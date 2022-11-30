@@ -78,7 +78,7 @@ class ZHAGroupMember(LogMixin):
         return member_info
 
     @property
-    def associated_entities(self) -> list[GroupEntityReference]:
+    def associated_entities(self) -> list[dict[str, Any]]:
         """Return the list of entities that were derived from this endpoint."""
         ha_entity_registry = self.device.gateway.ha_entity_registry
         zha_device_registry = self.device.gateway.device_registry
@@ -150,9 +150,7 @@ class ZHAGroup(LogMixin):
     def members(self) -> list[ZHAGroupMember]:
         """Return the ZHA devices that are members of this group."""
         return [
-            ZHAGroupMember(
-                self, self._zha_gateway.devices.get(member_ieee), endpoint_id
-            )
+            ZHAGroupMember(self, self._zha_gateway.devices[member_ieee], endpoint_id)
             for (member_ieee, endpoint_id) in self._zigpy_group.members.keys()
             if member_ieee in self._zha_gateway.devices
         ]

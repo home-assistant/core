@@ -12,10 +12,8 @@ from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
-    STATE_CLASSES_SCHEMA,
     RestoreSensor,
     SensorDeviceClass,
-    SensorEntity,
 )
 from homeassistant.components.sensor.helpers import async_parse_date_datetime
 from homeassistant.const import (
@@ -39,6 +37,10 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.template_entity import (
+    TEMPLATE_SENSOR_BASE_SCHEMA,
+    TemplateSensor,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -49,7 +51,6 @@ from .const import (
 )
 from .template_entity import (
     TEMPLATE_ENTITY_COMMON_SCHEMA,
-    TemplateEntity,
     rewrite_common_legacy_to_modern_conf,
 )
 from .trigger_entity import TriggerEntity
@@ -61,16 +62,15 @@ LEGACY_FIELDS = {
 }
 
 
-SENSOR_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_NAME): cv.template,
-        vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
-        vol.Required(CONF_STATE): cv.template,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    }
-).extend(TEMPLATE_ENTITY_COMMON_SCHEMA.schema)
+SENSOR_SCHEMA = (
+    vol.Schema(
+        {
+            vol.Required(CONF_STATE): cv.template,
+        }
+    )
+    .extend(TEMPLATE_SENSOR_BASE_SCHEMA.schema)
+    .extend(TEMPLATE_ENTITY_COMMON_SCHEMA.schema)
+)
 
 
 LEGACY_SENSOR_SCHEMA = vol.All(
@@ -192,8 +192,10 @@ async def async_setup_platform(
     )
 
 
-class SensorTemplate(TemplateEntity, SensorEntity):
+class SensorTemplate(TemplateSensor):
     """Representation of a Template Sensor."""
+
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -202,16 +204,12 @@ class SensorTemplate(TemplateEntity, SensorEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(hass, config=config, unique_id=unique_id)
+        super().__init__(hass, config=config, fallback_name=None, unique_id=unique_id)
+        self._template = config.get(CONF_STATE)
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:
             self.entity_id = async_generate_entity_id(
                 ENTITY_ID_FORMAT, object_id, hass=hass
             )
-
-        self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
-        self._template = config.get(CONF_STATE)
-        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
-        self._attr_state_class = config.get(CONF_STATE_CLASS)
 
     async def async_added_to_hass(self):
         """Register callbacks."""

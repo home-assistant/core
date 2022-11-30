@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "device_key": "La cl\u00e9 d'appareil de votre appareil",
+                    "event": "L'\u00e9v\u00e9nement pour les \u00e9v\u00e9nements.",
+                    "name": "Nom",
+                    "password": "Le mot de passe du chiffrement utilis\u00e9 par votre appareil",
+                    "salt": "Le salage utilis\u00e9 par votre appareil."
+                }
+            }
+        }
+    }
+}

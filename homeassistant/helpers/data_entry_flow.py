@@ -26,7 +26,7 @@ class _BaseFlowManagerView(HomeAssistantView):
         self, result: data_entry_flow.FlowResult
     ) -> data_entry_flow.FlowResult:
         """Convert result to JSON."""
-        if result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+        if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
             data = result.copy()
             data.pop("result")
             data.pop("data")

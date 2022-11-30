@@ -198,7 +198,7 @@ async def test_daily_forecast(hass):
     assert forecast.get(ATTR_FORECAST_TEMP) == 16.2
     assert forecast.get(ATTR_FORECAST_TEMP_LOW) == 10.6
     assert forecast.get(ATTR_FORECAST_PRECIPITATION_PROBABILITY) == "100.0"
-    assert forecast.get(ATTR_FORECAST_WIND_SPEED) == "10"
+    assert forecast.get(ATTR_FORECAST_WIND_SPEED) == 10.0
     assert forecast.get(ATTR_FORECAST_WIND_BEARING) == "S"
 
 
@@ -222,5 +222,5 @@ async def test_hourly_forecast(hass):
     assert forecast.get(ATTR_FORECAST_CONDITION) == "rainy"
     assert forecast.get(ATTR_FORECAST_TEMP) == 7.7
     assert forecast.get(ATTR_FORECAST_PRECIPITATION_PROBABILITY) == 80.0
-    assert forecast.get(ATTR_FORECAST_WIND_SPEED) == "32.7"
+    assert forecast.get(ATTR_FORECAST_WIND_SPEED) == 32.7
     assert forecast.get(ATTR_FORECAST_WIND_BEARING) == "S"

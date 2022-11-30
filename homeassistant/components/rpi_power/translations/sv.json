@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Redan konfigurerad. Bara en konfiguration \u00e4r till\u00e5ten."
+        },
+        "step": {
+            "confirm": {
+                "description": "Vill du b\u00f6rja med inst\u00e4llning?"
+            }
+        }
+    }
+}

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -111,7 +110,7 @@ class XiaomiGenericCoordinatedButton(XiaomiCoordinatedMiioEntity, ButtonEntity):
         super().__init__(name, device, entry, unique_id, coordinator)
         self.entity_description = description
 
-    async def async_press(self, **kwargs: Any) -> None:
+    async def async_press(self) -> None:
         """Press the button."""
         method = getattr(self._device, self.entity_description.method_press)
         await self._try_command(

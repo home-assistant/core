@@ -24,10 +24,10 @@ from homeassistant.components.recorder.statistics import (
 )
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.websocket_api import messages
-from homeassistant.components.websocket_api.const import JSON_DUMP
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA
+from homeassistant.helpers.json import JSON_DUMP
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 

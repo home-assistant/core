@@ -11,6 +11,11 @@
         },
         "flow_title": "{name}",
         "step": {
+            "records": {
+                "data": {
+                    "records": "\u0417\u0430\u043f\u0438\u0441\u0438"
+                }
+            },
             "user": {
                 "title": "\u0421\u0432\u044a\u0440\u0437\u0432\u0430\u043d\u0435 \u0441 Cloudflare"
             },

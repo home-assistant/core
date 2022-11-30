@@ -48,7 +48,7 @@ async def async_get_mac_address_from_host(hass: HomeAssistant, host: str) -> str
 
 async def async_create_device(hass: HomeAssistant, ssdp_location: str) -> Device:
     """Create UPnP/IGD device."""
-    session = async_get_clientsession(hass)
+    session = async_get_clientsession(hass, verify_ssl=False)
     requester = AiohttpSessionRequester(session, with_sleep=True, timeout=20)
 
     factory = UpnpFactory(requester, disable_state_variable_validation=True)

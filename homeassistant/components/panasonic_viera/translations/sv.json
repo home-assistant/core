@@ -4,6 +4,11 @@
             "unknown": "Ett ov\u00e4ntat fel intr\u00e4ffade. Kontrollera loggarna f\u00f6r mer information."
         },
         "step": {
+            "pairing": {
+                "data": {
+                    "pin": "Pin-kod"
+                }
+            },
             "user": {
                 "data": {
                     "host": "IP-adress",

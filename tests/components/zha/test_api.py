@@ -37,7 +37,7 @@ from homeassistant.components.zha.core.const import (
     GROUP_IDS,
     GROUP_NAME,
 )
-from homeassistant.const import ATTR_NAME
+from homeassistant.const import ATTR_NAME, Platform
 from homeassistant.core import Context
 
 from .conftest import (
@@ -51,6 +51,20 @@ from .conftest import (
 
 IEEE_SWITCH_DEVICE = "01:2d:6f:00:0a:90:69:e7"
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
+
+
+@pytest.fixture(autouse=True)
+def required_platform_only():
+    """Only setup the required and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.SELECT,
+            Platform.SENSOR,
+            Platform.SWITCH,
+        ),
+    ):
+        yield
 
 
 @pytest.fixture

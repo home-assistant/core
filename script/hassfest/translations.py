@@ -224,6 +224,9 @@ def gen_strings_schema(config: Config, integration: Integration):
                 ),
                 slug_validator=vol.Any("_", cv.slug),
             ),
+            vol.Optional("application_credentials"): {
+                vol.Optional("description"): cv.string_with_no_html,
+            },
         }
     )
 

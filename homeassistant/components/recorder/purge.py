@@ -14,7 +14,7 @@ from sqlalchemy.sql.expression import distinct
 from homeassistant.const import EVENT_STATE_CHANGED
 
 from .const import MAX_ROWS_TO_PURGE, SupportedDialect
-from .models import Events, StateAttributes, States
+from .db_schema import Events, StateAttributes, States
 from .queries import (
     attributes_ids_exist_in_states,
     attributes_ids_exist_in_states_sqlite,

@@ -8,6 +8,11 @@
                 },
                 "description": "Do vill du konfigurera {name}?"
             },
+            "reauth_confirm": {
+                "data": {
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            },
             "user": {
                 "data": {
                     "host": "V\u00e4rd eller IP-adress",

@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "invalid_unique_id": "Imposs\u00edvel determinar um ID exclusivo v\u00e1lido para o dispositivo",
-            "no_unique_id": "[%key:component::asuswrt::config::abort::not_unique_id_exist%]"
+            "no_unique_id": "Um dispositivo sem um ID exclusivo v\u00e1lido j\u00e1 est\u00e1 configurado. A configura\u00e7\u00e3o de v\u00e1rias inst\u00e2ncias n\u00e3o \u00e9 poss\u00edvel"
         },
         "error": {
             "cannot_connect": "Falha ao conectar",

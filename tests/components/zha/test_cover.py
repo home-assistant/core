@@ -17,6 +17,7 @@ from homeassistant.components.cover import (
     SERVICE_SET_COVER_POSITION,
     SERVICE_STOP_COVER,
 )
+from homeassistant.components.zha.core.const import ZHA_EVENT
 from homeassistant.const import (
     ATTR_COMMAND,
     STATE_CLOSED,
@@ -36,6 +37,21 @@ from .common import (
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 from tests.common import async_capture_events, mock_coro, mock_restore_cache
+
+
+@pytest.fixture(autouse=True)
+def cover_platform_only():
+    """Only setup the cover and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.COVER,
+            Platform.DEVICE_TRACKER,
+            Platform.NUMBER,
+            Platform.SELECT,
+        ),
+    ):
+        yield
 
 
 @pytest.fixture
@@ -410,7 +426,7 @@ async def test_cover_remote(hass, zha_device_joined_restored, zigpy_cover_remote
     cluster = zigpy_cover_remote.endpoints[1].out_clusters[
         closures.WindowCovering.cluster_id
     ]
-    zha_events = async_capture_events(hass, "zha_event")
+    zha_events = async_capture_events(hass, ZHA_EVENT)
 
     # up command
     hdr = make_zcl_header(0, global_command=False)

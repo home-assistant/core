@@ -1,4 +1,4 @@
-"""Common stuff for AVM Fritz!Box tests."""
+"""Common stuff for Fritz!Tools tests."""
 from homeassistant.components import ssdp
 from homeassistant.components.fritz.const import DOMAIN
 from homeassistant.components.ssdp import ATTR_UPNP_FRIENDLY_NAME, ATTR_UPNP_UDN
@@ -193,6 +193,7 @@ MOCK_FB_SERVICES: dict[str, dict] = {
         }
     },
 }
+
 
 MOCK_MESH_DATA = {
     "schema_version": "1.9",

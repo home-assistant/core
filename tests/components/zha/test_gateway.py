@@ -35,6 +35,22 @@ def zigpy_dev_basic(zigpy_device_mock):
     )
 
 
+@pytest.fixture(autouse=True)
+def required_platform_only():
+    """Only setup the required and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.SENSOR,
+            Platform.LIGHT,
+            Platform.DEVICE_TRACKER,
+            Platform.NUMBER,
+            Platform.SELECT,
+        ),
+    ):
+        yield
+
+
 @pytest.fixture
 async def zha_dev_basic(hass, zha_device_restored, zigpy_dev_basic):
     """ZHA device with just a basic cluster."""

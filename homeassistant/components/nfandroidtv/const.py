@@ -7,6 +7,8 @@ CONF_TRANSPARENCY = "transparency"
 CONF_COLOR = "color"
 CONF_INTERRUPT = "interrupt"
 
+DATA_HASS_CONFIG = "nfandroid_hass_config"
+
 DEFAULT_NAME = "Android TV / Fire TV"
 DEFAULT_TIMEOUT = 5
 

@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "authenticate": {
+                "data": {
+                    "api_key": "API-nyckel"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-nyckel"
+                }
+            }
+        }
+    }
+}

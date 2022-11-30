@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad"
+        },
+        "step": {
+            "connect": {
+                "data": {
+                    "api_key": "API-nyckel"
+                }
+            }
+        }
+    }
+}

@@ -1,7 +1,13 @@
-"""Support for power & energy sensors for VeSync outlets."""
+"""Support for voltage, power & energy sensors for VeSync outlets."""
+from __future__ import annotations
+
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+
+from pyvesync.vesyncfan import VeSyncAirBypass
+from pyvesync.vesyncoutlet import VeSyncOutlet
+from pyvesync.vesyncswitch import VeSyncSwitch
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -12,6 +18,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     POWER_WATT,
@@ -22,7 +29,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .common import VeSyncBaseEntity, VeSyncDevice
+from .common import VeSyncBaseEntity
 from .const import DEV_TYPE_TO_HA, DOMAIN, SKU_TO_BASE_DEVICE, VS_DISCOVERY, VS_SENSORS
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,7 +39,7 @@ _LOGGER = logging.getLogger(__name__)
 class VeSyncSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[VeSyncDevice], StateType]
+    value_fn: Callable[[VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch], StateType]
 
 
 @dataclass
@@ -41,8 +48,12 @@ class VeSyncSensorEntityDescription(
 ):
     """Describe VeSync sensor entity."""
 
-    exists_fn: Callable[[VeSyncDevice], bool] = lambda _: True
-    update_fn: Callable[[VeSyncDevice], None] = lambda _: None
+    exists_fn: Callable[
+        [VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch], bool
+    ] = lambda _: True
+    update_fn: Callable[
+        [VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch], None
+    ] = lambda _: None
 
 
 def update_energy(device):
@@ -107,7 +118,47 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda device: device.details["energy"],
+        value_fn=lambda device: device.energy_today,
+        update_fn=update_energy,
+        exists_fn=lambda device: ha_dev_type(device) == "outlet",
+    ),
+    VeSyncSensorEntityDescription(
+        key="energy-weekly",
+        name="energy use weekly",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda device: device.weekly_energy_total,
+        update_fn=update_energy,
+        exists_fn=lambda device: ha_dev_type(device) == "outlet",
+    ),
+    VeSyncSensorEntityDescription(
+        key="energy-monthly",
+        name="energy use monthly",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda device: device.monthly_energy_total,
+        update_fn=update_energy,
+        exists_fn=lambda device: ha_dev_type(device) == "outlet",
+    ),
+    VeSyncSensorEntityDescription(
+        key="energy-yearly",
+        name="energy use yearly",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda device: device.yearly_energy_total,
+        update_fn=update_energy,
+        exists_fn=lambda device: ha_dev_type(device) == "outlet",
+    ),
+    VeSyncSensorEntityDescription(
+        key="voltage",
+        name="current voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: device.details["voltage"],
         update_fn=update_energy,
         exists_fn=lambda device: ha_dev_type(device) == "outlet",
     ),
@@ -151,7 +202,7 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
 
     def __init__(
         self,
-        device: VeSyncDevice,
+        device: VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch,
         description: VeSyncSensorEntityDescription,
     ) -> None:
         """Initialize the VeSync outlet device."""

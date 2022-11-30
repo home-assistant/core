@@ -9,6 +9,8 @@ from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_CONFIGURATION_URL,
+    ATTR_IDENTIFIERS,
     CONF_DEVICE_ID,
     CONF_NAME,
     CONF_PARAMS,
@@ -42,7 +44,7 @@ class DeviceCoordinator(DataUpdateCoordinator):
         self.hass = hass
         self.wemo = wemo
         self.device_id = device_id
-        self.device_info = _device_info(wemo)
+        self.device_info = _create_device_info(wemo)
         self.supports_long_press = wemo.supports_long_press()
         self.update_lock = asyncio.Lock()
 
@@ -124,6 +126,15 @@ class DeviceCoordinator(DataUpdateCoordinator):
                 raise UpdateFailed("WeMo update failed") from err
 
 
+def _create_device_info(wemo: WeMoDevice) -> DeviceInfo:
+    """Create device information. Modify if special device."""
+    _dev_info = _device_info(wemo)
+    if wemo.model_name == "DLI emulated Belkin Socket":
+        _dev_info[ATTR_CONFIGURATION_URL] = f"http://{wemo.host}"
+        _dev_info[ATTR_IDENTIFIERS] = {(DOMAIN, wemo.serialnumber[:-1])}
+    return _dev_info
+
+
 def _device_info(wemo: WeMoDevice) -> DeviceInfo:
     return DeviceInfo(
         connections={(CONNECTION_UPNP, wemo.udn)},
@@ -144,7 +155,7 @@ async def async_register_device(
 
     device_registry = async_get_device_registry(hass)
     entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id, **_device_info(wemo)
+        config_entry_id=config_entry.entry_id, **_create_device_info(wemo)
     )
 
     device = DeviceCoordinator(hass, wemo, entry.id)

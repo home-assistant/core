@@ -222,7 +222,7 @@ async def test_filtered_allowlist(hass, mock_client):
         FilterTest("light.excluded_test", False),
         FilterTest("light.excluded", False),
         FilterTest("sensor.included_test", True),
-        FilterTest("climate.included_test", False),
+        FilterTest("climate.included_test", True),
     ]
 
     for test in tests:

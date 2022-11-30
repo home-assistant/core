@@ -99,8 +99,6 @@ def get_properties(device: Device, show_advanced=False):
             continue
 
         prop_schema = get_schema(prop, name, device.groups)
-        if name == "momentary_delay":
-            print(prop_schema)
         if prop_schema is None:
             continue
         schema[name] = prop_schema
@@ -216,7 +214,7 @@ async def websocket_write_properties(
 
     result = await device.async_write_config()
     await devices.async_save(workdir=hass.config.config_dir)
-    if result != ResponseStatus.SUCCESS:
+    if result not in [ResponseStatus.SUCCESS, ResponseStatus.RUN_ON_WAKE]:
         connection.send_message(
             websocket_api.error_message(
                 msg[ID], "write_failed", "properties not written to device"
@@ -244,9 +242,10 @@ async def websocket_load_properties(
         notify_device_not_found(connection, msg, INSTEON_DEVICE_NOT_FOUND)
         return
 
-    result, _ = await device.async_read_config(read_aldb=False)
+    result = await device.async_read_config(read_aldb=False)
     await devices.async_save(workdir=hass.config.config_dir)
-    if result != ResponseStatus.SUCCESS:
+
+    if result not in [ResponseStatus.SUCCESS, ResponseStatus.RUN_ON_WAKE]:
         connection.send_message(
             websocket_api.error_message(
                 msg[ID], "load_failed", "properties not loaded from device"

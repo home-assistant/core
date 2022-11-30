@@ -1,5 +1,7 @@
 """The tests for the MQTT subscription component."""
-from unittest.mock import ANY
+from unittest.mock import ANY, patch
+
+import pytest
 
 from homeassistant.components.mqtt.subscription import (
     async_prepare_subscribe_topics,
@@ -9,6 +11,13 @@ from homeassistant.components.mqtt.subscription import (
 from homeassistant.core import callback
 
 from tests.common import async_fire_mqtt_message
+
+
+@pytest.fixture(autouse=True)
+def no_platforms():
+    """Skip platform setup to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", []):
+        yield
 
 
 async def test_subscribe_topics(hass, mqtt_mock_entry_no_yaml_config, caplog):

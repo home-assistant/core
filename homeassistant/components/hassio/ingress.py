@@ -15,7 +15,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import X_HASSIO, X_INGRESS_PATH
+from .const import X_AUTH_TOKEN, X_INGRESS_PATH
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -183,7 +183,7 @@ def _init_header(request: web.Request, token: str) -> CIMultiDict | dict[str, st
         headers[name] = value
 
     # Inject token / cleanup later on Supervisor
-    headers[X_HASSIO] = os.environ.get("SUPERVISOR_TOKEN", "")
+    headers[X_AUTH_TOKEN] = os.environ.get("SUPERVISOR_TOKEN", "")
 
     # Ingress information
     headers[X_INGRESS_PATH] = f"/api/hassio_ingress/{token}"

@@ -52,10 +52,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     options = ConnectionOptions(host=host, username=username, password=password)
     try:
         nam = await NettigoAirMonitor.create(websession, options)
-    except AuthFailed as err:
-        raise ConfigEntryAuthFailed from err
     except (ApiError, ClientError, ClientConnectorError, asyncio.TimeoutError) as err:
         raise ConfigEntryNotReady from err
+
+    try:
+        await nam.async_check_credentials()
+    except AuthFailed as err:
+        raise ConfigEntryAuthFailed from err
 
     coordinator = NAMDataUpdateCoordinator(hass, nam, entry.unique_id)
     await coordinator.async_config_entry_first_refresh()

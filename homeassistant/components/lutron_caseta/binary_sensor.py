@@ -6,14 +6,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_SUGGESTED_AREA
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN as CASETA_DOMAIN, LutronCasetaDevice, _area_and_name_from_name
-from .const import BRIDGE_DEVICE, BRIDGE_LEAP, CONFIG_URL, MANUFACTURER, UNASSIGNED_AREA
+from .const import CONFIG_URL, MANUFACTURER
+from .models import LutronCasetaData
 
 
 async def async_setup_entry(
@@ -26,9 +26,9 @@ async def async_setup_entry(
     Adds occupancy groups from the Caseta bridge associated with the
     config_entry as binary_sensor entities.
     """
-    data = hass.data[CASETA_DOMAIN][config_entry.entry_id]
-    bridge = data[BRIDGE_LEAP]
-    bridge_device = data[BRIDGE_DEVICE]
+    data: LutronCasetaData = hass.data[CASETA_DOMAIN][config_entry.entry_id]
+    bridge = data.bridge
+    bridge_device = data.bridge_device
     occupancy_groups = bridge.occupancy_groups
     async_add_entities(
         LutronOccupancySensor(occupancy_group, bridge, bridge_device)
@@ -44,7 +44,9 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
     def __init__(self, device, bridge, bridge_device):
         """Init an occupancy sensor."""
         super().__init__(device, bridge, bridge_device)
-        info = DeviceInfo(
+        _, name = _area_and_name_from_name(device["name"])
+        self._attr_name = name
+        self._attr_device_info = DeviceInfo(
             identifiers={(CASETA_DOMAIN, self.unique_id)},
             manufacturer=MANUFACTURER,
             model="Lutron Occupancy",
@@ -53,10 +55,6 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
             configuration_url=CONFIG_URL,
             entry_type=DeviceEntryType.SERVICE,
         )
-        area, _ = _area_and_name_from_name(device["name"])
-        if area != UNASSIGNED_AREA:
-            info[ATTR_SUGGESTED_AREA] = area
-        self._attr_device_info = info
 
     @property
     def is_on(self):
@@ -77,7 +75,7 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
     @property
     def unique_id(self):
         """Return a unique identifier."""
-        return f"occupancygroup_{self.device_id}"
+        return f"occupancygroup_{self._bridge_unique_id}_{self.device_id}"
 
     @property
     def extra_state_attributes(self):

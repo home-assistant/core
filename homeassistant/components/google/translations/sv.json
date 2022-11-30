@@ -1,0 +1,8 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto har redan konfigurerats",
+            "cannot_connect": "Det gick inte att ansluta."
+        }
+    }
+}

@@ -176,7 +176,7 @@ async def test_full_batch(hass, entry_with_one_event, mock_create_batch):
                 FilterTest("light.excluded_test", 0),
                 FilterTest("light.excluded", 0),
                 FilterTest("sensor.included_test", 1),
-                FilterTest("climate.included_test", 0),
+                FilterTest("climate.included_test", 1),
             ],
         ),
         (

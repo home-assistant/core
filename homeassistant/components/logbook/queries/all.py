@@ -8,7 +8,11 @@ from sqlalchemy.orm import Query
 from sqlalchemy.sql.elements import ClauseList
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 
-from homeassistant.components.recorder.models import LAST_UPDATED_INDEX, Events, States
+from homeassistant.components.recorder.db_schema import (
+    LAST_UPDATED_INDEX,
+    Events,
+    States,
+)
 
 from .common import (
     apply_states_filters,

@@ -24,7 +24,7 @@ from homeassistant.components.vacuum import (
     STATE_DOCKED,
     STATE_ERROR,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
@@ -60,19 +60,6 @@ async def test_vacuum_status_when_sleeping(
     vacuum = hass.states.get(VACUUM_ENTITY_ID)
     assert vacuum
     assert vacuum.attributes.get(ATTR_STATUS) == "Ready (Sleeping)"
-
-
-async def test_vacuum_state_when_not_recently_seen(
-    hass: HomeAssistant, mock_account_with_robot_not_recently_seen: MagicMock
-) -> None:
-    """Tests the vacuum state when not seen recently."""
-    await setup_integration(
-        hass, mock_account_with_robot_not_recently_seen, PLATFORM_DOMAIN
-    )
-
-    vacuum = hass.states.get(VACUUM_ENTITY_ID)
-    assert vacuum
-    assert vacuum.state == STATE_UNAVAILABLE
 
 
 async def test_no_robots(

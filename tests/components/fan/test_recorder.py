@@ -5,7 +5,7 @@ from datetime import timedelta
 
 from homeassistant.components import fan
 from homeassistant.components.fan import ATTR_PRESET_MODES
-from homeassistant.components.recorder.models import StateAttributes, States
+from homeassistant.components.recorder.db_schema import StateAttributes, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import State

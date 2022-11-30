@@ -1,11 +1,13 @@
 """The tests for the  MQTT device_tracker discovery platform."""
 
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components import device_tracker
 from homeassistant.components.mqtt.const import DOMAIN as MQTT_DOMAIN
 from homeassistant.components.mqtt.discovery import ALREADY_DISCOVERED
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN
+from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN, Platform
 from homeassistant.setup import async_setup_component
 
 from .test_common import help_test_setting_blocked_attribute_via_mqtt_json_message
@@ -19,6 +21,13 @@ DEFAULT_CONFIG = {
         "state_topic": "test-topic",
     }
 }
+
+
+@pytest.fixture(autouse=True)
+def device_tracker_platform_only():
+    """Only setup the device_tracker platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.DEVICE_TRACKER]):
+        yield
 
 
 @pytest.fixture

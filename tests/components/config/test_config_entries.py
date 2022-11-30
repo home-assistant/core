@@ -2,7 +2,7 @@
 
 from collections import OrderedDict
 from http import HTTPStatus
-from unittest.mock import AsyncMock, patch
+from unittest.mock import ANY, AsyncMock, patch
 
 import pytest
 import voluptuous as vol
@@ -13,6 +13,7 @@ from homeassistant.config_entries import HANDLERS, ConfigFlow
 from homeassistant.core import callback
 from homeassistant.generated import config_flows
 from homeassistant.helpers import config_entry_flow, config_validation as cv
+from homeassistant.loader import IntegrationNotFound
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -1113,3 +1114,192 @@ async def test_ignore_flow_nonexisting(hass, hass_ws_client):
 
     assert not response["success"]
     assert response["error"]["code"] == "not_found"
+
+
+async def test_get_entries_ws(hass, hass_ws_client, clear_handlers):
+    """Test get entries with the websocket api."""
+    assert await async_setup_component(hass, "config", {})
+    mock_integration(hass, MockModule("comp1"))
+    mock_integration(
+        hass, MockModule("comp2", partial_manifest={"integration_type": "helper"})
+    )
+    mock_integration(hass, MockModule("comp3"))
+    entry = MockConfigEntry(
+        domain="comp1",
+        title="Test 1",
+        source="bla",
+    )
+    entry.add_to_hass(hass)
+    MockConfigEntry(
+        domain="comp2",
+        title="Test 2",
+        source="bla2",
+        state=core_ce.ConfigEntryState.SETUP_ERROR,
+        reason="Unsupported API",
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain="comp3",
+        title="Test 3",
+        source="bla3",
+        disabled_by=core_ce.ConfigEntryDisabler.USER,
+    ).add_to_hass(hass)
+
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config_entries/get",
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["id"] == 5
+    assert response["result"] == [
+        {
+            "disabled_by": None,
+            "domain": "comp1",
+            "entry_id": ANY,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": None,
+            "source": "bla",
+            "state": "not_loaded",
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test 1",
+        },
+        {
+            "disabled_by": None,
+            "domain": "comp2",
+            "entry_id": ANY,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": "Unsupported API",
+            "source": "bla2",
+            "state": "setup_error",
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test 2",
+        },
+        {
+            "disabled_by": "user",
+            "domain": "comp3",
+            "entry_id": ANY,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": None,
+            "source": "bla3",
+            "state": "not_loaded",
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test 3",
+        },
+    ]
+
+    await ws_client.send_json(
+        {
+            "id": 6,
+            "type": "config_entries/get",
+            "domain": "comp1",
+            "type_filter": "integration",
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["id"] == 6
+    assert response["result"] == [
+        {
+            "disabled_by": None,
+            "domain": "comp1",
+            "entry_id": ANY,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": None,
+            "source": "bla",
+            "state": "not_loaded",
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test 1",
+        }
+    ]
+    # Verify we skip broken integrations
+
+    with patch(
+        "homeassistant.components.config.config_entries.async_get_integration",
+        side_effect=IntegrationNotFound("any"),
+    ):
+        await ws_client.send_json(
+            {
+                "id": 7,
+                "type": "config_entries/get",
+                "type_filter": "integration",
+            }
+        )
+        response = await ws_client.receive_json()
+
+    assert response["id"] == 7
+    assert response["result"] == [
+        {
+            "disabled_by": None,
+            "domain": "comp1",
+            "entry_id": ANY,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": None,
+            "source": "bla",
+            "state": "not_loaded",
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test 1",
+        },
+        {
+            "disabled_by": None,
+            "domain": "comp2",
+            "entry_id": ANY,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": "Unsupported API",
+            "source": "bla2",
+            "state": "setup_error",
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test 2",
+        },
+        {
+            "disabled_by": "user",
+            "domain": "comp3",
+            "entry_id": ANY,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": None,
+            "source": "bla3",
+            "state": "not_loaded",
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test 3",
+        },
+    ]
+
+    # Verify we raise if something really goes wrong
+
+    with patch(
+        "homeassistant.components.config.config_entries.async_get_integration",
+        side_effect=Exception,
+    ):
+        await ws_client.send_json(
+            {
+                "id": 8,
+                "type": "config_entries/get",
+                "type_filter": "integration",
+            }
+        )
+        response = await ws_client.receive_json()
+
+    assert response["id"] == 8
+    assert response["success"] is False

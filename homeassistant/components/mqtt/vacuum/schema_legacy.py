@@ -1,6 +1,4 @@
 """Support for Legacy MQTT vacuum."""
-import json
-
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
@@ -14,6 +12,7 @@ from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.icon import icon_for_battery_level
+from homeassistant.helpers.json import json_dumps
 
 from .. import subscription
 from ..config import MQTT_BASE_SCHEMA
@@ -511,7 +510,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         if params:
             message = {"command": command}
             message.update(params)
-            message = json.dumps(message)
+            message = json_dumps(message)
         else:
             message = command
         await self.async_publish(

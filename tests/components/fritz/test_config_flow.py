@@ -1,4 +1,4 @@
-"""Tests for AVM Fritz!Box config flow."""
+"""Tests for Fritz!Tools config flow."""
 import dataclasses
 from unittest.mock import patch
 

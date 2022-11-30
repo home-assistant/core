@@ -29,14 +29,13 @@ from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from .const import DATA_INSTANCE, SQLITE_URL_PREFIX, SupportedDialect
-from .models import (
+from .db_schema import (
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
     TABLES_TO_CHECK,
     RecorderRuns,
-    UnsupportedDialect,
-    process_timestamp,
 )
+from .models import UnsupportedDialect, process_timestamp
 
 if TYPE_CHECKING:
     from . import Recorder

@@ -39,9 +39,9 @@ DEVICE_NUMBER_TYPES = (
         icon="mdi:thermometer",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
-        min_value=-10,
-        max_value=10,
-        step=0.1,
+        native_min_value=-10,
+        native_max_value=10,
+        native_step=0.1,
     ),
     SensiboNumberEntityDescription(
         key="calibration_hum",
@@ -50,9 +50,9 @@ DEVICE_NUMBER_TYPES = (
         icon="mdi:water",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
-        min_value=-10,
-        max_value=10,
-        step=0.1,
+        native_min_value=-10,
+        native_max_value=10,
+        native_step=0.1,
     ),
 )
 
@@ -89,12 +89,12 @@ class SensiboNumber(SensiboDeviceBaseEntity, NumberEntity):
         self._attr_name = f"{self.device_data.name} {entity_description.name}"
 
     @property
-    def value(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the value from coordinator data."""
         value: float | None = getattr(self.device_data, self.entity_description.key)
         return value
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set value for calibration."""
         data = {self.entity_description.remote_key: value}
         result = await self.async_send_command("set_calibration", {"data": data})

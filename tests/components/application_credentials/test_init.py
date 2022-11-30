@@ -701,7 +701,11 @@ async def test_websocket_integration_list(ws_client: ClientFixture):
         "homeassistant.loader.APPLICATION_CREDENTIALS", ["example1", "example2"]
     ):
         assert await client.cmd_result("config") == {
-            "domains": ["example1", "example2"]
+            "domains": ["example1", "example2"],
+            "integrations": {
+                "example1": {},
+                "example2": {},
+            },
         }
 
 

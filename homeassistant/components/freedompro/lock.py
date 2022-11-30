@@ -1,5 +1,6 @@
 """Support for Freedompro lock."""
 import json
+from typing import Any
 
 from pyfreedompro import put_state
 
@@ -75,10 +76,10 @@ class Device(CoordinatorEntity, LockEntity):
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
-    async def async_lock(self, **kwargs):
+    async def async_lock(self, **kwargs: Any) -> None:
         """Async function to lock the lock."""
-        payload = {"lock": 1}
-        payload = json.dumps(payload)
+        payload_dict = {"lock": 1}
+        payload = json.dumps(payload_dict)
         await put_state(
             self._session,
             self._api_key,
@@ -87,10 +88,10 @@ class Device(CoordinatorEntity, LockEntity):
         )
         await self.coordinator.async_request_refresh()
 
-    async def async_unlock(self, **kwargs):
+    async def async_unlock(self, **kwargs: Any) -> None:
         """Async function to unlock the lock."""
-        payload = {"lock": 0}
-        payload = json.dumps(payload)
+        payload_dict = {"lock": 0}
+        payload = json.dumps(payload_dict)
         await put_state(
             self._session,
             self._api_key,

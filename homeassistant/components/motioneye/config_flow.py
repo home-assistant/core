@@ -157,10 +157,7 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
             data=user_input,
         )
 
-    async def async_step_reauth(
-        self,
-        config_data: Mapping[str, Any],
-    ) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle a reauthentication flow."""
         return await self.async_step_user()
 

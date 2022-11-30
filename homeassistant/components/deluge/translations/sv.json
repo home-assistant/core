@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Port",
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            }
+        }
+    }
+}

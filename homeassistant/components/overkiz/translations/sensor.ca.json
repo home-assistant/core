@@ -36,6 +36,11 @@
         "overkiz__sensor_room": {
             "clean": "Net",
             "dirty": "Brut"
+        },
+        "overkiz__three_way_handle_direction": {
+            "closed": "Tancada",
+            "open": "Oberta",
+            "tilt": "Inclinada"
         }
     }
 }

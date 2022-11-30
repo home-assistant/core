@@ -1,6 +1,12 @@
 {
     "config": {
         "step": {
+            "configure": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            },
             "configure_profile": {
                 "title": "Konfigurera Profiler"
             }

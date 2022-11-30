@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Redan konfigurerad. Endast en konfiguration m\u00f6jlig."
+        },
         "step": {
             "setup_network": {
                 "data": {

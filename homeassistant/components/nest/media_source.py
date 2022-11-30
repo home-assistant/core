@@ -25,7 +25,6 @@ import os
 
 from google_nest_sdm.camera_traits import CameraClipPreviewTrait, CameraEventImageTrait
 from google_nest_sdm.device import Device
-from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.event import EventImageType, ImageEventBase
 from google_nest_sdm.event_media import (
     ClipPreviewSession,
@@ -57,8 +56,8 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.util import dt as dt_util
 
-from .const import DATA_DEVICE_MANAGER, DOMAIN
-from .device_info import NestDeviceInfo
+from .const import DOMAIN
+from .device_info import NestDeviceInfo, async_nest_devices_by_device_id
 from .events import EVENT_NAME_MAP, MEDIA_SOURCE_EVENT_TITLE_MAP
 
 _LOGGER = logging.getLogger(__name__)
@@ -271,21 +270,13 @@ async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
 @callback
 def async_get_media_source_devices(hass: HomeAssistant) -> Mapping[str, Device]:
     """Return a mapping of device id to eligible Nest event media devices."""
-    if DATA_DEVICE_MANAGER not in hass.data[DOMAIN]:
-        # Integration unloaded, or is legacy nest integration
-        return {}
-    device_manager: DeviceManager = hass.data[DOMAIN][DATA_DEVICE_MANAGER]
-    device_registry = dr.async_get(hass)
-    devices = {}
-    for device in device_manager.devices.values():
-        if not (
-            CameraEventImageTrait.NAME in device.traits
-            or CameraClipPreviewTrait.NAME in device.traits
-        ):
-            continue
-        if device_entry := device_registry.async_get_device({(DOMAIN, device.name)}):
-            devices[device_entry.id] = device
-    return devices
+    devices = async_nest_devices_by_device_id(hass)
+    return {
+        device_id: device
+        for device_id, device in devices.items()
+        if CameraEventImageTrait.NAME in device.traits
+        or CameraClipPreviewTrait.NAME in device.traits
+    }
 
 
 @dataclass

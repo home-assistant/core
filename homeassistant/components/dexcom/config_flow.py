@@ -1,4 +1,6 @@
 """Config flow for Dexcom integration."""
+from __future__ import annotations
+
 from pydexcom import AccountError, Dexcom, SessionError
 import voluptuous as vol
 
@@ -53,7 +55,9 @@ class DexcomConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> DexcomOptionsFlowHandler:
         """Get the options flow for this handler."""
         return DexcomOptionsFlowHandler(config_entry)
 

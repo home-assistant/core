@@ -83,9 +83,7 @@ async def async_setup_entry(
     """Set up MQTT button through configuration.yaml and dynamically through MQTT discovery."""
     # load and initialize platform config from configuration.yaml
     config_entry.async_on_unload(
-        await async_setup_platform_discovery(
-            hass, button.DOMAIN, PLATFORM_SCHEMA_MODERN
-        )
+        await async_setup_platform_discovery(hass, button.DOMAIN)
     )
     # setup for discovery
     setup = functools.partial(
@@ -132,7 +130,7 @@ class MqttButton(MqttEntity, ButtonEntity):
         """Return the device class of the sensor."""
         return self._config.get(CONF_DEVICE_CLASS)
 
-    async def async_press(self, **kwargs):
+    async def async_press(self) -> None:
         """Turn the device on.
 
         This method is a coroutine.

@@ -195,6 +195,8 @@ async def async_setup_platform(
 class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
     """A virtual binary sensor that triggers from another sensor."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hass: HomeAssistant,

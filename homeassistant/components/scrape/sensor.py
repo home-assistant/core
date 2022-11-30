@@ -114,7 +114,7 @@ async def async_setup_entry(
     if value_template is not None:
         val_template = Template(value_template, hass)
 
-    rest = hass.data.setdefault(DOMAIN, {})[entry.entry_id]
+    rest = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [

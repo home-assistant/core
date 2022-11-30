@@ -22,6 +22,21 @@ from .common import async_enable_traffic, find_entity_id
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 
+@pytest.fixture(autouse=True)
+def alarm_control_panel_platform_only():
+    """Only setup the alarm_control_panel and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.ALARM_CONTROL_PANEL,
+            Platform.DEVICE_TRACKER,
+            Platform.NUMBER,
+            Platform.SELECT,
+        ),
+    ):
+        yield
+
+
 @pytest.fixture
 def zigpy_device(zigpy_device_mock):
     """Device tracker zigpy device."""

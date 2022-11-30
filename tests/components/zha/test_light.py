@@ -80,6 +80,24 @@ LIGHT_COLOR = {
 }
 
 
+@pytest.fixture(autouse=True)
+def light_platform_only():
+    """Only setup the light and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.BINARY_SENSOR,
+            Platform.DEVICE_TRACKER,
+            Platform.BUTTON,
+            Platform.LIGHT,
+            Platform.SENSOR,
+            Platform.NUMBER,
+            Platform.SELECT,
+        ),
+    ):
+        yield
+
+
 @pytest.fixture
 async def coordinator(hass, zigpy_device_mock, zha_device_joined):
     """Test zha light platform."""

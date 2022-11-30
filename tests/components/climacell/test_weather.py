@@ -132,7 +132,7 @@ async def test_v3_weather(
         {
             ATTR_FORECAST_CONDITION: ATTR_CONDITION_CLOUDY,
             ATTR_FORECAST_TIME: "2021-03-12T00:00:00-08:00",
-            ATTR_FORECAST_PRECIPITATION: 0.0457,
+            ATTR_FORECAST_PRECIPITATION: 0.05,
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: 25,
             ATTR_FORECAST_TEMP: 19.9,
             ATTR_FORECAST_TEMP_LOW: 12.1,
@@ -148,7 +148,7 @@ async def test_v3_weather(
         {
             ATTR_FORECAST_CONDITION: ATTR_CONDITION_RAINY,
             ATTR_FORECAST_TIME: "2021-03-14T00:00:00-08:00",
-            ATTR_FORECAST_PRECIPITATION: 1.0744,
+            ATTR_FORECAST_PRECIPITATION: 1.07,
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: 75,
             ATTR_FORECAST_TEMP: 6.4,
             ATTR_FORECAST_TEMP_LOW: 3.2,
@@ -156,7 +156,7 @@ async def test_v3_weather(
         {
             ATTR_FORECAST_CONDITION: ATTR_CONDITION_SNOWY,
             ATTR_FORECAST_TIME: "2021-03-15T00:00:00-07:00",  # DST starts
-            ATTR_FORECAST_PRECIPITATION: 7.3050,
+            ATTR_FORECAST_PRECIPITATION: 7.31,
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: 95,
             ATTR_FORECAST_TEMP: 1.2,
             ATTR_FORECAST_TEMP_LOW: 0.2,
@@ -164,7 +164,7 @@ async def test_v3_weather(
         {
             ATTR_FORECAST_CONDITION: ATTR_CONDITION_CLOUDY,
             ATTR_FORECAST_TIME: "2021-03-16T00:00:00-07:00",
-            ATTR_FORECAST_PRECIPITATION: 0.0051,
+            ATTR_FORECAST_PRECIPITATION: 0.01,
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: 5,
             ATTR_FORECAST_TEMP: 6.1,
             ATTR_FORECAST_TEMP_LOW: -1.6,
@@ -188,7 +188,7 @@ async def test_v3_weather(
         {
             ATTR_FORECAST_CONDITION: ATTR_CONDITION_CLOUDY,
             ATTR_FORECAST_TIME: "2021-03-19T00:00:00-07:00",
-            ATTR_FORECAST_PRECIPITATION: 0.1778,
+            ATTR_FORECAST_PRECIPITATION: 0.18,
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: 45,
             ATTR_FORECAST_TEMP: 9.4,
             ATTR_FORECAST_TEMP_LOW: 4.7,
@@ -196,7 +196,7 @@ async def test_v3_weather(
         {
             ATTR_FORECAST_CONDITION: ATTR_CONDITION_RAINY,
             ATTR_FORECAST_TIME: "2021-03-20T00:00:00-07:00",
-            ATTR_FORECAST_PRECIPITATION: 1.2319,
+            ATTR_FORECAST_PRECIPITATION: 1.23,
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: 55,
             ATTR_FORECAST_TEMP: 5.0,
             ATTR_FORECAST_TEMP_LOW: 3.1,
@@ -204,7 +204,7 @@ async def test_v3_weather(
         {
             ATTR_FORECAST_CONDITION: ATTR_CONDITION_CLOUDY,
             ATTR_FORECAST_TIME: "2021-03-21T00:00:00-07:00",
-            ATTR_FORECAST_PRECIPITATION: 0.0432,
+            ATTR_FORECAST_PRECIPITATION: 0.04,
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: 20,
             ATTR_FORECAST_TEMP: 6.8,
             ATTR_FORECAST_TEMP_LOW: 0.9,
@@ -213,11 +213,11 @@ async def test_v3_weather(
     assert weather_state.attributes[ATTR_FRIENDLY_NAME] == "ClimaCell - Daily"
     assert weather_state.attributes[ATTR_WEATHER_HUMIDITY] == 24
     assert weather_state.attributes[ATTR_WEATHER_OZONE] == 52.625
-    assert weather_state.attributes[ATTR_WEATHER_PRESSURE] == 1028.1246
+    assert weather_state.attributes[ATTR_WEATHER_PRESSURE] == 1028.12
     assert weather_state.attributes[ATTR_WEATHER_TEMPERATURE] == 6.6
-    assert weather_state.attributes[ATTR_WEATHER_VISIBILITY] == 9.9940
+    assert weather_state.attributes[ATTR_WEATHER_VISIBILITY] == 9.99
     assert weather_state.attributes[ATTR_WEATHER_WIND_BEARING] == 320.31
-    assert weather_state.attributes[ATTR_WEATHER_WIND_SPEED] == 14.6289
+    assert weather_state.attributes[ATTR_WEATHER_WIND_SPEED] == 14.63
     assert weather_state.attributes[ATTR_CLOUD_COVER] == 100
     assert weather_state.attributes[ATTR_WIND_GUST] == 24.0758
     assert weather_state.attributes[ATTR_PRECIPITATION_TYPE] == "rain"

@@ -23,7 +23,6 @@ class GoalZeroEntity(CoordinatorEntity[GoalZeroDataUpdateCoordinator]):
     ) -> None:
         """Initialize a Goal Zero Yeti entity."""
         super().__init__(coordinator)
-        self.coordinator = coordinator
         self.entity_description = description
         self._attr_name = (
             f"{coordinator.config_entry.data[CONF_NAME]} {description.name}"

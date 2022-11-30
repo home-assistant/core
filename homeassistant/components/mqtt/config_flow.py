@@ -1,4 +1,6 @@
 """Config flow for MQTT."""
+from __future__ import annotations
+
 from collections import OrderedDict
 import queue
 
@@ -15,6 +17,7 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_USERNAME,
 )
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
 from .client import MqttClientSetup
@@ -45,7 +48,10 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     _hassio_discovery = None
 
     @staticmethod
-    def async_get_options_flow(config_entry):
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> MQTTOptionsFlowHandler:
         """Get the options flow for this handler."""
         return MQTTOptionsFlowHandler(config_entry)
 
@@ -136,10 +142,10 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle MQTT options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize MQTT options flow."""
         self.config_entry = config_entry
-        self.broker_config = {}
+        self.broker_config: dict[str, str | int] = {}
         self.options = dict(config_entry.options)
 
     async def async_step_init(self, user_input=None):

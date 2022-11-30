@@ -20,6 +20,13 @@
                 "description": "Enter your Hive authentication code. \n \n Please enter code 0000 to request another code.",
                 "title": "Hive Two-factor Authentication."
             },
+            "configuration": {
+                "data": {
+                    "device_name": "Device Name"
+                },
+                "description": "Enter your Hive configuration ",
+                "title": "Hive Configuration."
+            },
             "reauth": {
                 "data": {
                     "password": "Password",
@@ -34,7 +41,7 @@
                     "scan_interval": "Scan Interval (seconds)",
                     "username": "Username"
                 },
-                "description": "Enter your Hive login information and configuration.",
+                "description": "Enter your Hive login information.",
                 "title": "Hive Login"
             }
         }

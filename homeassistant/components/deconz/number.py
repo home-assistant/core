@@ -43,9 +43,9 @@ ENTITY_DESCRIPTIONS = {
             value_fn=lambda device: device.delay,
             suffix="Delay",
             update_key=PRESENCE_DELAY,
-            max_value=65535,
-            min_value=0,
-            step=1,
+            native_max_value=65535,
+            native_min_value=0,
+            native_step=1,
             entity_category=EntityCategory.CONFIG,
         )
     ]
@@ -107,11 +107,11 @@ class DeconzNumber(DeconzDevice, NumberEntity):
             super().async_update_callback()
 
     @property
-    def value(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the value of the sensor property."""
         return self.entity_description.value_fn(self._device)
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set sensor config."""
         data = {self.entity_description.key: int(value)}
         await self._device.set_config(**data)

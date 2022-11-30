@@ -24,6 +24,8 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
@@ -864,3 +866,43 @@ async def test_reload(hass):
 
     assert hass.states.get("sensor.mockreset") is None
     assert hass.states.get("sensor.rollout")
+
+
+@respx.mock
+async def test_entity_config(hass: HomeAssistant) -> None:
+    """Test entity configuration."""
+
+    config = {
+        DOMAIN: {
+            # REST configuration
+            "platform": "rest",
+            "method": "GET",
+            "resource": "http://localhost",
+            # Entity configuration
+            "icon": "{{'mdi:one_two_three'}}",
+            "picture": "{{'blabla.png'}}",
+            "device_class": "temperature",
+            "name": "{{'REST' + ' ' + 'Sensor'}}",
+            "state_class": "measurement",
+            "unique_id": "very_unique",
+            "unit_of_measurement": "beardsecond",
+        },
+    }
+
+    respx.get("http://localhost") % HTTPStatus.OK
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_get("sensor.rest_sensor").unique_id == "very_unique"
+
+    state = hass.states.get("sensor.rest_sensor")
+    assert state.state == ""
+    assert state.attributes == {
+        "device_class": "temperature",
+        "entity_picture": "blabla.png",
+        "friendly_name": "REST Sensor",
+        "icon": "mdi:one_two_three",
+        "state_class": "measurement",
+        "unit_of_measurement": "beardsecond",
+    }

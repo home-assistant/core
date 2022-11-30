@@ -153,14 +153,14 @@ class CommandCover(CoverEntity):
                 payload = self._value_template.render_with_possible_json_value(payload)
             self._state = int(payload)
 
-    def open_cover(self, **kwargs) -> None:
+    def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         self._move_cover(self._command_open)
 
-    def close_cover(self, **kwargs) -> None:
+    def close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         self._move_cover(self._command_close)
 
-    def stop_cover(self, **kwargs) -> None:
+    def stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         self._move_cover(self._command_stop)

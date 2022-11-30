@@ -1,4 +1,6 @@
 """Config flow for Plex."""
+from __future__ import annotations
+
 import copy
 import logging
 
@@ -85,7 +87,9 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> PlexOptionsFlowHandler:
         """Get the options flow for this handler."""
         return PlexOptionsFlowHandler(config_entry)
 
@@ -334,7 +338,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class PlexOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Plex options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize Plex options flow."""
         self.options = copy.deepcopy(dict(config_entry.options))
         self.server_id = config_entry.data[CONF_SERVER_IDENTIFIER]

@@ -6,12 +6,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
     DOMAIN as BINARY_SENSOR_DOMAIN,
 )
-from homeassistant.components.sensor import (
-    DEVICE_CLASSES_SCHEMA as SENSOR_DEVICE_CLASSES_SCHEMA,
-    DOMAIN as SENSOR_DOMAIN,
-    STATE_CLASSES_SCHEMA,
-)
-from homeassistant.components.sensor.const import CONF_STATE_CLASS
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_DEVICE_CLASS,
@@ -26,7 +21,6 @@ from homeassistant.const import (
     CONF_RESOURCE_TEMPLATE,
     CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
-    CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
@@ -34,6 +28,7 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.template_entity import TEMPLATE_SENSOR_BASE_SCHEMA
 
 from .const import (
     CONF_JSON_ATTRS,
@@ -41,7 +36,6 @@ from .const import (
     DEFAULT_BINARY_SENSOR_NAME,
     DEFAULT_FORCE_UPDATE,
     DEFAULT_METHOD,
-    DEFAULT_SENSOR_NAME,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     METHODS,
@@ -65,10 +59,7 @@ RESOURCE_SCHEMA = {
 }
 
 SENSOR_SCHEMA = {
-    vol.Optional(CONF_NAME, default=DEFAULT_SENSOR_NAME): cv.string,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
-    vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
+    **TEMPLATE_SENSOR_BASE_SCHEMA.schema,
     vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
     vol.Optional(CONF_JSON_ATTRS_PATH): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,

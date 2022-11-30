@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable, Generator
 from datetime import datetime, timedelta
 import logging
 from time import monotonic
-from typing import Any, Generic, TypeVar  # pylint: disable=unused-import
+from typing import Any, Generic, TypeVar
 import urllib.error
 
 import aiohttp

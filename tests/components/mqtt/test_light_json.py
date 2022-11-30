@@ -103,6 +103,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    Platform,
 )
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
@@ -148,6 +149,13 @@ DEFAULT_CONFIG = {
         "command_topic": "test-topic",
     }
 }
+
+
+@pytest.fixture(autouse=True)
+def light_platform_only():
+    """Only setup the light platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT]):
+        yield
 
 
 class JsonValidator:
@@ -680,7 +688,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     await common.async_turn_on(hass, "light.test")
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "test_light_rgb/set", '{"state": "ON"}', 2, False
+        "test_light_rgb/set", '{"state":"ON"}', 2, False
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("light.test")
@@ -701,7 +709,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     await common.async_turn_off(hass, "light.test")
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "test_light_rgb/set", '{"state": "OFF"}', 2, False
+        "test_light_rgb/set", '{"state":"OFF"}', 2, False
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("light.test")
@@ -830,7 +838,7 @@ async def test_sending_mqtt_commands_and_optimistic2(
     # Turn the light on
     await common.async_turn_on(hass, "light.test")
     mqtt_mock.async_publish.assert_called_once_with(
-        "test_light_rgb/set", '{"state": "ON"}', 2, False
+        "test_light_rgb/set", '{"state":"ON"}', 2, False
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("light.test")
@@ -840,7 +848,7 @@ async def test_sending_mqtt_commands_and_optimistic2(
     await common.async_turn_on(hass, "light.test", color_temp=90)
     mqtt_mock.async_publish.assert_called_once_with(
         "test_light_rgb/set",
-        JsonValidator('{"state": "ON", "color_temp": 90}'),
+        JsonValidator('{"state":"ON","color_temp":90}'),
         2,
         False,
     )
@@ -851,7 +859,7 @@ async def test_sending_mqtt_commands_and_optimistic2(
     # Turn the light off
     await common.async_turn_off(hass, "light.test")
     mqtt_mock.async_publish.assert_called_once_with(
-        "test_light_rgb/set", '{"state": "OFF"}', 2, False
+        "test_light_rgb/set", '{"state":"OFF"}', 2, False
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("light.test")
@@ -1996,7 +2004,7 @@ async def test_entity_debug_info_message(hass, mqtt_mock_entry_no_yaml_config):
         light.DOMAIN,
         DEFAULT_CONFIG,
         light.SERVICE_TURN_ON,
-        command_payload='{"state": "ON"}',
+        command_payload='{"state":"ON"}',
         state_payload='{"state":"ON"}',
     )
 
@@ -2030,7 +2038,7 @@ async def test_max_mireds(hass, mqtt_mock_entry_with_yaml_config):
             light.SERVICE_TURN_ON,
             "command_topic",
             None,
-            '{"state": "ON"}',
+            '{"state":"ON"}',
             None,
             None,
             None,
@@ -2039,7 +2047,7 @@ async def test_max_mireds(hass, mqtt_mock_entry_with_yaml_config):
             light.SERVICE_TURN_OFF,
             "command_topic",
             None,
-            '{"state": "OFF"}',
+            '{"state":"OFF"}',
             None,
             None,
             None,
@@ -2146,13 +2154,11 @@ async def test_encoding_subscribable_topics(
     )
 
 
-async def test_setup_manual_entity_from_yaml(hass, caplog, tmp_path):
+async def test_setup_manual_entity_from_yaml(hass):
     """Test setup manual configured MQTT entity."""
     platform = light.DOMAIN
     config = copy.deepcopy(DEFAULT_CONFIG[platform])
     config["name"] = "test"
     del config["platform"]
-    await help_test_setup_manual_entity_from_yaml(
-        hass, caplog, tmp_path, platform, config
-    )
+    await help_test_setup_manual_entity_from_yaml(hass, platform, config)
     assert hass.states.get(f"{platform}.test") is not None

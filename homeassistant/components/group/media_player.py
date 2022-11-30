@@ -103,6 +103,8 @@ async def async_setup_entry(
 class MediaPlayerGroup(MediaPlayerEntity):
     """Representation of a Media Group."""
 
+    _attr_available: bool = False
+
     def __init__(self, unique_id: str | None, name: str, entities: list[str]) -> None:
         """Initialize a Media Group entity."""
         self._name = name
@@ -390,19 +392,29 @@ class MediaPlayerGroup(MediaPlayerEntity):
     @callback
     def async_update_state(self) -> None:
         """Query all members and determine the media group state."""
-        states = [self.hass.states.get(entity) for entity in self._entities]
-        states_values = [state.state for state in states if state is not None]
-        off_values = STATE_OFF, STATE_UNAVAILABLE, STATE_UNKNOWN
+        states = [
+            state.state
+            for entity_id in self._entities
+            if (state := self.hass.states.get(entity_id)) is not None
+        ]
 
-        if states_values:
-            if states_values.count(states_values[0]) == len(states_values):
-                self._state = states_values[0]
-            elif any(state for state in states_values if state not in off_values):
+        # Set group as unavailable if all members are unavailable or missing
+        self._attr_available = any(state != STATE_UNAVAILABLE for state in states)
+
+        valid_state = any(
+            state not in (STATE_UNKNOWN, STATE_UNAVAILABLE) for state in states
+        )
+        if not valid_state:
+            # Set as unknown if all members are unknown or unavailable
+            self._state = None
+        else:
+            off_values = (STATE_OFF, STATE_UNAVAILABLE, STATE_UNKNOWN)
+            if states.count(states[0]) == len(states):
+                self._state = states[0]
+            elif any(state for state in states if state not in off_values):
                 self._state = STATE_ON
             else:
                 self._state = STATE_OFF
-        else:
-            self._state = None
 
         supported_features = 0
         if self._features[KEY_CLEAR_PLAYLIST]:

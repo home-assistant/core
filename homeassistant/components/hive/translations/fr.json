@@ -20,6 +20,13 @@
                 "description": "Entrez votre code d\u2019authentification Hive. \n \nVeuillez entrer le code 0000 pour demander un autre code.",
                 "title": "Authentification \u00e0 deux facteurs Hive."
             },
+            "configuration": {
+                "data": {
+                    "device_name": "Nom de l'appareil"
+                },
+                "description": "Saisissez votre configuration Hive ",
+                "title": "Configuration Hive."
+            },
             "reauth": {
                 "data": {
                     "password": "Mot de passe",

@@ -183,8 +183,8 @@ async def test_deprecated_datetime_str(
     await hass.async_block_till_done()
 
     assert (
-        f"Invalid {provides}: sensor.test has a {device_class} device class "
-        f"but does not provide a {provides} state but {type(state_value)}"
+        f"Invalid {provides}: sensor.test has {device_class} device class "
+        f"but provides state {state_value}:{type(state_value)}"
     ) in caplog.text
 
 

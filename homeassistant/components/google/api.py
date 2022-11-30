@@ -173,7 +173,7 @@ async def async_create_device_flow(
     return DeviceFlow(hass, oauth_flow, device_flow_info)
 
 
-class ApiAuthImpl(AbstractAuth):  # type: ignore[misc]
+class ApiAuthImpl(AbstractAuth):
     """Authentication implementation for google calendar api library."""
 
     def __init__(
@@ -191,7 +191,7 @@ class ApiAuthImpl(AbstractAuth):  # type: ignore[misc]
         return cast(str, self._session.token["access_token"])
 
 
-class AccessTokenAuthImpl(AbstractAuth):  # type: ignore[misc]
+class AccessTokenAuthImpl(AbstractAuth):
     """Authentication implementation used during config flow, without refresh.
 
     This exists to allow the config flow to use the API before it has fully

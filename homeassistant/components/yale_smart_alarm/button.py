@@ -1,7 +1,7 @@
 """Support for Yale Smart Alarm button."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -50,7 +50,7 @@ class YalePanicButton(YaleAlarmEntity, ButtonEntity):
         self._attr_name = f"{coordinator.entry.data[CONF_NAME]} {description.name}"
         self._attr_unique_id = f"yale_smart_alarm-{description.key}"
 
-    async def async_press(self, **kwargs: Any) -> None:
+    async def async_press(self) -> None:
         """Press the button."""
         if TYPE_CHECKING:
             assert self.coordinator.yale, "Connection to API is missing"

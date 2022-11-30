@@ -1,20 +1,11 @@
 """Support for deCONZ alarm control panel devices."""
 from __future__ import annotations
 
-from pydeconz.interfaces.alarm_systems import ArmAction
+from pydeconz.models.alarm_system import AlarmSystemArmAction
 from pydeconz.models.event import EventType
 from pydeconz.models.sensor.ancillary_control import (
-    ANCILLARY_CONTROL_ARMED_AWAY,
-    ANCILLARY_CONTROL_ARMED_NIGHT,
-    ANCILLARY_CONTROL_ARMED_STAY,
-    ANCILLARY_CONTROL_ARMING_AWAY,
-    ANCILLARY_CONTROL_ARMING_NIGHT,
-    ANCILLARY_CONTROL_ARMING_STAY,
-    ANCILLARY_CONTROL_DISARMED,
-    ANCILLARY_CONTROL_ENTRY_DELAY,
-    ANCILLARY_CONTROL_EXIT_DELAY,
-    ANCILLARY_CONTROL_IN_ALARM,
     AncillaryControl,
+    AncillaryControlPanel,
 )
 
 from homeassistant.components.alarm_control_panel import (
@@ -40,16 +31,16 @@ from .deconz_device import DeconzDevice
 from .gateway import DeconzGateway, get_gateway_from_config_entry
 
 DECONZ_TO_ALARM_STATE = {
-    ANCILLARY_CONTROL_ARMED_AWAY: STATE_ALARM_ARMED_AWAY,
-    ANCILLARY_CONTROL_ARMED_NIGHT: STATE_ALARM_ARMED_NIGHT,
-    ANCILLARY_CONTROL_ARMED_STAY: STATE_ALARM_ARMED_HOME,
-    ANCILLARY_CONTROL_ARMING_AWAY: STATE_ALARM_ARMING,
-    ANCILLARY_CONTROL_ARMING_NIGHT: STATE_ALARM_ARMING,
-    ANCILLARY_CONTROL_ARMING_STAY: STATE_ALARM_ARMING,
-    ANCILLARY_CONTROL_DISARMED: STATE_ALARM_DISARMED,
-    ANCILLARY_CONTROL_ENTRY_DELAY: STATE_ALARM_PENDING,
-    ANCILLARY_CONTROL_EXIT_DELAY: STATE_ALARM_PENDING,
-    ANCILLARY_CONTROL_IN_ALARM: STATE_ALARM_TRIGGERED,
+    AncillaryControlPanel.ARMED_AWAY: STATE_ALARM_ARMED_AWAY,
+    AncillaryControlPanel.ARMED_NIGHT: STATE_ALARM_ARMED_NIGHT,
+    AncillaryControlPanel.ARMED_STAY: STATE_ALARM_ARMED_HOME,
+    AncillaryControlPanel.ARMING_AWAY: STATE_ALARM_ARMING,
+    AncillaryControlPanel.ARMING_NIGHT: STATE_ALARM_ARMING,
+    AncillaryControlPanel.ARMING_STAY: STATE_ALARM_ARMING,
+    AncillaryControlPanel.DISARMED: STATE_ALARM_DISARMED,
+    AncillaryControlPanel.ENTRY_DELAY: STATE_ALARM_PENDING,
+    AncillaryControlPanel.EXIT_DELAY: STATE_ALARM_PENDING,
+    AncillaryControlPanel.IN_ALARM: STATE_ALARM_TRIGGERED,
 }
 
 
@@ -133,26 +124,26 @@ class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
         """Send arm away command."""
         if code:
             await self.gateway.api.alarmsystems.arm(
-                self.alarm_system_id, ArmAction.AWAY, code
+                self.alarm_system_id, AlarmSystemArmAction.AWAY, code
             )
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         if code:
             await self.gateway.api.alarmsystems.arm(
-                self.alarm_system_id, ArmAction.STAY, code
+                self.alarm_system_id, AlarmSystemArmAction.STAY, code
             )
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         if code:
             await self.gateway.api.alarmsystems.arm(
-                self.alarm_system_id, ArmAction.NIGHT, code
+                self.alarm_system_id, AlarmSystemArmAction.NIGHT, code
             )
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if code:
             await self.gateway.api.alarmsystems.arm(
-                self.alarm_system_id, ArmAction.DISARM, code
+                self.alarm_system_id, AlarmSystemArmAction.DISARM, code
             )

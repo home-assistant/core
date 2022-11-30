@@ -20,6 +20,13 @@
                 "description": "Hive\u8a8d\u8a3c\u30b3\u30fc\u30c9\u3092\u5165\u529b\u3057\u307e\u3059\u3002 \n\n\u5225\u306e\u30b3\u30fc\u30c9\u3092\u30ea\u30af\u30a8\u30b9\u30c8\u3059\u308b\u306b\u306f\u3001\u30b3\u30fc\u30c9 0000 \u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044\u3002",
                 "title": "Hive 2\u8981\u7d20\u8a8d\u8a3c\u3002"
             },
+            "configuration": {
+                "data": {
+                    "device_name": "\u30c7\u30d0\u30a4\u30b9\u540d"
+                },
+                "description": "Hive\u306e\u8a2d\u5b9a\u3092\u5165\u529b\u3057\u307e\u3059 ",
+                "title": "Hive\u306e\u8a2d\u5b9a\u3002"
+            },
             "reauth": {
                 "data": {
                     "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",

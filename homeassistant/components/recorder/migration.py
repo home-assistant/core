@@ -22,7 +22,7 @@ from sqlalchemy.sql.expression import true
 from homeassistant.core import HomeAssistant
 
 from .const import SupportedDialect
-from .models import (
+from .db_schema import (
     SCHEMA_VERSION,
     TABLE_STATES,
     Base,
@@ -31,8 +31,8 @@ from .models import (
     StatisticsMeta,
     StatisticsRuns,
     StatisticsShortTerm,
-    process_timestamp,
 )
+from .models import process_timestamp
 from .statistics import (
     delete_statistics_duplicates,
     delete_statistics_meta_duplicates,

@@ -3,7 +3,7 @@ import asyncio
 import base64
 from http import HTTPStatus
 import io
-from unittest.mock import Mock, PropertyMock, mock_open, patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, mock_open, patch
 
 import pytest
 
@@ -410,6 +410,7 @@ async def test_preload_stream(hass, mock_stream):
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
         return_value="http://example.com",
     ):
+        mock_create_stream.return_value.start = AsyncMock()
         assert await async_setup_component(
             hass, "camera", {DOMAIN: {"platform": "demo"}}
         )

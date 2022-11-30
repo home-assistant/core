@@ -1,5 +1,5 @@
 """Support for hunterdouglass_powerview sensors."""
-from aiopvapi.resources.shade import factory as PvShade
+from aiopvapi.resources.shade import BaseShade, factory as PvShade
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -13,18 +13,14 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    COORDINATOR,
-    DEVICE_INFO,
     DOMAIN,
-    PV_API,
-    PV_ROOM_DATA,
-    PV_SHADE_DATA,
     ROOM_ID_IN_SHADE,
     ROOM_NAME_UNICODE,
     SHADE_BATTERY_LEVEL,
     SHADE_BATTERY_LEVEL_MAX,
 )
 from .entity import ShadeEntity
+from .model import PowerviewEntryData
 
 
 async def async_setup_entry(
@@ -32,24 +28,23 @@ async def async_setup_entry(
 ) -> None:
     """Set up the hunter douglas shades sensors."""
 
-    pv_data = hass.data[DOMAIN][entry.entry_id]
-    room_data = pv_data[PV_ROOM_DATA]
-    shade_data = pv_data[PV_SHADE_DATA]
-    pv_request = pv_data[PV_API]
-    coordinator = pv_data[COORDINATOR]
-    device_info = pv_data[DEVICE_INFO]
+    pv_entry: PowerviewEntryData = hass.data[DOMAIN][entry.entry_id]
 
     entities = []
-    for raw_shade in shade_data.values():
-        shade = PvShade(raw_shade, pv_request)
+    for raw_shade in pv_entry.shade_data.values():
+        shade: BaseShade = PvShade(raw_shade, pv_entry.api)
         if SHADE_BATTERY_LEVEL not in shade.raw_data:
             continue
         name_before_refresh = shade.name
         room_id = shade.raw_data.get(ROOM_ID_IN_SHADE)
-        room_name = room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
+        room_name = pv_entry.room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
         entities.append(
             PowerViewShadeBatterySensor(
-                coordinator, device_info, room_name, shade, name_before_refresh
+                pv_entry.coordinator,
+                pv_entry.device_info,
+                room_name,
+                shade,
+                name_before_refresh,
             )
         )
     async_add_entities(entities)
@@ -91,3 +86,7 @@ class PowerViewShadeBatterySensor(ShadeEntity, SensorEntity):
         """Update with new data from the coordinator."""
         self._shade.raw_data = self.data.get_raw_data(self._shade.id)
         self.async_write_ha_state()
+
+    async def async_update(self) -> None:
+        """Refresh shade battery."""
+        await self._shade.refreshBattery()

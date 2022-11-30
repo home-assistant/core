@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "cloud": {
+                "data": {
+                    "cloud_password": "Molnl\u00f6senord",
+                    "cloud_username": "Molnanv\u00e4ndarnamn"
+                }
+            }
+        }
+    }
+}

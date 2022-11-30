@@ -13,6 +13,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
 )
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
@@ -60,6 +61,13 @@ DEFAULT_CONFIG = {
         "state_topic": "test-topic",
     }
 }
+
+
+@pytest.fixture(autouse=True)
+def binary_sensor_platform_only():
+    """Only setup the binary_sensor platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR]):
+        yield
 
 
 async def test_setting_sensor_value_expires_availability_topic(
@@ -1063,13 +1071,11 @@ async def test_skip_restoring_state_with_over_due_expire_trigger(
     assert "Skip state recovery after reload for binary_sensor.test3" in caplog.text
 
 
-async def test_setup_manual_entity_from_yaml(hass, caplog, tmp_path):
+async def test_setup_manual_entity_from_yaml(hass):
     """Test setup manual configured MQTT entity."""
     platform = binary_sensor.DOMAIN
     config = copy.deepcopy(DEFAULT_CONFIG[platform])
     config["name"] = "test"
     del config["platform"]
-    await help_test_setup_manual_entity_from_yaml(
-        hass, caplog, tmp_path, platform, config
-    )
+    await help_test_setup_manual_entity_from_yaml(hass, platform, config)
     assert hass.states.get(f"{platform}.test") is not None

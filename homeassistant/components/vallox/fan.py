@@ -132,7 +132,7 @@ class ValloxFan(ValloxEntity, FanEntity):
         Returns true if the mode has been changed, false otherwise.
         """
         try:
-            self._valid_preset_mode_or_raise(preset_mode)  # type: ignore[no-untyped-call]
+            self._valid_preset_mode_or_raise(preset_mode)
 
         except NotValidPresetModeError as err:
             _LOGGER.error(err)

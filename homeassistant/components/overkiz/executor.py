@@ -37,6 +37,10 @@ class OverkizExecutor:
         """Return Overkiz device linked to this entity."""
         return self.coordinator.data[self.device_url]
 
+    def linked_device(self, index: int) -> Device:
+        """Return Overkiz device sharing the same base url."""
+        return self.coordinator.data[f"{self.base_device_url}#{index}"]
+
     def select_command(self, *commands: str) -> str | None:
         """Select first existing command in a list of commands."""
         existing_commands = self.device.definition.commands

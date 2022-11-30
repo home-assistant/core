@@ -327,7 +327,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         """Whether the code is required for arm actions."""
         return self._code_arm_required
 
-    def alarm_disarm(self, code=None):
+    def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if not self._validate_code(code, STATE_ALARM_DISARMED):
             return
@@ -336,7 +336,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         self._state_ts = dt_util.utcnow()
         self.schedule_update_ha_state()
 
-    def alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         if self._code_arm_required and not self._validate_code(
             code, STATE_ALARM_ARMED_HOME
@@ -345,7 +345,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
 
         self._update_state(STATE_ALARM_ARMED_HOME)
 
-    def alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         if self._code_arm_required and not self._validate_code(
             code, STATE_ALARM_ARMED_AWAY
@@ -354,7 +354,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
 
         self._update_state(STATE_ALARM_ARMED_AWAY)
 
-    def alarm_arm_night(self, code=None):
+    def alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         if self._code_arm_required and not self._validate_code(
             code, STATE_ALARM_ARMED_NIGHT
@@ -363,7 +363,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
 
         self._update_state(STATE_ALARM_ARMED_NIGHT)
 
-    def alarm_trigger(self, code=None):
+    def alarm_trigger(self, code: str | None = None) -> None:
         """
         Send alarm trigger command.
 
@@ -426,7 +426,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
             ATTR_POST_PENDING_STATE: self._state,
         }
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
         async_track_state_change_event(
             self.hass, [self.entity_id], self._async_state_changed_listener

@@ -11,7 +11,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Voulez-vous configurer {name} ?"
+                "description": "Voulez-vous configurer {name}\u00a0?"
             },
             "pick_radio": {
                 "data": {

@@ -24,8 +24,10 @@ async def test_sensor(
 
     state1 = hass.states.get("sensor.hallway_motion_sensor_battery_voltage")
     state2 = hass.states.get("sensor.kitchen_pm2_5")
+    state3 = hass.states.get("sensor.kitchen_pure_sensitivity")
     assert state1.state == "3000"
     assert state2.state == "1"
+    assert state3.state == "n"
     assert state2.attributes == {
         "state_class": "measurement",
         "unit_of_measurement": "µg/m³",

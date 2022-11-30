@@ -1,7 +1,9 @@
 """Support for IP Cameras."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
+from typing import Any
 
 import httpx
 import voluptuous as vol
@@ -115,12 +117,12 @@ async def async_setup_entry(
     )
 
 
-def generate_auth(device_info) -> httpx.Auth | None:
+def generate_auth(device_info: Mapping[str, Any]) -> httpx.Auth | None:
     """Generate httpx.Auth object from credentials."""
-    username = device_info.get(CONF_USERNAME)
-    password = device_info.get(CONF_PASSWORD)
+    username: str | None = device_info.get(CONF_USERNAME)
+    password: str | None = device_info.get(CONF_PASSWORD)
     authentication = device_info.get(CONF_AUTHENTICATION)
-    if username:
+    if username and password:
         if authentication == HTTP_DIGEST_AUTHENTICATION:
             return httpx.DigestAuth(username=username, password=password)
         return httpx.BasicAuth(username=username, password=password)
@@ -130,7 +132,15 @@ def generate_auth(device_info) -> httpx.Auth | None:
 class GenericCamera(Camera):
     """A generic implementation of an IP camera."""
 
-    def __init__(self, hass, device_info, identifier, title):
+    _last_image: bytes | None
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        device_info: Mapping[str, Any],
+        identifier: str,
+        title: str,
+    ) -> None:
         """Initialize a generic camera."""
         super().__init__()
         self.hass = hass
@@ -143,10 +153,10 @@ class GenericCamera(Camera):
             and self._still_image_url
         ):
             self._still_image_url = cv.template(self._still_image_url)
-        if self._still_image_url not in [None, ""]:
+        if self._still_image_url:
             self._still_image_url.hass = hass
         self._stream_source = device_info.get(CONF_STREAM_SOURCE)
-        if self._stream_source not in (None, ""):
+        if self._stream_source:
             if not isinstance(self._stream_source, template_helper.Template):
                 self._stream_source = cv.template(self._stream_source)
             self._stream_source.hass = hass
@@ -207,7 +217,7 @@ class GenericCamera(Camera):
         """Return the name of this device."""
         return self._name
 
-    async def stream_source(self):
+    async def stream_source(self) -> str | None:
         """Return the source of the stream."""
         if self._stream_source is None:
             return None

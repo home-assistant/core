@@ -119,7 +119,9 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> InsteonOptionsFlowHandler:
         """Define the config flow to handle options."""
         return InsteonOptionsFlowHandler(config_entry)
 
@@ -234,7 +236,7 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class InsteonOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle an Insteon options flow."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Init the InsteonOptionsFlowHandler class."""
         self.config_entry = config_entry
 

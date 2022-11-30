@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "flow_title": "{name} {model} ({host})",
+        "step": {
+            "confirm": {
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani: {name} {model} ({host})?"
+            },
+            "user": {
+                "data": {
+                    "host": "C\u00edm"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "hold_temp": "\u00c1ll\u00edtson be \u00e1lland\u00f3 tart\u00e1st a h\u0151m\u00e9rs\u00e9klet be\u00e1ll\u00edt\u00e1sakor."
+                }
+            }
+        }
+    }
+}

@@ -219,6 +219,7 @@ class CloudGoogleConfig(AbstractConfig):
             sync_entities = True
         elif not self.enabled and self.is_local_sdk_active:
             self.async_disable_local_sdk()
+            sync_entities = True
 
         self._cur_entity_prefs = prefs.google_entity_configs
         self._cur_default_expose = prefs.google_default_expose

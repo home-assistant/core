@@ -27,13 +27,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util.dt import utcnow
 
-from .conftest import ComponentSetup, YieldFixture
+from .conftest import (
+    CLIENT_ID,
+    CLIENT_SECRET,
+    EMAIL_ADDRESS,
+    ComponentSetup,
+    YieldFixture,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 CODE_CHECK_INTERVAL = 1
 CODE_CHECK_ALARM_TIMEDELTA = datetime.timedelta(seconds=CODE_CHECK_INTERVAL * 2)
-EMAIL_ADDRESS = "user@gmail.com"
 
 
 @pytest.fixture(autouse=True)
@@ -71,6 +76,12 @@ async def mock_exchange(creds: OAuth2Credentials) -> YieldFixture[Mock]:
 
 
 @pytest.fixture
+async def primary_calendar_email() -> str:
+    """Fixture to override the google calendar primary email address."""
+    return EMAIL_ADDRESS
+
+
+@pytest.fixture
 async def primary_calendar_error() -> ClientError | None:
     """Fixture for tests to inject an error during calendar lookup."""
     return None
@@ -78,12 +89,14 @@ async def primary_calendar_error() -> ClientError | None:
 
 @pytest.fixture(autouse=True)
 async def primary_calendar(
-    mock_calendar_get: Callable[[...], None], primary_calendar_error: ClientError | None
+    mock_calendar_get: Callable[[...], None],
+    primary_calendar_error: ClientError | None,
+    primary_calendar_email: str,
 ) -> None:
     """Fixture to return the primary calendar."""
     mock_calendar_get(
         "primary",
-        {"id": EMAIL_ADDRESS, "summary": "Personal"},
+        {"id": primary_calendar_email, "summary": "Personal"},
         exc=primary_calendar_error,
     )
 
@@ -165,7 +178,7 @@ async def test_full_flow_application_creds(
     assert await component_setup()
 
     await async_import_client_credential(
-        hass, DOMAIN, ClientCredential("client-id", "client-secret"), "imported-cred"
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "imported-cred"
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -327,24 +340,105 @@ async def test_exchange_error(
     assert len(entries) == 1
 
 
-async def test_existing_config_entry(
+@pytest.mark.parametrize("google_config", [None])
+async def test_duplicate_config_entries(
     hass: HomeAssistant,
+    mock_code_flow: Mock,
+    mock_exchange: Mock,
+    config: dict[str, Any],
     config_entry: MockConfigEntry,
     component_setup: ComponentSetup,
 ) -> None:
-    """Test can't configure when config entry already exists."""
+    """Test that the same account cannot be setup twice."""
+    assert await component_setup()
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "imported-cred"
+    )
+
+    # Load a config entry
     config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.google.async_setup_entry", return_value=True
+    ) as mock_setup:
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert len(mock_setup.mock_calls) == 1
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
 
-    assert await component_setup()
-
+    # Start a new config flow using the same credential
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    assert result.get("type") == "progress"
+    assert result.get("step_id") == "auth"
+    assert "description_placeholders" in result
+    assert "url" in result["description_placeholders"]
+
+    # Run one tick to invoke the credential exchange check
+    now = utcnow()
+    await fire_alarm(hass, now + CODE_CHECK_ALARM_TIMEDELTA)
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(flow_id=result["flow_id"])
     assert result.get("type") == "abort"
     assert result.get("reason") == "already_configured"
+
+
+@pytest.mark.parametrize(
+    "google_config,primary_calendar_email", [(None, "another-email@example.com")]
+)
+async def test_multiple_config_entries(
+    hass: HomeAssistant,
+    mock_code_flow: Mock,
+    mock_exchange: Mock,
+    config: dict[str, Any],
+    config_entry: MockConfigEntry,
+    component_setup: ComponentSetup,
+) -> None:
+    """Test that multiple config entries can be set at once."""
+    assert await component_setup()
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "imported-cred"
+    )
+
+    # Load a config entry
+    config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.google.async_setup_entry", return_value=True
+    ) as mock_setup:
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert len(mock_setup.mock_calls) == 1
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+
+    # Start a new config flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") == "progress"
+    assert result.get("step_id") == "auth"
+    assert "description_placeholders" in result
+    assert "url" in result["description_placeholders"]
+
+    with patch(
+        "homeassistant.components.google.async_setup_entry", return_value=True
+    ) as mock_setup:
+        # Run one tick to invoke the credential exchange check
+        now = utcnow()
+        await fire_alarm(hass, now + CODE_CHECK_ALARM_TIMEDELTA)
+        await hass.async_block_till_done()
+        result = await hass.config_entries.flow.async_configure(
+            flow_id=result["flow_id"]
+        )
+    assert result.get("type") == "create_entry"
+    assert result.get("title") == "another-email@example.com"
+    assert len(mock_setup.mock_calls) == 1
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 2
 
 
 async def test_missing_configuration(
@@ -385,8 +479,8 @@ async def test_wrong_configuration(
         config_entry_oauth2_flow.LocalOAuth2Implementation(
             hass,
             DOMAIN,
-            "client-id",
-            "client-secret",
+            CLIENT_ID,
+            CLIENT_SECRET,
             "http://example/authorize",
             "http://example/token",
         ),
@@ -499,7 +593,7 @@ async def test_reauth_flow(
 
 
 @pytest.mark.parametrize("primary_calendar_error", [ClientError()])
-async def test_title_lookup_failure(
+async def test_calendar_lookup_failure(
     hass: HomeAssistant,
     mock_code_flow: Mock,
     mock_exchange: Mock,
@@ -516,9 +610,7 @@ async def test_title_lookup_failure(
     assert "description_placeholders" in result
     assert "url" in result["description_placeholders"]
 
-    with patch(
-        "homeassistant.components.google.async_setup_entry", return_value=True
-    ) as mock_setup:
+    with patch("homeassistant.components.google.async_setup_entry", return_value=True):
         # Run one tick to invoke the credential exchange check
         now = utcnow()
         await fire_alarm(hass, now + CODE_CHECK_ALARM_TIMEDELTA)
@@ -527,12 +619,8 @@ async def test_title_lookup_failure(
             flow_id=result["flow_id"]
         )
 
-    assert result.get("type") == "create_entry"
-    assert result.get("title") == "Import from configuration.yaml"
-
-    assert len(mock_setup.mock_calls) == 1
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
+    assert result.get("type") == "abort"
+    assert result.get("reason") == "cannot_connect"
 
 
 async def test_options_flow_triggers_reauth(

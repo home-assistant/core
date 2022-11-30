@@ -15,6 +15,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.setup import async_setup_component
 
@@ -53,6 +54,13 @@ from tests.common import async_fire_mqtt_message
 DEFAULT_CONFIG = {
     siren.DOMAIN: {"platform": "mqtt", "name": "test", "command_topic": "test-topic"}
 }
+
+
+@pytest.fixture(autouse=True)
+def siren_platform_only():
+    """Only setup the siren platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SIREN]):
+        yield
 
 
 async def async_turn_on(hass, entity_id=ENTITY_MATCH_ALL, parameters={}) -> None:
@@ -132,7 +140,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     await async_turn_on(hass, entity_id="siren.test")
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", '{"state": "beer on"}', 2, False
+        "command-topic", '{"state":"beer on"}', 2, False
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("siren.test")
@@ -141,7 +149,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     await async_turn_off(hass, entity_id="siren.test")
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", '{"state": "beer off"}', 2, False
+        "command-topic", '{"state":"beer off"}', 2, False
     )
     state = hass.states.get("siren.test")
     assert state.state == STATE_OFF
@@ -862,7 +870,7 @@ async def test_entity_debug_info_message(hass, mqtt_mock_entry_no_yaml_config):
         siren.DOMAIN,
         DEFAULT_CONFIG,
         siren.SERVICE_TURN_ON,
-        command_payload='{"state": "ON"}',
+        command_payload='{"state":"ON"}',
     )
 
 
@@ -873,14 +881,14 @@ async def test_entity_debug_info_message(hass, mqtt_mock_entry_no_yaml_config):
             siren.SERVICE_TURN_ON,
             "command_topic",
             None,
-            '{"state": "ON"}',
+            '{"state":"ON"}',
             None,
         ),
         (
             siren.SERVICE_TURN_OFF,
             "command_topic",
             None,
-            '{"state": "OFF"}',
+            '{"state":"OFF"}',
             None,
         ),
     ],
@@ -959,13 +967,11 @@ async def test_encoding_subscribable_topics(
     )
 
 
-async def test_setup_manual_entity_from_yaml(hass, caplog, tmp_path):
+async def test_setup_manual_entity_from_yaml(hass):
     """Test setup manual configured MQTT entity."""
     platform = siren.DOMAIN
     config = copy.deepcopy(DEFAULT_CONFIG[platform])
     config["name"] = "test"
     del config["platform"]
-    await help_test_setup_manual_entity_from_yaml(
-        hass, caplog, tmp_path, platform, config
-    )
+    await help_test_setup_manual_entity_from_yaml(hass, platform, config)
     assert hass.states.get(f"{platform}.test") is not None

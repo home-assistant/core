@@ -9,7 +9,7 @@
         },
         "step": {
             "link": {
-                "description": "Do vill du konfigurera {name} ({host})?",
+                "description": "Vill du konfigurera {name} ({host})?",
                 "title": "Anslut till PowerView Hub"
             },
             "user": {

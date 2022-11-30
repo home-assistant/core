@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.energy import async_get_manager, validate
+from homeassistant.helpers.json import JSON_DUMP
 from homeassistant.setup import async_setup_component
 
 
@@ -408,7 +409,11 @@ async def test_validation_grid(
         },
     )
 
-    assert (await validate.async_validate(hass)).as_dict() == {
+    result = await validate.async_validate(hass)
+    # verify its also json serializable
+    JSON_DUMP(result)
+
+    assert result.as_dict() == {
         "energy_sources": [
             [
                 {

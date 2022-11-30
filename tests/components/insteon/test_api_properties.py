@@ -401,7 +401,7 @@ async def test_load_properties(hass, hass_ws_client, kpl_properties_data):
     )
 
     device = devices["33.33.33"]
-    device.async_read_config = AsyncMock(return_value=(1, 1))
+    device.async_read_config = AsyncMock(return_value=1)
     with patch.object(insteon.api.properties, "devices", devices):
         await ws_client.send_json(
             {ID: 2, TYPE: "insteon/properties/load", DEVICE_ADDRESS: "33.33.33"}
@@ -418,7 +418,7 @@ async def test_load_properties_failure(hass, hass_ws_client, kpl_properties_data
     )
 
     device = devices["33.33.33"]
-    device.async_read_config = AsyncMock(return_value=(0, 0))
+    device.async_read_config = AsyncMock(return_value=0)
     with patch.object(insteon.api.properties, "devices", devices):
         await ws_client.send_json(
             {ID: 2, TYPE: "insteon/properties/load", DEVICE_ADDRESS: "33.33.33"}

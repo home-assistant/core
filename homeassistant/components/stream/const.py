@@ -53,3 +53,4 @@ RTSP_TRANSPORTS = {
     "http": "HTTP",
 }
 CONF_USE_WALLCLOCK_AS_TIMESTAMPS = "use_wallclock_as_timestamps"
+CONF_EXTRA_PART_WAIT_TIME = "extra_part_wait_time"

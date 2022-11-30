@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "unknown": "Erreur inattendue"
+        },
+        "flow_title": "{name} {model} ({host})",
+        "step": {
+            "confirm": {
+                "description": "Voulez-vous configurer {name} {model} ({host})\u00a0?"
+            },
+            "user": {
+                "data": {
+                    "host": "H\u00f4te"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "hold_temp": "D\u00e9finissez un maintien permanent lors du r\u00e9glage de la temp\u00e9rature."
+                }
+            }
+        }
+    }
+}

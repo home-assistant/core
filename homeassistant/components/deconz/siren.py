@@ -59,11 +59,17 @@ class DeconzSiren(DeconzDevice, SirenEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on siren."""
-        data = {}
         if (duration := kwargs.get(ATTR_DURATION)) is not None:
-            data["duration"] = duration * 10
-        await self._device.turn_on(**data)
+            duration *= 10
+        await self.gateway.api.lights.sirens.set_state(
+            id=self._device.resource_id,
+            on=True,
+            duration=duration,
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off siren."""
-        await self._device.turn_off()
+        await self.gateway.api.lights.sirens.set_state(
+            id=self._device.resource_id,
+            on=False,
+        )

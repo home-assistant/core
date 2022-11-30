@@ -24,6 +24,23 @@ from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 from tests.common import mock_coro
 
 
+@pytest.fixture(autouse=True)
+def number_platform_only():
+    """Only setup the number and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.BUTTON,
+            Platform.DEVICE_TRACKER,
+            Platform.LIGHT,
+            Platform.NUMBER,
+            Platform.SELECT,
+            Platform.SENSOR,
+        ),
+    ):
+        yield
+
+
 @pytest.fixture
 def zigpy_analog_output_device(zigpy_device_mock):
     """Zigpy analog_output device."""

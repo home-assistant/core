@@ -1421,12 +1421,12 @@ async def test_setup_and_remove_config_entry(
 @pytest.mark.parametrize(
     "hide_members,hidden_by_initial,hidden_by",
     (
-        (False, "integration", "integration"),
+        (False, er.RegistryEntryHider.INTEGRATION, er.RegistryEntryHider.INTEGRATION),
         (False, None, None),
-        (False, "user", "user"),
-        (True, "integration", None),
+        (False, er.RegistryEntryHider.USER, er.RegistryEntryHider.USER),
+        (True, er.RegistryEntryHider.INTEGRATION, None),
         (True, None, None),
-        (True, "user", "user"),
+        (True, er.RegistryEntryHider.USER, er.RegistryEntryHider.USER),
     ),
 )
 @pytest.mark.parametrize(
@@ -1444,7 +1444,7 @@ async def test_unhide_members_on_remove(
     group_type: str,
     extra_options: dict[str, Any],
     hide_members: bool,
-    hidden_by_initial: str,
+    hidden_by_initial: er.RegistryEntryHider,
     hidden_by: str,
 ) -> None:
     """Test removing a config entry."""

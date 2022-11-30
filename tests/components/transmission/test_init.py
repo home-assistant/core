@@ -6,7 +6,7 @@ import pytest
 from transmissionrpc.error import TransmissionError
 
 from homeassistant.components import transmission
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, mock_coro
@@ -105,7 +105,7 @@ async def test_setup_failed(hass):
 
     with patch(
         "transmissionrpc.Client", side_effect=TransmissionError("401: Unauthorized")
-    ):
+    ), pytest.raises(ConfigEntryAuthFailed):
 
         assert await transmission.async_setup_entry(hass, entry) is False
 

@@ -94,6 +94,8 @@ async def async_setup_platform(
 class TemplateSelect(TemplateEntity, SelectEntity):
     """Representation of a template select."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hass: HomeAssistant,

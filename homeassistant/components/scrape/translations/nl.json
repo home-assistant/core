@@ -1,0 +1,73 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is al geconfigureerd"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "attribute": "Attribuut",
+                    "authentication": "Authenticatie",
+                    "device_class": "Apparaatklasse",
+                    "headers": "Headers",
+                    "index": "Index",
+                    "name": "Naam",
+                    "password": "Wachtwoord",
+                    "resource": "Bron",
+                    "select": "Selecteer",
+                    "state_class": "Staatklasse",
+                    "unit_of_measurement": "Meeteenheid",
+                    "username": "Gebruikersnaam",
+                    "value_template": "Waardetemplate",
+                    "verify_ssl": "SSL-certificaat verifi\u00ebren"
+                },
+                "data_description": {
+                    "attribute": "Haal de waarde op van een attribuut op de geselecteerde tag",
+                    "authentication": "Type van de HTTP-authenticatie. Ofwel basic of digest",
+                    "device_class": "Het type/klasse van de sensor om het pictogram in de frontend in te stellen",
+                    "headers": "Headers om te gebruiken voor het webverzoek",
+                    "index": "Definieert welke van de door de CSS-selector geretourneerde elementen moeten worden gebruikt",
+                    "resource": "De URL naar de website die de waarde bevat",
+                    "select": "Definieert naar welke tag moet worden gezocht. Controleer Beautifulsoup CSS-selectors voor details",
+                    "state_class": "De state_class van de sensor",
+                    "value_template": "Definieert een sjabloon om de status van de sensor te krijgen",
+                    "verify_ssl": "Activeert/de-activeert verificatie van SSL/TLS certificaat, als voorbeeld of het is zelf-getekend"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "attribute": "Attribuut",
+                    "authentication": "Authenticatie",
+                    "device_class": "Apparaatklasse",
+                    "headers": "Headers",
+                    "index": "Index",
+                    "name": "Naam",
+                    "password": "Wachtwoord",
+                    "resource": "Bron",
+                    "select": "Selecteer",
+                    "state_class": "Staatklasse",
+                    "unit_of_measurement": "Meeteenheid",
+                    "username": "Gebruikersnaam",
+                    "value_template": "Waardetemplate",
+                    "verify_ssl": "SSL-certificaat verifi\u00ebren"
+                },
+                "data_description": {
+                    "attribute": "Haal de waarde op van een attribuut op de geselecteerde tag",
+                    "authentication": "Type van de HTTP-authenticatie. Ofwel basic of digest",
+                    "device_class": "Het type/klasse van de sensor om het pictogram in de frontend in te stellen",
+                    "headers": "Headers om te gebruiken voor het webverzoek",
+                    "index": "Definieert welke van de door de CSS-selector geretourneerde elementen moeten worden gebruikt",
+                    "resource": "De URL naar de website die de waarde bevat",
+                    "select": "Definieert naar welke tag moet worden gezocht. Controleer Beautifulsoup CSS-selectors voor details",
+                    "state_class": "De state_class van de sensor",
+                    "value_template": "Definieert een sjabloon om de status van de sensor te krijgen",
+                    "verify_ssl": "Activeert/de-activeert verificatie van SSL/TLS certificaat, als voorbeeld of het is zelf-getekend"
+                }
+            }
+        }
+    }
+}

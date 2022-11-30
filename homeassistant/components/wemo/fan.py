@@ -136,15 +136,18 @@ class WemoHumidifier(WemoBinaryStateEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn the fan on."""
-        self.set_percentage(percentage)
+        self._set_percentage(percentage)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         with self._wemo_call_wrapper("turn off"):
             self.wemo.set_state(FanMode.Off)
 
-    def set_percentage(self, percentage: int | None) -> None:
+    def set_percentage(self, percentage: int) -> None:
         """Set the fan_mode of the Humidifier."""
+        self._set_percentage(percentage)
+
+    def _set_percentage(self, percentage: int | None) -> None:
         if percentage is None:
             named_speed = self._last_fan_on_mode
         elif percentage == 0:

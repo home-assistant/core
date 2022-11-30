@@ -158,6 +158,7 @@ async def mock_create_stream(hass) -> Mock:
         )
         mock_stream.return_value.async_get_image = AsyncMock()
         mock_stream.return_value.async_get_image.return_value = IMAGE_BYTES_FROM_STREAM
+        mock_stream.return_value.start = AsyncMock()
         yield mock_stream
 
 
@@ -370,6 +371,7 @@ async def test_refresh_expired_stream_token(
     # Request a stream for the camera entity to exercise nest cam + camera interaction
     # and shutdown on url expiration
     with patch("homeassistant.components.camera.create_stream") as create_stream:
+        create_stream.return_value.start = AsyncMock()
         hls_url = await camera.async_request_stream(hass, "camera.my_camera", fmt="hls")
         assert hls_url.startswith("/api/hls/")  # Includes access token
         assert create_stream.called
@@ -536,7 +538,8 @@ async def test_refresh_expired_stream_failure(
 
     # Request an HLS stream
     with patch("homeassistant.components.camera.create_stream") as create_stream:
-
+        create_stream.return_value.start = AsyncMock()
+        create_stream.return_value.stop = AsyncMock()
         hls_url = await camera.async_request_stream(hass, "camera.my_camera", fmt="hls")
         assert hls_url.startswith("/api/hls/")  # Includes access token
         assert create_stream.called
@@ -555,6 +558,7 @@ async def test_refresh_expired_stream_failure(
 
     # Requesting an HLS stream will create an entirely new stream
     with patch("homeassistant.components.camera.create_stream") as create_stream:
+        create_stream.return_value.start = AsyncMock()
         # The HLS stream endpoint was invalidated, with a new auth token
         hls_url2 = await camera.async_request_stream(
             hass, "camera.my_camera", fmt="hls"

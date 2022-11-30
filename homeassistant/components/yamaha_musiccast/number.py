@@ -45,15 +45,15 @@ class NumberCapability(MusicCastCapabilityEntity, NumberEntity):
     ) -> None:
         """Initialize the number entity."""
         super().__init__(coordinator, capability, zone_id)
-        self._attr_min_value = capability.value_range.minimum
-        self._attr_max_value = capability.value_range.maximum
-        self._attr_step = capability.value_range.step
+        self._attr_native_min_value = capability.value_range.minimum
+        self._attr_native_max_value = capability.value_range.maximum
+        self._attr_native_step = capability.value_range.step
 
     @property
-    def value(self):
+    def native_value(self):
         """Return the current value."""
         return self.capability.current
 
-    async def async_set_value(self, value: float):
+    async def async_set_native_value(self, value: float):
         """Set a new value."""
         await self.capability.set(value)

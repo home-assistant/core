@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "modules power": "Total maxeffekt (Watt) p\u00e5 dina solpaneler"
+                }
+            }
+        }
+    }
+}

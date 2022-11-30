@@ -6,8 +6,13 @@ from typing import cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizState
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.components.number import (
+    NumberDeviceClass,
+    NumberEntity,
+    NumberEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -38,8 +43,8 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         name="My Position",
         icon="mdi:content-save-cog",
         command=OverkizCommand.SET_MEMORIZED_1_POSITION,
-        min_value=0,
-        max_value=100,
+        native_min_value=0,
+        native_max_value=100,
         entity_category=EntityCategory.CONFIG,
     ),
     # WaterHeater: Expected Number Of Shower (2 - 4)
@@ -48,8 +53,8 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         name="Expected Number Of Shower",
         icon="mdi:shower-head",
         command=OverkizCommand.SET_EXPECTED_NUMBER_OF_SHOWER,
-        min_value=2,
-        max_value=4,
+        native_min_value=2,
+        native_max_value=4,
         entity_category=EntityCategory.CONFIG,
     ),
     # SomfyHeatingTemperatureInterface
@@ -58,8 +63,10 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         name="Eco Room Temperature",
         icon="mdi:thermometer",
         command=OverkizCommand.SET_ECO_TEMPERATURE,
-        min_value=6,
-        max_value=29,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_min_value=6,
+        native_max_value=29,
+        native_unit_of_measurement=TEMP_CELSIUS,
         entity_category=EntityCategory.CONFIG,
     ),
     OverkizNumberDescription(
@@ -67,8 +74,10 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         name="Comfort Room Temperature",
         icon="mdi:home-thermometer-outline",
         command=OverkizCommand.SET_COMFORT_TEMPERATURE,
-        min_value=7,
-        max_value=30,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_min_value=7,
+        native_max_value=30,
+        native_unit_of_measurement=TEMP_CELSIUS,
         entity_category=EntityCategory.CONFIG,
     ),
     OverkizNumberDescription(
@@ -76,8 +85,10 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         name="Freeze Protection Temperature",
         icon="mdi:sun-thermometer-outline",
         command=OverkizCommand.SET_SECURED_POSITION_TEMPERATURE,
-        min_value=5,
-        max_value=15,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_min_value=5,
+        native_max_value=15,
+        native_unit_of_measurement=TEMP_CELSIUS,
         entity_category=EntityCategory.CONFIG,
     ),
     # DimmerExteriorHeating (Somfy Terrace Heater) (0 - 100)
@@ -86,8 +97,8 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         key=OverkizState.CORE_LEVEL,
         icon="mdi:patio-heater",
         command=OverkizCommand.SET_LEVEL,
-        min_value=0,
-        max_value=100,
+        native_min_value=0,
+        native_max_value=100,
         inverted=True,
     ),
 ]
@@ -130,20 +141,20 @@ class OverkizNumber(OverkizDescriptiveEntity, NumberEntity):
     entity_description: OverkizNumberDescription
 
     @property
-    def value(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the entity value to represent the entity state."""
         if state := self.device.states.get(self.entity_description.key):
             if self.entity_description.inverted:
-                return self._attr_max_value - cast(float, state.value)
+                return self.native_max_value - cast(float, state.value)
 
             return cast(float, state.value)
 
         return None
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         if self.entity_description.inverted:
-            value = self._attr_max_value - value
+            value = self.native_max_value - value
 
         await self.executor.async_execute_command(
             self.entity_description.command, value

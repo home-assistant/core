@@ -75,6 +75,16 @@ class SystemBridgeDataUpdateCoordinator(
             hass, LOGGER, name=DOMAIN, update_interval=timedelta(seconds=30)
         )
 
+    def is_ready(self) -> bool:
+        """Return if the data is ready."""
+        if self.data is None:
+            return False
+        for module in MODULES:
+            if getattr(self.data, module) is None:
+                self.logger.debug("%s - Module %s is None", self.title, module)
+                return False
+        return True
+
     async def async_get_data(
         self,
         modules: list[str],

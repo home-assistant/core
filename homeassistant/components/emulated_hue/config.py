@@ -1,13 +1,39 @@
 """Support for local control of entities by emulating a Philips Hue bridge."""
 from __future__ import annotations
 
-from collections.abc import Iterable
+from functools import cache
 import logging
 
+from homeassistant.components import (
+    climate,
+    cover,
+    fan,
+    humidifier,
+    light,
+    media_player,
+    scene,
+    script,
+)
 from homeassistant.const import CONF_ENTITIES, CONF_TYPE
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import Event, HomeAssistant, State, callback, split_entity_id
 from homeassistant.helpers import storage
+from homeassistant.helpers.event import (
+    async_track_state_added_domain,
+    async_track_state_removed_domain,
+)
 from homeassistant.helpers.typing import ConfigType
+
+SUPPORTED_DOMAINS = {
+    climate.DOMAIN,
+    cover.DOMAIN,
+    fan.DOMAIN,
+    humidifier.DOMAIN,
+    light.DOMAIN,
+    media_player.DOMAIN,
+    scene.DOMAIN,
+    script.DOMAIN,
+}
+
 
 TYPE_ALEXA = "alexa"
 TYPE_GOOGLE = "google_home"
@@ -78,7 +104,7 @@ class Config:
 
         # Get whether or not UPNP binds to multicast address (239.255.255.250)
         # or to the unicast address (host_ip_addr)
-        self.upnp_bind_multicast = conf.get(
+        self.upnp_bind_multicast: bool = conf.get(
             CONF_UPNP_BIND_MULTICAST, DEFAULT_UPNP_BIND_MULTICAST
         )
 
@@ -93,7 +119,7 @@ class Config:
 
         # Get whether or not entities should be exposed by default, or if only
         # explicitly marked ones will be exposed
-        self.expose_by_default = conf.get(
+        self.expose_by_default: bool = conf.get(
             CONF_EXPOSE_BY_DEFAULT, DEFAULT_EXPOSE_BY_DEFAULT
         )
 
@@ -118,18 +144,31 @@ class Config:
 
         # Get whether all non-dimmable lights should be reported as dimmable
         # for compatibility with older installations.
-        self.lights_all_dimmable = conf.get(CONF_LIGHTS_ALL_DIMMABLE)
+        self.lights_all_dimmable: bool = conf.get(CONF_LIGHTS_ALL_DIMMABLE) or False
+
+        if self.expose_by_default:
+            self.track_domains = set(self.exposed_domains) or SUPPORTED_DOMAINS
+        else:
+            self.track_domains = {
+                split_entity_id(entity_id)[0] for entity_id in self.entities
+            }
 
     async def async_setup(self) -> None:
-        """Set up and migrate to storage."""
-        self.store = storage.Store(self.hass, DATA_VERSION, DATA_KEY)  # type: ignore[arg-type]
+        """Set up tracking and migrate to storage."""
+        hass = self.hass
+        self.store = storage.Store(hass, DATA_VERSION, DATA_KEY)  # type: ignore[arg-type]
+        numbers_path = hass.config.path(NUMBERS_FILE)
         self.numbers = (
-            await storage.async_migrator(
-                self.hass, self.hass.config.path(NUMBERS_FILE), self.store
-            )
-            or {}
+            await storage.async_migrator(hass, numbers_path, self.store) or {}
+        )
+        async_track_state_added_domain(
+            hass, self.track_domains, self._clear_exposed_cache
+        )
+        async_track_state_removed_domain(
+            hass, self.track_domains, self._clear_exposed_cache
         )
 
+    @cache  # pylint: disable=method-cache-max-size-none
     def entity_id_to_number(self, entity_id: str) -> str:
         """Get a unique number for the entity id."""
         if self.type == TYPE_ALEXA:
@@ -166,19 +205,33 @@ class Config:
 
         return state.attributes.get(ATTR_EMULATED_HUE_NAME, state.name)
 
+    @cache  # pylint: disable=method-cache-max-size-none
+    def get_exposed_states(self) -> list[State]:
+        """Return a list of exposed states."""
+        state_machine = self.hass.states
+        if self.expose_by_default:
+            return [
+                state
+                for state in state_machine.async_all()
+                if self.is_state_exposed(state)
+            ]
+        states: list[State] = []
+        for entity_id in self.entities:
+            if (state := state_machine.get(entity_id)) and self.is_state_exposed(state):
+                states.append(state)
+        return states
+
+    @callback
+    def _clear_exposed_cache(self, event: Event) -> None:
+        """Clear the cache of exposed states."""
+        self.get_exposed_states.cache_clear()  # pylint: disable=no-member
+
     def is_state_exposed(self, state: State) -> bool:
         """Cache determine if an entity should be exposed on the emulated bridge."""
         if (exposed := self._exposed_cache.get(state.entity_id)) is not None:
             return exposed
         exposed = self._is_state_exposed(state)
         self._exposed_cache[state.entity_id] = exposed
-        return exposed
-
-    def filter_exposed_states(self, states: Iterable[State]) -> list[State]:
-        """Filter a list of all states down to exposed entities."""
-        exposed: list[State] = [
-            state for state in states if self.is_state_exposed(state)
-        ]
         return exposed
 
     def _is_state_exposed(self, state: State) -> bool:

@@ -8,6 +8,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -33,8 +34,8 @@ async def async_setup_entry(
         DATA_COORDINATOR
     ]
 
-    if not coordinator.data[entry.unique_id].get("data"):
-        return
+    if not coordinator.data.get(entry.unique_id):
+        raise PlatformNotReady
 
     async_add_entities(
         [
