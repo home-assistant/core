@@ -64,13 +64,13 @@ async def test_commission_on_network(
         {
             ID: 1,
             TYPE: "matter/commission_on_network",
-            "pin": "1234",
+            "pin": 1234,
         }
     )
     msg = await ws_client.receive_json()
 
     assert msg["success"]
-    matter_client.commission_on_network.assert_called_once_with("1234")
+    matter_client.commission_on_network.assert_called_once_with(1234)
 
     matter_client.commission_on_network.reset_mock()
     matter_client.commission_on_network.side_effect = FailedCommand(
@@ -81,14 +81,14 @@ async def test_commission_on_network(
         {
             ID: 2,
             TYPE: "matter/commission_on_network",
-            "pin": "1234",
+            "pin": 1234,
         }
     )
     msg = await ws_client.receive_json()
 
     assert not msg["success"]
     assert msg["error"]["code"] == "test_code"
-    matter_client.commission_on_network.assert_called_once_with("1234")
+    matter_client.commission_on_network.assert_called_once_with(1234)
 
 
 async def test_set_wifi_credentials(

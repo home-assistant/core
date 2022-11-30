@@ -87,7 +87,7 @@ async def websocket_commission(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "matter/commission_on_network",
-        vol.Required("pin"): str,
+        vol.Required("pin"): int,
     }
 )
 @websocket_api.async_response
