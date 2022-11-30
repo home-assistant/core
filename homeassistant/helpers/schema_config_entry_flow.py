@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Coroutine, Mapping
 import copy
 from dataclasses import dataclass
 import types
@@ -44,7 +44,7 @@ class SchemaFlowFormStep(SchemaFlowStep):
     """
 
     validate_user_input: Callable[
-        [SchemaCommonFlowHandler, dict[str, Any]], dict[str, Any]
+        [SchemaCommonFlowHandler, dict[str, Any]], Coroutine[Any, Any, dict[str, Any]]
     ] | None = None
     """Optional function to validate user input.
 
@@ -160,7 +160,7 @@ class SchemaCommonFlowHandler:
         if user_input is not None and form_step.validate_user_input is not None:
             # Do extra validation of user input
             try:
-                user_input = form_step.validate_user_input(self, user_input)
+                user_input = await form_step.validate_user_input(self, user_input)
             except SchemaFlowError as exc:
                 return self._show_next_step(step_id, exc, user_input)
 

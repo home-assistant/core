@@ -116,7 +116,7 @@ SENSOR_SETUP = {
 }
 
 
-def validate_rest_setup(
+async def validate_rest_setup(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     """Validate rest setup."""
@@ -129,7 +129,7 @@ def validate_rest_setup(
     return user_input
 
 
-def validate_sensor_setup(
+async def validate_sensor_setup(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     """Validate sensor input."""
@@ -157,7 +157,7 @@ def get_remove_sensor_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     )
 
 
-def validate_remove_sensor(
+async def validate_remove_sensor(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     """Validate remove sensor."""
