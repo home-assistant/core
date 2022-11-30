@@ -26,6 +26,7 @@
         "confirm_setup": "Do you want to start set up?"
       },
       "data": {
+        "device": "Device",
         "name": "Name",
         "email": "Email",
         "username": "Username",

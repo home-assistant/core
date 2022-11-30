@@ -7,15 +7,21 @@
             "switchbot_unsupported_type": "Unsupported Switchbot Type.",
             "unknown": "Unexpected error"
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({address})",
         "step": {
-            "user": {
+            "confirm": {
+                "description": "Do you want to setup {name}?"
+            },
+            "password": {
                 "data": {
-                    "mac": "Device MAC address",
-                    "name": "Name",
                     "password": "Password"
                 },
-                "title": "Setup Switchbot device"
+                "description": "The {name} device requires a password"
+            },
+            "user": {
+                "data": {
+                    "address": "Device address"
+                }
             }
         }
     },
@@ -23,10 +29,7 @@
         "step": {
             "init": {
                 "data": {
-                    "retry_count": "Retry count",
-                    "retry_timeout": "Timeout between retries",
-                    "scan_timeout": "How long to scan for advertisement data",
-                    "update_time": "Time between updates (seconds)"
+                    "retry_count": "Retry count"
                 }
             }
         }

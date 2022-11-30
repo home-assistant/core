@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Iterable
+from collections.abc import Callable, Coroutine, Iterable
 from functools import lru_cache, partial, wraps
 import inspect
 from itertools import groupby
@@ -16,6 +16,7 @@ import uuid
 import attr
 import certifi
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_PASSWORD,
@@ -23,8 +24,16 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import CoreState, HassJob, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    CoreState,
+    Event,
+    HassJob,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.typing import ConfigType
@@ -42,15 +51,20 @@ from .const import (
     CONF_CLIENT_KEY,
     CONF_KEEPALIVE,
     CONF_TLS_INSECURE,
+    CONF_TRANSPORT,
     CONF_WILL_MESSAGE,
-    DATA_MQTT,
+    CONF_WS_HEADERS,
+    CONF_WS_PATH,
     DEFAULT_ENCODING,
+    DEFAULT_PROTOCOL,
     DEFAULT_QOS,
+    DEFAULT_TRANSPORT,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
+    PROTOCOL_5,
     PROTOCOL_31,
+    TRANSPORT_WEBSOCKETS,
 )
-from .discovery import LAST_DISCOVERY
 from .models import (
     AsyncMessageCallbackType,
     MessageCallbackType,
@@ -59,6 +73,7 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
+from .util import get_file_path, get_mqtt_data, mqtt_config_entry_enabled
 
 if TYPE_CHECKING:
     # Only import for paho-mqtt type checking here, imports are done locally
@@ -94,7 +109,11 @@ async def async_publish(
     encoding: str | None = DEFAULT_ENCODING,
 ) -> None:
     """Publish message to a MQTT topic."""
-
+    mqtt_data = get_mqtt_data(hass, True)
+    if mqtt_data.client is None or not mqtt_config_entry_enabled(hass):
+        raise HomeAssistantError(
+            f"Cannot publish to topic '{topic}', MQTT is not enabled"
+        )
     outgoing_payload = payload
     if not isinstance(payload, bytes):
         if not encoding:
@@ -119,23 +138,29 @@ async def async_publish(
                 )
                 return
 
-    await hass.data[DATA_MQTT].async_publish(topic, outgoing_payload, qos, retain)
+    await mqtt_data.client.async_publish(
+        topic, outgoing_payload, qos or 0, retain or False
+    )
 
 
 AsyncDeprecatedMessageCallbackType = Callable[
-    [str, ReceivePayloadType, int], Awaitable[None]
+    [str, ReceivePayloadType, int], Coroutine[Any, Any, None]
 ]
 DeprecatedMessageCallbackType = Callable[[str, ReceivePayloadType, int], None]
+DeprecatedMessageCallbackTypes = Union[
+    AsyncDeprecatedMessageCallbackType, DeprecatedMessageCallbackType
+]
 
 
+# Support for a deprecated callback type will be removed from HA core 2023.2.0
 def wrap_msg_callback(
-    msg_callback: AsyncDeprecatedMessageCallbackType | DeprecatedMessageCallbackType,
+    msg_callback: DeprecatedMessageCallbackTypes,
 ) -> AsyncMessageCallbackType | MessageCallbackType:
     """Wrap an MQTT message callback to support deprecated signature."""
     # Check for partials to properly determine if coroutine function
     check_func = msg_callback
     while isinstance(check_func, partial):
-        check_func = check_func.func
+        check_func = check_func.func  # type: ignore[unreachable]
 
     wrapper_func: AsyncMessageCallbackType | MessageCallbackType
     if asyncio.iscoroutinefunction(check_func):
@@ -148,14 +173,15 @@ def wrap_msg_callback(
             )
 
         wrapper_func = async_wrapper
-    else:
+        return wrapper_func
 
-        @wraps(msg_callback)
-        def wrapper(msg: ReceiveMessage) -> None:
-            """Call with deprecated signature."""
-            msg_callback(msg.topic, msg.payload, msg.qos)
+    @wraps(msg_callback)
+    def wrapper(msg: ReceiveMessage) -> None:
+        """Call with deprecated signature."""
+        msg_callback(msg.topic, msg.payload, msg.qos)
 
-        wrapper_func = wrapper
+    wrapper_func = wrapper
+
     return wrapper_func
 
 
@@ -165,15 +191,20 @@ async def async_subscribe(
     topic: str,
     msg_callback: AsyncMessageCallbackType
     | MessageCallbackType
-    | DeprecatedMessageCallbackType
-    | AsyncDeprecatedMessageCallbackType,
+    | DeprecatedMessageCallbackTypes,
     qos: int = DEFAULT_QOS,
-    encoding: str | None = "utf-8",
-):
+    encoding: str | None = DEFAULT_ENCODING,
+) -> CALLBACK_TYPE:
     """Subscribe to an MQTT topic.
 
     Call the return value to unsubscribe.
     """
+    mqtt_data = get_mqtt_data(hass, True)
+    if mqtt_data.client is None or not mqtt_config_entry_enabled(hass):
+        raise HomeAssistantError(
+            f"Cannot subscribe to topic '{topic}', MQTT is not enabled"
+        )
+    # Support for a deprecated callback type will be removed from HA core 2023.2.0
     # Count callback parameters which don't have a default value
     non_default = 0
     if msg_callback:
@@ -187,15 +218,16 @@ async def async_subscribe(
     if non_default == 3:
         module = inspect.getmodule(msg_callback)
         _LOGGER.warning(
-            "Signature of MQTT msg_callback '%s.%s' is deprecated",
+            "Signature of MQTT msg_callback '%s.%s' is deprecated, "
+            "this will stop working with HA core 2023.2",
             module.__name__ if module else "<unknown>",
             msg_callback.__name__,
         )
         wrapped_msg_callback = wrap_msg_callback(
-            cast(DeprecatedMessageCallbackType, msg_callback)
+            cast(DeprecatedMessageCallbackTypes, msg_callback)
         )
 
-    async_remove = await hass.data[DATA_MQTT].async_subscribe(
+    async_remove = await mqtt_data.client.async_subscribe(
         topic,
         catch_log_exception(
             wrapped_msg_callback,
@@ -223,7 +255,7 @@ def subscribe(
         async_subscribe(hass, topic, msg_callback, qos, encoding), hass.loop
     ).result()
 
-    def remove():
+    def remove() -> None:
         """Remove listener convert."""
         run_callback_threadsafe(hass.loop, async_remove).result()
 
@@ -236,7 +268,7 @@ class Subscription:
 
     topic: str = attr.ib()
     matcher: Any = attr.ib()
-    job: HassJob = attr.ib()
+    job: HassJob[[ReceiveMessage], Coroutine[Any, Any, None] | None] = attr.ib()
     qos: int = attr.ib(default=0)
     encoding: str | None = attr.ib(default="utf-8")
 
@@ -251,8 +283,10 @@ class MqttClientSetup:
         # should be able to optionally rely on MQTT.
         import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
 
-        if config[CONF_PROTOCOL] == PROTOCOL_31:
+        if (protocol := config.get(CONF_PROTOCOL, DEFAULT_PROTOCOL)) == PROTOCOL_31:
             proto = mqtt.MQTTv31
+        elif protocol == PROTOCOL_5:
+            proto = mqtt.MQTTv5
         else:
             proto = mqtt.MQTTv311
 
@@ -260,7 +294,8 @@ class MqttClientSetup:
             # PAHO MQTT relies on the MQTT server to generate random client IDs.
             # However, that feature is not mandatory so we generate our own.
             client_id = mqtt.base62(uuid.uuid4().int, padding=22)
-        self._client = mqtt.Client(client_id, protocol=proto)
+        transport = config.get(CONF_TRANSPORT, DEFAULT_TRANSPORT)
+        self._client = mqtt.Client(client_id, protocol=proto, transport=transport)
 
         # Enable logging
         self._client.enable_logger()
@@ -270,12 +305,18 @@ class MqttClientSetup:
         if username is not None:
             self._client.username_pw_set(username, password)
 
-        if (certificate := config.get(CONF_CERTIFICATE)) == "auto":
+        if (
+            certificate := get_file_path(CONF_CERTIFICATE, config.get(CONF_CERTIFICATE))
+        ) == "auto":
             certificate = certifi.where()
 
-        client_key = config.get(CONF_CLIENT_KEY)
-        client_cert = config.get(CONF_CLIENT_CERT)
+        client_key = get_file_path(CONF_CLIENT_KEY, config.get(CONF_CLIENT_KEY))
+        client_cert = get_file_path(CONF_CLIENT_CERT, config.get(CONF_CLIENT_CERT))
         tls_insecure = config.get(CONF_TLS_INSECURE)
+        if transport == TRANSPORT_WEBSOCKETS:
+            ws_path = config.get(CONF_WS_PATH)
+            ws_headers = config.get(CONF_WS_HEADERS)
+            self._client.ws_set_options(ws_path, ws_headers)
         if certificate is not None:
             self._client.tls_set(
                 certificate,
@@ -299,13 +340,15 @@ class MQTT:
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry,
-        conf,
+        config_entry: ConfigEntry,
+        conf: ConfigType,
     ) -> None:
         """Initialize Home Assistant MQTT client."""
         # We don't import on the top because some integrations
         # should be able to optionally rely on MQTT.
         import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
+
+        self._mqtt_data = get_mqtt_data(hass)
 
         self.hass = hass
         self.config_entry = config_entry
@@ -315,23 +358,38 @@ class MQTT:
         self._ha_started = asyncio.Event()
         self._last_subscribe = time.time()
         self._mqttc: mqtt.Client = None
-        self._paho_lock = asyncio.Lock()
+        self._cleanup_on_unload: list[Callable[[], None]] = []
 
-        self._pending_operations: dict[str, asyncio.Event] = {}
+        self._paho_lock = asyncio.Lock()  # Prevents parallel calls to the MQTT client
+        self._pending_operations: dict[int, asyncio.Event] = {}
+        self._pending_operations_condition = asyncio.Condition()
 
         if self.hass.state == CoreState.running:
             self._ha_started.set()
         else:
 
             @callback
-            def ha_started(_):
+            def ha_started(_: Event) -> None:
                 self._ha_started.set()
 
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, ha_started)
 
         self.init_client()
 
-    def init_client(self):
+        async def async_stop_mqtt(_event: Event) -> None:
+            """Stop MQTT component."""
+            await self.async_disconnect()
+
+        self._cleanup_on_unload.append(
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_mqtt)
+        )
+
+    def cleanup(self) -> None:
+        """Clean up listeners."""
+        while self._cleanup_on_unload:
+            self._cleanup_on_unload.pop()()
+
+    def init_client(self) -> None:
         """Initialize paho client."""
         self._mqttc = MqttClientSetup(self.conf).client
         self._mqttc.on_connect = self._mqtt_on_connect
@@ -366,7 +424,8 @@ class MQTT:
                 self._mqttc.publish, topic, payload, qos, retain
             )
             _LOGGER.debug(
-                "Transmitting message on %s: '%s', mid: %s",
+                "Transmitting%s message on %s: '%s', mid: %s",
+                " retained" if retain else "",
                 topic,
                 payload,
                 msg_info.mid,
@@ -397,20 +456,30 @@ class MQTT:
 
         self._mqttc.loop_start()
 
-    async def async_disconnect(self):
+    async def async_disconnect(self) -> None:
         """Stop the MQTT client."""
 
-        def stop():
+        def stop() -> None:
             """Stop the MQTT client."""
             # Do not disconnect, we want the broker to always publish will
             self._mqttc.loop_stop()
 
-        await self.hass.async_add_executor_job(stop)
+        def no_more_acks() -> bool:
+            """Return False if there are unprocessed ACKs."""
+            return not bool(self._pending_operations)
+
+        # wait for ACKs to be processed
+        async with self._pending_operations_condition:
+            await self._pending_operations_condition.wait_for(no_more_acks)
+
+        # stop the MQTT loop
+        async with self._paho_lock:
+            await self.hass.async_add_executor_job(stop)
 
     async def async_subscribe(
         self,
         topic: str,
-        msg_callback: MessageCallbackType,
+        msg_callback: AsyncMessageCallbackType | MessageCallbackType,
         qos: int,
         encoding: str | None = None,
     ) -> Callable[[], None]:
@@ -440,7 +509,7 @@ class MQTT:
             self.subscriptions.remove(subscription)
             self._matching_subscriptions.cache_clear()
 
-            # Only unsubscribe if currently connected.
+            # Only unsubscribe if currently connected
             if self.connected:
                 self.hass.async_create_task(self._async_unsubscribe(topic))
 
@@ -451,18 +520,25 @@ class MQTT:
 
         This method is a coroutine.
         """
+
+        def _client_unsubscribe(topic: str) -> int:
+            result: int | None = None
+            mid: int | None = None
+            result, mid = self._mqttc.unsubscribe(topic)
+            _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
+            _raise_on_error(result)
+            assert mid
+            return mid
+
         if any(other.topic == topic for other in self.subscriptions):
             # Other subscriptions on topic remaining - don't unsubscribe.
             return
 
         async with self._paho_lock:
-            result: int | None = None
-            result, mid = await self.hass.async_add_executor_job(
-                self._mqttc.unsubscribe, topic
-            )
-            _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
-            _raise_on_error(result)
-        await self._wait_for_mid(mid)
+            mid = await self.hass.async_add_executor_job(_client_unsubscribe, topic)
+            await self._register_mid(mid)
+
+        self.hass.async_create_task(self._wait_for_mid(mid))
 
     async def _async_perform_subscriptions(
         self, subscriptions: Iterable[tuple[str, int]]
@@ -496,7 +572,14 @@ class MQTT:
         if errors:
             _raise_on_errors(errors)
 
-    def _mqtt_on_connect(self, _mqttc, _userdata, _flags, result_code: int) -> None:
+    def _mqtt_on_connect(
+        self,
+        _mqttc: mqtt.Client,
+        _userdata: None,
+        _flags: dict[str, int],
+        result_code: int,
+        properties: mqtt.Properties | None = None,
+    ) -> None:
         """On connect callback.
 
         Resubscribe to all topics we were subscribed to and publish birth
@@ -539,7 +622,7 @@ class MQTT:
             and ATTR_TOPIC in self.conf[CONF_BIRTH_MESSAGE]
         ):
 
-            async def publish_birth_message(birth_message):
+            async def publish_birth_message(birth_message: PublishMessage) -> None:
                 await self._ha_started.wait()  # Wait for Home Assistant to start
                 await self._discovery_cooldown()  # Wait for MQTT discovery to cool down
                 await self.async_publish(
@@ -554,24 +637,26 @@ class MQTT:
                 publish_birth_message(birth_message), self.hass.loop
             )
 
-    def _mqtt_on_message(self, _mqttc, _userdata, msg) -> None:
+    def _mqtt_on_message(
+        self, _mqttc: mqtt.Client, _userdata: None, msg: mqtt.MQTTMessage
+    ) -> None:
         """Message received callback."""
         self.hass.add_job(self._mqtt_handle_message, msg)
 
     @lru_cache(2048)
-    def _matching_subscriptions(self, topic):
-        subscriptions = []
+    def _matching_subscriptions(self, topic: str) -> list[Subscription]:
+        subscriptions: list[Subscription] = []
         for subscription in self.subscriptions:
             if subscription.matcher(topic):
                 subscriptions.append(subscription)
         return subscriptions
 
     @callback
-    def _mqtt_handle_message(self, msg) -> None:
+    def _mqtt_handle_message(self, msg: mqtt.MQTTMessage) -> None:
         _LOGGER.debug(
-            "Received message on %s%s: %s",
+            "Received%s message on %s: %s",
+            " retained" if msg.retain else "",
             msg.topic,
-            " (retained)" if msg.retain else "",
             msg.payload[0:8192],
         )
         timestamp = dt_util.utcnow()
@@ -593,7 +678,6 @@ class MQTT:
                         subscription.job,
                     )
                     continue
-
             self.hass.async_run_hass_job(
                 subscription.job,
                 ReceiveMessage(
@@ -605,20 +689,41 @@ class MQTT:
                     timestamp,
                 ),
             )
+        self._mqtt_data.state_write_requests.process_write_state_requests()
 
-    def _mqtt_on_callback(self, _mqttc, _userdata, mid, _granted_qos=None) -> None:
+    def _mqtt_on_callback(
+        self,
+        _mqttc: mqtt.Client,
+        _userdata: None,
+        mid: int,
+        _granted_qos_reason: tuple[int, ...] | mqtt.ReasonCodes | None = None,
+        _properties_reason: mqtt.ReasonCodes | None = None,
+    ) -> None:
         """Publish / Subscribe / Unsubscribe callback."""
+        # The callback signature for on_unsubscribe is different from on_subscribe
+        # see https://github.com/eclipse/paho.mqtt.python/issues/687
+        # properties and reasoncodes are not used in Home Assistant
         self.hass.add_job(self._mqtt_handle_mid, mid)
 
-    @callback
-    def _mqtt_handle_mid(self, mid) -> None:
+    async def _mqtt_handle_mid(self, mid: int) -> None:
         # Create the mid event if not created, either _mqtt_handle_mid or _wait_for_mid
         # may be executed first.
-        if mid not in self._pending_operations:
-            self._pending_operations[mid] = asyncio.Event()
+        await self._register_mid(mid)
         self._pending_operations[mid].set()
 
-    def _mqtt_on_disconnect(self, _mqttc, _userdata, result_code: int) -> None:
+    async def _register_mid(self, mid: int) -> None:
+        """Create Event for an expected ACK."""
+        async with self._pending_operations_condition:
+            if mid not in self._pending_operations:
+                self._pending_operations[mid] = asyncio.Event()
+
+    def _mqtt_on_disconnect(
+        self,
+        _mqttc: mqtt.Client,
+        _userdata: None,
+        result_code: int,
+        properties: mqtt.Properties | None = None,
+    ) -> None:
         """Disconnected callback."""
         self.connected = False
         dispatcher_send(self.hass, MQTT_DISCONNECTED)
@@ -629,12 +734,11 @@ class MQTT:
             result_code,
         )
 
-    async def _wait_for_mid(self, mid):
+    async def _wait_for_mid(self, mid: int) -> None:
         """Wait for ACK from broker."""
         # Create the mid event if not created, either _mqtt_handle_mid or _wait_for_mid
         # may be executed first.
-        if mid not in self._pending_operations:
-            self._pending_operations[mid] = asyncio.Event()
+        await self._register_mid(mid)
         try:
             await asyncio.wait_for(self._pending_operations[mid].wait(), TIMEOUT_ACK)
         except asyncio.TimeoutError:
@@ -642,15 +746,18 @@ class MQTT:
                 "No ACK from MQTT server in %s seconds (mid: %s)", TIMEOUT_ACK, mid
             )
         finally:
-            del self._pending_operations[mid]
+            async with self._pending_operations_condition:
+                # Cleanup ACK sync buffer
+                del self._pending_operations[mid]
+                self._pending_operations_condition.notify_all()
 
-    async def _discovery_cooldown(self):
+    async def _discovery_cooldown(self) -> None:
         now = time.time()
         # Reset discovery and subscribe cooldowns
-        self.hass.data[LAST_DISCOVERY] = now
+        self._mqtt_data.last_discovery = now
         self._last_subscribe = now
 
-        last_discovery = self.hass.data[LAST_DISCOVERY]
+        last_discovery = self._mqtt_data.last_discovery
         last_subscribe = self._last_subscribe
         wait_until = max(
             last_discovery + DISCOVERY_COOLDOWN, last_subscribe + DISCOVERY_COOLDOWN
@@ -658,7 +765,7 @@ class MQTT:
         while now < wait_until:
             await asyncio.sleep(wait_until - now)
             now = time.time()
-            last_discovery = self.hass.data[LAST_DISCOVERY]
+            last_discovery = self._mqtt_data.last_discovery
             last_subscribe = self._last_subscribe
             wait_until = max(
                 last_discovery + DISCOVERY_COOLDOWN, last_subscribe + DISCOVERY_COOLDOWN

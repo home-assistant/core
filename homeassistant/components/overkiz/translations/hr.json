@@ -1,0 +1,7 @@
+{
+    "config": {
+        "error": {
+            "unsupported_hardware": "Va\u0161 {unsupported_device} hardver nije podr\u017ean ovom integracijom."
+        }
+    }
+}

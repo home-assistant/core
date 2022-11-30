@@ -24,7 +24,7 @@ DHCP_SERVICE_INFO = dhcp.DhcpServiceInfo(
 )
 
 TEST_PASSWORD = "test-password"
-TEST_URL = "test-url"
+TEST_URL = f"http://{DHCP_SERVICE_INFO.ip}"
 TEST_USERNAME = "test-username"
 
 
@@ -48,7 +48,7 @@ async def test_form(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == SOURCE_USER
         assert result["errors"] == {}
 
@@ -62,7 +62,7 @@ async def test_form(hass: HomeAssistant) -> None:
         entry = conf_entries[0]
         assert entry.state is ConfigEntryState.LOADED
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert (
             result["title"]
             == f"QNAP {SYSTEM_BOARD_MOCK[API_RESULT][API_PRODUCT]} {SYSTEM_BOARD_MOCK[API_RESULT][API_MAC_ADDR]}"
@@ -159,7 +159,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "discovered_connection"
 
     with patch(
@@ -187,6 +187,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,
+        CONF_URL: TEST_URL,
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -205,7 +206,7 @@ async def test_dhcp_flow_error(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -222,7 +223,7 @@ async def test_dhcp_connection_error(hass: HomeAssistant):
             context={"source": config_entries.SOURCE_DHCP},
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "discovered_connection"
 
     with patch(
@@ -237,7 +238,7 @@ async def test_dhcp_connection_error(hass: HomeAssistant):
             },
         )
 
-        assert result["errors"] == {CONF_URL: "cannot_connect"}
+        assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_dhcp_login_error(hass: HomeAssistant):
@@ -253,7 +254,7 @@ async def test_dhcp_login_error(hass: HomeAssistant):
             context={"source": config_entries.SOURCE_DHCP},
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "discovered_connection"
 
     with patch(

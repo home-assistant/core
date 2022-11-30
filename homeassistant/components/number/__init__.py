@@ -14,8 +14,13 @@ import voluptuous as vol
 
 from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MODE, TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.const import (
+    ATTR_MODE,
+    CONF_UNIT_OF_MEASUREMENT,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -24,7 +29,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import temperature as temperature_util
+from homeassistant.util.unit_conversion import BaseUnitConverter, TemperatureConverter
 
 from .const import (
     ATTR_MAX,
@@ -50,8 +55,257 @@ _LOGGER = logging.getLogger(__name__)
 class NumberDeviceClass(StrEnum):
     """Device class for numbers."""
 
-    # temperature (C/F)
+    # NumberDeviceClass should be aligned with SensorDeviceClass
+
+    APPARENT_POWER = "apparent_power"
+    """Apparent power.
+
+    Unit of measurement: `VA`
+    """
+
+    AQI = "aqi"
+    """Air Quality Index.
+
+    Unit of measurement: `None`
+    """
+
+    BATTERY = "battery"
+    """Percentage of battery that is left.
+
+    Unit of measurement: `%`
+    """
+
+    CO = "carbon_monoxide"
+    """Carbon Monoxide gas concentration.
+
+    Unit of measurement: `ppm` (parts per million)
+    """
+
+    CO2 = "carbon_dioxide"
+    """Carbon Dioxide gas concentration.
+
+    Unit of measurement: `ppm` (parts per million)
+    """
+
+    CURRENT = "current"
+    """Current.
+
+    Unit of measurement: `A`
+    """
+
+    DISTANCE = "distance"
+    """Generic distance.
+
+    Unit of measurement: `LENGTH_*` units
+    - SI /metric: `mm`, `cm`, `m`, `km`
+    - USCS / imperial: `in`, `ft`, `yd`, `mi`
+    """
+
+    ENERGY = "energy"
+    """Energy.
+
+    Unit of measurement: `Wh`, `kWh`, `MWh`, `GJ`
+    """
+
+    FREQUENCY = "frequency"
+    """Frequency.
+
+    Unit of measurement: `Hz`, `kHz`, `MHz`, `GHz`
+    """
+
+    GAS = "gas"
+    """Gas.
+
+    Unit of measurement: `m³`, `ft³`
+    """
+
+    HUMIDITY = "humidity"
+    """Relative humidity.
+
+    Unit of measurement: `%`
+    """
+
+    ILLUMINANCE = "illuminance"
+    """Illuminance.
+
+    Unit of measurement: `lx`, `lm`
+    """
+
+    MOISTURE = "moisture"
+    """Moisture.
+
+    Unit of measurement: `%`
+    """
+
+    MONETARY = "monetary"
+    """Amount of money.
+
+    Unit of measurement: ISO4217 currency code
+
+    See https://en.wikipedia.org/wiki/ISO_4217#Active_codes for active codes
+    """
+
+    NITROGEN_DIOXIDE = "nitrogen_dioxide"
+    """Amount of NO2.
+
+    Unit of measurement: `µg/m³`
+    """
+
+    NITROGEN_MONOXIDE = "nitrogen_monoxide"
+    """Amount of NO.
+
+    Unit of measurement: `µg/m³`
+    """
+
+    NITROUS_OXIDE = "nitrous_oxide"
+    """Amount of N2O.
+
+    Unit of measurement: `µg/m³`
+    """
+
+    OZONE = "ozone"
+    """Amount of O3.
+
+    Unit of measurement: `µg/m³`
+    """
+
+    PM1 = "pm1"
+    """Particulate matter <= 0.1 μm.
+
+    Unit of measurement: `µg/m³`
+    """
+
+    PM10 = "pm10"
+    """Particulate matter <= 10 μm.
+
+    Unit of measurement: `µg/m³`
+    """
+
+    PM25 = "pm25"
+    """Particulate matter <= 2.5 μm.
+
+    Unit of measurement: `µg/m³`
+    """
+
+    POWER_FACTOR = "power_factor"
+    """Power factor.
+
+    Unit of measurement: `%`
+    """
+
+    POWER = "power"
+    """Power.
+
+    Unit of measurement: `W`, `kW`
+    """
+
+    PRECIPITATION = "precipitation"
+    """Precipitation.
+
+    Unit of measurement:
+    - SI / metric: `mm`
+    - USCS / imperial: `in`
+    """
+
+    PRECIPITATION_INTENSITY = "precipitation_intensity"
+    """Precipitation intensity.
+
+    Unit of measurement: UnitOfVolumetricFlux
+    - SI /metric: `mm/d`, `mm/h`
+    - USCS / imperial: `in/d`, `in/h`
+    """
+
+    PRESSURE = "pressure"
+    """Pressure.
+
+    Unit of measurement:
+    - `mbar`, `cbar`, `bar`
+    - `Pa`, `hPa`, `kPa`
+    - `inHg`
+    - `psi`
+    """
+
+    REACTIVE_POWER = "reactive_power"
+    """Reactive power.
+
+    Unit of measurement: `var`
+    """
+
+    SIGNAL_STRENGTH = "signal_strength"
+    """Signal strength.
+
+    Unit of measurement: `dB`, `dBm`
+    """
+
+    SPEED = "speed"
+    """Generic speed.
+
+    Unit of measurement: `SPEED_*` units or `UnitOfVolumetricFlux`
+    - SI /metric: `mm/d`, `mm/h`, `m/s`, `km/h`
+    - USCS / imperial: `in/d`, `in/h`, `ft/s`, `mph`
+    - Nautical: `kn`
+    """
+
+    SULPHUR_DIOXIDE = "sulphur_dioxide"
+    """Amount of SO2.
+
+    Unit of measurement: `µg/m³`
+    """
+
     TEMPERATURE = "temperature"
+    """Temperature.
+
+    Unit of measurement: `°C`, `°F`
+    """
+
+    VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
+    """Amount of VOC.
+
+    Unit of measurement: `µg/m³`
+    """
+
+    VOLTAGE = "voltage"
+    """Voltage.
+
+    Unit of measurement: `V`
+    """
+
+    VOLUME = "volume"
+    """Generic volume.
+
+    Unit of measurement: `VOLUME_*` units
+    - SI / metric: `mL`, `L`, `m³`
+    - USCS / imperial: `fl. oz.`, `ft³`, `gal` (warning: volumes expressed in
+    USCS/imperial units are currently assumed to be US volumes)
+    """
+
+    WATER = "water"
+    """Water.
+
+    Unit of measurement:
+    - SI / metric: `m³`, `L`
+    - USCS / imperial: `ft³`, `gal` (warning: volumes expressed in
+    USCS/imperial units are currently assumed to be US volumes)
+    """
+
+    WEIGHT = "weight"
+    """Generic weight, represents a measurement of an object's mass.
+
+    Weight is used instead of mass to fit with every day language.
+
+    Unit of measurement: `MASS_*` units
+    - SI / metric: `µg`, `mg`, `g`, `kg`
+    - USCS / imperial: `oz`, `lb`
+    """
+
+    WIND_SPEED = "wind_speed"
+    """Wind speed.
+
+    Unit of measurement: `SPEED_*` units
+    - SI /metric: `m/s`, `km/h`
+    - USCS / imperial: `ft/s`, `mph`
+    - Nautical: `kn`
+    """
 
 
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(NumberDeviceClass))
@@ -65,14 +319,16 @@ class NumberMode(StrEnum):
     SLIDER = "slider"
 
 
-UNIT_CONVERSIONS: dict[str, Callable[[float, str, str], float]] = {
-    NumberDeviceClass.TEMPERATURE: temperature_util.convert,
+UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
+    NumberDeviceClass.TEMPERATURE: TemperatureConverter,
 }
+
+# mypy: disallow-any-generics
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Number entities."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[NumberEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -106,13 +362,13 @@ async def async_set_value(entity: NumberEntity, service_call: ServiceCall) -> No
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[NumberEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[NumberEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -143,7 +399,7 @@ class NumberEntityDescription(EntityDescription):
             else:
                 module = inspect.getmodule(self)
             if module and module.__file__ and "custom_components" in module.__file__:
-                report_issue = "report it to the custom component author."
+                report_issue = "report it to the custom integration author."
             else:
                 report_issue = (
                     "create a bug report at "
@@ -183,16 +439,18 @@ class NumberEntity(Entity):
     entity_description: NumberEntityDescription
     _attr_max_value: None
     _attr_min_value: None
+    _attr_mode: NumberMode = NumberMode.AUTO
     _attr_state: None = None
     _attr_step: None
-    _attr_mode: NumberMode = NumberMode.AUTO
+    _attr_unit_of_measurement: None  # Subclasses of NumberEntity should not set this
     _attr_value: None
     _attr_native_max_value: float
     _attr_native_min_value: float
     _attr_native_step: float
-    _attr_native_value: float
+    _attr_native_value: float | None = None
     _attr_native_unit_of_measurement: str | None
     _deprecated_number_entity_reported = False
+    _number_option_unit_of_measurement: str | None = None
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Post initialisation processing."""
@@ -211,7 +469,7 @@ class NumberEntity(Entity):
         ):
             module = inspect.getmodule(cls)
             if module and module.__file__ and "custom_components" in module.__file__:
-                report_issue = "report it to the custom component author."
+                report_issue = "report it to the custom integration author."
             else:
                 report_issue = (
                     "create a bug report at "
@@ -225,6 +483,13 @@ class NumberEntity(Entity):
                 cls.__name__,
                 report_issue,
             )
+
+    async def async_internal_added_to_hass(self) -> None:
+        """Call when the number entity is added to hass."""
+        await super().async_internal_added_to_hass()
+        if not self.registry_entry:
+            return
+        self.async_registry_entry_updated()
 
     @property
     def capability_attributes(self) -> dict[str, Any]:
@@ -348,7 +613,11 @@ class NumberEntity(Entity):
     @final
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the entity, after unit conversion."""
+        if self._number_option_unit_of_measurement:
+            return self._number_option_unit_of_measurement
+
         if hasattr(self, "_attr_unit_of_measurement"):
+            self._report_deprecated_number_entity()
             return self._attr_unit_of_measurement
         if (
             hasattr(self, "entity_description")
@@ -401,7 +670,9 @@ class NumberEntity(Entity):
         """Set new value."""
         await self.hass.async_add_executor_job(self.set_value, value)
 
-    def _convert_to_state_value(self, value: float, method: Callable) -> float:
+    def _convert_to_state_value(
+        self, value: float, method: Callable[[float, int], float]
+    ) -> float:
         """Convert a value in the number's native unit to the configured unit."""
 
         native_unit_of_measurement = self.native_unit_of_measurement
@@ -410,7 +681,7 @@ class NumberEntity(Entity):
 
         if (
             native_unit_of_measurement != unit_of_measurement
-            and device_class in UNIT_CONVERSIONS
+            and device_class in UNIT_CONVERTERS
         ):
             assert native_unit_of_measurement
             assert unit_of_measurement
@@ -420,7 +691,7 @@ class NumberEntity(Entity):
 
             # Suppress ValueError (Could not convert value to float)
             with suppress(ValueError):
-                value_new: float = UNIT_CONVERSIONS[device_class](
+                value_new: float = UNIT_CONVERTERS[device_class].convert(
                     value,
                     native_unit_of_measurement,
                     unit_of_measurement,
@@ -441,12 +712,12 @@ class NumberEntity(Entity):
         if (
             value is not None
             and native_unit_of_measurement != unit_of_measurement
-            and device_class in UNIT_CONVERSIONS
+            and device_class in UNIT_CONVERTERS
         ):
             assert native_unit_of_measurement
             assert unit_of_measurement
 
-            value = UNIT_CONVERSIONS[device_class](
+            value = UNIT_CONVERTERS[device_class].convert(
                 value,
                 unit_of_measurement,
                 native_unit_of_measurement,
@@ -466,6 +737,23 @@ class NumberEntity(Entity):
                 type(self),
                 report_issue,
             )
+
+    @callback
+    def async_registry_entry_updated(self) -> None:
+        """Run when the entity registry entry has been updated."""
+        assert self.registry_entry
+        if (
+            (number_options := self.registry_entry.options.get(DOMAIN))
+            and (custom_unit := number_options.get(CONF_UNIT_OF_MEASUREMENT))
+            and (device_class := self.device_class) in UNIT_CONVERTERS
+            and self.native_unit_of_measurement
+            in UNIT_CONVERTERS[device_class].VALID_UNITS
+            and custom_unit in UNIT_CONVERTERS[device_class].VALID_UNITS
+        ):
+            self._number_option_unit_of_measurement = custom_unit
+            return
+
+        self._number_option_unit_of_measurement = None
 
 
 @dataclasses.dataclass

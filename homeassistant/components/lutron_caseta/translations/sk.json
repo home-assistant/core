@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "not_lutron_device": "Zisten\u00e9 zariadenie nie je zariadenie Lutron"
+        },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostite\u013e"
+                },
+                "description": "Zadajte IP adresu zariadenia.",
+                "title": "Automaticky sa pripojte k mostu"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Prv\u00e9 tla\u010didlo",
+            "button_2": "Druh\u00e9 tla\u010didlo",
+            "button_3": "Tretie tla\u010didlo",
+            "button_4": "\u0160tvrt\u00e9 tla\u010didlo",
+            "button_5": "Piate tla\u010didlo",
+            "button_6": "\u0160ieste tla\u010didlo",
+            "button_7": "Siedme tla\u010didlo",
+            "group_1_button_2": "Prv\u00e1 skupina druh\u00e9 tla\u010didlo",
+            "group_2_button_1": "Druh\u00e1 skupina prv\u00e9 tla\u010didlo",
+            "group_2_button_2": "Druh\u00e1 skupina druh\u00e9 tla\u010didlo"
+        },
+        "trigger_type": {
+            "press": "\"{subtype}\" stla\u010den\u00e9",
+            "release": "\u201c{subtype}\u201c uvo\u013enen\u00e9"
+        }
+    }
+}

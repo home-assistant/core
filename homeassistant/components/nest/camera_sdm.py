@@ -18,8 +18,7 @@ from google_nest_sdm.device import Device
 from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.exceptions import ApiException
 
-from homeassistant.components.camera import Camera, CameraEntityFeature
-from homeassistant.components.camera.const import StreamType
+from homeassistant.components.camera import Camera, CameraEntityFeature, StreamType
 from homeassistant.components.stream import CONF_EXTRA_PART_WAIT_TIME
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -61,6 +60,8 @@ async def async_setup_sdm_entry(
 class NestCamera(Camera):
     """Devices that support cameras."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, device: Device) -> None:
         """Initialize the camera."""
         super().__init__()
@@ -73,20 +74,10 @@ class NestCamera(Camera):
         self.stream_options[CONF_EXTRA_PART_WAIT_TIME] = 3
 
     @property
-    def should_poll(self) -> bool:
-        """Disable polling since entities have state pushed via pubsub."""
-        return False
-
-    @property
     def unique_id(self) -> str:
         """Return a unique ID."""
         # The API "name" field is a unique device identifier.
         return f"{self._device.name}-camera"
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the camera."""
-        return self._device_info.device_name
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -104,9 +95,9 @@ class NestCamera(Camera):
         return self._device_info.device_model
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> CameraEntityFeature:
         """Flag supported features."""
-        supported_features = 0
+        supported_features = CameraEntityFeature(0)
         if CameraLiveStreamTrait.NAME in self._device.traits:
             supported_features |= CameraEntityFeature.STREAM
         return supported_features

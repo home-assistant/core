@@ -42,7 +42,6 @@ class RingSensor(RingEntityMixin, SensorEntity):
     """A sensor implementation for Ring device."""
 
     entity_description: RingSensorEntityDescription
-    _attr_should_poll = False  # updates are controlled via the hub
 
     def __init__(
         self,
@@ -83,7 +82,7 @@ class RingSensor(RingEntityMixin, SensorEntity):
 class HealthDataRingSensor(RingSensor):
     """Ring sensor that relies on health data."""
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
 
@@ -91,7 +90,7 @@ class HealthDataRingSensor(RingSensor):
             self._device, self._health_update_callback
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Disconnect callbacks."""
         await super().async_will_remove_from_hass()
 
@@ -126,7 +125,7 @@ class HistoryRingSensor(RingSensor):
 
     _latest_event = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
 
@@ -134,7 +133,7 @@ class HistoryRingSensor(RingSensor):
             self._device, self._history_update_callback
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Disconnect callbacks."""
         await super().async_will_remove_from_hass()
 
@@ -207,7 +206,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
         name="Battery",
         category=["doorbots", "authorized_doorbots", "stickup_cams"],
         native_unit_of_measurement=PERCENTAGE,
-        device_class="battery",
+        device_class=SensorDeviceClass.BATTERY,
         cls=RingSensor,
     ),
     RingSensorEntityDescription(
@@ -256,7 +255,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
         category=["chimes", "doorbots", "authorized_doorbots", "stickup_cams"],
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         icon="mdi:wifi",
-        device_class="signal_strength",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         cls=HealthDataRingSensor,
     ),
 )

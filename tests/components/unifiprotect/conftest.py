@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime, timedelta
+from functools import partial
 from ipaddress import IPv4Address
 import json
 from typing import Any
@@ -102,6 +103,11 @@ def mock_ufp_client(bootstrap: Bootstrap):
     """Mock ProtectApiClient for testing."""
     client = Mock()
     client.bootstrap = bootstrap
+    client._bootstrap = bootstrap
+    client.api_path = "/api"
+    # functionality from API client tests actually need
+    client._stream_response = partial(ProtectApiClient._stream_response, client)
+    client.get_camera_video = partial(ProtectApiClient.get_camera_video, client)
 
     nvr = client.bootstrap.nvr
     nvr._api = client
@@ -122,7 +128,7 @@ def mock_entry(
     """Mock ProtectApiClient for testing."""
 
     with _patch_discovery(no_device=True), patch(
-        "homeassistant.components.unifiprotect.ProtectApiClient"
+        "homeassistant.components.unifiprotect.utils.ProtectApiClient"
     ) as mock_api:
         ufp_config_entry.add_to_hass(hass)
 
@@ -203,6 +209,7 @@ def doorbell_fixture(camera: Camera, fixed_now: datetime):
         SmartDetectObjectType.PERSON,
         SmartDetectObjectType.VEHICLE,
     ]
+    doorbell.has_speaker = True
     doorbell.feature_flags.has_hdr = True
     doorbell.feature_flags.has_lcd_screen = True
     doorbell.feature_flags.has_speaker = True

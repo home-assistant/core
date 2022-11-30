@@ -39,7 +39,8 @@
         },
         "overkiz__three_way_handle_direction": {
             "closed": "Tutup",
-            "open": "Buka"
+            "open": "Buka",
+            "tilt": "Miring"
         }
     }
 }

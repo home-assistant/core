@@ -11,15 +11,21 @@
             "one": "Bo\u015f",
             "other": "Bo\u015f"
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({address})",
         "step": {
-            "user": {
+            "confirm": {
+                "description": "{name} kurulumunu yapmak istiyor musunuz?"
+            },
+            "password": {
                 "data": {
-                    "mac": "Cihaz MAC adresi",
-                    "name": "Ad",
                     "password": "Parola"
                 },
-                "title": "Switchbot cihaz\u0131n\u0131 kurun"
+                "description": "{name} cihaz\u0131 bir \u015fifre gerektiriyor"
+            },
+            "user": {
+                "data": {
+                    "address": "Cihaz adresi"
+                }
             }
         }
     },
@@ -27,10 +33,7 @@
         "step": {
             "init": {
                 "data": {
-                    "retry_count": "Yeniden deneme say\u0131s\u0131",
-                    "retry_timeout": "Yeniden denemeler aras\u0131ndaki zaman a\u015f\u0131m\u0131",
-                    "scan_timeout": "Reklam verilerinin taranmas\u0131 ne kadar s\u00fcrer?",
-                    "update_time": "G\u00fcncellemeler aras\u0131ndaki s\u00fcre (saniye)"
+                    "retry_count": "Yeniden deneme say\u0131s\u0131"
                 }
             }
         }

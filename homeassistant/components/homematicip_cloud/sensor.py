@@ -8,6 +8,7 @@ from homematicip.aio.device import (
     AsyncFullFlushSwitchMeasuring,
     AsyncHeatingThermostat,
     AsyncHeatingThermostatCompact,
+    AsyncHeatingThermostatEvo,
     AsyncHomeControlAccessPoint,
     AsyncLightSensor,
     AsyncMotionDetectorIndoor,
@@ -17,6 +18,7 @@ from homematicip.aio.device import (
     AsyncPlugableSwitchMeasuring,
     AsyncPresenceDetectorIndoor,
     AsyncRoomControlDeviceAnalog,
+    AsyncTemperatureDifferenceSensor2,
     AsyncTemperatureHumiditySensorDisplay,
     AsyncTemperatureHumiditySensorOutdoor,
     AsyncTemperatureHumiditySensorWithoutDisplay,
@@ -74,7 +76,14 @@ async def async_setup_entry(
     for device in hap.home.devices:
         if isinstance(device, AsyncHomeControlAccessPoint):
             entities.append(HomematicipAccesspointDutyCycle(hap, device))
-        if isinstance(device, (AsyncHeatingThermostat, AsyncHeatingThermostatCompact)):
+        if isinstance(
+            device,
+            (
+                AsyncHeatingThermostat,
+                AsyncHeatingThermostatCompact,
+                AsyncHeatingThermostatEvo,
+            ),
+        ):
             entities.append(HomematicipHeatingThermostat(hap, device))
             entities.append(HomematicipTemperatureSensor(hap, device))
         if isinstance(
@@ -124,9 +133,12 @@ async def async_setup_entry(
             entities.append(HomematicipTodayRainSensor(hap, device))
         if isinstance(device, AsyncPassageDetector):
             entities.append(HomematicipPassageDetectorDeltaCounter(hap, device))
+        if isinstance(device, AsyncTemperatureDifferenceSensor2):
+            entities.append(HomematicpTemperatureExternalSensorCh1(hap, device))
+            entities.append(HomematicpTemperatureExternalSensorCh2(hap, device))
+            entities.append(HomematicpTemperatureExternalSensorDelta(hap, device))
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class HomematicipAccesspointDutyCycle(HomematicipGenericEntity, SensorEntity):
@@ -193,7 +205,7 @@ class HomematicipHumiditySensor(HomematicipGenericEntity, SensorEntity):
         super().__init__(hap, device, post="Humidity")
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> SensorDeviceClass:
         """Return the device class of the sensor."""
         return SensorDeviceClass.HUMIDITY
 
@@ -218,7 +230,7 @@ class HomematicipTemperatureSensor(HomematicipGenericEntity, SensorEntity):
         super().__init__(hap, device, post="Temperature")
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> SensorDeviceClass:
         """Return the device class of the sensor."""
         return SensorDeviceClass.TEMPERATURE
 
@@ -257,7 +269,7 @@ class HomematicipIlluminanceSensor(HomematicipGenericEntity, SensorEntity):
         super().__init__(hap, device, post="Illuminance")
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> SensorDeviceClass:
         """Return the device class of the sensor."""
         return SensorDeviceClass.ILLUMINANCE
 
@@ -296,7 +308,7 @@ class HomematicipPowerSensor(HomematicipGenericEntity, SensorEntity):
         super().__init__(hap, device, post="Power")
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> SensorDeviceClass:
         """Return the device class of the sensor."""
         return SensorDeviceClass.POWER
 
@@ -321,7 +333,7 @@ class HomematicipEnergySensor(HomematicipGenericEntity, SensorEntity):
         super().__init__(hap, device, post="Energy")
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> SensorDeviceClass:
         """Return the device class of the sensor."""
         return SensorDeviceClass.ENERGY
 
@@ -338,6 +350,8 @@ class HomematicipEnergySensor(HomematicipGenericEntity, SensorEntity):
 
 class HomematicipWindspeedSensor(HomematicipGenericEntity, SensorEntity):
     """Representation of the HomematicIP wind speed sensor."""
+
+    _attr_device_class = SensorDeviceClass.SPEED
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the windspeed sensor."""
@@ -385,6 +399,81 @@ class HomematicipTodayRainSensor(HomematicipGenericEntity, SensorEntity):
     def native_unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
         return LENGTH_MILLIMETERS
+
+
+class HomematicpTemperatureExternalSensorCh1(HomematicipGenericEntity, SensorEntity):
+    """Representation of the HomematicIP device HmIP-STE2-PCB."""
+
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the  device."""
+        super().__init__(hap, device, post="Channel 1 Temperature")
+
+    @property
+    def device_class(self) -> SensorDeviceClass:
+        """Return the device class of the sensor."""
+        return SensorDeviceClass.TEMPERATURE
+
+    @property
+    def native_value(self) -> float:
+        """Return the state."""
+        return self._device.temperatureExternalOne
+
+    @property
+    def native_unit_of_measurement(self) -> str:
+        """Return the unit this state is expressed in."""
+        return TEMP_CELSIUS
+
+
+class HomematicpTemperatureExternalSensorCh2(HomematicipGenericEntity, SensorEntity):
+    """Representation of the HomematicIP device HmIP-STE2-PCB."""
+
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the  device."""
+        super().__init__(hap, device, post="Channel 2 Temperature")
+
+    @property
+    def device_class(self) -> SensorDeviceClass:
+        """Return the device class of the sensor."""
+        return SensorDeviceClass.TEMPERATURE
+
+    @property
+    def native_value(self) -> float:
+        """Return the state."""
+        return self._device.temperatureExternalTwo
+
+    @property
+    def native_unit_of_measurement(self) -> str:
+        """Return the unit this state is expressed in."""
+        return TEMP_CELSIUS
+
+
+class HomematicpTemperatureExternalSensorDelta(HomematicipGenericEntity, SensorEntity):
+    """Representation of the HomematicIP device HmIP-STE2-PCB."""
+
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the  device."""
+        super().__init__(hap, device, post="Delta Temperature")
+
+    @property
+    def device_class(self) -> SensorDeviceClass:
+        """Return the device class of the sensor."""
+        return SensorDeviceClass.TEMPERATURE
+
+    @property
+    def native_value(self) -> float:
+        """Return the state."""
+        return self._device.temperatureExternalDelta
+
+    @property
+    def native_unit_of_measurement(self) -> str:
+        """Return the unit this state is expressed in."""
+        return TEMP_CELSIUS
 
 
 class HomematicipPassageDetectorDeltaCounter(HomematicipGenericEntity, SensorEntity):

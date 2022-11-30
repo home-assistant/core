@@ -1,6 +1,8 @@
 """Demo platform that has two fake switches."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_DEFAULT_NAME
@@ -69,12 +71,12 @@ class DemoSwitch(SwitchEntity):
             name=self.name,
         )
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self._attr_is_on = True
         self.schedule_update_ha_state()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self._attr_is_on = False
         self.schedule_update_ha_state()

@@ -9,14 +9,18 @@ import aiohttp
 from pyunifiprotect import NotAuthorized, NvrError, ProtectApiClient
 from pyunifiprotect.data import NVR, Bootstrap, Light
 
-from homeassistant.components.unifiprotect.const import CONF_DISABLE_RTSP, DOMAIN
+from homeassistant.components.unifiprotect.const import (
+    CONF_DISABLE_RTSP,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import _patch_discovery
-from .utils import MockUFPFixture, init_entry
+from .utils import MockUFPFixture, init_entry, time_changed
 
 from tests.common import MockConfigEntry
 
@@ -68,7 +72,9 @@ async def test_setup_multiple(
     nvr.id
     ufp.api.get_nvr = AsyncMock(return_value=nvr)
 
-    with patch("homeassistant.components.unifiprotect.ProtectApiClient") as mock_api:
+    with patch(
+        "homeassistant.components.unifiprotect.utils.ProtectApiClient"
+    ) as mock_api:
         mock_config = MockConfigEntry(
             domain=DOMAIN,
             data={
@@ -109,11 +115,10 @@ async def test_reload(hass: HomeAssistant, ufp: MockUFPFixture):
     assert ufp.api.async_disconnect_ws.called
 
 
-async def test_unload(hass: HomeAssistant, ufp: MockUFPFixture):
+async def test_unload(hass: HomeAssistant, ufp: MockUFPFixture, light: Light):
     """Test unloading of unifiprotect entry."""
 
-    await hass.config_entries.async_setup(ufp.entry.entry_id)
-    await hass.async_block_till_done()
+    await init_entry(hass, ufp, [light])
     assert ufp.entry.state == ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(ufp.entry.entry_id)
@@ -146,12 +151,23 @@ async def test_setup_failed_update(hass: HomeAssistant, ufp: MockUFPFixture):
 async def test_setup_failed_update_reauth(hass: HomeAssistant, ufp: MockUFPFixture):
     """Test setup of unifiprotect entry with update that gives unauthroized error."""
 
-    ufp.api.update = AsyncMock(side_effect=NotAuthorized)
-
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
-    assert ufp.entry.state == ConfigEntryState.SETUP_RETRY
-    assert ufp.api.update.called
+    assert ufp.entry.state == ConfigEntryState.LOADED
+
+    # reauth should not be triggered until there are 10 auth failures in a row
+    # to verify it is not transient
+    ufp.api.update = AsyncMock(side_effect=NotAuthorized)
+    for _ in range(10):
+        await time_changed(hass, DEFAULT_SCAN_INTERVAL)
+        assert len(hass.config_entries.flow._progress) == 0
+
+    assert ufp.api.update.call_count == 10
+    assert ufp.entry.state == ConfigEntryState.LOADED
+
+    await time_changed(hass, DEFAULT_SCAN_INTERVAL)
+    assert ufp.api.update.call_count == 11
+    assert len(hass.config_entries.flow._progress) == 1
 
 
 async def test_setup_failed_error(hass: HomeAssistant, ufp: MockUFPFixture):
@@ -180,7 +196,7 @@ async def test_setup_starts_discovery(
 ):
     """Test setting up will start discovery."""
     with _patch_discovery(), patch(
-        "homeassistant.components.unifiprotect.ProtectApiClient"
+        "homeassistant.components.unifiprotect.utils.ProtectApiClient"
     ) as mock_api:
         ufp_config_entry.add_to_hass(hass)
         mock_api.return_value = ufp_client

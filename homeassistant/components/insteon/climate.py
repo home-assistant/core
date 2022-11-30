@@ -1,15 +1,17 @@
 """Support for Insteon thermostat."""
 from __future__ import annotations
 
+from typing import Any
+
 from pyinsteon.config import CELSIUS
 from pyinsteon.constants import ThermostatMode
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -86,7 +88,7 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        if self._insteon_device.properties[CELSIUS].value:
+        if self._insteon_device.configuration[CELSIUS].value:
             return TEMP_CELSIUS
         return TEMP_FAHRENHEIT
 
@@ -182,7 +184,7 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
         attr["humidifier"] = humidifier
         return attr
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_temp = kwargs.get(ATTR_TEMPERATURE)
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
@@ -206,15 +208,15 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
         mode = list(HVAC_MODES)[list(HVAC_MODES.values()).index(hvac_mode)]
         await self._insteon_device.async_set_mode(mode)
 
-    async def async_set_humidity(self, humidity):
+    async def async_set_humidity(self, humidity: int) -> None:
         """Set new humidity level."""
-        change = humidity - self.target_humidity
+        change = humidity - (self.target_humidity or 0)
         high = self._insteon_device.groups[HUMIDITY_HIGH].value + change
         low = self._insteon_device.groups[HUMIDITY_LOW].value + change
         await self._insteon_device.async_set_humidity_low_set_point(low)
         await self._insteon_device.async_set_humidity_high_set_point(high)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register INSTEON update events."""
         await super().async_added_to_hass()
         await self._insteon_device.async_read_op_flags()

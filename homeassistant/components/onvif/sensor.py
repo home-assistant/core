@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+from decimal import Decimal
 
 from homeassistant.components.sensor import RestoreSensor
 from homeassistant.config_entries import ConfigEntry
@@ -47,8 +48,6 @@ async def async_setup_entry(
 
     device.events.async_add_listener(async_check_entities)
 
-    return True
-
 
 class ONVIFSensor(ONVIFBaseEntity, RestoreSensor):
     """Representation of a ONVIF sensor event."""
@@ -65,6 +64,7 @@ class ONVIFSensor(ONVIFBaseEntity, RestoreSensor):
             self._attr_native_unit_of_measurement = entry.unit_of_measurement
         else:
             event = device.events.get_uid(uid)
+            assert event
             self._attr_device_class = event.device_class
             self._attr_entity_category = event.entity_category
             self._attr_entity_registry_enabled_default = event.entity_enabled
@@ -75,13 +75,13 @@ class ONVIFSensor(ONVIFBaseEntity, RestoreSensor):
         super().__init__(device)
 
     @property
-    def native_value(self) -> StateType | date | datetime:
+    def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the value reported by the sensor."""
         if (event := self.device.events.get_uid(self._attr_unique_id)) is not None:
             return event.value
         return self._attr_native_value
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Connect to dispatcher listening for entity data notifications."""
         self.async_on_remove(
             self.device.events.async_add_listener(self.async_write_ha_state)

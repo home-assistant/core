@@ -2,42 +2,31 @@
 from __future__ import annotations
 
 from typing import Any
-from unittest.mock import patch
-
-from homeassistant.components.scrape.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
-async def init_integration(
-    hass: HomeAssistant,
-    config: dict[str, Any],
-    data: str,
-    entry_id: str = "1",
-    source: str = SOURCE_USER,
-) -> MockConfigEntry:
-    """Set up the Scrape integration in Home Assistant."""
+def return_integration_config(
+    *,
+    authentication=None,
+    username=None,
+    password=None,
+    headers=None,
+    sensors=None,
+) -> dict[str, dict[str, Any]]:
+    """Return config."""
+    config = {
+        "resource": "https://www.home-assistant.io",
+        "verify_ssl": True,
+        "sensor": sensors,
+    }
+    if authentication:
+        config["authentication"] = authentication
+    if username:
+        config["username"] = username
+        config["password"] = password
+    if headers:
+        config["headers"] = headers
 
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        source=source,
-        data={},
-        options=config,
-        entry_id=entry_id,
-    )
-
-    config_entry.add_to_hass(hass)
-    mocker = MockRestData(data)
-    with patch(
-        "homeassistant.components.scrape.RestData",
-        return_value=mocker,
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    return config_entry
+    return config
 
 
 def return_config(
@@ -54,6 +43,8 @@ def return_config(
     username=None,
     password=None,
     headers=None,
+    unique_id=None,
+    remove_platform=False,
 ) -> dict[str, dict[str, Any]]:
     """Return config."""
     config = {
@@ -64,6 +55,8 @@ def return_config(
         "index": 0,
         "verify_ssl": True,
     }
+    if remove_platform:
+        config.pop("platform")
     if attribute:
         config["attribute"] = attribute
     if index:
@@ -76,12 +69,15 @@ def return_config(
         config["device_class"] = device_class
     if state_class:
         config["state_class"] = state_class
-    if username:
+    if authentication:
         config["authentication"] = authentication
+    if username:
         config["username"] = username
         config["password"] = password
     if headers:
         config["headers"] = headers
+    if unique_id:
+        config["unique_id"] = unique_id
     return config
 
 
@@ -102,8 +98,17 @@ class MockRestData:
         self.count += 1
         if self.payload == "test_scrape_sensor":
             self.data = (
+                # Default
                 "<div class='current-version material-card text'>"
                 "<h1>Current Version: 2021.12.10</h1>Released: <span class='release-date'>January 17, 2022</span>"
+                "<div class='links' style='links'><a href='/latest-release-notes/'>Release notes</a></div></div>"
+                "<template>Trying to get</template>"
+            )
+        if self.payload == "test_scrape_sensor2":
+            self.data = (
+                # Hidden version
+                "<div class='current-version material-card text'>"
+                "<h1>Hidden Version: 2021.12.10</h1>Released: <span class='release-date'>January 17, 2022</span>"
                 "<div class='links' style='links'><a href='/latest-release-notes/'>Release notes</a></div></div>"
                 "<template>Trying to get</template>"
             )

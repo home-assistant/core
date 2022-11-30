@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from pyunifiprotect.data import (
     Doorlock,
     LockStatusType,
+    ModelType,
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
 )
@@ -34,19 +35,16 @@ async def async_setup_entry(
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
     async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        if not device.is_adopted_by_us:
-            return
-
         if isinstance(device, Doorlock):
             async_add_entities([ProtectLock(data, device)])
 
-    async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
+    )
 
     entities = []
-    for device in data.api.bootstrap.doorlocks.values():
-        if not device.is_adopted_by_us:
-            continue
-
+    for device in data.get_by_types({ModelType.DOORLOCK}):
+        device = cast(Doorlock, device)
         entities.append(ProtectLock(data, device))
 
     async_add_entities(entities)

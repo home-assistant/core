@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 from urllib.parse import urlparse
 
 from awesomeversion import (
@@ -51,11 +52,15 @@ NO_IOT_CLASS = [
     "discovery",
     "downloader",
     "ffmpeg",
+    "file_upload",
     "frontend",
     "hardkernel",
     "hardware",
     "history",
     "homeassistant",
+    "homeassistant_alerts",
+    "homeassistant_hardware",
+    "homeassistant_sky_connect",
     "homeassistant_yellow",
     "image",
     "input_boolean",
@@ -80,7 +85,9 @@ NO_IOT_CLASS = [
     "proxy",
     "python_script",
     "raspberry_pi",
+    "repairs",
     "safe_mode",
+    "schedule",
     "script",
     "search",
     "system_health",
@@ -112,7 +119,7 @@ def documentation_url(value: str) -> str:
     return value
 
 
-def verify_lowercase(value: str):
+def verify_lowercase(value: str) -> str:
     """Verify a value is lowercase."""
     if value.lower() != value:
         raise vol.Invalid("Value needs to be lowercase")
@@ -120,7 +127,7 @@ def verify_lowercase(value: str):
     return value
 
 
-def verify_uppercase(value: str):
+def verify_uppercase(value: str) -> str:
     """Verify a value is uppercase."""
     if value.upper() != value:
         raise vol.Invalid("Value needs to be uppercase")
@@ -128,12 +135,12 @@ def verify_uppercase(value: str):
     return value
 
 
-def verify_version(value: str):
+def verify_version(value: str) -> str:
     """Verify the version."""
     try:
         AwesomeVersion(
             value,
-            [
+            ensure_strategy=[
                 AwesomeVersionStrategy.CALVER,
                 AwesomeVersionStrategy.SEMVER,
                 AwesomeVersionStrategy.SIMPLEVER,
@@ -146,18 +153,28 @@ def verify_version(value: str):
     return value
 
 
-def verify_wildcard(value: str):
+def verify_wildcard(value: str) -> str:
     """Verify the matcher contains a wildcard."""
     if "*" not in value:
         raise vol.Invalid(f"'{value}' needs to contain a wildcard matcher")
     return value
 
 
-MANIFEST_SCHEMA = vol.Schema(
+INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
     {
         vol.Required("domain"): str,
         vol.Required("name"): str,
-        vol.Optional("integration_type"): vol.In(["hardware", "helper"]),
+        vol.Optional("integration_type", default="hub"): vol.In(
+            [
+                "device",
+                "entity",
+                "hardware",
+                "helper",
+                "hub",
+                "service",
+                "system",
+            ]
+        ),
         vol.Optional("config_flow"): bool,
         vol.Optional("mqtt"): [str],
         vol.Optional("zeroconf"): [
@@ -189,6 +206,18 @@ MANIFEST_SCHEMA = vol.Schema(
         vol.Optional("ssdp"): vol.Schema(
             vol.All([vol.All(vol.Schema({}, extra=vol.ALLOW_EXTRA), vol.Length(min=1))])
         ),
+        vol.Optional("bluetooth"): [
+            vol.Schema(
+                {
+                    vol.Optional("connectable"): bool,
+                    vol.Optional("service_uuid"): vol.All(str, verify_lowercase),
+                    vol.Optional("service_data_uuid"): vol.All(str, verify_lowercase),
+                    vol.Optional("local_name"): vol.All(str),
+                    vol.Optional("manufacturer_id"): int,
+                    vol.Optional("manufacturer_data_start"): [int],
+                }
+            )
+        ],
         vol.Optional("homekit"): vol.Schema({vol.Optional("models"): [str]}),
         vol.Optional("dhcp"): [
             vol.Schema(
@@ -227,19 +256,37 @@ MANIFEST_SCHEMA = vol.Schema(
         vol.Optional("loggers"): [str],
         vol.Optional("disabled"): str,
         vol.Optional("iot_class"): vol.In(SUPPORTED_IOT_CLASSES),
-        vol.Optional("supported_brands"): vol.Schema({str: str}),
     }
 )
 
-CUSTOM_INTEGRATION_MANIFEST_SCHEMA = MANIFEST_SCHEMA.extend(
+VIRTUAL_INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
+    {
+        vol.Required("domain"): str,
+        vol.Required("name"): str,
+        vol.Required("integration_type"): "virtual",
+        vol.Exclusive("iot_standards", "virtual_integration"): [
+            vol.Any("homekit", "zigbee", "zwave")
+        ],
+        vol.Exclusive("supported_by", "virtual_integration"): str,
+    }
+)
+
+
+def manifest_schema(value: dict[str, Any]) -> vol.Schema:
+    """Validate integration manifest."""
+    if value.get("integration_type") == "virtual":
+        return VIRTUAL_INTEGRATION_MANIFEST_SCHEMA(value)
+    return INTEGRATION_MANIFEST_SCHEMA(value)
+
+
+CUSTOM_INTEGRATION_MANIFEST_SCHEMA = INTEGRATION_MANIFEST_SCHEMA.extend(
     {
         vol.Optional("version"): vol.All(str, verify_version),
-        vol.Remove("supported_brands"): dict,
     }
 )
 
 
-def validate_version(integration: Integration):
+def validate_version(integration: Integration) -> None:
     """
     Validate the version of the integration.
 
@@ -252,12 +299,9 @@ def validate_version(integration: Integration):
 
 def validate_manifest(integration: Integration, core_components_dir: Path) -> None:
     """Validate manifest."""
-    if not integration.manifest:
-        return
-
     try:
         if integration.core:
-            MANIFEST_SCHEMA(integration.manifest)
+            manifest_schema(integration.manifest)
         else:
             CUSTOM_INTEGRATION_MANIFEST_SCHEMA(integration.manifest)
     except vol.Invalid as err:
@@ -285,15 +329,19 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
     if (
         integration.manifest["domain"] not in NO_IOT_CLASS
         and "iot_class" not in integration.manifest
+        and integration.manifest.get("integration_type") != "virtual"
     ):
         integration.add_error("manifest", "Domain is missing an IoT Class")
 
-    for domain, _name in integration.manifest.get("supported_brands", {}).items():
-        if (core_components_dir / domain).exists():
-            integration.add_warning(
-                "manifest",
-                f"Supported brand domain {domain} collides with built-in core integration",
-            )
+    if (
+        integration.manifest.get("integration_type") == "virtual"
+        and (supported_by := integration.manifest.get("supported_by"))
+        and not (core_components_dir / supported_by).exists()
+    ):
+        integration.add_error(
+            "manifest",
+            "Virtual integration points to non-existing supported_by integration",
+        )
 
     if not integration.core:
         validate_version(integration)

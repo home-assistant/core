@@ -224,7 +224,7 @@ class FidoSensor(SensorEntity):
         """Return the state attributes of the sensor."""
         return {"number": self._number}
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data from Fido and update the state."""
         await self.fido_data.async_update()
         if (sensor_type := self.entity_description.key) == "balance":

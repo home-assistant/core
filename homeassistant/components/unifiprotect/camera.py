@@ -3,10 +3,12 @@ from __future__ import annotations
 
 from collections.abc import Generator
 import logging
+from typing import cast
 
 from pyunifiprotect.data import (
     Camera as UFPCamera,
     CameraChannel,
+    ModelType,
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
     StateType,
@@ -42,12 +44,10 @@ def get_camera_channels(
     """Get all the camera channels."""
 
     devices = (
-        data.api.bootstrap.cameras.values() if ufp_device is None else [ufp_device]
+        data.get_by_types({ModelType.CAMERA}) if ufp_device is None else [ufp_device]
     )
     for camera in devices:
-        if not camera.is_adopted_by_us:
-            continue
-
+        camera = cast(UFPCamera, camera)
         if not camera.channels:
             if ufp_device is None:
                 # only warn on startup
@@ -120,8 +120,12 @@ async def async_setup_entry(
         entities = _async_camera_entities(data, ufp_device=device)
         async_add_entities(entities)
 
-    async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
-    async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_CHANNELS), _add_new_device)
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
+    )
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_CHANNELS), _add_new_device)
+    )
 
     entities = _async_camera_entities(data)
     async_add_entities(entities)
@@ -171,9 +175,10 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         self._stream_source = (  # pylint: disable=attribute-defined-outside-init
             None if disable_stream else rtsp_url
         )
-        self._attr_supported_features: int = (
-            CameraEntityFeature.STREAM if self._stream_source else 0
-        )
+        if self._stream_source:
+            self._attr_supported_features = CameraEntityFeature.STREAM
+        else:
+            self._attr_supported_features = CameraEntityFeature(0)
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
@@ -186,6 +191,11 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         self._attr_is_recording = (
             self.device.state == StateType.CONNECTED and self.device.is_recording
         )
+        is_connected = (
+            self.data.last_update_success and self.device.state == StateType.CONNECTED
+        )
+        # some cameras have detachable lens that could cause the camera to be offline
+        self._attr_available = is_connected and self.device.is_video_ready
 
         self._async_set_stream_source()
         self._attr_extra_state_attributes = {

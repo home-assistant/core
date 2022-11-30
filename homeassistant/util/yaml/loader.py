@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import OrderedDict
 from collections.abc import Iterator
 import fnmatch
-from io import StringIO
+from io import StringIO, TextIOWrapper
 import logging
 import os
 from pathlib import Path
@@ -18,7 +18,7 @@ try:
     HAS_C_LOADER = True
 except ImportError:
     HAS_C_LOADER = False
-    from yaml import SafeLoader as FastestAvailableSafeLoader  # type: ignore[misc]
+    from yaml import SafeLoader as FastestAvailableSafeLoader  # type: ignore[assignment]
 
 from homeassistant.exceptions import HomeAssistantError
 
@@ -169,7 +169,7 @@ def parse_yaml(
     except yaml.YAMLError:
         # Loading failed, so we now load with the slow line loader
         # since the C one will not give us line numbers
-        if isinstance(content, (StringIO, TextIO)):
+        if isinstance(content, (StringIO, TextIO, TextIOWrapper)):
             # Rewind the stream so we can try again
             content.seek(0, 0)
         return _parse_yaml_pure_python(content, secrets)

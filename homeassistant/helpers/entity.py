@@ -144,7 +144,7 @@ def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
 
 
 def get_unit_of_measurement(hass: HomeAssistant, entity_id: str) -> str | None:
-    """Get unit of measurement class of an entity.
+    """Get unit of measurement of an entity.
 
     First try the statemachine, then entity registry.
     """
@@ -274,6 +274,7 @@ class Entity(ABC):
     _attr_assumed_state: bool = False
     _attr_attribution: str | None = None
     _attr_available: bool = True
+    _attr_capability_attributes: Mapping[str, Any] | None = None
     _attr_context_recent_time: timedelta = timedelta(seconds=5)
     _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
@@ -336,6 +337,18 @@ class Entity(ABC):
 
         Implemented by component base class. Convention for attribute names
         is lowercase snake_case.
+        """
+        return self._attr_capability_attributes
+
+    def get_initial_entity_options(self) -> er.EntityOptionsType | None:
+        """Return initial entity options.
+
+        These will be stored in the entity registry the first time the entity is seen,
+        and then never updated.
+
+        Implemented by component base class, should not be extended by integrations.
+
+        Note: Not a property to avoid calculating unless needed.
         """
         return None
 
@@ -692,9 +705,9 @@ class Entity(ABC):
         try:
             task: asyncio.Future[None]
             if hasattr(self, "async_update"):
-                task = self.hass.async_create_task(self.async_update())  # type: ignore[attr-defined]
+                task = self.hass.async_create_task(self.async_update())
             elif hasattr(self, "update"):
-                task = self.hass.async_add_executor_job(self.update)  # type: ignore[attr-defined]
+                task = self.hass.async_add_executor_job(self.update)
             else:
                 return
 
@@ -936,7 +949,7 @@ class Entity(ABC):
         """Suggest to report an issue."""
         report_issue = ""
         if "custom_components" in type(self).__module__:
-            report_issue = "report it to the custom component author."
+            report_issue = "report it to the custom integration author."
         else:
             report_issue = (
                 "create a bug report at "

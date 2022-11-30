@@ -63,19 +63,30 @@ def create_event_handler(patterns, hass):
             super().__init__(patterns)
             self.hass = hass
 
-        def process(self, event):
+        def process(self, event, moved=False):
             """On Watcher event, fire HA event."""
             _LOGGER.debug("process(%s)", event)
             if not event.is_directory:
                 folder, file_name = os.path.split(event.src_path)
+                fireable = {
+                    "event_type": event.event_type,
+                    "path": event.src_path,
+                    "file": file_name,
+                    "folder": folder,
+                }
+
+                if moved:
+                    dest_folder, dest_file_name = os.path.split(event.dest_path)
+                    fireable.update(
+                        {
+                            "dest_path": event.dest_path,
+                            "dest_file": dest_file_name,
+                            "dest_folder": dest_folder,
+                        }
+                    )
                 self.hass.bus.fire(
                     DOMAIN,
-                    {
-                        "event_type": event.event_type,
-                        "path": event.src_path,
-                        "file": file_name,
-                        "folder": folder,
-                    },
+                    fireable,
                 )
 
         def on_modified(self, event):
@@ -84,7 +95,7 @@ def create_event_handler(patterns, hass):
 
         def on_moved(self, event):
             """File moved."""
-            self.process(event)
+            self.process(event, moved=True)
 
         def on_created(self, event):
             """File created."""

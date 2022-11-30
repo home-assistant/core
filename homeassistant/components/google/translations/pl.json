@@ -11,7 +11,8 @@
             "invalid_access_token": "Niepoprawny token dost\u0119pu",
             "missing_configuration": "Komponent nie jest skonfigurowany. Post\u0119puj zgodnie z dokumentacj\u0105.",
             "oauth_error": "Otrzymano nieprawid\u0142owe dane tokena.",
-            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119",
+            "timeout_connect": "Limit czasu na nawi\u0105zanie po\u0142\u0105czenia"
         },
         "create_entry": {
             "default": "Pomy\u015blnie uwierzytelniono"

@@ -1,18 +1,21 @@
 """Number platform for Sensibo integration."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
+
+from pysensibo.model import SensiboDevice
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
-from .entity import SensiboDeviceBaseEntity
+from .entity import SensiboDeviceBaseEntity, async_handle_api_call
 
 PARALLEL_UPDATES = 0
 
@@ -22,6 +25,7 @@ class SensiboEntityDescriptionMixin:
     """Mixin values for Sensibo entities."""
 
     remote_key: str
+    value_fn: Callable[[SensiboDevice], float | None]
 
 
 @dataclass
@@ -42,6 +46,7 @@ DEVICE_NUMBER_TYPES = (
         native_min_value=-10,
         native_max_value=10,
         native_step=0.1,
+        value_fn=lambda data: data.calibration_temp,
     ),
     SensiboNumberEntityDescription(
         key="calibration_hum",
@@ -53,6 +58,7 @@ DEVICE_NUMBER_TYPES = (
         native_min_value=-10,
         native_max_value=10,
         native_step=0.1,
+        value_fn=lambda data: data.calibration_hum,
     ),
 )
 
@@ -86,20 +92,22 @@ class SensiboNumber(SensiboDeviceBaseEntity, NumberEntity):
         super().__init__(coordinator, device_id)
         self.entity_description = entity_description
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
-        self._attr_name = f"{self.device_data.name} {entity_description.name}"
 
     @property
     def native_value(self) -> float | None:
         """Return the value from coordinator data."""
-        value: float | None = getattr(self.device_data, self.entity_description.key)
-        return value
+        return self.entity_description.value_fn(self.device_data)
 
     async def async_set_native_value(self, value: float) -> None:
         """Set value for calibration."""
+        await self.async_send_api_call(key=self.entity_description.key, value=value)
+
+    @async_handle_api_call
+    async def async_send_api_call(self, key: str, value: Any) -> bool:
+        """Make service call to api."""
         data = {self.entity_description.remote_key: value}
-        result = await self.async_send_command("set_calibration", {"data": data})
-        if result["status"] == "success":
-            setattr(self.device_data, self.entity_description.key, value)
-            self.async_write_ha_state()
-            return
-        raise HomeAssistantError(f"Could not set calibration for device {self.name}")
+        result = await self._client.async_set_calibration(
+            self._device_id,
+            data,
+        )
+        return bool(result.get("status") == "success")

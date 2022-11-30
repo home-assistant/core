@@ -5,11 +5,8 @@ from datetime import timedelta
 
 from aiohttp import ClientConnectionError
 from async_timeout import timeout
-from intellifire4py import (
-    IntellifireAsync,
-    IntellifireControlAsync,
-    IntellifirePollData,
-)
+from intellifire4py import IntellifirePollData
+from intellifire4py.intellifire import IntellifireAPILocal
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -24,8 +21,7 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData
     def __init__(
         self,
         hass: HomeAssistant,
-        read_api: IntellifireAsync,
-        control_api: IntellifireControlAsync,
+        api: IntellifireAPILocal,
     ) -> None:
         """Initialize the Coordinator."""
         super().__init__(
@@ -34,27 +30,37 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData
             name=DOMAIN,
             update_interval=timedelta(seconds=15),
         )
-        self._read_api = read_api
-        self._control_api = control_api
+        self._api = api
 
     async def _async_update_data(self) -> IntellifirePollData:
-        LOGGER.debug("Calling update loop on IntelliFire")
-        async with timeout(100):
-            try:
-                await self._read_api.poll()
-            except (ConnectionError, ClientConnectionError) as exception:
-                raise UpdateFailed from exception
-        return self._read_api.data
+
+        if not self._api.is_polling_in_background:
+            LOGGER.info("Starting Intellifire Background Polling Loop")
+            await self._api.start_background_polling()
+
+            # Don't return uninitialized poll data
+            async with timeout(15):
+                try:
+                    await self._api.poll()
+                except (ConnectionError, ClientConnectionError) as exception:
+                    raise UpdateFailed from exception
+
+        LOGGER.debug("Failure Count %d", self._api.failed_poll_attempts)
+        if self._api.failed_poll_attempts > 10:
+            LOGGER.debug("Too many polling errors - raising exception")
+            raise UpdateFailed
+
+        return self._api.data
 
     @property
-    def read_api(self) -> IntellifireAsync:
+    def read_api(self) -> IntellifireAPILocal:
         """Return the Status API pointer."""
-        return self._read_api
+        return self._api
 
     @property
-    def control_api(self) -> IntellifireControlAsync:
+    def control_api(self) -> IntellifireAPILocal:
         """Return the control API."""
-        return self._control_api
+        return self._api
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -65,5 +71,5 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData
             name="IntelliFire Fireplace",
             identifiers={("IntelliFire", f"{self.read_api.data.serial}]")},
             sw_version=self.read_api.data.fw_ver_str,
-            configuration_url=f"http://{self.read_api.ip}/poll",
+            configuration_url=f"http://{self._api.fireplace_ip}/poll",
         )

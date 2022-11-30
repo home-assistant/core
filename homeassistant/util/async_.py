@@ -150,7 +150,7 @@ def check_loop(
     integration = found_frame.filename[start:end]
 
     if path == "custom_components/":
-        extra = " to the custom component author"
+        extra = " to the custom integration author"
     else:
         extra = ""
 

@@ -1,4 +1,6 @@
 """Definition and setup of the Omnilogic Sensors for Home Assistant."""
+from typing import Any
+
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -34,7 +36,8 @@ async def async_setup_entry(
             continue
 
         for entity_setting in entity_settings:
-            for state_key, entity_class in entity_setting["entity_classes"].items():
+            entity_classes: dict[str, type] = entity_setting["entity_classes"]
+            for state_key, entity_class in entity_classes.items():
                 if check_guard(state_key, item, entity_setting):
                     continue
 
@@ -248,7 +251,7 @@ class OmniLogicORPSensor(OmnilogicSensor):
         return orp_state
 
 
-SENSOR_TYPES = {
+SENSOR_TYPES: dict[tuple[int, str], list[dict[str, Any]]] = {
     (2, "Backyard"): [
         {
             "entity_classes": {"airTemp": OmniLogicTemperatureSensor},

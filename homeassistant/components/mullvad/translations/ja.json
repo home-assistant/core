@@ -9,7 +9,7 @@
         },
         "step": {
             "user": {
-                "description": "Mullvad VPN\u30a4\u30f3\u30c6\u30b0\u30ec\u30fc\u30b7\u30e7\u30f3\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3057\u307e\u3059\u304b\uff1f"
+                "description": "Mullvad VPN\u7d71\u5408\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3057\u307e\u3059\u304b\uff1f"
             }
         }
     }

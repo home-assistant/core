@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Final, cast
 
 from homeassistant.components.sensor import (
@@ -22,6 +22,7 @@ from homeassistant.const import (
     FREQUENCY_MEGAHERTZ,
     PERCENTAGE,
     POWER_WATT,
+    REVOLUTIONS_PER_MINUTE,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
@@ -29,7 +30,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from . import SystemBridgeDeviceEntity
+from . import SystemBridgeEntity
 from .const import DOMAIN
 from .coordinator import SystemBridgeCoordinatorData, SystemBridgeDataUpdateCoordinator
 
@@ -41,7 +42,6 @@ ATTR_TYPE: Final = "type"
 ATTR_USED: Final = "used"
 
 PIXELS: Final = "px"
-RPM: Final = "RPM"
 
 
 @dataclass
@@ -125,6 +125,15 @@ def memory_used(data: SystemBridgeCoordinatorData) -> float | None:
 
 
 BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
+    SystemBridgeSensorEntityDescription(
+        key="boot_time",
+        name="Boot Time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        icon="mdi:av-timer",
+        value=lambda data: datetime.fromtimestamp(
+            data.system.boot_time, tz=timezone.utc
+        ),
+    ),
     SystemBridgeSensorEntityDescription(
         key="cpu_speed",
         name="CPU Speed",
@@ -430,7 +439,7 @@ async def async_setup_entry(
                     name=f"{gpu['name']} Fan Speed",
                     entity_registry_enabled_default=False,
                     state_class=SensorStateClass.MEASUREMENT,
-                    native_unit_of_measurement=RPM,
+                    native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
                     icon="mdi:fan",
                     value=lambda data, k=gpu["key"]: getattr(
                         data.gpu, f"{k}_fan_speed"
@@ -503,7 +512,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SystemBridgeSensor(SystemBridgeDeviceEntity, SensorEntity):
+class SystemBridgeSensor(SystemBridgeEntity, SensorEntity):
     """Define a System Bridge sensor."""
 
     entity_description: SystemBridgeSensorEntityDescription

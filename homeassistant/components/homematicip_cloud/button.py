@@ -1,0 +1,41 @@
+"""Support for HomematicIP Cloud button devices."""
+from __future__ import annotations
+
+from homematicip.aio.device import AsyncWallMountedGarageDoorController
+
+from homeassistant.components.button import ButtonEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
+from .hap import HomematicipHAP
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the HomematicIP button from a config entry."""
+    hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
+    entities: list[HomematicipGenericEntity] = []
+    for device in hap.home.devices:
+        if isinstance(device, AsyncWallMountedGarageDoorController):
+            entities.append(HomematicipGarageDoorControllerButton(hap, device))
+
+    if entities:
+        async_add_entities(entities)
+
+
+class HomematicipGarageDoorControllerButton(HomematicipGenericEntity, ButtonEntity):
+    """Representation of the HomematicIP Wall mounted Garage Door Controller."""
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize a wall mounted garage door controller."""
+        super().__init__(hap, device)
+        self._attr_icon = "mdi:arrow-up-down"
+
+    async def async_press(self) -> None:
+        """Handle the button press."""
+        await self._device.send_start_impulse()

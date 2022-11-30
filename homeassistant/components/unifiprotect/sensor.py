@@ -4,17 +4,18 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, cast
 
 from pyunifiprotect.data import (
     NVR,
     Camera,
-    Event,
     Light,
+    ModelType,
     ProtectAdoptableDeviceModel,
     ProtectDeviceModel,
     ProtectModelWithId,
     Sensor,
+    SmartDetectObjectType,
 )
 
 from homeassistant.components.sensor import (
@@ -40,20 +41,19 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DISPATCH_ADOPT, DOMAIN
+from .const import DEVICE_CLASS_DETECTION, DISPATCH_ADOPT, DOMAIN
 from .data import ProtectData
 from .entity import (
-    EventThumbnailMixin,
+    EventEntityMixin,
     ProtectDeviceEntity,
     ProtectNVREntity,
     async_all_device_entities,
 )
-from .models import PermRequired, ProtectRequiredKeysMixin, T
+from .models import PermRequired, ProtectEventMixin, ProtectRequiredKeysMixin, T
 from .utils import async_dispatch_id as _ufpd, async_get_light_motion_current
 
 _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
-DEVICE_CLASS_DETECTION = "unifiprotect__detection"
 
 
 @dataclass
@@ -71,6 +71,13 @@ class ProtectSensorEntityDescription(
         if isinstance(value, float) and self.precision:
             value = round(value, self.precision)
         return value
+
+
+@dataclass
+class ProtectSensorEventEntityDescription(
+    ProtectEventMixin[T], SensorEntityDescription
+):
+    """Describes UniFi Protect Sensor entity."""
 
 
 def _get_uptime(obj: ProtectDeviceModel) -> datetime | None:
@@ -201,13 +208,22 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     ProtectSensorEntityDescription(
+        key="lens_type",
+        name="Lens Type",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:camera-iris",
+        ufp_required_field="has_removable_lens",
+        ufp_value="feature_flags.lens_type",
+    ),
+    ProtectSensorEntityDescription(
         key="mic_level",
         name="Microphone Level",
         icon="mdi:microphone",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_required_field="feature_flags.has_mic",
+        ufp_required_field="has_mic",
         ufp_value="mic_volume",
+        ufp_enabled="feature_flags.has_mic",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectSensorEntityDescription(
@@ -503,11 +519,23 @@ NVR_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ),
 )
 
-MOTION_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
-    ProtectSensorEntityDescription(
+MOTION_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
+    ProtectSensorEventEntityDescription(
         key="detected_object",
         name="Detected Object",
         device_class=DEVICE_CLASS_DETECTION,
+        entity_registry_enabled_default=False,
+        ufp_value="is_smart_detected",
+        ufp_event_obj="last_smart_detect_event",
+    ),
+    ProtectSensorEventEntityDescription(
+        key="smart_obj_licenseplate",
+        name="License Plate Detected",
+        icon="mdi:car",
+        device_class=DEVICE_CLASS_DETECTION,
+        ufp_value="is_smart_detected",
+        ufp_event_obj="last_smart_detect_event",
+        ufp_smart_type=SmartDetectObjectType.LICENSE_PLATE,
     ),
 )
 
@@ -613,7 +641,9 @@ async def async_setup_entry(
             entities += _async_motion_entities(data, ufp_device=device)
         async_add_entities(entities)
 
-    async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
+    )
 
     entities: list[ProtectDeviceEntity] = async_all_device_entities(
         data,
@@ -639,12 +669,10 @@ def _async_motion_entities(
 ) -> list[ProtectDeviceEntity]:
     entities: list[ProtectDeviceEntity] = []
     devices = (
-        data.api.bootstrap.cameras.values() if ufp_device is None else [ufp_device]
+        data.get_by_types({ModelType.CAMERA}) if ufp_device is None else [ufp_device]
     )
     for device in devices:
-        if not device.is_adopted_by_us:
-            continue
-
+        device = cast(Camera, device)
         for description in MOTION_TRIP_SENSORS:
             entities.append(ProtectDeviceSensor(data, device, description))
             _LOGGER.debug(
@@ -656,8 +684,8 @@ def _async_motion_entities(
         if not device.feature_flags.has_smart_detect:
             continue
 
-        for description in MOTION_SENSORS:
-            entities.append(ProtectEventSensor(data, device, description))
+        for event_desc in MOTION_SENSORS:
+            entities.append(ProtectEventSensor(data, device, event_desc))
             _LOGGER.debug(
                 "Adding sensor entity %s for %s",
                 description.name,
@@ -720,30 +748,38 @@ class ProtectNVRSensor(ProtectNVREntity, SensorEntity):
         self._attr_native_value = self.entity_description.get_ufp_value(self.device)
 
 
-class ProtectEventSensor(ProtectDeviceSensor, EventThumbnailMixin):
+class ProtectEventSensor(EventEntityMixin, SensorEntity):
     """A UniFi Protect Device Sensor with access tokens."""
 
-    device: Camera
+    entity_description: ProtectSensorEventEntityDescription
 
-    @callback
-    def _async_get_event(self) -> Event | None:
-        """Get event from Protect device."""
-
-        event: Event | None = None
-        if (
-            self.device.is_smart_detected
-            and self.device.last_smart_detect_event is not None
-            and len(self.device.last_smart_detect_event.smart_detect_types) > 0
-        ):
-            event = self.device.last_smart_detect_event
-
-        return event
+    def __init__(
+        self,
+        data: ProtectData,
+        device: ProtectAdoptableDeviceModel,
+        description: ProtectSensorEventEntityDescription,
+    ) -> None:
+        """Initialize an UniFi Protect sensor."""
+        super().__init__(data, device, description)
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         # do not call ProtectDeviceSensor method since we want event to get value here
-        EventThumbnailMixin._async_update_device_from_protect(self, device)
-        if self._event is None:
-            self._attr_native_value = OBJECT_TYPE_NONE
+        EventEntityMixin._async_update_device_from_protect(self, device)
+        if (
+            self.entity_description.ufp_smart_type
+            == SmartDetectObjectType.LICENSE_PLATE
+        ):
+            if (
+                self._event is None
+                or self._event.metadata is None
+                or self._event.metadata.license_plate is None
+            ):
+                self._attr_native_value = OBJECT_TYPE_NONE
+            else:
+                self._attr_native_value = self._event.metadata.license_plate.name
         else:
-            self._attr_native_value = self._event.smart_detect_types[0].value
+            if self._event is None:
+                self._attr_native_value = OBJECT_TYPE_NONE
+            else:
+                self._attr_native_value = self._event.smart_detect_types[0].value

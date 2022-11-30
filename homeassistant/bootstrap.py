@@ -17,14 +17,20 @@ import voluptuous as vol
 import yarl
 
 from . import config as conf_util, config_entries, core, loader
-from .components import http, persistent_notification
+from .components import http
 from .const import (
     REQUIRED_NEXT_PYTHON_HA_RELEASE,
     REQUIRED_NEXT_PYTHON_VER,
-    SIGNAL_BOOTSTRAP_INTEGRATONS,
+    SIGNAL_BOOTSTRAP_INTEGRATIONS,
 )
 from .exceptions import HomeAssistantError
-from .helpers import area_registry, device_registry, entity_registry
+from .helpers import (
+    area_registry,
+    device_registry,
+    entity_registry,
+    issue_registry,
+    recorder,
+)
 from .helpers.dispatcher import async_dispatcher_send
 from .helpers.typing import ConfigType
 from .setup import (
@@ -35,7 +41,6 @@ from .setup import (
     async_setup_component,
 )
 from .util import dt as dt_util
-from .util.async_ import gather_with_concurrency
 from .util.logging import async_activate_log_queue_handler
 from .util.package import async_get_user_site, is_virtual_env
 
@@ -48,6 +53,7 @@ ERROR_LOG_FILENAME = "home-assistant.log"
 
 # hass.data key for logging information.
 DATA_LOGGING = "logging"
+DATA_REGISTRIES_LOADED = "bootstrap_registries_loaded"
 
 LOG_SLOW_STARTUP_INTERVAL = 60
 SLOW_STARTUP_CHECK_INTERVAL = 1
@@ -67,10 +73,19 @@ LOGGING_INTEGRATIONS = {
     # Error logging
     "system_log",
     "sentry",
+}
+FRONTEND_INTEGRATIONS = {
+    # Get the frontend up and running as soon as possible so problem
+    # integrations can be removed and database migration status is
+    # visible in frontend
+    "frontend",
+}
+RECORDER_INTEGRATIONS = {
+    # Setup after frontend
     # To record data
     "recorder",
 }
-DISCOVERY_INTEGRATIONS = ("dhcp", "ssdp", "usb", "zeroconf")
+DISCOVERY_INTEGRATIONS = ("bluetooth", "dhcp", "ssdp", "usb", "zeroconf")
 STAGE_1_INTEGRATIONS = {
     # We need to make sure discovery integrations
     # update their deps before stage 2 integrations
@@ -84,10 +99,6 @@ STAGE_1_INTEGRATIONS = {
     "cloud",
     # Ensure supervisor is available
     "hassio",
-    # Get the frontend up and running as soon
-    # as possible so problem integrations can
-    # be removed
-    "frontend",
 }
 
 
@@ -206,6 +217,32 @@ def open_hass_ui(hass: core.HomeAssistant) -> None:
         )
 
 
+async def load_registries(hass: core.HomeAssistant) -> None:
+    """Load the registries and cache the result of platform.uname().processor."""
+    if DATA_REGISTRIES_LOADED in hass.data:
+        return
+    hass.data[DATA_REGISTRIES_LOADED] = None
+
+    def _cache_uname_processor() -> None:
+        """Cache the result of platform.uname().processor in the executor.
+
+        Multiple modules call this function at startup which
+        executes a blocking subprocess call. This is a problem for the
+        asyncio event loop. By primeing the cache of uname we can
+        avoid the blocking call in the event loop.
+        """
+        platform.uname().processor  # pylint: disable=expression-not-assigned
+
+    # Load the registries and cache the result of platform.uname().processor
+    await asyncio.gather(
+        area_registry.async_load(hass),
+        device_registry.async_load(hass),
+        entity_registry.async_load(hass),
+        issue_registry.async_load(hass),
+        hass.async_add_executor_job(_cache_uname_processor),
+    )
+
+
 async def async_from_config_dict(
     config: ConfigType, hass: core.HomeAssistant
 ) -> core.HomeAssistant | None:
@@ -218,6 +255,7 @@ async def async_from_config_dict(
 
     hass.config_entries = config_entries.ConfigEntries(hass, config)
     await hass.config_entries.async_initialize()
+    await load_registries(hass)
 
     # Set up core.
     _LOGGER.debug("Setting up %s", CORE_INTEGRATIONS)
@@ -258,16 +296,31 @@ async def async_from_config_dict(
         REQUIRED_NEXT_PYTHON_HA_RELEASE
         and sys.version_info[:3] < REQUIRED_NEXT_PYTHON_VER
     ):
-        msg = (
-            "Support for the running Python version "
-            f"{'.'.join(str(x) for x in sys.version_info[:3])} is deprecated and will "
-            f"be removed in Home Assistant {REQUIRED_NEXT_PYTHON_HA_RELEASE}. "
-            "Please upgrade Python to "
-            f"{'.'.join(str(x) for x in REQUIRED_NEXT_PYTHON_VER[:2])}."
+        current_python_version = ".".join(str(x) for x in sys.version_info[:3])
+        required_python_version = ".".join(str(x) for x in REQUIRED_NEXT_PYTHON_VER[:2])
+        _LOGGER.warning(
+            (
+                "Support for the running Python version %s is deprecated and "
+                "will be removed in Home Assistant %s; "
+                "Please upgrade Python to %s"
+            ),
+            current_python_version,
+            REQUIRED_NEXT_PYTHON_HA_RELEASE,
+            required_python_version,
         )
-        _LOGGER.warning(msg)
-        persistent_notification.async_create(
-            hass, msg, "Python version", "python_version"
+        issue_registry.async_create_issue(
+            hass,
+            core.DOMAIN,
+            "python_version",
+            is_fixable=False,
+            severity=issue_registry.IssueSeverity.WARNING,
+            breaks_in_ha_version=REQUIRED_NEXT_PYTHON_HA_RELEASE,
+            translation_key="python_version",
+            translation_placeholders={
+                "current_python_version": current_python_version,
+                "required_python_version": required_python_version,
+                "breaks_in_ha_version": REQUIRED_NEXT_PYTHON_HA_RELEASE,
+            },
         )
 
     return hass
@@ -285,7 +338,9 @@ def async_enable_logging(
 
     This method must be run in the event loop.
     """
-    fmt = "%(asctime)s %(levelname)s (%(threadName)s) [%(name)s] %(message)s"
+    fmt = (
+        "%(asctime)s.%(msecs)03d %(levelname)s (%(threadName)s) [%(name)s] %(message)s"
+    )
     datefmt = "%Y-%m-%d %H:%M:%S"
 
     if not log_no_color:
@@ -392,7 +447,7 @@ async def async_mount_local_lib_path(config_dir: str) -> str:
 def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
     """Get domains of components to set up."""
     # Filter out the repeating and common config section [homeassistant]
-    domains = {key.split(" ")[0] for key in config if key != core.DOMAIN}
+    domains = {key.partition(" ")[0] for key in config if key != core.DOMAIN}
 
     # Add config entry domains
     if not hass.config.safe_mode:
@@ -419,7 +474,7 @@ async def _async_watch_pending_setups(hass: core.HomeAssistant) -> None:
         _LOGGER.debug("Integration remaining: %s", remaining_with_setup_started)
         if remaining_with_setup_started or not previous_was_empty:
             async_dispatcher_send(
-                hass, SIGNAL_BOOTSTRAP_INTEGRATONS, remaining_with_setup_started
+                hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, remaining_with_setup_started
             )
         previous_was_empty = not remaining_with_setup_started
         await asyncio.sleep(SLOW_STARTUP_CHECK_INTERVAL)
@@ -477,14 +532,9 @@ async def _async_set_up_integrations(
 
         integrations_to_process = [
             int_or_exc
-            for int_or_exc in await gather_with_concurrency(
-                loader.MAX_LOAD_CONCURRENTLY,
-                *(
-                    loader.async_get_integration(hass, domain)
-                    for domain in old_to_resolve
-                ),
-                return_exceptions=True,
-            )
+            for int_or_exc in (
+                await loader.async_get_integrations(hass, old_to_resolve)
+            ).values()
             if isinstance(int_or_exc, loader.Integration)
         ]
         resolve_dependencies_tasks = [
@@ -508,10 +558,24 @@ async def _async_set_up_integrations(
 
     _LOGGER.info("Domains to be set up: %s", domains_to_setup)
 
+    # Initialize recorder
+    if "recorder" in domains_to_setup:
+        recorder.async_initialize_recorder(hass)
+
     # Load logging as soon as possible
     if logging_domains := domains_to_setup & LOGGING_INTEGRATIONS:
         _LOGGER.info("Setting up logging: %s", logging_domains)
         await async_setup_multi_components(hass, logging_domains, config)
+
+    # Setup frontend
+    if frontend_domains := domains_to_setup & FRONTEND_INTEGRATIONS:
+        _LOGGER.info("Setting up frontend: %s", frontend_domains)
+        await async_setup_multi_components(hass, frontend_domains, config)
+
+    # Setup recorder
+    if recorder_domains := domains_to_setup & RECORDER_INTEGRATIONS:
+        _LOGGER.info("Setting up recorder: %s", recorder_domains)
+        await async_setup_multi_components(hass, recorder_domains, config)
 
     # Start up debuggers. Start these first in case they want to wait.
     if debuggers := domains_to_setup & DEBUGGER_INTEGRATIONS:
@@ -522,7 +586,8 @@ async def _async_set_up_integrations(
     stage_1_domains: set[str] = set()
 
     # Find all dependencies of any dependency of any stage 1 integration that
-    # we plan on loading and promote them to stage 1
+    # we plan on loading and promote them to stage 1. This is done only to not
+    # get misleading log messages
     deps_promotion: set[str] = STAGE_1_INTEGRATIONS
     while deps_promotion:
         old_deps_promotion = deps_promotion
@@ -539,24 +604,13 @@ async def _async_set_up_integrations(
 
             deps_promotion.update(dep_itg.all_dependencies)
 
-    stage_2_domains = domains_to_setup - logging_domains - debuggers - stage_1_domains
-
-    def _cache_uname_processor() -> None:
-        """Cache the result of platform.uname().processor in the executor.
-
-        Multiple modules call this function at startup which
-        executes a blocking subprocess call. This is a problem for the
-        asyncio event loop. By primeing the cache of uname we can
-        avoid the blocking call in the event loop.
-        """
-        platform.uname().processor  # pylint: disable=expression-not-assigned
-
-    # Load the registries
-    await asyncio.gather(
-        device_registry.async_load(hass),
-        entity_registry.async_load(hass),
-        area_registry.async_load(hass),
-        hass.async_add_executor_job(_cache_uname_processor),
+    stage_2_domains = (
+        domains_to_setup
+        - logging_domains
+        - frontend_domains
+        - recorder_domains
+        - debuggers
+        - stage_1_domains
     )
 
     # Start setup
@@ -592,7 +646,7 @@ async def _async_set_up_integrations(
         _LOGGER.warning("Setup timed out for bootstrap - moving forward")
 
     watch_task.cancel()
-    async_dispatcher_send(hass, SIGNAL_BOOTSTRAP_INTEGRATONS, {})
+    async_dispatcher_send(hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, {})
 
     _LOGGER.debug(
         "Integration setup times: %s",

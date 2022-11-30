@@ -11,8 +11,16 @@
   "dhcp": [
     { "registered_devices": true },
     {
+      "hostname": "es*",
+      "macaddress": "54AF97*"
+    },
+    {
       "hostname": "ep*",
       "macaddress": "E848B8*"
+    },
+    {
+      "hostname": "ep*",
+      "macaddress": "1C61B4*"
     },
     {
       "hostname": "ep*",

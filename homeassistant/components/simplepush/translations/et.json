@@ -17,5 +17,11 @@
                 }
             }
         }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "Simplepushi konfigureerimine YAMLi abil on eemaldatud.\n\nTeie olemasolevat YAML-konfiguratsiooni ei kasuta Home Assistant.\n\nEemaldage Simplepushi YAML-konfiguratsioon oma configuration.yaml-failist ja k\u00e4ivitage Home Assistant uuesti, et see probleem lahendada.",
+            "title": "Simplepush YAML-i konfiguratsioon on eemaldatud"
+        }
     }
 }

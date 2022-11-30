@@ -36,8 +36,8 @@ if TYPE_CHECKING:
     from ...entity import ZhaEntity
     from ..device import ZHADevice
 
-_ChannelsT = TypeVar("_ChannelsT", bound="Channels")
-_ChannelPoolT = TypeVar("_ChannelPoolT", bound="ChannelPool")
+_ChannelsSelfT = TypeVar("_ChannelsSelfT", bound="Channels")
+_ChannelPoolSelfT = TypeVar("_ChannelPoolSelfT", bound="ChannelPool")
 _ChannelsDictType = dict[str, base.ZigbeeChannel]
 
 
@@ -104,7 +104,7 @@ class Channels:
         }
 
     @classmethod
-    def new(cls: type[_ChannelsT], zha_device: ZHADevice) -> _ChannelsT:
+    def new(cls: type[_ChannelsSelfT], zha_device: ZHADevice) -> _ChannelsSelfT:
         """Create new instance."""
         channels = cls(zha_device)
         for ep_id in sorted(zha_device.device.endpoints):
@@ -272,7 +272,9 @@ class ChannelPool:
         )
 
     @classmethod
-    def new(cls: type[_ChannelPoolT], channels: Channels, ep_id: int) -> _ChannelPoolT:
+    def new(
+        cls: type[_ChannelPoolSelfT], channels: Channels, ep_id: int
+    ) -> _ChannelPoolSelfT:
         """Create new channels for an endpoint."""
         pool = cls(channels, ep_id)
         pool.add_all_channels()

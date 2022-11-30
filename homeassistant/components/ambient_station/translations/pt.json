@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Chave de API",
+                    "api_key": "Chave da API",
                     "app_key": "Chave de aplica\u00e7\u00e3o"
                 },
                 "title": "Preencha as suas informa\u00e7\u00f5es"

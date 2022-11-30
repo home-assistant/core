@@ -1,7 +1,7 @@
 """SQLAlchemy util functions."""
 from __future__ import annotations
 
-from collections.abc import Callable, Generator, Iterable
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta
 import functools
@@ -24,8 +24,10 @@ from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from typing_extensions import Concatenate, ParamSpec
+import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 import homeassistant.util.dt as dt_util
 
 from .const import DATA_INSTANCE, SQLITE_URL_PREFIX, SupportedDialect
@@ -35,7 +37,7 @@ from .db_schema import (
     TABLES_TO_CHECK,
     RecorderRuns,
 )
-from .models import UnsupportedDialect, process_timestamp
+from .models import StatisticPeriod, UnsupportedDialect, process_timestamp
 
 if TYPE_CHECKING:
     from . import Recorder
@@ -50,10 +52,18 @@ QUERY_RETRY_WAIT = 0.1
 SQLITE3_POSTFIXES = ["", "-wal", "-shm"]
 DEFAULT_YIELD_STATES_ROWS = 32768
 
-MIN_VERSION_MARIA_DB = AwesomeVersion("10.3.0", AwesomeVersionStrategy.SIMPLEVER)
-MIN_VERSION_MYSQL = AwesomeVersion("8.0.0", AwesomeVersionStrategy.SIMPLEVER)
-MIN_VERSION_PGSQL = AwesomeVersion("12.0", AwesomeVersionStrategy.SIMPLEVER)
-MIN_VERSION_SQLITE = AwesomeVersion("3.31.0", AwesomeVersionStrategy.SIMPLEVER)
+MIN_VERSION_MARIA_DB = AwesomeVersion(
+    "10.3.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
+)
+MIN_VERSION_MYSQL = AwesomeVersion(
+    "8.0.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
+)
+MIN_VERSION_PGSQL = AwesomeVersion(
+    "12.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
+)
+MIN_VERSION_SQLITE = AwesomeVersion(
+    "3.31.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
+)
 
 # This is the maximum time after the recorder ends the session
 # before we no longer consider startup to be a "restart" and we
@@ -80,7 +90,7 @@ def session_scope(
 ) -> Generator[Session, None, None]:
     """Provide a transactional scope around a series of operations."""
     if session is None and hass is not None:
-        session = hass.data[DATA_INSTANCE].get_session()
+        session = get_instance(hass).get_session()
 
     if session is None:
         raise RuntimeError("Session required")
@@ -172,7 +182,7 @@ def execute_stmt_lambda_element(
     start_time: datetime | None = None,
     end_time: datetime | None = None,
     yield_per: int | None = DEFAULT_YIELD_STATES_ROWS,
-) -> Iterable[Row]:
+) -> list[Row]:
     """Execute a StatementLambdaElement.
 
     If the time window passed is greater than one day
@@ -501,6 +511,7 @@ def retryable_database_job(
                 assert instance.engine is not None
                 if (
                     instance.engine.dialect.name == SupportedDialect.MYSQL
+                    and err.orig
                     and err.orig.args[0] in RETRYABLE_MYSQL_ERRORS
                 ):
                     _LOGGER.info(
@@ -552,7 +563,19 @@ def write_lock_db_sqlite(instance: Recorder) -> Generator[None, None, None]:
 
 
 def async_migration_in_progress(hass: HomeAssistant) -> bool:
-    """Determine is a migration is in progress.
+    """Determine if a migration is in progress.
+
+    This is a thin wrapper that allows us to change
+    out the implementation later.
+    """
+    if DATA_INSTANCE not in hass.data:
+        return False
+    instance = get_instance(hass)
+    return instance.migration_in_progress
+
+
+def async_migration_is_live(hass: HomeAssistant) -> bool:
+    """Determine if a migration is live.
 
     This is a thin wrapper that allows us to change
     out the implementation later.
@@ -560,7 +583,7 @@ def async_migration_in_progress(hass: HomeAssistant) -> bool:
     if DATA_INSTANCE not in hass.data:
         return False
     instance: Recorder = hass.data[DATA_INSTANCE]
-    return instance.migration_in_progress
+    return instance.migration_is_live
 
 
 def second_sunday(year: int, month: int) -> date:
@@ -577,3 +600,89 @@ def second_sunday(year: int, month: int) -> date:
 def is_second_sunday(date_time: datetime) -> bool:
     """Check if a time is the second sunday of the month."""
     return bool(second_sunday(date_time.year, date_time.month).day == date_time.day)
+
+
+def get_instance(hass: HomeAssistant) -> Recorder:
+    """Get the recorder instance."""
+    instance: Recorder = hass.data[DATA_INSTANCE]
+    return instance
+
+
+PERIOD_SCHEMA = vol.Schema(
+    {
+        vol.Exclusive("calendar", "period"): vol.Schema(
+            {
+                vol.Required("period"): vol.Any("hour", "day", "week", "month", "year"),
+                vol.Optional("offset"): int,
+            }
+        ),
+        vol.Exclusive("fixed_period", "period"): vol.Schema(
+            {
+                vol.Optional("start_time"): vol.All(cv.datetime, dt_util.as_utc),
+                vol.Optional("end_time"): vol.All(cv.datetime, dt_util.as_utc),
+            }
+        ),
+        vol.Exclusive("rolling_window", "period"): vol.Schema(
+            {
+                vol.Required("duration"): cv.time_period_dict,
+                vol.Optional("offset"): cv.time_period_dict,
+            }
+        ),
+    }
+)
+
+
+def resolve_period(
+    period_def: StatisticPeriod,
+) -> tuple[datetime | None, datetime | None]:
+    """Return start and end datetimes for a statistic period definition."""
+    start_time = None
+    end_time = None
+
+    if "calendar" in period_def:
+        calendar_period = period_def["calendar"]["period"]
+        start_of_day = dt_util.start_of_local_day()
+        cal_offset = period_def["calendar"].get("offset", 0)
+        if calendar_period == "hour":
+            start_time = dt_util.now().replace(minute=0, second=0, microsecond=0)
+            start_time += timedelta(hours=cal_offset)
+            end_time = start_time + timedelta(hours=1)
+        elif calendar_period == "day":
+            start_time = start_of_day
+            start_time += timedelta(days=cal_offset)
+            end_time = start_time + timedelta(days=1)
+        elif calendar_period == "week":
+            start_time = start_of_day - timedelta(days=start_of_day.weekday())
+            start_time += timedelta(days=cal_offset * 7)
+            end_time = start_time + timedelta(weeks=1)
+        elif calendar_period == "month":
+            start_time = start_of_day.replace(day=28)
+            # This works for up to 48 months of offset
+            start_time = (start_time + timedelta(days=cal_offset * 31)).replace(day=1)
+            end_time = (start_time + timedelta(days=31)).replace(day=1)
+        else:  # calendar_period = "year"
+            start_time = start_of_day.replace(month=12, day=31)
+            # This works for 100+ years of offset
+            start_time = (start_time + timedelta(days=cal_offset * 366)).replace(
+                month=1, day=1
+            )
+            end_time = (start_time + timedelta(days=365)).replace(day=1)
+
+        start_time = dt_util.as_utc(start_time)
+        end_time = dt_util.as_utc(end_time)
+
+    elif "fixed_period" in period_def:
+        start_time = period_def["fixed_period"].get("start_time")
+        end_time = period_def["fixed_period"].get("end_time")
+
+    elif "rolling_window" in period_def:
+        duration = period_def["rolling_window"]["duration"]
+        now = dt_util.utcnow()
+        start_time = now - duration
+        end_time = start_time + duration
+
+        if offset := period_def["rolling_window"].get("offset"):
+            start_time += offset
+            end_time += offset
+
+    return (start_time, end_time)

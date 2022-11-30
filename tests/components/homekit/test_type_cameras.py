@@ -4,7 +4,6 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 from uuid import UUID
 
-from pyhap.accessory_driver import AccessoryDriver
 import pytest
 
 from homeassistant.components import camera, ffmpeg
@@ -76,21 +75,6 @@ async def _async_stop_stream(hass, acc, session_info):
     await acc.stop_stream(session_info)
     await acc.run()
     await hass.async_block_till_done()
-
-
-@pytest.fixture()
-def run_driver(hass):
-    """Return a custom AccessoryDriver instance for HomeKit accessory init."""
-    with patch("pyhap.accessory_driver.AsyncZeroconf"), patch(
-        "pyhap.accessory_driver.AccessoryEncoder"
-    ), patch("pyhap.accessory_driver.HAPServer"), patch(
-        "pyhap.accessory_driver.AccessoryDriver.publish"
-    ), patch(
-        "pyhap.accessory_driver.AccessoryDriver.persist"
-    ):
-        yield AccessoryDriver(
-            pincode=b"123-45-678", address="127.0.0.1", loop=hass.loop
-        )
 
 
 def _mock_reader():
@@ -501,7 +485,6 @@ async def test_camera_stream_source_configured_and_copy_codec(hass, run_driver, 
     ):
         await _async_start_streaming(hass, acc)
         await _async_reconfigure_stream(hass, acc, session_info, {})
-        await _async_stop_stream(hass, acc, session_info)
         await _async_stop_all_streams(hass, acc)
 
     expected_output = (
@@ -642,11 +625,15 @@ async def test_camera_with_linked_motion_sensor(hass, run_driver, events):
     assert char
 
     assert char.value is True
+    broker = MagicMock()
+    char.broker = broker
 
     hass.states.async_set(
         motion_entity_id, STATE_OFF, {ATTR_DEVICE_CLASS: BinarySensorDeviceClass.MOTION}
     )
     await hass.async_block_till_done()
+    assert len(broker.mock_calls) == 2
+    broker.reset_mock()
     assert char.value is False
 
     char.set_value(True)
@@ -654,8 +641,28 @@ async def test_camera_with_linked_motion_sensor(hass, run_driver, events):
         motion_entity_id, STATE_ON, {ATTR_DEVICE_CLASS: BinarySensorDeviceClass.MOTION}
     )
     await hass.async_block_till_done()
+    assert len(broker.mock_calls) == 2
+    broker.reset_mock()
     assert char.value is True
 
+    hass.states.async_set(
+        motion_entity_id,
+        STATE_ON,
+        {ATTR_DEVICE_CLASS: BinarySensorDeviceClass.MOTION},
+        force_update=True,
+    )
+    await hass.async_block_till_done()
+    assert len(broker.mock_calls) == 0
+    broker.reset_mock()
+
+    hass.states.async_set(
+        motion_entity_id,
+        STATE_ON,
+        {ATTR_DEVICE_CLASS: BinarySensorDeviceClass.MOTION, "other": "attr"},
+    )
+    await hass.async_block_till_done()
+    assert len(broker.mock_calls) == 0
+    broker.reset_mock()
     # Ensure we do not throw when the linked
     # motion sensor is removed
     hass.states.async_remove(motion_entity_id)
@@ -747,7 +754,8 @@ async def test_camera_with_linked_doorbell_sensor(hass, run_driver, events):
     assert service2
     char2 = service.get_characteristic(CHAR_PROGRAMMABLE_SWITCH_EVENT)
     assert char2
-
+    broker = MagicMock()
+    char2.broker = broker
     assert char2.value is None
 
     hass.states.async_set(
@@ -758,9 +766,12 @@ async def test_camera_with_linked_doorbell_sensor(hass, run_driver, events):
     await hass.async_block_till_done()
     assert char.value is None
     assert char2.value is None
+    assert len(broker.mock_calls) == 0
 
     char.set_value(True)
     char2.set_value(True)
+    broker.reset_mock()
+
     hass.states.async_set(
         doorbell_entity_id,
         STATE_ON,
@@ -769,6 +780,31 @@ async def test_camera_with_linked_doorbell_sensor(hass, run_driver, events):
     await hass.async_block_till_done()
     assert char.value is None
     assert char2.value is None
+    assert len(broker.mock_calls) == 2
+    broker.reset_mock()
+
+    hass.states.async_set(
+        doorbell_entity_id,
+        STATE_ON,
+        {ATTR_DEVICE_CLASS: BinarySensorDeviceClass.OCCUPANCY},
+        force_update=True,
+    )
+    await hass.async_block_till_done()
+    assert char.value is None
+    assert char2.value is None
+    assert len(broker.mock_calls) == 0
+    broker.reset_mock()
+
+    hass.states.async_set(
+        doorbell_entity_id,
+        STATE_ON,
+        {ATTR_DEVICE_CLASS: BinarySensorDeviceClass.OCCUPANCY, "other": "attr"},
+    )
+    await hass.async_block_till_done()
+    assert char.value is None
+    assert char2.value is None
+    assert len(broker.mock_calls) == 0
+    broker.reset_mock()
 
     # Ensure we do not throw when the linked
     # doorbell sensor is removed

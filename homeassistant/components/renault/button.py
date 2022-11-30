@@ -71,13 +71,13 @@ BUTTON_TYPES: tuple[RenaultButtonEntityDescription, ...] = (
         async_press=_start_air_conditioner,
         key="start_air_conditioner",
         icon="mdi:air-conditioner",
-        name="Start Air Conditioner",
+        name="Start air conditioner",
     ),
     RenaultButtonEntityDescription(
         async_press=_start_charge,
         key="start_charge",
         icon="mdi:ev-station",
-        name="Start Charge",
+        name="Start charge",
         requires_electricity=True,
     ),
 )

@@ -112,7 +112,7 @@ class BloomSkySensor(SensorEntity):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return SENSOR_DEVICE_CLASS.get(self._sensor_name)
 
-    def update(self):
+    def update(self) -> None:
         """Request an update from the BloomSky API."""
         self._bloomsky.refresh_devices()
         state = self._bloomsky.devices[self._device_id]["Data"][self._sensor_name]

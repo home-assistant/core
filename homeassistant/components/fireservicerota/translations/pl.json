@@ -11,7 +11,7 @@
             "invalid_auth": "Niepoprawne uwierzytelnienie"
         },
         "step": {
-            "reauth": {
+            "reauth_confirm": {
                 "data": {
                     "password": "Has\u0142o"
                 },

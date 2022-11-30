@@ -1,50 +1,104 @@
 """Provides the switchbot DataUpdateCoordinator."""
 from __future__ import annotations
 
-from datetime import timedelta
+import asyncio
+import contextlib
 import logging
+from typing import TYPE_CHECKING, Any
 
+import async_timeout
 import switchbot
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth.passive_update_coordinator import (
+    PassiveBluetoothDataUpdateCoordinator,
+)
+from homeassistant.core import HomeAssistant, callback
 
-from .const import DOMAIN
+if TYPE_CHECKING:
+    from bleak.backends.device import BLEDevice
+
 
 _LOGGER = logging.getLogger(__name__)
 
+DEVICE_STARTUP_TIMEOUT = 30
 
-class SwitchbotDataUpdateCoordinator(DataUpdateCoordinator):
+
+def flatten_sensors_data(sensor):
+    """Deconstruct SwitchBot library temp object C/Fº readings from dictionary."""
+    if "temp" in sensor["data"]:
+        sensor["data"]["temperature"] = sensor["data"]["temp"]["c"]
+
+    return sensor
+
+
+class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
     """Class to manage fetching switchbot data."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        *,
-        update_interval: int,
-        api: switchbot,
-        retry_count: int,
-        scan_timeout: int,
+        logger: logging.Logger,
+        ble_device: BLEDevice,
+        device: switchbot.SwitchbotDevice,
+        base_unique_id: str,
+        device_name: str,
+        connectable: bool,
+        model: str,
     ) -> None:
         """Initialize global switchbot data updater."""
-        self.switchbot_api = api
-        self.switchbot_data = self.switchbot_api.GetSwitchbotDevices()
-        self.retry_count = retry_count
-        self.scan_timeout = scan_timeout
-        self.update_interval = timedelta(seconds=update_interval)
-
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=self.update_interval
+            hass,
+            logger,
+            ble_device.address,
+            bluetooth.BluetoothScanningMode.ACTIVE,
+            connectable,
         )
+        self.ble_device = ble_device
+        self.device = device
+        self.data: dict[str, Any] = {}
+        self.device_name = device_name
+        self.base_unique_id = base_unique_id
+        self.model = model
+        self._ready_event = asyncio.Event()
+        self._was_unavailable = True
 
-    async def _async_update_data(self) -> dict | None:
-        """Fetch data from switchbot."""
+    @callback
+    def _async_handle_unavailable(
+        self, service_info: bluetooth.BluetoothServiceInfoBleak
+    ) -> None:
+        """Handle the device going unavailable."""
+        super()._async_handle_unavailable(service_info)
+        self._was_unavailable = True
 
-        switchbot_data = await self.switchbot_data.discover(
-            retry=self.retry_count, scan_timeout=self.scan_timeout
-        )
+    @callback
+    def _async_handle_bluetooth_event(
+        self,
+        service_info: bluetooth.BluetoothServiceInfoBleak,
+        change: bluetooth.BluetoothChange,
+    ) -> None:
+        """Handle a Bluetooth event."""
+        self.ble_device = service_info.device
+        if not (
+            adv := switchbot.parse_advertisement_data(
+                service_info.device, service_info.advertisement
+            )
+        ):
+            return
+        if "modelName" in adv.data:
+            self._ready_event.set()
+        _LOGGER.debug("%s: Switchbot data: %s", self.ble_device.address, self.data)
+        if not self.device.advertisement_changed(adv) and not self._was_unavailable:
+            return
+        self._was_unavailable = False
+        self.data = flatten_sensors_data(adv.data)
+        self.device.update_from_advertisement(adv)
+        super()._async_handle_bluetooth_event(service_info, change)
 
-        if not switchbot_data:
-            raise UpdateFailed("Unable to fetch switchbot services data")
-
-        return switchbot_data
+    async def async_wait_ready(self) -> bool:
+        """Wait for the device to be ready."""
+        with contextlib.suppress(asyncio.TimeoutError):
+            async with async_timeout.timeout(DEVICE_STARTUP_TIMEOUT):
+                await self._ready_event.wait()
+                return True
+        return False

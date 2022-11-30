@@ -5,7 +5,6 @@ from typing import Any, cast
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -49,6 +48,8 @@ class SpeedtestSensor(
     """Implementation of a speedtest.net sensor."""
 
     entity_description: SpeedtestSensorEntityDescription
+    _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
     _attr_icon = ICON
 
     def __init__(
@@ -59,10 +60,9 @@ class SpeedtestSensor(
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = f"{DEFAULT_NAME} {description.name}"
         self._attr_unique_id = description.key
         self._state: StateType = None
-        self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        self._attrs: dict[str, Any] = {}
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.coordinator.config_entry.entry_id)},
             name=DEFAULT_NAME,

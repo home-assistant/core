@@ -6,8 +6,8 @@
       "unable_still_load": "Unable to load valid image from still image URL (e.g. invalid host, URL or authentication failure).  Review log for more info.",
       "no_still_image_or_stream_url": "You must specify at least a still image or stream URL",
       "invalid_still_image": "URL did not return a valid still image",
-      "stream_file_not_found": "File not found while trying to connect to stream (is ffmpeg installed?)",
-      "stream_http_not_found": "HTTP 404 Not found while trying to connect to stream",
+      "malformed_url": "Malformed URL",
+      "relative_url": "Relative URLs are not allowed",
       "template_error": "Error rendering template. Review log for more info.",
       "timeout": "Timeout while loading URL",
       "stream_no_route_to_host": "Could not find host while trying to connect to stream",
@@ -32,14 +32,12 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
       },
-      "content_type": {
-        "description": "Specify the content type for the stream.",
+      "user_confirm_still": {
+        "title": "Preview",
+        "description": "![Camera Still Image Preview]({preview_url})",
         "data": {
-          "content_type": "Content Type"
+          "confirmed_ok": "This image looks good."
         }
-      },
-      "confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
     }
   },
@@ -62,10 +60,11 @@
           "use_wallclock_as_timestamps": "This option may correct segmenting or crashing issues arising from buggy timestamp implementations on some cameras"
         }
       },
-      "content_type": {
-        "description": "[%key:component::generic::config::step::content_type::description%]",
+      "confirm_still": {
+        "title": "[%key:component::generic::config::step::user_confirm_still::title%]",
+        "description": "[%key:component::generic::config::step::user_confirm_still::description%]",
         "data": {
-          "content_type": "[%key:component::generic::config::step::content_type::data::content_type%]"
+          "confirmed_ok": "[%key:component::generic::config::step::user_confirm_still::data::confirmed_ok%]"
         }
       }
     },
@@ -75,6 +74,8 @@
       "unable_still_load": "[%key:component::generic::config::error::unable_still_load%]",
       "no_still_image_or_stream_url": "[%key:component::generic::config::error::no_still_image_or_stream_url%]",
       "invalid_still_image": "[%key:component::generic::config::error::invalid_still_image%]",
+      "malformed_url": "[%key:component::generic::config::error::malformed_url%]",
+      "relative_url": "[%key:component::generic::config::error::relative_url%]",
       "template_error": "[%key:component::generic::config::error::template_error%]",
       "timeout": "[%key:component::generic::config::error::timeout%]",
       "stream_no_route_to_host": "[%key:component::generic::config::error::stream_no_route_to_host%]",

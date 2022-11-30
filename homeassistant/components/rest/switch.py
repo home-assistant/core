@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from http import HTTPStatus
 import logging
+from typing import Any
 
 import aiohttp
 import async_timeout
@@ -18,11 +19,11 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_HEADERS,
     CONF_METHOD,
-    CONF_NAME,
     CONF_PARAMS,
     CONF_PASSWORD,
     CONF_RESOURCE,
     CONF_TIMEOUT,
+    CONF_UNIQUE_ID,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
@@ -30,6 +31,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.template_entity import (
+    TEMPLATE_ENTITY_BASE_SCHEMA,
+    TemplateEntity,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,6 +54,7 @@ SUPPORT_REST_METHODS = ["post", "put", "patch"]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
+        **TEMPLATE_ENTITY_BASE_SCHEMA.schema,
         vol.Required(CONF_RESOURCE): cv.url,
         vol.Optional(CONF_STATE_RESOURCE): cv.url,
         vol.Optional(CONF_HEADERS): {cv.string: cv.template},
@@ -59,7 +65,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.All(
             vol.Lower, vol.In(SUPPORT_REST_METHODS)
         ),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
@@ -76,50 +81,11 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the RESTful switch."""
-    body_off = config.get(CONF_BODY_OFF)
-    body_on = config.get(CONF_BODY_ON)
-    is_on_template = config.get(CONF_IS_ON_TEMPLATE)
-    method = config.get(CONF_METHOD)
-    headers = config.get(CONF_HEADERS)
-    params = config.get(CONF_PARAMS)
-    name = config.get(CONF_NAME)
-    device_class = config.get(CONF_DEVICE_CLASS)
-    username = config.get(CONF_USERNAME)
-    resource = config.get(CONF_RESOURCE)
-    state_resource = config.get(CONF_STATE_RESOURCE) or resource
-    verify_ssl = config.get(CONF_VERIFY_SSL)
-
-    auth = None
-    if username:
-        auth = aiohttp.BasicAuth(username, password=config[CONF_PASSWORD])
-
-    if is_on_template is not None:
-        is_on_template.hass = hass
-    if body_on is not None:
-        body_on.hass = hass
-    if body_off is not None:
-        body_off.hass = hass
-
-    template.attach(hass, headers)
-    template.attach(hass, params)
-    timeout = config.get(CONF_TIMEOUT)
+    resource: str = config[CONF_RESOURCE]
+    unique_id: str | None = config.get(CONF_UNIQUE_ID)
 
     try:
-        switch = RestSwitch(
-            name,
-            device_class,
-            resource,
-            state_resource,
-            method,
-            headers,
-            params,
-            auth,
-            body_on,
-            body_off,
-            is_on_template,
-            timeout,
-            verify_ssl,
-        )
+        switch = RestSwitch(hass, config, unique_id)
 
         req = await switch.get_device_state(hass)
         if req.status >= HTTPStatus.BAD_REQUEST:
@@ -135,53 +101,53 @@ async def async_setup_platform(
         _LOGGER.error("No route to resource/endpoint: %s", resource)
 
 
-class RestSwitch(SwitchEntity):
+class RestSwitch(TemplateEntity, SwitchEntity):
     """Representation of a switch that can be toggled using REST."""
 
     def __init__(
         self,
-        name,
-        device_class,
-        resource,
-        state_resource,
-        method,
-        headers,
-        params,
-        auth,
-        body_on,
-        body_off,
-        is_on_template,
-        timeout,
-        verify_ssl,
-    ):
+        hass: HomeAssistant,
+        config: ConfigType,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the REST switch."""
-        self._state = None
-        self._name = name
-        self._resource = resource
-        self._state_resource = state_resource
-        self._method = method
-        self._headers = headers
-        self._params = params
+        TemplateEntity.__init__(
+            self,
+            hass,
+            config=config,
+            fallback_name=DEFAULT_NAME,
+            unique_id=unique_id,
+        )
+
+        auth: aiohttp.BasicAuth | None = None
+        username: str | None = None
+        if username := config.get(CONF_USERNAME):
+            password: str = config[CONF_PASSWORD]
+            auth = aiohttp.BasicAuth(username, password=password)
+
+        self._resource: str = config[CONF_RESOURCE]
+        self._state_resource: str = config.get(CONF_STATE_RESOURCE) or self._resource
+        self._method: str = config[CONF_METHOD]
+        self._headers: dict[str, template.Template] | None = config.get(CONF_HEADERS)
+        self._params: dict[str, template.Template] | None = config.get(CONF_PARAMS)
         self._auth = auth
-        self._body_on = body_on
-        self._body_off = body_off
-        self._is_on_template = is_on_template
-        self._timeout = timeout
-        self._verify_ssl = verify_ssl
+        self._body_on: template.Template = config[CONF_BODY_ON]
+        self._body_off: template.Template = config[CONF_BODY_OFF]
+        self._is_on_template: template.Template | None = config.get(CONF_IS_ON_TEMPLATE)
+        self._timeout: int = config[CONF_TIMEOUT]
+        self._verify_ssl: bool = config[CONF_VERIFY_SSL]
 
-        self._attr_device_class = device_class
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
 
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name
+        self._body_on.hass = hass
+        self._body_off.hass = hass
+        if (is_on_template := self._is_on_template) is not None:
+            is_on_template.hass = hass
 
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
+        template.attach(hass, self._headers)
+        template.attach(hass, self._params)
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         body_on_t = self._body_on.async_render(parse_result=False)
 
@@ -189,7 +155,7 @@ class RestSwitch(SwitchEntity):
             req = await self.set_device_state(body_on_t)
 
             if req.status == HTTPStatus.OK:
-                self._state = True
+                self._attr_is_on = True
             else:
                 _LOGGER.error(
                     "Can't turn on %s. Is resource/endpoint offline?", self._resource
@@ -197,14 +163,14 @@ class RestSwitch(SwitchEntity):
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Error while switching on %s", self._resource)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         body_off_t = self._body_off.async_render(parse_result=False)
 
         try:
             req = await self.set_device_state(body_off_t)
             if req.status == HTTPStatus.OK:
-                self._state = False
+                self._attr_is_on = False
             else:
                 _LOGGER.error(
                     "Can't turn off %s. Is resource/endpoint offline?", self._resource
@@ -212,7 +178,7 @@ class RestSwitch(SwitchEntity):
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Error while switching off %s", self._resource)
 
-    async def set_device_state(self, body):
+    async def set_device_state(self, body: Any) -> aiohttp.ClientResponse:
         """Send a state update to the device."""
         websession = async_get_clientsession(self.hass, self._verify_ssl)
 
@@ -220,7 +186,7 @@ class RestSwitch(SwitchEntity):
         rendered_params = template.render_complex(self._params)
 
         async with async_timeout.timeout(self._timeout):
-            req = await getattr(websession, self._method)(
+            req: aiohttp.ClientResponse = await getattr(websession, self._method)(
                 self._resource,
                 auth=self._auth,
                 data=bytes(body, "utf-8"),
@@ -229,7 +195,7 @@ class RestSwitch(SwitchEntity):
             )
             return req
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the current state, catching errors."""
         try:
             await self.get_device_state(self.hass)
@@ -238,7 +204,7 @@ class RestSwitch(SwitchEntity):
         except aiohttp.ClientError as err:
             _LOGGER.exception("Error while fetching data: %s", err)
 
-    async def get_device_state(self, hass):
+    async def get_device_state(self, hass: HomeAssistant) -> aiohttp.ClientResponse:
         """Get the latest data from REST API and update the state."""
         websession = async_get_clientsession(hass, self._verify_ssl)
 
@@ -260,17 +226,17 @@ class RestSwitch(SwitchEntity):
             )
             text = text.lower()
             if text == "true":
-                self._state = True
+                self._attr_is_on = True
             elif text == "false":
-                self._state = False
+                self._attr_is_on = False
             else:
-                self._state = None
+                self._attr_is_on = None
         else:
             if text == self._body_on.template:
-                self._state = True
+                self._attr_is_on = True
             elif text == self._body_off.template:
-                self._state = False
+                self._attr_is_on = False
             else:
-                self._state = None
+                self._attr_is_on = None
 
         return req

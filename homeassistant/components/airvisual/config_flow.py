@@ -6,16 +6,18 @@ from collections.abc import Mapping
 from typing import Any
 
 from pyairvisual import CloudAPI, NodeSamba
-from pyairvisual.errors import (
-    AirVisualError,
+from pyairvisual.cloud_api import (
     InvalidKeyError,
-    NodeProError,
+    KeyExpiredError,
     NotFoundError,
+    UnauthorizedError,
 )
+from pyairvisual.errors import AirVisualError
+from pyairvisual.node import NodeProError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry, OptionsFlow
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_IP_ADDRESS,
@@ -28,6 +30,10 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaFlowFormStep,
+    SchemaOptionsFlowHandler,
+)
 
 from . import async_get_geography_id
 from .const import (
@@ -63,6 +69,13 @@ PICK_INTEGRATION_TYPE_SCHEMA = vol.Schema(
         )
     }
 )
+
+OPTIONS_SCHEMA = vol.Schema(
+    {vol.Required(CONF_SHOW_ON_MAP): bool},
+)
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
+}
 
 
 class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -119,7 +132,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if user_input[CONF_API_KEY] not in valid_keys:
                 try:
                     await coro
-                except InvalidKeyError:
+                except (InvalidKeyError, KeyExpiredError, UnauthorizedError):
                     errors[CONF_API_KEY] = "invalid_api_key"
                 except NotFoundError:
                     errors[CONF_CITY] = "location_not_found"
@@ -163,9 +176,9 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(config_entry: ConfigEntry) -> SchemaOptionsFlowHandler:
         """Define the config flow to handle options."""
-        return AirVisualOptionsFlowHandler(config_entry)
+        return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
     async def async_step_geography_by_coords(
         self, user_input: dict[str, str] | None = None
@@ -221,10 +234,10 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data={**user_input, CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_NODE_PRO},
         )
 
-    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
-        self._entry_data_for_reauth = data
-        self._geo_id = async_get_geography_id(data)
+        self._entry_data_for_reauth = entry_data
+        self._geo_id = async_get_geography_id(entry_data)
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -256,30 +269,3 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input["type"] == INTEGRATION_TYPE_GEOGRAPHY_NAME:
             return await self.async_step_geography_by_name()
         return await self.async_step_node_pro()
-
-
-class AirVisualOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle an AirVisual options flow."""
-
-    def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize."""
-        self.entry = entry
-
-    async def async_step_init(
-        self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
-        """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_SHOW_ON_MAP,
-                        default=self.entry.options.get(CONF_SHOW_ON_MAP),
-                    ): bool
-                }
-            ),
-        )

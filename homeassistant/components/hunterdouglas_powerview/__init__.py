@@ -42,7 +42,13 @@ PARALLEL_UPDATES = 1
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
-PLATFORMS = [Platform.BUTTON, Platform.COVER, Platform.SCENE, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.COVER,
+    Platform.SCENE,
+    Platform.SELECT,
+    Platform.SENSOR,
+]
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -96,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device_info=device_info,
     )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

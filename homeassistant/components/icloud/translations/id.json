@@ -11,7 +11,7 @@
             "validate_verification_code": "Gagal memverifikasi kode verifikasi Anda, coba lagi"
         },
         "step": {
-            "reauth": {
+            "reauth_confirm": {
                 "data": {
                     "password": "Kata Sandi"
                 },

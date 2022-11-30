@@ -1,4 +1,6 @@
 """Platform for UPB light integration."""
+from typing import Any
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_FLASH,
@@ -49,6 +51,8 @@ async def async_setup_entry(
 class UpbLight(UpbAttachedEntity, LightEntity):
     """Representation of an UPB Light."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, element, unique_id, upb):
         """Initialize an UpbLight."""
         super().__init__(element, unique_id, upb)
@@ -67,7 +71,7 @@ class UpbLight(UpbAttachedEntity, LightEntity):
         return {self.color_mode}
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> LightEntityFeature:
         """Flag supported features."""
         if self._element.dimmable:
             return LightEntityFeature.TRANSITION | LightEntityFeature.FLASH
@@ -83,7 +87,7 @@ class UpbLight(UpbAttachedEntity, LightEntity):
         """Get the current brightness."""
         return self._brightness != 0
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         if flash := kwargs.get(ATTR_FLASH):
             await self.async_light_blink(0.5 if flash == "short" else 1.5)
@@ -92,7 +96,7 @@ class UpbLight(UpbAttachedEntity, LightEntity):
             brightness = round(kwargs.get(ATTR_BRIGHTNESS, 255) / 2.55)
             self._element.turn_on(brightness, rate)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
         rate = kwargs.get(ATTR_TRANSITION, -1)
         self._element.turn_off(rate)
@@ -112,7 +116,7 @@ class UpbLight(UpbAttachedEntity, LightEntity):
         blink_rate = int(blink_rate * 60)  # Convert seconds to 60 hz pulses
         self._element.blink(blink_rate)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Request the device to update its status."""
         self._element.update_status()
 

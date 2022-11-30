@@ -7,15 +7,21 @@
             "switchbot_unsupported_type": "Switchbot-type st\u00f8ttes ikke.",
             "unknown": "Uventet feil"
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ( {address} )",
         "step": {
-            "user": {
+            "confirm": {
+                "description": "Vil du konfigurere {name}?"
+            },
+            "password": {
                 "data": {
-                    "mac": "Enhetens MAC -adresse",
-                    "name": "Navn",
                     "password": "Passord"
                 },
-                "title": "Sett opp Switchbot-enhet"
+                "description": "{name} -enheten krever et passord"
+            },
+            "user": {
+                "data": {
+                    "address": "Enhetsadresse"
+                }
             }
         }
     },
@@ -23,10 +29,7 @@
         "step": {
             "init": {
                 "data": {
-                    "retry_count": "Antall nye fors\u00f8k",
-                    "retry_timeout": "Tidsavbrudd mellom fors\u00f8k",
-                    "scan_timeout": "Hvor lenge skal jeg s\u00f8ke etter annonsedata",
-                    "update_time": "Tid mellom oppdateringer (sekunder)"
+                    "retry_count": "Antall nye fors\u00f8k"
                 }
             }
         }

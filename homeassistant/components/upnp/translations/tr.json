@@ -13,7 +13,7 @@
         "step": {
             "init": {
                 "one": "Bo\u015f",
-                "other": ""
+                "other": "Bo\u015f"
             },
             "ssdp_confirm": {
                 "description": "Bu UPnP / IGD cihaz\u0131n\u0131 kurmak istiyor musunuz?"

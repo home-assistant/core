@@ -1,8 +1,6 @@
 """Test ZHA Gateway."""
 import asyncio
-import math
-import time
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import zigpy.profiles.zha as zha
@@ -10,10 +8,9 @@ import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.lighting as lighting
 
 from homeassistant.components.zha.core.group import GroupMember
-from homeassistant.components.zha.core.store import TOMBSTONE_LIFETIME
 from homeassistant.const import Platform
 
-from .common import async_enable_traffic, async_find_group_entity_id, get_zha_gateway
+from .common import async_find_group_entity_id, get_zha_gateway
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
@@ -216,60 +213,49 @@ async def test_gateway_create_group_with_id(hass, device_light_1, coordinator):
     assert zha_group.group_id == 0x1234
 
 
-async def test_updating_device_store(hass, zigpy_dev_basic, zha_dev_basic):
-    """Test saving data after a delay."""
+@patch(
+    "homeassistant.components.zha.core.gateway.ZHAGateway.async_load_devices",
+    MagicMock(),
+)
+@patch(
+    "homeassistant.components.zha.core.gateway.ZHAGateway.async_load_groups",
+    MagicMock(),
+)
+@patch("homeassistant.components.zha.core.gateway.STARTUP_FAILURE_DELAY_S", 0.01)
+@pytest.mark.parametrize(
+    "startup",
+    [
+        [asyncio.TimeoutError(), FileNotFoundError(), MagicMock()],
+        [asyncio.TimeoutError(), MagicMock()],
+        [MagicMock()],
+    ],
+)
+async def test_gateway_initialize_success(startup, hass, device_light_1, coordinator):
+    """Test ZHA initializing the gateway successfully."""
     zha_gateway = get_zha_gateway(hass)
     assert zha_gateway is not None
-    await async_enable_traffic(hass, [zha_dev_basic])
 
-    assert zha_dev_basic.last_seen is not None
-    entry = zha_gateway.zha_storage.async_get_or_create_device(zha_dev_basic)
-    assert math.isclose(entry.last_seen, zha_dev_basic.last_seen, rel_tol=1e-06)
+    zha_gateway.shutdown = AsyncMock()
 
-    assert zha_dev_basic.last_seen is not None
-    last_seen = zha_dev_basic.last_seen
+    with patch(
+        "bellows.zigbee.application.ControllerApplication.new", side_effect=startup
+    ) as mock_new:
+        await zha_gateway.async_initialize()
 
-    # test that we can't set None as last seen any more
-    zha_dev_basic.async_update_last_seen(None)
-    assert math.isclose(last_seen, zha_dev_basic.last_seen, rel_tol=1e-06)
-
-    # test that we won't put None in storage
-    zigpy_dev_basic.last_seen = None
-    assert zha_dev_basic.last_seen is None
-    await zha_gateway.async_update_device_storage()
-    await hass.async_block_till_done()
-    entry = zha_gateway.zha_storage.async_get_or_create_device(zha_dev_basic)
-    assert math.isclose(entry.last_seen, last_seen, rel_tol=1e-06)
-
-    # test that we can still set a good last_seen
-    last_seen = time.time()
-    zha_dev_basic.async_update_last_seen(last_seen)
-    assert math.isclose(last_seen, zha_dev_basic.last_seen, rel_tol=1e-06)
-
-    # test that we still put good values in storage
-    await zha_gateway.async_update_device_storage()
-    await hass.async_block_till_done()
-    entry = zha_gateway.zha_storage.async_get_or_create_device(zha_dev_basic)
-    assert math.isclose(entry.last_seen, last_seen, rel_tol=1e-06)
+    assert mock_new.call_count == len(startup)
 
 
-async def test_cleaning_up_storage(hass, zigpy_dev_basic, zha_dev_basic, hass_storage):
-    """Test cleaning up zha storage and remove stale devices."""
+@patch("homeassistant.components.zha.core.gateway.STARTUP_FAILURE_DELAY_S", 0.01)
+async def test_gateway_initialize_failure(hass, device_light_1, coordinator):
+    """Test ZHA failing to initialize the gateway."""
     zha_gateway = get_zha_gateway(hass)
     assert zha_gateway is not None
-    await async_enable_traffic(hass, [zha_dev_basic])
 
-    assert zha_dev_basic.last_seen is not None
-    await zha_gateway.zha_storage.async_save()
-    await hass.async_block_till_done()
+    with patch(
+        "bellows.zigbee.application.ControllerApplication.new",
+        side_effect=[asyncio.TimeoutError(), FileNotFoundError(), RuntimeError()],
+    ) as mock_new:
+        with pytest.raises(RuntimeError):
+            await zha_gateway.async_initialize()
 
-    assert hass_storage["zha.storage"]["data"]["devices"]
-    device = hass_storage["zha.storage"]["data"]["devices"][0]
-    assert device["ieee"] == str(zha_dev_basic.ieee)
-
-    zha_dev_basic.device.last_seen = time.time() - TOMBSTONE_LIFETIME - 1
-    await zha_gateway.async_update_device_storage()
-    await hass.async_block_till_done()
-    await zha_gateway.zha_storage.async_save()
-    await hass.async_block_till_done()
-    assert not hass_storage["zha.storage"]["data"]["devices"]
+    assert mock_new.call_count == 3

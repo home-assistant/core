@@ -25,5 +25,10 @@
                 }
             }
         }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button": "Bot\u00e3o"
+        }
     }
 }

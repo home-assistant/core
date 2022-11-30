@@ -57,6 +57,19 @@ async def mock_supervisor_fixture(hass, aioclient_mock):
     """Mock supervisor."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
+    aioclient_mock.get(
+        "http://127.0.0.1/resolution/info",
+        json={
+            "result": "ok",
+            "data": {
+                "unsupported": [],
+                "unhealthy": [],
+                "suggestions": [],
+                "issues": [],
+                "checks": [],
+            },
+        },
+    )
     with patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}), patch(
         "homeassistant.components.hassio.HassIO.is_connected",
         return_value=True,
@@ -144,6 +157,12 @@ async def test_onboarding_user_already_done(hass, hass_storage, hass_client_no_a
 
 async def test_onboarding_user(hass, hass_storage, hass_client_no_auth):
     """Test creating a new user."""
+    area_registry = ar.async_get(hass)
+
+    # Create an existing area to mimic an integration creating an area
+    # before onboarding is done.
+    area_registry.async_create("Living Room")
+
     assert await async_setup_component(hass, "person", {})
     assert await async_setup_component(hass, "onboarding", {})
     await hass.async_block_till_done()
@@ -194,7 +213,6 @@ async def test_onboarding_user(hass, hass_storage, hass_client_no_auth):
     )
 
     # Validate created areas
-    area_registry = ar.async_get(hass)
     assert len(area_registry.areas) == 3
     assert sorted(area.name for area in area_registry.async_list_areas()) == [
         "Bedroom",

@@ -69,12 +69,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         config_entry_id=entry.entry_id,
         configuration_url=printer.url,
         connections=device_connections(printer),
+        default_manufacturer="Samsung",
         identifiers=device_identifiers(printer),
         model=printer.model(),
         name=printer.hostname(),
     )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 

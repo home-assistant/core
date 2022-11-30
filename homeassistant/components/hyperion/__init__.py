@@ -269,21 +269,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         }
     )
 
-    async def setup_then_listen() -> None:
-        await asyncio.gather(
-            *(
-                hass.config_entries.async_forward_entry_setup(entry, platform)
-                for platform in PLATFORMS
-            )
-        )
-        assert hyperion_client
-        if hyperion_client.instances is not None:
-            await async_instances_to_clients_raw(hyperion_client.instances)
-        hass.data[DOMAIN][entry.entry_id][CONF_ON_UNLOAD].append(
-            entry.add_update_listener(_async_entry_updated)
-        )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    assert hyperion_client
+    if hyperion_client.instances is not None:
+        await async_instances_to_clients_raw(hyperion_client.instances)
+    hass.data[DOMAIN][entry.entry_id][CONF_ON_UNLOAD].append(
+        entry.add_update_listener(_async_entry_updated)
+    )
 
-    hass.async_create_task(setup_then_listen())
     return True
 
 

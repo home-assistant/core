@@ -9,9 +9,9 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 
 from homeassistant.auth.models import RefreshToken, User
+from homeassistant.components.http import current_request
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
-from homeassistant.helpers.json import JSON_DUMP
 
 from . import const, messages
 
@@ -43,6 +43,7 @@ class ActiveConnection:
         self.refresh_token_id = refresh_token.id
         self.subscriptions: dict[Hashable, Callable[[], Any]] = {}
         self.last_id = 0
+        self.supported_features: dict[str, float] = {}
         current_connection.set(self)
 
     def context(self, msg: dict[str, Any]) -> Context:
@@ -53,13 +54,6 @@ class ActiveConnection:
     def send_result(self, msg_id: int, result: Any | None = None) -> None:
         """Send a result message."""
         self.send_message(messages.result_message(msg_id, result))
-
-    async def send_big_result(self, msg_id: int, result: Any) -> None:
-        """Send a result message that would be expensive to JSON serialize."""
-        content = await self.hass.async_add_executor_job(
-            JSON_DUMP, messages.result_message(msg_id, result)
-        )
-        self.send_message(content)
 
     @callback
     def send_error(self, msg_id: int, code: str, message: str) -> None:
@@ -144,6 +138,13 @@ class ActiveConnection:
             err_message = "Unknown error"
             log_handler = self.logger.exception
 
-        log_handler("Error handling message: %s (%s)", err_message, code)
-
         self.send_message(messages.error_message(msg["id"], code, err_message))
+
+        if code:
+            err_message += f" ({code})"
+        if request := current_request.get():
+            err_message += f" from {request.remote}"
+            if user_agent := request.headers.get("user-agent"):
+                err_message += f" ({user_agent})"
+
+        log_handler("Error handling message: %s", err_message)

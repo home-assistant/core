@@ -1,7 +1,6 @@
 """Support gathering system information of hosts which are running netdata."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
 from netdata import Netdata
@@ -22,11 +21,8 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 CONF_DATA_GROUP = "data_group"
 CONF_ELEMENT = "element"
@@ -140,11 +136,11 @@ class NetdataSensor(SensorEntity):
         return self._state
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Could the resource be accessed during the last update call."""
         return self.netdata.available
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data from Netdata REST API."""
         await self.netdata.async_update()
         resource_data = self.netdata.api.metrics.get(self._sensor)
@@ -186,11 +182,11 @@ class NetdataAlarms(SensorEntity):
         return "mdi:crosshairs-question"
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Could the resource be accessed during the last update call."""
         return self.netdata.available
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest alarms from Netdata REST API."""
         await self.netdata.async_update()
         alarms = self.netdata.api.alarms["alarms"]
@@ -223,7 +219,6 @@ class NetdataData:
         self.api = api
         self.available = True
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Get the latest data from the Netdata REST API."""
 

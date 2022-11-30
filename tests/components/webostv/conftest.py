@@ -39,6 +39,8 @@ def client_fixture():
         client.sound_output = "speaker"
         client.muted = False
         client.is_on = True
+        client.is_registered = Mock(return_value=True)
+        client.is_connected = Mock(return_value=True)
 
         async def mock_state_update_callback():
             await client.register_state_update_callback.call_args[0][0](client)

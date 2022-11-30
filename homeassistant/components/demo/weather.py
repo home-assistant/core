@@ -18,29 +18,17 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_CONDITION_WINDY,
     ATTR_CONDITION_WINDY_VARIANT,
-    ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
-    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
-    ATTR_FORECAST_TIME,
+    Forecast,
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    PRESSURE_HPA,
-    PRESSURE_INHG,
-    SPEED_METERS_PER_SECOND,
-    SPEED_MILES_PER_HOUR,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.const import UnitOfPressure, UnitOfSpeed, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-CONDITION_CLASSES = {
+CONDITION_CLASSES: dict[str, list[str]] = {
     ATTR_CONDITION_CLOUDY: [],
     ATTR_CONDITION_FOG: [],
     ATTR_CONDITION_HAIL: [],
@@ -83,9 +71,9 @@ def setup_platform(
                 92,
                 1099,
                 0.5,
-                TEMP_CELSIUS,
-                PRESSURE_HPA,
-                SPEED_METERS_PER_SECOND,
+                UnitOfTemperature.CELSIUS,
+                UnitOfPressure.HPA,
+                UnitOfSpeed.METERS_PER_SECOND,
                 [
                     [ATTR_CONDITION_RAINY, 1, 22, 15, 60],
                     [ATTR_CONDITION_RAINY, 5, 19, 8, 30],
@@ -103,9 +91,9 @@ def setup_platform(
                 54,
                 987,
                 4.8,
-                TEMP_FAHRENHEIT,
-                PRESSURE_INHG,
-                SPEED_MILES_PER_HOUR,
+                UnitOfTemperature.FAHRENHEIT,
+                UnitOfPressure.INHG,
+                UnitOfSpeed.MILES_PER_HOUR,
                 [
                     [ATTR_CONDITION_SNOWY, 2, -10, -15, 60],
                     [ATTR_CONDITION_PARTLYCLOUDY, 1, -13, -14, 25],
@@ -123,21 +111,24 @@ def setup_platform(
 class DemoWeather(WeatherEntity):
     """Representation of a weather condition."""
 
+    _attr_attribution = "Powered by Home Assistant"
+    _attr_should_poll = False
+
     def __init__(
         self,
-        name,
-        condition,
-        temperature,
-        humidity,
-        pressure,
-        wind_speed,
-        temperature_unit,
-        pressure_unit,
-        wind_speed_unit,
-        forecast,
-    ):
+        name: str,
+        condition: str,
+        temperature: float,
+        humidity: float,
+        pressure: float,
+        wind_speed: float,
+        temperature_unit: str,
+        pressure_unit: str,
+        wind_speed_unit: str,
+        forecast: list[list],
+    ) -> None:
         """Initialize the Demo weather."""
-        self._name = name
+        self._attr_name = f"Demo Weather {name}"
         self._condition = condition
         self._native_temperature = temperature
         self._native_temperature_unit = temperature_unit
@@ -149,77 +140,62 @@ class DemoWeather(WeatherEntity):
         self._forecast = forecast
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"Demo Weather {self._name}"
-
-    @property
-    def should_poll(self):
-        """No polling needed for a demo weather condition."""
-        return False
-
-    @property
-    def native_temperature(self):
+    def native_temperature(self) -> float:
         """Return the temperature."""
         return self._native_temperature
 
     @property
-    def native_temperature_unit(self):
+    def native_temperature_unit(self) -> str:
         """Return the unit of measurement."""
         return self._native_temperature_unit
 
     @property
-    def humidity(self):
+    def humidity(self) -> float:
         """Return the humidity."""
         return self._humidity
 
     @property
-    def native_wind_speed(self):
+    def native_wind_speed(self) -> float:
         """Return the wind speed."""
         return self._native_wind_speed
 
     @property
-    def native_wind_speed_unit(self):
+    def native_wind_speed_unit(self) -> str:
         """Return the wind speed."""
         return self._native_wind_speed_unit
 
     @property
-    def native_pressure(self):
+    def native_pressure(self) -> float:
         """Return the pressure."""
         return self._native_pressure
 
     @property
-    def native_pressure_unit(self):
+    def native_pressure_unit(self) -> str:
         """Return the pressure."""
         return self._native_pressure_unit
 
     @property
-    def condition(self):
+    def condition(self) -> str:
         """Return the weather condition."""
         return [
             k for k, v in CONDITION_CLASSES.items() if self._condition.lower() in v
         ][0]
 
     @property
-    def attribution(self):
-        """Return the attribution."""
-        return "Powered by Home Assistant"
-
-    @property
-    def forecast(self):
+    def forecast(self) -> list[Forecast]:
         """Return the forecast."""
         reftime = dt_util.now().replace(hour=16, minute=00)
 
         forecast_data = []
         for entry in self._forecast:
-            data_dict = {
-                ATTR_FORECAST_TIME: reftime.isoformat(),
-                ATTR_FORECAST_CONDITION: entry[0],
-                ATTR_FORECAST_PRECIPITATION: entry[1],
-                ATTR_FORECAST_TEMP: entry[2],
-                ATTR_FORECAST_TEMP_LOW: entry[3],
-                ATTR_FORECAST_PRECIPITATION_PROBABILITY: entry[4],
-            }
+            data_dict = Forecast(
+                datetime=reftime.isoformat(),
+                condition=entry[0],
+                precipitation=entry[1],
+                temperature=entry[2],
+                templow=entry[3],
+                precipitation_probability=entry[4],
+            )
             reftime = reftime + timedelta(hours=4)
             forecast_data.append(data_dict)
 

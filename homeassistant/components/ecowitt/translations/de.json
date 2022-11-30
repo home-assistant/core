@@ -1,0 +1,12 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "Um die Integration abzuschlie\u00dfen, verwende die Ecowitt App (auf deinem Telefon) oder rufe die Ecowitt Web UI in einem Browser unter der IP-Adresse der Station auf.\n\nW\u00e4hle deine Station \u2192 Men\u00fc Andere \u2192 DIY Upload Servers. Klicke auf \"Weiter\" und w\u00e4hle \"Angepasst\".\n\n- Server IP: `{server}`\n- Pfad: `{path}`\n- Anschluss: `{port}`\n\nKlicke auf \"Speichern\"."
+        },
+        "step": {
+            "user": {
+                "description": "M\u00f6chtest du Ecowitt wirklich einrichten?"
+            }
+        }
+    }
+}

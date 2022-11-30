@@ -1,0 +1,20 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "cool": "Podpora chladiaceho re\u017eimu",
+                    "dry": "Podpora su\u0161iaceho re\u017eimu",
+                    "fan_only": "Podpora re\u017eimu iba ventil\u00e1tora",
+                    "heat": "Podpora re\u017eimu vykurovania",
+                    "heat_cool": "Podpora automatick\u00e9ho re\u017eimu vykurovania/chladenia",
+                    "host": "Hostite\u013e"
+                },
+                "title": "Nastavte podrobnosti pripojenia CoolMasterNet."
+            }
+        }
+    }
+}

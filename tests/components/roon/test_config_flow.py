@@ -185,7 +185,7 @@ async def test_duplicate_config(hass):
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result2["type"] == data_entry_flow.FlowResultType.ABORT
         assert result2["reason"] == "already_configured"
 
 

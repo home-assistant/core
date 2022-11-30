@@ -7,10 +7,10 @@ from pyps4_2ndscreen.media_art import COUNTRIES
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_TITLE,
-    MEDIA_TYPE_GAME,
+    MediaType,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -75,7 +75,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up PS4 from a config entry."""
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
@@ -206,7 +206,7 @@ def _reformat_data(hass: HomeAssistant, games: dict, unique_id: str) -> dict:
                 ATTR_LOCKED: False,
                 ATTR_MEDIA_TITLE: data,
                 ATTR_MEDIA_IMAGE_URL: None,
-                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_GAME,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.GAME,
             }
             data_reformatted = True
 

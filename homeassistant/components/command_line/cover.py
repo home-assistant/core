@@ -115,10 +115,13 @@ class CommandCover(CoverEntity):
         """Execute the actual commands."""
         _LOGGER.info("Running command: %s", command)
 
-        success = call_shell_with_timeout(command, self._timeout) == 0
+        returncode = call_shell_with_timeout(command, self._timeout)
+        success = returncode == 0
 
         if not success:
-            _LOGGER.error("Command failed: %s", command)
+            _LOGGER.error(
+                "Command failed (with return code %s): %s", returncode, command
+            )
 
         return success
 

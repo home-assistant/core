@@ -7,34 +7,13 @@ reset:
     entity:
       domain: select
 
-next_tariff:
-  name: Next Tariff
-  description: Changes the tariff to the next one.
-  target:
-    entity:
-      domain: utility_meter
-
-select_tariff:
-  name: Select Tariff
-  description: Selects the current tariff of a utility meter.
-  target:
-    entity:
-      domain: utility_meter
-  fields:
-    tariff:
-      name: Tariff
-      description: Name of the tariff to switch to
-      example: "offpeak"
-      required: true
-      selector:
-        text:
-
 calibrate:
   name: Calibrate
   description: Calibrates a utility meter sensor.
   target:
     entity:
       domain: sensor
+      integration: utility_meter
   fields:
     value:
       name: Value

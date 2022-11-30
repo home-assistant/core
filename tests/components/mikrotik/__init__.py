@@ -1,4 +1,10 @@
 """Tests for the Mikrotik component."""
+from __future__ import annotations
+
+from typing import Any
+from unittest.mock import patch
+
+from homeassistant.components import mikrotik
 from homeassistant.components.mikrotik.const import (
     CONF_ARP_PING,
     CONF_DETECTION_TIME,
@@ -13,6 +19,9 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 MOCK_DATA = {
     CONF_NAME: "Mikrotik",
@@ -130,3 +139,39 @@ ARP_DATA = [
         "disabled": False,
     },
 ]
+
+
+async def setup_mikrotik_entry(hass: HomeAssistant, **kwargs: Any) -> None:
+    """Set up Mikrotik integration successfully."""
+    support_wireless: bool = kwargs.get("support_wireless", True)
+    dhcp_data: list[dict[str, Any]] = kwargs.get("dhcp_data", DHCP_DATA)
+    wireless_data: list[dict[str, Any]] = kwargs.get("wireless_data", WIRELESS_DATA)
+
+    def mock_command(self, cmd: str, params: dict[str, Any] | None = None) -> Any:
+        if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.IS_WIRELESS]:
+            return support_wireless
+        if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.DHCP]:
+            return dhcp_data
+        if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.WIRELESS]:
+            return wireless_data
+        if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.ARP]:
+            return ARP_DATA
+        return {}
+
+    options: dict[str, Any] = {}
+    if "force_dhcp" in kwargs:
+        options.update({"force_dhcp": True})
+
+    if "arp_ping" in kwargs:
+        options.update({"arp_ping": True})
+
+    config_entry = MockConfigEntry(
+        domain=mikrotik.DOMAIN, data=MOCK_DATA, options=options
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch("librouteros.connect"), patch.object(
+        mikrotik.hub.MikrotikData, "command", new=mock_command
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()

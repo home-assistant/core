@@ -9,7 +9,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import entity_registry as er
 
-from tests.components.sleepiq.conftest import (
+from .conftest import (
     BED_NAME,
     BED_NAME_LOWER,
     SLEEPER_L_ID,

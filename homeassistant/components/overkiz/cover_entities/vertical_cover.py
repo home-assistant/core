@@ -46,9 +46,9 @@ class VerticalCover(OverkizGenericCover):
     """Representation of an Overkiz vertical cover."""
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
-        supported_features: int = super().supported_features
+        supported_features = super().supported_features
 
         if self.executor.has_command(OverkizCommand.SET_CLOSURE):
             supported_features |= CoverEntityFeature.SET_POSITION
@@ -152,7 +152,7 @@ class LowSpeedCover(VerticalCover):
     ) -> None:
         """Initialize the device."""
         super().__init__(device_url, coordinator)
-        self._attr_name = f"{self._attr_name} Low Speed"
+        self._attr_name = "Low speed"
         self._attr_unique_id = f"{self._attr_unique_id}_low_speed"
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:

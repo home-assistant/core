@@ -1,0 +1,12 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "Entegrasyon kurulumunu tamamlamak i\u00e7in Ecowitt Uygulamas\u0131n\u0131 (telefonunuzda) kullan\u0131n veya istasyonun IP adresindeki bir taray\u0131c\u0131da Ecowitt WebUI'ye eri\u015fin. \n\n \u0130stasyonunuzu se\u00e7in - > Men\u00fc Di\u011ferleri - > Kendin Yap Y\u00fckleme Sunucular\u0131. \u0130leri'ye bas\u0131n ve '\u00d6zelle\u015ftirilmi\u015f'i se\u00e7in \n\n - Sunucu IP'si: ` {server} `\n - Yol: ` {path} `\n - Ba\u011flant\u0131 noktas\u0131: ` {port} ` \n\n 'Kaydet'e t\u0131klay\u0131n."
+        },
+        "step": {
+            "user": {
+                "description": "Ecowitt'i kurmak istedi\u011finizden emin misiniz?"
+            }
+        }
+    }
+}
