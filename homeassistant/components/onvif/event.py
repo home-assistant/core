@@ -8,7 +8,7 @@ import datetime as dt
 
 from httpx import RemoteProtocolError, TransportError
 from onvif import ONVIFCamera, ONVIFService
-from zeep.exceptions import Fault
+from zeep.exceptions import Fault, XMLParseError
 
 from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
@@ -127,14 +127,23 @@ class EventManager:
 
         try:
             restarted = await self.async_start()
-        except SUBSCRIPTION_ERRORS:
+        except XMLParseError as ex:
+            # Device may not support subscriptions to log at debug level
             restarted = False
+            LOGGER.debug(
+                "Failed to restart ONVIF PullPoint subscription for '%s'; Retrying later: %s",
+                self.unique_id,
+                ex,
+            )
+        except SUBSCRIPTION_ERRORS as ex:
+            restarted = False
+            LOGGER.warning(
+                "Failed to restart ONVIF PullPoint subscription for '%s'; Retrying later: %s",
+                self.unique_id,
+                ex,
+            )
 
         if not restarted:
-            LOGGER.warning(
-                "Failed to restart ONVIF PullPoint subscription for '%s'. Retrying",
-                self.unique_id,
-            )
             # Try again in a minute
             self._unsub_refresh = async_call_later(self.hass, 60, self.async_restart)
         elif self._listeners:
