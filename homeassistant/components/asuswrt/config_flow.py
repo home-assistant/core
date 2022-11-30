@@ -69,7 +69,7 @@ OPTIONS_SCHEMA = vol.Schema(
 )
 
 
-def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     """Get options schema."""
     options_flow: SchemaOptionsFlowHandler
     options_flow = cast(SchemaOptionsFlowHandler, handler.parent_handler)

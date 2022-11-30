@@ -58,7 +58,7 @@ OPTIONS_SCHEMA = vol.Schema(
 )
 
 
-def _options_suggested_values(handler: SchemaCommonFlowHandler) -> dict[str, Any]:
+async def _options_suggested_values(handler: SchemaCommonFlowHandler) -> dict[str, Any]:
     parent_handler = cast(SchemaOptionsFlowHandler, handler.parent_handler)
     suggested_values = copy.deepcopy(dict(parent_handler.config_entry.data))
     suggested_values.update(parent_handler.options)
