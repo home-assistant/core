@@ -306,7 +306,7 @@ def _async_register_base_station(
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, system.system_id)},
+        identifiers={(DOMAIN, str(system.system_id))},
         manufacturer="SimpliSafe",
         model=system.version,
         name=system.address,
@@ -757,7 +757,7 @@ class SimpliSafeEntity(CoordinatorEntity):
             manufacturer="SimpliSafe",
             model=model,
             name=device_name,
-            via_device=(DOMAIN, system.system_id),
+            via_device=(DOMAIN, str(system.system_id)),
         )
 
         self._attr_unique_id = serial
