@@ -964,6 +964,9 @@ iperf3==0.1.11
 # homeassistant.components.gogogate2
 ismartgate==4.0.4
 
+# homeassistant.components.file_upload
+janus==1.0.0
+
 # homeassistant.components.jellyfin
 jellyfin-apiclient-python==1.9.2
 
@@ -2282,7 +2285,7 @@ simplehound==0.3
 simplepush==2.1.1
 
 # homeassistant.components.simplisafe
-simplisafe-python==2022.07.1
+simplisafe-python==2022.11.2
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.1.2
