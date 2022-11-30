@@ -128,7 +128,7 @@ MatterLightEntityDescriptionFactory = partial(
 
 # Mapping of a Matter Device type to Light Entity Description.
 # A Matter device type (instance) can consist of multiple attributes.
-# For example a Color Light which has attribute sto control brightness
+# For example a Color Light which has an attribute to control brightness
 # but also for color.
 
 DEVICE_ENTITY: dict[
