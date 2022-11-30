@@ -2,121 +2,42 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
-import json
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING
 
-import aiohttp
-from matter_server.client.adapter import AbstractMatterAdapter
-from matter_server.client.model.node_device import AbstractMatterNodeDevice
-from matter_server.common.json_utils import CHIPJSONDecoder, CHIPJSONEncoder
-from matter_server.vendor.chip.clusters import Objects as all_clusters
+from chip.clusters import Objects as all_clusters
+from matter_server.common.models.node_device import AbstractMatterNodeDevice
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_URL, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
 from .device_platform import DEVICE_PLATFORM
 
 if TYPE_CHECKING:
-    from matter_server.client.model.node import MatterNode
-
-STORAGE_MAJOR_VERSION = 1
-STORAGE_MINOR_VERSION = 0
+    from matter_server.client import MatterClient
+    from matter_server.common.models.node import MatterNode
 
 
-def load_json(
-    filename: str,
-    default: list | dict | None = None,
-    decoder: type[json.JSONDecoder] | None = None,
-) -> list | dict:
-    """Load JSON data from a file and return as dict or list.
-
-    Defaults to returning empty dict if file is not found.
-
-    Temporarily copied from Home Assistant to allow decoder.
-    """
-    try:
-        with open(filename, encoding="utf-8") as fdesc:
-            return json.loads(fdesc.read(), cls=decoder)  # type: ignore[no-any-return]
-    except FileNotFoundError:
-        # This is not a fatal error
-        logging.getLogger(__name__).debug("JSON file not found: %s", filename)
-    except ValueError as error:
-        logging.getLogger(__name__).exception(
-            "Could not parse JSON content: %s", filename
-        )
-        raise HomeAssistantError(error) from error
-    except OSError as error:
-        logging.getLogger(__name__).exception("JSON file reading failed: %s", filename)
-        raise HomeAssistantError(error) from error
-    return {} if default is None else default
-
-
-class MatterStore(Store[dict]):
-    """Temporary fork to add support for using our JSON decoder."""
-
-    async def _async_load_data(self) -> Any | None:
-        """Load the data with custom decoder."""
-        # Check if we have a pending write
-        if self._data is not None:
-            return await super()._async_load_data()  # type: ignore[no-untyped-call]
-
-        data: dict = await self.hass.async_add_executor_job(
-            load_json, self.path, None, CHIPJSONDecoder  # type: ignore[arg-type]
-        )
-
-        if data == {}:
-            return None
-
-        # We store it as a to-be-saved data so the load function will pick it up
-        # and run migration etc.
-        self._data = data
-        return await super()._async_load_data()  # type: ignore[no-untyped-call]
-
-
-def get_matter_store(hass: HomeAssistant, config_entry: ConfigEntry) -> MatterStore:
-    """Get the store for the config entry."""
-    return MatterStore(
-        hass,
-        STORAGE_MAJOR_VERSION,
-        f"{DOMAIN}_{config_entry.entry_id}",
-        minor_version=STORAGE_MINOR_VERSION,
-        encoder=CHIPJSONEncoder,
-    )
-
-
-def get_matter_fallback_store(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> Store[dict]:
-    """Get the store for the config entry."""
-    return Store(
-        hass,
-        STORAGE_MAJOR_VERSION,
-        f"{DOMAIN}_{config_entry.entry_id}",
-        minor_version=STORAGE_MINOR_VERSION,
-    )
-
-
-class MatterAdapter(AbstractMatterAdapter):  # type: ignore[misc]
+class MatterAdapter:
     """Connect Matter into Home Assistant."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self,
+        matter_client: MatterClient,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+    ) -> None:
         """Initialize the adapter."""
+        self.matter_client = matter_client
         self.hass = hass
         self.config_entry = config_entry
         self.logger = logging.getLogger(__name__)
-        self._store = get_matter_store(hass, config_entry)
         self.platform_handlers: dict[Platform, AddEntitiesCallback] = {}
         self._platforms_set_up = asyncio.Event()
-        self._node_lock: dict[int, asyncio.Lock] = {}
 
     def register_platform_handler(
         self, platform: Platform, add_entities: AddEntitiesCallback
@@ -126,43 +47,13 @@ class MatterAdapter(AbstractMatterAdapter):  # type: ignore[misc]
         if len(self.platform_handlers) == len(DEVICE_PLATFORM):
             self._platforms_set_up.set()
 
-    async def load_data(self) -> dict | None:
-        """Load data."""
-        try:
-            return await self._store.async_load()
-        except ValueError:
-            # Exception happens when the stored data is not deserializable with new Matter models
-            data = await get_matter_fallback_store(
-                self.hass, self.config_entry
-            ).async_load()
-            # Remove the serialized matter data. Devices will be re-interviewed.
-            if data is not None:
-                del data["node_interview_version"]
-            return data
+    async def setup_nodes(self) -> None:
+        """Set up all existing nodes."""
+        await self._platforms_set_up.wait()
+        for node in await self.matter_client.get_nodes():
+            await self._setup_node(node)
 
-    async def save_data(self, data: dict) -> None:
-        """Save data."""
-        await self._store.async_save(data)
-
-    def delay_save_data(self, get_data: Callable[[], dict]) -> None:
-        """Save data, but not right now."""
-        self._store.async_delay_save(get_data, 60)
-
-    def get_server_url(self) -> str:
-        """Get the server URL."""
-        return cast(str, self.config_entry.data[CONF_URL])
-
-    def get_client_session(self) -> aiohttp.ClientSession:
-        """Get the client session."""
-        return async_get_clientsession(self.hass)
-
-    def get_node_lock(self, nodeid: int) -> asyncio.Lock:
-        """Get the lock for a node."""
-        if nodeid not in self._node_lock:
-            self._node_lock[nodeid] = asyncio.Lock()
-        return self._node_lock[nodeid]
-
-    async def setup_node(self, node: MatterNode) -> None:
+    async def _setup_node(self, node: MatterNode) -> None:
         """Set up an node."""
         await self._platforms_set_up.wait()
         self.logger.debug("Setting up entities for node %s", node.node_id)
@@ -233,7 +124,10 @@ class MatterAdapter(AbstractMatterAdapter):  # type: ignore[misc]
                     )
                     entities.append(
                         entity_description.entity_cls(
-                            node_device, instance, entity_description
+                            self.matter_client,
+                            node_device,
+                            instance,
+                            entity_description,
                         )
                     )
 
@@ -246,14 +140,3 @@ class MatterAdapter(AbstractMatterAdapter):  # type: ignore[misc]
                     type(instance).__name__,
                     hex(instance.device_type.device_type),
                 )
-
-    async def handle_server_disconnected(self, should_reload: bool) -> None:
-        """Handle server disconnected."""
-        # The entry needs to be reloaded since a new driver state
-        # will be acquired on reconnect.
-        # All model instances will be replaced when the new state is acquired.
-        if should_reload and self.hass.is_running:
-            self.logger.info("Disconnected from server. Reloading")
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(self.config_entry.entry_id)
-            )

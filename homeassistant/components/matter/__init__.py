@@ -27,6 +27,7 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.service import async_register_admin_service
 
+from .adapter import MatterAdapter
 from .addon import get_addon_manager
 from .api import async_register_api
 from .const import CONF_INTEGRATION_CREATED_ADDON, CONF_USE_ADDON, DOMAIN, LOGGER
@@ -93,9 +94,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN] = {}
         _async_init_services(hass)
 
-    hass.data[DOMAIN][entry.entry_id] = matter_client
+    # we create an intermediate layer (adapter) which keeps track of our nodes
+    # and discovery of platformentities from the node's attributes
+    matter = MatterAdapter(matter_client, hass, entry)
+    hass.data[DOMAIN][entry.entry_id] = matter
 
+    # forward platform setup to all platforms in the discovery schema
     await hass.config_entries.async_forward_entry_setups(entry, DEVICE_PLATFORM)
+
+    # start discovering of node entities as task
+    asyncio.create_task(matter.setup_nodes())
 
     return True
 
@@ -105,8 +113,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, DEVICE_PLATFORM)
 
     if unload_ok:
-        matter_client: MatterClient = hass.data[DOMAIN].pop(entry.entry_id)
-        await matter_client.disconnect()
+        matter: MatterAdapter = hass.data[DOMAIN].pop(entry.entry_id)
+        await matter.matter_client.disconnect()
 
     if entry.data.get(CONF_USE_ADDON) and entry.disabled_by:
         addon_manager: AddonManager = get_addon_manager(hass)
@@ -157,20 +165,23 @@ async def async_remove_config_entry_device(
     if not unique_id:
         return True
 
-    matter_client: MatterClient = hass.data[DOMAIN][config_entry.entry_id]
+    matter: MatterAdapter = hass.data[DOMAIN][config_entry.entry_id]
 
-    for node in await matter_client.get_nodes():
+    for node in await matter.matter_client.get_nodes():
         if node.unique_id == unique_id:
-            await matter_client.remove_node(node.node_id)
+            await matter.matter_client.remove_node(node.node_id)
             break
 
     return True
 
 
 @callback
-def get_matter_client(hass: HomeAssistant) -> MatterClient:
-    """Return MatterClient instance."""
-    return next(iter(hass.data[DOMAIN].values()))
+def get_matter(hass: HomeAssistant) -> MatterAdapter:
+    """Return MatterAdapter instance."""
+    # NOTE: This assumes only one Matter connection/fabric can exist
+    # Shall we support connecting to multiple servers in the client or by config entries ?
+    # In case of the config entry we need to fix this.
+    return next(iter(hass.data[DOMAIN].values()))  # type: ignore[no-any-return]
 
 
 @callback
@@ -179,7 +190,7 @@ def _async_init_services(hass: HomeAssistant) -> None:
 
     async def commission(call: ServiceCall) -> None:
         """Handle commissioning."""
-        matter_client = get_matter_client(hass)
+        matter_client = get_matter(hass).matter_client
         try:
             await matter_client.commission_with_code(call.data["code"])
         except FailedCommand as err:
@@ -195,7 +206,7 @@ def _async_init_services(hass: HomeAssistant) -> None:
 
     async def accept_shared_device(call: ServiceCall) -> None:
         """Accept a shared device."""
-        matter_client = get_matter_client(hass)
+        matter_client = get_matter(hass).matter_client
         try:
             await matter_client.commission_on_network(call.data["pin"])
         except FailedCommand as err:
@@ -211,7 +222,7 @@ def _async_init_services(hass: HomeAssistant) -> None:
 
     async def set_wifi(call: ServiceCall) -> None:
         """Handle set wifi creds."""
-        matter_client = get_matter_client(hass)
+        matter_client = get_matter(hass).matter_client
         try:
             await matter_client.set_wifi_credentials(
                 call.data["ssid"], call.data["password"]
@@ -234,7 +245,7 @@ def _async_init_services(hass: HomeAssistant) -> None:
 
     async def set_thread_dataset(call: ServiceCall) -> None:
         """Handle set Thread creds."""
-        matter_client = get_matter_client(hass)
+        matter_client = get_matter(hass).matter_client
         thread_dataset = bytes.fromhex(call.data["dataset"])
         try:
             await matter_client.set_thread_operational_dataset(thread_dataset)
@@ -271,7 +282,7 @@ def _async_init_services(hass: HomeAssistant) -> None:
 
         unique_id = matter_id[1]
 
-        matter_client = get_matter_client(hass)
+        matter_client = get_matter(hass).matter_client
 
         # This could be more efficient
         for node in await matter_client.get_nodes():
@@ -287,7 +298,7 @@ def _async_init_services(hass: HomeAssistant) -> None:
         if node_id is None:
             raise HomeAssistantError("This is not a Matter device")
 
-        matter_client = get_matter_client(hass)
+        matter_client = get_matter(hass).matter_client
 
         # We are sending device ID .
 

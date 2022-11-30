@@ -24,8 +24,6 @@ from .entity import MatterEntity, MatterEntityDescriptionBaseClass
 from .util import renormalize
 
 if TYPE_CHECKING:
-    from matter_server.client import MatterClient
-
     from .adapter import MatterAdapter
 
 
@@ -35,9 +33,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Matter Light from Config Entry."""
-    matter: MatterClient = hass.data[DOMAIN][config_entry.entry_id]
-    adapter: MatterAdapter = matter.adapter
-    adapter.register_platform_handler(Platform.LIGHT, async_add_entities)
+    matter: MatterAdapter = hass.data[DOMAIN][config_entry.entry_id]
+    matter.register_platform_handler(Platform.LIGHT, async_add_entities)
 
 
 class MatterLight(MatterEntity, LightEntity):
@@ -55,7 +52,9 @@ class MatterLight(MatterEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
         if ATTR_BRIGHTNESS not in kwargs or not self._supports_brightness():
-            await self._device_type_instance.send_command(
+            await self.matter_client.send_device_command(
+                node_id=self._device_type_instance.node.node_id,
+                endpoint=self._device_type_instance.endpoint,
                 payload=clusters.OnOff.Commands.On(),
             )
             return
@@ -69,12 +68,14 @@ class MatterLight(MatterEntity, LightEntity):
             )
         )
 
-        await self._device_type_instance.send_command(
+        await self.matter_client.send_device_command(
+            node_id=self._device_type_instance.node.node_id,
+            endpoint=self._device_type_instance.endpoint,
             payload=clusters.LevelControl.Commands.MoveToLevelWithOnOff(
                 level=level,
                 # It's required in TLV. We don't implement transition time yet.
                 transitionTime=0,
-            )
+            ),
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -123,6 +124,10 @@ MatterLightEntityDescriptionFactory = partial(
     MatterLightEntityDescription, entity_cls=MatterLight
 )
 
+# Mapping of a Matter Device type to Light Entity Description.
+# A Matter device type (instance) can consist of multiple attributes
+# For example a Color Light which has attribute sto control brightness
+# but also for color.
 
 DEVICE_ENTITY: dict[
     type[device_types.DeviceType],
