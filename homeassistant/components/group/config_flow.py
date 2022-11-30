@@ -1,7 +1,7 @@
 """Config flow for Group integration."""
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Coroutine, Mapping
 from functools import partial
 from typing import Any, cast
 
@@ -100,11 +100,12 @@ def choose_options_step(options: dict[str, Any]) -> str:
 
 def set_group_type(
     group_type: str,
-) -> Callable[[SchemaCommonFlowHandler, dict[str, Any]], dict[str, Any]]:
+) -> Callable[
+    [SchemaCommonFlowHandler, dict[str, Any]], Coroutine[Any, Any, dict[str, Any]]
+]:
     """Set group type."""
 
-    @callback
-    def _set_group_type(
+    async def _set_group_type(
         handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
     ) -> dict[str, Any]:
         """Add group type to user input."""
@@ -116,23 +117,32 @@ def set_group_type(
 CONFIG_FLOW = {
     "user": SchemaFlowMenuStep(GROUP_TYPES),
     "binary_sensor": SchemaFlowFormStep(
-        BINARY_SENSOR_CONFIG_SCHEMA, set_group_type("binary_sensor")
+        BINARY_SENSOR_CONFIG_SCHEMA,
+        validate_user_input=set_group_type("binary_sensor"),
     ),
     "cover": SchemaFlowFormStep(
-        basic_group_config_schema("cover"), set_group_type("cover")
+        basic_group_config_schema("cover"),
+        validate_user_input=set_group_type("cover"),
     ),
-    "fan": SchemaFlowFormStep(basic_group_config_schema("fan"), set_group_type("fan")),
+    "fan": SchemaFlowFormStep(
+        basic_group_config_schema("fan"),
+        validate_user_input=set_group_type("fan"),
+    ),
     "light": SchemaFlowFormStep(
-        basic_group_config_schema("light"), set_group_type("light")
+        basic_group_config_schema("light"),
+        validate_user_input=set_group_type("light"),
     ),
     "lock": SchemaFlowFormStep(
-        basic_group_config_schema("lock"), set_group_type("lock")
+        basic_group_config_schema("lock"),
+        validate_user_input=set_group_type("lock"),
     ),
     "media_player": SchemaFlowFormStep(
-        basic_group_config_schema("media_player"), set_group_type("media_player")
+        basic_group_config_schema("media_player"),
+        validate_user_input=set_group_type("media_player"),
     ),
     "switch": SchemaFlowFormStep(
-        basic_group_config_schema("switch"), set_group_type("switch")
+        basic_group_config_schema("switch"),
+        validate_user_input=set_group_type("switch"),
     ),
 }
 
