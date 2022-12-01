@@ -82,6 +82,7 @@ class LivisiWindowSensor(
     CoordinatorEntity[LivisiDataUpdateCoordinator], BinarySensorEntity
 ):
     """Represents the Livisi Binary Sensor."""
+
     def __init__(
         self,
         config_entry: ConfigEntry,
