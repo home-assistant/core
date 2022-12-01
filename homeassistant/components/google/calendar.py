@@ -8,7 +8,12 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any
 
-from gcal_sync.api import GoogleCalendarService, ListEventsRequest, Range, SyncEventsRequest
+from gcal_sync.api import (
+    GoogleCalendarService,
+    ListEventsRequest,
+    Range,
+    SyncEventsRequest,
+)
 from gcal_sync.exceptions import ApiException
 from gcal_sync.model import AccessRole, DateOrDatetime, Event
 from gcal_sync.store import ScopedCalendarStore
