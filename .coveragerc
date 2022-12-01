@@ -724,6 +724,9 @@ omit =
     homeassistant/components/map/*
     homeassistant/components/mastodon/notify.py
     homeassistant/components/matrix/*
+    homeassistant/components/matter/__init__.py
+    homeassistant/components/matter/adapter.py
+    homeassistant/components/matter/entity.py
     homeassistant/components/meater/__init__.py
     homeassistant/components/meater/const.py
     homeassistant/components/meater/sensor.py
