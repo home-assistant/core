@@ -104,6 +104,14 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `d`, `h`, `min`, `s`
     """
 
+    ENUM = "enum"
+    """Enumeration.
+
+    Provides a fixed list of options the state of the sensor can be in.
+
+    Unit of measurement: `None`
+    """
+
     TIMESTAMP = "timestamp"
     """Timestamp.
 
@@ -732,21 +740,31 @@ class SensorEntity(Entity):
                 ) from err
 
         # Enum checks
-        if value is not None and (options := self.options) is not None:
+        if value is not None and (
+            device_class == SensorDeviceClass.ENUM or self.options is not None
+        ):
+            if device_class != SensorDeviceClass.ENUM:
+                reason = "is missing the enum device class"
+                if device_class is not None:
+                    reason = f"has device class '{device_class}' instead of 'enum'"
+                raise ValueError(
+                    f"Sensor {self.entity_id} is providing enum options, but {reason}"
+                )
+
             if state_class:
                 raise ValueError(
                     f"Sensor {self.entity_id} has an state_class and thus indicating "
-                    "it has a numeric value; it incorrectly provides a list of options"
+                    "it has a numeric value; however, it has the enum device class"
                 )
 
-            if device_class and device_class in SensorDeviceClass:
+            if unit_of_measurement:
                 raise ValueError(
-                    f"Sensor {self.entity_id} has an device_class indicating "
-                    "it is an numeric or datetime value; "
-                    "it incorrectly provides a list of options"
+                    f"Sensor {self.entity_id} has an unit of measurement and thus "
+                    "indicating it has a numeric value; "
+                    "however, it has the enum device class"
                 )
 
-            if value not in options:
+            if (options := self.options) and value not in options:
                 raise ValueError(
                     f"Sensor {self.entity_id} provides state value '{value}', "
                     "which is not in the list of options provided"
