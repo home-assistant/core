@@ -46,7 +46,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 FullyKioskError,
                 asyncio.TimeoutError,
             ) as error:
-                LOGGER.exception(error)
+                LOGGER.debug(error, exc_info=True)
                 errors["base"] = "cannot_connect"
             except Exception as error:  # pylint: disable=broad-except
                 LOGGER.exception(error)
