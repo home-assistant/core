@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from functools import partial
 
 import speedtest
 
@@ -22,9 +23,11 @@ PLATFORMS = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the Speedtest.net component."""
-    api = speedtest.Speedtest(secure=True)
-    coordinator = SpeedTestDataCoordinator(hass, config_entry, api)
     try:
+        api = await hass.async_add_executor_job(
+            partial(speedtest.Speedtest, secure=True)
+        )
+        coordinator = SpeedTestDataCoordinator(hass, config_entry, api)
         await hass.async_add_executor_job(coordinator.update_servers)
     except speedtest.SpeedtestException as err:
         raise ConfigEntryNotReady from err
