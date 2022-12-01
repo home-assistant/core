@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from matter_server.client.client import Client
+from matter_server.client import MatterClient
 from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
 import voluptuous as vol
 
@@ -33,7 +33,7 @@ from .const import (
 
 ADDON_SETUP_TIMEOUT = 5
 ADDON_SETUP_TIMEOUT_ROUNDS = 40
-DEFAULT_URL = "ws://localhost:5580/chip_ws"
+DEFAULT_URL = "ws://localhost:5580/ws"
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
 
 
@@ -45,13 +45,13 @@ def get_manual_schema(user_input: dict[str, Any]) -> vol.Schema:
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect."""
-    client = Client(data[CONF_URL], aiohttp_client.async_get_clientsession(hass))
+    client = MatterClient(data[CONF_URL], aiohttp_client.async_get_clientsession(hass))
     await client.connect()
 
 
 def build_ws_address(host: str, port: int) -> str:
     """Return the websocket address."""
-    return f"ws://{host}:{port}/chip_ws"
+    return f"ws://{host}:{port}/ws"
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

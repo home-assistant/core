@@ -30,10 +30,10 @@ async def test_commission(
     msg = await ws_client.receive_json()
 
     assert msg["success"]
-    matter_client.commission.assert_called_once_with("12345678")
+    matter_client.commission_with_code.assert_called_once_with("12345678")
 
-    matter_client.commission.reset_mock()
-    matter_client.commission.side_effect = FailedCommand(
+    matter_client.commission_with_code.reset_mock()
+    matter_client.commission_with_code.side_effect = FailedCommand(
         "test_id", "test_code", "Failed to commission"
     )
 
@@ -48,4 +48,4 @@ async def test_commission(
 
     assert not msg["success"]
     assert msg["error"]["code"] == "test_code"
-    matter_client.commission.assert_called_once_with("12345678")
+    matter_client.commission_with_code.assert_called_once_with("12345678")

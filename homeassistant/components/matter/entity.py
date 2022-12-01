@@ -2,18 +2,25 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+import logging
+from typing import TYPE_CHECKING, Any
 
-from matter_server.client.exceptions import FailedCommand
-from matter_server.client.model.device_type_instance import MatterDeviceTypeInstance
-from matter_server.client.model.node_device import AbstractMatterNodeDevice
+from matter_server.common.models.device_type_instance import MatterDeviceTypeInstance
+from matter_server.common.models.events import EventType
+from matter_server.common.models.node_device import AbstractMatterNodeDevice
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from matter_server.client import MatterClient
+    from matter_server.common.models.node import MatterAttribute
+
+LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -35,71 +42,61 @@ class MatterEntity(Entity):
     entity_description: MatterEntityDescriptionBaseClass
     _attr_should_poll = False
     _attr_has_entity_name = True
-    _unsubscribe: Callable[..., Coroutine[Any, Any, None]] | None = None
 
     def __init__(
         self,
+        matter_client: MatterClient,
         node_device: AbstractMatterNodeDevice,
         device_type_instance: MatterDeviceTypeInstance,
         entity_description: MatterEntityDescriptionBaseClass,
     ) -> None:
         """Initialize the entity."""
+        self.matter_client = matter_client
         self._node_device = node_device
         self._device_type_instance = device_type_instance
         self.entity_description = entity_description
         node = device_type_instance.node
-        self._attr_unique_id = f"{node.matter.client.server_info.compressedFabricId}-{node.unique_id}-{device_type_instance.endpoint_id}-{device_type_instance.device_type.device_type}"
+        self._unsubscribes: list[Callable] = []
+        # for fast lookups we create a mapping to the attribute paths
+        self._attributes_map: dict[type, str] = {}
+        self._attr_unique_id = f"{matter_client.server_info.compressed_fabric_id}-{node.unique_id}-{device_type_instance.endpoint}-{device_type_instance.device_type.device_type}"
 
     @property
     def device_info(self) -> DeviceInfo | None:
         """Return device info for device registry."""
         return {"identifiers": {(DOMAIN, self._node_device.device_info().uniqueID)}}
 
-    async def init_matter_device(self) -> None:
-        """Initialize and subscribe device attributes."""
-        try:
-            # Subscribe to updates.
-            self._unsubscribe = await self._device_type_instance.subscribe_updates(
-                self.entity_description.subscribe_attributes,
-                self._subscription_update,
-            )
-
-            # Fetch latest info from the device.
-            await self._device_type_instance.update_attributes(
-                self.entity_description.subscribe_attributes
-            )
-        except FailedCommand as err:
-            self._device_type_instance.node.matter.adapter.logger.warning(
-                "Error interacting with node %d (%s): %s. Marking device as unavailable. Recovery is not implemented yet. Reload config entry when device is available again.",
-                self._device_type_instance.node.node_id,
-                self.entity_id,
-                str(err.error_code),
-            )
-            self._attr_available = False
-
-        self._update_from_device()
-
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
         await super().async_added_to_hass()
 
-        if not self.entity_description.subscribe_attributes:
-            self._update_from_device()
-            return
+        # Subscribe to attribute updates.
+        for attr_cls in self.entity_description.subscribe_attributes:
+            if matter_attr := self.get_matter_attribute(attr_cls):
+                self._attributes_map[attr_cls] = matter_attr.path
+                self._unsubscribes.append(
+                    self.matter_client.subscribe(
+                        self._on_matter_event,
+                        EventType.ATTRIBUTE_UPDATED,
+                        self._device_type_instance.node.node_id,
+                        matter_attr.path,
+                    )
+                )
+                continue
+            # not sure if this can happen, but just in case log it.
+            LOGGER.warning("Attribute not found on device: %s", attr_cls)
 
-        async with self._device_type_instance.node.matter.adapter.get_node_lock(
-            self._device_type_instance.node.node_id
-        ):
-            await self.init_matter_device()
+        # make sure to update the attributes once
+        self._update_from_device()
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
-        if self._unsubscribe is not None:
-            await self._unsubscribe()
+        for unsub in self._unsubscribes:
+            unsub()
 
     @callback
-    def _subscription_update(self) -> None:
-        """Call when subscription is updated."""
+    def _on_matter_event(self, event: EventType, data: Any = None) -> None:
+        """Call on update."""
         self._update_from_device()
         self.async_write_ha_state()
 
@@ -107,3 +104,15 @@ class MatterEntity(Entity):
     @abstractmethod
     def _update_from_device(self) -> None:
         """Update data from Matter device."""
+
+    @callback
+    def get_matter_attribute(self, attribute: type) -> MatterAttribute | None:
+        """Lookup MatterAttribute instance on device instance by providing the attribute class."""
+        return next(
+            (
+                x
+                for x in self._device_type_instance.attributes
+                if x.attribute_type == attribute
+            ),
+            None,
+        )

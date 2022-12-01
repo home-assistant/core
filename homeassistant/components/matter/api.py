@@ -6,13 +6,13 @@ from functools import wraps
 from typing import Any
 
 from matter_server.client.exceptions import FailedCommand
-from matter_server.client.matter import Matter
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
 
+from .adapter import MatterAdapter
 from .const import DOMAIN
 
 ID = "id"
@@ -25,15 +25,15 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_commission)
 
 
-def async_get_matter(func: Callable) -> Callable:
-    """Decorate function to get the Matter client."""
+def async_get_matter_adapter(func: Callable) -> Callable:
+    """Decorate function to get the MatterAdapter."""
 
     @wraps(func)
     async def _get_matter(
         hass: HomeAssistant, connection: ActiveConnection, msg: dict
     ) -> None:
         """Provide the Matter client to the function."""
-        matter: Matter = list(hass.data[DOMAIN].values())[0]
+        matter: MatterAdapter = next(iter(hass.data[DOMAIN].values()))
 
         await func(hass, connection, msg, matter)
 
@@ -69,13 +69,13 @@ def async_handle_failed_command(func: Callable) -> Callable:
 )
 @websocket_api.async_response
 @async_handle_failed_command
-@async_get_matter
+@async_get_matter_adapter
 async def websocket_commission(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    matter: Matter,
+    matter: MatterAdapter,
 ) -> None:
     """Commission a device to the Matter network."""
-    await matter.commission(msg["code"])
+    await matter.matter_client.commission_with_code(msg["code"])
     connection.send_result(msg[ID])
