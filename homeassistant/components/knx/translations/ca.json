@@ -94,13 +94,6 @@
                 },
                 "description": "Introdueix la informaci\u00f3 de seguretat IP (IP Secure)."
             },
-            "secure_tunneling": {
-                "description": "Selecciona com vols configurar KNX/IP Secure.",
-                "menu_options": {
-                    "secure_knxkeys": "Utilitza un fitxer `.knxkeys` que contingui les claus de seguretat IP (IP Secure)",
-                    "secure_tunnel_manual": "Configura manualment les claus de seguretat IP (IP Secure)"
-                }
-            },
             "tunnel": {
                 "data": {
                     "gateway": "Connexi\u00f3 t\u00fanel KNX"
@@ -215,13 +208,6 @@
                     "user_password": "Contrasenya per a la connexi\u00f3 t\u00fanel espec\u00edfica configurada al panell 'Propietats' del t\u00fanel a ETS."
                 },
                 "description": "Introdueix la informaci\u00f3 de seguretat IP (IP Secure)."
-            },
-            "secure_tunneling": {
-                "description": "Selecciona com vols configurar KNX/IP Secure.",
-                "menu_options": {
-                    "secure_knxkeys": "Utilitza un fitxer `.knxkeys` que contingui les claus de seguretat IP (IP Secure)",
-                    "secure_tunnel_manual": "Configura manualment les claus de seguretat IP (IP Secure)"
-                }
             },
             "tunnel": {
                 "data": {

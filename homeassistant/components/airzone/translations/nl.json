@@ -19,8 +19,7 @@
                     "host": "Host",
                     "id": "Systeem ID",
                     "port": "Poort"
-                },
-                "description": "Airzone integratie instellen."
+                }
             }
         }
     }

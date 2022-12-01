@@ -24,9 +24,6 @@
         }
     },
     "issues": {
-        "deprecated_yaml": {
-            "title": "De Radarr YAML-configuratie wordt verwijderd"
-        },
         "removed_yaml": {
             "title": "De Radarr YAML configuratie is verwijderd"
         }

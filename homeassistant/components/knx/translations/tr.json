@@ -50,12 +50,6 @@
                 },
                 "description": "L\u00fctfen `.knxkeys` dosyan\u0131z i\u00e7in bilgileri girin."
             },
-            "secure_tunneling": {
-                "description": "KNX/IP Secure'u nas\u0131l yap\u0131land\u0131rmak istedi\u011finizi se\u00e7in.",
-                "menu_options": {
-                    "secure_knxkeys": "IP g\u00fcvenli anahtarlar\u0131 i\u00e7eren bir \".knxkeys\" dosyas\u0131 kullan\u0131n"
-                }
-            },
             "tunnel": {
                 "data": {
                     "gateway": "KNX T\u00fcnel Ba\u011flant\u0131s\u0131"

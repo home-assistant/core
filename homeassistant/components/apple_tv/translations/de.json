@@ -56,7 +56,7 @@
                 "data": {
                     "device_input": "Ger\u00e4t"
                 },
-                "description": "Gib zun\u00e4chst den Ger\u00e4tenamen (z. B. K\u00fcche oder Schlafzimmer) oder die IP-Adresse des Apple TV ein, den du hinzuf\u00fcgen m\u00f6chtest.\n\nWenn du dein Ger\u00e4t nicht sehen kannst oder Probleme auftreten, versuche die IP-Adresse des Ger\u00e4ts einzugeben.",
+                "description": "Gib zun\u00e4chst den Ger\u00e4tenamen (z.B. K\u00fcche oder Schlafzimmer) oder die IP-Adresse des Apple TV ein, den du hinzuf\u00fcgen m\u00f6chtest.\n\nWenn du dein Ger\u00e4t nicht sehen kannst oder Probleme auftreten, versuche die IP-Adresse des Ger\u00e4ts einzugeben.",
                 "title": "Neuen Apple TV einrichten"
             }
         }

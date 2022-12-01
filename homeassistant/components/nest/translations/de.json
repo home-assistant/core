@@ -37,7 +37,7 @@
                 "title": "Nest: Cloud-Projekt-ID eingeben"
             },
             "create_cloud_project": {
-                "description": "Die Nest-Integration erm\u00f6glicht es dir, deine Nest-Thermostate, -Kameras und -T\u00fcrklingeln \u00fcber die Smart Device Management API zu integrieren. Die SDM API **erfordert eine einmalige Einrichtungsgeb\u00fchr von US $5**. Siehe Dokumentation f\u00fcr [weitere Informationen]({more_info_url}).\n\n1. Rufe die [Google Cloud Console]({cloud_console_url}) auf.\n1. Wenn dies dein erstes Projekt ist, dr\u00fccke auf **Projekt erstellen** und dann auf **Neues Projekt**.\n1. Gib deinem Cloud-Projekt einen Namen und dr\u00fccke dann auf **Erstellen**.\n1. Speichere die Cloud Project ID, z. B. *example-project-12345*, da du diese sp\u00e4ter ben\u00f6tigst.\n1. Gehe zur API-Bibliothek f\u00fcr [Smart Device Management API]({sdm_api_url}) und dr\u00fccke auf **Aktivieren**.\n1. Wechsele zur API-Bibliothek f\u00fcr [Cloud Pub/Sub API]({pubsub_api_url}) und dr\u00fccke auf **Aktivieren**.\n\nFahre fort, wenn dein Cloud-Projekt eingerichtet ist.",
+                "description": "Die Nest-Integration erm\u00f6glicht es dir, deine Nest Thermostate, Kameras und T\u00fcrklingeln \u00fcber die Smart Device Management API zu integrieren. Die SDM API **erfordert eine einmalige Einrichtungsgeb\u00fchr von US $5**. Siehe Dokumentation f\u00fcr [weitere Informationen]({more_info_url}).\n\n1. Rufe die [Google Cloud Console]({cloud_console_url}) auf.\n1. Wenn dies dein erstes Projekt ist, dr\u00fccke auf **Projekt erstellen** und dann auf **Neues Projekt**.\n1. Gib deinem Cloud-Projekt einen Namen und dr\u00fccke dann auf **Erstellen**.\n1. Speichere die Cloud Projekt ID, z. B. *example-project-12345*, da du diese sp\u00e4ter ben\u00f6tigst.\n1. Gehe zur API-Bibliothek f\u00fcr [Smart Device Management API]({sdm_api_url}) und dr\u00fccke auf **Aktivieren**.\n1. Wechsele zur API-Bibliothek f\u00fcr [Cloud Pub/Sub API]({pubsub_api_url}) und dr\u00fccke auf **Aktivieren**.\n\nFahre fort, wenn dein Cloud-Projekt eingerichtet ist.",
                 "title": "Nest: Cloud-Projekt erstellen und konfigurieren"
             },
             "device_project": {
@@ -62,7 +62,7 @@
                 "data": {
                     "code": "PIN-Code"
                 },
-                "description": "[Autorisiere dein Konto] ( {url} ), um deinen Nest-Account zu verkn\u00fcpfen.\n\nF\u00fcge anschlie\u00dfend den erhaltenen PIN Code hier ein.",
+                "description": "[Autorisiere dein Konto] ({url}), um deinen Nest-Account zu verkn\u00fcpfen.\n\nF\u00fcge anschlie\u00dfend den erhaltenen PIN-Code hier ein.",
                 "title": "Nest-Konto verkn\u00fcpfen"
             },
             "pick_implementation": {
