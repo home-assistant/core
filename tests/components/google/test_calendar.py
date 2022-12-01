@@ -843,7 +843,7 @@ async def test_websocket_create(
     aioclient_mock: AiohttpClientMocker,
     ws_client: ClientFixture,
 ) -> None:
-    """Test service call that sets a date range."""
+    """Test websocket create command that sets a date range."""
     mock_events_list({})
     assert await component_setup()
 
