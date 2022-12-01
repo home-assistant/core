@@ -73,13 +73,6 @@
                 },
                 "description": "Wprowad\u017a informacje o IP secure."
             },
-            "secure_tunneling": {
-                "description": "Wybierz, jak chcesz skonfigurowa\u0107 KNX/IP secure.",
-                "menu_options": {
-                    "secure_knxkeys": "U\u017cyj pliku `.knxkeys` zawieraj\u0105cego klucze IP secure",
-                    "secure_tunnel_manual": "R\u0119czna konfiguracja kluczy IP secure"
-                }
-            },
             "tunnel": {
                 "data": {
                     "gateway": "Po\u0142\u0105czenie tunelowe KNX"
@@ -173,13 +166,6 @@
                     "user_password": "Has\u0142o dla konkretnego po\u0142\u0105czenia tunelowego ustawione w panelu \u201eW\u0142a\u015bciwo\u015bci\u201d tunelu w ETS."
                 },
                 "description": "Wprowad\u017a informacje o IP secure."
-            },
-            "secure_tunneling": {
-                "description": "Wybierz, jak chcesz skonfigurowa\u0107 KNX/IP secure.",
-                "menu_options": {
-                    "secure_knxkeys": "U\u017cyj pliku `.knxkeys` zawieraj\u0105cego klucze IP secure",
-                    "secure_tunnel_manual": "R\u0119czna konfiguracja kluczy IP secure"
-                }
             },
             "tunnel": {
                 "data": {

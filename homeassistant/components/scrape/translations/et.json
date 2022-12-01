@@ -79,27 +79,11 @@
                 }
             },
             "init": {
-                "data": {
-                    "authentication": "Tuvastamine",
-                    "headers": "P\u00e4ised",
-                    "method": "Meetod",
-                    "password": "Salas\u00f5na",
-                    "resource": "Resurss",
-                    "timeout": "Ajal\u00f5pp",
-                    "username": "<Empty>",
-                    "verify_ssl": "<Empty>"
-                },
-                "data_description": {
-                    "authentication": "HTTP kasutaja tuvastamise meetod; algeline v\u00f5i muu",
-                    "headers": "Veebip\u00e4ringus kasutatav p\u00e4is",
-                    "resource": "Veebilehe URL ei sisalda soovitud v\u00e4\u00e4rtusi",
-                    "timeout": "Veebilehe ajal\u00f5pp",
-                    "verify_ssl": "Lubab v\u00f5i keelab SSL/TLS serdi tuvastamise n\u00e4iteks juhul kui sert on ise allkirjastatud"
-                },
                 "menu_options": {
                     "add_sensor": "Lisa andur",
                     "remove_sensor": "Eemalda andur",
-                    "resource": "Seadista resurss"
+                    "resource": "Seadista resurss",
+                    "select_edit_sensor": "Seadista andur"
                 }
             },
             "resource": {
