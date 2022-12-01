@@ -41,7 +41,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEVICE_CLASS_DETECTION, DISPATCH_ADOPT, DOMAIN
+from .const import DISPATCH_ADOPT, DOMAIN
 from .data import ProtectData
 from .entity import (
     EventEntityMixin,
@@ -54,6 +54,8 @@ from .utils import async_dispatch_id as _ufpd, async_get_light_motion_current
 
 _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
+DEVICE_CLASS_DETECTION = "unifiprotect__detection"
+DEVICE_CLASS_LICENSE_PLATE = "unifiprotect__license_plate"
 
 
 @dataclass
@@ -532,8 +534,9 @@ MOTION_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
         key="smart_obj_licenseplate",
         name="License Plate Detected",
         icon="mdi:car",
-        device_class=DEVICE_CLASS_DETECTION,
+        device_class=DEVICE_CLASS_LICENSE_PLATE,
         ufp_value="is_smart_detected",
+        ufp_required_field="can_detect_license_plate",
         ufp_event_obj="last_smart_detect_event",
         ufp_smart_type=SmartDetectObjectType.LICENSE_PLATE,
     ),
@@ -685,6 +688,9 @@ def _async_motion_entities(
             continue
 
         for event_desc in MOTION_SENSORS:
+            if not event_desc.has_required(device):
+                continue
+
             entities.append(ProtectEventSensor(data, device, event_desc))
             _LOGGER.debug(
                 "Adding sensor entity %s for %s",
