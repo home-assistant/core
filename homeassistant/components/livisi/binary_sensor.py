@@ -34,7 +34,7 @@ async def async_setup_entry(
 
     @callback
     def handle_coordinator_update() -> None:
-        """Added Window Sensor"""
+        """Add Window Sensor."""
         shc_devices: list[dict[str, Any]] = coordinator.data
         entities: list[BinarySensorEntity] = []
         for device in shc_devices:
@@ -81,8 +81,7 @@ def create_entity(
 class LivisiWindowSensor(
     CoordinatorEntity[LivisiDataUpdateCoordinator], BinarySensorEntity
 ):
-    """Represents the Livisi Binary."""
-
+    """Represents the Livisi Binary Sensor."""
     def __init__(
         self,
         config_entry: ConfigEntry,
@@ -147,8 +146,3 @@ class LivisiWindowSensor(
         """Update the reachability of the switch device."""
         self._attr_available = is_reachable
         self.async_write_ha_state()
-
-    @property
-    def icon(self):
-        """Icon fron Sensor"""
-        return "mdi:window-open"
