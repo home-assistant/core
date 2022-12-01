@@ -503,14 +503,25 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
         """Add a new event to calendar."""
         dtstart = kwargs[EVENT_START]
         dtend = kwargs[EVENT_END]
+        start: DateOrDatetime
+        end: DateOrDatetime
         if isinstance(dtstart, datetime):
-            dtstart = dt_util.as_local(dtstart)
-            dtend = dt_util.as_local(dtend)
+            start = DateOrDatetime(
+                date_time=dt_util.as_local(dtstart),
+                timezone=str(dt_util.DEFAULT_TIME_ZONE),
+            )
+            end = DateOrDatetime(
+                date_time=dt_util.as_local(dtend),
+                timezone=str(dt_util.DEFAULT_TIME_ZONE),
+            )
+        else:
+            start = DateOrDatetime(date=dtstart)
+            end = DateOrDatetime(date=dtend)
         event = Event.parse_obj(
             {
                 EVENT_SUMMARY: kwargs[EVENT_SUMMARY],
-                "start": DateOrDatetime.parse(dtstart),
-                "end": DateOrDatetime.parse(dtend),
+                "start": start,
+                "end": end,
                 EVENT_DESCRIPTION: kwargs.get(EVENT_DESCRIPTION),
             }
         )

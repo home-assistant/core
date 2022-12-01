@@ -67,14 +67,6 @@ TEST_EVENT = {
 }
 
 
-@pytest.fixture(
-    autouse=True, scope="module", params=["reader", "owner", "freeBusyReader"]
-)
-def calendar_access_role(request) -> str:
-    """Fixture to exercise access roles in tests."""
-    return request.param
-
-
 @pytest.fixture(autouse=True)
 def mock_test_setup(
     test_api_calendar,
@@ -154,7 +146,7 @@ async def ws_client(
 
 
 async def test_all_day_event(hass, mock_events_list_items, component_setup):
-    """Test that we can create an event trigger on device."""
+    """Test for an all day calendar event."""
     week_from_today = dt_util.now().date() + datetime.timedelta(days=7)
     end_event = week_from_today + datetime.timedelta(days=1)
     event = {
@@ -183,7 +175,7 @@ async def test_all_day_event(hass, mock_events_list_items, component_setup):
 
 
 async def test_future_event(hass, mock_events_list_items, component_setup):
-    """Test that we can create an event trigger on device."""
+    """Test for an upcoming event."""
     one_hour_from_now = dt_util.now() + datetime.timedelta(minutes=30)
     end_event = one_hour_from_now + datetime.timedelta(minutes=60)
     event = {
@@ -212,7 +204,7 @@ async def test_future_event(hass, mock_events_list_items, component_setup):
 
 
 async def test_in_progress_event(hass, mock_events_list_items, component_setup):
-    """Test that we can create an event trigger on device."""
+    """Test an event that is active now."""
     middle_of_event = dt_util.now() - datetime.timedelta(minutes=30)
     end_event = middle_of_event + datetime.timedelta(minutes=60)
     event = {
@@ -241,7 +233,7 @@ async def test_in_progress_event(hass, mock_events_list_items, component_setup):
 
 
 async def test_offset_in_progress_event(hass, mock_events_list_items, component_setup):
-    """Test that we can create an event trigger on device."""
+    """Test an event that is active now with an offset."""
     middle_of_event = dt_util.now() + datetime.timedelta(minutes=14)
     end_event = middle_of_event + datetime.timedelta(minutes=60)
     event_summary = "Test Event in Progress"
@@ -274,7 +266,7 @@ async def test_offset_in_progress_event(hass, mock_events_list_items, component_
 async def test_all_day_offset_in_progress_event(
     hass, mock_events_list_items, component_setup
 ):
-    """Test that we can create an event trigger on device."""
+    """Test an all day event that is currently in progress due to an offset."""
     tomorrow = dt_util.now().date() + datetime.timedelta(days=1)
     end_event = tomorrow + datetime.timedelta(days=1)
     event_summary = "Test All Day Event Offset In Progress"
@@ -305,7 +297,7 @@ async def test_all_day_offset_in_progress_event(
 
 
 async def test_all_day_offset_event(hass, mock_events_list_items, component_setup):
-    """Test that we can create an event trigger on device."""
+    """Test an all day event that not in progress due to an offset."""
     now = dt_util.now()
     day_after_tomorrow = now.date() + datetime.timedelta(days=2)
     end_event = day_after_tomorrow + datetime.timedelta(days=1)
@@ -338,7 +330,7 @@ async def test_all_day_offset_event(hass, mock_events_list_items, component_setu
 
 
 async def test_missing_summary(hass, mock_events_list_items, component_setup):
-    """Test that we can create an event trigger on device."""
+    """Test that a summary is optional."""
     start_event = dt_util.now() + datetime.timedelta(minutes=14)
     end_event = start_event + datetime.timedelta(minutes=60)
     event = {
@@ -876,8 +868,11 @@ async def test_websocket_create(
     assert aioclient_mock.mock_calls[0][2] == {
         "summary": "Bastille Day Party",
         "description": None,
-        "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
-        "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
+        "start": {
+            "dateTime": "1997-07-14T11:00:00-06:00",
+            "timeZone": "America/Regina",
+        },
+        "end": {"dateTime": "1997-07-14T22:00:00-06:00", "timeZone": "America/Regina"},
     }
 
 
@@ -942,7 +937,7 @@ async def test_websocket_delete_recurring_event_instance(
                 "summary": "All Day Event",
                 "start": {"date": "2022-10-08"},
                 "end": {"date": "2022-10-09"},
-                "recurrence": ["FREQ=WEEKLY"],
+                "recurrence": ["RRULE:FREQ=WEEKLY"],
             },
         ]
     )
@@ -1010,7 +1005,7 @@ async def test_websocket_delete_recurring_event_instance(
     # Request to cancel all events after the second instance
     assert aioclient_mock.mock_calls[0][2] == {
         "id": "event-id-1",
-        "recurrence": ["FREQ=WEEKLY;UNTIL=2022-10-15;INTERVAL=1"],
+        "recurrence": ["RRULE:FREQ=WEEKLY;UNTIL=20221015"],
     }
 
 
@@ -1050,3 +1045,61 @@ async def test_readonly_websocket_create(
     )
     assert result.get("error")
     assert result["error"].get("code") == "not_supported"
+
+
+@pytest.mark.parametrize("calendar_access_role", ["reader", "freeBusyReader"])
+async def test_all_day_reader_access(hass, mock_events_list_items, component_setup):
+    """Test that reader / freebusy reader access can load properly."""
+    week_from_today = dt_util.now().date() + datetime.timedelta(days=7)
+    end_event = week_from_today + datetime.timedelta(days=1)
+    event = {
+        **TEST_EVENT,
+        "start": {"date": week_from_today.isoformat()},
+        "end": {"date": end_event.isoformat()},
+    }
+    mock_events_list_items([event])
+
+    assert await component_setup()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_OFF
+    assert dict(state.attributes) == {
+        "friendly_name": TEST_ENTITY_NAME,
+        "message": event["summary"],
+        "all_day": True,
+        "offset_reached": False,
+        "start_time": week_from_today.strftime(DATE_STR_FORMAT),
+        "end_time": end_event.strftime(DATE_STR_FORMAT),
+        "location": event["location"],
+        "description": event["description"],
+    }
+
+
+@pytest.mark.parametrize("calendar_access_role", ["reader", "freeBusyReader"])
+async def test_reader_in_progress_event(hass, mock_events_list_items, component_setup):
+    """Test reader access for an event in process."""
+    middle_of_event = dt_util.now() - datetime.timedelta(minutes=30)
+    end_event = middle_of_event + datetime.timedelta(minutes=60)
+    event = {
+        **TEST_EVENT,
+        "start": {"dateTime": middle_of_event.isoformat()},
+        "end": {"dateTime": end_event.isoformat()},
+    }
+    mock_events_list_items([event])
+
+    assert await component_setup()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_ON
+    assert dict(state.attributes) == {
+        "friendly_name": TEST_ENTITY_NAME,
+        "message": event["summary"],
+        "all_day": False,
+        "offset_reached": False,
+        "start_time": middle_of_event.strftime(DATE_STR_FORMAT),
+        "end_time": end_event.strftime(DATE_STR_FORMAT),
+        "location": event["location"],
+        "description": event["description"],
+    }
