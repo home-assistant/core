@@ -672,6 +672,7 @@ omit =
     homeassistant/components/led_ble/__init__.py
     homeassistant/components/led_ble/light.py
     homeassistant/components/lg_netcast/media_player.py
+    homeassistant/components/lg_soundbar/__init__.py
     homeassistant/components/lg_soundbar/media_player.py
     homeassistant/components/lidarr/__init__.py
     homeassistant/components/lidarr/coordinator.py
@@ -840,6 +841,7 @@ omit =
     homeassistant/components/nfandroidtv/__init__.py
     homeassistant/components/nfandroidtv/notify.py
     homeassistant/components/nibe_heatpump/__init__.py
+    homeassistant/components/nibe_heatpump/climate.py
     homeassistant/components/nibe_heatpump/binary_sensor.py
     homeassistant/components/nibe_heatpump/number.py
     homeassistant/components/nibe_heatpump/select.py
@@ -1138,6 +1140,7 @@ omit =
     homeassistant/components/skybell/switch.py
     homeassistant/components/slack/__init__.py
     homeassistant/components/slack/notify.py
+    homeassistant/components/slack/sensor.py
     homeassistant/components/slide/*
     homeassistant/components/slimproto/__init__.py
     homeassistant/components/slimproto/media_player.py

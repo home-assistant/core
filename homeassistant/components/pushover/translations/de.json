@@ -28,7 +28,7 @@
     "issues": {
         "removed_yaml": {
             "description": "Das Konfigurieren von Pushover mit YAML wurde entfernt. \n\nDeine vorhandene YAML-Konfiguration wird von Home Assistant nicht verwendet. \n\nEntferne die Pushover-YAML-Konfiguration aus deiner configuration.yaml-Datei und starte Home Assistant neu, um dieses Problem zu beheben.",
-            "title": "Die Pushover-YAML-Konfiguration wurde entfernt"
+            "title": "Die Pushover YAML-Konfiguration wurde entfernt"
         }
     }
 }

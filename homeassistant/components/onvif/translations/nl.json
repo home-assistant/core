@@ -48,7 +48,8 @@
             "onvif_devices": {
                 "data": {
                     "extra_arguments": "Extra FFMPEG argumenten",
-                    "rtsp_transport": "RTSP-transportmechanisme"
+                    "rtsp_transport": "RTSP-transportmechanisme",
+                    "use_wallclock_as_timestamps": "Gebruik de lokale tijd voor tijdstempels"
                 },
                 "title": "ONVIF-apparaatopties"
             }

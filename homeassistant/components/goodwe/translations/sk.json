@@ -11,7 +11,8 @@
             "user": {
                 "data": {
                     "host": "IP adresa"
-                }
+                },
+                "description": "Pripoji\u0165 k meni\u010du"
             }
         }
     }

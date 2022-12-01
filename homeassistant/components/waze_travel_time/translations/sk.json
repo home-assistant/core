@@ -13,5 +13,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "units": "Jednotky"
+                }
+            }
+        }
     }
 }

@@ -17,7 +17,7 @@
                 "data": {
                     "password": "Passwort"
                 },
-                "description": "Bitte gebe das Passwort der ESPHome-Konfiguration f\u00fcr {name} ein:"
+                "description": "Bitte gebe das Passwort der ESPHome Konfiguration f\u00fcr {name} ein:"
             },
             "discovery_confirm": {
                 "description": "Willst du den ESPHome-Knoten `{name}` zu Home Assistant hinzuf\u00fcgen?",
@@ -40,7 +40,7 @@
                     "host": "Host",
                     "port": "Port"
                 },
-                "description": "Bitte gib die Verbindungseinstellungen deines [ESPHome]( {esphome_url} )-Knotens ein."
+                "description": "Bitte gib die Verbindungseinstellungen deines [ESPHome]({esphome_url}) Knotens ein."
             }
         }
     },

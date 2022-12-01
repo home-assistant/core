@@ -22,16 +22,6 @@
             }
         }
     },
-    "options": {
-        "step": {
-            "user": {
-                "data": {
-                    "forecast": "V\u00e4derprognos"
-                },
-                "description": "P\u00e5 grund av begr\u00e4nsningarna f\u00f6r den kostnadsfria versionen av AccuWeather API-nyckeln, n\u00e4r du aktiverar v\u00e4derprognos, kommer datauppdateringar att utf\u00f6ras var 80:e minut ist\u00e4llet f\u00f6r var 40:e minut."
-            }
-        }
-    },
     "system_health": {
         "info": {
             "can_reach_server": "N\u00e5 AccuWeather-servern",

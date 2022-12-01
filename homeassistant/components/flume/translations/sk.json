@@ -13,12 +13,17 @@
             "reauth_confirm": {
                 "data": {
                     "password": "Heslo"
-                }
+                },
+                "description": "Heslo pre {username} u\u017e nie je platn\u00e9.",
+                "title": "Znova overte svoj \u00fa\u010det Flume"
             },
             "user": {
                 "data": {
-                    "password": "Heslo"
-                }
+                    "client_id": "ID klienta",
+                    "password": "Heslo",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
+                },
+                "title": "Pripoji\u0165 sa k svojmu \u00fa\u010dtu Flume"
             }
         }
     }

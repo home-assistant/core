@@ -63,8 +63,8 @@ build.json @home-assistant/supervisor
 /tests/components/alarm_control_panel/ @home-assistant/core
 /homeassistant/components/alert/ @home-assistant/core @frenck
 /tests/components/alert/ @home-assistant/core @frenck
-/homeassistant/components/alexa/ @home-assistant/cloud @ochlocracy
-/tests/components/alexa/ @home-assistant/cloud @ochlocracy
+/homeassistant/components/alexa/ @home-assistant/cloud @ochlocracy @jbouwh
+/tests/components/alexa/ @home-assistant/cloud @ochlocracy @jbouwh
 /homeassistant/components/almond/ @gcampax @balloob
 /tests/components/almond/ @gcampax @balloob
 /homeassistant/components/amberelectric/ @madpilot
@@ -639,6 +639,8 @@ build.json @home-assistant/supervisor
 /tests/components/litterrobot/ @natekspencer @tkdrob
 /homeassistant/components/livisi/ @StefanIacobLivisi
 /tests/components/livisi/ @StefanIacobLivisi
+/homeassistant/components/local_calendar/ @allenporter
+/tests/components/local_calendar/ @allenporter
 /homeassistant/components/local_ip/ @issacg
 /tests/components/local_ip/ @issacg
 /homeassistant/components/lock/ @home-assistant/core
@@ -721,8 +723,8 @@ build.json @home-assistant/supervisor
 /tests/components/motion_blinds/ @starkillerOG
 /homeassistant/components/motioneye/ @dermotduffy
 /tests/components/motioneye/ @dermotduffy
-/homeassistant/components/mqtt/ @emontnemery
-/tests/components/mqtt/ @emontnemery
+/homeassistant/components/mqtt/ @emontnemery @jbouwh
+/tests/components/mqtt/ @emontnemery @jbouwh
 /homeassistant/components/msteams/ @peroyvind
 /homeassistant/components/mullvad/ @meichthys
 /tests/components/mullvad/ @meichthys
@@ -1137,8 +1139,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/synology_srm/ @aerialls
 /homeassistant/components/system_bridge/ @timmo001
 /tests/components/system_bridge/ @timmo001
-/homeassistant/components/tado/ @michaelarnauts @north3221
-/tests/components/tado/ @michaelarnauts @north3221
+/homeassistant/components/tado/ @michaelarnauts
+/tests/components/tado/ @michaelarnauts
 /homeassistant/components/tag/ @balloob @dmulcahey
 /tests/components/tag/ @balloob @dmulcahey
 /homeassistant/components/tailscale/ @frenck

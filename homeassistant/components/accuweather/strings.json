@@ -22,6 +22,17 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
+  "entity": {
+    "sensor": {
+      "pressure_tendency": {
+        "state": {
+          "steady": "Steady",
+          "rising": "Rising",
+          "falling": "Falling"
+        }
+      }
+    }
+  },
   "options": {
     "step": {
       "init": {

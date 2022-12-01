@@ -14,7 +14,7 @@
             "authentication_error": "Helytelen HomeKit k\u00f3d. K\u00e9rem, ellen\u0151rizze, \u00e9s pr\u00f3b\u00e1lja \u00fajra.",
             "insecure_setup_code": "A k\u00e9rt telep\u00edt\u00e9si k\u00f3d trivi\u00e1lis jellege miatt nem biztons\u00e1gos. Ez a tartoz\u00e9k nem felel meg az alapvet\u0151 biztons\u00e1gi k\u00f6vetelm\u00e9nyeknek.",
             "max_peers_error": "Az eszk\u00f6z megtagadta a p\u00e1ros\u00edt\u00e1s hozz\u00e1ad\u00e1s\u00e1t, mivel nincs szabad p\u00e1ros\u00edt\u00e1si t\u00e1rhelye.",
-            "pairing_failed": "Nem kezelt hiba t\u00f6rt\u00e9nt az eszk\u00f6zzel val\u00f3 p\u00e1ros\u00edt\u00e1s sor\u00e1n. Lehet, hogy ez \u00e1tmeneti hiba, vagy az eszk\u00f6z jelenleg m\u00e9g nem t\u00e1mogatott.",
+            "pairing_failed": "Nem kezelt hiba t\u00f6rt\u00e9nt az eszk\u00f6zzel val\u00f3 p\u00e1ros\u00edt\u00e1s sor\u00e1n. Ez \u00e1tmeneti hiba lehet, vagy el\u0151fordulhat, hogy az eszk\u00f6z jelenleg nem t\u00e1mogatott: {error}",
             "unable_to_pair": "Nem siker\u00fclt p\u00e1ros\u00edtani, pr\u00f3b\u00e1ld \u00fajra.",
             "unknown_error": "Az eszk\u00f6z ismeretlen hib\u00e1t jelentett. A p\u00e1ros\u00edt\u00e1s sikertelen."
         },
