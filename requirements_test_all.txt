@@ -1236,7 +1236,7 @@ pymeteoclimatic==0.0.6
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==2.5.3
+pymodbus==3.0.2
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
