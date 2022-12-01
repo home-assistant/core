@@ -172,7 +172,7 @@ async def get_owntone_content(
             result = await master.api.get_artists()  # list of artists with name, uri
         elif media_content.type == MediaType.GENRE:
             if result := await master.api.get_genres():  # returns list of genre names
-                for item in result:  # pylint: disable=not-an-iterable
+                for item in result:
                     # add generated genre uris to list of genre names
                     item["uri"] = create_owntone_uri(
                         MediaType.GENRE, cast(str, item["name"])
@@ -229,6 +229,10 @@ def create_browse_media_response(
     if not children:  # Directory searches will pass in subdirectories as children
         children = []
     for item in result:
+        if item.get("data_kind") == "spotify" or (
+            "path" in item and cast(str, item["path"]).startswith("spotify")
+        ):  # Exclude spotify data from Owntone library
+            continue
         assert isinstance(item["uri"], str)
         media_type = OWNTONE_TYPE_TO_MEDIA_TYPE[item["uri"].split(":")[1]]
         title = item.get("name") or item.get("title")  # only tracks use title

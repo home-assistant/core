@@ -3,7 +3,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from homematicip.aio.device import AsyncHeatingThermostat, AsyncHeatingThermostatCompact
+from homematicip.aio.device import (
+    AsyncHeatingThermostat,
+    AsyncHeatingThermostatCompact,
+    AsyncHeatingThermostatEvo,
+)
 from homematicip.aio.group import AsyncHeatingGroup
 from homematicip.base.enums import AbsenceType
 from homematicip.device import Switch
@@ -51,8 +55,7 @@ async def async_setup_entry(
         if isinstance(device, AsyncHeatingGroup):
             entities.append(HomematicipHeatingGroup(hap, device))
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
@@ -313,11 +316,16 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     @property
     def _first_radiator_thermostat(
         self,
-    ) -> AsyncHeatingThermostat | AsyncHeatingThermostatCompact | None:
+    ) -> AsyncHeatingThermostat | AsyncHeatingThermostatCompact | AsyncHeatingThermostatEvo | None:
         """Return the first radiator thermostat from the hmip heating group."""
         for device in self._device.devices:
             if isinstance(
-                device, (AsyncHeatingThermostat, AsyncHeatingThermostatCompact)
+                device,
+                (
+                    AsyncHeatingThermostat,
+                    AsyncHeatingThermostatCompact,
+                    AsyncHeatingThermostatEvo,
+                ),
             ):
                 return device
 

@@ -2,8 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Konto wurde bereits konfiguriert",
-            "no_udn": "SSDP-Erkennungsinfo hat keine UDN",
-            "not_keenetic_ndms2": "Gefundenes Ger\u00e4t ist kein Keenetic-Router"
+            "no_udn": "SSDP Erkennungsinformation hat keine UDN",
+            "not_keenetic_ndms2": "Gefundenes Ger\u00e4t ist kein Keenetic Router"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen"
@@ -30,7 +30,7 @@
                     "include_associated": "WLAN-AP-Zuordnungsdaten verwenden (wird ignoriert, wenn Hotspot-Daten verwendet werden)",
                     "interfaces": "Schnittstellen zum Scannen ausw\u00e4hlen",
                     "scan_interval": "Scanintervall",
-                    "try_hotspot": "'ip hotspot'-Daten verwenden (am genauesten)"
+                    "try_hotspot": "'IP Hotspot' Daten verwenden (am genauesten)"
                 }
             }
         }

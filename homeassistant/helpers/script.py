@@ -50,6 +50,7 @@ from homeassistant.const import (
     CONF_SEQUENCE,
     CONF_SERVICE,
     CONF_SERVICE_DATA,
+    CONF_SERVICE_DATA_TEMPLATE,
     CONF_STOP,
     CONF_TARGET,
     CONF_THEN,
@@ -1112,11 +1113,10 @@ async def _async_stop_scripts_at_shutdown(hass, event):
 _VarsType = Union[dict[str, Any], MappingProxyType]
 
 
-def _referenced_extract_ids(
-    data: dict[str, Any] | None, key: str, found: set[str]
-) -> None:
+def _referenced_extract_ids(data: Any, key: str, found: set[str]) -> None:
     """Extract referenced IDs."""
-    if not data:
+    # Data may not exist, or be a template
+    if not isinstance(data, dict):
         return
 
     item_ids = data.get(key)
@@ -1300,7 +1300,7 @@ class Script:
                 for data in (
                     step.get(CONF_TARGET),
                     step.get(CONF_SERVICE_DATA),
-                    step.get(service.CONF_SERVICE_DATA_TEMPLATE),
+                    step.get(CONF_SERVICE_DATA_TEMPLATE),
                 ):
                     _referenced_extract_ids(data, ATTR_AREA_ID, referenced)
 
@@ -1340,7 +1340,7 @@ class Script:
                 for data in (
                     step.get(CONF_TARGET),
                     step.get(CONF_SERVICE_DATA),
-                    step.get(service.CONF_SERVICE_DATA_TEMPLATE),
+                    step.get(CONF_SERVICE_DATA_TEMPLATE),
                 ):
                     _referenced_extract_ids(data, ATTR_DEVICE_ID, referenced)
 
@@ -1391,7 +1391,7 @@ class Script:
                     step,
                     step.get(CONF_TARGET),
                     step.get(CONF_SERVICE_DATA),
-                    step.get(service.CONF_SERVICE_DATA_TEMPLATE),
+                    step.get(CONF_SERVICE_DATA_TEMPLATE),
                 ):
                     _referenced_extract_ids(data, ATTR_ENTITY_ID, referenced)
 

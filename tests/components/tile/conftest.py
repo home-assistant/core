@@ -26,9 +26,9 @@ def api_fixture(hass, data_tile_details):
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(hass, config, unique_id):
+def config_entry_fixture(hass, config):
     """Define a config entry fixture."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id=unique_id, data=config)
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=config[CONF_USERNAME], data=config)
     entry.add_to_hass(hass)
     return entry
 
@@ -42,7 +42,7 @@ def config_fixture(hass):
     }
 
 
-@pytest.fixture(name="data_tile_details", scope="session")
+@pytest.fixture(name="data_tile_details", scope="package")
 def data_tile_details_fixture():
     """Define a Tile details data payload."""
     return json.loads(load_fixture("tile_details_data.json", "tile"))
@@ -59,9 +59,3 @@ async def setup_tile_fixture(hass, api, config):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
         yield
-
-
-@pytest.fixture(name="unique_id")
-def unique_id_fixture(hass):
-    """Define a config entry unique ID fixture."""
-    return "user@host.com"

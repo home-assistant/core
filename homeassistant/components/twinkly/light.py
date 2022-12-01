@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -10,10 +11,12 @@ from ttls.client import Twinkly
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_EFFECT,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL
@@ -91,6 +94,8 @@ class TwinklyLight(LightEntity):
         self._is_on = False
         self._is_available = False
         self._attributes: dict[Any, Any] = {}
+        self._current_movie: dict[Any, Any] = {}
+        self._movies: list[Any] = []
 
     @property
     def available(self) -> bool:
@@ -128,17 +133,37 @@ class TwinklyLight(LightEntity):
         )
 
     @property
+    def supported_features(self) -> LightEntityFeature:
+        """Return supported features."""
+        return LightEntityFeature.EFFECT
+
+    @property
     def is_on(self) -> bool:
         """Return true if light is on."""
         return self._is_on
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return device specific state attributes."""
 
         attributes = self._attributes
 
         return attributes
+
+    @property
+    def effect(self) -> str | None:
+        """Return the current effect."""
+        if "name" in self._current_movie:
+            return f"{self._current_movie['id']} {self._current_movie['name']}"
+        return None
+
+    @property
+    def effect_list(self) -> list[str]:
+        """Return the list of saved effects."""
+        effect_list = []
+        for movie in self._movies:
+            effect_list.append(f"{movie['id']} {movie['name']}")
+        return effect_list
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
@@ -160,15 +185,16 @@ class TwinklyLight(LightEntity):
                 if isinstance(self._attr_rgbw_color, tuple):
 
                     await self._client.interview()
-                    # Reagarrange from rgbw to wrgb
+                    # Static color only supports rgb
                     await self._client.set_static_colour(
                         (
-                            self._attr_rgbw_color[3],
                             self._attr_rgbw_color[0],
                             self._attr_rgbw_color[1],
                             self._attr_rgbw_color[2],
                         )
                     )
+                    await self._client.set_mode("color")
+                    self._client.default_mode = "color"
 
         if ATTR_RGB_COLOR in kwargs:
             if kwargs[ATTR_RGB_COLOR] != self._attr_rgb_color:
@@ -177,9 +203,19 @@ class TwinklyLight(LightEntity):
                 if isinstance(self._attr_rgb_color, tuple):
 
                     await self._client.interview()
-                    # Reagarrange from rgbw to wrgb
                     await self._client.set_static_colour(self._attr_rgb_color)
+                    await self._client.set_mode("color")
+                    self._client.default_mode = "color"
 
+        if ATTR_EFFECT in kwargs:
+            movie_id = kwargs[ATTR_EFFECT].split(" ")[0]
+            if "id" not in self._current_movie or int(movie_id) != int(
+                self._current_movie["id"]
+            ):
+                await self._client.interview()
+                await self._client.set_current_movie(int(movie_id))
+                await self._client.set_mode("movie")
+                self._client.default_mode = "movie"
         if not self._is_on:
             await self._client.turn_on()
 
@@ -232,6 +268,9 @@ class TwinklyLight(LightEntity):
                 if key not in HIDDEN_DEV_VALUES:
                     self._attributes[key] = value
 
+            await self.async_update_movies()
+            await self.async_update_current_movie()
+
             if not self._is_available:
                 _LOGGER.info("Twinkly '%s' is now available", self._client.host)
 
@@ -245,3 +284,15 @@ class TwinklyLight(LightEntity):
                     "Twinkly '%s' is not reachable (client error)", self._client.host
                 )
             self._is_available = False
+
+    async def async_update_movies(self) -> None:
+        """Update the list of movies (effects)."""
+        movies = await self._client.get_saved_movies()
+        if "movies" in movies:
+            self._movies = movies["movies"]
+
+    async def async_update_current_movie(self) -> None:
+        """Update the current active movie."""
+        current_movie = await self._client.get_current_movie()
+        if "id" in current_movie:
+            self._current_movie = current_movie

@@ -1,7 +1,20 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba u\u017e je nakonfigurovan\u00e1",
+            "authorize_url_timeout": "\u010casov\u00fd limit generovania autorizovanej adresy URL.",
+            "unknown_authorize_url_generation": "Nezn\u00e1ma chyba pri generovan\u00ed autorizovanej adresy URL."
+        },
         "error": {
             "invalid_auth": "Neplatn\u00e9 overenie"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostite\u013e"
+                },
+                "description": "Pr\u00e1zdne"
+            }
         }
     }
 }

@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+            "reauth_successful": "Re-autentisering var vellykket"
         },
         "error": {
             "connection_error": "Kan ikke koble til ESP. Kontroller at YAML filen din inneholder en \"api:\" linje.",
@@ -42,6 +42,12 @@
                 },
                 "description": "Vennligst skriv inn tilkoblingsinnstillingene for [ESPHome]( {esphome_url} )-noden."
             }
+        }
+    },
+    "issues": {
+        "ble_firmware_outdated": {
+            "description": "For \u00e5 forbedre Bluetooth-p\u00e5litelighet og ytelse anbefaler vi p\u00e5 det sterkeste \u00e5 oppdatere {name} med ESPHome 2022.11.0 eller nyere.",
+            "title": "Oppdater {name} med ESPHome 2022.11.0 eller nyere"
         }
     }
 }

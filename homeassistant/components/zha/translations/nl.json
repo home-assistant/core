@@ -6,12 +6,23 @@
             "usb_probe_failed": "Kon het USB apparaat niet onderzoeken"
         },
         "error": {
-            "cannot_connect": "Kan geen verbinding maken"
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_backup_json": "Ongeldige back-up-JSON"
         },
         "flow_title": "{name}",
         "step": {
             "choose_automatic_backup": {
                 "title": "Automatische back-up herstellen"
+            },
+            "choose_formation_strategy": {
+                "menu_options": {
+                    "choose_automatic_backup": "Een automatische back-up herstellen",
+                    "upload_manual_backup": "Upload een handmatige back-up"
+                }
+            },
+            "choose_serial_port": {
+                "description": "Selecteer de seri\u00eble poort voor je Zigbee-radio",
+                "title": "Selecteer een seri\u00eble poort"
             },
             "confirm": {
                 "description": "Wilt u {name} instellen?"
@@ -19,34 +30,17 @@
             "confirm_hardware": {
                 "description": "Wilt u {name} instellen?"
             },
-            "pick_radio": {
+            "manual_port_config": {
                 "data": {
-                    "radio_type": "Radio type"
-                },
-                "description": "Kies een type Zigbee-radio",
-                "title": "Radio type"
-            },
-            "port_config": {
-                "data": {
-                    "baudrate": "poort snelheid",
-                    "flow_control": "gegevensstroombeheer",
-                    "path": "Serieel apparaatpad"
-                },
-                "description": "Voer poortspecifieke instellingen in",
-                "title": "Instellingen"
+                    "baudrate": "poortsnelheid"
+                }
             },
             "upload_manual_backup": {
                 "data": {
                     "uploaded_backup_file": "Een bestand uploaden"
                 },
+                "description": "Herstel je netwerkinstellingen van ge-upload backup-JSON-bestand. Je kunt deze dpwnloaden van een andere ZHA installatie via **Netwerkinstellingen**, of gebruik een Zigbee2MQTT `coordinator_backup.json` bestand.",
                 "title": "Upload een handmatige back-up"
-            },
-            "user": {
-                "data": {
-                    "path": "Serieel apparaatpad"
-                },
-                "description": "Selecteer seri\u00eble poort voor Zigbee-radio",
-                "title": "ZHA"
             }
         }
     },
@@ -127,21 +121,38 @@
             "usb_probe_failed": "Kon het USB apparaat niet onderzoeken"
         },
         "error": {
-            "cannot_connect": "Kan geen verbinding maken"
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_backup_json": "Ongeldige back-up-JSON"
         },
         "flow_title": "{name}",
         "step": {
             "choose_automatic_backup": {
                 "title": "Automatische back-up herstellen"
             },
+            "choose_formation_strategy": {
+                "menu_options": {
+                    "choose_automatic_backup": "Een automatische back-up herstellen",
+                    "upload_manual_backup": "Upload een handmatige back-up"
+                }
+            },
+            "choose_serial_port": {
+                "description": "Selecteer de seri\u00eble poort voor je Zigbee-radio",
+                "title": "Selecteer een seri\u00eble poort"
+            },
             "init": {
                 "description": "ZHA wordt gestopt. Wilt u doorgaan?",
                 "title": "ZHA opnieuw configureren"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "poortsnelheid"
+                }
             },
             "upload_manual_backup": {
                 "data": {
                     "uploaded_backup_file": "Een bestand uploaden"
                 },
+                "description": "Herstel je netwerkinstellingen van ge-upload backup-JSON-bestand. Je kunt deze dpwnloaden van een andere ZHA installatie via **Netwerkinstellingen**, of gebruik een Zigbee2MQTT `coordinator_backup.json` bestand.",
                 "title": "Upload een handmatige back-up"
             }
         }

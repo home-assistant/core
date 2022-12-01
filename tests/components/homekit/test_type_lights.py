@@ -18,7 +18,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
     ATTR_COLOR_MODE,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ATTR_MAX_MIREDS,
     ATTR_MIN_MIREDS,
@@ -250,7 +250,7 @@ async def test_light_color_temperature(hass, hk_driver, events):
     hass.states.async_set(
         entity_id,
         STATE_ON,
-        {ATTR_SUPPORTED_COLOR_MODES: ["color_temp"], ATTR_COLOR_TEMP: 190},
+        {ATTR_SUPPORTED_COLOR_MODES: ["color_temp"], ATTR_COLOR_TEMP_KELVIN: 5263},
     )
     await hass.async_block_till_done()
     acc = Light(hass, hk_driver, "Light", entity_id, 1, None)
@@ -282,7 +282,7 @@ async def test_light_color_temperature(hass, hk_driver, events):
     await _wait_for_light_coalesce(hass)
     assert call_turn_on
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
-    assert call_turn_on[0].data[ATTR_COLOR_TEMP] == 250
+    assert call_turn_on[0].data[ATTR_COLOR_TEMP_KELVIN] == 4000
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] == "color temperature at 250"
 
@@ -302,7 +302,7 @@ async def test_light_color_temperature_and_rgb_color(
         STATE_ON,
         {
             ATTR_SUPPORTED_COLOR_MODES: supported_color_modes,
-            ATTR_COLOR_TEMP: 190,
+            ATTR_COLOR_TEMP_KELVIN: 5263,
             ATTR_HS_COLOR: (260, 90),
         },
     )
@@ -316,7 +316,7 @@ async def test_light_color_temperature_and_rgb_color(
 
     assert hasattr(acc, "char_color_temp")
 
-    hass.states.async_set(entity_id, STATE_ON, {ATTR_COLOR_TEMP: 224})
+    hass.states.async_set(entity_id, STATE_ON, {ATTR_COLOR_TEMP_KELVIN: 4464})
     await hass.async_block_till_done()
     await acc.run()
     await hass.async_block_till_done()
@@ -324,7 +324,7 @@ async def test_light_color_temperature_and_rgb_color(
     assert acc.char_hue.value == 27
     assert acc.char_saturation.value == 27
 
-    hass.states.async_set(entity_id, STATE_ON, {ATTR_COLOR_TEMP: 352})
+    hass.states.async_set(entity_id, STATE_ON, {ATTR_COLOR_TEMP_KELVIN: 2840})
     await hass.async_block_till_done()
     await acc.run()
     await hass.async_block_till_done()
@@ -373,7 +373,7 @@ async def test_light_color_temperature_and_rgb_color(
     assert call_turn_on[0]
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_turn_on[0].data[ATTR_BRIGHTNESS_PCT] == 20
-    assert call_turn_on[0].data[ATTR_COLOR_TEMP] == 250
+    assert call_turn_on[0].data[ATTR_COLOR_TEMP_KELVIN] == 4000
 
     assert len(events) == 1
     assert (
@@ -446,7 +446,7 @@ async def test_light_color_temperature_and_rgb_color(
     )
     await _wait_for_light_coalesce(hass)
     assert call_turn_on[3]
-    assert call_turn_on[3].data[ATTR_COLOR_TEMP] == 320
+    assert call_turn_on[3].data[ATTR_COLOR_TEMP_KELVIN] == 3125
     assert events[-1].data[ATTR_VALUE] == "color temperature at 320"
 
     # Generate a conflict by setting color temp then saturation
@@ -991,7 +991,7 @@ async def test_light_rgb_with_white_switch_to_temp(
     await _wait_for_light_coalesce(hass)
     assert call_turn_on
     assert call_turn_on[-1].data[ATTR_ENTITY_ID] == entity_id
-    assert call_turn_on[-1].data[ATTR_COLOR_TEMP] == 500
+    assert call_turn_on[-1].data[ATTR_COLOR_TEMP_KELVIN] == 2000
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] == "color temperature at 500"
     assert acc.char_brightness.value == 100
@@ -1335,7 +1335,7 @@ async def test_light_set_brightness_and_color_temp(hass, hk_driver, events):
     await hass.async_block_till_done()
     assert acc.char_brightness.value == 40
 
-    hass.states.async_set(entity_id, STATE_ON, {ATTR_COLOR_TEMP: (224.14)})
+    hass.states.async_set(entity_id, STATE_ON, {ATTR_COLOR_TEMP_KELVIN: (4461)})
     await hass.async_block_till_done()
     assert acc.char_color_temp.value == 224
 
@@ -1364,7 +1364,7 @@ async def test_light_set_brightness_and_color_temp(hass, hk_driver, events):
     assert call_turn_on[0]
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_turn_on[0].data[ATTR_BRIGHTNESS_PCT] == 20
-    assert call_turn_on[0].data[ATTR_COLOR_TEMP] == 250
+    assert call_turn_on[0].data[ATTR_COLOR_TEMP_KELVIN] == 4000
 
     assert len(events) == 1
     assert (

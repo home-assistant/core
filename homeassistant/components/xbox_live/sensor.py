@@ -60,8 +60,7 @@ def setup_platform(
             continue
         entities.append(XboxSensor(api, xuid, gamercard, interval))
 
-    if entities:
-        add_entities(entities, True)
+    add_entities(entities, True)
 
 
 def get_user_gamercard(api, xuid):

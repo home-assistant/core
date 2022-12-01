@@ -75,8 +75,7 @@ async def async_setup_entry(
         "set_timer",
     )
 
-    if entities:
-        async_add_entities(entities, True)
+    async_add_entities(entities, True)
 
 
 def _generate_entities(tado):

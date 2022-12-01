@@ -30,7 +30,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utc_from_timestamp
 
-from . import FritzBoxEntity
+from . import FritzBoxDeviceEntity
 from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
 from .model import FritzEntityDescriptionMixinBase
 
@@ -76,7 +76,11 @@ def suitable_temperature(device: FritzhomeDevice) -> bool:
 
 def value_electric_current(device: FritzhomeDevice) -> float:
     """Return native value for electric current sensor."""
-    if isinstance(device.power, int) and isinstance(device.voltage, int):
+    if (
+        isinstance(device.power, int)
+        and isinstance(device.voltage, int)
+        and device.voltage > 0
+    ):
         return round(device.power / device.voltage, 3)
     return 0.0
 
@@ -216,14 +220,14 @@ async def async_setup_entry(
     async_add_entities(
         [
             FritzBoxSensor(coordinator, ain, description)
-            for ain, device in coordinator.data.items()
+            for ain, device in coordinator.data.devices.items()
             for description in SENSOR_TYPES
             if description.suitable(device)
         ]
     )
 
 
-class FritzBoxSensor(FritzBoxEntity, SensorEntity):
+class FritzBoxSensor(FritzBoxDeviceEntity, SensorEntity):
     """The entity class for FRITZ!SmartHome sensors."""
 
     entity_description: FritzSensorEntityDescription
@@ -231,4 +235,4 @@ class FritzBoxSensor(FritzBoxEntity, SensorEntity):
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
-        return self.entity_description.native_value(self.device)
+        return self.entity_description.native_value(self.data)

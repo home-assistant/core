@@ -11,8 +11,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
-
-# pylint: disable-next=unused-import
 from homeassistant.helpers.issue_registry import (
     async_delete_issue,
     async_get as async_get_issue_registry,
@@ -87,7 +85,8 @@ class RepairsFlowManager(data_entry_flow.FlowManager):
         self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
     ) -> data_entry_flow.FlowResult:
         """Complete a fix flow."""
-        async_delete_issue(self.hass, flow.handler, flow.init_data["issue_id"])
+        if result.get("type") != data_entry_flow.FlowResultType.ABORT:
+            async_delete_issue(self.hass, flow.handler, flow.init_data["issue_id"])
         if "result" not in result:
             result["result"] = None
         return result

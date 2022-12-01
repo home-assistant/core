@@ -172,6 +172,7 @@ SENSOR_TYPES: tuple[ECSensorEntityDescription, ...] = (
         key="visibility",
         name="Visibility",
         native_unit_of_measurement=LENGTH_KILOMETERS,
+        device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.conditions.get("visibility", {}).get("value"),
     ),

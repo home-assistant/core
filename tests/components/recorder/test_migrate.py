@@ -21,21 +21,18 @@ from sqlalchemy.pool import StaticPool
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import persistent_notification as pn, recorder
 from homeassistant.components.recorder import db_schema, migration
-from homeassistant.components.recorder.const import SQLITE_URL_PREFIX
 from homeassistant.components.recorder.db_schema import (
     SCHEMA_VERSION,
     RecorderRuns,
     States,
 )
-from homeassistant.components.recorder.statistics import get_start_time
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.helpers import recorder as recorder_helper
-from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
-from .common import async_wait_recording_done, create_engine_test, wait_recording_done
+from .common import async_wait_recording_done, create_engine_test
 
-from tests.common import async_fire_time_changed, get_test_home_assistant
+from tests.common import async_fire_time_changed
 
 ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 
@@ -137,14 +134,16 @@ async def test_database_migration_encounters_corruption(hass):
     sqlite3_exception.__cause__ = sqlite3.DatabaseError()
 
     with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
-        "homeassistant.components.recorder.migration.schema_is_current",
-        side_effect=[False, True],
+        "homeassistant.components.recorder.migration._schema_is_current",
+        side_effect=[False],
     ), patch(
         "homeassistant.components.recorder.migration.migrate_schema",
         side_effect=sqlite3_exception,
     ), patch(
         "homeassistant.components.recorder.core.move_away_broken_database"
-    ) as move_away:
+    ) as move_away, patch(
+        "homeassistant.components.recorder.Recorder._schedule_compile_missing_statistics",
+    ):
         recorder_helper.async_initialize_recorder(hass)
         await async_setup_component(
             hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
@@ -162,8 +161,8 @@ async def test_database_migration_encounters_corruption_not_sqlite(hass):
     assert recorder.util.async_migration_in_progress(hass) is False
 
     with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
-        "homeassistant.components.recorder.migration.schema_is_current",
-        side_effect=[False, True],
+        "homeassistant.components.recorder.migration._schema_is_current",
+        side_effect=[False],
     ), patch(
         "homeassistant.components.recorder.migration.migrate_schema",
         side_effect=DatabaseError("statement", {}, []),
@@ -361,114 +360,6 @@ async def test_schema_migrate(hass, start_version, live):
         assert migration_version == db_schema.SCHEMA_VERSION
         assert setup_run.called
         assert recorder.util.async_migration_in_progress(hass) is not True
-
-
-def test_set_state_unit(caplog, tmpdir):
-    """Test state unit column is initialized."""
-
-    def _create_engine_29(*args, **kwargs):
-        """Test version of create_engine that initializes with old schema.
-
-        This simulates an existing db with the old schema.
-        """
-        module = "tests.components.recorder.db_schema_29"
-        importlib.import_module(module)
-        old_db_schema = sys.modules[module]
-        engine = create_engine(*args, **kwargs)
-        old_db_schema.Base.metadata.create_all(engine)
-        with Session(engine) as session:
-            session.add(recorder.db_schema.StatisticsRuns(start=get_start_time()))
-            session.add(
-                recorder.db_schema.SchemaChanges(
-                    schema_version=old_db_schema.SCHEMA_VERSION
-                )
-            )
-            session.commit()
-        return engine
-
-    test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
-
-    module = "tests.components.recorder.db_schema_29"
-    importlib.import_module(module)
-    old_db_schema = sys.modules[module]
-
-    external_energy_metadata_1 = {
-        "has_mean": False,
-        "has_sum": True,
-        "name": "Total imported energy",
-        "source": "test",
-        "statistic_id": "test:total_energy_import_tariff_1",
-        "unit_of_measurement": "kWh",
-    }
-    external_co2_metadata = {
-        "has_mean": True,
-        "has_sum": False,
-        "name": "Fossil percentage",
-        "source": "test",
-        "statistic_id": "test:fossil_percentage",
-        "unit_of_measurement": "%",
-    }
-
-    # Create some statistics_meta with schema version 29
-    with patch.object(recorder, "db_schema", old_db_schema), patch.object(
-        recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-    ), patch(
-        "homeassistant.components.recorder.core.create_engine", new=_create_engine_29
-    ):
-        hass = get_test_home_assistant()
-        recorder_helper.async_initialize_recorder(hass)
-        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
-        wait_recording_done(hass)
-        wait_recording_done(hass)
-
-        with session_scope(hass=hass) as session:
-            session.add(
-                recorder.db_schema.StatisticsMeta.from_meta(external_energy_metadata_1)
-            )
-            session.add(
-                recorder.db_schema.StatisticsMeta.from_meta(external_co2_metadata)
-            )
-
-        with session_scope(hass=hass) as session:
-            tmp = session.query(recorder.db_schema.StatisticsMeta).all()
-            assert len(tmp) == 2
-            assert tmp[0].id == 1
-            assert tmp[0].statistic_id == "test:total_energy_import_tariff_1"
-            assert tmp[0].unit_of_measurement == "kWh"
-            assert not hasattr(tmp[0], "state_unit_of_measurement")
-            assert tmp[1].id == 2
-            assert tmp[1].statistic_id == "test:fossil_percentage"
-            assert tmp[1].unit_of_measurement == "%"
-            assert not hasattr(tmp[1], "state_unit_of_measurement")
-
-        hass.stop()
-        dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
-
-    # Test that the state_unit column is initialized during migration from schema 28
-    hass = get_test_home_assistant()
-    recorder_helper.async_initialize_recorder(hass)
-    setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
-    hass.start()
-    wait_recording_done(hass)
-    wait_recording_done(hass)
-
-    with session_scope(hass=hass) as session:
-        tmp = session.query(recorder.db_schema.StatisticsMeta).all()
-        assert len(tmp) == 2
-        assert tmp[0].id == 1
-        assert tmp[0].statistic_id == "test:total_energy_import_tariff_1"
-        assert tmp[0].unit_of_measurement == "kWh"
-        assert hasattr(tmp[0], "state_unit_of_measurement")
-        assert tmp[0].state_unit_of_measurement == "kWh"
-        assert tmp[1].id == 2
-        assert tmp[1].statistic_id == "test:fossil_percentage"
-        assert hasattr(tmp[1], "state_unit_of_measurement")
-        assert tmp[1].state_unit_of_measurement == "%"
-        assert tmp[1].state_unit_of_measurement == "%"
-
-    hass.stop()
-    dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
 
 def test_invalid_update(hass):

@@ -17,6 +17,7 @@ from homeassistant.components.media_player import (
     BrowseMedia,
     MediaPlayerEnqueue,
     MediaPlayerEntity,
+    MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
     async_process_play_media_url,
@@ -236,7 +237,7 @@ class ForkedDaapdZone(MediaPlayerEntity):
         await self._api.set_volume(volume=volume * 100, output_id=self._output_id)
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         return SUPPORTED_FEATURES_ZONE
 
@@ -558,7 +559,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         return self._player["shuffle"]
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         return SUPPORTED_FEATURES
 
@@ -925,7 +926,8 @@ class ForkedDaapdUpdater:
         else:
             _LOGGER.error("Invalid websocket port")
 
-    def _disconnected_callback(self):
+    async def _disconnected_callback(self):
+        """Send update signals when the websocket gets disconnected."""
         async_dispatcher_send(
             self.hass, SIGNAL_UPDATE_MASTER.format(self._entry_id), False
         )

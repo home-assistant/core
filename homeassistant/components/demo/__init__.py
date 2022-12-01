@@ -52,6 +52,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
+    Platform.TEXT,
     Platform.UPDATE,
     Platform.VACUUM,
     Platform.WATER_HEATER,
@@ -230,6 +231,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         translation_key="bad_psu",
     )
 
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "cold_tea",
+        is_fixable=True,
+        severity=IssueSeverity.WARNING,
+        translation_key="cold_tea",
+    )
+
     return True
 
 
@@ -267,7 +277,7 @@ async def _insert_sum_statistics(
     statistic_id = metadata["statistic_id"]
 
     last_stats = await get_instance(hass).async_add_executor_job(
-        get_last_statistics, hass, 1, statistic_id, False
+        get_last_statistics, hass, 1, statistic_id, False, {"sum"}
     )
     if statistic_id in last_stats:
         sum_ = last_stats[statistic_id][0]["sum"] or 0
@@ -295,7 +305,6 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
     metadata: StatisticMetaData = {
         "source": DOMAIN,
         "name": "Outdoor temperature",
-        "state_unit_of_measurement": TEMP_CELSIUS,
         "statistic_id": f"{DOMAIN}:temperature_outdoor",
         "unit_of_measurement": TEMP_CELSIUS,
         "has_mean": True,
@@ -309,7 +318,6 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
     metadata = {
         "source": DOMAIN,
         "name": "Energy consumption 1",
-        "state_unit_of_measurement": ENERGY_KILO_WATT_HOUR,
         "statistic_id": f"{DOMAIN}:energy_consumption_kwh",
         "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
         "has_mean": False,
@@ -322,7 +330,6 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
     metadata = {
         "source": DOMAIN,
         "name": "Energy consumption 2",
-        "state_unit_of_measurement": ENERGY_MEGA_WATT_HOUR,
         "statistic_id": f"{DOMAIN}:energy_consumption_mwh",
         "unit_of_measurement": ENERGY_MEGA_WATT_HOUR,
         "has_mean": False,
@@ -337,7 +344,6 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
     metadata = {
         "source": DOMAIN,
         "name": "Gas consumption 1",
-        "state_unit_of_measurement": VOLUME_CUBIC_METERS,
         "statistic_id": f"{DOMAIN}:gas_consumption_m3",
         "unit_of_measurement": VOLUME_CUBIC_METERS,
         "has_mean": False,
@@ -352,7 +358,6 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
     metadata = {
         "source": DOMAIN,
         "name": "Gas consumption 2",
-        "state_unit_of_measurement": VOLUME_CUBIC_FEET,
         "statistic_id": f"{DOMAIN}:gas_consumption_ft3",
         "unit_of_measurement": VOLUME_CUBIC_FEET,
         "has_mean": False,

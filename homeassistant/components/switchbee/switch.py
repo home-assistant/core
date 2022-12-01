@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, TypeVar, Union, cast
+from typing import Any, TypeVar, Union
 
 from switchbee.api import SwitchBeeDeviceOfflineError, SwitchBeeError
 from switchbee.device import (
@@ -76,7 +76,7 @@ class SwitchBeeSwitchEntity(SwitchBeeDeviceEntity[_DeviceTypeT], SwitchEntity):
     def _update_from_coordinator(self) -> None:
         """Update the entity attributes from the coordinator data."""
 
-        coordinator_device = cast(_DeviceTypeT, self.coordinator.data[self._device.id])
+        coordinator_device = self._get_coordinator_device()
 
         if coordinator_device.state == -1:
 

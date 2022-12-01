@@ -76,7 +76,7 @@ class YeelightScanner:
             self._listeners.append(
                 SsdpSearchListener(
                     async_callback=self._async_process_entry,
-                    service_type=SSDP_ST,
+                    search_target=SSDP_ST,
                     target=SSDP_TARGET,
                     source=source,
                     async_connect_callback=_wrap_async_connected_idx(idx),

@@ -22,6 +22,9 @@ class ClientMock:
         self.state = True
         self.brightness = {"mode": "enabled", "value": 10}
         self.color = None
+        self.movies = [{"id": 1, "name": "Rainbow"}, {"id": 2, "name": "Flare"}]
+        self.current_movie = {}
+        self.default_mode = "movie"
 
         self.id = str(uuid4())
         self.device_info = {
@@ -81,3 +84,22 @@ class ClientMock:
 
     async def interview(self) -> None:
         """Interview."""
+
+    async def get_saved_movies(self) -> dict:
+        """Get saved movies."""
+        return self.movies
+
+    async def get_current_movie(self) -> dict:
+        """Get current movie."""
+        return self.current_movie
+
+    async def set_current_movie(self, movie_id: int) -> dict:
+        """Set current movie."""
+        self.current_movie = {"id": movie_id}
+
+    async def set_mode(self, mode: str) -> None:
+        """Set mode."""
+        if mode == "off":
+            self.turn_off
+        else:
+            self.turn_on

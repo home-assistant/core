@@ -54,7 +54,7 @@ from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure
 from homeassistant.util.speed import convert as convert_speed
 from homeassistant.util.temperature import convert as convert_temperature
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.testing_config.custom_components.test import weather as WeatherPlatform
 
@@ -143,7 +143,7 @@ async def create_entity(hass: HomeAssistant, **kwargs):
 @pytest.mark.parametrize("native_unit", (TEMP_FAHRENHEIT, TEMP_CELSIUS))
 @pytest.mark.parametrize(
     "state_unit, unit_system",
-    ((TEMP_CELSIUS, METRIC_SYSTEM), (TEMP_FAHRENHEIT, IMPERIAL_SYSTEM)),
+    ((TEMP_CELSIUS, METRIC_SYSTEM), (TEMP_FAHRENHEIT, US_CUSTOMARY_SYSTEM)),
 )
 async def test_temperature(
     hass: HomeAssistant,
@@ -176,7 +176,7 @@ async def test_temperature(
 @pytest.mark.parametrize("native_unit", (None,))
 @pytest.mark.parametrize(
     "state_unit, unit_system",
-    ((TEMP_CELSIUS, METRIC_SYSTEM), (TEMP_FAHRENHEIT, IMPERIAL_SYSTEM)),
+    ((TEMP_CELSIUS, METRIC_SYSTEM), (TEMP_FAHRENHEIT, US_CUSTOMARY_SYSTEM)),
 )
 async def test_temperature_no_unit(
     hass: HomeAssistant,
@@ -209,7 +209,7 @@ async def test_temperature_no_unit(
 @pytest.mark.parametrize("native_unit", (PRESSURE_INHG, PRESSURE_INHG))
 @pytest.mark.parametrize(
     "state_unit, unit_system",
-    ((PRESSURE_HPA, METRIC_SYSTEM), (PRESSURE_INHG, IMPERIAL_SYSTEM)),
+    ((PRESSURE_HPA, METRIC_SYSTEM), (PRESSURE_INHG, US_CUSTOMARY_SYSTEM)),
 )
 async def test_pressure(
     hass: HomeAssistant,
@@ -237,7 +237,7 @@ async def test_pressure(
 @pytest.mark.parametrize("native_unit", (None,))
 @pytest.mark.parametrize(
     "state_unit, unit_system",
-    ((PRESSURE_HPA, METRIC_SYSTEM), (PRESSURE_INHG, IMPERIAL_SYSTEM)),
+    ((PRESSURE_HPA, METRIC_SYSTEM), (PRESSURE_INHG, US_CUSTOMARY_SYSTEM)),
 )
 async def test_pressure_no_unit(
     hass: HomeAssistant,
@@ -270,7 +270,7 @@ async def test_pressure_no_unit(
     "state_unit, unit_system",
     (
         (SPEED_KILOMETERS_PER_HOUR, METRIC_SYSTEM),
-        (SPEED_MILES_PER_HOUR, IMPERIAL_SYSTEM),
+        (SPEED_MILES_PER_HOUR, US_CUSTOMARY_SYSTEM),
     ),
 )
 async def test_wind_speed(
@@ -304,7 +304,7 @@ async def test_wind_speed(
     "state_unit, unit_system",
     (
         (SPEED_KILOMETERS_PER_HOUR, METRIC_SYSTEM),
-        (SPEED_MILES_PER_HOUR, IMPERIAL_SYSTEM),
+        (SPEED_MILES_PER_HOUR, US_CUSTOMARY_SYSTEM),
     ),
 )
 async def test_wind_speed_no_unit(
@@ -338,7 +338,7 @@ async def test_wind_speed_no_unit(
     "state_unit, unit_system",
     (
         (LENGTH_KILOMETERS, METRIC_SYSTEM),
-        (LENGTH_MILES, IMPERIAL_SYSTEM),
+        (LENGTH_MILES, US_CUSTOMARY_SYSTEM),
     ),
 )
 async def test_visibility(
@@ -369,7 +369,7 @@ async def test_visibility(
     "state_unit, unit_system",
     (
         (LENGTH_KILOMETERS, METRIC_SYSTEM),
-        (LENGTH_MILES, IMPERIAL_SYSTEM),
+        (LENGTH_MILES, US_CUSTOMARY_SYSTEM),
     ),
 )
 async def test_visibility_no_unit(
@@ -400,7 +400,7 @@ async def test_visibility_no_unit(
     "state_unit, unit_system",
     (
         (LENGTH_MILLIMETERS, METRIC_SYSTEM),
-        (LENGTH_INCHES, IMPERIAL_SYSTEM),
+        (LENGTH_INCHES, US_CUSTOMARY_SYSTEM),
     ),
 )
 async def test_precipitation(
@@ -431,7 +431,7 @@ async def test_precipitation(
     "state_unit, unit_system",
     (
         (LENGTH_MILLIMETERS, METRIC_SYSTEM),
-        (LENGTH_INCHES, IMPERIAL_SYSTEM),
+        (LENGTH_INCHES, US_CUSTOMARY_SYSTEM),
     ),
 )
 async def test_precipitation_no_unit(
@@ -719,7 +719,7 @@ async def test_backwards_compatibility_convert_values(
     precipitation_value = 1
     precipitation_unit = LENGTH_MILLIMETERS
 
-    hass.config.units = IMPERIAL_SYSTEM
+    hass.config.units = US_CUSTOMARY_SYSTEM
 
     platform: WeatherPlatform = getattr(hass.components, "test.weather")
     platform.init(empty=True)

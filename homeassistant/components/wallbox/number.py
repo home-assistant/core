@@ -7,6 +7,7 @@ from typing import Optional, cast
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import InvalidAuth, WallboxCoordinator, WallboxEntity
@@ -46,6 +47,8 @@ async def async_setup_entry(
         )
     except InvalidAuth:
         return
+    except ConnectionError as exc:
+        raise PlatformNotReady from exc
 
     async_add_entities(
         [

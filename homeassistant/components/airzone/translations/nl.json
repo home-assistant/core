@@ -8,12 +8,18 @@
             "invalid_system_id": "Ongeldige Airzone systeem ID"
         },
         "step": {
+            "discovered_connection": {
+                "data": {
+                    "id": "Systeem ID",
+                    "port": "Poort"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Host",
+                    "id": "Systeem ID",
                     "port": "Poort"
-                },
-                "description": "Airzone integratie instellen."
+                }
             }
         }
     }
