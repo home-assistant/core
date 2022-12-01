@@ -24,5 +24,11 @@
                 }
             }
         }
+    },
+    "issues": {
+        "migrated_attributes": {
+            "description": "Vaakumseadme atribuudid on n\u00fc\u00fcd saadaval diagnostiliste anduritena.\n\nPalun kohandage k\u00f5iki automatiseerimisi v\u00f5i skripte, mis neid atribuute kasutavad.",
+            "title": "Litter-Roboti atribuudid on n\u00fc\u00fcd oma andurid"
+        }
     }
 }

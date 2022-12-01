@@ -15,7 +15,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_API_KEY,
     CONF_MONITORED_CONDITIONS,
     CONF_SCAN_INTERVAL,
@@ -27,8 +26,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTRIBUTION = "Information provided by https://travis-ci.org/"
 
 CONF_BRANCH = "branch"
 CONF_REPOSITORY = "repository"
@@ -142,6 +139,8 @@ def setup_platform(
 class TravisCISensor(SensorEntity):
     """Representation of a Travis CI sensor."""
 
+    _attr_attribution = "Information provided by https://travis-ci.org/"
+
     def __init__(
         self, data, repo_name, user, branch, description: SensorEntityDescription
     ):
@@ -159,7 +158,6 @@ class TravisCISensor(SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {}
-        attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
 
         if self._build and self._attr_native_value is not None:
             if self._user and self.entity_description.key == "state":

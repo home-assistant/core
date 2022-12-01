@@ -12,18 +12,14 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_API_KEY,
-    CONF_MONITORED_CONDITIONS,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_API_KEY, CONF_MONITORED_CONDITIONS, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +29,6 @@ CONF_UNITS = "units"
 
 DEFAULT_UNIT = "us"
 DEFAULT_NAME = "MSW"
-DEFAULT_ATTRIBUTION = "Data provided by magicseaweed.com"
 
 ICON = "mdi:waves"
 
@@ -92,7 +87,7 @@ def setup_platform(
 
     if CONF_UNITS in config:
         units = config.get(CONF_UNITS)
-    elif hass.config.units.is_metric:
+    elif hass.config.units is METRIC_SYSTEM:
         units = UNITS[0]
     else:
         units = UNITS[2]
@@ -126,6 +121,7 @@ def setup_platform(
 class MagicSeaweedSensor(SensorEntity):
     """Implementation of a MagicSeaweed sensor."""
 
+    _attr_attribution = "Data provided by magicseaweed.com"
     _attr_icon = ICON
 
     def __init__(
@@ -150,7 +146,7 @@ class MagicSeaweedSensor(SensorEntity):
         else:
             self._attr_name = f"{hour} {name} {description.name}"
 
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._attr_extra_state_attributes = {}
 
     @property
     def unit_system(self):

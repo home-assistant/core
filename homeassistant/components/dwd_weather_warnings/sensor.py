@@ -22,7 +22,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS, CONF_NAME
+from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -31,7 +31,6 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Data provided by DWD"
 ATTR_REGION_NAME = "region_name"
 ATTR_REGION_ID = "region_id"
 ATTR_LAST_UPDATE = "last_update"
@@ -108,6 +107,8 @@ def setup_platform(
 class DwdWeatherWarningsSensor(SensorEntity):
     """Representation of a DWD-Weather-Warnings sensor."""
 
+    _attr_attribution = "Data provided by DWD"
+
     def __init__(
         self,
         api,
@@ -130,7 +131,6 @@ class DwdWeatherWarningsSensor(SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes of the DWD-Weather-Warnings."""
         data = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_REGION_NAME: self._api.api.warncell_name,
             ATTR_REGION_ID: self._api.api.warncell_id,
             ATTR_LAST_UPDATE: self._api.api.last_update,

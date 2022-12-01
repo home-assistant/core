@@ -10,7 +10,8 @@
             "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en curso",
             "cannot_connect": "No se pudo conectar",
             "discovery_requires_supervisor": "El descubrimiento requiere del supervisor.",
-            "not_zwave_device": "El dispositivo descubierto no es un dispositivo Z-Wave."
+            "not_zwave_device": "El dispositivo descubierto no es un dispositivo Z-Wave.",
+            "not_zwave_js_addon": "El complemento descubierto no es el complemento oficial de Z-Wave JS."
         },
         "error": {
             "addon_start_failed": "No se pudo iniciar el complemento Z-Wave JS. Comprueba la configuraci\u00f3n.",
@@ -89,6 +90,12 @@
             "state.node_status": "El estado del nodo ha cambiado",
             "zwave_js.value_updated.config_parameter": "Cambio de valor en el par\u00e1metro de configuraci\u00f3n {subtype}",
             "zwave_js.value_updated.value": "Cambio de valor en un valor Z-Wave JS"
+        }
+    },
+    "issues": {
+        "invalid_server_version": {
+            "description": "La versi\u00f3n de Z-Wave JS Server que est\u00e1 ejecutando actualmente es demasiado antigua para esta versi\u00f3n de Home Assistant. Actualiza Z-Wave JS Server a la \u00faltima versi\u00f3n para solucionar este problema.",
+            "title": "Se necesita una versi\u00f3n m\u00e1s reciente de Z-Wave JS Server"
         }
     },
     "options": {

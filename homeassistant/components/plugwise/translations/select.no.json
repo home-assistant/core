@@ -1,0 +1,17 @@
+{
+    "state": {
+        "plugwise__dhw_mode": {
+            "auto": "Auto",
+            "boost": "\u00d8ke",
+            "comfort": "Komfort",
+            "off": "Av"
+        },
+        "plugwise__regulation_mode": {
+            "bleeding_cold": "Bl\u00f8dende kaldt",
+            "bleeding_hot": "Bl\u00f8dende varmt",
+            "cooling": "Kj\u00f8ling",
+            "heating": "Oppvarming",
+            "off": "Av"
+        }
+    }
+}

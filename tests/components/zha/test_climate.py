@@ -10,7 +10,7 @@ import zigpy.zcl.clusters
 from zigpy.zcl.clusters.hvac import Thermostat
 import zigpy.zcl.foundation as zcl_f
 
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
@@ -486,7 +486,7 @@ async def test_climate_hvac_action_pi_demand(hass, device_climate):
     ),
 )
 async def test_hvac_mode(hass, device_climate, sys_mode, hvac_mode):
-    """Test HVAC modee."""
+    """Test HVAC mode."""
 
     thrm_cluster = device_climate.device.endpoints[1].thermostat
     entity_id = await find_entity_id(Platform.CLIMATE, device_climate, hass)

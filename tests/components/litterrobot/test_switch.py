@@ -58,17 +58,14 @@ async def test_on_off_commands(
     data = {ATTR_ENTITY_ID: entity_id}
 
     count = 0
-    for service in (SERVICE_TURN_ON, SERVICE_TURN_OFF):
+    services = ((SERVICE_TURN_ON, STATE_ON, "1"), (SERVICE_TURN_OFF, STATE_OFF, "0"))
+    for service, new_state, new_value in services:
         count += 1
-        await hass.services.async_call(
-            PLATFORM_DOMAIN,
-            service,
-            data,
-            blocking=True,
+        await hass.services.async_call(PLATFORM_DOMAIN, service, data, blocking=True)
+        robot._update_data(  # pylint:disable=protected-access
+            {updated_field: new_value}, partial=True
         )
-        robot._update_data({updated_field: 1 if service == SERVICE_TURN_ON else 0})
 
         assert getattr(robot, robot_command).call_count == count
-        state = hass.states.get(entity_id)
-        assert state
-        assert state.state == STATE_ON if service == SERVICE_TURN_ON else STATE_OFF
+        assert (state := hass.states.get(entity_id))
+        assert state.state == new_state

@@ -20,9 +20,10 @@ import homeassistant.components.zha.core.const as zha_const
 import homeassistant.components.zha.core.device as zha_core_device
 from homeassistant.setup import async_setup_component
 
+from . import common
+
 from tests.common import MockConfigEntry
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
-from tests.components.zha import common
 
 FIXTURE_GRP_ID = 0x1001
 FIXTURE_GRP_NAME = "fixture group"
@@ -56,6 +57,7 @@ def zigpy_app_controller():
     type(app).nwk = PropertyMock(return_value=zigpy.types.NWK(0x0000))
     type(app).devices = PropertyMock(return_value={})
     type(app).backups = zigpy.backups.BackupManager(app)
+    type(app).topology = zigpy.topology.Topology(app)
 
     state = State()
     state.node_info.ieee = app.ieee.return_value

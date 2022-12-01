@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Umiestnenie u\u017e je nakonfigurovan\u00e9",
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "timeout": "\u010casov\u00fd limit na nadviazanie spojenia",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "community": {
+                "data": {
+                    "region": "Regi\u00f3n"
+                }
+            },
+            "district": {
+                "data": {
+                    "region": "Regi\u00f3n"
+                }
+            },
+            "user": {
+                "data": {
+                    "region": "Regi\u00f3n"
+                }
+            }
+        }
+    }
+}

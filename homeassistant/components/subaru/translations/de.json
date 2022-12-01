@@ -11,7 +11,7 @@
             "incorrect_pin": "Falsche PIN",
             "incorrect_validation_code": "Falscher Validierungscode",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
-            "two_factor_request_failed": "Anfrage f\u00fcr 2FA-Code fehlgeschlagen, bitte versuche es erneut"
+            "two_factor_request_failed": "Anfrage f\u00fcr 2FA Code fehlgeschlagen, bitte versuche es erneut"
         },
         "step": {
             "pin": {

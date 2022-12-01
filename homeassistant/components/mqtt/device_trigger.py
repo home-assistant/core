@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-from typing import cast
+from typing import Any, cast
 
 import attr
 import voluptuous as vol
@@ -23,7 +23,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import debug_info, trigger as mqtt_trigger
 from .config import MQTT_BASE_SCHEMA
@@ -33,17 +33,16 @@ from .const import (
     CONF_PAYLOAD,
     CONF_QOS,
     CONF_TOPIC,
-    DATA_MQTT,
     DOMAIN,
 )
-from .discovery import MQTT_DISCOVERY_DONE
+from .discovery import MQTT_DISCOVERY_DONE, MQTTDiscoveryPayload
 from .mixins import (
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-    MqttData,
     MqttDiscoveryDeviceUpdate,
     send_discovery_done,
     update_device,
 )
+from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,7 +96,7 @@ class TriggerInstance:
 
     async def async_attach_trigger(self) -> None:
         """Attach MQTT trigger."""
-        mqtt_config = {
+        mqtt_config: dict[str, Any] = {
             CONF_PLATFORM: DOMAIN,
             CONF_TOPIC: self.trigger.topic,
             CONF_ENCODING: DEFAULT_ENCODING,
@@ -124,7 +123,7 @@ class Trigger:
     """Device trigger settings."""
 
     device_id: str = attr.ib()
-    discovery_data: dict | None = attr.ib()
+    discovery_data: DiscoveryInfoType | None = attr.ib()
     hass: HomeAssistant = attr.ib()
     payload: str | None = attr.ib()
     qos: int | None = attr.ib()
@@ -194,7 +193,7 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdate):
         hass: HomeAssistant,
         config: ConfigType,
         device_id: str,
-        discovery_data: dict,
+        discovery_data: DiscoveryInfoType,
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize."""
@@ -203,7 +202,7 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdate):
         self.device_id = device_id
         self.discovery_data = discovery_data
         self.hass = hass
-        self._mqtt_data: MqttData = hass.data[DATA_MQTT]
+        self._mqtt_data = get_mqtt_data(hass)
 
         MqttDiscoveryDeviceUpdate.__init__(
             self,
@@ -238,7 +237,7 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdate):
             self.hass, discovery_hash, self.discovery_data, self.device_id
         )
 
-    async def async_update(self, discovery_data: dict) -> None:
+    async def async_update(self, discovery_data: MQTTDiscoveryPayload) -> None:
         """Handle MQTT device trigger discovery updates."""
         discovery_hash = self.discovery_data[ATTR_DISCOVERY_HASH]
         discovery_id = discovery_hash[1]
@@ -262,11 +261,14 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdate):
 
 
 async def async_setup_trigger(
-    hass, config: ConfigType, config_entry: ConfigEntry, discovery_data: dict
+    hass: HomeAssistant,
+    config: ConfigType,
+    config_entry: ConfigEntry,
+    discovery_data: DiscoveryInfoType,
 ) -> None:
     """Set up the MQTT device trigger."""
     config = TRIGGER_DISCOVERY_SCHEMA(config)
-    discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
+    discovery_hash: tuple[str, str] = discovery_data[ATTR_DISCOVERY_HASH]
 
     if (device_id := update_device(hass, config_entry, config)) is None:
         async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
@@ -281,7 +283,7 @@ async def async_setup_trigger(
 
 async def async_removed_from_device(hass: HomeAssistant, device_id: str) -> None:
     """Handle Mqtt removed from a device."""
-    mqtt_data: MqttData = hass.data[DATA_MQTT]
+    mqtt_data = get_mqtt_data(hass)
     triggers = await async_get_triggers(hass, device_id)
     for trig in triggers:
         device_trigger: Trigger = mqtt_data.device_triggers.pop(trig[CONF_DISCOVERY_ID])
@@ -296,7 +298,7 @@ async def async_get_triggers(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device triggers for MQTT devices."""
-    mqtt_data: MqttData = hass.data[DATA_MQTT]
+    mqtt_data = get_mqtt_data(hass)
     triggers: list[dict[str, str]] = []
 
     if not mqtt_data.device_triggers:
@@ -325,7 +327,7 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    mqtt_data: MqttData = hass.data[DATA_MQTT]
+    mqtt_data = get_mqtt_data(hass)
     device_id = config[CONF_DEVICE_ID]
     discovery_id = config[CONF_DISCOVERY_ID]
 

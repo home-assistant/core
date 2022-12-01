@@ -218,7 +218,7 @@ def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | No
         state: State | None = event.data.get(EVENT_NEW_STATE)
         if (
             state is None
-            or state.state in (STATE_UNKNOWN, "", STATE_UNAVAILABLE)
+            or state.state in (STATE_UNKNOWN, "", STATE_UNAVAILABLE, None)
             or not entity_filter(state.entity_id)
         ):
             return None

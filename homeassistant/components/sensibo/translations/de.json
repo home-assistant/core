@@ -17,7 +17,7 @@
                     "api_key": "API-Schl\u00fcssel"
                 },
                 "data_description": {
-                    "api_key": "Folge der Dokumentation, um einen neuen Api-Schl\u00fcssel zu erhalten."
+                    "api_key": "Folge der Dokumentation, um deinen API-Schl\u00fcssel zu erhalten."
                 }
             },
             "user": {
@@ -25,7 +25,7 @@
                     "api_key": "API-Schl\u00fcssel"
                 },
                 "data_description": {
-                    "api_key": "Folge der Dokumentation, um deinen Api-Schl\u00fcssel zu erhalten."
+                    "api_key": "Folge der Dokumentation, um deinen API-Schl\u00fcssel zu erhalten."
                 }
             }
         }

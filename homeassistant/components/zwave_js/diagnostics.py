@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from dataclasses import astuple, dataclass
 from typing import Any
 
 from zwave_js_server.client import Client
@@ -19,28 +18,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DATA_CLIENT, DOMAIN
+from .const import DATA_CLIENT, DOMAIN, USER_AGENT
 from .helpers import (
+    ZwaveValueMatcher,
     get_home_and_node_id_from_device_entry,
     get_state_key_from_unique_id,
     get_value_id_from_unique_id,
+    value_matches_matcher,
 )
-
-
-@dataclass
-class ZwaveValueMatcher:
-    """Class to allow matching a Z-Wave Value."""
-
-    property_: str | int | None = None
-    command_class: int | None = None
-    endpoint: int | None = None
-    property_key: str | int | None = None
-
-    def __post_init__(self) -> None:
-        """Post initialization check."""
-        if all(val is None for val in astuple(self)):
-            raise ValueError("At least one of the fields must be set.")
-
 
 KEYS_TO_REDACT = {"homeId", "location"}
 
@@ -55,21 +40,7 @@ def redact_value_of_zwave_value(zwave_value: ValueDataType) -> ValueDataType:
     if zwave_value.get("value") in (None, ""):
         return zwave_value
     for value_to_redact in VALUES_TO_REDACT:
-        command_class = None
-        if "commandClass" in zwave_value:
-            command_class = CommandClass(zwave_value["commandClass"])
-        zwave_value_id = ZwaveValueMatcher(
-            property_=zwave_value.get("property"),
-            command_class=command_class,
-            endpoint=zwave_value.get("endpoint"),
-            property_key=zwave_value.get("propertyKey"),
-        )
-        if all(
-            redacted_field_val is None or redacted_field_val == zwave_value_field_val
-            for redacted_field_val, zwave_value_field_val in zip(
-                astuple(value_to_redact), astuple(zwave_value_id)
-            )
-        ):
+        if value_matches_matcher(value_to_redact, zwave_value):
             redacted_value: ValueDataType = deepcopy(zwave_value)
             redacted_value["value"] = REDACTED
             return redacted_value
@@ -138,7 +109,9 @@ async def async_get_config_entry_diagnostics(
 ) -> list[dict]:
     """Return diagnostics for a config entry."""
     msgs: list[dict] = async_redact_data(
-        await dump_msgs(config_entry.data[CONF_URL], async_get_clientsession(hass)),
+        await dump_msgs(
+            config_entry.data[CONF_URL], async_get_clientsession(hass), USER_AGENT
+        ),
         KEYS_TO_REDACT,
     )
     handshake_msgs = msgs[:-1]

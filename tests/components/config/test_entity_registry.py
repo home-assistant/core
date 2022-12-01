@@ -70,6 +70,7 @@ async def test_list_entities(hass, client):
             "hidden_by": None,
             "icon": None,
             "id": ANY,
+            "unique_id": ANY,
             "name": "Hello World",
             "original_name": None,
             "platform": "test_platform",
@@ -85,6 +86,7 @@ async def test_list_entities(hass, client):
             "hidden_by": None,
             "icon": None,
             "id": ANY,
+            "unique_id": ANY,
             "name": None,
             "original_name": None,
             "platform": "test_platform",
@@ -122,6 +124,7 @@ async def test_list_entities(hass, client):
             "hidden_by": None,
             "icon": None,
             "id": ANY,
+            "unique_id": ANY,
             "name": "Hello World",
             "original_name": None,
             "platform": "test_platform",
@@ -342,7 +345,7 @@ async def test_update_entity(hass, client):
             "platform": "test_platform",
             "unique_id": "1234",
         },
-        "reload_delay": 30,
+        "require_restart": True,
     }
 
     # UPDATE ENTITY OPTION

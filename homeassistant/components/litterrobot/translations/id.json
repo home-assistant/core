@@ -24,5 +24,11 @@
                 }
             }
         }
+    },
+    "issues": {
+        "migrated_attributes": {
+            "description": "Atribut entitas vakum sekarang tersedia sebagai sensor diagnostik.\n\nSesuaikan semua otomasi atau skrip yang mungkin Anda miliki yang menggunakan atribut ini.",
+            "title": "Atribut Litter-Robot sekarang menjadi sensor tersendiri"
+        }
     }
 }

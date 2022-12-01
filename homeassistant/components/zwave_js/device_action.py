@@ -9,7 +9,7 @@ import voluptuous as vol
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.lock import ATTR_CODE_SLOT, ATTR_USERCODE
 from zwave_js_server.const.command_class.meter import CC_SPECIFIC_METER_TYPE
-from zwave_js_server.model.value import get_value_id
+from zwave_js_server.model.value import get_value_id_str
 from zwave_js_server.util.command_class.meter import get_meter_type
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
@@ -341,7 +341,7 @@ async def async_get_action_capabilities(
         }
 
     if action_type == SERVICE_SET_CONFIG_PARAMETER:
-        value_id = get_value_id(
+        value_id = get_value_id_str(
             node,
             CommandClass.CONFIGURATION,
             config[ATTR_CONFIG_PARAMETER],

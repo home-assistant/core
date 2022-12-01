@@ -9,6 +9,7 @@ from xknx.devices import Switch as XknxSwitch
 from homeassistant import config_entries
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import (
+    CONF_DEVICE_CLASS,
     CONF_ENTITY_CATEGORY,
     CONF_NAME,
     STATE_ON,
@@ -56,6 +57,7 @@ class KNXSwitch(KnxEntity, SwitchEntity, RestoreEntity):
             )
         )
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_unique_id = str(self._device.switch.group_address)
 
     async def async_added_to_hass(self) -> None:

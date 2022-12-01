@@ -24,5 +24,11 @@
                 }
             }
         }
+    },
+    "issues": {
+        "migrated_attributes": {
+            "description": "Los atributos de la entidad aspiradora ahora est\u00e1n disponibles como sensores de diagn\u00f3stico. \n\nPor favor, ajusta cualquier automatizaci\u00f3n o script que puedas tener que use estos atributos.",
+            "title": "Los atributos de Litter-Robot ahora son sus propios sensores"
+        }
     }
 }

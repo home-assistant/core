@@ -1,7 +1,7 @@
 """Config flow for Group integration."""
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Coroutine, Mapping
 from functools import partial
 from typing import Any, cast
 
@@ -11,6 +11,7 @@ from homeassistant.const import CONF_ENTITIES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
     SchemaFlowFormStep,
     SchemaFlowMenuStep,
@@ -23,17 +24,15 @@ from .binary_sensor import CONF_ALL
 from .const import CONF_HIDE_MEMBERS
 
 
-def basic_group_options_schema(
-    domain: str,
-    handler: SchemaConfigFlowHandler | SchemaOptionsFlowHandler,
-    options: dict[str, Any],
+async def basic_group_options_schema(
+    domain: str, handler: SchemaCommonFlowHandler
 ) -> vol.Schema:
     """Generate options schema."""
-    handler = cast(SchemaOptionsFlowHandler, handler)
     return vol.Schema(
         {
             vol.Required(CONF_ENTITIES): entity_selector_without_own_entities(
-                handler, selector.EntitySelectorConfig(domain=domain, multiple=True)
+                cast(SchemaOptionsFlowHandler, handler.parent_handler),
+                selector.EntitySelectorConfig(domain=domain, multiple=True),
             ),
             vol.Required(CONF_HIDE_MEMBERS, default=False): selector.BooleanSelector(),
         }
@@ -53,12 +52,9 @@ def basic_group_config_schema(domain: str) -> vol.Schema:
     )
 
 
-def binary_sensor_options_schema(
-    handler: SchemaConfigFlowHandler | SchemaOptionsFlowHandler,
-    options: dict[str, Any],
-) -> vol.Schema:
+async def binary_sensor_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     """Generate options schema."""
-    return basic_group_options_schema("binary_sensor", handler, options).extend(
+    return (await basic_group_options_schema("binary_sensor", handler)).extend(
         {
             vol.Required(CONF_ALL, default=False): selector.BooleanSelector(),
         }
@@ -72,13 +68,11 @@ BINARY_SENSOR_CONFIG_SCHEMA = basic_group_config_schema("binary_sensor").extend(
 )
 
 
-def light_switch_options_schema(
-    domain: str,
-    handler: SchemaConfigFlowHandler | SchemaOptionsFlowHandler,
-    options: dict[str, Any],
+async def light_switch_options_schema(
+    domain: str, handler: SchemaCommonFlowHandler
 ) -> vol.Schema:
     """Generate options schema."""
-    return basic_group_options_schema(domain, handler, options).extend(
+    return (await basic_group_options_schema(domain, handler)).extend(
         {
             vol.Required(
                 CONF_ALL, default=False, description={"advanced": True}
@@ -98,49 +92,62 @@ GROUP_TYPES = [
 ]
 
 
-@callback
-def choose_options_step(options: dict[str, Any]) -> str:
+async def choose_options_step(options: dict[str, Any]) -> str:
     """Return next step_id for options flow according to group_type."""
     return cast(str, options["group_type"])
 
 
-def set_group_type(group_type: str) -> Callable[[dict[str, Any]], dict[str, Any]]:
+def set_group_type(
+    group_type: str,
+) -> Callable[
+    [SchemaCommonFlowHandler, dict[str, Any]], Coroutine[Any, Any, dict[str, Any]]
+]:
     """Set group type."""
 
-    @callback
-    def _set_group_type(user_input: dict[str, Any]) -> dict[str, Any]:
+    async def _set_group_type(
+        handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+    ) -> dict[str, Any]:
         """Add group type to user input."""
         return {"group_type": group_type, **user_input}
 
     return _set_group_type
 
 
-CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+CONFIG_FLOW = {
     "user": SchemaFlowMenuStep(GROUP_TYPES),
     "binary_sensor": SchemaFlowFormStep(
-        BINARY_SENSOR_CONFIG_SCHEMA, set_group_type("binary_sensor")
+        BINARY_SENSOR_CONFIG_SCHEMA,
+        validate_user_input=set_group_type("binary_sensor"),
     ),
     "cover": SchemaFlowFormStep(
-        basic_group_config_schema("cover"), set_group_type("cover")
+        basic_group_config_schema("cover"),
+        validate_user_input=set_group_type("cover"),
     ),
-    "fan": SchemaFlowFormStep(basic_group_config_schema("fan"), set_group_type("fan")),
+    "fan": SchemaFlowFormStep(
+        basic_group_config_schema("fan"),
+        validate_user_input=set_group_type("fan"),
+    ),
     "light": SchemaFlowFormStep(
-        basic_group_config_schema("light"), set_group_type("light")
+        basic_group_config_schema("light"),
+        validate_user_input=set_group_type("light"),
     ),
     "lock": SchemaFlowFormStep(
-        basic_group_config_schema("lock"), set_group_type("lock")
+        basic_group_config_schema("lock"),
+        validate_user_input=set_group_type("lock"),
     ),
     "media_player": SchemaFlowFormStep(
-        basic_group_config_schema("media_player"), set_group_type("media_player")
+        basic_group_config_schema("media_player"),
+        validate_user_input=set_group_type("media_player"),
     ),
     "switch": SchemaFlowFormStep(
-        basic_group_config_schema("switch"), set_group_type("switch")
+        basic_group_config_schema("switch"),
+        validate_user_input=set_group_type("switch"),
     ),
 }
 
 
-OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
-    "init": SchemaFlowFormStep(None, next_step=choose_options_step),
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(next_step=choose_options_step),
     "binary_sensor": SchemaFlowFormStep(binary_sensor_options_schema),
     "cover": SchemaFlowFormStep(partial(basic_group_options_schema, "cover")),
     "fan": SchemaFlowFormStep(partial(basic_group_options_schema, "fan")),

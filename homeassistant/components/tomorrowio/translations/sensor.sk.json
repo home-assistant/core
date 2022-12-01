@@ -1,7 +1,15 @@
 {
     "state": {
         "tomorrowio__pollen_index": {
-            "low": "N\u00edzka"
+            "high": "Vysok\u00fd",
+            "low": "N\u00edzka",
+            "medium": "Stredn\u00fd"
+        },
+        "tomorrowio__precipitation_type": {
+            "freezing_rain": "Mrzn\u00faci d\u00e1\u017e\u010f",
+            "ice_pellets": "\u013dadovec",
+            "rain": "D\u00e1\u017e\u010f",
+            "snow": "Sneh"
         }
     }
 }

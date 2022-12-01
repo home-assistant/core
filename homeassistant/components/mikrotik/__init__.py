@@ -2,7 +2,7 @@
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import ATTR_MANUFACTURER, DOMAIN
@@ -20,8 +20,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         api = await hass.async_add_executor_job(get_api, dict(config_entry.data))
     except CannotConnect as api_error:
         raise ConfigEntryNotReady from api_error
-    except LoginError:
-        return False
+    except LoginError as err:
+        raise ConfigEntryAuthFailed from err
 
     coordinator = MikrotikDataUpdateCoordinator(hass, config_entry, api)
     await hass.async_add_executor_job(coordinator.api.get_hub_details)

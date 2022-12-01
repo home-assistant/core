@@ -33,7 +33,7 @@ from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.temperature import convert
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 from .util import ecobee_date, ecobee_time
@@ -351,7 +351,7 @@ class Thermostat(ClimateEntity):
         return self.thermostat["runtime"]["connected"]
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         if self.has_humidifier_control:
             return SUPPORT_FLAGS | ClimateEntityFeature.TARGET_HUMIDITY
@@ -763,12 +763,12 @@ class Thermostat(ClimateEntity):
     def create_vacation(self, service_data):
         """Create a vacation with user-specified parameters."""
         vacation_name = service_data[ATTR_VACATION_NAME]
-        cool_temp = convert(
+        cool_temp = TemperatureConverter.convert(
             service_data[ATTR_COOL_TEMP],
             self.hass.config.units.temperature_unit,
             TEMP_FAHRENHEIT,
         )
-        heat_temp = convert(
+        heat_temp = TemperatureConverter.convert(
             service_data[ATTR_HEAT_TEMP],
             self.hass.config.units.temperature_unit,
             TEMP_FAHRENHEIT,

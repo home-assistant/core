@@ -16,21 +16,10 @@ import yarl
 from homeassistant.components import media_player, tts
 from homeassistant.components.cast import media_player as cast
 from homeassistant.components.cast.media_player import ChromecastInfo
-from homeassistant.components.media_player import BrowseMedia
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_APP,
-    MEDIA_CLASS_PLAYLIST,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
+from homeassistant.components.media_player import (
+    BrowseMedia,
+    MediaClass,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
@@ -841,11 +830,11 @@ async def test_entity_cast_status(hass: HomeAssistant):
 
     # No media status, pause, play, stop not supported
     assert state.attributes.get("supported_features") == (
-        SUPPORT_PLAY_MEDIA
-        | SUPPORT_TURN_OFF
-        | SUPPORT_TURN_ON
-        | SUPPORT_VOLUME_MUTE
-        | SUPPORT_VOLUME_SET
+        MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_SET
     )
 
     cast_status = MagicMock()
@@ -884,7 +873,9 @@ async def test_entity_cast_status(hass: HomeAssistant):
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.attributes.get("supported_features") == (
-        SUPPORT_PLAY_MEDIA | SUPPORT_TURN_OFF | SUPPORT_TURN_ON
+        MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.TURN_ON
     )
 
 
@@ -893,51 +884,51 @@ async def test_entity_cast_status(hass: HomeAssistant):
     [
         (
             pychromecast.const.CAST_TYPE_AUDIO,
-            SUPPORT_PAUSE
-            | SUPPORT_PLAY
-            | SUPPORT_PLAY_MEDIA
-            | SUPPORT_STOP
-            | SUPPORT_TURN_OFF
-            | SUPPORT_TURN_ON
-            | SUPPORT_VOLUME_MUTE
-            | SUPPORT_VOLUME_SET,
-            SUPPORT_PLAY_MEDIA
-            | SUPPORT_TURN_OFF
-            | SUPPORT_TURN_ON
-            | SUPPORT_VOLUME_MUTE
-            | SUPPORT_VOLUME_SET,
+            MediaPlayerEntityFeature.PAUSE
+            | MediaPlayerEntityFeature.PLAY
+            | MediaPlayerEntityFeature.PLAY_MEDIA
+            | MediaPlayerEntityFeature.STOP
+            | MediaPlayerEntityFeature.TURN_OFF
+            | MediaPlayerEntityFeature.TURN_ON
+            | MediaPlayerEntityFeature.VOLUME_MUTE
+            | MediaPlayerEntityFeature.VOLUME_SET,
+            MediaPlayerEntityFeature.PLAY_MEDIA
+            | MediaPlayerEntityFeature.TURN_OFF
+            | MediaPlayerEntityFeature.TURN_ON
+            | MediaPlayerEntityFeature.VOLUME_MUTE
+            | MediaPlayerEntityFeature.VOLUME_SET,
         ),
         (
             pychromecast.const.CAST_TYPE_CHROMECAST,
-            SUPPORT_PAUSE
-            | SUPPORT_PLAY
-            | SUPPORT_PLAY_MEDIA
-            | SUPPORT_STOP
-            | SUPPORT_TURN_OFF
-            | SUPPORT_TURN_ON
-            | SUPPORT_VOLUME_MUTE
-            | SUPPORT_VOLUME_SET,
-            SUPPORT_PLAY_MEDIA
-            | SUPPORT_TURN_OFF
-            | SUPPORT_TURN_ON
-            | SUPPORT_VOLUME_MUTE
-            | SUPPORT_VOLUME_SET,
+            MediaPlayerEntityFeature.PAUSE
+            | MediaPlayerEntityFeature.PLAY
+            | MediaPlayerEntityFeature.PLAY_MEDIA
+            | MediaPlayerEntityFeature.STOP
+            | MediaPlayerEntityFeature.TURN_OFF
+            | MediaPlayerEntityFeature.TURN_ON
+            | MediaPlayerEntityFeature.VOLUME_MUTE
+            | MediaPlayerEntityFeature.VOLUME_SET,
+            MediaPlayerEntityFeature.PLAY_MEDIA
+            | MediaPlayerEntityFeature.TURN_OFF
+            | MediaPlayerEntityFeature.TURN_ON
+            | MediaPlayerEntityFeature.VOLUME_MUTE
+            | MediaPlayerEntityFeature.VOLUME_SET,
         ),
         (
             pychromecast.const.CAST_TYPE_GROUP,
-            SUPPORT_PAUSE
-            | SUPPORT_PLAY
-            | SUPPORT_PLAY_MEDIA
-            | SUPPORT_STOP
-            | SUPPORT_TURN_OFF
-            | SUPPORT_TURN_ON
-            | SUPPORT_VOLUME_MUTE
-            | SUPPORT_VOLUME_SET,
-            SUPPORT_PLAY_MEDIA
-            | SUPPORT_TURN_OFF
-            | SUPPORT_TURN_ON
-            | SUPPORT_VOLUME_MUTE
-            | SUPPORT_VOLUME_SET,
+            MediaPlayerEntityFeature.PAUSE
+            | MediaPlayerEntityFeature.PLAY
+            | MediaPlayerEntityFeature.PLAY_MEDIA
+            | MediaPlayerEntityFeature.STOP
+            | MediaPlayerEntityFeature.TURN_OFF
+            | MediaPlayerEntityFeature.TURN_ON
+            | MediaPlayerEntityFeature.VOLUME_MUTE
+            | MediaPlayerEntityFeature.VOLUME_SET,
+            MediaPlayerEntityFeature.PLAY_MEDIA
+            | MediaPlayerEntityFeature.TURN_OFF
+            | MediaPlayerEntityFeature.TURN_ON
+            | MediaPlayerEntityFeature.VOLUME_MUTE
+            | MediaPlayerEntityFeature.VOLUME_SET,
         ),
     ],
 )
@@ -1395,14 +1386,14 @@ async def test_entity_control(hass: HomeAssistant, quick_play_mock):
     assert entity_id == reg.async_get_entity_id("media_player", "cast", str(info.uuid))
 
     assert state.attributes.get("supported_features") == (
-        SUPPORT_PAUSE
-        | SUPPORT_PLAY
-        | SUPPORT_PLAY_MEDIA
-        | SUPPORT_STOP
-        | SUPPORT_TURN_OFF
-        | SUPPORT_TURN_ON
-        | SUPPORT_VOLUME_MUTE
-        | SUPPORT_VOLUME_SET
+        MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_SET
     )
 
     # Turn on
@@ -1461,17 +1452,17 @@ async def test_entity_control(hass: HomeAssistant, quick_play_mock):
 
     state = hass.states.get(entity_id)
     assert state.attributes.get("supported_features") == (
-        SUPPORT_PAUSE
-        | SUPPORT_PLAY
-        | SUPPORT_PLAY_MEDIA
-        | SUPPORT_STOP
-        | SUPPORT_TURN_OFF
-        | SUPPORT_TURN_ON
-        | SUPPORT_PREVIOUS_TRACK
-        | SUPPORT_NEXT_TRACK
-        | SUPPORT_SEEK
-        | SUPPORT_VOLUME_MUTE
-        | SUPPORT_VOLUME_SET
+        MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.SEEK
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_SET
     )
 
     # Media previous
@@ -1599,11 +1590,11 @@ async def test_entity_media_states_lovelace_app(hass: HomeAssistant):
     state = hass.states.get(entity_id)
     assert state.state == "playing"
     assert state.attributes.get("supported_features") == (
-        SUPPORT_PLAY_MEDIA
-        | SUPPORT_TURN_OFF
-        | SUPPORT_TURN_ON
-        | SUPPORT_VOLUME_MUTE
-        | SUPPORT_VOLUME_SET
+        MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_SET
     )
 
     media_status = MagicMock(images=None)
@@ -2110,7 +2101,7 @@ async def test_cast_platform_browse_media(hass: HomeAssistant, hass_ws_client):
             return_value=[
                 BrowseMedia(
                     title="Spotify",
-                    media_class=MEDIA_CLASS_APP,
+                    media_class=MediaClass.APP,
                     media_content_id="",
                     media_content_type="spotify",
                     thumbnail="https://brands.home-assistant.io/_/spotify/logo.png",
@@ -2122,7 +2113,7 @@ async def test_cast_platform_browse_media(hass: HomeAssistant, hass_ws_client):
         async_browse_media=AsyncMock(
             return_value=BrowseMedia(
                 title="Spotify Favourites",
-                media_class=MEDIA_CLASS_PLAYLIST,
+                media_class=MediaClass.PLAYLIST,
                 media_content_id="",
                 media_content_type="spotify",
                 can_play=True,

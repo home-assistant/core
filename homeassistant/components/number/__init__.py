@@ -29,7 +29,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import temperature as temperature_util
+from homeassistant.util.unit_conversion import BaseUnitConverter, TemperatureConverter
 
 from .const import (
     ATTR_MAX,
@@ -55,8 +55,257 @@ _LOGGER = logging.getLogger(__name__)
 class NumberDeviceClass(StrEnum):
     """Device class for numbers."""
 
-    # temperature (C/F)
+    # NumberDeviceClass should be aligned with SensorDeviceClass
+
+    APPARENT_POWER = "apparent_power"
+    """Apparent power.
+
+    Unit of measurement: `VA`
+    """
+
+    AQI = "aqi"
+    """Air Quality Index.
+
+    Unit of measurement: `None`
+    """
+
+    BATTERY = "battery"
+    """Percentage of battery that is left.
+
+    Unit of measurement: `%`
+    """
+
+    CO = "carbon_monoxide"
+    """Carbon Monoxide gas concentration.
+
+    Unit of measurement: `ppm` (parts per million)
+    """
+
+    CO2 = "carbon_dioxide"
+    """Carbon Dioxide gas concentration.
+
+    Unit of measurement: `ppm` (parts per million)
+    """
+
+    CURRENT = "current"
+    """Current.
+
+    Unit of measurement: `A`
+    """
+
+    DISTANCE = "distance"
+    """Generic distance.
+
+    Unit of measurement: `LENGTH_*` units
+    - SI /metric: `mm`, `cm`, `m`, `km`
+    - USCS / imperial: `in`, `ft`, `yd`, `mi`
+    """
+
+    ENERGY = "energy"
+    """Energy.
+
+    Unit of measurement: `Wh`, `kWh`, `MWh`, `GJ`
+    """
+
+    FREQUENCY = "frequency"
+    """Frequency.
+
+    Unit of measurement: `Hz`, `kHz`, `MHz`, `GHz`
+    """
+
+    GAS = "gas"
+    """Gas.
+
+    Unit of measurement: `m³`, `ft³`
+    """
+
+    HUMIDITY = "humidity"
+    """Relative humidity.
+
+    Unit of measurement: `%`
+    """
+
+    ILLUMINANCE = "illuminance"
+    """Illuminance.
+
+    Unit of measurement: `lx`, `lm`
+    """
+
+    MOISTURE = "moisture"
+    """Moisture.
+
+    Unit of measurement: `%`
+    """
+
+    MONETARY = "monetary"
+    """Amount of money.
+
+    Unit of measurement: ISO4217 currency code
+
+    See https://en.wikipedia.org/wiki/ISO_4217#Active_codes for active codes
+    """
+
+    NITROGEN_DIOXIDE = "nitrogen_dioxide"
+    """Amount of NO2.
+
+    Unit of measurement: `µg/m³`
+    """
+
+    NITROGEN_MONOXIDE = "nitrogen_monoxide"
+    """Amount of NO.
+
+    Unit of measurement: `µg/m³`
+    """
+
+    NITROUS_OXIDE = "nitrous_oxide"
+    """Amount of N2O.
+
+    Unit of measurement: `µg/m³`
+    """
+
+    OZONE = "ozone"
+    """Amount of O3.
+
+    Unit of measurement: `µg/m³`
+    """
+
+    PM1 = "pm1"
+    """Particulate matter <= 0.1 μm.
+
+    Unit of measurement: `µg/m³`
+    """
+
+    PM10 = "pm10"
+    """Particulate matter <= 10 μm.
+
+    Unit of measurement: `µg/m³`
+    """
+
+    PM25 = "pm25"
+    """Particulate matter <= 2.5 μm.
+
+    Unit of measurement: `µg/m³`
+    """
+
+    POWER_FACTOR = "power_factor"
+    """Power factor.
+
+    Unit of measurement: `%`
+    """
+
+    POWER = "power"
+    """Power.
+
+    Unit of measurement: `W`, `kW`
+    """
+
+    PRECIPITATION = "precipitation"
+    """Precipitation.
+
+    Unit of measurement:
+    - SI / metric: `mm`
+    - USCS / imperial: `in`
+    """
+
+    PRECIPITATION_INTENSITY = "precipitation_intensity"
+    """Precipitation intensity.
+
+    Unit of measurement: UnitOfVolumetricFlux
+    - SI /metric: `mm/d`, `mm/h`
+    - USCS / imperial: `in/d`, `in/h`
+    """
+
+    PRESSURE = "pressure"
+    """Pressure.
+
+    Unit of measurement:
+    - `mbar`, `cbar`, `bar`
+    - `Pa`, `hPa`, `kPa`
+    - `inHg`
+    - `psi`
+    """
+
+    REACTIVE_POWER = "reactive_power"
+    """Reactive power.
+
+    Unit of measurement: `var`
+    """
+
+    SIGNAL_STRENGTH = "signal_strength"
+    """Signal strength.
+
+    Unit of measurement: `dB`, `dBm`
+    """
+
+    SPEED = "speed"
+    """Generic speed.
+
+    Unit of measurement: `SPEED_*` units or `UnitOfVolumetricFlux`
+    - SI /metric: `mm/d`, `mm/h`, `m/s`, `km/h`
+    - USCS / imperial: `in/d`, `in/h`, `ft/s`, `mph`
+    - Nautical: `kn`
+    """
+
+    SULPHUR_DIOXIDE = "sulphur_dioxide"
+    """Amount of SO2.
+
+    Unit of measurement: `µg/m³`
+    """
+
     TEMPERATURE = "temperature"
+    """Temperature.
+
+    Unit of measurement: `°C`, `°F`
+    """
+
+    VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
+    """Amount of VOC.
+
+    Unit of measurement: `µg/m³`
+    """
+
+    VOLTAGE = "voltage"
+    """Voltage.
+
+    Unit of measurement: `V`
+    """
+
+    VOLUME = "volume"
+    """Generic volume.
+
+    Unit of measurement: `VOLUME_*` units
+    - SI / metric: `mL`, `L`, `m³`
+    - USCS / imperial: `fl. oz.`, `ft³`, `gal` (warning: volumes expressed in
+    USCS/imperial units are currently assumed to be US volumes)
+    """
+
+    WATER = "water"
+    """Water.
+
+    Unit of measurement:
+    - SI / metric: `m³`, `L`
+    - USCS / imperial: `ft³`, `gal` (warning: volumes expressed in
+    USCS/imperial units are currently assumed to be US volumes)
+    """
+
+    WEIGHT = "weight"
+    """Generic weight, represents a measurement of an object's mass.
+
+    Weight is used instead of mass to fit with every day language.
+
+    Unit of measurement: `MASS_*` units
+    - SI / metric: `µg`, `mg`, `g`, `kg`
+    - USCS / imperial: `oz`, `lb`
+    """
+
+    WIND_SPEED = "wind_speed"
+    """Wind speed.
+
+    Unit of measurement: `SPEED_*` units
+    - SI /metric: `m/s`, `km/h`
+    - USCS / imperial: `ft/s`, `mph`
+    - Nautical: `kn`
+    """
 
 
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(NumberDeviceClass))
@@ -70,12 +319,8 @@ class NumberMode(StrEnum):
     SLIDER = "slider"
 
 
-UNIT_CONVERSIONS: dict[str, Callable[[float, str, str], float]] = {
-    NumberDeviceClass.TEMPERATURE: temperature_util.convert,
-}
-
-VALID_UNITS: dict[str, tuple[str, ...]] = {
-    NumberDeviceClass.TEMPERATURE: temperature_util.VALID_UNITS,
+UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
+    NumberDeviceClass.TEMPERATURE: TemperatureConverter,
 }
 
 # mypy: disallow-any-generics
@@ -436,7 +681,7 @@ class NumberEntity(Entity):
 
         if (
             native_unit_of_measurement != unit_of_measurement
-            and device_class in UNIT_CONVERSIONS
+            and device_class in UNIT_CONVERTERS
         ):
             assert native_unit_of_measurement
             assert unit_of_measurement
@@ -446,7 +691,7 @@ class NumberEntity(Entity):
 
             # Suppress ValueError (Could not convert value to float)
             with suppress(ValueError):
-                value_new: float = UNIT_CONVERSIONS[device_class](
+                value_new: float = UNIT_CONVERTERS[device_class].convert(
                     value,
                     native_unit_of_measurement,
                     unit_of_measurement,
@@ -467,12 +712,12 @@ class NumberEntity(Entity):
         if (
             value is not None
             and native_unit_of_measurement != unit_of_measurement
-            and device_class in UNIT_CONVERSIONS
+            and device_class in UNIT_CONVERTERS
         ):
             assert native_unit_of_measurement
             assert unit_of_measurement
 
-            value = UNIT_CONVERSIONS[device_class](
+            value = UNIT_CONVERTERS[device_class].convert(
                 value,
                 unit_of_measurement,
                 native_unit_of_measurement,
@@ -500,9 +745,10 @@ class NumberEntity(Entity):
         if (
             (number_options := self.registry_entry.options.get(DOMAIN))
             and (custom_unit := number_options.get(CONF_UNIT_OF_MEASUREMENT))
-            and (device_class := self.device_class) in UNIT_CONVERSIONS
-            and self.native_unit_of_measurement in VALID_UNITS[device_class]
-            and custom_unit in VALID_UNITS[device_class]
+            and (device_class := self.device_class) in UNIT_CONVERTERS
+            and self.native_unit_of_measurement
+            in UNIT_CONVERTERS[device_class].VALID_UNITS
+            and custom_unit in UNIT_CONVERTERS[device_class].VALID_UNITS
         ):
             self._number_option_unit_of_measurement = custom_unit
             return

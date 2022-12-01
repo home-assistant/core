@@ -1,6 +1,6 @@
 {
   "domain": "ezviz",
-  "name": "Ezviz",
+  "name": "EZVIZ",
   "documentation": "https://www.home-assistant.io/integrations/ezviz",
   "dependencies": ["ffmpeg"],
   "codeowners": ["@RenierM26", "@baqs"],
