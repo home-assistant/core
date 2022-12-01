@@ -147,6 +147,65 @@ async def test_service_say_german_service(hass, mock_gtts, calls):
     }
 
 
+async def test_service_say_en_uk_config(hass, mock_gtts, calls):
+    """Test service call say with en-uk code in the config."""
+
+    await async_setup_component(
+        hass,
+        tts.DOMAIN,
+        {tts.DOMAIN: {"platform": "google_translate", "language": "en-uk"}},
+    )
+
+    await hass.services.async_call(
+        tts.DOMAIN,
+        "google_translate_say",
+        {
+            "entity_id": "media_player.something",
+            tts.ATTR_MESSAGE: "There is a person at the front door.",
+        },
+        blocking=True,
+    )
+
+    assert len(calls) == 1
+    await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+    assert len(mock_gtts.mock_calls) == 2
+    assert mock_gtts.mock_calls[0][2] == {
+        "text": "There is a person at the front door.",
+        "lang": "en",
+        "tld": "co.uk",
+    }
+
+
+async def test_service_say_en_uk_service(hass, mock_gtts, calls):
+    """Test service call say with en-uk code in the config."""
+
+    await async_setup_component(
+        hass,
+        tts.DOMAIN,
+        {tts.DOMAIN: {"platform": "google_translate"}},
+    )
+
+    await hass.services.async_call(
+        tts.DOMAIN,
+        "google_translate_say",
+        {
+            "entity_id": "media_player.something",
+            tts.ATTR_MESSAGE: "There is a person at the front door.",
+            tts.ATTR_LANGUAGE: "en-uk",
+        },
+        blocking=True,
+    )
+
+    assert len(calls) == 1
+    await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+    assert len(mock_gtts.mock_calls) == 2
+    assert mock_gtts.mock_calls[0][2] == {
+        "text": "There is a person at the front door.",
+        "lang": "en",
+        "tld": "co.uk",
+    }
+
+
 async def test_service_say_en_couk(hass, mock_gtts, calls):
     """Test service call say in co.uk tld accent."""
 
