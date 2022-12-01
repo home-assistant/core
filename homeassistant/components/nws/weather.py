@@ -1,4 +1,6 @@
 """Support for NWS weather service."""
+from __future__ import annotations
+
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_SUNNY,
@@ -81,8 +83,8 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            NWSWeather(entry.data, hass_data, DAYNIGHT, hass.config.units),
-            NWSWeather(entry.data, hass_data, HOURLY, hass.config.units),
+            NWSWeather(entry.data, hass_data, DAYNIGHT),
+            NWSWeather(entry.data, hass_data, HOURLY),
         ],
         False,
     )
@@ -93,7 +95,7 @@ class NWSWeather(WeatherEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, entry_data, hass_data, mode, units):
+    def __init__(self, entry_data, hass_data, mode):
         """Initialise the platform with a data instance and station name."""
         self.nws = hass_data[NWS_DATA]
         self.latitude = entry_data[CONF_LATITUDE]
@@ -132,67 +134,67 @@ class NWSWeather(WeatherEntity):
         self.async_write_ha_state()
 
     @property
-    def attribution(self):
+    def attribution(self) -> str:
         """Return the attribution."""
         return ATTRIBUTION
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the station."""
         return f"{self.station} {self.mode.title()}"
 
     @property
-    def native_temperature(self):
+    def native_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.observation:
             return self.observation.get("temperature")
         return None
 
     @property
-    def native_temperature_unit(self):
+    def native_temperature_unit(self) -> str:
         """Return the current temperature unit."""
         return UnitOfTemperature.CELSIUS
 
     @property
-    def native_pressure(self):
+    def native_pressure(self) -> float | None:
         """Return the current pressure."""
         if self.observation:
             return self.observation.get("seaLevelPressure")
         return None
 
     @property
-    def native_pressure_unit(self):
+    def native_pressure_unit(self) -> str:
         """Return the current pressure unit."""
         return UnitOfPressure.PA
 
     @property
-    def humidity(self):
+    def humidity(self) -> float | None:
         """Return the name of the sensor."""
         if self.observation:
             return self.observation.get("relativeHumidity")
         return None
 
     @property
-    def native_wind_speed(self):
+    def native_wind_speed(self) -> float | None:
         """Return the current windspeed."""
         if self.observation:
             return self.observation.get("windSpeed")
         return None
 
     @property
-    def native_wind_speed_unit(self):
+    def native_wind_speed_unit(self) -> str:
         """Return the current windspeed."""
         return UnitOfSpeed.KILOMETERS_PER_HOUR
 
     @property
-    def wind_bearing(self):
+    def wind_bearing(self) -> float | None:
         """Return the current wind bearing (degrees)."""
         if self.observation:
             return self.observation.get("windDirection")
         return None
 
     @property
-    def condition(self):
+    def condition(self) -> str | None:
         """Return current condition."""
         weather = None
         if self.observation:
@@ -205,14 +207,14 @@ class NWSWeather(WeatherEntity):
         return None
 
     @property
-    def native_visibility(self):
+    def native_visibility(self) -> float | None:
         """Return visibility."""
         if self.observation:
             return self.observation.get("visibility")
         return None
 
     @property
-    def native_visibility_unit(self):
+    def native_visibility_unit(self) -> str:
         """Return visibility unit."""
         return UnitOfLength.METERS
 
@@ -262,7 +264,7 @@ class NWSWeather(WeatherEntity):
         return forecast
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return a unique_id for this entity."""
         return f"{base_unique_id(self.latitude, self.longitude)}_{self.mode}"
 

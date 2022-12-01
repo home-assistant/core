@@ -1,29 +1,13 @@
 """Sensors for National Weather Service (NWS)."""
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    LENGTH_METERS,
-    LENGTH_MILES,
-    PERCENTAGE,
-    PRESSURE_INHG,
-    PRESSURE_PA,
-    SPEED_KILOMETERS_PER_HOUR,
-    SPEED_MILES_PER_HOUR,
-    TEMP_CELSIUS,
-)
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
-from homeassistant.util.unit_conversion import (
-    DistanceConverter,
-    PressureConverter,
-    SpeedConverter,
-)
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import base_unique_id, device_info
 from .const import (
@@ -49,7 +33,6 @@ async def async_setup_entry(
 
     async_add_entities(
         NWSSensor(
-            hass=hass,
             entry_data=entry.data,
             hass_data=hass_data,
             description=description,
@@ -67,7 +50,6 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         entry_data,
         hass_data,
         description: NWSSensorEntityDescription,
@@ -81,37 +63,14 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
         self.entity_description = description
 
         self._attr_name = f"{station} {description.name}"
-        if hass.config.units is US_CUSTOMARY_SYSTEM:
-            self._attr_native_unit_of_measurement = description.unit_convert
 
     @property
-    def native_value(self):
+    def native_value(self) -> StateType:
         """Return the state."""
-        value = self._nws.observation.get(self.entity_description.key)
-        if value is None:
-            return None
-        # Set alias to unit property -> prevent unnecessary hasattr calls
-        unit_of_measurement = self.native_unit_of_measurement
-        if unit_of_measurement == SPEED_MILES_PER_HOUR:
-            return round(
-                SpeedConverter.convert(
-                    value, SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR
-                )
-            )
-        if unit_of_measurement == LENGTH_MILES:
-            return round(DistanceConverter.convert(value, LENGTH_METERS, LENGTH_MILES))
-        if unit_of_measurement == PRESSURE_INHG:
-            return round(
-                PressureConverter.convert(value, PRESSURE_PA, PRESSURE_INHG), 2
-            )
-        if unit_of_measurement == TEMP_CELSIUS:
-            return round(value, 1)
-        if unit_of_measurement == PERCENTAGE:
-            return round(value)
-        return value
+        return self._nws.observation.get(self.entity_description.key)
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return a unique_id for this entity."""
         return f"{base_unique_id(self._latitude, self._longitude)}_{self.entity_description.key}"
 

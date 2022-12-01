@@ -26,14 +26,11 @@ from homeassistant.components.weather import (
 )
 from homeassistant.const import (
     DEGREE,
-    LENGTH_METERS,
-    LENGTH_MILES,
     PERCENTAGE,
-    PRESSURE_INHG,
-    PRESSURE_PA,
-    SPEED_KILOMETERS_PER_HOUR,
-    SPEED_MILES_PER_HOUR,
-    TEMP_CELSIUS,
+    UnitOfLength,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 
 DOMAIN = "nws"
@@ -105,8 +102,6 @@ FORECAST_VALID_TIME = timedelta(minutes=45)
 class NWSSensorEntityDescription(SensorEntityDescription):
     """Class describing NWSSensor entities."""
 
-    unit_convert: str | None = None
-
 
 SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
     NWSSensorEntityDescription(
@@ -115,8 +110,7 @@ SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
         icon=None,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
-        unit_convert=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     NWSSensorEntityDescription(
         key="temperature",
@@ -124,8 +118,7 @@ SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
         icon=None,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
-        unit_convert=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     NWSSensorEntityDescription(
         key="windChill",
@@ -133,8 +126,7 @@ SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
         icon=None,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
-        unit_convert=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     NWSSensorEntityDescription(
         key="heatIndex",
@@ -142,8 +134,7 @@ SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
         icon=None,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
-        unit_convert=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     NWSSensorEntityDescription(
         key="relativeHumidity",
@@ -152,25 +143,22 @@ SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
-        unit_convert=PERCENTAGE,
     ),
     NWSSensorEntityDescription(
         key="windSpeed",
         name="Wind Speed",
         icon="mdi:weather-windy",
-        device_class=None,
+        device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
-        unit_convert=SPEED_MILES_PER_HOUR,
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
     ),
     NWSSensorEntityDescription(
         key="windGust",
         name="Wind Gust",
         icon="mdi:weather-windy",
-        device_class=None,
+        device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
-        unit_convert=SPEED_MILES_PER_HOUR,
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
     ),
     NWSSensorEntityDescription(
         key="windDirection",
@@ -179,7 +167,6 @@ SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
         device_class=None,
         state_class=None,  # statistics currently doesn't handle circular statistics
         native_unit_of_measurement=DEGREE,
-        unit_convert=DEGREE,
     ),
     NWSSensorEntityDescription(
         key="barometricPressure",
@@ -187,8 +174,7 @@ SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
         icon=None,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PRESSURE_PA,
-        unit_convert=PRESSURE_INHG,
+        native_unit_of_measurement=UnitOfPressure.PA,
     ),
     NWSSensorEntityDescription(
         key="seaLevelPressure",
@@ -196,16 +182,14 @@ SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
         icon=None,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PRESSURE_PA,
-        unit_convert=PRESSURE_INHG,
+        native_unit_of_measurement=UnitOfPressure.PA,
     ),
     NWSSensorEntityDescription(
         key="visibility",
         name="Visibility",
         icon="mdi:eye",
-        device_class=None,
+        device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=LENGTH_METERS,
-        unit_convert=LENGTH_MILES,
+        native_unit_of_measurement=UnitOfLength.METERS,
     ),
 )
