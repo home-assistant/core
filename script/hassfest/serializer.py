@@ -23,7 +23,7 @@ def _wrap_items(
         items = sorted(items)
 
     joined_items = ", ".join(items)
-    return f"{opener}{joined_items}{',' if len(joined_items) != 0 else ''}{closer}"
+    return f"{opener}{joined_items}{',' if joined_items else ''}{closer}"
 
 
 def _mapping_to_str(data: Mapping[Any, Any]) -> str:
