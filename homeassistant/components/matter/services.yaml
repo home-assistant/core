@@ -1,0 +1,66 @@
+commission:
+  name: Commission device
+  description: >
+    Add a new device to your Matter network.
+  fields:
+    code:
+      name: Pairing code
+      description: The pairing code for the device.
+      required: true
+      selector:
+        text:
+accept_shared_device:
+  name: Accept shared device
+  description: >
+    Add a shared device to your Matter network.
+  fields:
+    pin:
+      name: Pin code
+      description: The pin code for the device.
+      required: true
+      selector:
+        text:
+
+set_wifi:
+  name: Set Wi-Fi credentials
+  description: >
+    The Wi-Fi credentials will be sent as part of commissioning to a Matter device so it can connect to the Wi-Fi network.
+  fields:
+    ssid:
+      name: Network name
+      description: The SSID network name.
+      required: true
+      selector:
+        text:
+    password:
+      name: Password
+      description: The Wi-Fi network password.
+      required: true
+      selector:
+        text:
+          type: password
+set_thread:
+  name: Set Thread network operational dataset
+  description: >
+    The Thread keys will be used as part of commissioning to let a Matter device join the Thread network.
+
+    Get keys by running `ot-ctl dataset active -x` on the Open Thread Border Router.
+  fields:
+    thread_operation_dataset:
+      name: Thread Operational Dataset
+      description: The Thread Operational Dataset to set.
+      required: true
+      selector:
+        text:
+open_commissioning_window:
+  name: Open Commissioning Window
+  description: >
+    Allow adding one of your devices to another Matter network by opening the commissioning window for this Matter device for 60 seconds.
+  fields:
+    device_id:
+      name: Device
+      description: The Matter device to add to the other Matter network.
+      required: true
+      selector:
+        device:
+          integration: matter
