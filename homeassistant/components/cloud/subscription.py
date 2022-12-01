@@ -22,3 +22,14 @@ async def async_subscription_info(cloud: Cloud) -> dict[str, Any] | None:
         _LOGGER.error("Failed to fetch subscription information")
 
     return None
+
+
+async def async_migrate_paypal_agreement(cloud: Cloud) -> dict[str, Any] | None:
+    """Migrate a paypal agreement from legacy."""
+    try:
+        async with async_timeout.timeout(REQUEST_TIMEOUT):
+            return await cloud_api.async_migrate_paypal_agreement(cloud)
+    except ClientError as exception:
+        _LOGGER.error("Failed to start agreement migration - %s", exception)
+
+    return None
