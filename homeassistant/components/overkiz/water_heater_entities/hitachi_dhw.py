@@ -18,7 +18,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 
-from ..const import LOGGER
 from ..entity import OverkizEntity
 
 OVERKIZ_TO_OPERATION_MODE: dict[str, str] = {
@@ -64,12 +63,10 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            LOGGER.debug("Argument `temperature` is missing in async_set_temperature")
-            return
 
         await self.executor.async_execute_command(
-            OverkizCommand.SET_CONTROL_DHW_SETTING_TEMPERATURE, int(temperature)
+            OverkizCommand.SET_CONTROL_DHW_SETTING_TEMPERATURE,
+            int(kwargs[ATTR_TEMPERATURE]),
         )
 
     @property

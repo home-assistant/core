@@ -230,7 +230,7 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        target_temperature = kwargs.get(ATTR_TEMPERATURE)
+        target_temperature = kwargs[ATTR_TEMPERATURE]
 
         if self.executor.has_command(OverkizCommand.SET_TARGET_TEMPERATURE):
             await self.executor.async_execute_command(
