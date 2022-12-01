@@ -186,12 +186,11 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
             PassiveBluetoothEntityKey, EntityDescription
         ] = {}
         self.devices: dict[str | None, DeviceInfo] = {}
-        self.last_update_success = True
 
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return self.coordinator.available and self.last_update_success
+        return self.coordinator.available
 
     @callback
     def async_handle_unavailable(self) -> None:
@@ -277,22 +276,14 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
         try:
             new_data = self.update_method(update)
         except Exception as err:  # pylint: disable=broad-except
-            self.last_update_success = False
             self.coordinator.logger.exception(
                 "Unexpected error updating %s data: %s", self.coordinator.name, err
             )
             return
 
         if not isinstance(new_data, PassiveBluetoothDataUpdate):
-            self.last_update_success = False  # type: ignore[unreachable]
             raise ValueError(
                 f"The update_method for {self.coordinator.name} returned {new_data} instead of a PassiveBluetoothDataUpdate"
-            )
-
-        if not self.last_update_success:
-            self.last_update_success = True
-            self.coordinator.logger.info(
-                "Processing %s data recovered", self.coordinator.name
             )
 
         self.devices.update(new_data.devices)
