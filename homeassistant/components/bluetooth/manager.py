@@ -441,6 +441,15 @@ class BluetoothManager:
         if address not in tracker.intervals:
             tracker.async_collect(service_info)
 
+        if debug:
+            _LOGGER.debug(
+                "%s: %s pre-match: (new=%s) (old=%s)",
+                self._async_describe_source(service_info),
+                address,
+                service_info,
+                old_service_info,
+            )
+
         # If the advertisement data is the same as the last time we saw it, we
         # don't need to do anything else.
         if old_service_info and not (
