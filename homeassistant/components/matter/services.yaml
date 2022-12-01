@@ -26,7 +26,7 @@ set_wifi:
   description: >
     The Wi-Fi credentials will be sent as part of commissioning to a Matter device so it can connect to the Wi-Fi network.
   fields:
-    network_name:
+    ssid:
       name: Network name
       description: The SSID network name.
       required: true

@@ -5,8 +5,8 @@ from dataclasses import dataclass
 from functools import partial
 from typing import TYPE_CHECKING, Any
 
-from matter_server.vendor import device_types
-from matter_server.vendor.chip.clusters import Objects as clusters
+from chip.clusters import Objects as clusters
+from matter_server.common.models import device_types
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -24,8 +24,6 @@ from .entity import MatterEntity, MatterEntityDescriptionBaseClass
 from .util import renormalize
 
 if TYPE_CHECKING:
-    from matter_server.client.matter import Matter
-
     from .adapter import MatterAdapter
 
 
@@ -35,9 +33,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Matter Light from Config Entry."""
-    matter: Matter = hass.data[DOMAIN][config_entry.entry_id]
-    adapter: MatterAdapter = matter.adapter
-    adapter.register_platform_handler(Platform.LIGHT, async_add_entities)
+    matter: MatterAdapter = hass.data[DOMAIN][config_entry.entry_id]
+    matter.register_platform_handler(Platform.LIGHT, async_add_entities)
 
 
 class MatterLight(MatterEntity, LightEntity):
@@ -55,8 +52,10 @@ class MatterLight(MatterEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
         if ATTR_BRIGHTNESS not in kwargs or not self._supports_brightness():
-            await self._device_type_instance.send_command(
-                payload=clusters.OnOff.Commands.On(),
+            await self.matter_client.send_device_command(
+                node_id=self._device_type_instance.node.node_id,
+                endpoint=self._device_type_instance.endpoint,
+                command=clusters.OnOff.Commands.On(),
             )
             return
 
@@ -69,18 +68,22 @@ class MatterLight(MatterEntity, LightEntity):
             )
         )
 
-        await self._device_type_instance.send_command(
-            payload=clusters.LevelControl.Commands.MoveToLevelWithOnOff(
+        await self.matter_client.send_device_command(
+            node_id=self._device_type_instance.node.node_id,
+            endpoint=self._device_type_instance.endpoint,
+            command=clusters.LevelControl.Commands.MoveToLevelWithOnOff(
                 level=level,
                 # It's required in TLV. We don't implement transition time yet.
                 transitionTime=0,
-            )
+            ),
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
-        await self._device_type_instance.send_command(
-            payload=clusters.OnOff.Commands.Off(),
+        await self.matter_client.send_device_command(
+            node_id=self._device_type_instance.node.node_id,
+            endpoint=self._device_type_instance.endpoint,
+            command=clusters.OnOff.Commands.Off(),
         )
 
     @callback
@@ -90,7 +93,8 @@ class MatterLight(MatterEntity, LightEntity):
             if self._supports_brightness():
                 self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
-        self._attr_is_on = self._device_type_instance.get_cluster(clusters.OnOff).onOff
+        if attr := self.get_matter_attribute(clusters.OnOff.Attributes.OnOff):
+            self._attr_is_on = attr.value
 
         if (
             clusters.LevelControl.Attributes.CurrentLevel
@@ -123,6 +127,10 @@ MatterLightEntityDescriptionFactory = partial(
     MatterLightEntityDescription, entity_cls=MatterLight
 )
 
+# Mapping of a Matter Device type to Light Entity Description.
+# A Matter device type (instance) can consist of multiple attributes.
+# For example a Color Light which has an attribute to control brightness
+# but also for color.
 
 DEVICE_ENTITY: dict[
     type[device_types.DeviceType],

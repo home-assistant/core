@@ -2,8 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, call, patch
+from unittest.mock import AsyncMock, MagicMock, call
 
 from matter_server.client.exceptions import InvalidServerVersion
 import pytest
@@ -15,13 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture(name="mock_pathlib", autouse=True)
-def mock_pathlib_fixture() -> Generator[MagicMock, None, None]:
-    """Mock pathlib."""
-    with patch("homeassistant.components.matter.Path") as mock_path:
-        yield mock_path
 
 
 async def test_raise_addon_task_in_progress(
@@ -46,7 +38,7 @@ async def test_raise_addon_task_in_progress(
         domain=DOMAIN,
         title="Matter",
         data={
-            "url": "ws://host1:5581/chip_ws",
+            "url": "ws://host1:5581/ws",
             "use_addon": True,
         },
     )
@@ -86,7 +78,7 @@ async def test_start_addon(
         domain=DOMAIN,
         title="Matter",
         data={
-            "url": "ws://host1:5581/chip_ws",
+            "url": "ws://host1:5581/ws",
             "use_addon": True,
         },
     )
@@ -114,7 +106,7 @@ async def test_install_addon(
         domain=DOMAIN,
         title="Matter",
         data={
-            "url": "ws://host1:5581/chip_ws",
+            "url": "ws://host1:5581/ws",
             "use_addon": True,
         },
     )
@@ -144,7 +136,7 @@ async def test_addon_info_failure(
         domain=DOMAIN,
         title="Matter",
         data={
-            "url": "ws://host1:5581/chip_ws",
+            "url": "ws://host1:5581/ws",
             "use_addon": True,
         },
     )
@@ -196,7 +188,7 @@ async def test_update_addon(
         domain=DOMAIN,
         title="Matter",
         data={
-            "url": "ws://host1:5581/chip_ws",
+            "url": "ws://host1:5581/ws",
             "use_addon": True,
         },
     )
@@ -221,7 +213,7 @@ async def test_issue_registry_invalid_version(
         domain=DOMAIN,
         title="Matter",
         data={
-            "url": "ws://host1:5581/chip_ws",
+            "url": "ws://host1:5581/ws",
             "use_addon": False,
         },
     )
@@ -267,7 +259,7 @@ async def test_stop_addon(
         domain=DOMAIN,
         title="Matter",
         data={
-            "url": "ws://host1:5581/chip_ws",
+            "url": "ws://host1:5581/ws",
             "use_addon": True,
         },
     )
