@@ -843,7 +843,7 @@ async def test_websocket_create(
     aioclient_mock: AiohttpClientMocker,
     ws_client: ClientFixture,
 ) -> None:
-    """Test websocket create command that sets a date range."""
+    """Test websocket create command that sets a date/time range."""
     mock_events_list({})
     assert await component_setup()
 
@@ -873,6 +873,49 @@ async def test_websocket_create(
             "timeZone": "America/Regina",
         },
         "end": {"dateTime": "1997-07-14T22:00:00-06:00", "timeZone": "America/Regina"},
+    }
+
+
+async def test_websocket_create_all_day(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    test_api_calendar: dict[str, Any],
+    mock_insert_event: Callable[[str, dict[str, Any]], None],
+    mock_events_list: ApiResult,
+    aioclient_mock: AiohttpClientMocker,
+    ws_client: ClientFixture,
+) -> None:
+    """Test websocket create command for an all day event."""
+    mock_events_list({})
+    assert await component_setup()
+
+    aioclient_mock.clear_requests()
+    mock_insert_event(
+        calendar_id=CALENDAR_ID,
+    )
+
+    client = await ws_client()
+    await client.cmd_result(
+        "create",
+        {
+            "entity_id": TEST_ENTITY,
+            "event": {
+                "summary": "Bastille Day Party",
+                "dtstart": "1997-07-14",
+                "dtend": "1997-07-15",
+                "rrule": "FREQ=YEARLY",
+            },
+        },
+    )
+    assert len(aioclient_mock.mock_calls) == 1
+    assert aioclient_mock.mock_calls[0][2] == {
+        "summary": "Bastille Day Party",
+        "description": None,
+        "start": {
+            "date": "1997-07-14",
+        },
+        "end": {"date": "1997-07-15"},
+        "recurrence": ["FREQ=YEARLY"],
     }
 
 
