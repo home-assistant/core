@@ -34,6 +34,22 @@ def async_get_api(hass: HomeAssistant, api_key: str) -> API:
     return API(api_key, session=session)
 
 
+@callback
+def async_get_coordinates_schema(hass: HomeAssistant) -> vol.Schema:
+    """Define a schema for the by_coordinates step."""
+    return vol.Schema(
+        {
+            vol.Inclusive(
+                CONF_LATITUDE, "coords", default=hass.config.latitude
+            ): cv.latitude,
+            vol.Inclusive(
+                CONF_LONGITUDE, "coords", default=hass.config.longitude
+            ): cv.longitude,
+            vol.Optional(CONF_DISTANCE, default=DEFAULT_DISTANCE): cv.positive_int,
+        }
+    )
+
+
 class FlowError(Exception):
     """Define an exception that indicates a flow error."""
 
@@ -89,34 +105,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self._entry_data: dict[str, Any] = {}
 
-    @property
-    def step_by_coordinates_schema(self) -> vol.Schema:
-        """Define a schema for the by_coordinates step."""
-        return vol.Schema(
-            {
-                vol.Inclusive(
-                    CONF_LATITUDE, "coords", default=self.hass.config.latitude
-                ): cv.latitude,
-                vol.Inclusive(
-                    CONF_LONGITUDE, "coords", default=self.hass.config.longitude
-                ): cv.longitude,
-                vol.Optional(CONF_DISTANCE, default=DEFAULT_DISTANCE): cv.positive_int,
-            }
-        )
-
     async def async_step_by_coordinates(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the selection of a sensor by latitude/longitude."""
         if user_input is None:
             return self.async_show_form(
-                step_id="by_coordinates", data_schema=self.step_by_coordinates_schema
+                step_id="by_coordinates",
+                data_schema=async_get_coordinates_schema(self.hass),
             )
+
+        api_key = self._entry_data[CONF_API_KEY]
 
         try:
             nearest_sensor = await async_validate_coordinates(
                 self.hass,
-                self._entry_data[CONF_API_KEY],
+                api_key,
                 user_input[CONF_LATITUDE],
                 user_input[CONF_LONGITUDE],
                 user_input[CONF_DISTANCE],
@@ -124,12 +128,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except FlowError as err:
             return self.async_show_form(
                 step_id="by_coordinates",
-                data_schema=self.step_by_coordinates_schema,
+                data_schema=async_get_coordinates_schema(self.hass),
                 errors={"base": str(err)},
             )
 
         return self.async_create_entry(
-            title=nearest_sensor.name,
+            title=api_key[:5],
             data=self._entry_data
             | {CONF_SENSOR_INDICES: [nearest_sensor.sensor_index]},
         )

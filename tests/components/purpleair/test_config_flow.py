@@ -35,7 +35,7 @@ async def test_create_entry_by_coordinates(hass, setup_purpleair):
         },
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Test Sensor"
+    assert result["title"] == "abcde"
     assert result["data"] == {
         "api_key": "abcde12345",
         "sensor_indices": [123456],

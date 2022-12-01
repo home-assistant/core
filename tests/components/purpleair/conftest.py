@@ -21,7 +21,7 @@ def config_entry_fixture(hass, config_entry_options):
     """Define a config entry fixture."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        title="Test Sensor",
+        title="abcde",
         unique_id="abcde12345",
         options=config_entry_options,
     )
