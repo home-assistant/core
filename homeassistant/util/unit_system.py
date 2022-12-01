@@ -17,6 +17,7 @@ from homeassistant.const import (
     WIND_SPEED,
     UnitOfLength,
     UnitOfMass,
+    UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -247,7 +248,7 @@ validate_unit_system = vol.All(
 
 METRIC_SYSTEM = UnitSystem(
     _CONF_UNIT_SYSTEM_METRIC,
-    accumulated_precipitation=UnitOfLength.MILLIMETERS,
+    accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
     conversions={
         # Convert non-metric distances
         ("distance", UnitOfLength.FEET): UnitOfLength.METERS,
@@ -279,7 +280,7 @@ METRIC_SYSTEM = UnitSystem(
 
 US_CUSTOMARY_SYSTEM = UnitSystem(
     _CONF_UNIT_SYSTEM_US_CUSTOMARY,
-    accumulated_precipitation=UnitOfLength.INCHES,
+    accumulated_precipitation=UnitOfPrecipitationDepth.INCHES,
     conversions={
         # Convert non-USCS distances
         ("distance", UnitOfLength.CENTIMETERS): UnitOfLength.INCHES,

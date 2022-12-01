@@ -40,18 +40,5 @@
                 }
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "method": "Metoda",
-                    "timeout": "\u010casov\u00fd limit"
-                },
-                "data_description": {
-                    "timeout": "\u010casov\u00fd limit pro p\u0159ipojen\u00ed k webu"
-                }
-            }
-        }
     }
 }

@@ -73,12 +73,13 @@ async def test_sensor_without_forecast(hass):
     assert state.state == "falling"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_ICON) == "mdi:gauge"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == "accuweather__pressure_tendency"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
     assert state.attributes.get(ATTR_STATE_CLASS) is None
 
     entry = registry.async_get("sensor.home_pressure_tendency")
     assert entry
     assert entry.unique_id == "0123456-pressuretendency"
+    assert entry.translation_key == "pressure_tendency"
 
     state = hass.states.get("sensor.home_realfeel_temperature")
     assert state

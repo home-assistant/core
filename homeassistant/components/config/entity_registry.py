@@ -247,16 +247,17 @@ def _entry_dict(entry: er.RegistryEntry) -> dict[str, Any]:
         "config_entry_id": entry.config_entry_id,
         "device_id": entry.device_id,
         "disabled_by": entry.disabled_by,
-        "has_entity_name": entry.has_entity_name,
         "entity_category": entry.entity_category,
         "entity_id": entry.entity_id,
+        "has_entity_name": entry.has_entity_name,
         "hidden_by": entry.hidden_by,
         "icon": entry.icon,
         "id": entry.id,
-        "unique_id": entry.unique_id,
         "name": entry.name,
         "original_name": entry.original_name,
         "platform": entry.platform,
+        "translation_key": entry.translation_key,
+        "unique_id": entry.unique_id,
     }
 
 

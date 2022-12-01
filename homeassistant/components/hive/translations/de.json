@@ -24,8 +24,8 @@
                 "data": {
                     "device_name": "Ger\u00e4tename"
                 },
-                "description": "Gib deine Hive-Konfiguration ein",
-                "title": "Hive-Konfiguration."
+                "description": "Gib deine Hive Konfiguration ein",
+                "title": "Hive Konfiguration."
             },
             "reauth": {
                 "data": {

@@ -48,6 +48,7 @@ from .const import (
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
@@ -156,6 +157,8 @@ class ContextCoordinator(
         self, update_callback: CALLBACK_TYPE, context: Any = None
     ) -> Callable[[], None]:
         """Wrap standard function to prune cached callback database."""
+        assert isinstance(context, set)
+        context -= {None}
         release = super().async_add_listener(update_callback, context)
         self.__dict__.pop("context_callbacks", None)
 

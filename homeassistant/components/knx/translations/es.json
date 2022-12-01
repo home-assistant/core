@@ -94,13 +94,6 @@
                 },
                 "description": "Por favor, introduce tu informaci\u00f3n de IP segura."
             },
-            "secure_tunneling": {
-                "description": "Selecciona c\u00f3mo quieres configurar KNX/IP Secure.",
-                "menu_options": {
-                    "secure_knxkeys": "Utilizar un archivo `.knxkeys` que contenga claves seguras de IP",
-                    "secure_tunnel_manual": "Configurar claves seguras de IP manualmente"
-                }
-            },
             "tunnel": {
                 "data": {
                     "gateway": "Conexi\u00f3n de t\u00fanel KNX"
@@ -215,13 +208,6 @@
                     "user_password": "Contrase\u00f1a para la conexi\u00f3n de t\u00fanel espec\u00edfica establecida en el panel 'Propiedades' del t\u00fanel en ETS."
                 },
                 "description": "Por favor, introduce tu informaci\u00f3n de IP segura."
-            },
-            "secure_tunneling": {
-                "description": "Selecciona c\u00f3mo quieres configurar KNX/IP Secure.",
-                "menu_options": {
-                    "secure_knxkeys": "Utilizar un archivo `.knxkeys` que contenga claves seguras de IP",
-                    "secure_tunnel_manual": "Configurar claves seguras de IP manualmente"
-                }
             },
             "tunnel": {
                 "data": {
