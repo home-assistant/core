@@ -25,7 +25,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_commission)
 
 
-def async_get_matter(func: Callable) -> Callable:
+def async_get_matter_adapter(func: Callable) -> Callable:
     """Decorate function to get the MatterAdapter."""
 
     @wraps(func)
@@ -69,7 +69,7 @@ def async_handle_failed_command(func: Callable) -> Callable:
 )
 @websocket_api.async_response
 @async_handle_failed_command
-@async_get_matter
+@async_get_matter_adapter
 async def websocket_commission(
     hass: HomeAssistant,
     connection: ActiveConnection,

@@ -5,38 +5,33 @@ import asyncio
 from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from matter_server.client import MatterClient
 import pytest
 
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-# TEMP: Tests need to be fixed
-pytestmark = pytest.mark.skip("all tests still WIP")
-
 
 @pytest.fixture(name="matter_client")
 async def matter_client_fixture() -> AsyncGenerator[MagicMock, None]:
     """Fixture for a Matter client."""
-    with patch("homeassistant.components.matter.Matter", autospec=True) as client_class:
+    with patch(
+        "homeassistant.components.matter.MatterClient", autospec=True
+    ) as client_class:
         client = client_class.return_value
-        client.client = MagicMock(spec=MatterClient)
-        client.driver_ready = asyncio.Event()
 
         async def connect() -> None:
             """Mock connect."""
-            adapter = client_class.call_args[0][0]
-            client.adapter = adapter
             await asyncio.sleep(0)
             client.connected = True
 
-        def listen() -> None:
+        async def listen(init_ready: asyncio.Event | None) -> None:
             """Mock listen."""
-            client.driver_ready.set()
+            if init_ready is not None:
+                init_ready.set()
 
         client.connect = AsyncMock(side_effect=connect)
-        client.listen = MagicMock(side_effect=listen)
+        client.start_listening = AsyncMock(side_effect=listen)
 
         yield client
 
