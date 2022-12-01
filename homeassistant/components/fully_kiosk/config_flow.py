@@ -49,7 +49,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 LOGGER.debug(error, exc_info=True)
                 errors["base"] = "cannot_connect"
             except Exception as error:  # pylint: disable=broad-except
-                LOGGER.exception(error)
+                LOGGER.debug(error, exc_info=True)
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(device_info["deviceID"])
