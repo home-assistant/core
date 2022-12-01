@@ -179,6 +179,7 @@ homeassistant.components.logger.*
 homeassistant.components.lookin.*
 homeassistant.components.luftdaten.*
 homeassistant.components.mailbox.*
+homeassistant.components.matter.*
 homeassistant.components.media_player.*
 homeassistant.components.media_source.*
 homeassistant.components.metoffice.*

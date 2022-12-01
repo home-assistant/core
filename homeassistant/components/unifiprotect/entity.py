@@ -325,7 +325,6 @@ class EventEntityMixin(ProtectDeviceEntity):
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
-        self._attr_is_on: bool | None = self.entity_description.get_is_on(device)
         self._event = self.entity_description.get_event_obj(device)
 
         attrs = self.extra_state_attributes or {}
