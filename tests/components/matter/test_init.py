@@ -2,8 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, call, patch
+from unittest.mock import AsyncMock, MagicMock, call
 
 from matter_server.client.exceptions import InvalidServerVersion
 import pytest
@@ -15,16 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
 from tests.common import MockConfigEntry
-
-# TEMP: Tests need to be fixed
-pytestmark = pytest.mark.skip("all tests still WIP")
-
-
-@pytest.fixture(name="mock_pathlib", autouse=True)
-def mock_pathlib_fixture() -> Generator[MagicMock, None, None]:
-    """Mock pathlib."""
-    with patch("homeassistant.components.matter.Path") as mock_path:
-        yield mock_path
 
 
 async def test_raise_addon_task_in_progress(
