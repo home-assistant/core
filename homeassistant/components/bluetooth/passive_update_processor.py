@@ -274,6 +274,7 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
     @callback
     def async_handle_update(self, update: _T) -> None:
         """Handle a Bluetooth event."""
+        self.coordinator.logger.warning("Processing update: %s", update)
         try:
             new_data = self.update_method(update)
         except Exception as err:  # pylint: disable=broad-except
