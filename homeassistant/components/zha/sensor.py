@@ -890,3 +890,75 @@ class AqaraPetFeederWeightDispensed(Sensor, id_suffix="weight_dispensed"):
     _unit = UnitOfMass.GRAMS
     _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
     _attr_icon: str = "mdi:weight-gram"
+
+
+@MULTI_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={
+        "_TZE200_sh1btabb",
+        "_TZE200_a7sghmms",
+    },
+)
+class GiexIrrigationDuration(Sensor, id_suffix="irrigation_duration"):
+    """Sensor that displays last irrigation duration."""
+
+    SENSOR_ATTR = "irrigation_duration"
+    _attr_icon = "mdi:timer"
+    _attr_name: str = "Last irrigation duration"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the entity."""
+        assert self.SENSOR_ATTR is not None
+        return self._channel.cluster.get(self.SENSOR_ATTR)
+
+
+@MULTI_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={
+        "_TZE200_sh1btabb",
+        "_TZE200_a7sghmms",
+    },
+)
+class GiexIrrigationStartTime(Sensor, id_suffix="irrigation_start_time"):
+    """Sensor that displays last irrigation start time."""
+
+    SENSOR_ATTR = "irrigation_start_time"
+    _attr_icon = "mdi:clock"
+    _attr_name: str = "Last irrigation start time"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the entity."""
+        assert self.SENSOR_ATTR is not None
+        return self._channel.cluster.get(self.SENSOR_ATTR)
+
+
+@MULTI_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={
+        "_TZE200_sh1btabb",
+        "_TZE200_a7sghmms",
+    },
+)
+class GiexIrrigationEndTime(Sensor, id_suffix="irrigation_end_time"):
+    """Sensor that displays last irrigation end time."""
+
+    SENSOR_ATTR = "irrigation_end_time"
+    _attr_icon = "mdi:clock"
+    _attr_name: str = "Last irrigation end time"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the entity."""
+        assert self.SENSOR_ATTR is not None
+        raw_state = self._channel.cluster.get(self.SENSOR_ATTR)
+        if raw_state is None:
+            return None
+        return raw_state
