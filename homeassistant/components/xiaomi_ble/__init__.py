@@ -60,9 +60,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def _needs_poll(
         service_info: BluetoothServiceInfoBleak, last_poll: float | None
     ) -> bool:
-        if hass.state != CoreState.running:
-            return False
-        return data.poll_needed(service_info, last_poll)
+        return hass.state == CoreState.running and data.poll_needed(
+            service_info, last_poll
+        )
 
     async def _async_poll(service_info: BluetoothServiceInfoBleak):
         # BluetoothServiceInfoBleak is defined in HA, otherwise would just pass it
