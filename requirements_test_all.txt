@@ -436,7 +436,7 @@ datapoint==0.9.8
 dbus-fast==1.75.0
 
 # homeassistant.components.debugpy
-debugpy==1.6.3
+debugpy==1.6.4
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
