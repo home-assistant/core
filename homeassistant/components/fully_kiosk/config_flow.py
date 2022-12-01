@@ -12,7 +12,13 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.dhcp import DhcpServiceInfo
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_PASSWORD,
+    CONF_SSL,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
@@ -73,9 +79,35 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            result = await self._create_entry(user_input[CONF_HOST], user_input, errors)
-            if result:
-                return result
+            fully = FullyKiosk(
+                async_get_clientsession(self.hass),
+                user_input[CONF_HOST],
+                DEFAULT_PORT,
+                user_input[CONF_PASSWORD],
+                use_ssl=user_input[CONF_SSL],
+                verify_ssl=user_input[CONF_VERIFY_SSL],
+            )
+
+            try:
+                async with timeout(15):
+                    device_info = await fully.getDeviceInfo()
+            except (
+                ClientConnectorError,
+                FullyKioskError,
+                asyncio.TimeoutError,
+            ) as error:
+                LOGGER.debug(error.args, exc_info=True)
+                errors["base"] = "cannot_connect"
+            except Exception as error:  # pylint: disable=broad-except
+                LOGGER.exception("Unexpected exception: %s", error)
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(device_info["deviceID"])
+                self._abort_if_unique_id_configured(updates=user_input)
+                return self.async_create_entry(
+                    title=device_info["deviceName"],
+                    data=user_input | {CONF_MAC: format_mac(device_info["Mac"])},
+                )
 
         return self.async_show_form(
             step_id="user",
@@ -83,6 +115,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_HOST): str,
                     vol.Required(CONF_PASSWORD): str,
+                    vol.Optional(CONF_SSL, default=False): bool,
+                    vol.Optional(CONF_VERIFY_SSL, default=False): bool,
                 }
             ),
             errors=errors,
