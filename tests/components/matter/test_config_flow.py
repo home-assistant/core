@@ -16,9 +16,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-# TEMP: Tests need to be fixed
-pytestmark = pytest.mark.skip("all tests still WIP")
-
 ADDON_DISCOVERY_INFO = {
     "addon": "Matter Server",
     "host": "host1",
@@ -39,7 +36,7 @@ def setup_entry_fixture() -> Generator[AsyncMock, None, None]:
 def client_connect_fixture() -> Generator[AsyncMock, None, None]:
     """Mock server version."""
     with patch(
-        "homeassistant.components.matter.config_flow.Client.connect"
+        "homeassistant.components.matter.config_flow.MatterClient.connect"
     ) as client_connect:
         yield client_connect
 
