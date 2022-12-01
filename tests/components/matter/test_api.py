@@ -111,18 +111,14 @@ async def test_set_wifi_credentials(
     msg = await ws_client.receive_json()
 
     assert msg["success"]
-    assert (
-        matter_client.client.driver.device_controller.set_wifi_credentials.call_count
-        == 1
-    )
-    assert (
-        matter_client.client.driver.device_controller.set_wifi_credentials.call_args
-        == call(ssid="test_network", credentials="test_password")
+    assert matter_client.set_wifi_credentials.call_count == 1
+    assert matter_client.set_wifi_credentials.call_args == call(
+        ssid="test_network", credentials="test_password"
     )
 
-    matter_client.client.driver.device_controller.set_wifi_credentials.reset_mock()
-    matter_client.client.driver.device_controller.set_wifi_credentials.side_effect = (
-        FailedCommand("test_id", "test_code", "Failed to commission on network")
+    matter_client.set_wifi_credentials.reset_mock()
+    matter_client.set_wifi_credentials.side_effect = FailedCommand(
+        "test_id", "test_code", "Failed to commission on network"
     )
 
     await ws_client.send_json(
@@ -137,11 +133,7 @@ async def test_set_wifi_credentials(
 
     assert not msg["success"]
     assert msg["error"]["code"] == "test_code"
-    assert (
-        matter_client.client.driver.device_controller.set_wifi_credentials.call_count
-        == 1
-    )
-    assert (
-        matter_client.client.driver.device_controller.set_wifi_credentials.call_args
-        == call(ssid="test_network", credentials="test_password")
+    assert matter_client.set_wifi_credentials.call_count == 1
+    assert matter_client.set_wifi_credentials.call_args == call(
+        ssid="test_network", credentials="test_password"
     )

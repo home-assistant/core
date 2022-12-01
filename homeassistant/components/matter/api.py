@@ -92,15 +92,15 @@ async def websocket_commission(
 )
 @websocket_api.async_response
 @async_handle_failed_command
-@async_get_matter
+@async_get_matter_adapter
 async def websocket_commission_on_network(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    matter: Matter,
+    matter: MatterAdapter,
 ) -> None:
     """Commission a device already on the network."""
-    await matter.commission_on_network(msg["pin"])
+    await matter.matter_client.commission_on_network(msg["pin"])
     connection.send_result(msg[ID])
 
 
@@ -114,15 +114,15 @@ async def websocket_commission_on_network(
 )
 @websocket_api.async_response
 @async_handle_failed_command
-@async_get_matter
+@async_get_matter_adapter
 async def websocket_set_wifi_credentials(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    matter: Matter,
+    matter: MatterAdapter,
 ) -> None:
     """Set WiFi credentials for a device."""
-    await matter.client.driver.device_controller.set_wifi_credentials(
+    await matter.matter_client.set_wifi_credentials(
         ssid=msg["network_name"], credentials=msg["password"]
     )
     connection.send_result(msg[ID])
