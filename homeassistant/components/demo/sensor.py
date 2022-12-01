@@ -128,14 +128,14 @@ async def async_setup_platform(
             ),
             DemoSensor(
                 unique_id="sensor_10",
-                name="Mode sensor",
+                name="Thermostat mode",
                 state="eco",
                 device_class=SensorDeviceClass.ENUM,
                 state_class=None,
                 unit_of_measurement=None,
                 battery=None,
                 options=["away", "comfort", "eco", "sleep"],
-                translation_key="mode",
+                translation_key="thermostat_mode",
             ),
         ]
     )

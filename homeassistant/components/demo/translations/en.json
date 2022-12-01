@@ -1,7 +1,7 @@
 {
     "entity": {
         "sensor": {
-            "mode": {
+            "thermostat_mode": {
                 "state": {
                     "away": "Away",
                     "comfort": "Comfort",
