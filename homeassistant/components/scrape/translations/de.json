@@ -40,7 +40,7 @@
                     "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
                 },
                 "data_description": {
-                    "authentication": "Typ der HTTP-Authentifizierung. Entweder basic oder digest",
+                    "authentication": "Typ der HTTP-Authentifizierung. Entweder Basic oder Digest",
                     "headers": "F\u00fcr die Webanforderung zu verwendende Header",
                     "resource": "Die URL der Website, die den Wert enth\u00e4lt",
                     "timeout": "Zeit\u00fcberschreitung f\u00fcr die Verbindung zur Website",
@@ -78,28 +78,33 @@
                     "value_template": "Definiert eine Vorlage, um den Zustand des Sensors zu ermitteln"
                 }
             },
-            "init": {
+            "edit_sensor": {
                 "data": {
-                    "authentication": "Authentifizierungsmethode ausw\u00e4hlen",
-                    "headers": "Header",
-                    "method": "Methode",
-                    "password": "Passwort",
-                    "resource": "Ressource",
-                    "timeout": "Zeit\u00fcberschreitung",
-                    "username": "Benutzername",
-                    "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
+                    "attribute": "Attribut",
+                    "device_class": "Ger\u00e4teklasse",
+                    "index": "Index",
+                    "name": "Name",
+                    "select": "Ausw\u00e4hlen",
+                    "state_class": "Zustandsklasse",
+                    "unit_of_measurement": "Ma\u00dfeinheit",
+                    "value_template": "Wertvorlage"
                 },
                 "data_description": {
-                    "authentication": "Typ der HTTP-Authentifizierung. Entweder basic oder digest",
-                    "headers": "F\u00fcr die Webanforderung zu verwendende Header",
-                    "resource": "Die URL der Website, die den Wert enth\u00e4lt",
-                    "timeout": "Zeit\u00fcberschreitung f\u00fcr die Verbindung zur Website",
-                    "verify_ssl": "Aktiviert/deaktiviert die \u00dcberpr\u00fcfung des SSL/TLS-Zertifikats, z.B. wenn es selbst signiert ist"
-                },
+                    "attribute": "Wert eines Attributs auf dem ausgew\u00e4hlten Tag abrufen",
+                    "device_class": "Der Typ/die Klasse des Sensors, um das Symbol im Frontend festzulegen",
+                    "index": "Definiert, welche der vom CSS-Selektor zur\u00fcckgegebenen Elemente verwendet werden sollen",
+                    "select": "Legt fest, nach welchem Tag gesucht werden soll. Siehe Beautifulsoup CSS-Selektoren f\u00fcr Details",
+                    "state_class": "Die state_class des Sensors",
+                    "unit_of_measurement": "W\u00e4hle die Temperaturmessung oder erstelle deine eigene",
+                    "value_template": "Definiert eine Vorlage, um den Zustand des Sensors zu ermitteln"
+                }
+            },
+            "init": {
                 "menu_options": {
                     "add_sensor": "Sensor hinzuf\u00fcgen",
                     "remove_sensor": "Sensor entfernen",
-                    "resource": "Ressource konfigurieren"
+                    "resource": "Ressource konfigurieren",
+                    "select_edit_sensor": "Sensor konfigurieren"
                 }
             },
             "resource": {
@@ -114,7 +119,7 @@
                     "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
                 },
                 "data_description": {
-                    "authentication": "Typ der HTTP-Authentifizierung. Entweder basic oder digest",
+                    "authentication": "Typ der HTTP-Authentifizierung. Entweder Basic oder Digest",
                     "headers": "F\u00fcr die Webanforderung zu verwendende Header",
                     "resource": "Die URL der Website, die den Wert enth\u00e4lt",
                     "timeout": "Zeit\u00fcberschreitung f\u00fcr die Verbindung zur Website",

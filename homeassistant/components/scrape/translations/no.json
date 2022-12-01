@@ -79,23 +79,6 @@
                 }
             },
             "init": {
-                "data": {
-                    "authentication": "Velg autentiseringsmetode",
-                    "headers": "Overskrifter",
-                    "method": "Metode",
-                    "password": "Passord",
-                    "resource": "Ressurs",
-                    "timeout": "Tidsavbrudd",
-                    "username": "Brukernavn",
-                    "verify_ssl": "Verifisere SSL-sertifikat"
-                },
-                "data_description": {
-                    "authentication": "Type HTTP-godkjenning. Enten grunnleggende eller ufullstendig",
-                    "headers": "Overskrifter som skal brukes for nettforesp\u00f8rselen",
-                    "resource": "URL-en til nettstedet som inneholder verdien",
-                    "timeout": "Tidsavbrudd for tilkobling til nettside",
-                    "verify_ssl": "Aktiverer/deaktiverer verifisering av SSL/TLS-sertifikat, for eksempel hvis det er selvsignert"
-                },
                 "menu_options": {
                     "add_sensor": "Legg til sensor",
                     "remove_sensor": "Fjern sensoren",

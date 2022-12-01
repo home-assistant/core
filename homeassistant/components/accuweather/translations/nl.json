@@ -29,12 +29,6 @@
                     "forecast": "Weersverwachting"
                 },
                 "description": "Wanneer je de weersverwachting ingeschakeld zullen updates elke 80 minuten plaatsvinden i.p.v. elke 40 minuten, dit komt door de beperkingen van de gratis versie van de AccuWeather API sleutel."
-            },
-            "user": {
-                "data": {
-                    "forecast": "Weervoorspelling"
-                },
-                "description": "Vanwege de beperkingen van de gratis versie van de AccuWeather API-sleutel, worden gegevensupdates elke 64 minuten in plaats van elke 32 minuten uitgevoerd wanneer u weersvoorspelling inschakelt."
             }
         }
     },

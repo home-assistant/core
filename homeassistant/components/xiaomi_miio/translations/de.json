@@ -37,7 +37,7 @@
                     "host": "IP-Adresse",
                     "token": "API-Token"
                 },
-                "description": "Du ben\u00f6tigst den 32 Zeichen langen API-Token, siehe https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token f\u00fcr Anweisungen. Bitte beachte, dass sich dieser API-Token von dem Schl\u00fcssel unterscheidet, der von der Xiaomi Aqara-Integration verwendet wird."
+                "description": "Du ben\u00f6tigst den 32 Zeichen langen API-Token, siehe https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token f\u00fcr Anweisungen. Bitte beachte, dass sich dieser API-Token von dem Schl\u00fcssel unterscheidet, der von der Xiaomi Aqara Integration verwendet wird."
             },
             "reauth_confirm": {
                 "description": "Die Xiaomi Miio-Integration muss dein Konto neu authentifizieren, um die Token zu aktualisieren oder fehlende Cloud-Anmeldedaten hinzuzuf\u00fcgen.",

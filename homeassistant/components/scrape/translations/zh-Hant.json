@@ -79,23 +79,6 @@
                 }
             },
             "init": {
-                "data": {
-                    "authentication": "\u9078\u64c7\u9a57\u8b49\u6a21\u5f0f",
-                    "headers": "Headers",
-                    "method": "\u65b9\u5f0f",
-                    "password": "\u5bc6\u78bc",
-                    "resource": "\u4f86\u6e90",
-                    "timeout": "\u903e\u6642",
-                    "username": "\u4f7f\u7528\u8005\u540d\u7a31",
-                    "verify_ssl": "\u78ba\u8a8d SSL \u8a8d\u8b49"
-                },
-                "data_description": {
-                    "authentication": "HTTP \u9a57\u8b49\u985e\u578b\u3002\u57fa\u672c\u6216\u6458\u8981",
-                    "headers": "\u7528\u65bc Web \u8acb\u6c42\u4e4b Headers",
-                    "resource": "\u5305\u542b\u6578\u503c\u7684\u7db2\u7ad9 URL",
-                    "timeout": "\u7db2\u7ad9\u9023\u7dda\u903e\u6642",
-                    "verify_ssl": "\u958b\u555f/\u95dc\u9589 SSL/TLS \u9a57\u8b49\u8a8d\u8b49\uff0c\u4f8b\u5982\u81ea\u7c3d\u7ae0\u6191\u8b49"
-                },
                 "menu_options": {
                     "add_sensor": "\u65b0\u589e\u611f\u6e2c\u5668",
                     "remove_sensor": "\u79fb\u9664\u611f\u6e2c\u5668",

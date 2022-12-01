@@ -72,7 +72,7 @@
                 "data": {
                     "all_updates": "Echtzeitmetriken (WARNUNG: Erh\u00f6ht die CPU-Auslastung erheblich)",
                     "allow_ea": "Early-Access-Versionen von Protect zulassen (WARNUNG: Markiert deine Integration als nicht unterst\u00fctzt)",
-                    "disable_rtsp": "RTSP-Stream deaktivieren",
+                    "disable_rtsp": "RTSP Stream deaktivieren",
                     "max_media": "Maximale Anzahl von Ereignissen, die f\u00fcr den Medienbrowser geladen werden (erh\u00f6ht die RAM-Nutzung)",
                     "override_connection_host": "Verbindungshost \u00fcberschreiben"
                 },

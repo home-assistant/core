@@ -107,7 +107,7 @@
             "addon_start_failed": "Der Start des Z-Wave JS-Add-ons ist fehlgeschlagen.",
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "cannot_connect": "Verbindung fehlgeschlagen",
-            "different_device": "Das angeschlossene USB-Ger\u00e4t ist nicht dasselbe, das zuvor f\u00fcr diesen Config-Eintrag konfiguriert wurde. Bitte erstelle stattdessen einen neuen Konfigurationseintrag f\u00fcr das neue Ger\u00e4t."
+            "different_device": "Das angeschlossene USB-Ger\u00e4t ist nicht dasselbe, das zuvor f\u00fcr diesen Konfigurationseintrag konfiguriert wurde. Bitte erstelle stattdessen einen neuen Konfigurationseintrag f\u00fcr das neue Ger\u00e4t."
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",

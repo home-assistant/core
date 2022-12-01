@@ -30,19 +30,5 @@
                 }
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "password": "Heslo",
-                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno",
-                    "verify_ssl": "Overi\u0165 SSL certifik\u00e1t"
-                },
-                "data_description": {
-                    "timeout": "\u010casov\u00fd limit pre pripojenie k webovej str\u00e1nke"
-                }
-            }
-        }
     }
 }
