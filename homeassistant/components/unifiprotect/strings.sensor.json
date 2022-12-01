@@ -1,7 +1,7 @@
 {
-    "state": {
-        "unifiprotect__license_plate": {
-            "none": "Clear"
-        }
+  "state": {
+    "unifiprotect__license_plate": {
+      "none": "Clear"
     }
+  }
 }
