@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 raise UpdateFailed(f"Error communicating with API: {err}") from err
 
             data["type"] = ted_reader.system_type
-            data["energy"] = ted_reader.energy()
+            data["net"] = ted_reader.energy()
             data["production"] = ted_reader.production()
             data["consumption"] = ted_reader.consumption()
             data["spyders"] = {}
