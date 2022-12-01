@@ -688,6 +688,9 @@ def _async_motion_entities(
             continue
 
         for event_desc in MOTION_SENSORS:
+            if not event_desc.has_required(device):
+                continue
+
             entities.append(ProtectEventSensor(data, device, event_desc))
             _LOGGER.debug(
                 "Adding sensor entity %s for %s",
