@@ -163,6 +163,7 @@ class TwinklyLight(LightEntity):
         effect_list = []
         for movie in self._movies:
             effect_list.append(f"{movie['id']} {movie['name']}")
+        effect_list.append('playlist')
         return effect_list
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -209,7 +210,10 @@ class TwinklyLight(LightEntity):
 
         if ATTR_EFFECT in kwargs:
             movie_id = kwargs[ATTR_EFFECT].split(" ")[0]
-            if "id" not in self._current_movie or int(movie_id) != int(
+            if movie_id == "playlist":
+                await self._client.set_mode("playlist")
+                self._client.default_mode = "playlist"
+            elif "id" not in self._current_movie or int(movie_id) != int(
                 self._current_movie["id"]
             ):
                 await self._client.interview()
