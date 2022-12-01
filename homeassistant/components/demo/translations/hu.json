@@ -11,6 +11,14 @@
             },
             "title": "A t\u00e1pegys\u00e9g nem m\u0171k\u00f6dik megb\u00edzhat\u00f3 m\u00f3don"
         },
+        "cold_tea": {
+            "fix_flow": {
+                "abort": {
+                    "not_tea_time": "A te\u00e1t jelenleg nem lehet \u00fajra felmeleg\u00edteni."
+                }
+            },
+            "title": "A tea hideg"
+        },
         "out_of_blinker_fluid": {
             "fix_flow": {
                 "step": {

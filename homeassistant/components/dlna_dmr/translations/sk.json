@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "alternative_integration": "Zariadenie je lep\u0161ie podporovan\u00e9 inou integr\u00e1ciou",
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "non_unique_id": "Viacer\u00e9 zariadenia n\u00e1jden\u00e9 s rovnak\u00fdm jedine\u010dn\u00fdm identifik\u00e1torom"
+        },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "Chcete za\u010da\u0165 nastavova\u0165?"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                },
+                "description": "URL adresa k XML s\u00faboru popisu zariadenia"
+            },
+            "user": {
+                "data": {
+                    "host": "Hostite\u013e"
+                },
+                "description": "Vyberte zariadenie, ktor\u00e9 chcete nakonfigurova\u0165, alebo nechajte pr\u00e1zdne a zadajte adresu URL"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_url": "Neplatn\u00e1 adresa URL"
+        }
+    }
+}

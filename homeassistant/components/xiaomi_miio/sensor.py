@@ -70,6 +70,7 @@ from .const import (
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V2,
     MODEL_AIRPURIFIER_V3,
+    MODEL_AIRPURIFIER_ZA1,
     MODEL_FAN_P5,
     MODEL_FAN_V2,
     MODEL_FAN_V3,
@@ -97,6 +98,7 @@ UNIT_LUMEN = "lm"
 
 ATTR_ACTUAL_SPEED = "actual_speed"
 ATTR_AIR_QUALITY = "air_quality"
+ATTR_TVOC = "tvoc"
 ATTR_AQI = "aqi"
 ATTR_BATTERY = "battery"
 ATTR_CARBON_DIOXIDE = "co2"
@@ -261,6 +263,13 @@ SENSOR_TYPES = {
         native_unit_of_measurement="AQI",
         icon="mdi:cloud",
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ATTR_TVOC: XiaomiMiioSensorDescription(
+        key=ATTR_TVOC,
+        name="TVOC",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
     ),
     ATTR_PM10: XiaomiMiioSensorDescription(
         key=ATTR_PM10,
@@ -452,6 +461,15 @@ PURIFIER_3C_SENSORS = (
     ATTR_MOTOR_SPEED,
     ATTR_PM25,
 )
+PURIFIER_ZA1_SENSORS = (
+    ATTR_FILTER_LIFE_REMAINING,
+    ATTR_FILTER_USE,
+    ATTR_MOTOR_SPEED,
+    ATTR_PM25,
+    ATTR_TVOC,
+    ATTR_HUMIDITY,
+    ATTR_TEMPERATURE,
+)
 PURIFIER_V2_SENSORS = (
     ATTR_FILTER_LIFE_REMAINING,
     ATTR_FILTER_USE,
@@ -548,6 +566,7 @@ MODEL_TO_SENSORS_MAP: dict[str, tuple[str, ...]] = {
     MODEL_AIRPURIFIER_PRO_V7: PURIFIER_PRO_V7_SENSORS,
     MODEL_AIRPURIFIER_V2: PURIFIER_V2_SENSORS,
     MODEL_AIRPURIFIER_V3: PURIFIER_V3_SENSORS,
+    MODEL_AIRPURIFIER_ZA1: PURIFIER_ZA1_SENSORS,
     MODEL_FAN_V2: FAN_V2_V3_SENSORS,
     MODEL_FAN_V3: FAN_V2_V3_SENSORS,
     MODEL_FAN_ZA5: FAN_ZA5_SENSORS,

@@ -4,7 +4,7 @@ from unittest.mock import patch
 from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, MockModule, mock_integration
 
 CONFIG_ENTRY_DATA = {
     "device": "bla_device",
@@ -25,8 +25,12 @@ CONFIG_ENTRY_DATA_2 = {
 }
 
 
-async def test_hardware_info(hass: HomeAssistant, hass_ws_client) -> None:
+async def test_hardware_info(
+    hass: HomeAssistant, hass_ws_client, addon_store_info
+) -> None:
     """Test we can get the board info."""
+    mock_integration(hass, MockModule("usb"))
+
     # Setup the config entry
     config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA,

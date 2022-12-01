@@ -42,12 +42,15 @@
         }
     },
     "issues": {
+        "deprecate_smart_sensor": {
+            "description": "\u00dchtse \"Avastatud objekti\" andur arukate tuvastuste jaoks on n\u00fc\u00fcdseks kaotanud kehtivuse. See on asendatud iga aruka avastamise t\u00fc\u00fcbi jaoks eraldi aruka avastamise binaarsete anduritega. Palun ajakohasta vastavalt k\u00f5ik mallid v\u00f5i automaatika.",
+            "title": "Nutika tuvastamise andur on aegunud"
+        },
         "ea_setup_failed": {
             "description": "Kasutad UniFi Protecti v {version} mis on varajase juurdep\u00e4\u00e4su versioon. Sidumise laadimisel ilmnes parandamatu viga. Sidumise kasutamise j\u00e4tkamiseks [alanda UniFi Protecti stabiilsele versioonile](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect). \n\n Viga: {error}",
             "title": "Varajase juurdep\u00e4\u00e4su versiooni h\u00e4\u00e4lestamise t\u00f5rge"
         },
         "ea_warning": {
-            "description": "Kasutad UniFi Protecti v{version}. Home Assistant ei toeta varajase juurdep\u00e4\u00e4su versioone ja see v\u00f5ib p\u00f5hjustada UniFi Protecti sidumise katkemist v\u00f5i ei t\u00f6\u00f6ta see ootusp\u00e4raselt.",
             "fix_flow": {
                 "step": {
                     "confirm": {
@@ -64,16 +67,12 @@
         }
     },
     "options": {
-        "error": {
-            "invalid_mac_list": "Peab olema komadega eraldatud MAC-aadresside loend"
-        },
         "step": {
             "init": {
                 "data": {
                     "all_updates": "Reaalajas m\u00f5\u00f5dikud (HOIATUS: suurendab oluliselt CPU kasutust)",
                     "allow_ea": "Protecti varajase juurdep\u00e4\u00e4su versioonide lubamine (HOIATUS: m\u00e4rgib sidumise mitte toetatuks)",
                     "disable_rtsp": "Keela RTSP voog",
-                    "ignored_devices": "Komaga eraldatud loend nende seadmete MAC-aadressidest mida eirata",
                     "max_media": "Meediumibrauserisse laaditavate s\u00fcndmuste maksimaalne arv (suurendab RAM-i kasutamist)",
                     "override_connection_host": "\u00dchenduse hosti alistamine"
                 },

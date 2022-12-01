@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba u\u017e je nakonfigurovan\u00e1",
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "timeout_connect": "\u010casov\u00fd limit na nadviazanie spojenia"
+        },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "invalid_auth": "Neplatn\u00e9 overenie",
+            "timeout_connect": "\u010casov\u00fd limit na nadviazanie spojenia"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API k\u013e\u00fa\u010d"
+                }
+            }
+        }
+    }
+}

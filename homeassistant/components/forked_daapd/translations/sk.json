@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+        },
+        "error": {
+            "unknown_error": "Neo\u010dak\u00e1van\u00e1 chyba",
+            "wrong_host_or_port": "Ned\u00e1 sa pripoji\u0165. Skontrolujte hostite\u013ea a port.",
+            "wrong_password": "Nespr\u00e1vne heslo."
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostite\u013e",
+                    "password": "Heslo API (ak heslo nem\u00e1te, nechajte pr\u00e1zdne)",
+                    "port": "API port"
+                }
+            }
+        }
+    }
+}

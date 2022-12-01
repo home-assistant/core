@@ -24,7 +24,7 @@
     },
     "options": {
         "step": {
-            "user": {
+            "init": {
                 "data": {
                     "forecast": "Prakiraan cuaca"
                 },
