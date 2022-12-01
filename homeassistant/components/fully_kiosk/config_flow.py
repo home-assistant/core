@@ -41,10 +41,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 async with timeout(15):
                     device_info = await fully.getDeviceInfo()
-            except (ClientConnectorError, FullyKioskError, asyncio.TimeoutError):
+            except (
+                ClientConnectorError,
+                FullyKioskError,
+                asyncio.TimeoutError,
+            ) as error:
+                LOGGER.exception(error)
                 errors["base"] = "cannot_connect"
             except Exception as error:  # pylint: disable=broad-except
-                LOGGER.exception(error.args, exc_info=True)
+                LOGGER.exception(error)
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(device_info["deviceID"])
