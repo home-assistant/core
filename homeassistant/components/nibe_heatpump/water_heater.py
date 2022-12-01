@@ -22,7 +22,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -144,6 +144,7 @@ class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntityFixed):
 
         self._attr_temperature_unit = self._coil_current.unit
 
+    @callback
     def _handle_coordinator_update(self) -> None:
         if not self.coordinator.data:
             return
