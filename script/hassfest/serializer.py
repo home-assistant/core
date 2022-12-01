@@ -21,7 +21,9 @@ def _wrap_items(
     # on one line and some on multiple.
     if sort:
         items = sorted(items)
-    return f"{opener}{','.join(items)},{closer}"
+
+    joined_items = ", ".join(items)
+    return f"{opener}{joined_items}{',' if joined_items else ''}{closer}"
 
 
 def _mapping_to_str(data: Mapping[Any, Any]) -> str:
