@@ -91,6 +91,46 @@ async def test_commission_on_network(
     matter_client.commission_on_network.assert_called_once_with(1234)
 
 
+async def test_set_thread_dataset(
+    hass: HomeAssistant,
+    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    matter_client: MagicMock,
+    integration: MockConfigEntry,
+) -> None:
+    """Test the set thread dataset command."""
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/set_thread",
+            "thread_operation_dataset": "test_dataset",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    matter_client.set_thread_operational_dataset.assert_called_once_with("test_dataset")
+
+    matter_client.set_thread_operational_dataset.reset_mock()
+    matter_client.set_thread_operational_dataset.side_effect = FailedCommand(
+        "test_id", "test_code", "Failed to commission"
+    )
+
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "matter/set_thread",
+            "thread_operation_dataset": "test_dataset",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "test_code"
+    matter_client.set_thread_operational_dataset.assert_called_once_with("test_dataset")
+
+
 async def test_set_wifi_credentials(
     hass: HomeAssistant,
     hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],

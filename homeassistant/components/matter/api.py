@@ -24,6 +24,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     """Register all of our api endpoints."""
     websocket_api.async_register_command(hass, websocket_commission)
     websocket_api.async_register_command(hass, websocket_commission_on_network)
+    websocket_api.async_register_command(hass, websocket_set_thread_dataset)
     websocket_api.async_register_command(hass, websocket_set_wifi_credentials)
 
 
@@ -101,6 +102,29 @@ async def websocket_commission_on_network(
 ) -> None:
     """Commission a device already on the network."""
     await matter.matter_client.commission_on_network(msg["pin"])
+    connection.send_result(msg[ID])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "matter/set_thread",
+        vol.Required("thread_operation_dataset"): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_matter_adapter
+async def websocket_set_thread_dataset(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    matter: MatterAdapter,
+) -> None:
+    """Set thread dataset."""
+    await matter.matter_client.set_thread_operational_dataset(
+        msg["thread_operation_dataset"]
+    )
     connection.send_result(msg[ID])
 
 
