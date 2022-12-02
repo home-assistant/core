@@ -72,6 +72,10 @@ async def test_reading_measures_not_list(hass, mock_get_station):
                 "latestReading": {"value": 5},
                 "stationReference": "L1234",
             },
+            "stageScale": {
+                "@id": "really-long-unique-id-for-stagescale",
+                "typicalRangeHigh": 7,
+            },
         },
     )
 
@@ -100,6 +104,10 @@ async def test_reading_no_unit(hass, mock_get_station):
                     "stationReference": "L1234",
                 }
             ],
+            "stageScale": {
+                "@id": "really-long-unique-id-for-stagescale",
+                "typicalRangeHigh": 7,
+            },
         },
     )
 
@@ -136,6 +144,10 @@ async def test_ignore_invalid_latest_reading(hass, mock_get_station):
                     "stationReference": "L0411",
                 },
             ],
+            "stageScale": {
+                "@id": "really-long-unique-id-for-stagescale",
+                "typicalRangeHigh": 7,
+            },
         },
     )
 
@@ -166,6 +178,10 @@ async def test_reading_unavailable(hass, mock_get_station, exception):
                     "unitName": "m",
                 }
             ],
+            "stageScale": {
+                "@id": "really-long-unique-id-for-stagescale",
+                "typicalRangeHigh": 7,
+            },
         },
     )
     state = hass.states.get("sensor.my_station_water_level_stage")
@@ -196,6 +212,10 @@ async def test_recover_from_failure(hass, mock_get_station, exception):
                     "unitName": "m",
                 }
             ],
+            "stageScale": {
+                "@id": "really-long-unique-id-for-stagescale",
+                "typicalRangeHigh": 7,
+            },
         },
     )
     state = hass.states.get("sensor.my_station_water_level_stage")
@@ -220,6 +240,10 @@ async def test_recover_from_failure(hass, mock_get_station, exception):
                     "unitName": "m",
                 }
             ],
+            "stageScale": {
+                "@id": "really-long-unique-id-for-stagescale",
+                "typicalRangeHigh": 7,
+            },
         },
     )
     state = hass.states.get("sensor.my_station_water_level_stage")
@@ -245,6 +269,10 @@ async def test_reading_is_sampled(hass, mock_get_station):
                     "unitName": "m",
                 }
             ],
+            "stageScale": {
+                "@id": "really-long-unique-id-for-stagescale",
+                "typicalRangeHigh": 7,
+            },
         },
     )
 
@@ -282,6 +310,10 @@ async def test_multiple_readings_are_sampled(hass, mock_get_station):
                     "unitName": "m",
                 },
             ],
+            "stageScale": {
+                "@id": "really-long-unique-id-for-stagescale",
+                "typicalRangeHigh": 7,
+            },
         },
     )
 
@@ -322,6 +354,10 @@ async def test_ignore_no_latest_reading(hass, mock_get_station):
                     "unitName": "m",
                 },
             ],
+            "stageScale": {
+                "@id": "really-long-unique-id-for-stagescale",
+                "typicalRangeHigh": 7,
+            },
         },
     )
 
@@ -352,6 +388,10 @@ async def test_mark_existing_as_unavailable_if_no_latest(hass, mock_get_station)
                     "unitName": "m",
                 }
             ],
+            "stageScale": {
+                "@id": "really-long-unique-id-for-stagescale",
+                "typicalRangeHigh": 7,
+            },
         },
     )
 
@@ -373,6 +413,9 @@ async def test_mark_existing_as_unavailable_if_no_latest(hass, mock_get_station)
                     "unitName": "m",
                 }
             ],
+            "stageScale": {
+                "@id": "really-long-unique-id-for-stagescale",
+            },
         }
     )
     state = hass.states.get("sensor.my_station_water_level_stage")
@@ -393,6 +436,10 @@ async def test_mark_existing_as_unavailable_if_no_latest(hass, mock_get_station)
                     "unitName": "m",
                 }
             ],
+            "stageScale": {
+                "@id": "really-long-unique-id-for-stagescale",
+                "typicalRangeHigh": 7,
+            },
         }
     )
     state = hass.states.get("sensor.my_station_water_level_stage")
@@ -418,6 +465,10 @@ async def test_unload_entry(hass, mock_get_station):
                     "unitName": "m",
                 }
             ],
+            "stageScale": {
+                "@id": "really-long-unique-id-for-stagescale",
+                "typicalRangeHigh": 7,
+            },
         },
     )
 
