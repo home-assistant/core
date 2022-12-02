@@ -11,7 +11,7 @@ from .const import DOMAIN
 from .models import HardwareProtocol
 
 
-async def async_process_hardware_platforms(hass: HomeAssistant):
+async def async_process_hardware_platforms(hass: HomeAssistant) -> bool:
     """Start processing hardware platforms."""
     hass.data[DOMAIN]["hardware_platform"] = {}
 
@@ -22,7 +22,7 @@ async def async_process_hardware_platforms(hass: HomeAssistant):
 
 async def _register_hardware_platform(
     hass: HomeAssistant, integration_domain: str, platform: HardwareProtocol
-):
+) -> None:
     """Register a hardware platform."""
     if integration_domain == DOMAIN:
         return
