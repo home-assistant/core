@@ -1,7 +1,7 @@
 """Support for Hitachi DHW."""
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -63,9 +63,10 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        temperature = cast(float, kwargs.get(ATTR_TEMPERATURE))
+
         await self.executor.async_execute_command(
-            OverkizCommand.SET_CONTROL_DHW_SETTING_TEMPERATURE, int(temperature)
+            OverkizCommand.SET_CONTROL_DHW_SETTING_TEMPERATURE,
+            int(kwargs[ATTR_TEMPERATURE]),
         )
 
     @property
