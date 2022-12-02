@@ -346,7 +346,7 @@ bellows==0.34.5
 bimmer_connected==0.10.4
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==2.8.7
+bleak-retry-connector==2.8.9
 
 # homeassistant.components.bluetooth
 bleak==0.19.2
@@ -1080,7 +1080,7 @@ pycfdns==2.0.1
 pychromecast==13.0.1
 
 # homeassistant.components.comfoconnect
-pycomfoconnect==0.4
+pycomfoconnect==0.5.1
 
 # homeassistant.components.coolmaster
 pycoolmasternet-async==0.1.2

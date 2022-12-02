@@ -10,7 +10,7 @@ atomicwrites-homeassistant==1.4.1
 attrs==21.2.0
 awesomeversion==22.9.0
 bcrypt==3.1.7
-bleak-retry-connector==2.8.7
+bleak-retry-connector==2.8.9
 bleak==0.19.2
 bluetooth-adapters==0.11.0
 bluetooth-auto-recovery==0.5.4
@@ -133,7 +133,3 @@ pandas==1.4.3
 
 # uamqp 1.6.1, has 1 failing test during built on armv7/armhf
 uamqp==1.6.0
-
-# Required for pycomfoconnect
-# https://github.com/home-assistant/core/pull/83073#issuecomment-1334870513
-protobuf==3.20.3
