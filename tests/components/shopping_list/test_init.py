@@ -3,6 +3,7 @@ from http import HTTPStatus
 
 import pytest
 
+from homeassistant.components.shopping_list import NoMatchingShoppingListItem
 from homeassistant.components.shopping_list.const import (
     DOMAIN,
     EVENT_SHOPPING_LIST_UPDATED,
@@ -54,7 +55,7 @@ async def test_remove_item(hass, sl_setup):
     assert item["name"] == "cheese"
 
     # Trying to remove the same item twice should fail
-    with pytest.raises(KeyError):
+    with pytest.raises(NoMatchingShoppingListItem):
         await hass.data[DOMAIN].async_remove(item_id)
 
 
