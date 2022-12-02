@@ -12,7 +12,7 @@ from bleak import BleakClient, BleakError
 from bleak.backends.client import BaseBleakClient, get_platform_client_backend_type
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementDataCallback, BaseBleakScanner
-from bleak_retry_connector import NO_RSSI_VALUE
+from bleak_retry_connector import NO_RSSI_VALUE, ble_device_description
 
 from homeassistant.core import CALLBACK_TYPE, callback as hass_callback
 from homeassistant.helpers.frame import report
@@ -189,7 +189,15 @@ class HaBleakClientWrapper(BleakClient):
             timeout=self.__timeout,
             hass=models.MANAGER.hass,
         )
-        return await super().connect(**kwargs)
+        if debug_logging := _LOGGER.isEnabledFor(logging.DEBUG):
+            # Only lookup the description if we are going to log it
+            description = ble_device_description(wrapped_backend.device)
+            rssi = wrapped_backend.device.rssi
+            _LOGGER.debug("%s: Connecting (last rssi: %s)", description, rssi)
+        connected = await super().connect(**kwargs)
+        if debug_logging:
+            _LOGGER.debug("%s: Connected (last rssi: %s)", description, rssi)
+        return connected
 
     @hass_callback
     def _async_get_backend_for_ble_device(
