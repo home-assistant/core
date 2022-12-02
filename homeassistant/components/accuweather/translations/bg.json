@@ -18,6 +18,16 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "pressure_tendency": {
+                "state": {
+                    "falling": "\u041f\u043e\u043d\u0438\u0436\u0435\u043d\u0438\u0435",
+                    "rising": "\u041f\u043e\u0432\u0438\u0448\u0435\u043d\u0438\u0435"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

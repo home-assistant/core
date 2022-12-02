@@ -78,6 +78,20 @@
                     "value_template": "M\u00e4\u00e4rab malli anduri v\u00e4\u00e4rtuse jaoks"
                 }
             },
+            "edit_sensor": {
+                "data": {
+                    "attribute": "Attribuut",
+                    "device_class": "Seadme klass",
+                    "index": "Indeks",
+                    "select": "Vali",
+                    "state_class": "Oleku klass",
+                    "unit_of_measurement": "M\u00f5\u00f5t\u00fchik",
+                    "value_template": "V\u00e4\u00e4rtuse mall"
+                },
+                "data_description": {
+                    "attribute": "Hangi valitud kirje v\u00e4\u00e4rtus"
+                }
+            },
             "init": {
                 "menu_options": {
                     "add_sensor": "Lisa andur",
