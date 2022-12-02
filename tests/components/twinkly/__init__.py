@@ -2,7 +2,9 @@
 
 from uuid import uuid4
 
+from aiohttp import ClientResponseError, RequestInfo
 from aiohttp.client_exceptions import ClientConnectionError
+from aiohttp.web import HTTPNotFound
 
 from homeassistant.components.twinkly.const import DEV_NAME
 
@@ -24,7 +26,9 @@ class ClientMock:
         self.color = None
         self.movies = [{"id": 1, "name": "Rainbow"}, {"id": 2, "name": "Flare"}]
         self.current_movie = {}
+        self.mock_unsupported_effects = False
         self.default_mode = "movie"
+        self.mode = None
 
         self.id = str(uuid4())
         self.device_info = {
@@ -81,16 +85,38 @@ class ClientMock:
     async def set_static_colour(self, colour) -> None:
         """Set static color."""
         self.color = colour
+        self.default_mode = "color"
+
+    async def set_cycle_colours(self, colour) -> None:
+        """Set static color."""
+        self.color = colour
+        self.default_mode = "movie"
 
     async def interview(self) -> None:
         """Interview."""
 
     async def get_saved_movies(self) -> dict:
         """Get saved movies."""
+        if self.mock_unsupported_effects:
+            raise ClientResponseError(
+                RequestInfo("url", "get", None),
+                None,
+                status=HTTPNotFound().status,
+                message="Not found",
+                headers=None,
+            )
         return self.movies
 
     async def get_current_movie(self) -> dict:
         """Get current movie."""
+        if self.mock_unsupported_effects:
+            raise ClientResponseError(
+                RequestInfo("url", "get", None),
+                None,
+                status=HTTPNotFound().status,
+                message="Not found",
+                headers=None,
+            )
         return self.current_movie
 
     async def set_current_movie(self, movie_id: int) -> dict:
@@ -103,3 +129,4 @@ class ClientMock:
             self.turn_off
         else:
             self.turn_on
+            self.mode = mode

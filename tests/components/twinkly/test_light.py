@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from homeassistant.components.light import ATTR_BRIGHTNESS
+from homeassistant.components.light import ATTR_BRIGHTNESS, LightEntityFeature
 from homeassistant.components.twinkly.const import (
     CONF_HOST,
     CONF_ID,
@@ -99,7 +99,7 @@ async def test_turn_on_with_brightness(hass: HomeAssistant):
 
 
 async def test_turn_on_with_color_rgbw(hass: HomeAssistant):
-    """Test support of the light.turn_on service with a brightness parameter."""
+    """Test support of the light.turn_on service with a rgbw parameter."""
     client = ClientMock()
     client.state = False
     client.device_info["led_profile"] = "RGBW"
@@ -123,7 +123,7 @@ async def test_turn_on_with_color_rgbw(hass: HomeAssistant):
 
 
 async def test_turn_on_with_color_rgb(hass: HomeAssistant):
-    """Test support of the light.turn_on service with a brightness parameter."""
+    """Test support of the light.turn_on service with a rgb parameter."""
     client = ClientMock()
     client.state = False
     client.device_info["led_profile"] = "RGB"
@@ -147,7 +147,7 @@ async def test_turn_on_with_color_rgb(hass: HomeAssistant):
 
 
 async def test_turn_on_with_effect(hass: HomeAssistant):
-    """Test support of the light.turn_on service with a brightness parameter."""
+    """Test support of the light.turn_on service with effects."""
     client = ClientMock()
     client.state = False
     client.device_info["led_profile"] = "RGB"
@@ -155,7 +155,7 @@ async def test_turn_on_with_effect(hass: HomeAssistant):
     entity, _, _, _ = await _create_entries(hass, client)
 
     assert hass.states.get(entity.entity_id).state == "off"
-    assert client.current_movie == {}
+    assert not client.current_movie
 
     await hass.services.async_call(
         "light",
@@ -168,6 +168,76 @@ async def test_turn_on_with_effect(hass: HomeAssistant):
 
     assert state.state == "on"
     assert client.current_movie["id"] == 1
+    assert client.default_mode == "movie"
+
+
+async def test_turn_on_with_color_rgbw_and_missing_effect(hass: HomeAssistant):
+    """Test support of the light.turn_on service with rgbw color and missing effect support."""
+    client = ClientMock()
+    client.state = False
+    client.device_info["led_profile"] = "RGBW"
+    client.brightness = {"mode": "enabled", "value": 255}
+    entity, _, _, _ = await _create_entries(hass, client)
+
+    assert hass.states.get(entity.entity_id).state == "off"
+    assert not client.current_movie
+
+    assert LightEntityFeature.EFFECT in entity.supported_features
+    client.mock_unsupported_effects = True
+
+    # Turn off to force async_update
+    await hass.services.async_call(
+        "light", "turn_off", service_data={"entity_id": entity.entity_id}
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        service_data={"entity_id": entity.entity_id, "rgbw_color": (128, 64, 32, 0)},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity.entity_id)
+
+    assert state.state == "on"
+    assert client.color == (0, 128, 64, 32)
+    assert client.mode == "movie"
+    assert client.default_mode == "movie"
+
+
+async def test_turn_on_with_color_rgb_and_missing_effect(hass: HomeAssistant):
+    """Test support of the light.turn_on service with rgb color and missing effect support."""
+    client = ClientMock()
+    client.state = False
+    client.device_info["led_profile"] = "RGB"
+    client.brightness = {"mode": "enabled", "value": 255}
+    entity, _, _, _ = await _create_entries(hass, client)
+
+    assert hass.states.get(entity.entity_id).state == "off"
+    assert not client.current_movie
+    assert LightEntityFeature.EFFECT in entity.supported_features
+
+    client.mock_unsupported_effects = True
+
+    # Turn off to force async_update
+    await hass.services.async_call(
+        "light", "turn_off", service_data={"entity_id": entity.entity_id}
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        service_data={"entity_id": entity.entity_id, "rgb_color": (128, 64, 32)},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity.entity_id)
+
+    assert state.state == "on"
+    assert client.color == (128, 64, 32)
+    assert client.mode == "movie"
     assert client.default_mode == "movie"
 
 
