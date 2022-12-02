@@ -192,7 +192,7 @@ async def async_setup_entry(
     coordinator: PurpleAirDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         PurpleAirSensorEntity(coordinator, entry, sensor_index, description)
-        for sensor_index in entry.data[CONF_SENSOR_INDICES]
+        for sensor_index in entry.options[CONF_SENSOR_INDICES]
         for description in SENSOR_DESCRIPTIONS
     )
 

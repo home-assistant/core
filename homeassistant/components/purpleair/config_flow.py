@@ -174,8 +174,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title=self._flow_data[CONF_API_KEY][:5],
-            data=self._flow_data
-            | {CONF_SENSOR_INDICES: [int(user_input[CONF_SENSOR_INDEX])]},
+            data=self._flow_data,
+            # Note that we store the sensor indices in options so that later on, we can
+            # add/remoev additional sensors via an options flow:
+            options={CONF_SENSOR_INDICES: [int(user_input[CONF_SENSOR_INDEX])]},
         )
 
     async def async_step_user(

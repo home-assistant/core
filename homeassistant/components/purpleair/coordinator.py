@@ -64,7 +64,7 @@ class PurpleAirDataUpdateCoordinator(DataUpdateCoordinator[GetSensorsResponse]):
         try:
             return await self._api.sensors.async_get_sensors(
                 SENSOR_FIELDS_TO_RETRIEVE,
-                sensor_indices=self._entry.data[CONF_SENSOR_INDICES],
+                sensor_indices=self._entry.options[CONF_SENSOR_INDICES],
             )
         except PurpleAirError as err:
             raise UpdateFailed(f"Error while fetching data: {err}") from err
