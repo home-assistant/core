@@ -4,7 +4,7 @@ import logging
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN, PLATFORMS
@@ -70,22 +70,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     except ConfigEntryNotReady:
 
-        if not coordinator.api_disabled:
-            await coordinator.api.close()
-            raise
+        await coordinator.api.close()
 
-    # Setup entry
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+        if coordinator.api_disabled:
+            entry.async_start_reauth(hass)
 
-    if coordinator.api_disabled:
-        await coordinator.async_listen_for_api_enabled()
-        raise ConfigEntryAuthFailed
+        raise
 
     # Abort reauth config flow if active
     for progress_flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN):
         if progress_flow["context"].get("source") == SOURCE_REAUTH:
             hass.config_entries.flow.async_abort(progress_flow["flow_id"])
+
+    # Setup entry
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     # Register device
     device_registry = dr.async_get(hass)
@@ -112,7 +111,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if unload_ok:
         coordinator = hass.data[DOMAIN].pop(entry.entry_id)
-        coordinator.async_stop_listen_for_api_enabled()
         await coordinator.api.close()
 
     return unload_ok
