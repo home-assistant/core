@@ -44,7 +44,7 @@ def async_get_api(hass: HomeAssistant, api_key: str) -> API:
 
 @callback
 def async_get_coordinates_schema(hass: HomeAssistant) -> vol.Schema:
-    """Define a schema searching for sensors near a coordinate pair."""
+    """Define a schema for searching for sensors near a coordinate pair."""
     return vol.Schema(
         {
             vol.Inclusive(
