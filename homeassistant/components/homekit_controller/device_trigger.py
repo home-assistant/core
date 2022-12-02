@@ -246,7 +246,7 @@ def async_get_or_create_trigger_source(
     hass: HomeAssistant, device_id: str
 ) -> TriggerSource:
     """Get or create a trigger source for a device id."""
-    if not (source := hass.data[TRIGGERS].get(device_id)):
+    if not (source := hass.data.setdefault(TRIGGERS, {}).get(device_id)):
         source = TriggerSource(hass)
         hass.data[TRIGGERS][device_id] = source
     return source
