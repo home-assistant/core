@@ -544,7 +544,7 @@ class HTML5NotificationService(BaseNotificationService):
                     _LOGGER.error("Error saving registration")
                 else:
                     _LOGGER.info("Configuration saved")
-            elif response.status_code != 201:
+            elif response.status_code > 399:
                 _LOGGER.error(
                     "There was an issue sending the notification %s: %s",
                     response.status,
