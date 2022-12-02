@@ -432,7 +432,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         TuyaSensorEntityDescription(
             key=DPCode.STATUS,
             name="Status",
-            translation_key=DPCode.STATUS,
+            translation_key="status",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.REMAIN_TIME,
@@ -971,7 +971,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             key=DPCode.AIR_QUALITY,
             name="Air quality",
             icon="mdi:air-filter",
-            translation_key=DPCode.AIR_QUALITY,
+            translation_key="air_quality",
         ),
     ),
     # Fan
