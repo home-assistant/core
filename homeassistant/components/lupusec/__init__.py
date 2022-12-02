@@ -55,7 +55,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     try:
         hass.data[DOMAIN] = LupusecSystem(username, password, ip_address, name)
-    except LupusecException as ex:
+    except Exception as ex:
         _LOGGER.error(ex)
 
         persistent_notification.create(
