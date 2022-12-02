@@ -15,7 +15,7 @@ from tests.common import assert_setup_component, async_capture_events
 
 
 @pytest.fixture
-def aiohttp_unused_port(loop, aiohttp_unused_port, socket_enabled):
+def aiohttp_unused_port(event_loop, aiohttp_unused_port, socket_enabled):
     """Return aiohttp_unused_port and allow opening sockets."""
     return aiohttp_unused_port
 

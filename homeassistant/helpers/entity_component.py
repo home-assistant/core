@@ -36,7 +36,7 @@ _EntityT = TypeVar("_EntityT", bound=entity.Entity)
 @bind_hass
 async def async_update_entity(hass: HomeAssistant, entity_id: str) -> None:
     """Trigger an update for an entity."""
-    domain = entity_id.split(".", 1)[0]
+    domain = entity_id.partition(".")[0]
     entity_comp: EntityComponent[entity.Entity] | None
     entity_comp = hass.data.get(DATA_INSTANCES, {}).get(domain)
 
@@ -90,7 +90,12 @@ class EntityComponent(Generic[_EntityT]):
 
     @property
     def entities(self) -> Iterable[_EntityT]:
-        """Return an iterable that returns all entities."""
+        """
+        Return an iterable that returns all entities.
+
+        As the underlying dicts may change when async context is lost, callers that
+        iterate over this asynchronously should make a copy using list() before iterating.
+        """
         return chain.from_iterable(
             platform.entities.values()  # type: ignore[misc]
             for platform in self._platforms.values()

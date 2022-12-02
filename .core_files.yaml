@@ -38,6 +38,7 @@ base_platforms: &base_platforms
   - homeassistant/components/siren/**
   - homeassistant/components/stt/**
   - homeassistant/components/switch/**
+  - homeassistant/components/text/**
   - homeassistant/components/tts/**
   - homeassistant/components/update/**
   - homeassistant/components/vacuum/**

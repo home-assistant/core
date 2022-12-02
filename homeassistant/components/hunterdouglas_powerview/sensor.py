@@ -19,8 +19,10 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
+    ATTR_BATTERY_KIND,
     ATTR_SIGNAL_STRENGTH,
     ATTR_SIGNAL_STRENGTH_MAX,
+    BATTERY_KIND_HARDWIRED,
     DOMAIN,
     ROOM_ID_IN_SHADE,
     ROOM_NAME_UNICODE,
@@ -60,7 +62,10 @@ SENSORS: Final = [
         native_value_fn=lambda shade: round(
             shade.raw_data[SHADE_BATTERY_LEVEL] / SHADE_BATTERY_LEVEL_MAX * 100
         ),
-        create_sensor_fn=lambda shade: bool(SHADE_BATTERY_LEVEL in shade.raw_data),
+        create_sensor_fn=lambda shade: bool(
+            shade.raw_data.get(ATTR_BATTERY_KIND) != BATTERY_KIND_HARDWIRED
+            and SHADE_BATTERY_LEVEL in shade.raw_data
+        ),
         update_fn=lambda shade: shade.refresh_battery(),
     ),
     PowerviewSensorDescription(
@@ -73,6 +78,7 @@ SENSORS: Final = [
         ),
         create_sensor_fn=lambda shade: bool(ATTR_SIGNAL_STRENGTH in shade.raw_data),
         update_fn=lambda shade: shade.refresh(),
+        entity_registry_enabled_default=False,
     ),
 ]
 

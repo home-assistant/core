@@ -50,71 +50,11 @@
                 },
                 "description": "L\u00fctfen `.knxkeys` dosyan\u0131z i\u00e7in bilgileri girin."
             },
-            "secure_manual": {
-                "data": {
-                    "device_authentication": "Cihaz do\u011frulama \u015fifresi",
-                    "user_id": "Kullan\u0131c\u0131 Kimli\u011fi",
-                    "user_password": "Kullan\u0131c\u0131 \u015fifresi"
-                },
-                "data_description": {
-                    "device_authentication": "Bu, ETS'deki aray\u00fcz\u00fcn 'IP' panelinde ayarlan\u0131r.",
-                    "user_id": "Bu genellikle t\u00fcnel numaras\u0131 +1'dir. Yani 'T\u00fcnel 2' Kullan\u0131c\u0131 Kimli\u011fi '3' olacakt\u0131r.",
-                    "user_password": "ETS'de t\u00fcnelin '\u00d6zellikler' panelinde ayarlanan belirli t\u00fcnel ba\u011flant\u0131s\u0131 i\u00e7in \u015fifre."
-                },
-                "description": "L\u00fctfen IP g\u00fcvenli bilgilerinizi giriniz."
-            },
-            "secure_tunneling": {
-                "description": "KNX/IP Secure'u nas\u0131l yap\u0131land\u0131rmak istedi\u011finizi se\u00e7in.",
-                "menu_options": {
-                    "secure_knxkeys": "IP g\u00fcvenli anahtarlar\u0131 i\u00e7eren bir \".knxkeys\" dosyas\u0131 kullan\u0131n",
-                    "secure_manual": "IP g\u00fcvenli anahtarlar\u0131n\u0131 manuel olarak yap\u0131land\u0131r\u0131n"
-                }
-            },
             "tunnel": {
                 "data": {
                     "gateway": "KNX T\u00fcnel Ba\u011flant\u0131s\u0131"
                 },
                 "description": "L\u00fctfen listeden bir a\u011f ge\u00e7idi se\u00e7in."
-            },
-            "type": {
-                "data": {
-                    "connection_type": "KNX Ba\u011flant\u0131 T\u00fcr\u00fc"
-                },
-                "description": "L\u00fctfen KNX ba\u011flant\u0131n\u0131z i\u00e7in kullanmam\u0131z gereken ba\u011flant\u0131 tipini giriniz.\n OTOMAT\u0130K - Entegrasyon, bir a\u011f ge\u00e7idi taramas\u0131 ger\u00e7ekle\u015ftirerek KNX Bus'\u0131n\u0131za olan ba\u011flant\u0131y\u0131 halleder.\n T\u00dcNELLEME - Entegrasyon, t\u00fcnelleme yoluyla KNX veri yolunuza ba\u011flanacakt\u0131r.\n Y\u00d6NLEND\u0130RME - Entegrasyon, y\u00f6nlendirme yoluyla KNX veri yolunuza ba\u011flanacakt\u0131r."
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "connection_type": "KNX Ba\u011flant\u0131 T\u00fcr\u00fc",
-                    "individual_address": "Varsay\u0131lan bireysel adres",
-                    "local_ip": "Home Asistan\u0131n\u0131n Yerel IP'si",
-                    "multicast_group": "\u00c7ok noktaya yay\u0131n grubu",
-                    "multicast_port": "\u00c7ok noktaya yay\u0131n ba\u011flant\u0131 noktas\u0131",
-                    "rate_limit": "H\u0131z s\u0131n\u0131r\u0131",
-                    "state_updater": "Durum g\u00fcncelleyici"
-                },
-                "data_description": {
-                    "individual_address": "Home Assistant taraf\u0131ndan kullan\u0131lacak KNX adresi, \u00f6r. \"0.0.4\"",
-                    "local_ip": "Otomatik ke\u015fif i\u00e7in \"0.0.0.0\"\u0131 kullan\u0131n.",
-                    "multicast_group": "Y\u00f6nlendirme ve ke\u015fif i\u00e7in kullan\u0131l\u0131r. Varsay\u0131lan: \"224.0.23.12\"",
-                    "multicast_port": "Y\u00f6nlendirme ve ke\u015fif i\u00e7in kullan\u0131l\u0131r. Varsay\u0131lan: \"3671\"",
-                    "rate_limit": "Saniyede maksimum giden telegram say\u0131s\u0131.\n \u00d6nerilen: 20 ila 40",
-                    "state_updater": "KNX Bus'tan okuma durumlar\u0131 i\u00e7in varsay\u0131lan\u0131 ayarlay\u0131n. Devre d\u0131\u015f\u0131 b\u0131rak\u0131ld\u0131\u011f\u0131nda, Home Assistant varl\u0131k durumlar\u0131n\u0131 KNX Bus'tan aktif olarak almaz. 'sync_state' varl\u0131k se\u00e7enekleri taraf\u0131ndan ge\u00e7ersiz k\u0131l\u0131nabilir."
-                }
-            },
-            "tunnel": {
-                "data": {
-                    "host": "Sunucu",
-                    "port": "Port",
-                    "tunneling_type": "KNX T\u00fcnel Tipi"
-                },
-                "data_description": {
-                    "host": "KNX/IP t\u00fcnelleme cihaz\u0131n\u0131n IP adresi.",
-                    "port": "KNX/IP t\u00fcnelleme cihaz\u0131n\u0131n ba\u011flant\u0131 noktas\u0131."
-                }
             }
         }
     }

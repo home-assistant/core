@@ -12,6 +12,7 @@ MESSAGE_RETRIES = 5
 OVERALL_TIMEOUT = 9
 UNAVAILABLE_GRACE = 90
 
+CONF_LABEL = "label"
 CONF_SERIAL = "serial"
 
 IDENTIFY_WAVEFORM = {
@@ -34,6 +35,7 @@ ATTR_INDICATION = "indication"
 ATTR_INFRARED = "infrared"
 ATTR_POWER = "power"
 ATTR_REMAINING = "remaining"
+ATTR_RSSI = "rssi"
 ATTR_ZONES = "zones"
 
 ATTR_THEME = "theme"

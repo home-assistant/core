@@ -14,6 +14,7 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -848,3 +849,21 @@ async def test_custom_unit_change(
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == pytest.approx(float(default_value))
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == default_unit
+
+
+def test_device_classes_aligned():
+    """Make sure all sensor device classes are also available in NumberDeviceClass."""
+
+    non_numeric_device_classes = {
+        SensorDeviceClass.DATE,
+        SensorDeviceClass.DURATION,
+        SensorDeviceClass.ENUM,
+        SensorDeviceClass.TIMESTAMP,
+    }
+
+    for device_class in SensorDeviceClass:
+        if device_class in non_numeric_device_classes:
+            continue
+
+        assert hasattr(NumberDeviceClass, device_class.name)
+        assert getattr(NumberDeviceClass, device_class.name).value == device_class.value

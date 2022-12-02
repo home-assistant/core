@@ -16,12 +16,12 @@ async def test_weather_sensor(hass, config_entry, netatmo_auth):
 
         await hass.async_block_till_done()
 
-    prefix = "sensor.netatmoindoor_"
+    prefix = "sensor.parents_bedroom_"
 
-    assert hass.states.get(f"{prefix}temperature").state == "24.6"
-    assert hass.states.get(f"{prefix}humidity").state == "36"
-    assert hass.states.get(f"{prefix}co2").state == "749"
-    assert hass.states.get(f"{prefix}pressure").state == "1017.3"
+    assert hass.states.get(f"{prefix}temperature").state == "20.3"
+    assert hass.states.get(f"{prefix}humidity").state == "63"
+    assert hass.states.get(f"{prefix}co2").state == "494"
+    assert hass.states.get(f"{prefix}pressure").state == "1014.5"
 
 
 async def test_public_weather_sensor(hass, config_entry, netatmo_auth):
@@ -104,25 +104,25 @@ async def test_process_health(health, expected):
 @pytest.mark.parametrize(
     "uid, name, expected",
     [
-        ("12:34:56:37:11:ca-reachable", "mystation_reachable", "True"),
-        ("12:34:56:03:1b:e4-rf_status", "mystation_yard_radio", "Full"),
+        ("12:34:56:03:1b:e4-reachable", "villa_garden_reachable", "True"),
+        ("12:34:56:03:1b:e4-rf_status", "villa_garden_radio", "Full"),
         (
-            "12:34:56:37:11:ca-wifi_status",
-            "mystation_wifi_strength",
-            "Full",
+            "12:34:56:80:bb:26-wifi_status",
+            "villa_wifi_strength",
+            "High",
         ),
         (
-            "12:34:56:37:11:ca-temp_trend",
-            "mystation_temperature_trend",
+            "12:34:56:80:bb:26-temp_trend",
+            "villa_temperature_trend",
             "stable",
         ),
         (
-            "12:34:56:37:11:ca-pressure_trend",
-            "netatmo_mystation_pressure_trend",
-            "down",
+            "12:34:56:80:bb:26-pressure_trend",
+            "villa_pressure_trend",
+            "up",
         ),
-        ("12:34:56:05:51:20-sum_rain_1", "netatmo_mystation_yard_rain_last_hour", "0"),
-        ("12:34:56:05:51:20-sum_rain_24", "netatmo_mystation_yard_rain_today", "0"),
+        ("12:34:56:80:c1:ea-sum_rain_1", "villa_rain_rain_last_hour", "0"),
+        ("12:34:56:80:c1:ea-sum_rain_24", "villa_rain_rain_today", "6.9"),
         ("12:34:56:03:1b:e4-windangle", "netatmoindoor_garden_direction", "SW"),
         (
             "12:34:56:03:1b:e4-windangle_value",

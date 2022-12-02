@@ -11,7 +11,7 @@ from homeassistant.components.knx.schema import LightSchema
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_NAME,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ATTR_RGBW_COLOR,
     ColorMode,
@@ -166,19 +166,25 @@ async def test_light_color_temp_absolute(hass: HomeAssistant, knx: KNXTestKit):
         brightness=255,
         color_mode=ColorMode.COLOR_TEMP,
         color_temp=370,
+        color_temp_kelvin=2700,
     )
     # change color temperature from HA
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": "light.test", ATTR_COLOR_TEMP: 250},  # 4000 Kelvin - 0x0FA0
+        {"entity_id": "light.test", ATTR_COLOR_TEMP_KELVIN: 4000},  # 4000 - 0x0FA0
         blocking=True,
     )
     await knx.assert_write(test_ct, (0x0F, 0xA0))
     knx.assert_state("light.test", STATE_ON, color_temp=250)
     # change color temperature from KNX
     await knx.receive_write(test_ct_state, (0x17, 0x70))  # 6000 Kelvin - 166 Mired
-    knx.assert_state("light.test", STATE_ON, color_temp=166)
+    knx.assert_state(
+        "light.test",
+        STATE_ON,
+        color_temp=166,
+        color_temp_kelvin=6000,
+    )
 
 
 async def test_light_color_temp_relative(hass: HomeAssistant, knx: KNXTestKit):
@@ -222,19 +228,33 @@ async def test_light_color_temp_relative(hass: HomeAssistant, knx: KNXTestKit):
         brightness=255,
         color_mode=ColorMode.COLOR_TEMP,
         color_temp=250,
+        color_temp_kelvin=4000,
     )
     # change color temperature from HA
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": "light.test", ATTR_COLOR_TEMP: 300},  # 3333 Kelvin - 33 % - 0x54
+        {
+            "entity_id": "light.test",
+            ATTR_COLOR_TEMP_KELVIN: 3333,  # 3333 Kelvin - 33.3 % - 0x55
+        },
         blocking=True,
     )
-    await knx.assert_write(test_ct, (0x54,))
-    knx.assert_state("light.test", STATE_ON, color_temp=300)
+    await knx.assert_write(test_ct, (0x55,))
+    knx.assert_state(
+        "light.test",
+        STATE_ON,
+        color_temp=300,
+        color_temp_kelvin=3333,
+    )
     # change color temperature from KNX
-    await knx.receive_write(test_ct_state, (0xE6,))  # 3900 Kelvin - 90 % - 256 Mired
-    knx.assert_state("light.test", STATE_ON, color_temp=256)
+    await knx.receive_write(test_ct_state, (0xE6,))  # 3901 Kelvin - 90.1 % - 256 Mired
+    knx.assert_state(
+        "light.test",
+        STATE_ON,
+        color_temp=256,
+        color_temp_kelvin=3901,
+    )
 
 
 async def test_light_hs_color(hass: HomeAssistant, knx: KNXTestKit):

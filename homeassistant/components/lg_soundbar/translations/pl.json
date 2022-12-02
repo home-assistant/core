@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
-            "existing_instance_updated": "Zaktualizowano istniej\u0105c\u0105 konfiguracj\u0119"
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
         },
         "error": {
-            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "no_data": "Urz\u0105dzenie nie zwr\u00f3ci\u0142o \u017cadnych danych wymaganych do wpisu."
         },
         "step": {
             "user": {

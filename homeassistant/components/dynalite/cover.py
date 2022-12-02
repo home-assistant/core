@@ -2,7 +2,12 @@
 
 from typing import Any
 
-from homeassistant.components.cover import DEVICE_CLASSES, CoverDeviceClass, CoverEntity
+from homeassistant.components.cover import (
+    ATTR_CURRENT_POSITION,
+    DEVICE_CLASSES,
+    CoverDeviceClass,
+    CoverEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -77,6 +82,12 @@ class DynaliteCover(DynaliteBase, CoverEntity):
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self._device.async_stop_cover(**kwargs)
+
+    def initialize_state(self, state):
+        """Initialize the state from cache."""
+        target_level = state.attributes.get(ATTR_CURRENT_POSITION)
+        if target_level is not None:
+            self._device.init_level(target_level)
 
 
 class DynaliteCoverWithTilt(DynaliteCover):

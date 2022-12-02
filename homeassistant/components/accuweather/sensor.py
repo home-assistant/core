@@ -190,7 +190,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="WindGustDay",
-        device_class=SensorDeviceClass.SPEED,
+        device_class=SensorDeviceClass.WIND_SPEED,
         icon="mdi:weather-windy",
         name="Wind gust day",
         entity_registry_enabled_default=False,
@@ -202,7 +202,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="WindGustNight",
-        device_class=SensorDeviceClass.SPEED,
+        device_class=SensorDeviceClass.WIND_SPEED,
         icon="mdi:weather-windy",
         name="Wind gust night",
         entity_registry_enabled_default=False,
@@ -214,7 +214,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="WindDay",
-        device_class=SensorDeviceClass.SPEED,
+        device_class=SensorDeviceClass.WIND_SPEED,
         icon="mdi:weather-windy",
         name="Wind day",
         unit_fn=lambda metric: SPEED_KILOMETERS_PER_HOUR
@@ -225,7 +225,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="WindNight",
-        device_class=SensorDeviceClass.SPEED,
+        device_class=SensorDeviceClass.WIND_SPEED,
         icon="mdi:weather-windy",
         name="Wind night",
         unit_fn=lambda metric: SPEED_KILOMETERS_PER_HOUR
@@ -253,7 +253,7 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         name="Cloud ceiling",
         state_class=SensorStateClass.MEASUREMENT,
         unit_fn=lambda metric: LENGTH_METERS if metric else LENGTH_FEET,
-        value_fn=lambda data, unit: round(data[unit][ATTR_VALUE]),
+        value_fn=lambda data, unit: round(cast(float, data[unit][ATTR_VALUE])),
     ),
     AccuWeatherSensorDescription(
         key="CloudCover",
@@ -301,9 +301,9 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="PressureTendency",
-        device_class="accuweather__pressure_tendency",
         icon="mdi:gauge",
         name="Pressure tendency",
+        translation_key="pressure_tendency",
         value_fn=lambda data, _: cast(str, data["LocalizedText"]).lower(),
     ),
     AccuWeatherSensorDescription(
@@ -335,7 +335,7 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="Wind",
-        device_class=SensorDeviceClass.SPEED,
+        device_class=SensorDeviceClass.WIND_SPEED,
         icon="mdi:weather-windy",
         name="Wind",
         state_class=SensorStateClass.MEASUREMENT,
@@ -346,7 +346,7 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="WindGust",
-        device_class=SensorDeviceClass.SPEED,
+        device_class=SensorDeviceClass.WIND_SPEED,
         icon="mdi:weather-windy",
         name="Wind gust",
         entity_registry_enabled_default=False,

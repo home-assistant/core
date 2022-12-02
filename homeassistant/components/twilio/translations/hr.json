@@ -1,0 +1,10 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "\u017delite li zapo\u010deti s postavljanjem?",
+                "title": "Postavite Twilio Webhook"
+            }
+        }
+    }
+}

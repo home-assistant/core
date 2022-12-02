@@ -1,4 +1,16 @@
 {
+    "entity": {
+        "sensor": {
+            "thermostat_mode": {
+                "state": {
+                    "away": "Away",
+                    "comfort": "Comfort",
+                    "eco": "Eco",
+                    "sleep": "Sleep"
+                }
+            }
+        }
+    },
     "issues": {
         "bad_psu": {
             "fix_flow": {
@@ -10,6 +22,15 @@
                 }
             },
             "title": "The power supply is not stable"
+        },
+        "cold_tea": {
+            "fix_flow": {
+                "abort": {
+                    "not_tea_time": "Can not re-heat the tea at this time"
+                },
+                "step": {}
+            },
+            "title": "The tea is cold"
         },
         "out_of_blinker_fluid": {
             "fix_flow": {
@@ -33,6 +54,9 @@
     },
     "options": {
         "step": {
+            "init": {
+                "data": {}
+            },
             "options_1": {
                 "data": {
                     "bool": "Optional boolean",

@@ -3,6 +3,11 @@
         "sensibo__sensitivity": {
             "n": "Normal",
             "s": "Duyarl\u0131"
+        },
+        "sensibo__smart_type": {
+            "feelslike": "Hissedilen",
+            "humidity": "Nem",
+            "temperature": "S\u0131cakl\u0131k"
         }
     }
 }

@@ -193,13 +193,9 @@ class YamahaDevice(MediaPlayerEntity):
     def __init__(self, name, receiver, source_ignore, source_names, zone_names):
         """Initialize the Yamaha Receiver."""
         self.receiver = receiver
-        self._muted = False
-        self._volume = 0
-        self._pwstate = MediaPlayerState.OFF
-        self._current_source = None
-        self._sound_mode = None
-        self._sound_mode_list = None
-        self._source_list = None
+        self._attr_is_volume_muted = False
+        self._attr_volume_level = 0
+        self._attr_state = MediaPlayerState.OFF
         self._source_ignore = source_ignore or []
         self._source_names = source_names or {}
         self._zone_names = zone_names or {}
@@ -220,33 +216,33 @@ class YamahaDevice(MediaPlayerEntity):
 
         if self.receiver.on:
             if self._play_status is None:
-                self._pwstate = MediaPlayerState.ON
+                self._attr_state = MediaPlayerState.ON
             elif self._play_status.playing:
-                self._pwstate = MediaPlayerState.PLAYING
+                self._attr_state = MediaPlayerState.PLAYING
             else:
-                self._pwstate = MediaPlayerState.IDLE
+                self._attr_state = MediaPlayerState.IDLE
         else:
-            self._pwstate = MediaPlayerState.OFF
+            self._attr_state = MediaPlayerState.OFF
 
-        self._muted = self.receiver.mute
-        self._volume = (self.receiver.volume / 100) + 1
+        self._attr_is_volume_muted = self.receiver.mute
+        self._attr_volume_level = (self.receiver.volume / 100) + 1
 
         if self.source_list is None:
             self.build_source_list()
 
         current_source = self.receiver.input
-        self._current_source = self._source_names.get(current_source, current_source)
+        self._attr_source = self._source_names.get(current_source, current_source)
         self._playback_support = self.receiver.get_playback_support()
         self._is_playback_supported = self.receiver.is_playback_supported(
-            self._current_source
+            self._attr_source
         )
         surround_programs = self.receiver.surround_programs()
         if surround_programs:
-            self._sound_mode = self.receiver.surround_program
-            self._sound_mode_list = surround_programs
+            self._attr_sound_mode = self.receiver.surround_program
+            self._attr_sound_mode_list = surround_programs
         else:
-            self._sound_mode = None
-            self._sound_mode_list = None
+            self._attr_sound_mode = None
+            self._attr_sound_mode_list = None
 
     def build_source_list(self):
         """Build the source list."""
@@ -254,7 +250,7 @@ class YamahaDevice(MediaPlayerEntity):
             alias: source for source, alias in self._source_names.items()
         }
 
-        self._source_list = sorted(
+        self._attr_source_list = sorted(
             self._source_names.get(source, source)
             for source in self.receiver.inputs()
             if source not in self._source_ignore
@@ -271,47 +267,12 @@ class YamahaDevice(MediaPlayerEntity):
         return name
 
     @property
-    def state(self):
-        """Return the state of the device."""
-        return self._pwstate
-
-    @property
-    def volume_level(self):
-        """Volume level of the media player (0..1)."""
-        return self._volume
-
-    @property
-    def is_volume_muted(self):
-        """Boolean if volume is currently muted."""
-        return self._muted
-
-    @property
-    def source(self):
-        """Return the current input source."""
-        return self._current_source
-
-    @property
-    def sound_mode(self):
-        """Return the current sound mode."""
-        return self._sound_mode
-
-    @property
-    def sound_mode_list(self):
-        """Return the current sound mode."""
-        return self._sound_mode_list
-
-    @property
-    def source_list(self):
-        """List of available input sources."""
-        return self._source_list
-
-    @property
     def zone_id(self):
         """Return a zone_id to ensure 1 media player per zone."""
         return f"{self.receiver.ctrl_url}:{self._zone}"
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         supported_features = SUPPORT_YAMAHA
 
@@ -347,7 +308,7 @@ class YamahaDevice(MediaPlayerEntity):
     def turn_on(self) -> None:
         """Turn the media player on."""
         self.receiver.on = True
-        self._volume = (self.receiver.volume / 100) + 1
+        self._attr_volume_level = (self.receiver.volume / 100) + 1
 
     def media_play(self) -> None:
         """Send play command."""

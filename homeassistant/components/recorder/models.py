@@ -1,9 +1,9 @@
 """Models for Recorder."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
-from typing import Any, TypedDict, overload
+from typing import Any, Literal, TypedDict, overload
 
 from sqlalchemy.engine.row import Row
 
@@ -160,7 +160,7 @@ class LazyState(State):
         """Set attributes."""
         self._attributes = value
 
-    @property  # type: ignore[override]
+    @property
     def context(self) -> Context:
         """State context."""
         if self._context is None:
@@ -172,7 +172,7 @@ class LazyState(State):
         """Set context."""
         self._context = value
 
-    @property  # type: ignore[override]
+    @property
     def last_changed(self) -> datetime:
         """Last changed datetime."""
         if self._last_changed is None:
@@ -187,7 +187,7 @@ class LazyState(State):
         """Set last changed datetime."""
         self._last_changed = value
 
-    @property  # type: ignore[override]
+    @property
     def last_updated(self) -> datetime:
         """Last updated datetime."""
         if self._last_updated is None:
@@ -284,3 +284,32 @@ def row_to_compressed_state(
                 row_changed_changed
             )
     return comp_state
+
+
+class CalendarStatisticPeriod(TypedDict, total=False):
+    """Statistic period definition."""
+
+    period: Literal["hour", "day", "week", "month", "year"]
+    offset: int
+
+
+class FixedStatisticPeriod(TypedDict, total=False):
+    """Statistic period definition."""
+
+    end_time: datetime
+    start_time: datetime
+
+
+class RollingWindowStatisticPeriod(TypedDict, total=False):
+    """Statistic period definition."""
+
+    duration: timedelta
+    offset: timedelta
+
+
+class StatisticPeriod(TypedDict, total=False):
+    """Statistic period definition."""
+
+    calendar: CalendarStatisticPeriod
+    fixed_period: FixedStatisticPeriod
+    rolling_window: RollingWindowStatisticPeriod

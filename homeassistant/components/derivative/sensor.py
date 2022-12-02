@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException
 import logging
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -137,20 +138,20 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
     def __init__(
         self,
         *,
-        name,
-        round_digits,
-        source_entity,
-        time_window,
-        unit_of_measurement,
-        unit_prefix,
-        unit_time,
-        unique_id,
-    ):
+        name: str | None,
+        round_digits: int,
+        source_entity: str,
+        time_window: timedelta,
+        unit_of_measurement: str | None,
+        unit_prefix: str | None,
+        unit_time: str,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the derivative sensor."""
         self._attr_unique_id = unique_id
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
-        self._state = 0
+        self._state: float | int | Decimal = 0
         # List of tuples with (timestamp_start, timestamp_end, derivative)
         self._state_list: list[tuple[datetime, datetime, Decimal]] = []
 
@@ -231,7 +232,9 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
                 (old_state.last_updated, new_state.last_updated, new_derivative)
             )
 
-            def calculate_weight(start, end, now):
+            def calculate_weight(
+                start: datetime, end: datetime, now: datetime
+            ) -> float:
                 window_start = now - timedelta(seconds=self._time_window)
                 if start < window_start:
                     weight = (end - window_start).total_seconds() / self._time_window
@@ -259,6 +262,9 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
         )
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | int | Decimal:
         """Return the state of the sensor."""
-        return round(self._state, self._round_digits)
+        value = round(self._state, self._round_digits)
+        if TYPE_CHECKING:
+            assert isinstance(value, (float, int, Decimal))
+        return value

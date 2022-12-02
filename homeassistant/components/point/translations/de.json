@@ -3,7 +3,7 @@
         "abort": {
             "already_setup": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich.",
             "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
-            "external_setup": "Pointt erfolgreich von einem anderen Flow konfiguriert.",
+            "external_setup": "Point erfolgreich von einem anderen Flow konfiguriert.",
             "no_flows": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen.",
             "unknown_authorize_url_generation": "Beim Generieren einer Authentifizierungs-URL ist ein unbekannter Fehler aufgetreten"
         },
@@ -16,7 +16,7 @@
         },
         "step": {
             "auth": {
-                "description": "Folge dem Link unten und **Best\u00e4tige** den Zugriff auf dein Minut-Konto. Kehre dann zur\u00fcck und dr\u00fccke unten auf **Senden**. \n\n [Link]({authorization_url})",
+                "description": "Folge dem Link unten und **Best\u00e4tige** den Zugriff auf dein Minut Konto. Kehre dann zur\u00fcck und dr\u00fccke unten auf **Senden**. \n\n [Link]({authorization_url})",
                 "title": "Point authentifizieren"
             },
             "user": {

@@ -177,3 +177,12 @@ class NoPresenceStatusResetButton(
     _attribute_value = 1
     _attr_device_class = ButtonDeviceClass.RESTART
     _attr_entity_category = EntityCategory.CONFIG
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederFeedButton(ZHAAttributeButton, id_suffix="feeding"):
+    """Defines a feed button for the aqara c1 pet feeder."""
+
+    _attribute_name = "feeding"
+    _attr_name = "Feed"
+    _attribute_value = 1

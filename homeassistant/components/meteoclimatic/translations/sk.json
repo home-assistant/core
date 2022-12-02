@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
+        "error": {
+            "not_found": "V sieti sa nena\u0161li \u017eiadne zariadenia"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "code": "K\u00f3d stanice"
+                }
+            }
+        }
+    }
+}

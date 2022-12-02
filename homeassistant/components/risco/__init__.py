@@ -26,8 +26,9 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -39,7 +40,12 @@ from .const import (
     TYPE_LOCAL,
 )
 
-PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 LAST_EVENT_STORAGE_VERSION = 1
 LAST_EVENT_TIMESTAMP_KEY = "last_event_timestamp"
 _LOGGER = logging.getLogger(__name__)
@@ -50,13 +56,17 @@ class LocalData:
     """A data class for local data passed to the platforms."""
 
     system: RiscoLocal
-    zone_updates: dict[int, Callable[[], Any]] = field(default_factory=dict)
     partition_updates: dict[int, Callable[[], Any]] = field(default_factory=dict)
 
 
 def is_local(entry: ConfigEntry) -> bool:
     """Return whether the entry represents an instance with local communication."""
     return entry.data.get(CONF_TYPE) == TYPE_LOCAL
+
+
+def zone_update_signal(zone_id: int) -> str:
+    """Return a signal for the dispatch of a zone update."""
+    return f"risco_zone_update_{zone_id}"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -95,9 +105,7 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
 
     async def _zone(zone_id: int, zone: Zone) -> None:
         _LOGGER.debug("Risco zone update for %d", zone_id)
-        callback = local_data.zone_updates.get(zone_id)
-        if callback:
-            callback()
+        async_dispatcher_send(hass, zone_update_signal(zone_id))
 
     entry.async_on_unload(risco.add_zone_handler(_zone))
 
@@ -124,10 +132,9 @@ async def _async_setup_cloud_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
     try:
         await risco.login(async_get_clientsession(hass))
     except CannotConnectError as error:
-        raise ConfigEntryNotReady() from error
-    except UnauthorizedError:
-        _LOGGER.exception("Failed to login to Risco cloud")
-        return False
+        raise ConfigEntryNotReady from error
+    except UnauthorizedError as error:
+        raise ConfigEntryAuthFailed from error
 
     scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     coordinator = RiscoDataUpdateCoordinator(hass, risco, scan_interval)

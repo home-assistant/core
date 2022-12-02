@@ -11,7 +11,6 @@ from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
     SchemaFlowFormStep,
-    SchemaFlowMenuStep,
     wrapped_entity_config_entry_title,
 )
 
@@ -25,7 +24,7 @@ TARGET_DOMAIN_OPTIONS = [
     selector.SelectOptionDict(value=Platform.SIREN, label="Siren"),
 ]
 
-CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+CONFIG_FLOW = {
     "user": SchemaFlowFormStep(
         vol.Schema(
             {

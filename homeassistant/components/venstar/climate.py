@@ -125,7 +125,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
         self._attr_name = self._client.name
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         features = (
             ClimateEntityFeature.TARGET_TEMPERATURE
