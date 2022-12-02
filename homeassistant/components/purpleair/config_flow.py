@@ -44,7 +44,7 @@ def async_get_api(hass: HomeAssistant, api_key: str) -> API:
 
 @callback
 def async_get_coordinates_schema(hass: HomeAssistant) -> vol.Schema:
-    """Define a schema for the by_coordinates step."""
+    """Define a schema searching for sensors near a coordinate pair."""
     return vol.Schema(
         {
             vol.Inclusive(
@@ -60,7 +60,7 @@ def async_get_coordinates_schema(hass: HomeAssistant) -> vol.Schema:
 
 @callback
 def async_get_nearby_sensors_schema(options: list[SelectOptionDict]) -> vol.Schema:
-    """Define a schema for the by_coordinates step."""
+    """Define a schema for selecting a sensor from a list."""
     return vol.Schema(
         {
             vol.Required(CONF_SENSOR_INDEX): SelectSelector(
