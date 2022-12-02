@@ -162,7 +162,6 @@ class HaBleakClientWrapper(BleakClient):
             self.__address = address_or_ble_device
         self.__disconnected_callback = disconnected_callback
         self.__timeout = timeout
-        self.__ble_device: BLEDevice | None = None
         self._backend: BaseBleakClient | None = None  # type: ignore[assignment]
 
     @property
@@ -183,12 +182,9 @@ class HaBleakClientWrapper(BleakClient):
     async def connect(self, **kwargs: Any) -> bool:
         """Connect to the specified GATT server."""
         assert models.MANAGER is not None
-        (
-            wrapped_backend,
-            self.__ble_device,
-        ) = self._async_get_best_available_backend_and_device()
+        wrapped_backend = self._async_get_best_available_backend_and_device()
         self._backend = wrapped_backend.client(
-            self.__ble_device,
+            wrapped_backend.device,
             disconnected_callback=self.__disconnected_callback,
             timeout=self.__timeout,
             hass=models.MANAGER.hass,
@@ -218,7 +214,7 @@ class HaBleakClientWrapper(BleakClient):
     @hass_callback
     def _async_get_best_available_backend_and_device(
         self,
-    ) -> tuple[_HaWrappedBleakBackend, BLEDevice]:
+    ) -> _HaWrappedBleakBackend:
         """Get a best available backend and device for the given address.
 
         This method will return the backend with the best rssi
@@ -235,9 +231,10 @@ class HaBleakClientWrapper(BleakClient):
             or NO_RSSI_VALUE,
             reverse=True,
         ):
-            ble_device = device_advertisement_data[0]
-            if backend := self._async_get_backend_for_ble_device(ble_device):
-                return backend, ble_device
+            if backend := self._async_get_backend_for_ble_device(
+                device_advertisement_data[0]
+            ):
+                return backend
 
         raise BleakError(
             f"No backend with an available connection slot that can reach address {address} was found"
