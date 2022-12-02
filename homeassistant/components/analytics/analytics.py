@@ -144,7 +144,7 @@ class Analytics:
     async def send_analytics(self, _=None) -> None:
         """Send analytics."""
         supervisor_info = None
-        operating_system_info = {}
+        operating_system_info: dict[str, Any] = {}
 
         if not self.onboarded or not self.preferences.get(ATTR_BASE, False):
             LOGGER.debug("Nothing to submit")
@@ -156,7 +156,7 @@ class Analytics:
 
         if self.supervisor:
             supervisor_info = hassio.get_supervisor_info(self.hass)
-            operating_system_info = hassio.get_os_info(self.hass)
+            operating_system_info = hassio.get_os_info(self.hass) or {}
 
         system_info = await async_get_system_info(self.hass)
         integrations = []
