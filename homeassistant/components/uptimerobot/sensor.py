@@ -3,7 +3,11 @@ from __future__ import annotations
 
 from typing import TypedDict
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -44,7 +48,9 @@ async def async_setup_entry(
                 key=str(monitor.id),
                 name=monitor.friendly_name,
                 entity_category=EntityCategory.DIAGNOSTIC,
-                device_class="uptimerobot__monitor_status",
+                device_class=SensorDeviceClass.ENUM,
+                options=["down", "not_checked_yet", "pause", "seems_down", "up"],
+                translation_key="monitor_status",
             ),
             monitor=monitor,
         )
