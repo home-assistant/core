@@ -231,7 +231,7 @@ class HaBleakClientWrapper(BleakClient):
             or NO_RSSI_VALUE,
             reverse=True,
         ):
-            _LOGGER.debug(
+            _LOGGER.warning(
                 "Trying backend %s for device=%s rssi=%s",
                 (
                     device_advertisement_data[0].details
