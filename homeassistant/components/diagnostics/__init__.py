@@ -151,9 +151,7 @@ async def _async_get_json_file_response(
     data: Any,
     filename: str,
     domain: str,
-    d_type: DiagnosticsType,
     d_id: str,
-    sub_type: DiagnosticsSubType | None = None,
     sub_id: str | None = None,
 ) -> web.Response:
     """Return JSON file from dictionary."""
@@ -183,9 +181,11 @@ async def _async_get_json_file_response(
     except TypeError:
         _LOGGER.error(
             "Failed to serialize to JSON: %s/%s%s. Bad data at %s",
-            d_type.value,
+            DiagnosticsType.CONFIG_ENTRY.value,
             d_id,
-            f"/{sub_type.value}/{sub_id}" if sub_type is not None else "",
+            f"/{DiagnosticsSubType.DEVICE.value}/{sub_id}"
+            if sub_id is not None
+            else "",
             format_unserializable_data(find_paths_unserializable_data(data)),
         )
         return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
@@ -213,11 +213,19 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
         sub_id: str | None = None,
     ) -> web.Response:
         """Download diagnostics."""
-        # t_type handling
+        # Validate d_type and sub_type
         try:
             d_type = DiagnosticsType(d_type)
         except ValueError:
             return web.Response(status=HTTPStatus.BAD_REQUEST)
+
+        if sub_type is not None:
+            try:
+                sub_type = DiagnosticsSubType(sub_type)
+            except ValueError:
+                return web.Response(status=HTTPStatus.BAD_REQUEST)
+
+        device_diagnostics = sub_type is not None
 
         hass: HomeAssistant = request.app["hass"]
 
@@ -230,23 +238,20 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
 
         filename = f"{config_entry.domain}-{config_entry.entry_id}"
 
-        if sub_type is None:
+        if not device_diagnostics:
+            # Config entry diagnostics
             if info.config_entry_diagnostics is None:
                 return web.Response(status=HTTPStatus.NOT_FOUND)
             data = await info.config_entry_diagnostics(hass, config_entry)
-            filename = f"{d_type}-{filename}"
+            filename = f"{DiagnosticsType.CONFIG_ENTRY}-{filename}"
             return await _async_get_json_file_response(
-                hass, data, filename, config_entry.domain, d_type.value, d_id
+                hass, data, filename, config_entry.domain, d_id
             )
 
-        # sub_type handling
-        try:
-            sub_type = DiagnosticsSubType(sub_type)
-        except ValueError:
-            return web.Response(status=HTTPStatus.BAD_REQUEST)
-
+        # Device diagnostics
         dev_reg = async_get(hass)
-        assert sub_id
+        if sub_id is None:
+            return web.Response(status=HTTPStatus.BAD_REQUEST)
 
         if (device := dev_reg.async_get(sub_id)) is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
@@ -258,5 +263,5 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
 
         data = await info.device_diagnostics(hass, config_entry, device)
         return await _async_get_json_file_response(
-            hass, data, filename, config_entry.domain, d_type, d_id, sub_type, sub_id
+            hass, data, filename, config_entry.domain, d_id, sub_id
         )
