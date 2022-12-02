@@ -154,7 +154,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._flow_data[CONF_NEARBY_SENSOR_OPTIONS] = [
             SelectOptionDict(
                 value=str(result.sensor.sensor_index),
-                label=f"{result.sensor.name} ({round(result.distance, 1)}km away)",
+                label=f"{result.sensor.name} ({round(result.distance, 1)} km away)",
             )
             for result in nearby_sensor_results
         ]
