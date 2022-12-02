@@ -147,7 +147,7 @@ uamqp==1.6.0
 
 # Required for pycomfoconnect
 # https://github.com/home-assistant/core/pull/83073#issuecomment-1334870513
-protobuf==3.20.1
+protobuf==3.20.3
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
