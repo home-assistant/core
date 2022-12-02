@@ -171,9 +171,8 @@ class ESPHomeClient(BaseBleakClient):
             )
         self._cancel_connection_state = None
 
-    def _async_ble_device_disconnected(self) -> None:
-        """Handle the BLE device disconnecting from the ESP."""
-        was_connected = self._is_connected
+    def _async_disconnected_cleanup(self) -> None:
+        """Clean up on disconnect."""
         self.services = BleakGATTServiceCollection()  # type: ignore[no-untyped-call]
         self._is_connected = False
         for _, notify_abort in self._notify_cancels.values():
@@ -182,6 +181,12 @@ class ESPHomeClient(BaseBleakClient):
         if self._disconnected_event:
             self._disconnected_event.set()
             self._disconnected_event = None
+        self._unsubscribe_connection_state()
+
+    def _async_ble_device_disconnected(self) -> None:
+        """Handle the BLE device disconnecting from the ESP."""
+        was_connected = self._is_connected
+        self._async_disconnected_cleanup()
         if was_connected:
             _LOGGER.debug(
                 "%s: %s - %s: BLE device disconnected",
@@ -190,7 +195,6 @@ class ESPHomeClient(BaseBleakClient):
                 self._ble_device.address,
             )
             self._async_call_bleak_disconnected_callback()
-        self._unsubscribe_connection_state()
 
     def _async_esp_disconnected(self) -> None:
         """Handle the esp32 client disconnecting from hass."""
@@ -320,7 +324,7 @@ class ESPHomeClient(BaseBleakClient):
     @api_error_as_bleak_error
     async def disconnect(self) -> bool:
         """Disconnect from the peripheral device."""
-        self._unsubscribe_connection_state()
+        self._async_disconnected_cleanup()
         await self._client.bluetooth_device_disconnect(self._address_as_int)
         await self._wait_for_free_connection_slot(DISCONNECT_TIMEOUT)
         return True
