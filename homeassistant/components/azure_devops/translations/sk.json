@@ -9,9 +9,21 @@
             "invalid_auth": "Neplatn\u00e9 overenie",
             "project_error": "Nepodarilo sa z\u00edska\u0165 inform\u00e1cie o projekte."
         },
+        "flow_title": "{project_url}",
         "step": {
             "reauth": {
-                "description": "Overenie toto\u017enosti pre {project_url} zlyhalo. Zadajte svoje aktu\u00e1lne poverenia."
+                "data": {
+                    "personal_access_token": "Osobn\u00fd pr\u00edstupov\u00fd token (PAT)"
+                },
+                "description": "Overenie toto\u017enosti pre {project_url} zlyhalo. Zadajte svoje aktu\u00e1lne poverenia.",
+                "title": "Op\u00e4tovn\u00e9 overenie"
+            },
+            "user": {
+                "data": {
+                    "organization": "Organiz\u00e1cia",
+                    "personal_access_token": "Osobn\u00fd pr\u00edstupov\u00fd token (PAT)",
+                    "project": "Projekt"
+                }
             }
         }
     }

@@ -8,12 +8,19 @@
             "invalid_system_id": "\u00c9rv\u00e9nytelen Airzone rendszerazonos\u00edt\u00f3"
         },
         "step": {
+            "discovered_connection": {
+                "data": {
+                    "host": "C\u00edm",
+                    "id": "Rendszerazonos\u00edt\u00f3",
+                    "port": "Port"
+                }
+            },
             "user": {
                 "data": {
                     "host": "C\u00edm",
+                    "id": "Rendszerazonos\u00edt\u00f3",
                     "port": "Port"
-                },
-                "description": "Airzone integr\u00e1ci\u00f3 be\u00e1ll\u00edt\u00e1sa."
+                }
             }
         }
     }

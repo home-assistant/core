@@ -10,10 +10,19 @@
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "Dvojfaktorov\u00fd k\u00f3d"
+                },
+                "description": "Zadajte PIN zaslan\u00fd na v\u00e1\u0161 e-mail",
+                "title": "Dvojfaktorov\u00e1 autentifik\u00e1cia"
+            },
             "user": {
                 "data": {
-                    "password": "Heslo"
-                }
+                    "password": "Heslo",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
+                },
+                "title": "Prihl\u00e1ste sa pomocou \u00fa\u010dtu Blink"
             }
         }
     },

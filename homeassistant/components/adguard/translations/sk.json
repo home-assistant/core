@@ -9,6 +9,7 @@
         },
         "step": {
             "hassio_confirm": {
+                "description": "Chcete nakonfigurova\u0165 Home Assistant na pripojenie k AdGuard Home poskytovan\u00e9mu doplnkom: {addon}?",
                 "title": "AdGuard Home cez doplnok Home Assistant"
             },
             "user": {

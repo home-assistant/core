@@ -61,5 +61,17 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "thermostat_mode": {
+        "state": {
+          "away": "Away",
+          "comfort": "Comfort",
+          "eco": "Eco",
+          "sleep": "Sleep"
+        }
+      }
+    }
   }
 }

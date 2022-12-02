@@ -1816,6 +1816,9 @@ class Config:
         # If True, pip install is skipped for requirements on startup
         self.skip_pip: bool = False
 
+        # List of packages to skip when installing requirements on startup
+        self.skip_pip_packages: list[str] = []
+
         # List of loaded components
         self.components: set[str] = set()
 
@@ -1976,9 +1979,18 @@ class Config:
 
     async def async_update(self, **kwargs: Any) -> None:
         """Update the configuration from a dictionary."""
+        # pylint: disable-next=import-outside-toplevel
+        from .config import (
+            _raise_issue_if_historic_currency,
+            _raise_issue_if_no_country,
+        )
+
         self._update(source=ConfigSource.STORAGE, **kwargs)
         await self._async_store()
         self.hass.bus.async_fire(EVENT_CORE_CONFIG_UPDATE, kwargs)
+
+        _raise_issue_if_historic_currency(self.hass, self.currency)
+        _raise_issue_if_no_country(self.hass, self.country)
 
     async def async_load(self) -> None:
         """Load [homeassistant] core config."""
@@ -2089,7 +2101,6 @@ class Config:
                             and "language" in owner_data["language"]
                         ):
                             with suppress(vol.InInvalid):
-                                # pylint: disable-next=protected-access
                                 data["language"] = cv.language(
                                     owner_data["language"]["language"]
                                 )

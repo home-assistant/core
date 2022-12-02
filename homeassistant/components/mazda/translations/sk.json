@@ -14,7 +14,8 @@
             "user": {
                 "data": {
                     "email": "Email",
-                    "password": "Heslo"
+                    "password": "Heslo",
+                    "region": "Oblas\u0165"
                 }
             }
         }

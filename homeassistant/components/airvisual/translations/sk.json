@@ -16,7 +16,8 @@
                     "api_key": "API k\u013e\u00fa\u010d",
                     "latitude": "Zemepisn\u00e1 \u0161\u00edrka",
                     "longitude": "Zemepisn\u00e1 d\u013a\u017eka"
-                }
+                },
+                "title": "Konfigur\u00e1cia geografie"
             },
             "geography_by_name": {
                 "data": {
@@ -24,7 +25,8 @@
                     "city": "Mesto",
                     "country": "Krajina",
                     "state": "stav"
-                }
+                },
+                "title": "Konfigur\u00e1cia geografie"
             },
             "node_pro": {
                 "data": {
@@ -35,7 +37,21 @@
             "reauth_confirm": {
                 "data": {
                     "api_key": "API k\u013e\u00fa\u010d"
-                }
+                },
+                "title": "Op\u00e4tovn\u00e9 overenie AirVisual"
+            },
+            "user": {
+                "title": "Nakonfigurujte AirVisual"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Zobrazte na mape sledovan\u00fa geografiu"
+                },
+                "title": "Nakonfigurujte AirVisual"
             }
         }
     }

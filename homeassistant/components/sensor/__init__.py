@@ -77,6 +77,7 @@ _LOGGER: Final = logging.getLogger(__name__)
 
 ATTR_LAST_RESET: Final = "last_reset"
 ATTR_STATE_CLASS: Final = "state_class"
+ATTR_OPTIONS: Final = "options"
 
 DOMAIN: Final = "sensor"
 
@@ -101,6 +102,14 @@ class SensorDeviceClass(StrEnum):
     """Fixed duration.
 
     Unit of measurement: `d`, `h`, `min`, `s`
+    """
+
+    ENUM = "enum"
+    """Enumeration.
+
+    Provides a fixed list of options the state of the sensor can be in.
+
+    Unit of measurement: `None`
     """
 
     TIMESTAMP = "timestamp"
@@ -446,6 +455,7 @@ class SensorEntityDescription(EntityDescription):
     last_reset: datetime | None = None
     native_unit_of_measurement: str | None = None
     state_class: SensorStateClass | str | None = None
+    options: list[str] | None = None
     unit_of_measurement: None = None  # Type override, use native_unit_of_measurement
 
 
@@ -457,6 +467,7 @@ class SensorEntity(Entity):
     _attr_last_reset: datetime | None
     _attr_native_unit_of_measurement: str | None
     _attr_native_value: StateType | date | datetime | Decimal = None
+    _attr_options: list[str] | None
     _attr_state_class: SensorStateClass | str | None
     _attr_state: None = None  # Subclasses of SensorEntity should not set this
     _attr_suggested_unit_of_measurement: str | None
@@ -524,6 +535,15 @@ class SensorEntity(Entity):
         return None
 
     @property
+    def options(self) -> list[str] | None:
+        """Return a set of possible options."""
+        if hasattr(self, "_attr_options"):
+            return self._attr_options
+        if hasattr(self, "entity_description"):
+            return self.entity_description.options
+        return None
+
+    @property
     def state_class(self) -> SensorStateClass | str | None:
         """Return the state class of this entity, if any."""
         if hasattr(self, "_attr_state_class"):
@@ -546,6 +566,9 @@ class SensorEntity(Entity):
         """Return the capability attributes."""
         if state_class := self.state_class:
             return {ATTR_STATE_CLASS: state_class}
+
+        if options := self.options:
+            return {ATTR_OPTIONS: options}
 
         return None
 
@@ -679,6 +702,7 @@ class SensorEntity(Entity):
         unit_of_measurement = self.unit_of_measurement
         value = self.native_value
         device_class = self.device_class
+        state_class = self.state_class
 
         # Received a datetime
         if value is not None and device_class == DEVICE_CLASS_TIMESTAMP:
@@ -714,6 +738,37 @@ class SensorEntity(Entity):
                     f"Invalid date: {self.entity_id} has date device class "
                     f"but provides state {value}:{type(value)} resulting in '{err}'"
                 ) from err
+
+        # Enum checks
+        if value is not None and (
+            device_class == SensorDeviceClass.ENUM or self.options is not None
+        ):
+            if device_class != SensorDeviceClass.ENUM:
+                reason = "is missing the enum device class"
+                if device_class is not None:
+                    reason = f"has device class '{device_class}' instead of 'enum'"
+                raise ValueError(
+                    f"Sensor {self.entity_id} is providing enum options, but {reason}"
+                )
+
+            if state_class:
+                raise ValueError(
+                    f"Sensor {self.entity_id} has an state_class and thus indicating "
+                    "it has a numeric value; however, it has the enum device class"
+                )
+
+            if unit_of_measurement:
+                raise ValueError(
+                    f"Sensor {self.entity_id} has an unit of measurement and thus "
+                    "indicating it has a numeric value; "
+                    "however, it has the enum device class"
+                )
+
+            if (options := self.options) and value not in options:
+                raise ValueError(
+                    f"Sensor {self.entity_id} provides state value '{value}', "
+                    "which is not in the list of options provided"
+                )
 
         if (
             value is not None
@@ -840,7 +895,7 @@ class SensorExtraStoredData(ExtraStoredData):
             # native_value is a dict, but does not have all values
             return None
         except DecimalInvalidOperation:
-            # native_value coulnd't be returned from decimal_str
+            # native_value couldn't be returned from decimal_str
             return None
 
         return cls(native_value, native_unit_of_measurement)

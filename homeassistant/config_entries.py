@@ -1778,7 +1778,7 @@ class EntityRegistryDisabledHandler:
 
         _LOGGER.info(
             "Reloading configuration entries because disabled_by changed in entity registry: %s",
-            ", ".join(self.changed),
+            ", ".join(to_reload),
         )
 
         await asyncio.gather(

@@ -491,7 +491,7 @@ class MediaPlayerEntity(Entity):
     _attr_sound_mode: str | None = None
     _attr_source_list: list[str] | None = None
     _attr_source: str | None = None
-    _attr_state: MediaPlayerState | str | None = None
+    _attr_state: MediaPlayerState | None = None
     _attr_supported_features: MediaPlayerEntityFeature = MediaPlayerEntityFeature(0)
     _attr_volume_level: float | None = None
 
@@ -506,7 +506,7 @@ class MediaPlayerEntity(Entity):
         return None
 
     @property
-    def state(self) -> MediaPlayerState | str | None:
+    def state(self) -> MediaPlayerState | None:
         """State of the player."""
         return self._attr_state
 

@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import (
@@ -64,7 +65,7 @@ def setup_platform(
     command: str = config[CONF_COMMAND]
     payload_off: str = config[CONF_PAYLOAD_OFF]
     payload_on: str = config[CONF_PAYLOAD_ON]
-    device_class: str | None = config.get(CONF_DEVICE_CLASS)
+    device_class: BinarySensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
     value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
     command_timeout: int = config[CONF_COMMAND_TIMEOUT]
     unique_id: str | None = config.get(CONF_UNIQUE_ID)
@@ -95,7 +96,7 @@ class CommandBinarySensor(BinarySensorEntity):
         self,
         data: CommandSensorData,
         name: str,
-        device_class: str | None,
+        device_class: BinarySensorDeviceClass | None,
         payload_on: str,
         payload_off: str,
         value_template: Template | None,

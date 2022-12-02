@@ -11,11 +11,26 @@
         },
         "flow_title": "{name}",
         "step": {
+            "confirm": {
+                "description": "Chcete za\u010da\u0165 nastavova\u0165?"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                },
+                "description": "URL adresa k XML s\u00faboru popisu zariadenia"
+            },
             "user": {
                 "data": {
                     "host": "Hostite\u013e"
-                }
+                },
+                "description": "Vyberte zariadenie, ktor\u00e9 chcete nakonfigurova\u0165, alebo nechajte pr\u00e1zdne a zadajte adresu URL"
             }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_url": "Neplatn\u00e1 adresa URL"
         }
     }
 }
