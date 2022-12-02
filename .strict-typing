@@ -56,6 +56,7 @@ homeassistant.components.amazon_polly.*
 homeassistant.components.ambient_station.*
 homeassistant.components.amcrest.*
 homeassistant.components.ampio.*
+homeassistant.components.analytics.*
 homeassistant.components.anthemav.*
 homeassistant.components.aqualogic.*
 homeassistant.components.aseko_pool_live.*
