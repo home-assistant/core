@@ -126,7 +126,7 @@ class ClientMock:
     async def set_mode(self, mode: str) -> None:
         """Set mode."""
         if mode == "off":
-            self.turn_off
+            self.turn_off()
         else:
-            self.turn_on
+            self.turn_on()
             self.mode = mode
