@@ -207,8 +207,11 @@ class TwinklyLight(LightEntity):
                                         self._attr_rgbw_color[2],
                                     )
                                 )
-                            await self._client.set_mode("movie")
-                            self._client.default_mode = "movie"
+                                await self._client.set_mode("movie")
+                                self._client.default_mode = "movie"
+                            else:
+                                _LOGGER.warning("Unable to set rgbw-color")
+                                _LOGGER.warning(error)
                     else:
                         await self._client.set_cycle_colours(
                             (
@@ -243,6 +246,9 @@ class TwinklyLight(LightEntity):
                                 )
                                 await self._client.set_mode("movie")
                                 self._client.default_mode = "movie"
+                            else:
+                                _LOGGER.warning("Unable to set rgb-color")
+                                _LOGGER.warning(error)
                     else:
                         await self._client.set_cycle_colours(self._attr_rgb_color)
                         await self._client.set_mode("movie")
@@ -343,6 +349,9 @@ class TwinklyLight(LightEntity):
                 self._attr_supported_features = (
                     self.supported_features & ~LightEntityFeature.EFFECT
                 )
+            else:
+                _LOGGER.warning("Unable to get movies")
+                _LOGGER.warning(error)
 
     async def async_update_current_movie(self) -> None:
         """Update the current active movie."""
@@ -359,3 +368,6 @@ class TwinklyLight(LightEntity):
                 self._attr_supported_features = (
                     self.supported_features & ~LightEntityFeature.EFFECT
                 )
+            else:
+                _LOGGER.warning("Unable to get movies")
+                _LOGGER.warning(error)
