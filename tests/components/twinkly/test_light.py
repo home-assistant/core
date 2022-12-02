@@ -247,7 +247,7 @@ async def test_turn_on_with_color_rgb_and_missing_effect_2(hass: HomeAssistant):
     client.state = False
     client.device_info["led_profile"] = "RGB"
     client.brightness = {"mode": "enabled", "value": 255}
-    del client.device_info["max_movies"]
+    client.version = "2.7.0"
     entity, _, _, _ = await _create_entries(hass, client)
 
     assert hass.states.get(entity.entity_id).state == "off"

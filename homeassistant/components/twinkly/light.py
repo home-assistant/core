@@ -8,6 +8,7 @@ from typing import Any
 
 from aiohttp import ClientError, ClientResponseError
 from aiohttp.web import HTTPNotFound
+from packaging import version
 from ttls.client import Twinkly
 
 from homeassistant.components.light import (
@@ -26,6 +27,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
+    ATTR_VERSION,
     CONF_HOST,
     CONF_ID,
     CONF_NAME,
@@ -38,6 +40,7 @@ from .const import (
     DEV_PROFILE_RGBW,
     DOMAIN,
     HIDDEN_DEV_VALUES,
+    MIN_EFFECT_VERSION,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -318,9 +321,12 @@ class TwinklyLight(LightEntity):
                 if key not in HIDDEN_DEV_VALUES:
                     self._attributes[key] = value
 
-            if (
-                "max_movies" not in device_info
-                and LightEntityFeature.EFFECT in self.supported_features
+            if ATTR_VERSION not in self._attributes:
+                firmware_version = await self._client.get_firmware_version()
+                self._attributes[ATTR_VERSION] = firmware_version[ATTR_VERSION]
+
+            if version.parse(self._attributes[ATTR_VERSION]) < version.parse(
+                MIN_EFFECT_VERSION
             ):
                 self._attr_supported_features = (
                     self.supported_features & ~LightEntityFeature.EFFECT

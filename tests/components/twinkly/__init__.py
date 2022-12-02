@@ -29,6 +29,7 @@ class ClientMock:
         self.mock_unsupported_effects = False
         self.default_mode = "movie"
         self.mode = None
+        self.version = "2.8.10"
 
         self.id = str(uuid4())
         self.device_info = {
@@ -131,3 +132,7 @@ class ClientMock:
         else:
             await self.turn_on()
             self.mode = mode
+
+    async def get_firmware_version(self) -> dict:
+        """Get firmware version."""
+        return {"version": self.version}
