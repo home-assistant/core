@@ -3,9 +3,9 @@
   "name": "Fibaro",
   "integration_type": "hub",
   "documentation": "https://www.home-assistant.io/integrations/fibaro",
-  "requirements": ["fiblary3==0.1.8"],
+  "requirements": ["pyfibaro==0.5"],
   "codeowners": ["@rappenze"],
   "iot_class": "local_push",
   "config_flow": true,
-  "loggers": ["fiblary3"]
+  "loggers": ["pyfibaro"]
 }

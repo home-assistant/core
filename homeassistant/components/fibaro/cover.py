@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from pyfibaro.fibaro_device import DeviceModel
+
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
@@ -39,7 +41,7 @@ async def async_setup_entry(
 class FibaroCover(FibaroDevice, CoverEntity):
     """Representation a Fibaro Cover."""
 
-    def __init__(self, fibaro_device):
+    def __init__(self, fibaro_device: DeviceModel) -> None:
         """Initialize the Vera device."""
         super().__init__(fibaro_device)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
@@ -95,10 +97,10 @@ class FibaroCover(FibaroDevice, CoverEntity):
         if self._is_open_close_only():
             if (
                 "state" not in self.fibaro_device.properties
-                or self.fibaro_device.properties.state.lower() == "unknown"
+                or self.fibaro_device.properties.get("state").lower() == "unknown"
             ):
                 return None
-            return self.fibaro_device.properties.state.lower() == "closed"
+            return self.fibaro_device.properties.get("state").lower() == "closed"
 
         if self.current_cover_position is None:
             return None

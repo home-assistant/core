@@ -6,6 +6,8 @@ from contextlib import suppress
 from functools import partial
 from typing import Any
 
+from pyfibaro.fibaro_device import DeviceModel
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_RGB_COLOR,
@@ -68,7 +70,7 @@ async def async_setup_entry(
 class FibaroLight(FibaroDevice, LightEntity):
     """Representation of a Fibaro Light, including dimmable."""
 
-    def __init__(self, fibaro_device):
+    def __init__(self, fibaro_device: DeviceModel) -> None:
         """Initialize the light."""
         self._update_lock = asyncio.Lock()
 
@@ -77,7 +79,7 @@ class FibaroLight(FibaroDevice, LightEntity):
             or "colorComponents" in fibaro_device.properties
             or "RGB" in fibaro_device.type
             or "rgb" in fibaro_device.type
-            or "color" in fibaro_device.baseType
+            or "color" in fibaro_device.base_type
         ) and (
             "setColor" in fibaro_device.actions
             or "setColorComponents" in fibaro_device.actions
@@ -88,7 +90,7 @@ class FibaroLight(FibaroDevice, LightEntity):
             or "rgbw" in fibaro_device.type
         )
         supports_dimming = (
-            "levelChange" in fibaro_device.interfaces
+            "levelChange" in fibaro_device.raw_data.get("interfaces")
             and "setValue" in fibaro_device.actions
         )
 
@@ -157,13 +159,13 @@ class FibaroLight(FibaroDevice, LightEntity):
         if self.current_binary_state:
             return True
         with suppress(ValueError, TypeError):
-            if "brightness" in props and int(props.brightness) != 0:
+            if "brightness" in props and int(props.get("brightness")) != 0:
                 return True
         with suppress(ValueError, TypeError):
-            if "currentProgram" in props and int(props.currentProgram) != 0:
+            if "currentProgram" in props and int(props.get("currentProgram")) != 0:
                 return True
         with suppress(ValueError, TypeError):
-            if "currentProgramID" in props and int(props.currentProgramID) != 0:
+            if "currentProgramID" in props and int(props.get("currentProgramID")) != 0:
                 return True
 
         return False
@@ -177,18 +179,20 @@ class FibaroLight(FibaroDevice, LightEntity):
         """Really update the state."""
         # Brightness handling
         if brightness_supported(self.supported_color_modes):
-            self._attr_brightness = scaleto255(int(self.fibaro_device.properties.value))
+            self._attr_brightness = scaleto255(
+                int(self.fibaro_device.properties.get("value"))
+            )
 
         # Color handling
         if (
             color_supported(self.supported_color_modes)
             and "color" in self.fibaro_device.properties
-            and "," in self.fibaro_device.properties.color
+            and "," in self.fibaro_device.properties.get("color")
         ):
             # Fibaro communicates the color as an 'R, G, B, W' string
-            rgbw_s = self.fibaro_device.properties.color
+            rgbw_s = self.fibaro_device.properties.get("color")
             if rgbw_s == "0,0,0,0" and "lastColorSet" in self.fibaro_device.properties:
-                rgbw_s = self.fibaro_device.properties.lastColorSet
+                rgbw_s = self.fibaro_device.properties.get("lastColorSet")
             rgbw_list = [int(i) for i in rgbw_s.split(",")][:4]
 
             if self._attr_color_mode == ColorMode.RGB:
