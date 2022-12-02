@@ -27,7 +27,7 @@ async def system_health_info(hass: HomeAssistant):
     supervisor_info = get_supervisor_info(hass)
 
     healthy: bool | dict[str, str]
-    if supervisor_info.get("healthy"):
+    if supervisor_info is not None and supervisor_info.get("healthy"):
         healthy = True
     else:
         healthy = {
@@ -36,7 +36,7 @@ async def system_health_info(hass: HomeAssistant):
         }
 
     supported: bool | dict[str, str]
-    if supervisor_info.get("supported"):
+    if supervisor_info is not None and supervisor_info.get("supported"):
         supported = True
     else:
         supported = {
@@ -70,7 +70,7 @@ async def system_health_info(hass: HomeAssistant):
 
     information["installed_addons"] = ", ".join(
         f"{addon['name']} ({addon['version']})"
-        for addon in supervisor_info.get("addons", [])
+        for addon in (supervisor_info or {}).get("addons", [])
     )
 
     return information

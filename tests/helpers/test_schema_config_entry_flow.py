@@ -17,6 +17,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowError,
     SchemaFlowFormStep,
     SchemaFlowMenuStep,
+    SchemaOptionsFlowHandler,
     wrapped_entity_config_entry_title,
 )
 from homeassistant.util.decorator import Registry
@@ -302,9 +303,12 @@ async def test_menu_step(hass: HomeAssistant) -> None:
     MENU_1 = ["option1", "option2"]
     MENU_2 = ["option3", "option4"]
 
+    async def _option1_next_step(_: dict[str, Any]) -> str:
+        return "menu2"
+
     CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
         "user": SchemaFlowMenuStep(MENU_1),
-        "option1": SchemaFlowFormStep(vol.Schema({}), next_step=lambda _: "menu2"),
+        "option1": SchemaFlowFormStep(vol.Schema({}), next_step=_option1_next_step),
         "menu2": SchemaFlowMenuStep(MENU_2),
         "option3": SchemaFlowFormStep(vol.Schema({}), next_step="option4"),
         "option4": SchemaFlowFormStep(vol.Schema({})),
@@ -383,10 +387,13 @@ async def test_schema_none(hass: HomeAssistant) -> None:
 async def test_last_step(hass: HomeAssistant) -> None:
     """Test SchemaFlowFormStep with schema set to None."""
 
+    async def _step2_next_step(_: dict[str, Any]) -> str:
+        return "step3"
+
     CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
         "user": SchemaFlowFormStep(next_step="step1"),
         "step1": SchemaFlowFormStep(vol.Schema({}), next_step="step2"),
-        "step2": SchemaFlowFormStep(vol.Schema({}), next_step=lambda _: "step3"),
+        "step2": SchemaFlowFormStep(vol.Schema({}), next_step=_step2_next_step),
         "step3": SchemaFlowFormStep(vol.Schema({}), next_step=None),
     }
 
@@ -421,10 +428,16 @@ async def test_last_step(hass: HomeAssistant) -> None:
 async def test_next_step_function(hass: HomeAssistant) -> None:
     """Test SchemaFlowFormStep with a next_step function."""
 
+    async def _step1_next_step(_: dict[str, Any]) -> str:
+        return "step2"
+
+    async def _step2_next_step(_: dict[str, Any]) -> None:
+        return None
+
     CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
         "user": SchemaFlowFormStep(next_step="step1"),
-        "step1": SchemaFlowFormStep(vol.Schema({}), next_step=lambda _: "step2"),
-        "step2": SchemaFlowFormStep(vol.Schema({}), next_step=lambda _: None),
+        "step1": SchemaFlowFormStep(vol.Schema({}), next_step=_step1_next_step),
+        "step2": SchemaFlowFormStep(vol.Schema({}), next_step=_step2_next_step),
     }
 
     class TestConfigFlow(SchemaConfigFlowHandler, domain=TEST_DOMAIN):
@@ -458,19 +471,22 @@ async def test_suggested_values(
         {vol.Optional("option1", default="a very reasonable default"): str}
     )
 
-    def _validate_user_input(
+    async def _validate_user_input(
         handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
     ) -> dict[str, Any]:
         if user_input["option1"] == "not a valid value":
             raise SchemaFlowError("option1 not using a valid value")
         return user_input
 
+    async def _step_2_suggested_values(_: SchemaCommonFlowHandler) -> dict[str, Any]:
+        return {"option1": "a random override"}
+
     OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
         "init": SchemaFlowFormStep(OPTIONS_SCHEMA, next_step="step_1"),
         "step_1": SchemaFlowFormStep(OPTIONS_SCHEMA, next_step="step_2"),
         "step_2": SchemaFlowFormStep(
             OPTIONS_SCHEMA,
-            suggested_values=lambda _: {"option1": "a random override"},
+            suggested_values=_step_2_suggested_values,
             next_step="step_3",
         ),
         "step_3": SchemaFlowFormStep(
@@ -555,3 +571,79 @@ async def test_suggested_values(
         result["flow_id"], {"option1": "blabla"}
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+
+
+async def test_options_flow_state(hass: HomeAssistant) -> None:
+    """Test flow_state handling in SchemaFlowFormStep."""
+
+    OPTIONS_SCHEMA = vol.Schema(
+        {vol.Optional("option1", default="a very reasonable default"): str}
+    )
+
+    async def _init_schema(handler: SchemaCommonFlowHandler) -> None:
+        handler.flow_state["idx"] = None
+
+    async def _validate_step1_input(
+        handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+    ) -> dict[str, Any]:
+        handler.flow_state["idx"] = user_input["option1"]
+        return user_input
+
+    async def _validate_step2_input(
+        handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+    ) -> dict[str, Any]:
+        user_input["idx_from_flow_state"] = handler.flow_state["idx"]
+        return user_input
+
+    OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+        "init": SchemaFlowFormStep(_init_schema, next_step="step_1"),
+        "step_1": SchemaFlowFormStep(
+            OPTIONS_SCHEMA,
+            validate_user_input=_validate_step1_input,
+            next_step="step_2",
+        ),
+        "step_2": SchemaFlowFormStep(
+            OPTIONS_SCHEMA,
+            validate_user_input=_validate_step2_input,
+        ),
+    }
+
+    class TestFlow(SchemaConfigFlowHandler, domain="test"):
+        config_flow = {}
+        options_flow = OPTIONS_FLOW
+
+    config_entry = MockConfigEntry(
+        data={},
+        domain="test",
+        options={"option1": "initial value"},
+    )
+    config_entry.add_to_hass(hass)
+
+    # Start flow in basic mode, flow state is initialised with None value
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "step_1"
+
+    options_handler: SchemaOptionsFlowHandler
+    options_handler = hass.config_entries.options._progress[result["flow_id"]]
+    assert options_handler._common_handler.flow_state == {"idx": None}
+
+    # In step 1, flow state is updated with user input
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"option1": "blublu"}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "step_2"
+
+    options_handler = hass.config_entries.options._progress[result["flow_id"]]
+    assert options_handler._common_handler.flow_state == {"idx": "blublu"}
+
+    # In step 2, options were updated from flow state
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"option1": "blabla"}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "idx_from_flow_state": "blublu",
+        "option1": "blabla",
+    }

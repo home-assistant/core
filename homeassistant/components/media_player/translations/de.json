@@ -21,7 +21,7 @@
     "state": {
         "_": {
             "buffering": "Puffern",
-            "idle": "inaktiv",
+            "idle": "Inaktiv",
             "off": "Aus",
             "on": "An",
             "paused": "Pausiert",

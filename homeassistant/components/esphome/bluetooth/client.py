@@ -296,7 +296,7 @@ class ESPHomeClient(BaseBleakClient):
                         address_type=self._address_type,
                     )
                 )
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 with contextlib.suppress(BleakError):
                     # If the connect call throws an exception,
                     # we need to make sure we await the future

@@ -94,13 +94,6 @@
                 },
                 "description": "Sisesta oma IP secure teave."
             },
-            "secure_tunneling": {
-                "description": "Vali kuidas soovid KNX/IP Secure'i seadistada.",
-                "menu_options": {
-                    "secure_knxkeys": "Kasuta knxkeys fail, mis sisaldab IP Secure teavet.",
-                    "secure_tunnel_manual": "IP Secure v\u00f5tmete k\u00e4sitsi seadistamine"
-                }
-            },
             "tunnel": {
                 "data": {
                     "gateway": "KNX tunneli \u00fchendus"
@@ -215,13 +208,6 @@
                     "user_password": "Konkreetse tunneli\u00fchenduse parool, mis on m\u00e4\u00e4ratud ETS-i tunneli paneelil \u201eAtribuudid\u201d."
                 },
                 "description": "Sisesta IP secure teave."
-            },
-            "secure_tunneling": {
-                "description": "Vali kuidas seadistada KNX/IP Secure",
-                "menu_options": {
-                    "secure_knxkeys": "Kasuta IP secure jaoks kirjet '.knxkeys'",
-                    "secure_tunnel_manual": "Seadista IP secure v\u00f5tmed k\u00e4sitsi"
-                }
             },
             "tunnel": {
                 "data": {

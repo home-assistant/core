@@ -271,7 +271,7 @@ def get_store(hass):
 
 @callback
 @bind_hass
-def get_supervisor_info(hass):
+def get_supervisor_info(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return Supervisor information.
 
     Async friendly.
@@ -719,7 +719,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"Error on Supervisor API: {err}") from err
 
         new_data: dict[str, Any] = {}
-        supervisor_info = get_supervisor_info(self.hass)
+        supervisor_info = get_supervisor_info(self.hass) or {}
         addons_info = get_addons_info(self.hass)
         addons_stats = get_addons_stats(self.hass)
         addons_changelogs = get_addons_changelogs(self.hass)

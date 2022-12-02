@@ -13,7 +13,7 @@
         "step": {
             "setup_network": {
                 "data": {
-                    "dsmr_version": "DSMR-Version ausw\u00e4hlen",
+                    "dsmr_version": "DSMR Version ausw\u00e4hlen",
                     "host": "Host",
                     "port": "Port"
                 },
@@ -21,7 +21,7 @@
             },
             "setup_serial": {
                 "data": {
-                    "dsmr_version": "DSMR-Version ausw\u00e4hlen",
+                    "dsmr_version": "DSMR Version ausw\u00e4hlen",
                     "port": "Ger\u00e4t w\u00e4hlen"
                 },
                 "title": "Ger\u00e4t"
