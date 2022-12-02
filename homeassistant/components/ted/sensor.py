@@ -9,7 +9,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import ELECTRIC_POTENTIAL_VOLT, ENERGY_WATT_HOUR, POWER_WATT
+from homeassistant.const import ELECTRIC_POTENTIAL_VOLT, UnitOfEnergy, UnitOfPower
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import COORDINATOR, DOMAIN, NAME, OPTION_DEFAULTS
@@ -17,40 +17,46 @@ from .const import COORDINATOR, DOMAIN, NAME, OPTION_DEFAULTS
 _LOGGER = logging.getLogger(__name__)
 
 
-def sensors(prefix, stype):
+def sensors(prefix, stype, is_net):
     """Return a list of sensors with given key prefix and type (Production / Consumption)."""
+    if is_net:  # If the sensor represents a net energy
+        total_state_class = SensorStateClass.TOTAL
+    else:
+        total_state_class = SensorStateClass.TOTAL_INCREASING
     return [
         SensorEntityDescription(
             key=f"{prefix}_now",
             name=f"Current {stype}",
-            native_unit_of_measurement=POWER_WATT,
+            native_unit_of_measurement=UnitOfPower.WATT,
             state_class=SensorStateClass.MEASUREMENT,
+            device_class=SensorDeviceClass.POWER,
         ),
         SensorEntityDescription(
             key=f"{prefix}_daily",
             name=f"Today's {stype}",
-            native_unit_of_measurement=ENERGY_WATT_HOUR,
-            state_class=SensorStateClass.TOTAL_INCREASING,
+            native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+            state_class=total_state_class,
             device_class=SensorDeviceClass.ENERGY,
         ),
         SensorEntityDescription(
             key=f"{prefix}_mtd",
             name=f"Month to Date {stype}",
-            native_unit_of_measurement=ENERGY_WATT_HOUR,
-            state_class=SensorStateClass.TOTAL_INCREASING,
+            native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+            state_class=total_state_class,
             device_class=SensorDeviceClass.ENERGY,
         ),
     ]
 
 
-def mtu_sensors(stype):
+def mtu_sensors(stype, is_net):
     """Return a list of mtu sensors with given key prefix and type (Production / Consumption)."""
     return [
-        *sensors("mtu_energy", stype),
+        *sensors("mtu_energy", stype, is_net),
         SensorEntityDescription(
             key="mtu_power_voltage",
             name="Voltage",
             native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            device_class=SensorDeviceClass.VOLTAGE,
         ),
     ]
 
@@ -64,15 +70,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entity_registry = hass.helpers.entity_registry.async_get(hass)
     config_id = config_entry.unique_id
     entities = []
-    for desc in sensors("consumption", "Energy Consumption"):
+    for desc in sensors("consumption", "Energy Usage", False):
         name = f"{config_name} {desc.name}"
         entities.append(TedSensor(desc, name, config_id, coordinator))
 
     if coordinator.data["type"] != SystemType.NET:
-        for desc in sensors("net", "Net Energy"):
+        for desc in sensors("net", "Net Grid Energy", True):
             name = f"{config_name} {desc.name}"
             entities.append(TedSensor(desc, name, config_id, coordinator))
-        for desc in sensors("production", "Energy Production"):
+        for desc in sensors("production", "Energy Production", False):
             name = f"{config_name} {desc.name}"
             entities.append(TedSensor(desc, name, config_id, coordinator))
 
@@ -80,7 +86,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     for spyder_id, spyder in coordinator.data["spyders"].items():
         spyder_name = spyder["name"]
-        for sensor_description in sensors("spyder_energy", "Energy Consumption"):
+        for sensor_description in sensors("spyder_energy", "Energy Usage", False):
             entity_name = f"{spyder_name} {sensor_description.name}"
             option_entities.append(
                 TedBreakdownSensor(
@@ -95,13 +101,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     for mtu_id, mtu in coordinator.data["mtus"].items():
         mtu_name = mtu["name"]
+        is_net = False
         if mtu["type"] == MtuType.LOAD:
-            stype = "Energy Consumption"
+            stype = "Energy Usage"
         elif mtu["type"] == MtuType.GENERATION:
             stype = "Energy Production"
         else:
-            stype = "Net Energy"
-        for sensor_description in mtu_sensors(stype):
+            stype = "Net Grid Energy"
+            is_net = True
+        for sensor_description in mtu_sensors(stype, is_net):
             entity_name = f"{mtu_name} {sensor_description.name}"
             option_entities.append(
                 TedBreakdownSensor(
