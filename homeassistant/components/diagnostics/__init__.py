@@ -215,13 +215,13 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
         """Download diagnostics."""
         # Validate d_type and sub_type
         try:
-            d_type = DiagnosticsType(d_type)
+            DiagnosticsType(d_type)
         except ValueError:
             return web.Response(status=HTTPStatus.BAD_REQUEST)
 
         if sub_type is not None:
             try:
-                sub_type = DiagnosticsSubType(sub_type)
+                DiagnosticsSubType(sub_type)
             except ValueError:
                 return web.Response(status=HTTPStatus.BAD_REQUEST)
 
