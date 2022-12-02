@@ -288,11 +288,13 @@ class TwinklyLight(LightEntity):
     async def async_update_movies(self) -> None:
         """Update the list of movies (effects)."""
         movies = await self._client.get_saved_movies()
-        if "movies" in movies:
+        _LOGGER.debug("Movies: %s", movies)
+        if movies and "movies" in movies:
             self._movies = movies["movies"]
 
     async def async_update_current_movie(self) -> None:
         """Update the current active movie."""
         current_movie = await self._client.get_current_movie()
-        if "id" in current_movie:
+        _LOGGER.debug("Current movie: %s", current_movie)
+        if current_movie and "id" in current_movie:
             self._current_movie = current_movie
