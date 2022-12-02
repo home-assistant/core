@@ -559,6 +559,15 @@ async def test_reauth_confirm_invalid(hass, mock_client, mock_zeroconf):
     assert result["errors"]
     assert result["errors"]["base"] == "invalid_psk"
 
+    mock_client.device_info = AsyncMock(return_value=MockDeviceInfo(False, "test"))
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
+
 
 async def test_discovery_dhcp_updates_host(hass, mock_client):
     """Test dhcp discovery updates host and aborts."""
