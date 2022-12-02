@@ -160,7 +160,7 @@ def mock_controller_connect(mock_devices, mock_available_temps):
 
 @pytest.fixture(name="connect_sens_fail")
 def mock_controller_connect_sens_fail():
-    """Mock a successful connection using AsusWrt library with sensors fail."""
+    """Mock a successful connection using AsusWrt library with sensors failing."""
     with patch(ASUSWRT_LIB) as service_mock:
         service_mock.return_value.connection.async_connect = AsyncMock()
         service_mock.return_value.is_connected = True
@@ -260,7 +260,7 @@ async def test_sensors(
     assert hass.states.get(f"{sensor_prefix}_upload").state == "50.0"
     assert hass.states.get(f"{sensor_prefix}_devices_connected").state == "2"
 
-    # remove first track device
+    # remove first tracked device
     mock_devices.pop(MOCK_MAC_1)
 
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
@@ -271,11 +271,11 @@ async def test_sensors(
     assert hass.states.get(f"{device_tracker.DOMAIN}.testtwo").state == STATE_HOME
     assert hass.states.get(f"{sensor_prefix}_devices_connected").state == "1"
 
-    # add 2 new device, one unnamed that should be ignored but counted
+    # add 2 new devices, one unnamed that should be ignored but counted
     mock_devices[MOCK_MAC_3] = new_device(MOCK_MAC_3, "192.168.1.4", "TestThree")
     mock_devices[MOCK_MAC_4] = new_device(MOCK_MAC_4, "192.168.1.5", None)
 
-    # change consider home settings to have status not home of removed track device
+    # change consider home settings to have status not home of removed tracked device
     hass.config_entries.async_update_entry(
         config_entry, options={CONF_CONSIDER_HOME: 0}
     )
@@ -409,7 +409,7 @@ async def test_options_reload(hass, connect):
     await hass.async_block_till_done()
 
     with PATCH_SETUP_ENTRY as setup_entry_call:
-        # change an option that require integration reload
+        # change an option that requires integration reload
         hass.config_entries.async_update_entry(
             config_entry, options={CONF_INTERFACE: "eth1"}
         )
