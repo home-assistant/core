@@ -116,6 +116,7 @@ class OpenUvCoordinator(DataUpdateCoordinator):
             data = await self.update_method()
         except InvalidApiKeyError:
             await self._invalid_api_key_monitor.async_increment()
+            return {}
         except OpenUvError as err:
             raise UpdateFailed(f"Error during protection data update: {err}") from err
 
