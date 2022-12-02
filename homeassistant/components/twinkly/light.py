@@ -184,15 +184,31 @@ class TwinklyLight(LightEntity):
                     await self._client.interview()
                     if LightEntityFeature.EFFECT in self.supported_features:
                         # Static color only supports rgb
-                        await self._client.set_static_colour(
-                            (
-                                self._attr_rgbw_color[0],
-                                self._attr_rgbw_color[1],
-                                self._attr_rgbw_color[2],
+                        try:
+                            await self._client.set_static_colour(
+                                (
+                                    self._attr_rgbw_color[0],
+                                    self._attr_rgbw_color[1],
+                                    self._attr_rgbw_color[2],
+                                )
                             )
-                        )
-                        await self._client.set_mode("color")
-                        self._client.default_mode = "color"
+                            await self._client.set_mode("color")
+                            self._client.default_mode = "color"
+                        except ClientResponseError as error:
+                            if error.status == HTTPNotFound().status:
+                                self._attr_supported_features = (
+                                    self.supported_features & ~LightEntityFeature.EFFECT
+                                )
+                                await self._client.set_cycle_colours(
+                                    (
+                                        self._attr_rgbw_color[3],
+                                        self._attr_rgbw_color[0],
+                                        self._attr_rgbw_color[1],
+                                        self._attr_rgbw_color[2],
+                                    )
+                                )
+                            await self._client.set_mode("movie")
+                            self._client.default_mode = "movie"
                     else:
                         await self._client.set_cycle_colours(
                             (
@@ -213,9 +229,20 @@ class TwinklyLight(LightEntity):
 
                     await self._client.interview()
                     if LightEntityFeature.EFFECT in self.supported_features:
-                        await self._client.set_static_colour(self._attr_rgb_color)
-                        await self._client.set_mode("color")
-                        self._client.default_mode = "color"
+                        try:
+                            await self._client.set_static_colour(self._attr_rgb_color)
+                            await self._client.set_mode("color")
+                            self._client.default_mode = "color"
+                        except ClientResponseError as error:
+                            if error.status == HTTPNotFound().status:
+                                self._attr_supported_features = (
+                                    self.supported_features & ~LightEntityFeature.EFFECT
+                                )
+                                await self._client.set_cycle_colours(
+                                    self._attr_rgb_color
+                                )
+                                await self._client.set_mode("movie")
+                                self._client.default_mode = "movie"
                     else:
                         await self._client.set_cycle_colours(self._attr_rgb_color)
                         await self._client.set_mode("movie")
