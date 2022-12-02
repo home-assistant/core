@@ -2,6 +2,7 @@
 import logging
 
 import lupupy
+from lupupy.exceptions import LupusecException
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
@@ -55,7 +56,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     try:
         hass.data[DOMAIN] = LupusecSystem(username, password, ip_address, name)
-    except Exception as ex:
+    except LupusecException as ex:
         _LOGGER.error(ex)
 
         persistent_notification.create(
