@@ -343,7 +343,6 @@ class TwinklyLight(LightEntity):
                 self._attr_supported_features = (
                     self.supported_features & ~LightEntityFeature.EFFECT
                 )
-                print(f"Supported features: {self.supported_features}")
 
     async def async_update_current_movie(self) -> None:
         """Update the current active movie."""
