@@ -38,40 +38,6 @@ PERSISTENCE = ".shopping_list.json"
 SERVICE_ITEM_SCHEMA = vol.Schema({vol.Required(ATTR_NAME): cv.string})
 SERVICE_LIST_SCHEMA = vol.Schema({})
 
-WS_TYPE_SHOPPING_LIST_ITEMS = "shopping_list/items"
-WS_TYPE_SHOPPING_LIST_ADD_ITEM = "shopping_list/items/add"
-WS_TYPE_SHOPPING_LIST_REMOVE_ITEM = "shopping_list/items/remove"
-WS_TYPE_SHOPPING_LIST_UPDATE_ITEM = "shopping_list/items/update"
-WS_TYPE_SHOPPING_LIST_CLEAR_ITEMS = "shopping_list/items/clear"
-
-SCHEMA_WEBSOCKET_ITEMS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_SHOPPING_LIST_ITEMS}
-)
-
-SCHEMA_WEBSOCKET_ADD_ITEM = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_SHOPPING_LIST_ADD_ITEM, vol.Required("name"): str}
-)
-
-SCHEMA_WEBSOCKET_REMOVE_ITEM = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {
-        vol.Required("type"): WS_TYPE_SHOPPING_LIST_REMOVE_ITEM,
-        vol.Required("item_id"): str,
-    }
-)
-
-SCHEMA_WEBSOCKET_UPDATE_ITEM = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {
-        vol.Required("type"): WS_TYPE_SHOPPING_LIST_UPDATE_ITEM,
-        vol.Required("item_id"): str,
-        vol.Optional("name"): str,
-        vol.Optional("complete"): bool,
-    }
-)
-
-SCHEMA_WEBSOCKET_CLEAR_ITEMS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_SHOPPING_LIST_CLEAR_ITEMS}
-)
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the shopping list."""
@@ -190,40 +156,18 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         hass, "shopping-list", "shopping_list", "mdi:cart"
     )
 
-    websocket_api.async_register_command(
-        hass,
-        WS_TYPE_SHOPPING_LIST_ITEMS,
-        websocket_handle_items,
-        SCHEMA_WEBSOCKET_ITEMS,
-    )
-    websocket_api.async_register_command(
-        hass,
-        WS_TYPE_SHOPPING_LIST_ADD_ITEM,
-        websocket_handle_add,
-        SCHEMA_WEBSOCKET_ADD_ITEM,
-    )
-    websocket_api.async_register_command(
-        hass,
-        WS_TYPE_SHOPPING_LIST_REMOVE_ITEM,
-        websocket_handle_remove,
-        SCHEMA_WEBSOCKET_REMOVE_ITEM,
-    )
-    websocket_api.async_register_command(
-        hass,
-        WS_TYPE_SHOPPING_LIST_UPDATE_ITEM,
-        websocket_handle_update,
-        SCHEMA_WEBSOCKET_UPDATE_ITEM,
-    )
-    websocket_api.async_register_command(
-        hass,
-        WS_TYPE_SHOPPING_LIST_CLEAR_ITEMS,
-        websocket_handle_clear,
-        SCHEMA_WEBSOCKET_CLEAR_ITEMS,
-    )
-
+    websocket_api.async_register_command(hass, websocket_handle_items)
+    websocket_api.async_register_command(hass, websocket_handle_add)
+    websocket_api.async_register_command(hass, websocket_handle_remove)
+    websocket_api.async_register_command(hass, websocket_handle_update)
+    websocket_api.async_register_command(hass, websocket_handle_clear)
     websocket_api.async_register_command(hass, websocket_handle_reorder)
 
     return True
+
+
+class NoMatchingShoppingListItem(Exception):
+    """No matching item could be found in the shopping list."""
 
 
 class ShoppingData:
@@ -251,7 +195,7 @@ class ShoppingData:
         item = next((itm for itm in self.items if itm["id"] == item_id), None)
 
         if item is None:
-            raise KeyError
+            raise NoMatchingShoppingListItem
 
         self.items.remove(item)
         await self.hass.async_add_executor_job(self.save)
@@ -267,7 +211,7 @@ class ShoppingData:
         item = next((itm for itm in self.items if itm["id"] == item_id), None)
 
         if item is None:
-            raise KeyError
+            raise NoMatchingShoppingListItem
 
         info = ITEM_UPDATE_SCHEMA(info)
         item.update(info)
@@ -310,7 +254,7 @@ class ShoppingData:
         # Append items by the order of passed in array.
         for item_id in item_ids:
             if item_id not in all_items_mapping:
-                raise KeyError
+                raise NoMatchingShoppingListItem
             new_items.append(all_items_mapping[item_id])
             # Remove the item from mapping after it's appended in the result array.
             del all_items_mapping[item_id]
@@ -370,7 +314,7 @@ class UpdateShoppingListItemView(http.HomeAssistantView):
         try:
             item = await request.app["hass"].data[DOMAIN].async_update(item_id, data)
             return self.json(item)
-        except KeyError:
+        except NoMatchingShoppingListItem:
             return self.json_message("Item not found", HTTPStatus.NOT_FOUND)
         except vol.Invalid:
             return self.json_message("Item not found", HTTPStatus.BAD_REQUEST)
@@ -403,6 +347,7 @@ class ClearCompletedItemsView(http.HomeAssistantView):
 
 
 @callback
+@websocket_api.websocket_command({vol.Required("type"): "shopping_list/items"})
 def websocket_handle_items(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
@@ -414,6 +359,9 @@ def websocket_handle_items(
     )
 
 
+@websocket_api.websocket_command(
+    {vol.Required("type"): "shopping_list/items/add", vol.Required("name"): str}
+)
 @websocket_api.async_response
 async def websocket_handle_add(
     hass: HomeAssistant,
@@ -425,6 +373,9 @@ async def websocket_handle_add(
     connection.send_message(websocket_api.result_message(msg["id"], item))
 
 
+@websocket_api.websocket_command(
+    {vol.Required("type"): "shopping_list/items/remove", vol.Required("item_id"): str}
+)
 @websocket_api.async_response
 async def websocket_handle_remove(
     hass: HomeAssistant,
@@ -438,13 +389,23 @@ async def websocket_handle_remove(
 
     try:
         item = await hass.data[DOMAIN].async_remove(item_id, connection.context(msg))
-        connection.send_message(websocket_api.result_message(msg_id, item))
-    except KeyError:
+    except NoMatchingShoppingListItem:
         connection.send_message(
             websocket_api.error_message(msg_id, "item_not_found", "Item not found")
         )
+        return
+
+    connection.send_message(websocket_api.result_message(msg_id, item))
 
 
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "shopping_list/items/update",
+        vol.Required("item_id"): str,
+        vol.Optional("name"): str,
+        vol.Optional("complete"): bool,
+    }
+)
 @websocket_api.async_response
 async def websocket_handle_update(
     hass: HomeAssistant,
@@ -461,13 +422,16 @@ async def websocket_handle_update(
         item = await hass.data[DOMAIN].async_update(
             item_id, data, connection.context(msg)
         )
-        connection.send_message(websocket_api.result_message(msg_id, item))
-    except KeyError:
+    except NoMatchingShoppingListItem:
         connection.send_message(
             websocket_api.error_message(msg_id, "item_not_found", "Item not found")
         )
+        return
+
+    connection.send_message(websocket_api.result_message(msg_id, item))
 
 
+@websocket_api.websocket_command({vol.Required("type"): "shopping_list/items/clear"})
 @websocket_api.async_response
 async def websocket_handle_clear(
     hass: HomeAssistant,
@@ -494,12 +458,15 @@ def websocket_handle_reorder(
     msg_id = msg.pop("id")
     try:
         hass.data[DOMAIN].async_reorder(msg.pop("item_ids"), connection.context(msg))
-        connection.send_result(msg_id)
-    except KeyError:
+    except NoMatchingShoppingListItem:
         connection.send_error(
             msg_id,
             websocket_api.const.ERR_NOT_FOUND,
             "One or more item id(s) not found.",
         )
+        return
     except vol.Invalid as err:
         connection.send_error(msg_id, websocket_api.const.ERR_INVALID_FORMAT, f"{err}")
+        return
+
+    connection.send_result(msg_id)
