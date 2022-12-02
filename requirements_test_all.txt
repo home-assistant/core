@@ -1080,7 +1080,7 @@ pycfdns==2.0.1
 pychromecast==13.0.1
 
 # homeassistant.components.comfoconnect
-pycomfoconnect==0.4
+pycomfoconnect==0.5
 
 # homeassistant.components.coolmaster
 pycoolmasternet-async==0.1.2
