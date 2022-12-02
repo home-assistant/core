@@ -1,6 +1,7 @@
 """Define fixtures for PurpleAir tests."""
 from unittest.mock import AsyncMock, patch
 
+from aiopurpleair.endpoints.sensors import NearbySensorResult
 from aiopurpleair.models.sensors import GetSensorsResponse
 import pytest
 
@@ -44,7 +45,12 @@ def config_entry_options_fixture():
 @pytest.fixture(name="get_nearby_sensors")
 def get_nearby_sensors_fixture(get_sensors_response):
     """Define a mocked API.sensors.async_get_nearby_sensors."""
-    return AsyncMock(return_value=list(get_sensors_response.data.values()))
+    return AsyncMock(
+        return_value=[
+            NearbySensorResult(sensor=sensor, distance=1.0)
+            for sensor in get_sensors_response.data.values()
+        ]
+    )
 
 
 @pytest.fixture(name="get_sensors")

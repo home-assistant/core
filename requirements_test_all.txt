@@ -213,7 +213,7 @@ aioopenexchangerates==0.4.0
 aiopulse==0.4.3
 
 # homeassistant.components.purpleair
-aiopurpleair==2022.11.2
+aiopurpleair==2022.12.0
 
 # homeassistant.components.hunterdouglas_powerview
 aiopvapi==2.0.4

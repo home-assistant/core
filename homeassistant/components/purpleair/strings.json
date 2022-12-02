@@ -14,6 +14,15 @@
           "distance": "The radius (in kilometers) of the circle to search within"
         }
       },
+      "choose_sensor": {
+        "description": "Which of the nearby sensors would you like to track?",
+        "data": {
+          "sensor_index": "Sensor"
+        },
+        "data_description": {
+          "sensor_index": "The sensor to track"
+        }
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"

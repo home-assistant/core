@@ -22,6 +22,15 @@
                 },
                 "description": "Search for a PurpleAir sensor within a certain distance of a latitude/longitude."
             },
+            "choose_sensor": {
+                "data": {
+                    "sensor_index": "Sensor"
+                },
+                "data_description": {
+                    "sensor_index": "The sensor to track"
+                },
+                "description": "Which of the nearby sensors would you like to track?"
+            },
             "user": {
                 "data": {
                     "api_key": "API Key"
