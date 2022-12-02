@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -73,7 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Register device
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         name=entry.title,
         manufacturer="HomeWizard",
@@ -81,6 +81,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         model=coordinator.data["device"].product_type,
         identifiers={(DOMAIN, coordinator.data["device"].serial)},
     )
+
+    @callback
+    def _async_detect_firmware_update() -> None:
+        """Detect firmware version and reload config_entry when device is updated."""
+        if not coordinator.last_update_success:
+            return
+
+        if (
+            coordinator.data is None
+            or coordinator.data["device"] is None
+            or coordinator.data["device"].firmware_version is None
+        ):
+            return
+
+        if device_entry.sw_version != coordinator.data["device"].firmware_version:
+            hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+
+    entry.async_on_unload(coordinator.async_add_listener(_async_detect_firmware_update))
 
     # Finalize
     hass.data.setdefault(DOMAIN, {})
