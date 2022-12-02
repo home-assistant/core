@@ -100,20 +100,17 @@ def handle_info(
 ) -> None:
     """List all possible diagnostic handlers."""
     diagnostics_data: DiagnosticsData = hass.data[DOMAIN]
-    connection.send_result(
-        msg["id"],
-        [
-            {
-                "domain": domain,
-                "handlers": {
-                    DiagnosticsType.CONFIG_ENTRY: info.config_entry_diagnostics
-                    is not None,
-                    DiagnosticsSubType.DEVICE: info.device_diagnostics is not None,
-                },
-            }
-            for domain, info in diagnostics_data.platforms.items()
-        ],
-    )
+    result = [
+        {
+            "domain": domain,
+            "handlers": {
+                DiagnosticsType.CONFIG_ENTRY: info.config_entry_diagnostics is not None,
+                DiagnosticsSubType.DEVICE: info.device_diagnostics is not None,
+            },
+        }
+        for domain, info in diagnostics_data.platforms.items()
+    ]
+    connection.send_result(msg["id"], result)
 
 
 @websocket_api.require_admin
