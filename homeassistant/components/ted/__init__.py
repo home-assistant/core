@@ -17,6 +17,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import COORDINATOR, DOMAIN, NAME, PLATFORMS
 
 SCAN_INTERVAL = timedelta(seconds=60)
+TIMEOUT = 50  # 10 seconds less than the scan interval
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     config = entry.data
     name = config[CONF_NAME]
 
-    async with async_timeout.timeout(10):
+    async with async_timeout.timeout(TIMEOUT):
         ted_reader = await tedpy.createTED(
             config[CONF_HOST],
             async_client=get_async_client(hass),
@@ -35,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_update_data():
         """Fetch data from API endpoint."""
         data = {}
-        async with async_timeout.timeout(10):
+        async with async_timeout.timeout(TIMEOUT):
             try:
                 await ted_reader.update()
             except httpx.HTTPError as err:
