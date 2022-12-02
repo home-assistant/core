@@ -199,6 +199,41 @@ async def test_load_detect_api_disabled(aioclient_mock, hass):
     assert flow["context"].get("entry_id") == entry.entry_id
 
 
+async def test_load_removes_reauth_flow(aioclient_mock, hass):
+    """Test setup removes reauth flow when API is enabled."""
+
+    device = get_mock_device()
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_IP_ADDRESS: "1.1.1.1"},
+        unique_id=DOMAIN,
+    )
+    entry.add_to_hass(hass)
+
+    # Add reauth flow from 'previously' failed init
+    entry.async_start_reauth(hass)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+
+    # Initialize entry
+    with patch(
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
+        return_value=device,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    # Flow should be removed
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 0
+
+
 async def test_load_handles_homewizardenergy_exception(aioclient_mock, hass):
     """Test setup handles exception from API."""
 
