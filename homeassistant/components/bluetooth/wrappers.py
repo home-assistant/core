@@ -231,6 +231,16 @@ class HaBleakClientWrapper(BleakClient):
             or NO_RSSI_VALUE,
             reverse=True,
         ):
+            _LOGGER.debug(
+                "Trying backend %s for device=%s rssi=%s",
+                (
+                    device_advertisement_data[0].details
+                    if isinstance(device_advertisement_data[0].details, dict)
+                    else {}
+                ).get("source"),
+                device_advertisement_data[0],
+                device_advertisement_data[1].rssi,
+            )
             if backend := self._async_get_backend_for_ble_device(
                 device_advertisement_data[0]
             ):
