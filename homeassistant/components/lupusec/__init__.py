@@ -2,7 +2,6 @@
 import logging
 
 import lupupy
-from lupupy.exceptions import LupusecException
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
