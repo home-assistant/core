@@ -318,6 +318,14 @@ class TwinklyLight(LightEntity):
                 if key not in HIDDEN_DEV_VALUES:
                     self._attributes[key] = value
 
+            if (
+                "max_movies" not in device_info
+                and LightEntityFeature.EFFECT in self.supported_features
+            ):
+                self._attr_supported_features = (
+                    self.supported_features & ~LightEntityFeature.EFFECT
+                )
+
             if LightEntityFeature.EFFECT in self.supported_features:
                 await self.async_update_movies()
                 await self.async_update_current_movie()
