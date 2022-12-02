@@ -142,7 +142,9 @@ class ESPHomeClient(BaseBleakClient):
         self._is_connected = False
         self._mtu: int | None = None
         self._cancel_connection_state: CALLBACK_TYPE | None = None
-        self._notify_cancels: dict[int, Callable[[], Coroutine[Any, Any, None]]] = {}
+        self._notify_cancels: dict[
+            int, tuple[Callable[[], Coroutine[Any, Any, None]], Callable[[], None]]
+        ] = {}
         self._disconnected_event: asyncio.Event | None = None
         device_info = self.entry_data.device_info
         assert device_info is not None
@@ -174,6 +176,8 @@ class ESPHomeClient(BaseBleakClient):
         was_connected = self._is_connected
         self.services = BleakGATTServiceCollection()  # type: ignore[no-untyped-call]
         self._is_connected = False
+        for _, notify_abort in self._notify_cancels.values():
+            notify_abort()
         self._notify_cancels.clear()
         if self._disconnected_event:
             self._disconnected_event.set()
@@ -551,12 +555,13 @@ class ESPHomeClient(BaseBleakClient):
                 f"Characteristic {characteristic.uuid} does not have notify or indicate property set."
             )
 
-        cancel_coro = await self._client.bluetooth_gatt_start_notify(
+        self._notify_cancels[
+            ble_handle
+        ] = await self._client.bluetooth_gatt_start_notify(
             self._address_as_int,
             ble_handle,
             lambda handle, data: callback(data),
         )
-        self._notify_cancels[ble_handle] = cancel_coro
 
         if self._connection_version < MIN_BLUETOOTH_PROXY_VERSION_HAS_CACHE:
             return
@@ -604,8 +609,9 @@ class ESPHomeClient(BaseBleakClient):
         characteristic = self._resolve_characteristic(char_specifier)
         # Do not raise KeyError if notifications are not enabled on this characteristic
         # to be consistent with the behavior of the BlueZ backend
-        if coro := self._notify_cancels.pop(characteristic.handle, None):
-            await coro()
+        if notify_cancel := self._notify_cancels.pop(characteristic.handle, None):
+            notify_stop, _ = notify_cancel
+            await notify_stop()
 
     def __del__(self) -> None:
         """Destructor to make sure the connection state is unsubscribed."""
