@@ -623,4 +623,4 @@ class ESPHomeClient(BaseBleakClient):
                 self._ble_device.address,
             )
         if not self._hass.loop.is_closed():
-            self._hass.loop.call_soon_threadsafe(self._unsubscribe_connection_state)
+            self._hass.loop.call_soon_threadsafe(self._async_ble_device_disconnected)
