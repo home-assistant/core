@@ -128,6 +128,7 @@ homeassistant.components.google_sheets.*
 homeassistant.components.greeneye_monitor.*
 homeassistant.components.group.*
 homeassistant.components.guardian.*
+homeassistant.components.hardkernel.*
 homeassistant.components.history.*
 homeassistant.components.homeassistant.triggers.event
 homeassistant.components.homeassistant_alerts.*
