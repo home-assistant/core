@@ -191,7 +191,6 @@ class FibaroController:
 
             raise FibaroConnectFailed from http_ex
         except Exception as ex:
-            _LOGGER.exception("Ex", exc_info=ex)
             raise FibaroConnectFailed from ex
 
     def enable_state_handler(self):
