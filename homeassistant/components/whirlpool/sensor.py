@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -122,6 +123,22 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
         has_entity_name=True,
         value_fn=lambda WasherDryer: WasherDryer.get_attribute(
             "Cavity_TimeStatusEstTimeRemaining"
+        ),
+    ),
+    WhirlpoolSensorEntityDescription(
+        key="DispenseLevel",
+        name="Dispense Level",
+        device_class=SensorDeviceClass.VOLUME,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_registry_enabled_default=True,
+        icon=ICON_W,
+        has_entity_name=True,
+        # value_fn=dispnese_fill,
+        value_fn=lambda WasherDryer: int(
+            int(WasherDryer.get_attribute("WashCavity_OpStatusBulkDispense1Level"))
+            * 100
+            / 6
         ),
     ),
 )

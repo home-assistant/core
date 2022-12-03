@@ -33,6 +33,9 @@ def side_effect_function_open_door(*args, **kwargs):
     if args[0] == "Cavity_OpStatusDoorOpen":
         return "1"
 
+    if args[0] == "WashCavity_OpStatusBulkDispense1Level":
+        return "3"
+
 
 async def test_sensor_values(
     hass: HomeAssistant,
