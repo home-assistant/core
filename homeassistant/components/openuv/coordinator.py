@@ -118,7 +118,7 @@ class OpenUvCoordinator(DataUpdateCoordinator):
             await self._invalid_api_key_monitor.async_increment()
             raise UpdateFailed(str(err)) from err
         except OpenUvError as err:
-            raise UpdateFailed(f"Error during data update: {err}") from err
+            raise UpdateFailed(str(err)) from err
 
         await self._invalid_api_key_monitor.async_reset()
         return cast(dict[str, Any], data["result"])
