@@ -444,7 +444,7 @@ class ESPHomeClient(BaseBleakClient):
         if not esphome_services.services:
             # If we got no services, we must have disconnected
             # or something went wrong on the ESP32's BLE stack.
-            raise BleakError("Failed to services")
+            raise BleakError("Failed to get services from remote esp")
 
         self.services = services
         _LOGGER.debug(
