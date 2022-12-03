@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
 from typing import Any
 
 from async_timeout import timeout
@@ -23,9 +24,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     regions: dict[str, str] = entry.data[CONF_REGIONS]
 
-    coordinator = NINADataUpdateCoordinator(
-        hass, regions, entry.data[CONF_FILTER_CORONA]
-    )
+    filter_regex = "/(?!)/"
+
+    if entry.data[CONF_FILTER_CORONA]:
+        filter_regex = ".*corona.*"
+
+    coordinator = NINADataUpdateCoordinator(hass, regions, filter_regex)
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -70,12 +74,12 @@ class NINADataUpdateCoordinator(
     """Class to manage fetching NINA data API."""
 
     def __init__(
-        self, hass: HomeAssistant, regions: dict[str, str], corona_filter: bool
+        self, hass: HomeAssistant, regions: dict[str, str], headline_filter: str
     ) -> None:
         """Initialize."""
         self._regions: dict[str, str] = regions
         self._nina: Nina = Nina(async_get_clientsession(hass))
-        self.corona_filter: bool = corona_filter
+        self.headline_filter: str = headline_filter
 
         for region in regions:
             self._nina.addRegion(region)
@@ -125,7 +129,9 @@ class NINADataUpdateCoordinator(
             warnings_for_regions: list[NinaWarningData] = []
 
             for raw_warn in raw_warnings:
-                if "corona" in raw_warn.headline.lower() and self.corona_filter:
+                if re.search(
+                    self.headline_filter, raw_warn.headline, flags=re.IGNORECASE
+                ):
                     continue
 
                 warning_data: NinaWarningData = NinaWarningData(
