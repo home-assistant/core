@@ -20,7 +20,7 @@ from aiohomekit.model.services import Service
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_VIA_DEVICE, EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
+from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -116,11 +116,6 @@ class HKDevice:
 
         self.pollable_characteristics: list[tuple[int, int]] = []
 
-        # If this is set polling is active and can be disabled by calling
-        # this method.
-        self._polling_interval_remover: CALLBACK_TYPE | None = None
-        self._ble_available_interval_remover: CALLBACK_TYPE | None = None
-
         # Never allow concurrent polling of the same accessory or bridge
         self._polling_lock = asyncio.Lock()
         self._polling_lock_warned = False
@@ -194,6 +189,7 @@ class HKDevice:
         If this fails the state may be inconsistent, but will
         get corrected as soon as the accessory advertises again.
         """
+        self._async_start_polling()
         try:
             await self.pairing.async_populate_accessories_state(force_update=True)
         except STARTUP_EXCEPTIONS as ex:
@@ -238,6 +234,7 @@ class HKDevice:
             await self.pairing.async_populate_accessories_state(
                 force_update=True, attempts=attempts
             )
+            self._async_start_polling()
 
         entry.async_on_unload(pairing.dispatcher_connect(self.process_new_events))
         entry.async_on_unload(
@@ -255,26 +252,33 @@ class HKDevice:
 
         self.async_set_available_state(self.pairing.is_available)
 
-        # We use async_request_update to avoid multiple updates
-        # at the same time which would generate a spurious warning
-        # in the log about concurrent polling.
-        self._polling_interval_remover = async_track_time_interval(
-            self.hass, self.async_request_update, self.pairing.poll_interval
-        )
-
         if transport == Transport.BLE:
             # If we are using BLE, we need to periodically check of the
             # BLE device is available since we won't get callbacks
             # when it goes away since we HomeKit supports disconnected
             # notifications and we cannot treat a disconnect as unavailability.
-            self._ble_available_interval_remover = async_track_time_interval(
-                self.hass,
-                self.async_update_available_state,
-                timedelta(seconds=BLE_AVAILABILITY_CHECK_INTERVAL),
+            entry.async_on_unload(
+                async_track_time_interval(
+                    self.hass,
+                    self.async_update_available_state,
+                    timedelta(seconds=BLE_AVAILABILITY_CHECK_INTERVAL),
+                )
             )
             # BLE devices always get an RSSI sensor as well
             if "sensor" not in self.platforms:
                 await self.async_load_platform("sensor")
+
+    @callback
+    def _async_start_polling(self) -> None:
+        """Start polling for updates."""
+        # We use async_request_update to avoid multiple updates
+        # at the same time which would generate a spurious warning
+        # in the log about concurrent polling.
+        self.config_entry.async_on_unload(
+            async_track_time_interval(
+                self.hass, self.async_request_update, self.pairing.poll_interval
+            )
+        )
 
     async def async_add_new_entities(self) -> None:
         """Add new entities to Home Assistant."""
@@ -532,9 +536,6 @@ class HKDevice:
 
     async def async_unload(self) -> None:
         """Stop interacting with device and prepare for removal from hass."""
-        if self._polling_interval_remover:
-            self._polling_interval_remover()
-
         await self.pairing.shutdown()
 
         await self.hass.config_entries.async_unload_platforms(
