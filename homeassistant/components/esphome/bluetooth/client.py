@@ -317,7 +317,20 @@ class ESPHomeClient(BaseBleakClient):
                 connected_future.cancel()
                 raise
             await connected_future
-        await self.get_services(dangerous_use_bleak_cache=dangerous_use_bleak_cache)
+
+        try:
+            await self.get_services(dangerous_use_bleak_cache=dangerous_use_bleak_cache)
+        except asyncio.CancelledError:
+            # On cancel we must still raise canceled error
+            # to avoid blocking the cancellation even if the
+            # disconnect call fails.
+            with contextlib.suppress(Exception):
+                await self.disconnect()
+            raise
+        except Exception:
+            await self.disconnect()
+            raise
+
         self._disconnected_event = asyncio.Event()
         return True
 
@@ -427,6 +440,12 @@ class ESPHomeClient(BaseBleakClient):
                             characteristic.handle,
                         )
                     )
+
+        if not esphome_services.services:
+            # If we got no services, we must have disconnected
+            # or something went wrong on the ESP32's BLE stack.
+            raise BleakError("Failed to services")
+
         self.services = services
         _LOGGER.debug(
             "%s: %s - %s: Cached services saved",
