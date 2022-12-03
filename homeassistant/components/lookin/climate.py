@@ -146,13 +146,18 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
             # or cool otherwise we set auto since we don't have a way to make
             # an educated guess.
             #
-            meteo_data: MeteoSensor = self._meteo_coordinator.data
-            if not (current_temp := meteo_data.temperature):
-                self._climate.hvac_mode = lookin_index.index(HVACMode.AUTO)
-            elif current_temp >= self._climate.temp_celsius:
-                self._climate.hvac_mode = lookin_index.index(HVACMode.COOL)
+
+            if self._meteo_coordinator:
+                meteo_data: MeteoSensor = self._meteo_coordinator.data
+                if not (current_temp := meteo_data.temperature):
+                    self._climate.hvac_mode = lookin_index.index(HVACMode.AUTO)
+                elif current_temp >= self._climate.temp_celsius:
+                    self._climate.hvac_mode = lookin_index.index(HVACMode.COOL)
+                else:
+                    self._climate.hvac_mode = lookin_index.index(HVACMode.HEAT)
             else:
-                self._climate.hvac_mode = lookin_index.index(HVACMode.HEAT)
+                self._climate.hvac_mode = lookin_index.index(HVACMode.AUTO)
+
         await self._async_update_conditioner()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:

@@ -61,7 +61,8 @@ class LookinDeviceCoordinatorEntity(
 
     def __init__(self, lookin_data: LookinData) -> None:
         """Init the lookin device entity."""
-        super().__init__(lookin_data.meteo_coordinator)
+        if lookin_data.meteo_coordinator:
+            super().__init__(lookin_data.meteo_coordinator)
         self._set_lookin_device_attrs(lookin_data)
         self._attr_device_info = _lookin_device_to_device_info(
             lookin_data.lookin_device, lookin_data.host

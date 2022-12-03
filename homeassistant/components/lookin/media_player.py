@@ -90,7 +90,7 @@ class LookinMedia(LookinPowerPushRemoteEntity, MediaPlayerEntity):
         self._source_list: dict[str, str] | None = None
 
     @property
-    def source_list(self):
+    def source_list(self) -> list[str]:
         """List of available input sources."""
         return list(self._source_list.keys()) if self._source_list else []
 
