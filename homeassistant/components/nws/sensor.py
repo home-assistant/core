@@ -189,7 +189,7 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
             self._attr_native_unit_of_measurement = description.unit_convert
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return the state."""
         value = self._nws.observation.get(self.entity_description.key)
         if value is None:
@@ -222,7 +222,7 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
         return value
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return a unique_id for this entity."""
         return f"{base_unique_id(self._latitude, self._longitude)}_{self.entity_description.key}"
 
