@@ -301,17 +301,6 @@ class TwinklyLight(LightEntity):
                 if key not in HIDDEN_DEV_VALUES:
                     self._attributes[key] = value
 
-            if ATTR_VERSION not in self._attributes:
-                firmware_version = await self._client.get_firmware_version()
-                self._attributes[ATTR_VERSION] = firmware_version[ATTR_VERSION]
-
-            if version.parse(self._attributes[ATTR_VERSION]) < version.parse(
-                MIN_EFFECT_VERSION
-            ):
-                self._attr_supported_features = (
-                    self.supported_features & ~LightEntityFeature.EFFECT
-                )
-
             if LightEntityFeature.EFFECT & self.supported_features:
                 await self.async_update_movies()
                 await self.async_update_current_movie()
