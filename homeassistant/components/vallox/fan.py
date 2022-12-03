@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import logging
 from typing import Any, NamedTuple
 
 from vallox_websocket_api import (
@@ -32,11 +31,10 @@ from .const import (
     METRIC_KEY_PROFILE_FAN_SPEED_HOME,
     MODE_OFF,
     MODE_ON,
-    STR_TO_VALLOX_PROFILE_SETTABLE,
-    VALLOX_PROFILE_TO_STR_REPORTABLE,
+    PRESET_MODE_TO_VALLOX_PROFILE_SETTABLE,
+    VALLOX_PRESET_MODES_SUPPORTING_FAN_SPEED,
+    VALLOX_PROFILE_TO_PRESET_MODE_REPORTABLE,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class ExtraStateAttributeDetails(NamedTuple):
@@ -86,7 +84,6 @@ async def async_setup_entry(
 class ValloxFanEntity(ValloxEntity, FanEntity):
     """Representation of the fan."""
 
-    _attr_supported_features = FanEntityFeature.PRESET_MODE | FanEntityFeature.SET_SPEED
     _attr_has_entity_name = True
 
     def __init__(
@@ -101,7 +98,7 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
         self._client = client
 
         self._attr_unique_id = str(self._device_uuid)
-        self._attr_preset_modes = list(STR_TO_VALLOX_PROFILE_SETTABLE)
+        self._attr_preset_modes = list(PRESET_MODE_TO_VALLOX_PROFILE_SETTABLE)
 
     @property
     def is_on(self) -> bool:
@@ -112,7 +109,16 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         vallox_profile = self.coordinator.data.profile
-        return VALLOX_PROFILE_TO_STR_REPORTABLE.get(vallox_profile)
+        return VALLOX_PROFILE_TO_PRESET_MODE_REPORTABLE.get(vallox_profile)
+
+    @property
+    def supported_features(self) -> FanEntityFeature:
+        """Flag supported features."""
+        features = FanEntityFeature.PRESET_MODE
+        if self.preset_mode in VALLOX_PRESET_MODES_SUPPORTING_FAN_SPEED:
+            features |= FanEntityFeature.SET_SPEED
+
+        return features
 
     @property
     def percentage(self) -> int | None:
@@ -214,7 +220,7 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
             return False
 
         try:
-            profile = STR_TO_VALLOX_PROFILE_SETTABLE[preset_mode]
+            profile = PRESET_MODE_TO_VALLOX_PROFILE_SETTABLE[preset_mode]
             await self._client.set_profile(profile)
             self.coordinator.data.profile = profile
 
