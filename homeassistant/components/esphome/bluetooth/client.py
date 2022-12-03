@@ -320,9 +320,15 @@ class ESPHomeClient(BaseBleakClient):
 
         try:
             await self.get_services(dangerous_use_bleak_cache=dangerous_use_bleak_cache)
-        except (asyncio.CancelledError, Exception):
-            self._async_disconnected_cleanup()
-            await self._client.bluetooth_device_disconnect(self._address_as_int)
+        except asyncio.CancelledError:
+            # On cancel we must still raise canceled error
+            # to avoid blocking the cancellation even if the
+            # disconnect call fails.
+            with contextlib.suppress(Exception):
+                await self.disconnect()
+            raise
+        except Exception:
+            await self.disconnect()
             raise
 
         self._disconnected_event = asyncio.Event()
