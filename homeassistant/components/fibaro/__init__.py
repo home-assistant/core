@@ -396,8 +396,8 @@ class FibaroController:
                 _LOGGER.debug(
                     "%s (%s, %s) -> %s %s",
                     device.ha_id,
-                    device.raw_data.get("type"),
-                    device.raw_data.get("baseType"),
+                    device.type,
+                    device.base_type,
                     platform,
                     str(device),
                 )
@@ -418,9 +418,9 @@ class FibaroController:
                 # otherwise add the first visible device in the group
                 # which is a hack, but solves a problem with FGT having
                 # hidden compatibility devices before the real device
-                if last_climate_parent != device.parentId or (
+                if last_climate_parent != device.parent_fibaro_id or (
                     "endPointId" in device.properties
-                    and last_endpoint != device.properties.endPointId
+                    and last_endpoint != device.properties.get("endPointId")
                 ):
                     _LOGGER.debug("Handle separately")
                     self.fibaro_devices[platform].append(device)
