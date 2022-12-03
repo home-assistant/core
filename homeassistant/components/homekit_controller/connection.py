@@ -217,7 +217,11 @@ class HKDevice:
         # so we only poll those chars but that is not possible
         # yet.
         attempts = None if self.hass.state == CoreState.running else 1
-        if transport == Transport.BLE and pairing.accessories:
+        if (
+            transport == Transport.BLE
+            and pairing.accessories
+            and pairing.accessories.has_aid(1)
+        ):
             # The GSN gets restored and a catch up poll will be
             # triggered via disconnected events automatically
             # if we are out of sync. To be sure we are in sync;
