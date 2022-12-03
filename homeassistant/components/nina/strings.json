@@ -11,7 +11,7 @@
           "_r_to_u": "City/county (R-U)",
           "_v_to_z": "City/county (V-Z)",
           "slots": "Maximum warnings per city/county",
-          "corona_filter": "Remove Corona Warnings"
+          "headline_filter": "Blacklist regex to filter warning headlines"
         }
       }
     },
@@ -36,7 +36,7 @@
           "_r_to_u": "City/county (R-U)",
           "_v_to_z": "City/county (V-Z)",
           "slots": "Maximum warnings per city/county",
-          "corona_filter": "Remove Corona Warnings"
+          "headline_filter": "Blacklist regex to filter warning headlines"
         }
       }
     },

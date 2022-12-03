@@ -20,6 +20,7 @@ from .const import (
     CONF_HEADLINE_FILTER,
     CONF_REGIONS,
     DOMAIN,
+    NO_MATCH_REGEX,
     SCAN_INTERVAL,
 )
 
@@ -32,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     regions: dict[str, str] = entry.data[CONF_REGIONS]
 
     if CONF_HEADLINE_FILTER not in entry.data:
-        filter_regex = "/(?!)/"
+        filter_regex = NO_MATCH_REGEX
 
         if entry.data[CONF_FILTER_CORONA]:
             filter_regex = ".*corona.*"

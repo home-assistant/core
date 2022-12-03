@@ -11,9 +11,11 @@ SCAN_INTERVAL: timedelta = timedelta(minutes=5)
 
 DOMAIN: str = "nina"
 
+NO_MATCH_REGEX: str = "/(?!)/"
+
 CONF_REGIONS: str = "regions"
 CONF_MESSAGE_SLOTS: str = "slots"
-CONF_FILTER_CORONA: str = "corona_filter"
+CONF_FILTER_CORONA: str = "corona_filter"  # deprecated
 CONF_HEADLINE_FILTER: str = "headline_filter"
 
 ATTR_HEADLINE: str = "headline"
