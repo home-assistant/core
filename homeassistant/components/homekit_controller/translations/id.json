@@ -69,5 +69,30 @@
             "single_press": "\"{subtype}\" ditekan"
         }
     },
+    "entity": {
+        "sensor": {
+            "thread_node_capabilities": {
+                "state": {
+                    "border_router_capable": "Kemampuan Router Perbatasan",
+                    "full": "Perangkat Akhir Lengkap",
+                    "minimal": "Perangkat Akhir Minimal",
+                    "none": "Tidak Ada",
+                    "router_eligible": "Perangkat Akhir yang Memenuhi Syarat Router",
+                    "sleepy": "Perangkat Akhir yang Jenak"
+                }
+            },
+            "thread_status": {
+                "state": {
+                    "border_router": "Router Perbatasan",
+                    "child": "Anakan",
+                    "detached": "Terpisah",
+                    "disabled": "Dinonaktifkan",
+                    "joining": "Bergabung",
+                    "leader": "Kepala",
+                    "router": "Router"
+                }
+            }
+        }
+    },
     "title": "Pengontrol HomeKit"
 }

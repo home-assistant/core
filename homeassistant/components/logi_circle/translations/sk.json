@@ -6,6 +6,7 @@
         },
         "error": {
             "authorize_url_timeout": "\u010casov\u00fd limit generovania autorizovanej adresy URL.",
+            "follow_link": "Pred stla\u010den\u00edm Odosla\u0165 kliknite na odkaz a overte sa.",
             "invalid_auth": "Neplatn\u00e9 overenie"
         }
     }
