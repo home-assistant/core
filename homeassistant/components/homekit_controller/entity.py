@@ -176,7 +176,6 @@ class HomeKitEntity(Entity):
 
     async def async_update(self) -> None:
         """Update the entity."""
-        assert 0, "Entity must implement async_update"
         await self._accessory.async_request_update()
 
 
