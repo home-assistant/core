@@ -14,7 +14,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import _LOGGER, CONF_FILTER_CORONA, CONF_REGIONS, DOMAIN, SCAN_INTERVAL
+from .const import (
+    _LOGGER,
+    CONF_FILTER_CORONA,
+    CONF_HEADLINE_FILTER,
+    CONF_REGIONS,
+    DOMAIN,
+    SCAN_INTERVAL,
+)
 
 PLATFORMS: list[str] = [Platform.BINARY_SENSOR]
 
@@ -24,12 +31,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     regions: dict[str, str] = entry.data[CONF_REGIONS]
 
-    filter_regex = "/(?!)/"
+    if CONF_HEADLINE_FILTER not in entry.data:
+        filter_regex = "/(?!)/"
 
-    if entry.data[CONF_FILTER_CORONA]:
-        filter_regex = ".*corona.*"
+        if entry.data[CONF_FILTER_CORONA]:
+            filter_regex = ".*corona.*"
 
-    coordinator = NINADataUpdateCoordinator(hass, regions, filter_regex)
+        new_data = {**entry.data, CONF_HEADLINE_FILTER: filter_regex}
+        new_data.pop(CONF_FILTER_CORONA, None)
+        hass.config_entries.async_update_entry(entry, data=new_data)
+
+    coordinator = NINADataUpdateCoordinator(
+        hass, regions, entry.data[CONF_HEADLINE_FILTER]
+    )
 
     await coordinator.async_config_entry_first_refresh()
 
