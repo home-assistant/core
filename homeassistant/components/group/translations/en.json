@@ -51,6 +51,21 @@
                 },
                 "title": "Add Group"
             },
+            "sensor": {
+                "data": {
+                    "all": "All entities",
+                    "device_class": "Device class",
+                    "entities": "Members",
+                    "hide_members": "Hide members",
+                    "name": "Name",
+                    "round_digits": "Round value to number of decimals",
+                    "state_class": "State class",
+                    "type": "Type",
+                    "unit_of_measurement": "Unit of Measurement"
+                },
+                "description": "If \"all entities\" is enabled, the group's state is only calculated if all members have values. If \"all entities\" is disabled, calculation will be done on available values.",
+                "title": "Add Group"
+            },
             "switch": {
                 "data": {
                     "entities": "Members",
@@ -68,6 +83,7 @@
                     "light": "Light group",
                     "lock": "Lock group",
                     "media_player": "Media player group",
+                    "sensor": "Sensor group",
                     "switch": "Switch group"
                 },
                 "title": "Add Group"
@@ -115,6 +131,19 @@
                     "entities": "Members",
                     "hide_members": "Hide members"
                 }
+            },
+            "sensor": {
+                "data": {
+                    "all": "All entities",
+                    "device_class": "Device class",
+                    "entities": "Members",
+                    "hide_members": "Hide members",
+                    "round_digits": "Round value to number of decimals",
+                    "state_class": "State class",
+                    "type": "Type",
+                    "unit_of_measurement": "Unit of Measurement"
+                },
+                "description": "If \"all entities\" is enabled, the group's state is on only if all members are on. If \"all entities\" is disabled, the group's state is on if any member is on."
             },
             "switch": {
                 "data": {

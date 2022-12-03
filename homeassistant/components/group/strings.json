@@ -12,6 +12,7 @@
           "light": "Light group",
           "lock": "Lock group",
           "media_player": "Media player group",
+          "sensor": "Sensor group",
           "switch": "Switch group"
         }
       },
@@ -65,6 +66,21 @@
           "name": "[%key:component::group::config::step::binary_sensor::data::name%]"
         }
       },
+      "sensor": {
+        "title": "[%key:component::group::config::step::user::title%]",
+        "description": "If \"all entities\" is enabled, the group's state is only calculated if all members have values. If \"all entities\" is disabled, calculation will be done on available values.",
+        "data": {
+          "all": "All entities",
+          "entities": "Members",
+          "hide_members": "Hide members",
+          "name": "Name",
+          "type": "Type",
+          "round_digits": "Round value to number of decimals",
+          "device_class": "Device class",
+          "state_class": "State class",
+          "unit_of_measurement": "Unit of Measurement"
+        }
+      },
       "switch": {
         "title": "[%key:component::group::config::step::user::title%]",
         "data": {
@@ -115,6 +131,19 @@
         "data": {
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
           "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]"
+        }
+      },
+      "sensor": {
+        "description": "[%key:component::group::config::step::binary_sensor::description%]",
+        "data": {
+          "all": "[%key:component::group::config::step::sensor::data::all%]",
+          "entities": "[%key:component::group::config::step::sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::sensor::data::hide_members%]",
+          "type": "[%key:component::group::config::step::sensor::data::type%]",
+          "round_digits": "[%key:component::group::config::step::sensor::data::round_digits%]",
+          "device_class": "[%key:component::group::config::step::sensor::data::device_class%]",
+          "state_class": "[%key:component::group::config::step::sensor::data::state_class%]",
+          "unit_of_measurement": "[%key:component::group::config::step::sensor::data::unit_of_measurement%]"
         }
       },
       "switch": {
