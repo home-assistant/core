@@ -224,8 +224,8 @@ class HKDevice:
         if transport == Transport.BLE and pairing.accessories:
             # The GSN gets restored and a catch up poll will be
             # triggered via disconnected events automatically
-            # if we are out of sync. To be sure we are in sync
-            # if for some reason the BLE connection failed
+            # if we are out of sync. To be sure we are in sync;
+            # If for some reason the BLE connection failed
             # previously we force an update after startup
             # is complete.
             entry.async_on_unload(
