@@ -330,7 +330,7 @@ async def test_destination_entity_not_found(hass: HomeAssistant, caplog):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
-    assert "device_tracker.test are not valid coordinates" in caplog.text
+    assert "Could not find entity device_tracker.test" in caplog.text
 
 
 @pytest.mark.usefixtures("valid_response")
@@ -356,7 +356,7 @@ async def test_origin_entity_not_found(hass: HomeAssistant, caplog):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
-    assert "device_tracker.test are not valid coordinates" in caplog.text
+    assert "Could not find entity device_tracker.test" in caplog.text
 
 
 @pytest.mark.usefixtures("valid_response")
@@ -386,7 +386,9 @@ async def test_invalid_destination_entity_state(hass: HomeAssistant, caplog):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
-    assert "test_state are not valid coordinates" in caplog.text
+    assert (
+        "device_tracker.test does not have valid coordinates: test_state" in caplog.text
+    )
 
 
 @pytest.mark.usefixtures("valid_response")
@@ -416,7 +418,9 @@ async def test_invalid_origin_entity_state(hass: HomeAssistant, caplog):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
-    assert "test_state are not valid coordinates" in caplog.text
+    assert (
+        "device_tracker.test does not have valid coordinates: test_state" in caplog.text
+    )
 
 
 async def test_route_not_found(hass: HomeAssistant, caplog):
