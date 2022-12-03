@@ -246,7 +246,7 @@ async def test_turn_on_with_color_rgb_and_missing_effect(hass: HomeAssistant):
 
 
 async def test_turn_on_with_effect_missing_effects(hass: HomeAssistant):
-    """Test support of the light.turn_on service with effects."""
+    """Test support of the light.turn_on service with effect set even if effects are not supported."""
     client = ClientMock()
     client.state = False
     client.device_info["led_profile"] = "RGB"
