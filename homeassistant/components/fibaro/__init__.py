@@ -423,7 +423,7 @@ class FibaroController:
                 ):
                     _LOGGER.debug("Handle separately")
                     self.fibaro_devices[platform].append(device)
-                    last_climate_parent = device.raw_data.get("parentId")
+                    last_climate_parent = device.parent_fibaro_id
                     if "endPointId" in device.properties:
                         last_endpoint = device.properties.get("endPointId")
                     else:
