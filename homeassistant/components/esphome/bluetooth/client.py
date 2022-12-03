@@ -449,6 +449,11 @@ class ESPHomeClient(BaseBleakClient):
             raise BleakError(f"Characteristic {char_specifier} was not found!")
         return characteristic
 
+    async def clear_cache(self) -> None:
+        """Clear the GATT cache."""
+        self.entry_data.clear_gatt_services_cache(self._address_as_int)
+        self.entry_data.clear_gatt_mtu_cache(self._address_as_int)
+
     @verify_connected
     @api_error_as_bleak_error
     async def read_gatt_char(
