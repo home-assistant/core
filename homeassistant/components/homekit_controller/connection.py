@@ -185,8 +185,8 @@ class HKDevice:
         self.available = available
         async_dispatcher_send(self.hass, self.signal_state_updated)
 
-    async def _async_retry_populate_ble_accessory_state(self, event: Event) -> None:
-        """Try again to populate the BLE accessory state.
+    async def _async_populate_ble_accessory_state(self, event: Event) -> None:
+        """Populate the BLE accessory state without blocking startup.
 
         If the accessory was asleep at startup we need to retry
         since we continued on to allow startup to proceed.
@@ -221,19 +221,22 @@ class HKDevice:
         # so we only poll those chars but that is not possible
         # yet.
         attempts = None if self.hass.state == CoreState.running else 1
-        try:
-            await self.pairing.async_populate_accessories_state(
-                force_update=True, attempts=attempts
-            )
-        except AccessoryNotFoundError:
-            if transport != Transport.BLE or not pairing.accessories:
-                # BLE devices may sleep and we can't force a connection
-                raise
+        if transport == Transport.BLE and pairing.accessories:
+            # The GSN gets restored and a catch up poll will be
+            # triggered via disconnected events automatically
+            # if we are out of sync. To be sure we are in sync;
+            # If for some reason the BLE connection failed
+            # previously we force an update after startup
+            # is complete.
             entry.async_on_unload(
                 self.hass.bus.async_listen(
                     EVENT_HOMEASSISTANT_STARTED,
-                    self._async_retry_populate_ble_accessory_state,
+                    self._async_populate_ble_accessory_state,
                 )
+            )
+        else:
+            await self.pairing.async_populate_accessories_state(
+                force_update=True, attempts=attempts
             )
 
         entry.async_on_unload(pairing.dispatcher_connect(self.process_new_events))
