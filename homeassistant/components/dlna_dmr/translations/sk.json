@@ -14,6 +14,9 @@
             "confirm": {
                 "description": "Chcete za\u010da\u0165 nastavova\u0165?"
             },
+            "import_turn_on": {
+                "description": "Ak chcete pokra\u010dova\u0165 v migr\u00e1cii, zapnite zariadenie a kliknite na tla\u010didlo Odosla\u0165"
+            },
             "manual": {
                 "data": {
                     "url": "URL"

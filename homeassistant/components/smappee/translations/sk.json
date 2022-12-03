@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured_device": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "authorize_url_timeout": "\u010casov\u00fd limit generovania autorizovanej adresy URL.",
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
             "invalid_mdns": "Nepodporovan\u00e9 zariadenie pre integr\u00e1ciu Smappee.",
             "missing_configuration": "Komponent nie je nakonfigurovan\u00fd. Postupujte pod\u013ea dokument\u00e1cie.",

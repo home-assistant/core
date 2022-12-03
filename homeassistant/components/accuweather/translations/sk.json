@@ -19,6 +19,16 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "pressure_tendency": {
+                "state": {
+                    "falling": "Klesaj\u00faci",
+                    "rising": "St\u00fapaj\u00faci"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

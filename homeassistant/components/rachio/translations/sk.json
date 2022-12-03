@@ -11,7 +11,8 @@
             "user": {
                 "data": {
                     "api_key": "API k\u013e\u00fa\u010d"
-                }
+                },
+                "description": "Budete potrebova\u0165 k\u013e\u00fa\u010d API zo str\u00e1nky https://app.rach.io/. Prejdite na Nastavenia a potom kliknite na polo\u017eku \"GET API KEY\"."
             }
         }
     },

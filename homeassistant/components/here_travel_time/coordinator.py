@@ -14,7 +14,7 @@ from homeassistant.const import ATTR_ATTRIBUTION, UnitOfLength
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.location import find_coordinates
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt
 from homeassistant.util.unit_conversion import DistanceConverter
 
@@ -215,13 +215,15 @@ def prepare_parameters(
     def _from_entity_id(entity_id: str) -> list[str]:
         coordinates = find_coordinates(hass, entity_id)
         if coordinates is None:
-            raise InvalidCoordinatesException(f"No coordinates found for {entity_id}")
+            raise UpdateFailed(f"No coordinates found for {entity_id}")
+        if coordinates is entity_id:
+            raise UpdateFailed(f"Could not find entity {entity_id}")
         try:
             formatted_coordinates = coordinates.split(",")
             vol.Schema(cv.gps(formatted_coordinates))
         except (AttributeError, vol.ExactSequenceInvalid) as ex:
-            raise InvalidCoordinatesException(
-                f"{coordinates} are not valid coordinates"
+            raise UpdateFailed(
+                f"{entity_id} does not have valid coordinates: {coordinates}"
             ) from ex
         return formatted_coordinates
 
@@ -275,7 +277,3 @@ def next_datetime(simple_time: time) -> datetime:
     if combined < datetime.now():
         combined = combined + timedelta(days=1)
     return combined
-
-
-class InvalidCoordinatesException(Exception):
-    """Coordinates for origin or destination are malformed."""

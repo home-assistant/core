@@ -1,4 +1,16 @@
 {
+    "entity": {
+        "sensor": {
+            "thermostat_mode": {
+                "state": {
+                    "away": "\u0395\u03ba\u03c4\u03cc\u03c2 \u03c3\u03c0\u03b9\u03c4\u03b9\u03bf\u03cd",
+                    "comfort": "\u0386\u03bd\u03b5\u03c3\u03b7",
+                    "eco": "Eco",
+                    "sleep": "\u038e\u03c0\u03bd\u03bf\u03c2"
+                }
+            }
+        }
+    },
     "issues": {
         "bad_psu": {
             "fix_flow": {

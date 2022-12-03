@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "authorize_url_timeout": "\u010casov\u00fd limit generovania autorizovanej adresy URL."
+            "authorize_url_timeout": "\u010casov\u00fd limit generovania autorizovanej adresy URL.",
+            "no_url_available": "Nie je k dispoz\u00edcii \u017eiadna adresa URL. Inform\u00e1cie o tejto chybe n\u00e1jdete [pozrite si sekciu pomocn\u00edka]({docs_url})"
         },
         "create_entry": {
             "default": "\u00daspe\u0161ne overen\u00e9 v slu\u017ebe Spotify."
