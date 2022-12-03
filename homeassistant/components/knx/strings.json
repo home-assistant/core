@@ -99,7 +99,8 @@
       "invalid_signature": "The password to decrypt the `.knxkeys` file is wrong.",
       "file_not_found": "The specified `.knxkeys` file was not found in the path config/.storage/knx/",
       "no_router_discovered": "No KNXnet/IP router was discovered on the network.",
-      "no_tunnel_discovered": "Could not find a KNX tunneling server on your network."
+      "no_tunnel_discovered": "Could not find a KNX tunneling server on your network.",
+      "unsupported_tunnel_type": "Selected tunnelling type not supported by gateway."
     }
   },
   "options": {
@@ -214,7 +215,8 @@
       "invalid_signature": "[%key:component::knx::config::error::invalid_signature%]",
       "file_not_found": "[%key:component::knx::config::error::file_not_found%]",
       "no_router_discovered": "[%key:component::knx::config::error::no_router_discovered%]",
-      "no_tunnel_discovered": "[%key:component::knx::config::error::no_tunnel_discovered%]"
+      "no_tunnel_discovered": "[%key:component::knx::config::error::no_tunnel_discovered%]",
+      "unsupported_tunnel_type": "[%key:component::knx::config::error::unsupported_tunnel_type%]"
     }
   }
 }

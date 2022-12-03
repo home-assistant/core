@@ -26,7 +26,22 @@
                     "verify_ssl": "Overi\u0165 SSL certifik\u00e1t"
                 },
                 "data_description": {
+                    "resource": "Adresa URL webovej lokality, ktor\u00e1 obsahuje hodnotu",
                     "timeout": "\u010casov\u00fd limit pre pripojenie k webovej str\u00e1nke"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "add_sensor": {
+                "data": {
+                    "value_template": "\u0160abl\u00f3na hodnoty"
+                }
+            },
+            "edit_sensor": {
+                "data": {
+                    "value_template": "\u0160abl\u00f3na hodnoty"
                 }
             }
         }
