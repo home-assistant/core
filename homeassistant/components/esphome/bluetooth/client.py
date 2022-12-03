@@ -321,7 +321,7 @@ class ESPHomeClient(BaseBleakClient):
         try:
             await self.get_services(dangerous_use_bleak_cache=dangerous_use_bleak_cache)
         except asyncio.CancelledError:
-            # On cancel we must still raise canceled error
+            # On cancel we must still raise cancelled error
             # to avoid blocking the cancellation even if the
             # disconnect call fails.
             with contextlib.suppress(Exception):
