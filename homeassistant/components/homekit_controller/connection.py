@@ -222,6 +222,11 @@ class HKDevice:
         # yet.
         attempts = None if self.hass.state == CoreState.running else 1
         if transport == Transport.BLE and pairing.accessories:
+            # The GSN gets restored and a catch up poll will be
+            # triggered via disconnected events automatically
+            # if we are out of sync. To be sure we are in sync
+            # we schedule a populate here but only after startup
+            # is complete.
             entry.async_on_unload(
                 self.hass.bus.async_listen(
                     EVENT_HOMEASSISTANT_STARTED,
