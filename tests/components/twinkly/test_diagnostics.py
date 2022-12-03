@@ -15,5 +15,6 @@ async def test_diagnostics(hass: HomeAssistant, hass_client) -> None:
     diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
 
     assert diag["entry"]["title"] == "Mock Title"
+    assert diag["entry"]["sw_version"] == "2.8.10"
     assert diag["entry"]["data"]["host"] == "**REDACTED**"
     assert "effect_list" in diag["entry"]["attributes"]
