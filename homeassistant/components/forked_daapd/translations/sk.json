@@ -18,5 +18,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "tts_pause_time": "Sekundy na pauzu pred a po TTS"
+                }
+            }
+        }
     }
 }

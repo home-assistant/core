@@ -42,7 +42,14 @@
             "turn_on": "Zapn\u00fa\u0165"
         },
         "trigger_type": {
-            "button_double_press": "\"{subtype}\" kliknut\u00e9 dvakr\u00e1t"
+            "button_double_press": "\"{subtype}\" kliknut\u00e9 dvakr\u00e1t",
+            "button_long_press": "Trvalo stla\u010den\u00e9 tla\u010didlo \"{subtype}\"",
+            "button_long_release": "\"{subtype}\" uvo\u013enen\u00e9 po dlhom stla\u010den\u00ed",
+            "button_quadruple_press": "\"{subtype}\" \u0161tvorn\u00e1sobne kliknut\u00e9",
+            "button_quintuple_press": "\"{subtype}\" p\u00e4\u0165n\u00e1sobne kliknut\u00e9",
+            "button_short_press": "\"{subtype}\" stla\u010den\u00e9",
+            "button_short_release": "\u201c{subtype}\u201c uvo\u013enen\u00e9",
+            "button_triple_press": "\"{subtype}\" trojn\u00e1sobne kliknut\u00e9"
         }
     },
     "options": {

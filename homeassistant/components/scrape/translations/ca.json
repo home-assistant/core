@@ -30,7 +30,7 @@
             },
             "user": {
                 "data": {
-                    "authentication": "Autenticaci\u00f3",
+                    "authentication": "Selecciona el m\u00e8tode d'autenticaci\u00f3",
                     "headers": "Cap\u00e7aleres",
                     "method": "M\u00e8tode",
                     "password": "Contrasenya",
@@ -107,7 +107,7 @@
             },
             "resource": {
                 "data": {
-                    "authentication": "Autenticaci\u00f3",
+                    "authentication": "Selecciona el m\u00e8tode d'autenticaci\u00f3",
                     "headers": "Cap\u00e7aleres",
                     "method": "M\u00e8tode",
                     "resource": "Recurs",
