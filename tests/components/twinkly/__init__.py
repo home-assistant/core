@@ -57,6 +57,7 @@ class ClientMock:
         if self.is_offline:
             raise ClientConnectionError()
         self.state = True
+        self.mode = self.default_mode
 
     async def turn_off(self) -> None:
         """Set the mocked off state."""

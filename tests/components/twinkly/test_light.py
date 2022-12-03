@@ -245,6 +245,37 @@ async def test_turn_on_with_color_rgb_and_missing_effect(hass: HomeAssistant):
     assert client.default_mode == "movie"
 
 
+async def test_turn_on_with_effect_missing_effects(hass: HomeAssistant):
+    """Test support of the light.turn_on service with effects."""
+    client = ClientMock()
+    client.state = False
+    client.device_info["led_profile"] = "RGB"
+    client.brightness = {"mode": "enabled", "value": 255}
+    client.version = "2.7.0"
+    entity, _, _, _ = await _create_entries(hass, client)
+
+    assert hass.states.get(entity.entity_id).state == "off"
+    assert not client.current_movie
+    assert (
+        not LightEntityFeature.EFFECT
+        & hass.states.get(entity.entity_id).attributes["supported_features"]
+    )
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        service_data={"entity_id": entity.entity_id, "effect": "1 Rainbow"},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity.entity_id)
+
+    assert state.state == "on"
+    assert not client.current_movie
+    assert client.default_mode == "movie"
+    assert client.mode == "movie"
+
+
 async def test_turn_off(hass: HomeAssistant):
     """Test support of the light.turn_off service."""
     entity, _, _, _ = await _create_entries(hass)
