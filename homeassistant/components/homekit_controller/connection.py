@@ -225,8 +225,8 @@ class HKDevice:
             # The GSN gets restored and a catch up poll will be
             # triggered via disconnected events automatically
             # if we are out of sync. To be sure we are in sync
-            # we schedule a populate here but only after startup
-            # is complete.
+            # if for some reason the BLE connection failed or
+            # we missed the event we do a force update here.
             entry.async_on_unload(
                 self.hass.bus.async_listen(
                     EVENT_HOMEASSISTANT_STARTED,
