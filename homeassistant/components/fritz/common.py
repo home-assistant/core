@@ -671,8 +671,12 @@ class AvmWrapper(FritzBoxTools):
         )
 
     async def async_ipv6_active(self) -> bool:
-        """Call WANIPConn service."""
-        return await self.hass.async_add_executor_job(partial(self.ipv6_active))
+        """Check ip an ipv6 is active on the WAn interface."""
+
+        def wrap_external_ipv6() -> str:
+            return str(self.fritz_status.external_ipv6)
+
+        return bool(await self.hass.async_add_executor_job(wrap_external_ipv6))
 
     async def async_get_connection_info(self) -> ConnectionInfo:
         """Return ConnectionInfo data."""
@@ -798,15 +802,6 @@ class AvmWrapper(FritzBoxTools):
 
         return self._service_call_action(
             "WANCommonInterfaceConfig", "1", "GetCommonLinkProperties"
-        )
-
-    def ipv6_active(self) -> bool:
-        """Call WANIPConn service."""
-
-        return bool(
-            self._service_call_action(
-                "WANIPConn", "1", "X_AVM_DE_GetExternalIPv6Address"
-            )["NewExternalIPv6Address"]
         )
 
     def set_wlan_configuration(self, index: int, turn_on: bool) -> dict[str, Any]:
