@@ -195,7 +195,6 @@ async def test_turn_on_with_color_rgbw_and_missing_effect(hass: HomeAssistant):
     entity, _, _, _ = await _create_entries(hass, client)
 
     assert hass.states.get(entity.entity_id).state == "off"
-    assert not client.current_movie
     assert (
         not LightEntityFeature.EFFECT
         & hass.states.get(entity.entity_id).attributes["supported_features"]
@@ -226,7 +225,6 @@ async def test_turn_on_with_color_rgb_and_missing_effect(hass: HomeAssistant):
     entity, _, _, _ = await _create_entries(hass, client)
 
     assert hass.states.get(entity.entity_id).state == "off"
-    assert not client.current_movie
     assert (
         not LightEntityFeature.EFFECT
         & hass.states.get(entity.entity_id).attributes["supported_features"]
