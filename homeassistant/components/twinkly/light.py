@@ -7,7 +7,7 @@ import logging
 from typing import Any
 
 from aiohttp import ClientError
-from packaging import version
+from awesomeversion import AwesomeVersion
 from ttls.client import Twinkly
 
 from homeassistant.components.light import (
@@ -173,7 +173,7 @@ class TwinklyLight(LightEntity):
         if ATTR_VERSION in software_version:
             self._software_version = software_version[ATTR_VERSION]
 
-            if version.parse(self._software_version) < version.parse(
+            if AwesomeVersion(self._software_version) < AwesomeVersion(
                 MIN_EFFECT_VERSION
             ):
                 self._attr_supported_features = (
