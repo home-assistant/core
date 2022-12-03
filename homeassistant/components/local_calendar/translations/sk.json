@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Vyberte n\u00e1zov pre svoj nov\u00fd kalend\u00e1r"
+            }
+        }
+    }
+}

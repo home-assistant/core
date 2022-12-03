@@ -156,7 +156,7 @@ aioecowitt==2022.11.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==12.2.1
+aioesphomeapi==13.0.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -450,7 +450,7 @@ bluemaestro-ble==0.2.0
 bluetooth-adapters==0.11.0
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==0.5.3
+bluetooth-auto-recovery==0.5.4
 
 # homeassistant.components.bluetooth
 # homeassistant.components.led_ble

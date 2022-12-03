@@ -1,4 +1,16 @@
 {
+    "entity": {
+        "sensor": {
+            "thermostat_mode": {
+                "state": {
+                    "away": "Borte",
+                    "comfort": "Komfort",
+                    "eco": "\u00d8ko",
+                    "sleep": "Sove"
+                }
+            }
+        }
+    },
     "issues": {
         "bad_psu": {
             "fix_flow": {

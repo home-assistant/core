@@ -19,7 +19,13 @@
             "choose_formation_strategy": {
                 "menu_options": {
                     "choose_automatic_backup": "Obnovenie automatickej z\u00e1lohy",
+                    "form_new_network": "Vyma\u017ete nastavenia siete a vytvorte nov\u00fa sie\u0165",
                     "upload_manual_backup": "Nahratie manu\u00e1lnej z\u00e1lohy"
+                }
+            },
+            "choose_serial_port": {
+                "data": {
+                    "path": "Cesta s\u00e9riov\u00e9ho zariadenia"
                 }
             },
             "confirm": {
@@ -38,10 +44,29 @@
             "button_3": "Tretie tla\u010didlo",
             "button_4": "\u0160tvrt\u00e9 tla\u010didlo",
             "button_5": "Piate tla\u010didlo",
-            "button_6": "\u0160ieste tla\u010didlo"
+            "button_6": "\u0160ieste tla\u010didlo",
+            "close": "Zavrie\u0165",
+            "left": "V\u013eavo",
+            "open": "Otvori\u0165",
+            "right": "Vpravo",
+            "turn_off": "Vypn\u00fa\u0165"
         },
         "trigger_type": {
-            "device_offline": "Zariadenie je offline"
+            "device_offline": "Zariadenie je offline",
+            "remote_button_alt_double_press": "dvojit\u00e9 kliknutie na tla\u010didlo \u201e{subtype}\u201c (Alternat\u00edvny re\u017eim)",
+            "remote_button_alt_long_press": "Trvalo stla\u010den\u00e9 tla\u010didlo \u201e{subtype}\u201c (Alternat\u00edvny re\u017eim)",
+            "remote_button_alt_long_release": "Tla\u010didlo \"{subtype}\" uvo\u013enen\u00e9 po dlhom stla\u010den\u00ed (alternat\u00edvny re\u017eim)",
+            "remote_button_alt_quadruple_press": "\u0161tvorit\u00e9 kliknutie na tla\u010didlo \u201e{subtype}\u201c (Alternat\u00edvny re\u017eim)",
+            "remote_button_alt_quintuple_press": "p\u00e4\u0165n\u00e1sobn\u00e9 kliknutie na tla\u010didlo \u201e{subtype}\u201c (Alternat\u00edvny re\u017eim)",
+            "remote_button_alt_triple_press": "trojit\u00e9 kliknutie na tla\u010didlo \u201e{subtype}\u201c (Alternat\u00edvny re\u017eim)",
+            "remote_button_double_press": "dvojklik na tla\u010didlo \u201e{subtype}\u201c",
+            "remote_button_long_press": "Trvalo stla\u010den\u00e9 tla\u010didlo \"{subtype}\"",
+            "remote_button_long_release": "Tla\u010didlo \"{subtype}\" uvo\u013enen\u00e9 po dlhom stla\u010den\u00ed",
+            "remote_button_quadruple_press": "Tla\u010didlo \"{subtype}\" kliknut\u00e9 \u0161tyrikr\u00e1t",
+            "remote_button_quintuple_press": "Tla\u010didlo \"{subtype}\" kliknut\u00e9 p\u00e4\u0165kr\u00e1t",
+            "remote_button_short_press": "Stla\u010den\u00e9 tla\u010didlo \"{subtype}\"",
+            "remote_button_short_release": "Tla\u010didlo \"{subtype}\" bolo uvo\u013enen\u00e9",
+            "remote_button_triple_press": "Trojklik na tla\u010didlo \"{subtype}\""
         }
     },
     "options": {
@@ -64,7 +89,13 @@
             "choose_formation_strategy": {
                 "menu_options": {
                     "choose_automatic_backup": "Obnovenie automatickej z\u00e1lohy",
+                    "form_new_network": "Vyma\u017ete nastavenia siete a vytvorte nov\u00fa sie\u0165",
                     "upload_manual_backup": "Nahratie manu\u00e1lnej z\u00e1lohy"
+                }
+            },
+            "choose_serial_port": {
+                "data": {
+                    "path": "Cesta s\u00e9riov\u00e9ho zariadenia"
                 }
             },
             "prompt_migrate_or_reconfigure": {
