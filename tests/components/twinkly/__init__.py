@@ -33,7 +33,6 @@ class ClientMock:
             "uuid": self.id,
             "device_name": self.id,  # we make sure that entity id is different for each test
             "product_code": TEST_MODEL,
-            "max_movies": 100,
         }
 
     @property
