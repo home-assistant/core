@@ -17,5 +17,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "interfaces": "Vyberte rozhrania na skenovanie"
+                }
+            }
+        }
     }
 }

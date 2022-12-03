@@ -31,11 +31,15 @@
             "user": {
                 "data": {
                     "host": "Hostite\u013e"
-                }
+                },
+                "description": "Pred pokusom o nastavenie sa uistite, \u017ee je v\u00e1\u0161 telev\u00edzor zapnut\u00fd."
             }
         }
     },
     "options": {
+        "abort": {
+            "failed_update": "Pri aktualiz\u00e1cii zoznamu zdrojov sa vyskytla chyba. \n\n Pred pokusom o nastavenie sa uistite, \u017ee je v\u00e1\u0161 telev\u00edzor zapnut\u00fd."
+        },
         "step": {
             "user": {
                 "data": {

@@ -34,7 +34,8 @@
             "on_supervisor": {
                 "data": {
                     "use_addon": "Utilitza el complement oficial del Supervisor, Servidor Matter"
-                }
+                },
+                "title": "Selecci\u00f3 del m\u00e8tode de connexi\u00f3"
             },
             "start_addon": {
                 "title": "Iniciant complement."
