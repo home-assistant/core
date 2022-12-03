@@ -1069,7 +1069,6 @@ async def test_options_flow_connection_type(
     # run one option flow test with a set up integration (knx fixture)
     # instead of mocking async_setup_entry (knx_setup fixture) to test
     # usage of the already running XKNX instance for gateway scanner
-    knx.mock_config = mock_config_entry
     gateway = _gateway_descriptor("192.168.0.1", 3675)
 
     await knx.setup_integration({})
