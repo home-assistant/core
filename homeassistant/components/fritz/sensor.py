@@ -165,6 +165,7 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         name="External IPv6",
         icon="mdi:earth",
         value_fn=_retrieve_external_ipv6_state,
+        is_suitable=lambda info: info.ipv6_active,
     ),
     FritzSensorEntityDescription(
         key="device_uptime",

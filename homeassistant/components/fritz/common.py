@@ -670,6 +670,10 @@ class AvmWrapper(FritzBoxTools):
             partial(self.get_wan_link_properties)
         )
 
+    async def async_ipv6_active(self) -> bool:
+        """Call WANIPConn service."""
+        return await self.hass.async_add_executor_job(partial(self.ipv6_active))
+
     async def async_get_connection_info(self) -> ConnectionInfo:
         """Return ConnectionInfo data."""
 
@@ -678,6 +682,7 @@ class AvmWrapper(FritzBoxTools):
             connection=link_properties.get("NewWANAccessType", "").lower(),
             mesh_role=self.mesh_role,
             wan_enabled=self.device_is_router,
+            ipv6_active=await self.async_ipv6_active(),
         )
         _LOGGER.debug(
             "ConnectionInfo for FritzBox %s: %s",
@@ -793,6 +798,15 @@ class AvmWrapper(FritzBoxTools):
 
         return self._service_call_action(
             "WANCommonInterfaceConfig", "1", "GetCommonLinkProperties"
+        )
+
+    def ipv6_active(self) -> bool:
+        """Call WANIPConn service."""
+
+        return bool(
+            self._service_call_action(
+                "WANIPConn", "1", "X_AVM_DE_GetExternalIPv6Address"
+            )["NewExternalIPv6Address"]
         )
 
     def set_wlan_configuration(self, index: int, turn_on: bool) -> dict[str, Any]:
@@ -1023,3 +1037,4 @@ class ConnectionInfo:
     connection: str
     mesh_role: MeshRoles
     wan_enabled: bool
+    ipv6_active: bool
