@@ -274,6 +274,7 @@ class HKDevice:
         # We use async_request_update to avoid multiple updates
         # at the same time which would generate a spurious warning
         # in the log about concurrent polling.
+        _LOGGER.warning("Starting polling for %s", self.unique_id)
         self.config_entry.async_on_unload(
             async_track_time_interval(
                 self.hass, self.async_request_update, self.pairing.poll_interval
