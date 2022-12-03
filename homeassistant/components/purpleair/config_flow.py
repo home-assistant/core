@@ -1,18 +1,25 @@
 """Config flow for PurpleAir integration."""
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Any
 
 from aiopurpleair import API
+from aiopurpleair.endpoints.sensors import NearbySensorResult
 from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_validation as cv,
+    device_registry as dr,
+)
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -20,10 +27,11 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_SENSOR_INDICES, DOMAIN, LOGGER
+from .const import CONF_LAST_UPDATE_REMOVAL, CONF_SENSOR_INDICES, DOMAIN, LOGGER
 
 CONF_DISTANCE = "distance"
 CONF_NEARBY_SENSOR_OPTIONS = "nearby_sensor_options"
+CONF_SENSOR_DEVICE_ID = "sensor_device_id"
 CONF_SENSOR_INDEX = "sensor_index"
 
 DEFAULT_DISTANCE = 5
@@ -59,6 +67,20 @@ def async_get_coordinates_schema(hass: HomeAssistant) -> vol.Schema:
 
 
 @callback
+def async_get_nearby_sensors_options(
+    nearby_sensor_results: list[NearbySensorResult],
+) -> list[SelectOptionDict]:
+    """Return a set of nearby sensors as SelectOptionDict objects."""
+    return [
+        SelectOptionDict(
+            value=str(result.sensor.sensor_index),
+            label=f"{result.sensor.name} ({round(result.distance, 1)} km away)",
+        )
+        for result in nearby_sensor_results
+    ]
+
+
+@callback
 def async_get_nearby_sensors_schema(options: list[SelectOptionDict]) -> vol.Schema:
     """Define a schema for selecting a sensor from a list."""
     return vol.Schema(
@@ -68,6 +90,67 @@ def async_get_nearby_sensors_schema(options: list[SelectOptionDict]) -> vol.Sche
             )
         }
     )
+
+
+@callback
+def async_get_remove_sensor_options(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> list[SelectOptionDict]:
+    """Return a set of already-configured sensors as SelectOptionDict objects."""
+    device_registry = dr.async_get(hass)
+    return [
+        SelectOptionDict(value=device_entry.id, label=device_entry.name)
+        for device_entry in device_registry.devices.values()
+        if config_entry.entry_id in device_entry.config_entries
+    ]
+
+
+@callback
+def async_get_remove_sensor_schema(sensors: list[SelectOptionDict]) -> vol.Schema:
+    """Define a schema removing a sensor."""
+    return vol.Schema(
+        {
+            vol.Required(CONF_SENSOR_DEVICE_ID): SelectSelector(
+                SelectSelectorConfig(options=sensors, mode=SelectSelectorMode.DROPDOWN)
+            )
+        }
+    )
+
+
+@callback
+def async_remove_sensor_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry_id: str
+) -> int:
+    """Remove a sensor from the device registry and return its index.
+
+    Note that this method expects that there will always be a single sensor index per
+    DeviceEntry.
+    """
+    device_registry = dr.async_get(hass)
+    device_entry = device_registry.async_get(device_entry_id)
+
+    [sensor_index] = [
+        sensor_index
+        for sensor_index in config_entry.options[CONF_SENSOR_INDICES]
+        if (DOMAIN, str(sensor_index)) in device_entry.identifiers
+    ]
+
+    device_registry.async_update_device(
+        device_entry.id, remove_config_entry_id=config_entry.entry_id
+    )
+
+    return sensor_index
+
+
+@callback
+def async_untrack_sensor_index(
+    config_entry: ConfigEntry, sensor_index: int
+) -> list[int]:
+    """Untrack a sensor index from a config entry and return the current index list."""
+    options = deepcopy({**config_entry.options})
+    options[CONF_LAST_UPDATE_REMOVAL] = True
+    options[CONF_SENSOR_INDICES].remove(sensor_index)
+    return options
 
 
 @dataclass
@@ -143,6 +226,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self._flow_data: dict[str, Any] = {}
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> PurpleAirOptionsFlowHandler:
+        """Define the config flow to handle options."""
+        return PurpleAirOptionsFlowHandler(config_entry)
+
     async def async_step_by_coordinates(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -168,13 +259,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors=validation.errors,
             )
 
-        self._flow_data[CONF_NEARBY_SENSOR_OPTIONS] = [
-            SelectOptionDict(
-                value=str(result.sensor.sensor_index),
-                label=f"{result.sensor.name} ({round(result.distance, 1)} km away)",
-            )
-            for result in validation.data
-        ]
+        self._flow_data[CONF_NEARBY_SENSOR_OPTIONS] = async_get_nearby_sensors_options(
+            validation.data
+        )
 
         return await self.async_step_choose_sensor()
 
@@ -218,3 +305,96 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._flow_data = {CONF_API_KEY: api_key}
         return await self.async_step_by_coordinates()
+
+
+class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a PurpleAir options flow."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize."""
+        self._flow_data: dict[str, Any] = {}
+        self.config_entry = config_entry
+
+    async def async_step_add_sensor(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Add a sensor."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="add_sensor",
+                data_schema=async_get_coordinates_schema(self.hass),
+            )
+
+        validation = await async_validate_coordinates(
+            self.hass,
+            self.config_entry.data[CONF_API_KEY],
+            user_input[CONF_LATITUDE],
+            user_input[CONF_LONGITUDE],
+            user_input[CONF_DISTANCE],
+        )
+
+        if validation.errors:
+            return self.async_show_form(
+                step_id="add_sensor",
+                data_schema=async_get_coordinates_schema(self.hass),
+                errors=validation.errors,
+            )
+
+        self._flow_data[CONF_NEARBY_SENSOR_OPTIONS] = async_get_nearby_sensors_options(
+            validation.data
+        )
+
+        return await self.async_step_choose_sensor()
+
+    async def async_step_choose_sensor(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the selection of a sensor."""
+        if user_input is None:
+            options = self._flow_data.pop(CONF_NEARBY_SENSOR_OPTIONS)
+            return self.async_show_form(
+                step_id="choose_sensor",
+                data_schema=async_get_nearby_sensors_schema(options),
+            )
+
+        sensor_index = int(user_input[CONF_SENSOR_INDEX])
+
+        if sensor_index in self.config_entry.options[CONF_SENSOR_INDICES]:
+            return self.async_abort(reason="already_configured")
+
+        options = deepcopy({**self.config_entry.options})
+        options[CONF_LAST_UPDATE_REMOVAL] = False
+        options[CONF_SENSOR_INDICES].append(sensor_index)
+        return self.async_create_entry(title="", data=options)
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the options."""
+        return self.async_show_menu(
+            step_id="init",
+            menu_options=["add_sensor", "remove_sensor"],
+        )
+
+    async def async_step_remove_sensor(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Add a sensor."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="remove_sensor",
+                data_schema=async_get_remove_sensor_schema(
+                    async_get_remove_sensor_options(self.hass, self.config_entry)
+                ),
+            )
+
+        # Remove the sensor from the device registry:
+        removed_sensor_index = async_remove_sensor_device(
+            self.hass, self.config_entry, user_input[CONF_SENSOR_DEVICE_ID]
+        )
+
+        # Untrack the sensor index in config entry options:
+        new_options = async_untrack_sensor_index(
+            self.config_entry, removed_sensor_index
+        )
+        return self.async_create_entry(title="", data=new_options)
