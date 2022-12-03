@@ -7,9 +7,10 @@ from typing import Any, Final
 
 import voluptuous as vol
 from xknx import XKNX
-from xknx.exceptions.exception import InvalidSecureConfiguration
+from xknx.exceptions.exception import CommunicationError, InvalidSecureConfiguration
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.io.gateway_scanner import GatewayDescriptor, GatewayScanner
+from xknx.io.self_description import request_description
 from xknx.secure import load_keyring
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
@@ -204,8 +205,11 @@ class KNXCommonFlow(ABC, FlowHandler):
             return await self.async_step_manual_tunnel()
 
         errors: dict = {}
-        tunnel_options = [str(tunnel) for tunnel in self._found_tunnels]
-        tunnel_options.append(OPTION_MANUAL_TUNNEL)
+        tunnel_options = {
+            str(tunnel): f"{tunnel}{' 🔐' if tunnel.tunnelling_requires_secure else ''}"
+            for tunnel in self._found_tunnels
+        }
+        tunnel_options |= {OPTION_MANUAL_TUNNEL: OPTION_MANUAL_TUNNEL}
         fields = {vol.Required(CONF_KNX_GATEWAY): vol.In(tunnel_options)}
 
         return self.async_show_form(
@@ -230,17 +234,38 @@ class KNXCommonFlow(ABC, FlowHandler):
                 except vol.Invalid:
                     errors[CONF_KNX_LOCAL_IP] = "invalid_ip_address"
 
+            selected_tunnelling_type = user_input[CONF_KNX_TUNNELING_TYPE]
             if not errors:
-                connection_type = user_input[CONF_KNX_TUNNELING_TYPE]
+                try:
+                    self._selected_tunnel = await request_description(
+                        gateway_ip=_host,
+                        gateway_port=user_input[CONF_PORT],
+                        local_ip=_local_ip,
+                        route_back=user_input[CONF_KNX_ROUTE_BACK],
+                    )
+                except CommunicationError:
+                    errors["base"] = "cannot_connect"
+                else:
+                    if bool(self._selected_tunnel.tunnelling_requires_secure) is not (
+                        selected_tunnelling_type == CONF_KNX_TUNNELING_TCP_SECURE
+                    ):
+                        errors[CONF_KNX_TUNNELING_TYPE] = "unsupported_tunnel_type"
+                    elif (
+                        selected_tunnelling_type == CONF_KNX_TUNNELING_TCP
+                        and not self._selected_tunnel.supports_tunnelling_tcp
+                    ):
+                        errors[CONF_KNX_TUNNELING_TYPE] = "unsupported_tunnel_type"
+
+            if not errors:
                 self.new_entry_data = KNXConfigEntryData(
+                    connection_type=selected_tunnelling_type,
                     host=_host,
                     port=user_input[CONF_PORT],
                     route_back=user_input[CONF_KNX_ROUTE_BACK],
                     local_ip=_local_ip,
-                    connection_type=connection_type,
                 )
 
-                if connection_type == CONF_KNX_TUNNELING_TCP_SECURE:
+                if selected_tunnelling_type == CONF_KNX_TUNNELING_TCP_SECURE:
                     return self.async_show_menu(
                         step_id="secure_key_source",
                         menu_options=["secure_knxkeys", "secure_routing_manual"],
@@ -299,7 +324,7 @@ class KNXCommonFlow(ABC, FlowHandler):
         if self.show_advanced_options:
             fields[vol.Optional(CONF_KNX_LOCAL_IP)] = _IP_SELECTOR
 
-        if not self._found_tunnels:
+        if not self._found_tunnels and not errors.get("base"):
             errors["base"] = "no_tunnel_discovered"
         return self.async_show_form(
             step_id="manual_tunnel", data_schema=vol.Schema(fields), errors=errors
