@@ -9,7 +9,6 @@ import logging
 
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
@@ -76,7 +75,8 @@ class FritzGuestWifiQRCamera(FritzBoxBaseEntity, Camera):
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the attributes."""
         attrs: dict[str, str] = {}
-        attrs["ssid"] = self._ssid or STATE_UNKNOWN
+        if self._ssid:
+            attrs["ssid"] = self._ssid
         attrs["refresh_after_seconds"] = str(DEFAULT_GUEST_WIFI_QR_REFRESH_SEC)
         return attrs
 
