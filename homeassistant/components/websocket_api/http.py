@@ -218,7 +218,9 @@ class WebSocketHandler:
                 raise Disconnect
 
             if msg.type != WSMsgType.TEXT:
-                disconnect_warn = "Received non-Text message."
+                disconnect_warn = (
+                    f"Received non-Text message with type: {msg.type}: {msg.data}."
+                )
                 raise Disconnect
 
             try:
@@ -242,7 +244,9 @@ class WebSocketHandler:
                     break
 
                 if msg.type != WSMsgType.TEXT:
-                    disconnect_warn = "Received non-Text message."
+                    disconnect_warn = (
+                        f"Received non-Text message with type: {msg.type}: {msg.data}."
+                    )
                     break
 
                 try:
