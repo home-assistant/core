@@ -55,9 +55,8 @@ async def test_turn_on_off(hass: HomeAssistant):
     assert hass.states.get(entity.entity_id).state == "off"
 
     await hass.services.async_call(
-        "light", "turn_on", service_data={"entity_id": entity.entity_id}
+        "light", "turn_on", service_data={"entity_id": entity.entity_id}, blocking=True
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(entity.entity_id)
 
@@ -78,8 +77,8 @@ async def test_turn_on_with_brightness(hass: HomeAssistant):
         "light",
         "turn_on",
         service_data={"entity_id": entity.entity_id, "brightness": 255},
+        blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(entity.entity_id)
 
@@ -90,8 +89,8 @@ async def test_turn_on_with_brightness(hass: HomeAssistant):
         "light",
         "turn_on",
         service_data={"entity_id": entity.entity_id, "brightness": 1},
+        blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(entity.entity_id)
 
@@ -112,8 +111,8 @@ async def test_turn_on_with_color_rgbw(hass: HomeAssistant):
         "light",
         "turn_on",
         service_data={"entity_id": entity.entity_id, "rgbw_color": (128, 64, 32, 0)},
+        blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(entity.entity_id)
 
@@ -136,8 +135,8 @@ async def test_turn_on_with_color_rgb(hass: HomeAssistant):
         "light",
         "turn_on",
         service_data={"entity_id": entity.entity_id, "rgb_color": (128, 64, 32)},
+        blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(entity.entity_id)
 
@@ -161,8 +160,8 @@ async def test_turn_on_with_effect(hass: HomeAssistant):
         "light",
         "turn_on",
         service_data={"entity_id": entity.entity_id, "effect": "1 Rainbow"},
+        blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(entity.entity_id)
 
@@ -177,26 +176,28 @@ async def test_turn_on_with_color_rgbw_and_missing_effect(hass: HomeAssistant):
     client.state = False
     client.device_info["led_profile"] = "RGBW"
     client.brightness = {"mode": "enabled", "value": 255}
+    client.version = "2.7.0"
     entity, _, _, _ = await _create_entries(hass, client)
 
     assert hass.states.get(entity.entity_id).state == "off"
     assert not client.current_movie
 
-    assert LightEntityFeature.EFFECT in entity.supported_features
-    client.mock_unsupported_effects = True
+    assert not LightEntityFeature.EFFECT & entity.supported_features
 
     # Turn off to force async_update
     await hass.services.async_call(
-        "light", "turn_off", service_data={"entity_id": entity.entity_id}
+        "light",
+        "turn_off",
+        service_data={"entity_id": entity.entity_id},
+        blocking=True,
     )
-    await hass.async_block_till_done()
 
     await hass.services.async_call(
         "light",
         "turn_on",
         service_data={"entity_id": entity.entity_id, "rgbw_color": (128, 64, 32, 0)},
+        blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(entity.entity_id)
 
@@ -212,41 +213,6 @@ async def test_turn_on_with_color_rgb_and_missing_effect(hass: HomeAssistant):
     client.state = False
     client.device_info["led_profile"] = "RGB"
     client.brightness = {"mode": "enabled", "value": 255}
-    entity, _, _, _ = await _create_entries(hass, client)
-
-    assert hass.states.get(entity.entity_id).state == "off"
-    assert not client.current_movie
-    assert LightEntityFeature.EFFECT in entity.supported_features
-
-    client.mock_unsupported_effects = True
-
-    # Turn off to force async_update
-    await hass.services.async_call(
-        "light", "turn_off", service_data={"entity_id": entity.entity_id}
-    )
-    await hass.async_block_till_done()
-
-    await hass.services.async_call(
-        "light",
-        "turn_on",
-        service_data={"entity_id": entity.entity_id, "rgb_color": (128, 64, 32)},
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity.entity_id)
-
-    assert state.state == "on"
-    assert client.color == (128, 64, 32)
-    assert client.mode == "movie"
-    assert client.default_mode == "movie"
-
-
-async def test_turn_on_with_color_rgb_and_missing_effect_2(hass: HomeAssistant):
-    """Test support of the light.turn_on service with rgb color and missing effect support."""
-    client = ClientMock()
-    client.state = False
-    client.device_info["led_profile"] = "RGB"
-    client.brightness = {"mode": "enabled", "value": 255}
     client.version = "2.7.0"
     entity, _, _, _ = await _create_entries(hass, client)
 
@@ -256,16 +222,15 @@ async def test_turn_on_with_color_rgb_and_missing_effect_2(hass: HomeAssistant):
 
     # Turn off to force async_update
     await hass.services.async_call(
-        "light", "turn_off", service_data={"entity_id": entity.entity_id}
+        "light", "turn_off", service_data={"entity_id": entity.entity_id}, blocking=True
     )
-    await hass.async_block_till_done()
 
     await hass.services.async_call(
         "light",
         "turn_on",
         service_data={"entity_id": entity.entity_id, "rgb_color": (128, 64, 32)},
+        blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(entity.entity_id)
 
@@ -282,9 +247,8 @@ async def test_turn_off(hass: HomeAssistant):
     assert hass.states.get(entity.entity_id).state == "on"
 
     await hass.services.async_call(
-        "light", "turn_off", service_data={"entity_id": entity.entity_id}
+        "light", "turn_off", service_data={"entity_id": entity.entity_id}, blocking=True
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(entity.entity_id)
 
@@ -303,9 +267,8 @@ async def test_update_name(hass: HomeAssistant):
 
     client.change_name("new_device_name")
     await hass.services.async_call(
-        "light", "turn_off", service_data={"entity_id": entity.entity_id}
+        "light", "turn_off", service_data={"entity_id": entity.entity_id}, blocking=True
     )  # We call turn_off which will automatically cause an async_update
-    await hass.async_block_till_done()
 
     state = hass.states.get(entity.entity_id)
 

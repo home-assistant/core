@@ -6,8 +6,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from aiohttp import ClientError, ClientResponseError
-from aiohttp.web import HTTPNotFound
+from aiohttp import ClientError
 from packaging import version
 from ttls.client import Twinkly
 
@@ -100,6 +99,8 @@ class TwinklyLight(LightEntity):
         self._attributes: dict[Any, Any] = {}
         self._current_movie: dict[Any, Any] = {}
         self._movies: list[Any] = []
+        self._software_version = ""
+        # We guess that most devices are "new" and support effects
         self._attr_supported_features = LightEntityFeature.EFFECT
 
     @property
@@ -135,6 +136,7 @@ class TwinklyLight(LightEntity):
             manufacturer="LEDWORKS",
             model=self.model,
             name=self.name,
+            sw_version=self._software_version,
         )
 
     @property
@@ -165,6 +167,19 @@ class TwinklyLight(LightEntity):
             effect_list.append(f"{movie['id']} {movie['name']}")
         return effect_list
 
+    async def async_added_to_hass(self) -> None:
+        """Device is added to hass."""
+        software_version = await self._client.get_firmware_version()
+        if ATTR_VERSION in software_version:
+            self._software_version = software_version[ATTR_VERSION]
+
+            if version.parse(self._software_version) < version.parse(
+                MIN_EFFECT_VERSION
+            ):
+                self._attr_supported_features = (
+                    self.supported_features & ~LightEntityFeature.EFFECT
+                )
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         if ATTR_BRIGHTNESS in kwargs:
@@ -178,88 +193,53 @@ class TwinklyLight(LightEntity):
 
             await self._client.set_brightness(brightness)
 
-        if ATTR_RGBW_COLOR in kwargs:
-            if kwargs[ATTR_RGBW_COLOR] != self._attr_rgbw_color:
-                self._attr_rgbw_color = kwargs[ATTR_RGBW_COLOR]
+        if (
+            ATTR_RGBW_COLOR in kwargs
+            and kwargs[ATTR_RGBW_COLOR] != self._attr_rgbw_color
+        ):
 
-                if isinstance(self._attr_rgbw_color, tuple):
+            await self._client.interview()
+            if LightEntityFeature.EFFECT & self.supported_features:
+                # Static color only supports rgb
+                await self._client.set_static_colour(
+                    (
+                        kwargs[ATTR_RGBW_COLOR][0],
+                        kwargs[ATTR_RGBW_COLOR][1],
+                        kwargs[ATTR_RGBW_COLOR][2],
+                    )
+                )
+                await self._client.set_mode("color")
+                self._client.default_mode = "color"
+            else:
+                await self._client.set_cycle_colours(
+                    (
+                        kwargs[ATTR_RGBW_COLOR][3],
+                        kwargs[ATTR_RGBW_COLOR][0],
+                        kwargs[ATTR_RGBW_COLOR][1],
+                        kwargs[ATTR_RGBW_COLOR][2],
+                    )
+                )
+                await self._client.set_mode("movie")
+                self._client.default_mode = "movie"
+            self._attr_rgbw_color = kwargs[ATTR_RGBW_COLOR]
 
-                    await self._client.interview()
-                    if LightEntityFeature.EFFECT in self.supported_features:
-                        # Static color only supports rgb
-                        try:
-                            await self._client.set_static_colour(
-                                (
-                                    self._attr_rgbw_color[0],
-                                    self._attr_rgbw_color[1],
-                                    self._attr_rgbw_color[2],
-                                )
-                            )
-                            await self._client.set_mode("color")
-                            self._client.default_mode = "color"
-                        except ClientResponseError as error:
-                            if error.status == HTTPNotFound().status:
-                                self._attr_supported_features = (
-                                    self.supported_features & ~LightEntityFeature.EFFECT
-                                )
-                                await self._client.set_cycle_colours(
-                                    (
-                                        self._attr_rgbw_color[3],
-                                        self._attr_rgbw_color[0],
-                                        self._attr_rgbw_color[1],
-                                        self._attr_rgbw_color[2],
-                                    )
-                                )
-                                await self._client.set_mode("movie")
-                                self._client.default_mode = "movie"
-                            else:
-                                _LOGGER.warning("Unable to set rgbw-color")
-                                _LOGGER.warning(error)
-                    else:
-                        await self._client.set_cycle_colours(
-                            (
-                                self._attr_rgbw_color[3],
-                                self._attr_rgbw_color[0],
-                                self._attr_rgbw_color[1],
-                                self._attr_rgbw_color[2],
-                            )
-                        )
-                        await self._client.set_mode("movie")
-                        self._client.default_mode = "movie"
+        if ATTR_RGB_COLOR in kwargs and kwargs[ATTR_RGB_COLOR] != self._attr_rgb_color:
 
-        if ATTR_RGB_COLOR in kwargs:
-            if kwargs[ATTR_RGB_COLOR] != self._attr_rgb_color:
-                self._attr_rgb_color = kwargs[ATTR_RGB_COLOR]
+            await self._client.interview()
+            if LightEntityFeature.EFFECT & self.supported_features:
+                await self._client.set_static_colour(kwargs[ATTR_RGB_COLOR])
+                await self._client.set_mode("color")
+                self._client.default_mode = "color"
+            else:
+                await self._client.set_cycle_colours(kwargs[ATTR_RGB_COLOR])
+                await self._client.set_mode("movie")
+                self._client.default_mode = "movie"
 
-                if isinstance(self._attr_rgb_color, tuple):
-
-                    await self._client.interview()
-                    if LightEntityFeature.EFFECT in self.supported_features:
-                        try:
-                            await self._client.set_static_colour(self._attr_rgb_color)
-                            await self._client.set_mode("color")
-                            self._client.default_mode = "color"
-                        except ClientResponseError as error:
-                            if error.status == HTTPNotFound().status:
-                                self._attr_supported_features = (
-                                    self.supported_features & ~LightEntityFeature.EFFECT
-                                )
-                                await self._client.set_cycle_colours(
-                                    self._attr_rgb_color
-                                )
-                                await self._client.set_mode("movie")
-                                self._client.default_mode = "movie"
-                            else:
-                                _LOGGER.warning("Unable to set rgb-color")
-                                _LOGGER.warning(error)
-                    else:
-                        await self._client.set_cycle_colours(self._attr_rgb_color)
-                        await self._client.set_mode("movie")
-                        self._client.default_mode = "movie"
+            self._attr_rgb_color = kwargs[ATTR_RGB_COLOR]
 
         if (
             ATTR_EFFECT in kwargs
-            and LightEntityFeature.EFFECT in self.supported_features
+            and LightEntityFeature.EFFECT & self.supported_features
         ):
             movie_id = kwargs[ATTR_EFFECT].split(" ")[0]
             if "id" not in self._current_movie or int(movie_id) != int(
@@ -332,7 +312,7 @@ class TwinklyLight(LightEntity):
                     self.supported_features & ~LightEntityFeature.EFFECT
                 )
 
-            if LightEntityFeature.EFFECT in self.supported_features:
+            if LightEntityFeature.EFFECT & self.supported_features:
                 await self.async_update_movies()
                 await self.async_update_current_movie()
 
@@ -352,36 +332,14 @@ class TwinklyLight(LightEntity):
 
     async def async_update_movies(self) -> None:
         """Update the list of movies (effects)."""
-        try:
-            movies = await self._client.get_saved_movies()
-            _LOGGER.debug("Movies: %s", movies)
-            if movies and "movies" in movies:
-                self._movies = movies["movies"]
-        except ClientResponseError as error:
-            if error.status == HTTPNotFound().status:
-                _LOGGER.debug("Movies url not found. New effects are not supported")
-                self._attr_supported_features = (
-                    self.supported_features & ~LightEntityFeature.EFFECT
-                )
-            else:
-                _LOGGER.warning("Unable to get movies")
-                _LOGGER.warning(error)
+        movies = await self._client.get_saved_movies()
+        _LOGGER.debug("Movies: %s", movies)
+        if movies and "movies" in movies:
+            self._movies = movies["movies"]
 
     async def async_update_current_movie(self) -> None:
         """Update the current active movie."""
-        try:
-            current_movie = await self._client.get_current_movie()
-            _LOGGER.debug("Current movie: %s", current_movie)
-            if current_movie and "id" in current_movie:
-                self._current_movie = current_movie
-        except ClientResponseError as error:
-            if error.status == HTTPNotFound().status:
-                _LOGGER.debug(
-                    "Current movie url not found. New effects are not supported"
-                )
-                self._attr_supported_features = (
-                    self.supported_features & ~LightEntityFeature.EFFECT
-                )
-            else:
-                _LOGGER.warning("Unable to get movies")
-                _LOGGER.warning(error)
+        current_movie = await self._client.get_current_movie()
+        _LOGGER.debug("Current movie: %s", current_movie)
+        if current_movie and "id" in current_movie:
+            self._current_movie = current_movie
