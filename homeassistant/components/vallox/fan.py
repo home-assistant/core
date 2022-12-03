@@ -19,6 +19,7 @@ from homeassistant.components.fan import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -193,8 +194,7 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
                 {METRIC_KEY_MODE: MODE_ON if mode else MODE_OFF}
             )
         except ValloxApiException as err:
-            _LOGGER.error("Error setting power mode: %s", err)
-            return False
+            raise HomeAssistantError("Failed to set power mode") from err
 
         return True
 
@@ -208,8 +208,7 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
             self._valid_preset_mode_or_raise(preset_mode)
 
         except NotValidPresetModeError as err:
-            _LOGGER.error(err)
-            return False
+            raise ValueError(f"Not valid preset mode: {preset_mode}") from err
 
         if preset_mode == self.preset_mode:
             return False
@@ -220,8 +219,7 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
             self.coordinator.data.profile = profile
 
         except ValloxApiException as err:
-            _LOGGER.error("Error setting preset: %s", err)
-            return False
+            raise HomeAssistantError(f"Failed to set profile: {preset_mode}") from err
 
         return True
 
@@ -235,11 +233,12 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
 
         try:
             await self._client.set_fan_speed(vallox_profile, percentage)
-        except ValloxInvalidInputException:
+        except ValloxInvalidInputException as err:
             # This can happen if current profile does not support setting the fan speed.
-            return False
+            raise ValueError(
+                f"{vallox_profile} profile does not support setting the fan speed"
+            ) from err
         except ValloxApiException as err:
-            _LOGGER.error("Error setting fan speed: %s", err)
-            return False
+            raise HomeAssistantError("Failed to set fan speed") from err
 
         return True
