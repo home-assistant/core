@@ -2373,7 +2373,7 @@ streamlabswater==1.0.1
 stringcase==1.2.0
 
 # homeassistant.components.subaru
-subarulink==0.6.1
+subarulink==0.7.0rc1
 
 # homeassistant.components.solarlog
 sunwatcher==0.2.1
