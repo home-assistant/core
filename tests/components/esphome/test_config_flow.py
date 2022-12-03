@@ -559,6 +559,53 @@ async def test_reauth_confirm_invalid(hass, mock_client, mock_zeroconf):
     assert result["errors"]
     assert result["errors"]["base"] == "invalid_psk"
 
+    mock_client.device_info = AsyncMock(return_value=MockDeviceInfo(False, "test"))
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
+
+
+async def test_reauth_confirm_invalid_with_unique_id(hass, mock_client, mock_zeroconf):
+    """Test reauth initiation with invalid PSK."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053, CONF_PASSWORD: ""},
+        unique_id="test",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        "esphome",
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+            "unique_id": entry.unique_id,
+        },
+    )
+
+    mock_client.device_info.side_effect = InvalidEncryptionKeyAPIError
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_NOISE_PSK: INVALID_NOISE_PSK}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"]
+    assert result["errors"]["base"] == "invalid_psk"
+
+    mock_client.device_info = AsyncMock(return_value=MockDeviceInfo(False, "test"))
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
+
 
 async def test_discovery_dhcp_updates_host(hass, mock_client):
     """Test dhcp discovery updates host and aborts."""
