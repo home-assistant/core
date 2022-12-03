@@ -652,6 +652,7 @@ class HKDevice:
 
     async def async_request_update(self, now: datetime | None = None) -> None:
         """Request an debounced update from the accessory."""
+        assert 0, "async_request_update is nulled out"
         await self._debounced_update.async_call()
 
     async def async_update(self, now=None):
