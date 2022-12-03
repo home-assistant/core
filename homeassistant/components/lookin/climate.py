@@ -172,14 +172,20 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
     async def _async_update_conditioner(self) -> None:
         """Update the conditioner state from the climate data."""
         self.coordinator.async_set_updated_data(self._climate)
-        await self._lookin_protocol.update_conditioner(climate=self._climate)
+        await self._lookin_protocol.update_conditioner(
+            uuid=self._attr_unique_id, status=self._climate.to_status
+        )
 
     def _async_update_from_data(self) -> None:
         """Update attrs from data."""
-        meteo_data: MeteoSensor = self._meteo_coordinator.data
+        if self._meteo_coordinator:
+            temperature = self._meteo_coordinator.data.temperature
+            humidity = int(self._meteo_coordinator.data.humidity)
+        else:
+            temperature = humidity = None
 
-        self._attr_current_temperature = meteo_data.temperature
-        self._attr_current_humidity = int(meteo_data.humidity)
+        self._attr_current_temperature = temperature
+        self._attr_current_humidity = humidity
         self._attr_target_temperature = self._climate.temp_celsius
         self._attr_fan_mode = LOOKIN_FAN_MODE_IDX_TO_HASS[self._climate.fan_mode]
         self._attr_swing_mode = LOOKIN_SWING_MODE_IDX_TO_HASS[self._climate.swing_mode]

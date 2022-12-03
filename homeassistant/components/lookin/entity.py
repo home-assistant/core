@@ -109,10 +109,10 @@ class LookinCoordinatorEntity(
         self._attr_unique_id = uuid
         self._attr_name = device.name
 
-    async def _async_send_command(self, command: str) -> None:
+    async def _async_send_command(self, command: str, signal: str = "FF") -> None:
         """Send command from saved IR device."""
         await self._lookin_protocol.send_command(
-            uuid=self._uuid, command=command, signal="FF"
+            uuid=self._uuid, command=command, signal=signal
         )
 
 

@@ -183,7 +183,7 @@ aiolifx_themes==0.2.0
 aiolivisi==0.0.14
 
 # homeassistant.components.lookin
-aiolookin==0.1.1
+aiolookin==1.0.0
 
 # homeassistant.components.lyric
 aiolyric==1.0.8
