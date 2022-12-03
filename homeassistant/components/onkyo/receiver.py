@@ -11,7 +11,7 @@ from pyeiscp import Connection
 
 from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -253,7 +253,7 @@ class ReceiverZone:
         self.receiver: OnkyoNetworkReceiver = receiver
         self.name: str = name
         self.muted: bool = False
-        self.powerstate: str = STATE_UNKNOWN
+        self.powerstate: bool = False
         self.source: tuple[str, ...] = ("Unknown",)
         self.sound_mode: str | None = None
         self.hdmi_output: str | None = None
@@ -400,7 +400,7 @@ class ReceiverZone:
     def update_received_callback(self, command: str, value: Any) -> None:
         """Handle an update for this zone."""
         if command in ["system-power", "power"]:
-            self.powerstate = STATE_ON if value == "on" else STATE_OFF
+            self.powerstate = value == "on"
         elif command in ["volume", "master-volume"] and value != "N/A":
             self._supports_volume = True
             self._volume = value

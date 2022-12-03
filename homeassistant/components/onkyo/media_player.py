@@ -185,9 +185,13 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         return self._receiver_zone.receiver.online
 
     @property
-    def state(self) -> str:
+    def state(self) -> MediaPlayerState:
         """Return state of power on/off."""
-        return self._receiver_zone.powerstate
+        return (
+            MediaPlayerState.ON
+            if self._receiver_zone.powerstate
+            else MediaPlayerState.OFF
+        )
 
     @property
     def is_volume_muted(self) -> bool:
@@ -229,7 +233,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
                 ATTR_AUDIO_INFORMATION: self._receiver_zone.audio_information,
                 ATTR_VIDEO_INFORMATION: self._receiver_zone.video_information,
             }
-            if self._receiver_zone.powerstate == MediaPlayerState.ON
+            if self._receiver_zone.powerstate
             else {}
         )
 

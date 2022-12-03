@@ -249,7 +249,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     key,
                     default=source_name,
                 ): str
-                for key, source_name in self._options[CONF_SOURCES].items()  # type: ignore
+                for key, source_name in self._options[CONF_SOURCES].items()  # type: ignore[union-attr]
             }
         )
 

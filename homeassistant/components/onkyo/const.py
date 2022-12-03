@@ -1,5 +1,6 @@
 """Constants used by the Onkyo component."""
 from pyeiscp.commands import COMMANDS
+
 from homeassistant.components.media_player import MediaPlayerEntityFeature
 
 DOMAIN = "onkyo"
