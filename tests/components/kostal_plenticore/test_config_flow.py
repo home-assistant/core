@@ -2,7 +2,7 @@
 import asyncio
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
-from kostal.plenticore import PlenticoreAuthenticationException
+from pykoplenti import AuthenticationException
 
 from homeassistant import config_entries
 from homeassistant.components.kostal_plenticore.const import DOMAIN
@@ -75,7 +75,7 @@ async def test_form_invalid_auth(hass):
         # mock of the context manager instance
         mock_api_ctx = MagicMock()
         mock_api_ctx.login = AsyncMock(
-            side_effect=PlenticoreAuthenticationException(404, "invalid user"),
+            side_effect=AuthenticationException(404, "invalid user"),
         )
 
         # mock of the return instance of PlenticoreApiClient

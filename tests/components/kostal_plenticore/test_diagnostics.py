@@ -1,6 +1,6 @@
 """Test Kostal Plenticore diagnostics."""
 from aiohttp import ClientSession
-from kostal.plenticore import SettingsData
+from pykoplenti import SettingsData
 
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.kostal_plenticore.helper import Plenticore
