@@ -12,6 +12,11 @@
             "title": "Nap\u00e1janie nie je stabiln\u00e9"
         },
         "cold_tea": {
+            "fix_flow": {
+                "abort": {
+                    "not_tea_time": "V tento moment nejde \u010daj znovu ohria\u0165"
+                }
+            },
             "title": "\u010caj je studen\u00fd"
         },
         "out_of_blinker_fluid": {

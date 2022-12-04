@@ -63,11 +63,21 @@
             "remote_button_long_release": "Tla\u010didlo \"{subtype}\" uvo\u013enen\u00e9 po dlhom stla\u010den\u00ed",
             "remote_button_quadruple_press": "Tla\u010didlo \"{subtype}\" kliknut\u00e9 \u0161tyrikr\u00e1t",
             "remote_button_quintuple_press": "Tla\u010didlo \"{subtype}\" kliknut\u00e9 p\u00e4\u0165kr\u00e1t",
+            "remote_button_rotation_stopped": "Oto\u010denie tla\u010didla \"{subtype}\" bolo zastaven\u00e9",
             "remote_button_short_press": "Stla\u010den\u00e9 tla\u010didlo \"{subtype}\"",
             "remote_button_short_release": "Tla\u010didlo \"{subtype}\" bolo uvo\u013enen\u00e9",
             "remote_button_triple_press": "Trojklik na tla\u010didlo \"{subtype}\"",
             "remote_double_tap": "Zariadenie \"{subtype}\" dvojit\u00e9 klepnutie",
             "remote_double_tap_any_side": "Zariadenie dvakr\u00e1t klepnut\u00e9 na \u013eubovo\u013en\u00fa stranu",
+            "remote_flip_180_degrees": "Zariadenie oto\u010den\u00e9 o 180 stup\u0148ov",
+            "remote_flip_90_degrees": "Zariadenie oto\u010den\u00e9 o 90 stup\u0148ov",
+            "remote_gyro_activated": "Zariadenie sa zatriaslo",
+            "remote_rotate_from_side_1": "Zariadenie oto\u010den\u00e9 zo \"strany 1\" na \"{subtype}\"",
+            "remote_rotate_from_side_2": "Zariadenie oto\u010den\u00e9 zo \"strany 2\" na \"{subtype}\"",
+            "remote_rotate_from_side_3": "Zariadenie oto\u010den\u00e9 zo \"strany 3\" na \"{subtype}\"",
+            "remote_rotate_from_side_4": "Zariadenie oto\u010den\u00e9 zo \"strany 4\" na \"{subtype}\"",
+            "remote_rotate_from_side_5": "Zariadenie oto\u010den\u00e9 zo \"strany 5\" na \"{subtype}\"",
+            "remote_rotate_from_side_6": "Zariadenie oto\u010den\u00e9 zo \"strany 6\" na \"{subtype}\"",
             "remote_turned_clockwise": "Zariadenie oto\u010den\u00e9 v smere hodinov\u00fdch ru\u010di\u010diek",
             "remote_turned_counter_clockwise": "Zariadenie oto\u010den\u00e9 proti smeru hodinov\u00fdch ru\u010di\u010diek"
         }
@@ -76,8 +86,11 @@
         "step": {
             "deconz_devices": {
                 "data": {
-                    "allow_clip_sensor": "Povoli\u0165 senzory deCONZ CLIP"
+                    "allow_clip_sensor": "Povoli\u0165 senzory deCONZ CLIP",
+                    "allow_deconz_groups": "Povoli\u0165 skupiny svetiel deCONZ",
+                    "allow_new_devices": "Povoli\u0165 automatick\u00e9 prid\u00e1vanie nov\u00fdch zariaden\u00ed"
                 },
+                "description": "Nastavte vidite\u013enos\u0165 typov zariaden\u00ed deCONZ",
                 "title": "mo\u017enosti deCONZ"
             }
         }
