@@ -1,4 +1,5 @@
 """Tests for the Elmax component."""
+from tests.common import load_fixture
 
 MOCK_USER_JWT = (
     "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
@@ -17,4 +18,5 @@ MOCK_PASSWORD = "password"
 MOCK_DIRECT_HOST = "192.138.1.253"
 MOCK_DIRECT_PORT = 443
 MOCK_DIRECT_SSL = True
+MOCK_DIRECT_CERT = load_fixture("direct/cert.pem", "elmax")
 MOCK_DIRECT_FOLLOW_MDNS = True

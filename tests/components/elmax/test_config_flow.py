@@ -13,6 +13,7 @@ from homeassistant.components.elmax.const import (
     CONF_ELMAX_MODE_DIRECT_HOST,
     CONF_ELMAX_MODE_DIRECT_PORT,
     CONF_ELMAX_MODE_DIRECT_SSL,
+    CONF_ELMAX_MODE_DIRECT_SSL_CERT,
     CONF_ELMAX_PANEL_ID,
     CONF_ELMAX_PANEL_NAME,
     CONF_ELMAX_PANEL_PIN,
@@ -23,6 +24,7 @@ from homeassistant.components.elmax.const import (
 from homeassistant.config_entries import SOURCE_REAUTH
 
 from . import (
+    MOCK_DIRECT_CERT,
     MOCK_DIRECT_FOLLOW_MDNS,
     MOCK_DIRECT_HOST,
     MOCK_DIRECT_PORT,
@@ -40,11 +42,29 @@ from tests.common import MockConfigEntry
 MOCK_ZEROCONF_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     host="1.1.1.1",
     addresses=["1.1.1.1"],
-    hostname="mock_hostname",
-    name="shelly1pm-12345",
-    port=None,
-    properties={zeroconf.ATTR_PROPERTIES_ID: "shelly1pm-12345"},
-    type="mock_type",
+    hostname="VideoBox.local",
+    name="VideoBox",
+    port=443,
+    properties={
+        "idl": MOCK_PANEL_ID,
+        "idr": MOCK_PANEL_ID,
+        "v1": "PHANTOM64PRO_GSM 11.9.844",
+        "v2": "4.9.13",
+    },
+    type="_elmax-ssl._tcp",
+)
+MOCK_ZEROCONF_DISCOVERY_INFO_NOT_SUPPORTED = zeroconf.ZeroconfServiceInfo(
+    host="1.1.1.1",
+    addresses=["1.1.1.1"],
+    hostname="VideoBox.local",
+    name="VideoBox",
+    port=443,
+    properties={
+        "idl": MOCK_PANEL_ID,
+        "idr": MOCK_PANEL_ID,
+        "v1": "PHANTOM64PRO_GSM 11.9.844",
+    },
+    type="_elmax-ssl._tcp",
 )
 CONF_POLLING = "polling"
 
@@ -138,20 +158,90 @@ async def test_cloud_setup(hass):
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
-async def test_zeroconf_form_setup(hass):
+async def test_zeroconf_form_setup_api_not_supported(hass):
     """Test the zeroconf setup case."""
-    # Setup once.
-    show_form_result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DISCOVERY_INFO_NOT_SUPPORTED,
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "not_supported"
+
+
+async def test_zeroconf_discovery(hass):
+    """Test discovery of Elmax local api panel."""
+    result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=MOCK_ZEROCONF_DISCOVERY_INFO,
     )
-    result = await hass.config_entries.flow.async_configure(
-        show_form_result["flow_id"],
-    )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "zeroconf_setup"
     assert result["errors"] is None
+
+
+async def test_zeroconf_setup_show_form(hass):
+    """Test discovery shows a form when activated."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DISCOVERY_INFO,
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_setup"
+
+
+async def test_zeroconf_setup(hass):
+    """Test the successful creation of config entry via discovery flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DISCOVERY_INFO,
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
+            CONF_ELMAX_MODE_DIRECT_SSL: MOCK_DIRECT_SSL,
+        },
+    )
+
+    await hass.async_block_till_done()
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+
+
+async def test_zeroconf_already_configured(hass):
+    """Ensure local discovery aborts when same panel is already added to ha."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        title=f"Elmax Direct ({MOCK_PANEL_ID})",
+        data={
+            CONF_ELMAX_MODE: CONF_ELMAX_MODE_DIRECT,
+            CONF_ELMAX_MODE_DIRECT_HOST: MOCK_DIRECT_HOST,
+            CONF_ELMAX_MODE_DIRECT_PORT: MOCK_DIRECT_PORT,
+            CONF_ELMAX_MODE_DIRECT_SSL: MOCK_DIRECT_SSL,
+            CONF_ELMAX_MODE_DIRECT_FOLLOW_MDNS: MOCK_DIRECT_FOLLOW_MDNS,
+            CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
+            CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
+            CONF_ELMAX_MODE_DIRECT_SSL_CERT: MOCK_DIRECT_CERT,
+        },
+        unique_id=MOCK_PANEL_ID,
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DISCOVERY_INFO,
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_one_config_allowed_cloud(hass):
