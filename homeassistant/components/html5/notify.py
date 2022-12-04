@@ -17,7 +17,6 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant.components import websocket_api
-from homeassistant.components.frontend import add_manifest_json_key
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -40,8 +39,6 @@ _LOGGER = logging.getLogger(__name__)
 
 REGISTRATIONS_FILE = "html5_push_registrations.conf"
 
-ATTR_GCM_SENDER_ID = "gcm_sender_id"
-ATTR_GCM_API_KEY = "gcm_api_key"
 ATTR_VAPID_PUB_KEY = "vapid_pub_key"
 ATTR_VAPID_PRV_KEY = "vapid_prv_key"
 ATTR_VAPID_EMAIL = "vapid_email"
@@ -52,7 +49,7 @@ def gcm_api_deprecated(value):
     if value:
         _LOGGER.warning(
             "Configuring html5_push_notifications via the GCM api"
-            " has been deprecated and will stop working after April 11,"
+            " has been deprecated and stopped working since May 29,"
             " 2019. Use the VAPID configuration instead. For instructions,"
             " see https://www.home-assistant.io/integrations/html5/"
         )
@@ -61,8 +58,8 @@ def gcm_api_deprecated(value):
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(ATTR_GCM_SENDER_ID): vol.All(cv.string, gcm_api_deprecated),
-        vol.Optional(ATTR_GCM_API_KEY): cv.string,
+        vol.Optional("gcm_sender_id"): vol.All(cv.string, gcm_api_deprecated),
+        vol.Optional("gcm_api_key"): cv.string,
         vol.Optional(ATTR_VAPID_PUB_KEY): cv.string,
         vol.Optional(ATTR_VAPID_PRV_KEY): cv.string,
         vol.Optional(ATTR_VAPID_EMAIL): cv.string,
@@ -187,13 +184,8 @@ def get_service(hass, config, discovery_info=None):
     hass.http.register_view(HTML5PushRegistrationView(registrations, json_path))
     hass.http.register_view(HTML5PushCallbackView(registrations))
 
-    gcm_api_key = config.get(ATTR_GCM_API_KEY)
-
-    if config.get(ATTR_GCM_SENDER_ID) is not None:
-        add_manifest_json_key(ATTR_GCM_SENDER_ID, config.get(ATTR_GCM_SENDER_ID))
-
     return HTML5NotificationService(
-        hass, gcm_api_key, vapid_prv_key, vapid_email, registrations, json_path
+        hass, vapid_prv_key, vapid_email, registrations, json_path
     )
 
 
@@ -399,9 +391,8 @@ class HTML5PushCallbackView(HomeAssistantView):
 class HTML5NotificationService(BaseNotificationService):
     """Implement the notification service for HTML5."""
 
-    def __init__(self, hass, gcm_key, vapid_prv, vapid_email, registrations, json_path):
+    def __init__(self, hass, vapid_prv, vapid_email, registrations, json_path):
         """Initialize the service."""
-        self._gcm_key = gcm_key
         self._vapid_prv = vapid_prv
         self._vapid_email = vapid_email
         self.registrations = registrations
@@ -513,26 +504,16 @@ class HTML5NotificationService(BaseNotificationService):
                 info[ATTR_SUBSCRIPTION][ATTR_KEYS][ATTR_AUTH],
             )
             webpusher = WebPusher(info[ATTR_SUBSCRIPTION])
-            if self._vapid_prv and self._vapid_email:
-                vapid_headers = create_vapid_headers(
-                    self._vapid_email,
-                    info[ATTR_SUBSCRIPTION],
-                    self._vapid_prv,
-                    timestamp,
-                )
-                vapid_headers.update({"urgency": priority, "priority": priority})
-                response = webpusher.send(
-                    data=json.dumps(payload), headers=vapid_headers, ttl=ttl
-                )
-            else:
-                # Only pass the gcm key if we're actually using GCM
-                # If we don't, notifications break on FireFox
-                gcm_key = (
-                    self._gcm_key
-                    if "googleapis.com" in info[ATTR_SUBSCRIPTION][ATTR_ENDPOINT]
-                    else None
-                )
-                response = webpusher.send(json.dumps(payload), gcm_key=gcm_key, ttl=ttl)
+            vapid_headers = create_vapid_headers(
+                self._vapid_email,
+                info[ATTR_SUBSCRIPTION],
+                self._vapid_prv,
+                timestamp,
+            )
+            vapid_headers.update({"urgency": priority, "priority": priority})
+            response = webpusher.send(
+                data=json.dumps(payload), headers=vapid_headers, ttl=ttl
+            )
 
             if response.status_code == 410:
                 _LOGGER.info("Notification channel has expired")
@@ -569,21 +550,14 @@ def add_jwt(timestamp, target, tag, jwt_secret):
 def create_vapid_headers(vapid_email, subscription_info, vapid_private_key, timestamp):
     """Create encrypted headers to send to WebPusher."""
 
-    if (
-        vapid_email
-        and vapid_private_key
-        and ATTR_ENDPOINT in subscription_info
-        and timestamp
-    ):
-        vapid_exp = datetime.fromtimestamp(timestamp) + timedelta(
-            hours=VAPID_CLAIM_VALID_HOURS
-        )
-        url = urlparse(subscription_info.get(ATTR_ENDPOINT))
-        vapid_claims = {
-            "sub": f"mailto:{vapid_email}",
-            "aud": f"{url.scheme}://{url.netloc}",
-            "exp": int(vapid_exp.timestamp()),
-        }
-        vapid = Vapid.from_string(private_key=vapid_private_key)
-        return vapid.sign(vapid_claims)
-    return None
+    vapid_exp = datetime.fromtimestamp(timestamp) + timedelta(
+        hours=VAPID_CLAIM_VALID_HOURS
+    )
+    url = urlparse(subscription_info.get(ATTR_ENDPOINT))
+    vapid_claims = {
+        "sub": f"mailto:{vapid_email}",
+        "aud": f"{url.scheme}://{url.netloc}",
+        "exp": int(vapid_exp.timestamp()),
+    }
+    vapid = Vapid.from_string(private_key=vapid_private_key)
+    return vapid.sign(vapid_claims)
