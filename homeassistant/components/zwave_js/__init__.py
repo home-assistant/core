@@ -252,11 +252,19 @@ class DriverEvents:
             if device not in known_devices:
                 self.dev_reg.async_remove_device(device.id)
 
-        # run discovery on all ready nodes
+        # run discovery on controller node
+        controller_node = None
+        if (controller_node_id := driver.controller.own_node_id is not None) and (
+            controller_node := driver.controller.nodes.get(controller_node_id)
+        ):
+            await self.controller_events.async_on_node_added(controller_node)
+
+        # run discovery on all other ready nodes
         await asyncio.gather(
             *(
                 self.controller_events.async_on_node_added(node)
                 for node in driver.controller.nodes.values()
+                if controller_node is None or node != controller_node
             )
         )
 
@@ -383,6 +391,15 @@ class ControllerEvents:
         device_id = get_device_id(driver, node)
         device_id_ext = get_device_id_ext(driver, node)
         device = self.dev_reg.async_get_device({device_id})
+        via_device_id = None
+        # Get the controller node device ID if this node is not the controller
+        if (
+            driver.controller.own_node_id is not None
+            and driver.controller.own_node_id != node.node_id
+        ):
+            via_device_id = get_device_id(
+                driver, driver.controller.nodes[driver.controller.own_node_id]
+            )
 
         # Replace the device if it can be determined that this node is not the
         # same product as it was previously.
@@ -408,6 +425,7 @@ class ControllerEvents:
             model=node.device_config.label,
             manufacturer=node.device_config.manufacturer,
             suggested_area=node.location if node.location else UNDEFINED,
+            via_device=via_device_id,
         )
 
         async_dispatcher_send(self.hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
