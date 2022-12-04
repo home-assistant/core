@@ -34,7 +34,7 @@ async def test_select(
     assert state1.state == "stopped"
 
     monkeypatch.setattr(
-        get_data.parsed["ABC999111"], "horizontal_swing_mode", "fixedLeft"
+        get_data.parsed["ABC999111"], "horizontal_swing_mode", "fixedleft"
     )
 
     with patch(

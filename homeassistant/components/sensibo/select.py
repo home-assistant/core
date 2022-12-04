@@ -27,6 +27,7 @@ class SensiboSelectDescriptionMixin:
     data_key: str
     value_fn: Callable[[SensiboDevice], str | None]
     options_fn: Callable[[SensiboDevice], list[str] | None]
+    transformation: Callable[[SensiboDevice], dict | None]
 
 
 @dataclass
@@ -45,6 +46,7 @@ DEVICE_SELECT_TYPES = (
         value_fn=lambda data: data.horizontal_swing_mode,
         options_fn=lambda data: data.horizontal_swing_modes,
         device_class=f"{DOMAIN}__horizontalswing",
+        transformation=lambda data: data.horizontal_swing_modes_to_native,
     ),
     SensiboSelectEntityDescription(
         key="light",
@@ -54,23 +56,9 @@ DEVICE_SELECT_TYPES = (
         value_fn=lambda data: data.light_mode,
         options_fn=lambda data: data.light_modes,
         device_class=f"{DOMAIN}__light",
+        transformation=lambda data: data.light_modes_to_native,
     ),
 )
-
-SELECT_STATES_TO_API = {
-    "stopped": "stopped",
-    "fixedleft": "fixedLeft",
-    "fixedcenterleft": "fixedCenterLeft",
-    "fixedcenter": "fixedCenter",
-    "fixedcenterright": "fixedCenterRight",
-    "fixedright": "fixedRight",
-    "fixedleftright": "fixedLeftRight",
-    "rangecenter": "rangeCenter",
-    "rangefull": "rangeFull",
-    "on": "on",
-    "dim": "dim",
-    "off": "off",
-}
 
 
 async def async_setup_entry(
@@ -107,10 +95,7 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return the current selected option."""
-        state = self.entity_description.value_fn(self.device_data)
-        if TYPE_CHECKING:
-            assert isinstance(state, str)
-        return state.lower()
+        return self.entity_description.value_fn(self.device_data)
 
     @property
     def options(self) -> list[str]:
@@ -118,10 +103,7 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
         options = self.entity_description.options_fn(self.device_data)
         if TYPE_CHECKING:
             assert options is not None
-        lower_case_options = []
-        for option in options:
-            lower_case_options.append(option.lower())
-        return lower_case_options
+        return options
 
     async def async_select_option(self, option: str) -> None:
         """Set state to the selected option."""
@@ -130,15 +112,18 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
                 f"Current mode {self.device_data.hvac_mode} doesn't support setting {self.entity_description.name}"
             )
 
-        value = SELECT_STATES_TO_API[option]
         await self.async_send_api_call(
             key=self.entity_description.data_key,
-            value=value,
+            value=option,
         )
 
     @async_handle_api_call
     async def async_send_api_call(self, key: str, value: Any) -> bool:
         """Make service call to api."""
+        transformation = self.entity_description.transformation(self.device_data)
+        if TYPE_CHECKING:
+            assert transformation is not None
+
         data = {
             "name": self.entity_description.key,
             "value": value,
@@ -148,7 +133,7 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
         result = await self._client.async_set_ac_state_property(
             self._device_id,
             data["name"],
-            data["value"],
+            transformation[data["value"]],
             data["ac_states"],
             data["assumed_state"],
         )
