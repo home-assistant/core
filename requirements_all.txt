@@ -630,7 +630,7 @@ eliqonline==1.2.2
 elkm1-lib==2.2.1
 
 # homeassistant.components.elmax
-elmax_api==0.0.3rc4
+elmax_api==0.0.3
 
 # homeassistant.components.emulated_roku
 emulated_roku==0.2.1
