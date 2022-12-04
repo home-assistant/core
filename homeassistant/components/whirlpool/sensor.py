@@ -14,7 +14,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -67,6 +66,13 @@ CYCLE_FUNC = [
     WasherDryer.get_cycle_status_spinning,
     WasherDryer.get_cycle_status_washing,
 ]
+TANK_FILL = {
+    "0": "Unknown",
+    "1": "Empty",
+    "2": "25%",
+    "3": "50%",
+    "4": "100%",
+}
 
 
 def washer_state(washer: WasherDryer) -> str | None:
@@ -130,16 +136,12 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
         name="Dispense Level",
         device_class=SensorDeviceClass.VOLUME,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
         entity_registry_enabled_default=True,
         icon=ICON_W,
         has_entity_name=True,
-        # value_fn=dispnese_fill,
-        value_fn=lambda WasherDryer: int(
-            int(WasherDryer.get_attribute("WashCavity_OpStatusBulkDispense1Level"))
-            * 100
-            / 6
-        ),
+        value_fn=lambda WasherDryer: TANK_FILL[
+            WasherDryer.get_attribute("WashCavity_OpStatusBulkDispense1Level")
+        ],
     ),
 )
 
