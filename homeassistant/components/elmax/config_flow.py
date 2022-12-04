@@ -3,15 +3,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-import socket
 from typing import Any
 
-from elmax_api.exceptions import (
-    ElmaxApiError,
-    ElmaxBadLoginError,
-    ElmaxBadPinError,
-    ElmaxNetworkError,
-)
+from elmax_api.exceptions import ElmaxBadLoginError, ElmaxBadPinError, ElmaxNetworkError
 from elmax_api.http import Elmax, ElmaxLocal, GenericElmax
 from elmax_api.model.panel import PanelEntry
 import httpx
@@ -167,24 +161,38 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="direct_setup", data_schema=DIRECT_SETUP_SCHEMA, errors=errors
         )
 
+    async def _handle_direct_and_create_entry(
+        self, fallback_step_id: str, schema: vol.Schema
+    ) -> FlowResult:
+        try:
+            return await self._test_direct_and_create_entry()
+        except (ElmaxNetworkError, httpx.ConnectError, httpx.ConnectTimeout):
+            return self.async_show_form(
+                step_id=fallback_step_id,
+                data_schema=schema,
+                errors={"base": "network_error"},
+            )
+        except ElmaxBadLoginError:
+            return self.async_show_form(
+                step_id=fallback_step_id,
+                data_schema=schema,
+                errors={"base": "invalid_auth"},
+            )
+
     async def _test_direct_and_create_entry(self):
         """Test the direct connection to the Elmax panel and create and entry if successful."""
         ssl_context = None
+        self._panel_direct_ssl_cert = None
         if self._panel_direct_use_ssl:
             # Fetch the remote certificate.
             # Local API is exposed via a self-signed SSL that we must add to our trust store.
-            try:
-                self._panel_direct_ssl_cert = (
-                    await GenericElmax.retrieve_server_certificate(
-                        hostname=self._panel_direct_hostname,
-                        port=self._panel_direct_port,
-                    )
+            self._panel_direct_ssl_cert = (
+                await GenericElmax.retrieve_server_certificate(
+                    hostname=self._panel_direct_hostname,
+                    port=self._panel_direct_port,
                 )
-            except (socket.gaierror, ConnectionRefusedError) as ex:
-                raise ElmaxNetworkError from ex
+            )
             ssl_context = build_direct_ssl_context(cadata=self._panel_direct_ssl_cert)
-        else:
-            self._panel_direct_ssl_cert = None
 
         # Attempt the connection to make sure the pin works. Also, take the chance to retrieve the panel ID via APIs.
         client_api_url = get_direct_api_url(
@@ -249,28 +257,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_ELMAX_PANEL_PIN, default=self._panel_pin): str,
             }
         )
-        try:
-            return await self._test_direct_and_create_entry()
-        except (ElmaxNetworkError, httpx.ConnectError, httpx.ConnectTimeout):
-            return self.async_show_form(
-                step_id="direct_setup",
-                data_schema=tmp_schema,
-                errors={"base": "network_error"},
-            )
-        except ElmaxBadLoginError:
-            return self.async_show_form(
-                step_id="direct_setup",
-                data_schema=tmp_schema,
-                errors={"base": "invalid_auth"},
-            )
-        except ElmaxApiError as ex:
-            if ex.status_code == 403:
-                return self.async_show_form(
-                    step_id="direct_setup",
-                    data_schema=tmp_schema,
-                    errors={"base": "invalid_auth"},
-                )
-            raise ex
+        return await self._handle_direct_and_create_entry(
+            fallback_step_id="direct_setup", schema=tmp_schema
+        )
 
     async def async_step_zeroconf_setup(self, user_input: dict[str, Any]) -> FlowResult:
         """Handle the direct setup step triggered via zeroconf."""
@@ -295,28 +284,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ): bool,
             }
         )
-        try:
-            return await self._test_direct_and_create_entry()
-        except (ElmaxNetworkError, httpx.ConnectError, httpx.ConnectTimeout):
-            return self.async_show_form(
-                step_id="zeroconf_setup",
-                data_schema=tmp_schema,
-                errors={"base": "network_error"},
-            )
-        except ElmaxBadLoginError:
-            return self.async_show_form(
-                step_id="zeroconf_setup",
-                data_schema=tmp_schema,
-                errors={"base": "invalid_auth"},
-            )
-        except ElmaxApiError as ex:
-            if ex.status_code == 403:
-                return self.async_show_form(
-                    step_id="zeroconf_setup",
-                    data_schema=tmp_schema,
-                    errors={"base": "invalid_auth"},
-                )
-            raise ex
+        return await self._handle_direct_and_create_entry(
+            fallback_step_id="zeroconf_setup", schema=tmp_schema
+        )
 
     async def _check_unique_and_create_entry(
         self, unique_id: str, title: str, data: Mapping[str, Any]
@@ -574,12 +544,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not check_local_version_supported(v2api_version):
             return self.async_abort(reason="not_supported")
 
-        if local_id is not None:
-            abort_result = await self._async_handle_entry_match(
-                local_id, remote_id, host, https_port, plain_http_port
+        if (
+            local_id is not None
+            and (
+                abort_result := await self._async_handle_entry_match(
+                    local_id, remote_id, host, https_port, plain_http_port
+                )
             )
-            if abort_result:
-                return abort_result
+            is not None
+        ):
+            return abort_result
 
         self._selected_mode = CONF_ELMAX_MODE_DIRECT
         self._panel_direct_hostname = host
