@@ -1,6 +1,7 @@
 """Sensor for Last.fm account status."""
 from __future__ import annotations
 
+import datetime
 import hashlib
 import logging
 import re
@@ -10,13 +11,23 @@ from pylast import WSError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_API_KEY
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_API_KEY,
+    CONF_API_TOKEN,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+DOMAIN = "lastfm"
+
 _LOGGER = logging.getLogger(__name__)
+
+SERVICE_SCROBBLE = "scrobble"
 
 ATTR_LAST_PLAYED = "last_played"
 ATTR_PLAY_COUNT = "play_count"
@@ -26,12 +37,37 @@ STATE_NOT_SCROBBLING = "Not Scrobbling"
 
 CONF_USERS = "users"
 
+
 ICON = "mdi:radio-fm"
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_USERS, default=[]): vol.All(cv.ensure_list, [cv.string]),
+        vol.Required(CONF_API_TOKEN): cv.string,
+        vol.Required(CONF_USERS, default=[]): vol.All(
+            cv.ensure_list,
+            [
+                {
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Optional(CONF_PASSWORD): cv.string,
+                }
+            ],
+        ),
+    }
+)
+
+ATTR_ARTIST = "artist"
+ATTR_TITLE = "title"
+ATTR_ALBUM = "album"
+ATTR_TIMESTAMP = "timestamp"
+SERVICE_SCHEMA_SCROBBLE = vol.Schema(
+    {
+        vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Required(ATTR_ARTIST): cv.string,
+        vol.Required(ATTR_TITLE): cv.string,
+        vol.Optional(ATTR_ALBUM, ""): cv.string,
+        vol.Optional(ATTR_TIMESTAMP, ""): cv.string,
     }
 )
 
@@ -49,15 +85,53 @@ def setup_platform(
     lastfm_api = lastfm.LastFMNetwork(api_key=api_key)
 
     entities = []
-    for username in users:
+    for user in users:
         try:
-            lastfm_api.get_user(username).get_image()
-            entities.append(LastfmSensor(username, lastfm_api))
+            lastfm_api.get_user(user["username"]).get_image()
+            entities.append(LastfmSensor(user["username"], lastfm_api))
         except WSError as error:
             _LOGGER.error(error)
             return
 
     add_entities(entities, True)
+
+    def scrobble(service: ServiceCall) -> None:
+        """Call when a user adds a new Aftership tracking from HASS."""
+        api_secret = config[CONF_API_TOKEN]
+        entity_id = service.data[ATTR_ENTITY_ID]
+        artist = service.data[ATTR_ARTIST]
+        title = service.data[ATTR_TITLE]
+        album = service.data[ATTR_ALBUM]
+        timestamp = service.data[ATTR_TIMESTAMP]
+        formatted_date = datetime.datetime.strptime(timestamp, "%Y/%m/%d %H:%M:%S")
+        unix_timestamp = datetime.datetime.timestamp(formatted_date)
+
+        for entity in entities:
+            _LOGGER.error(entity.name)  # prints User1
+            if entity.entity_id == entity_id:
+                passwords = {d["username"]: d["password"] for d in users}
+
+                try:
+                    network = lastfm.LastFMNetwork(
+                        api_key=api_key,
+                        api_secret=api_secret,
+                        username=entity.name,
+                        password_hash=lastfm.md5(passwords[entity.name]),
+                    )
+                except WSError as error:
+                    _LOGGER.error(error)
+                    return
+
+        # for entity in entities:
+        #    if entity.entity_id == entity_id:
+        network.scrobble(artist, title, int(unix_timestamp), album)
+
+    hass.services.register(
+        DOMAIN,
+        SERVICE_SCROBBLE,
+        scrobble,
+        schema=SERVICE_SCHEMA_SCROBBLE,
+    )
 
 
 class LastfmSensor(SensorEntity):

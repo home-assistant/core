@@ -1,0 +1,31 @@
+# Describes the format for available Last.fm services
+
+scrobble:
+  description: Manually scrobble a music track
+  fields:
+    entity_id:
+      name: Entity
+      description: id of the entity that should scrobble
+      required: true
+      selector:
+        entity:
+          integration: lastfm
+          domain: sensor
+    artist:
+      description: Artist name
+      example: Queen
+      required: true
+    title:
+      description: Track name
+      example: Bohemian Rhapsody
+      required: true
+    album:
+      description: Album name
+      example: A Night at the Opera
+      required: false
+    timestamp:
+      description: Timestamp of the scrobble
+      example: "2022-12-03 13:00:00"
+      required: false
+      selector:
+        datetime:
