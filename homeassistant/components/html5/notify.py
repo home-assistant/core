@@ -60,9 +60,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional("gcm_sender_id"): vol.All(cv.string, gcm_api_deprecated),
         vol.Optional("gcm_api_key"): cv.string,
-        vol.Optional(ATTR_VAPID_PUB_KEY): cv.string,
-        vol.Optional(ATTR_VAPID_PRV_KEY): cv.string,
-        vol.Optional(ATTR_VAPID_EMAIL): cv.string,
+        vol.Required(ATTR_VAPID_PUB_KEY): cv.string,
+        vol.Required(ATTR_VAPID_PRV_KEY): cv.string,
+        vol.Required(ATTR_VAPID_EMAIL): cv.string,
     }
 )
 
