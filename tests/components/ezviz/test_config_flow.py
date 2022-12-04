@@ -273,6 +273,17 @@ async def test_user_form_exception(hass: HomeAssistant, ezviz_config_flow) -> No
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_host"}
 
+    ezviz_config_flow.side_effect = EzvizAuthVerificationCode
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT_VALIDATE,
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "mfa_required"}
+
     ezviz_config_flow.side_effect = HTTPError
 
     result = await hass.config_entries.flow.async_configure(
