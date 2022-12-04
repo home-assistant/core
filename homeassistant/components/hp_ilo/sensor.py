@@ -126,11 +126,13 @@ class HpIloSensor(SensorEntity):
         sensor_name,
         sensor_value_template,
         unit_of_measurement,
+        state_class,
     ):
         """Initialize the HP iLO sensor."""
         self._hass = hass
         self._name = sensor_name
         self._unit_of_measurement = unit_of_measurement
+        self._state_class = state_class
         self._ilo_function = SENSOR_TYPES[sensor_type][1]
         self.hp_ilo_data = hp_ilo_data
 
@@ -152,6 +154,11 @@ class HpIloSensor(SensorEntity):
     def native_unit_of_measurement(self):
         """Return the unit of measurement of the sensor."""
         return self._unit_of_measurement
+
+    @property
+    def state_class(self):
+        """Return the state class of the sensor."""
+        return self._state_class
 
     @property
     def native_value(self):
