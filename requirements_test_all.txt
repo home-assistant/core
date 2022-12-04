@@ -33,7 +33,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.20.8
+PySwitchbot==0.22.0
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -856,7 +856,7 @@ nextcord==2.0.0a8
 nextdns==1.2.2
 
 # homeassistant.components.nibe_heatpump
-nibe==1.4.0
+nibe==1.5.0
 
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
@@ -1816,13 +1816,13 @@ xmltodict==0.13.0
 yalesmartalarmclient==0.3.9
 
 # homeassistant.components.yalexs_ble
-yalexs-ble==1.10.2
+yalexs-ble==1.10.3
 
 # homeassistant.components.august
 yalexs==1.2.6
 
 # homeassistant.components.august
-yalexs_ble==1.10.2
+yalexs_ble==1.10.3
 
 # homeassistant.components.yeelight
 yeelight==0.7.10
