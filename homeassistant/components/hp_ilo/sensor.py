@@ -7,7 +7,11 @@ import logging
 import hpilo
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
@@ -16,7 +20,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SENSOR_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
-    CONF_STATE_CLASS,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
 )
