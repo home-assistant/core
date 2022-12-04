@@ -79,7 +79,7 @@ REST_UPDATES: Final = {
         beta=False,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
+        entity_registry_enabled_default=True,
     ),
     "fwupdate_beta": RestUpdateDescription(
         name="Beta Firmware Update",
@@ -101,7 +101,7 @@ RPC_UPDATES: Final = {
         beta=False,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
+        entity_registry_enabled_default=True,
     ),
     "fwupdate_beta": RpcUpdateDescription(
         name="Beta Firmware Update",

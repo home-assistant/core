@@ -51,7 +51,6 @@ async def test_remove_legacy_entities(
         DOMAIN,
         unique_id,
         suggested_object_id=f"test_name_{object_id}",
-        disabled_by=None,
     )
 
     assert entity_registry.async_get(entity_id) is not None
@@ -69,7 +68,6 @@ async def test_block_update(hass: HomeAssistant, mock_block_device, monkeypatch)
         DOMAIN,
         f"{MOCK_MAC}-fwupdate",
         suggested_object_id="test_name_firmware_update",
-        disabled_by=None,
     )
     monkeypatch.setitem(mock_block_device.status["update"], "old_version", "1")
     monkeypatch.setitem(mock_block_device.status["update"], "new_version", "2")
@@ -113,7 +111,6 @@ async def test_block_beta_update(hass: HomeAssistant, mock_block_device, monkeyp
         DOMAIN,
         f"{MOCK_MAC}-fwupdate_beta",
         suggested_object_id="test_name_beta_firmware_update",
-        disabled_by=None,
     )
     monkeypatch.setitem(mock_block_device.status["update"], "old_version", "1")
     monkeypatch.setitem(mock_block_device.status["update"], "new_version", "2")
@@ -169,7 +166,6 @@ async def test_block_update_connection_error(
         DOMAIN,
         f"{MOCK_MAC}-fwupdate",
         suggested_object_id="test_name_firmware_update",
-        disabled_by=None,
     )
     monkeypatch.setitem(mock_block_device.status["update"], "old_version", "1")
     monkeypatch.setitem(mock_block_device.status["update"], "new_version", "2")
@@ -200,7 +196,6 @@ async def test_block_update_auth_error(
         DOMAIN,
         f"{MOCK_MAC}-fwupdate",
         suggested_object_id="test_name_firmware_update",
-        disabled_by=None,
     )
     monkeypatch.setitem(mock_block_device.status["update"], "old_version", "1")
     monkeypatch.setitem(mock_block_device.status["update"], "new_version", "2")
@@ -242,7 +237,6 @@ async def test_rpc_update(hass: HomeAssistant, mock_rpc_device, monkeypatch):
         DOMAIN,
         f"{MOCK_MAC}-sys-fwupdate",
         suggested_object_id="test_name_firmware_update",
-        disabled_by=None,
     )
     monkeypatch.setitem(mock_rpc_device.shelly, "ver", "1")
     monkeypatch.setitem(
@@ -292,7 +286,6 @@ async def test_rpc_beta_update(hass: HomeAssistant, mock_rpc_device, monkeypatch
         DOMAIN,
         f"{MOCK_MAC}-sys-fwupdate_beta",
         suggested_object_id="test_name_beta_firmware_update",
-        disabled_by=None,
     )
     monkeypatch.setitem(mock_rpc_device.shelly, "ver", "1")
     monkeypatch.setitem(
@@ -368,7 +361,6 @@ async def test_rpc_update__errors(
         DOMAIN,
         f"{MOCK_MAC}-sys-fwupdate",
         suggested_object_id="test_name_firmware_update",
-        disabled_by=None,
     )
     monkeypatch.setitem(mock_rpc_device.shelly, "ver", "1")
     monkeypatch.setitem(
@@ -404,7 +396,6 @@ async def test_rpc_update_auth_error(
         DOMAIN,
         f"{MOCK_MAC}-sys-fwupdate",
         suggested_object_id="test_name_firmware_update",
-        disabled_by=None,
     )
     monkeypatch.setitem(mock_rpc_device.shelly, "ver", "1")
     monkeypatch.setitem(
