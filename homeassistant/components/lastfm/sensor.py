@@ -122,8 +122,6 @@ def setup_platform(
                     _LOGGER.error(error)
                     return
 
-        # for entity in entities:
-        #    if entity.entity_id == entity_id:
         network.scrobble(artist, title, int(unix_timestamp), album)
 
     hass.services.register(
