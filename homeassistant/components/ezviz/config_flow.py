@@ -1,4 +1,4 @@
-"""Config flow for ezviz."""
+"""Config flow for EZVIZ."""
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -52,7 +52,7 @@ DEFAULT_OPTIONS = {
 
 
 def _validate_and_create_auth(data: dict) -> dict[str, Any]:
-    """Try to login to ezviz cloud account and return token."""
+    """Try to login to EZVIZ cloud account and return token."""
     # Verify cloud credentials by attempting a login request with username and password.
     # Return login token.
 
@@ -93,7 +93,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _validate_and_create_camera_rtsp(self, data: dict) -> FlowResult:
         """Try DESCRIBE on RTSP camera with credentials."""
 
-        # Get Ezviz cloud credentials from config entry
+        # Get EZVIZ cloud credentials from config entry
         ezviz_token = {
             CONF_SESSION_ID: None,
             CONF_RFSESSION_ID: None,
@@ -149,7 +149,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
 
-        # Check if ezviz cloud account is present in entry config,
+        # Check if EZVIZ cloud account is present in entry config,
         # abort if already configured.
         for item in self._async_current_entries():
             if item.data.get(CONF_TYPE) == ATTR_TYPE_CLOUD:
@@ -315,9 +315,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_reauth(
-        self, user_input: Mapping[str, Any] = None
-    ) -> FlowResult:
+    async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
         """Handle a flow for reauthentication with password."""
 
         return await self.async_step_reauth_confirm()
@@ -394,7 +392,7 @@ class EzvizOptionsFlowHandler(OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Manage Ezviz options."""
+        """Manage EZVIZ options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
