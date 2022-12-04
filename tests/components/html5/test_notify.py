@@ -86,7 +86,7 @@ class TestHtml5Notify:
 
         m = mock_open()
         with patch("homeassistant.util.json.open", m, create=True):
-            service = html5.get_service(hass, {})
+            service = html5.get_service(hass, VAPID_CONF)
 
         assert service is not None
 

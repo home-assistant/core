@@ -170,9 +170,9 @@ def get_service(hass, config, discovery_info=None):
     if registrations is None:
         return None
 
-    vapid_pub_key = config.get(ATTR_VAPID_PUB_KEY)
-    vapid_prv_key = config.get(ATTR_VAPID_PRV_KEY)
-    vapid_email = config.get(ATTR_VAPID_EMAIL)
+    vapid_pub_key = config[ATTR_VAPID_PUB_KEY]
+    vapid_prv_key = config[ATTR_VAPID_PRV_KEY]
+    vapid_email = config[ATTR_VAPID_EMAIL]
 
     def websocket_appkey(hass, connection, msg):
         connection.send_message(websocket_api.result_message(msg["id"], vapid_pub_key))
