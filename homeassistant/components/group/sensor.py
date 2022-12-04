@@ -8,6 +8,8 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA,
@@ -68,7 +70,9 @@ PARALLEL_UPDATES = 0
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITIES): cv.entities_domain(DOMAIN),
+        vol.Required(CONF_ENTITIES): cv.entities_domain(
+            [DOMAIN, NUMBER_DOMAIN, INPUT_NUMBER_DOMAIN]
+        ),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_ALL, default=False): cv.boolean,
@@ -104,8 +108,8 @@ async def async_setup_platform(
                 config[CONF_TYPE],
                 config[CONF_ROUND_DIGITS],
                 config.get(CONF_UNIT_OF_MEASUREMENT),
-                config.get(CONF_DEVICE_CLASS),
                 config[CONF_STATE_CLASS],
+                config.get(CONF_DEVICE_CLASS),
             )
         ]
     )
@@ -131,8 +135,8 @@ async def async_setup_entry(
                 config_entry.options[CONF_TYPE],
                 int(config_entry.options[CONF_ROUND_DIGITS]),
                 config_entry.options.get(CONF_UNIT_OF_MEASUREMENT),
-                config_entry.options.get(CONF_DEVICE_CLASS),
                 config_entry.options[CONF_STATE_CLASS],
+                config_entry.options.get(CONF_DEVICE_CLASS),
             )
         ]
     )
@@ -284,37 +288,45 @@ class SensorGroup(GroupEntity, SensorEntity):
     def async_update_group_state(self) -> None:
         """Query all members and determine the sensor group state."""
         states = []
+        test_states = []
         last_updated = now(UTC) - timedelta(days=1)
         sensor_values: list[tuple[str, Any]] = []
         for entity_id in self._entity_ids:
             if (state := self.hass.states.get(entity_id)) is not None:
                 states.append(state.state)
-                if state.last_updated > last_updated:
-                    self.last = float(state.state)
-                    self.last_entity_id = entity_id
                 try:
                     sensor_values.append((entity_id, float(state.state)))
                 except ValueError:
+                    test_states.append(False)
                     _LOGGER.warning(
                         "Unable to use state. Only numerical states are supported, entity %s excluded from calculation",
                         entity_id,
                     )
                     continue
+                test_states.append(True)
+                if state.last_updated > last_updated:
+                    self.last = float(state.state)
+                    self.last_entity_id = entity_id
+
+        # Set group as unavailable if all members are unavailable or missing
+        self._attr_available = any(state != STATE_UNAVAILABLE for state in states)
 
         valid_state = self.mode(
             state not in (STATE_UNKNOWN, STATE_UNAVAILABLE) for state in states
         )
+        valid_state_numeric = self.mode(numeric_state for numeric_state in test_states)
 
-        if not valid_state:
+        if not valid_state or not valid_state_numeric:
             # Set as unknown if any / all member is unknown or unavailable
+            self.min_entity_id = None
+            self.max_entity_id = None
+            self.last_entity_id = None
             self._attr_native_value = None
-        else:
-            # Calculate values
-            self._calc_values(sensor_values)
-            self._attr_native_value = getattr(self, self._sensor_attr)
+            return
 
-        # Set group as unavailable if all members are unavailable or missing
-        self._attr_available = any(state != STATE_UNAVAILABLE for state in states)
+        # Calculate values
+        self._calc_values(sensor_values)
+        self._attr_native_value = getattr(self, self._sensor_attr)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

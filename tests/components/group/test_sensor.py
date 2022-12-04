@@ -6,7 +6,11 @@ from pytest import LogCaptureFixture
 
 from homeassistant import config as hass_config
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
-from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    DOMAIN as SENSOR_DOMAIN,
+    SensorStateClass,
+)
 from homeassistant.const import SERVICE_RELOAD, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
@@ -28,47 +32,23 @@ RANGE_4_DIGITS = round(max(VALUES) - min(VALUES), 4)
 SUM_VALUE = sum(VALUES)
 
 
-async def test_default_name_sensor(hass: HomeAssistant) -> None:
-    """Test the min sensor with a default name."""
-    config = {
-        "sensor": {
-            "platform": "group",
-            "type": "min",
-            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
-        }
-    }
-
-    assert await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
-
-    entity_ids = config["sensor"]["entity_ids"]
-
-    for entity_id, value in dict(zip(entity_ids, VALUES)).items():
-        hass.states.async_set(entity_id, value)
-        await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.group_sensor_min_value")
-
-    assert str(float(MIN_VALUE)) == state.state
-    assert entity_ids[2] == state.attributes.get("min_entity_id")
-
-
 async def test_min_sensor(hass: HomeAssistant) -> None:
     """Test the min sensor."""
     config = {
-        "sensor": {
-            "platform": "group",
+        SENSOR_DOMAIN: {
+            "platform": GROUP_DOMAIN,
             "name": "test_min",
             "type": "min",
-            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
             "unique_id": "very_unique_id",
+            "state_class": SensorStateClass.MEASUREMENT,
         }
     }
 
     assert await async_setup_component(hass, "sensor", config)
     await hass.async_block_till_done()
 
-    entity_ids = config["sensor"]["entity_ids"]
+    entity_ids = config["sensor"]["entities"]
 
     for entity_id, value in dict(zip(entity_ids, VALUES)).items():
         hass.states.async_set(entity_id, value)
@@ -88,18 +68,19 @@ async def test_min_sensor(hass: HomeAssistant) -> None:
 async def test_max_sensor(hass: HomeAssistant) -> None:
     """Test the max sensor."""
     config = {
-        "sensor": {
-            "platform": "group",
+        SENSOR_DOMAIN: {
+            "platform": GROUP_DOMAIN,
             "name": "test_max",
             "type": "max",
-            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "state_class": SensorStateClass.MEASUREMENT,
         }
     }
 
     assert await async_setup_component(hass, "sensor", config)
     await hass.async_block_till_done()
 
-    entity_ids = config["sensor"]["entity_ids"]
+    entity_ids = config["sensor"]["entities"]
 
     for entity_id, value in dict(zip(entity_ids, VALUES)).items():
         hass.states.async_set(entity_id, value)
@@ -115,18 +96,19 @@ async def test_max_sensor(hass: HomeAssistant) -> None:
 async def test_mean_sensor(hass: HomeAssistant) -> None:
     """Test the mean sensor."""
     config = {
-        "sensor": {
-            "platform": "group",
+        SENSOR_DOMAIN: {
+            "platform": GROUP_DOMAIN,
             "name": "test_mean",
             "type": "mean",
-            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "state_class": SensorStateClass.MEASUREMENT,
         }
     }
 
     assert await async_setup_component(hass, "sensor", config)
     await hass.async_block_till_done()
 
-    entity_ids = config["sensor"]["entity_ids"]
+    entity_ids = config["sensor"]["entities"]
 
     for entity_id, value in dict(zip(entity_ids, VALUES)).items():
         hass.states.async_set(entity_id, value)
@@ -141,19 +123,20 @@ async def test_mean_sensor(hass: HomeAssistant) -> None:
 async def test_mean_1_digit_sensor(hass: HomeAssistant) -> None:
     """Test the mean with 1-digit precision sensor."""
     config = {
-        "sensor": {
-            "platform": "group",
+        SENSOR_DOMAIN: {
+            "platform": GROUP_DOMAIN,
             "name": "test_mean",
             "type": "mean",
             "round_digits": 1,
-            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "state_class": SensorStateClass.MEASUREMENT,
         }
     }
 
     assert await async_setup_component(hass, "sensor", config)
     await hass.async_block_till_done()
 
-    entity_ids = config["sensor"]["entity_ids"]
+    entity_ids = config["sensor"]["entities"]
 
     for entity_id, value in dict(zip(entity_ids, VALUES)).items():
         hass.states.async_set(entity_id, value)
@@ -167,19 +150,20 @@ async def test_mean_1_digit_sensor(hass: HomeAssistant) -> None:
 async def test_mean_4_digit_sensor(hass: HomeAssistant) -> None:
     """Test the mean with 4-digit precision sensor."""
     config = {
-        "sensor": {
-            "platform": "group",
+        SENSOR_DOMAIN: {
+            "platform": GROUP_DOMAIN,
             "name": "test_mean",
             "type": "mean",
             "round_digits": 4,
-            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "state_class": SensorStateClass.MEASUREMENT,
         }
     }
 
     assert await async_setup_component(hass, "sensor", config)
     await hass.async_block_till_done()
 
-    entity_ids = config["sensor"]["entity_ids"]
+    entity_ids = config["sensor"]["entities"]
 
     for entity_id, value in dict(zip(entity_ids, VALUES)).items():
         hass.states.async_set(entity_id, value)
@@ -193,18 +177,19 @@ async def test_mean_4_digit_sensor(hass: HomeAssistant) -> None:
 async def test_median_sensor(hass: HomeAssistant) -> None:
     """Test the median sensor."""
     config = {
-        "sensor": {
-            "platform": "group",
+        SENSOR_DOMAIN: {
+            "platform": GROUP_DOMAIN,
             "name": "test_median",
             "type": "median",
-            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "state_class": SensorStateClass.MEASUREMENT,
         }
     }
 
     assert await async_setup_component(hass, "sensor", config)
     await hass.async_block_till_done()
 
-    entity_ids = config["sensor"]["entity_ids"]
+    entity_ids = config["sensor"]["entities"]
 
     for entity_id, value in dict(zip(entity_ids, VALUES)).items():
         hass.states.async_set(entity_id, value)
@@ -219,19 +204,20 @@ async def test_median_sensor(hass: HomeAssistant) -> None:
 async def test_range_4_digit_sensor(hass: HomeAssistant) -> None:
     """Test the range with 4-digit precision sensor."""
     config = {
-        "sensor": {
-            "platform": "group",
+        SENSOR_DOMAIN: {
+            "platform": GROUP_DOMAIN,
             "name": "test_range",
             "type": "range",
             "round_digits": 4,
-            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "state_class": SensorStateClass.MEASUREMENT,
         }
     }
 
     assert await async_setup_component(hass, "sensor", config)
     await hass.async_block_till_done()
 
-    entity_ids = config["sensor"]["entity_ids"]
+    entity_ids = config["sensor"]["entities"]
 
     for entity_id, value in dict(zip(entity_ids, VALUES)).items():
         hass.states.async_set(entity_id, value)
@@ -245,19 +231,20 @@ async def test_range_4_digit_sensor(hass: HomeAssistant) -> None:
 async def test_range_1_digit_sensor(hass: HomeAssistant) -> None:
     """Test the range with 1-digit precision sensor."""
     config = {
-        "sensor": {
-            "platform": "group",
+        SENSOR_DOMAIN: {
+            "platform": GROUP_DOMAIN,
             "name": "test_range",
             "type": "range",
             "round_digits": 1,
-            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "state_class": SensorStateClass.MEASUREMENT,
         }
     }
 
     assert await async_setup_component(hass, "sensor", config)
     await hass.async_block_till_done()
 
-    entity_ids = config["sensor"]["entity_ids"]
+    entity_ids = config["sensor"]["entities"]
 
     for entity_id, value in dict(zip(entity_ids, VALUES)).items():
         hass.states.async_set(entity_id, value)
@@ -271,18 +258,19 @@ async def test_range_1_digit_sensor(hass: HomeAssistant) -> None:
 async def test_not_enough_sensor_value(hass: HomeAssistant) -> None:
     """Test that there is nothing done if not enough values available."""
     config = {
-        "sensor": {
-            "platform": "group",
+        SENSOR_DOMAIN: {
+            "platform": GROUP_DOMAIN,
             "name": "test_max",
             "type": "max",
-            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "state_class": SensorStateClass.MEASUREMENT,
         }
     }
 
     assert await async_setup_component(hass, "sensor", config)
     await hass.async_block_till_done()
 
-    entity_ids = config["sensor"]["entity_ids"]
+    entity_ids = config["sensor"]["entities"]
 
     hass.states.async_set(entity_ids[0], STATE_UNKNOWN)
     await hass.async_block_till_done()
@@ -323,18 +311,19 @@ async def test_not_enough_sensor_value(hass: HomeAssistant) -> None:
 async def test_last_sensor(hass: HomeAssistant) -> None:
     """Test the last sensor."""
     config = {
-        "sensor": {
-            "platform": "group",
+        SENSOR_DOMAIN: {
+            "platform": GROUP_DOMAIN,
             "name": "test_last",
             "type": "last",
-            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "state_class": SensorStateClass.MEASUREMENT,
         }
     }
 
     assert await async_setup_component(hass, "sensor", config)
     await hass.async_block_till_done()
 
-    entity_ids = config["sensor"]["entity_ids"]
+    entity_ids = config["sensor"]["entities"]
 
     for entity_id, value in dict(zip(entity_ids, VALUES)).items():
         hass.states.async_set(entity_id, value)
@@ -346,7 +335,7 @@ async def test_last_sensor(hass: HomeAssistant) -> None:
 
 
 async def test_reload(hass: HomeAssistant) -> None:
-    """Verify we can reload filter sensors."""
+    """Verify we can reload sensors."""
     hass.states.async_set("sensor.test_1", 12345)
     hass.states.async_set("sensor.test_2", 45678)
 
@@ -354,11 +343,12 @@ async def test_reload(hass: HomeAssistant) -> None:
         hass,
         "sensor",
         {
-            "sensor": {
-                "platform": "group",
-                "name": "test",
+            SENSOR_DOMAIN: {
+                "platform": GROUP_DOMAIN,
+                "name": "test_sensor",
                 "type": "mean",
-                "entity_ids": ["sensor.test_1", "sensor.test_2"],
+                "entities": ["sensor.test_1", "sensor.test_2"],
+                "state_class": SensorStateClass.MEASUREMENT,
             }
         },
     )
@@ -366,9 +356,9 @@ async def test_reload(hass: HomeAssistant) -> None:
 
     assert len(hass.states.async_all()) == 3
 
-    assert hass.states.get("sensor.test")
+    assert hass.states.get("sensor.test_sensor")
 
-    yaml_path = get_fixture_path("configuration.yaml", "min_max")
+    yaml_path = get_fixture_path("sensor_configuration.yaml", "group")
 
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
@@ -381,7 +371,7 @@ async def test_reload(hass: HomeAssistant) -> None:
 
     assert len(hass.states.async_all()) == 3
 
-    assert hass.states.get("sensor.test") is None
+    assert hass.states.get("sensor.test_sensor") is None
     assert hass.states.get("sensor.second_test")
 
 
@@ -390,19 +380,20 @@ async def test_sensor_incorrect_state(
 ) -> None:
     """Test the min sensor."""
     config = {
-        "sensor": {
-            "platform": "group",
+        SENSOR_DOMAIN: {
+            "platform": GROUP_DOMAIN,
             "name": "test_failure",
             "type": "min",
-            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
             "unique_id": "very_unique_id",
+            "state_class": SensorStateClass.MEASUREMENT,
         }
     }
 
     assert await async_setup_component(hass, "sensor", config)
     await hass.async_block_till_done()
 
-    entity_ids = config["sensor"]["entity_ids"]
+    entity_ids = config["sensor"]["entities"]
 
     for entity_id, value in dict(zip(entity_ids, VALUES_ERROR)).items():
         hass.states.async_set(entity_id, value)
@@ -411,25 +402,29 @@ async def test_sensor_incorrect_state(
     state = hass.states.get("sensor.test_failure")
 
     assert state.state == "15.3"
-    assert "Unable to store state. Only numerical states are supported" in caplog.text
+    assert (
+        "Unable to use state. Only numerical states are supported, entity sensor.test_2 excluded from calculation"
+        in caplog.text
+    )
 
 
 async def test_sum_sensor(hass: HomeAssistant) -> None:
     """Test the sum sensor."""
     config = {
-        "sensor": {
-            "platform": "group",
+        SENSOR_DOMAIN: {
+            "platform": GROUP_DOMAIN,
             "name": "test_sum",
             "type": "sum",
-            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
             "unique_id": "very_unique_id_sum_sensor",
+            "state_class": SensorStateClass.MEASUREMENT,
         }
     }
 
     assert await async_setup_component(hass, "sensor", config)
     await hass.async_block_till_done()
 
-    entity_ids = config["sensor"]["entity_ids"]
+    entity_ids = config["sensor"]["entities"]
 
     for entity_id, value in dict(zip(entity_ids, VALUES)).items():
         hass.states.async_set(entity_id, value)
@@ -445,22 +440,24 @@ async def test_sum_sensor(hass: HomeAssistant) -> None:
     assert entity.unique_id == "very_unique_id_sum_sensor"
 
 
-async def test_sum_sensor_no_state(hass: HomeAssistant) -> None:
-    """Test the sum sensor with no state ."""
+async def test_sum_sensor_require_all_states(hass: HomeAssistant) -> None:
+    """Test the sum sensor with missing state require all."""
     config = {
-        "sensor": {
-            "platform": "group",
+        SENSOR_DOMAIN: {
+            "platform": GROUP_DOMAIN,
             "name": "test_sum",
             "type": "sum",
-            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "all": True,
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
             "unique_id": "very_unique_id_sum_sensor",
+            "state_class": SensorStateClass.MEASUREMENT,
         }
     }
 
     assert await async_setup_component(hass, "sensor", config)
     await hass.async_block_till_done()
 
-    entity_ids = config["sensor"]["entity_ids"]
+    entity_ids = config["sensor"]["entities"]
 
     for entity_id, value in dict(zip(entity_ids, VALUES_ERROR)).items():
         hass.states.async_set(entity_id, value)
