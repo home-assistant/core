@@ -1373,6 +1373,7 @@ async def test_plant_group(hass):
         ("fan", "on", {}),
         ("light", "on", {"all": False}),
         ("media_player", "on", {}),
+        ("sensor", "1", {"all": True, "type": "max_value", "round_digits": 2.0}),
     ),
 )
 async def test_setup_and_remove_config_entry(
