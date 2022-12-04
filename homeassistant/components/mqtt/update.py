@@ -172,7 +172,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
                 )
                 return
 
-            json_payload = {}
+            json_payload: Any | dict = {}
             try:
                 json_payload = json_loads(payload)
                 if isinstance(json_payload, dict):
@@ -182,7 +182,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
                         msg.topic,
                     )
                 else:
-                    _LOGGER.debug(  # type:ignore[unreachable]
+                    _LOGGER.debug(
                         "Non-dictionary JSON payload detected after processing payload '%s' on topic %s",
                         payload,
                         msg.topic,
