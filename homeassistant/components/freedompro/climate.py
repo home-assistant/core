@@ -15,7 +15,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, CONF_API_KEY, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, CONF_API_KEY, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import DeviceInfo
@@ -61,7 +61,7 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], ClimateEntity):
     """Representation of an Freedompro climate."""
 
     _attr_hvac_modes = SUPPORTED_HVAC_MODES
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
         self,
