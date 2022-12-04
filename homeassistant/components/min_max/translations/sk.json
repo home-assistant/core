@@ -1,0 +1,25 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "entity_ids": "Vstupn\u00e9 entity",
+                    "name": "N\u00e1zov",
+                    "round_digits": "Presnos\u0165"
+                },
+                "title": "Skombinujte stav nieko\u013ek\u00fdch sn\u00edma\u010dov"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "entity_ids": "Vstupn\u00e9 entity",
+                    "round_digits": "Presnos\u0165"
+                }
+            }
+        }
+    },
+    "title": "Skombinujte stav nieko\u013ek\u00fdch sn\u00edma\u010dov"
+}

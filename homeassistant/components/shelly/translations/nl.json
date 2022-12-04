@@ -56,5 +56,18 @@
             "single_push": "{subtype} een druk",
             "triple": "{subtype} driemaal geklikt"
         }
+    },
+    "options": {
+        "abort": {
+            "ble_unsupported": "Bluetooth ondersteuning vereist firmwareversie {ble_min_version} of later."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "ble_scanner_mode": "Bluetooth scannermodus"
+                },
+                "description": "Het scannen van Bluetooth kan actief of passief worden ingesteld. In de actieve modus zal Shelly de gegevens opvragen van apparaten van dichtbij. In de passieve modus zal Shelly ongevraagd gegevens van apparaten dichtbij opvragen."
+            }
+        }
     }
 }

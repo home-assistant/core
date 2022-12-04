@@ -61,7 +61,7 @@
                 "description": "M\u00f6chtest du {name} mit dem Z-Wave JS Add-on einrichten?"
             },
             "zeroconf_confirm": {
-                "description": "M\u00f6chtest du den Z-Wave JS-Server mit der Home-ID {home_id} , gefunden unter {url} , zu Home Assistant hinzuf\u00fcgen?",
+                "description": "M\u00f6chtest du den Z-Wave JS-Server mit der Home-ID {home_id}, gefunden unter {url}, zu Home Assistant hinzuf\u00fcgen?",
                 "title": "Z-Wave JS-Server entdeckt"
             }
         }
@@ -85,8 +85,8 @@
             "event.notification.entry_control": "Benachrichtigung zur Zugangskontrolle gesendet",
             "event.notification.notification": "Benachrichtigung gesendet",
             "event.value_notification.basic": "Grundlegendes CC-Ereignis auf {subtype}",
-            "event.value_notification.central_scene": "Zentrale Szenenaktion auf {subtype}",
-            "event.value_notification.scene_activation": "Szenenaktivierung auf {subtype}",
+            "event.value_notification.central_scene": "Zentrale Szeneaktion auf {subtype}",
+            "event.value_notification.scene_activation": "Szeneaktivierung auf {subtype}",
             "state.node_status": "Knotenstatus ge\u00e4ndert",
             "zwave_js.value_updated.config_parameter": "Wert\u00e4nderung des Konfigurationsparameters {subtype}",
             "zwave_js.value_updated.value": "Wert\u00e4nderung bei einem Z-Wave JS Wert"
@@ -107,7 +107,7 @@
             "addon_start_failed": "Der Start des Z-Wave JS-Add-ons ist fehlgeschlagen.",
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "cannot_connect": "Verbindung fehlgeschlagen",
-            "different_device": "Das angeschlossene USB-Ger\u00e4t ist nicht dasselbe, das zuvor f\u00fcr diesen Config-Eintrag konfiguriert wurde. Bitte erstelle stattdessen einen neuen Konfigurationseintrag f\u00fcr das neue Ger\u00e4t."
+            "different_device": "Das angeschlossene USB-Ger\u00e4t ist nicht dasselbe, das zuvor f\u00fcr diesen Konfigurationseintrag konfiguriert wurde. Bitte erstelle stattdessen einen neuen Konfigurationseintrag f\u00fcr das neue Ger\u00e4t."
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",

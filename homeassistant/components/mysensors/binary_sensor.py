@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASSES,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
@@ -17,9 +16,9 @@ from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
 from .helpers import on_unload
 
 SENSORS = {
-    "S_DOOR": "door",
+    "S_DOOR": BinarySensorDeviceClass.DOOR,
     "S_MOTION": BinarySensorDeviceClass.MOTION,
-    "S_SMOKE": "smoke",
+    "S_SMOKE": BinarySensorDeviceClass.SMOKE,
     "S_SPRINKLER": BinarySensorDeviceClass.SAFETY,
     "S_WATER_LEAK": BinarySensorDeviceClass.SAFETY,
     "S_SOUND": BinarySensorDeviceClass.SOUND,
@@ -66,10 +65,7 @@ class MySensorsBinarySensor(mysensors.device.MySensorsEntity, BinarySensorEntity
         return self._values.get(self.value_type) == STATE_ON
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the class of this sensor, from DEVICE_CLASSES."""
         pres = self.gateway.const.Presentation
-        device_class = SENSORS.get(pres(self.child_type).name)
-        if device_class in DEVICE_CLASSES:
-            return device_class
-        return None
+        return SENSORS.get(pres(self.child_type).name)

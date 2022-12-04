@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "cannot_connect": "Verbindung fehlgeschlagen",
-            "not_insteon_device": "Erkanntes Ger\u00e4t ist kein Insteon-Ger\u00e4t",
+            "not_insteon_device": "Erkanntes Ger\u00e4t ist kein Insteon Ger\u00e4t",
             "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
         },
         "error": {
@@ -56,9 +56,9 @@
         "step": {
             "add_override": {
                 "data": {
-                    "address": "Ger\u00e4teadresse (z. B. 1a2b3c)",
-                    "cat": "Ger\u00e4tekategorie (z. B. 0x10)",
-                    "subcat": "Ger\u00e4teunterkategorie (z. B. 0x0a)"
+                    "address": "Ger\u00e4teadresse (z.B. 1a2b3c)",
+                    "cat": "Ger\u00e4tekategorie (z.B. 0x10)",
+                    "subcat": "Ger\u00e4teunterkategorie (z.B. 0x0a)"
                 },
                 "description": "F\u00fcge eine Ger\u00e4te\u00fcberschreibung hinzu."
             },
@@ -67,7 +67,7 @@
                     "housecode": "Hauscode (a - p)",
                     "platform": "Plattform",
                     "steps": "Dimmerstufen (nur f\u00fcr Lichtger\u00e4te, Voreinstellung 22)",
-                    "unitcode": "Unitcode (1 - 16)"
+                    "unitcode": "Einheitencode (1 - 16)"
                 },
                 "description": "\u00c4ndere das Insteon Hub-Passwort."
             },

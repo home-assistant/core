@@ -34,7 +34,6 @@ from .const import (
     TUYA_DISCOVERY_NEW,
     DPCode,
     DPType,
-    TuyaDeviceClass,
     UnitOfMeasurement,
 )
 
@@ -90,7 +89,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             key=DPCode.GAS_SENSOR_VALUE,
             name="Gas",
             icon="mdi:gas-cylinder",
-            device_class=SensorStateClass.MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CH4_SENSOR_VALUE,
@@ -157,7 +156,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             name="Smoke amount",
             icon="mdi:smoke-detector",
             entity_category=EntityCategory.DIAGNOSTIC,
-            device_class=SensorStateClass.MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         *BATTERY_SENSORS,
     ),
@@ -179,7 +178,6 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         TuyaSensorEntityDescription(
             key=DPCode.STATUS,
             name="Status",
-            device_class=TuyaDeviceClass.STATUS,
         ),
     ),
     # CO2 Detector
@@ -434,7 +432,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         TuyaSensorEntityDescription(
             key=DPCode.STATUS,
             name="Status",
-            device_class=TuyaDeviceClass.STATUS,
+            translation_key="status",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.REMAIN_TIME,
@@ -514,7 +512,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         TuyaSensorEntityDescription(
             key=DPCode.GAS_SENSOR_VALUE,
             icon="mdi:gas-cylinder",
-            device_class=SensorStateClass.MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         *BATTERY_SENSORS,
     ),
@@ -648,7 +646,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             name="Smoke amount",
             icon="mdi:smoke-detector",
             entity_category=EntityCategory.DIAGNOSTIC,
-            device_class=SensorStateClass.MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         *BATTERY_SENSORS,
     ),
@@ -973,7 +971,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             key=DPCode.AIR_QUALITY,
             name="Air quality",
             icon="mdi:air-filter",
-            device_class=TuyaDeviceClass.AIR_QUALITY,
+            translation_key="air_quality",
         ),
     ),
     # Fan

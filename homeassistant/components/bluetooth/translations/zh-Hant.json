@@ -9,9 +9,6 @@
             "bluetooth_confirm": {
                 "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name}\uff1f"
             },
-            "enable_bluetooth": {
-                "description": "\u662f\u5426\u8981\u8a2d\u5b9a\u85cd\u7259\uff1f"
-            },
             "multiple_adapters": {
                 "data": {
                     "adapter": "\u50b3\u8f38\u5668"
@@ -39,10 +36,8 @@
         "step": {
             "init": {
                 "data": {
-                    "adapter": "\u7528\u4ee5\u9032\u884c\u5075\u6e2c\u7684\u85cd\u7259\u50b3\u8f38\u5668",
                     "passive": "\u88ab\u52d5\u6383\u63cf"
-                },
-                "description": "\u88ab\u52d5\u76e3\u807d\u9700\u8981 BlueZ 5.63 \u6216\u66f4\u65b0\u7248\u672c\u3001\u4e26\u958b\u555f\u5be6\u9a57\u529f\u80fd\u3002"
+                }
             }
         }
     }

@@ -1,4 +1,9 @@
 {
+    "device_automation": {
+        "trigger_type": {
+            "changed_states": "{entity_name} zapnut\u00e9 alebo vypnut\u00e9"
+        }
+    },
     "state": {
         "_": {
             "off": "Vypnut\u00fd",

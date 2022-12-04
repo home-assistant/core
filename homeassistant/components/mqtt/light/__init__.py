@@ -9,15 +9,10 @@ import voluptuous as vol
 from homeassistant.components import light
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 
-from ..mixins import (
-    async_setup_entry_helper,
-    async_setup_platform_helper,
-    warn_for_legacy_schema,
-)
+from ..mixins import async_setup_entry_helper, warn_for_legacy_schema
 from .schema import CONF_SCHEMA, MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import (
     DISCOVERY_SCHEMA_BASIC,
@@ -77,10 +72,9 @@ DISCOVERY_SCHEMA = vol.All(
     validate_mqtt_light_discovery,
 )
 
-# Configuring MQTT Lights under the light platform key is deprecated in HA Core 2022.6
+# Configuring MQTT Lights under the light platform key was deprecated in HA Core 2022.6
+# Setup for the legacy YAML format was removed in HA Core 2022.12
 PLATFORM_SCHEMA = vol.All(
-    cv.PLATFORM_SCHEMA.extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema, extra=vol.ALLOW_EXTRA),
-    validate_mqtt_light,
     warn_for_legacy_schema(light.DOMAIN),
 )
 
@@ -88,23 +82,6 @@ PLATFORM_SCHEMA_MODERN = vol.All(
     MQTT_LIGHT_SCHEMA_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA),
     validate_mqtt_light_modern,
 )
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up MQTT light through configuration.yaml (deprecated)."""
-    # Deprecated in HA Core 2022.6
-    await async_setup_platform_helper(
-        hass,
-        light.DOMAIN,
-        discovery_info or config,
-        async_add_entities,
-        _async_setup_entity,
-    )
 
 
 async def async_setup_entry(

@@ -10,9 +10,9 @@
         "step": {
             "repositories": {
                 "data": {
-                    "repositories": "W\u00e4hle die zu verfolgenden Repositories aus."
+                    "repositories": "W\u00e4hle die zu verfolgenden Repositorien aus."
                 },
-                "title": "Repositories konfigurieren"
+                "title": "Repositorien konfigurieren"
             }
         }
     }

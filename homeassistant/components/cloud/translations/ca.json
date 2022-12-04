@@ -1,4 +1,9 @@
 {
+    "issues": {
+        "legacy_subscription": {
+            "title": "S'ha detectat una subscripci\u00f3 heretada"
+        }
+    },
     "system_health": {
         "info": {
             "alexa_enabled": "Alexa activada",

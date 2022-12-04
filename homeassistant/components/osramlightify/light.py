@@ -221,9 +221,9 @@ class Luminary(LightEntity):
 
         return color_modes
 
-    def _get_supported_features(self) -> LightEntityFeature | int:
+    def _get_supported_features(self) -> LightEntityFeature:
         """Get list of supported features."""
-        features = 0
+        features = LightEntityFeature(0)
         if "lum" in self._luminary.supported_features():
             features = features | LightEntityFeature.TRANSITION
 
@@ -435,7 +435,7 @@ class OsramLightifyGroup(Luminary):
         #       users.
         return f"{self._luminary.lights()}"
 
-    def _get_supported_features(self) -> LightEntityFeature | int:
+    def _get_supported_features(self) -> LightEntityFeature:
         """Get list of supported features."""
         features = super()._get_supported_features()
         if self._luminary.scenes():

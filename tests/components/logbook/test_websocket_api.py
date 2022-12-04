@@ -913,7 +913,7 @@ async def test_subscribe_unsubscribe_logbook_stream_included_entities(
 async def test_logbook_stream_excluded_entities_inherits_filters_from_recorder(
     recorder_mock, hass, hass_ws_client
 ):
-    """Test subscribe/unsubscribe logbook stream inherts filters from recorder."""
+    """Test subscribe/unsubscribe logbook stream inherits filters from recorder."""
     now = dt_util.utcnow()
     await asyncio.gather(
         *[

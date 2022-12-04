@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from homewizard_energy.models import State
+from homewizard_energy.models import State, System
 
 from homeassistant.components import switch
 from homeassistant.components.switch import SwitchDeviceClass
@@ -286,3 +286,63 @@ async def test_switch_lock_sets_power_on_unavailable(
             == STATE_OFF
         )
         assert len(api.state_set.mock_calls) == 2
+
+
+async def test_cloud_connection_on_off(hass, mock_config_entry_data, mock_config_entry):
+    """Test entity turns switch on and off."""
+
+    api = get_mock_device(product_type="HWE-SKT", firmware_version="3.02")
+    api.system = AsyncMock(return_value=System.from_dict({"cloud_enabled": False}))
+
+    def system_set(cloud_enabled):
+        api.system = AsyncMock(
+            return_value=System.from_dict({"cloud_enabled": cloud_enabled})
+        )
+
+    api.system_set = AsyncMock(side_effect=system_set)
+
+    with patch(
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
+        return_value=api,
+    ):
+        entry = mock_config_entry
+        entry.data = mock_config_entry_data
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert (
+            hass.states.get("switch.product_name_aabbccddeeff_cloud_connection").state
+            == STATE_OFF
+        )
+
+        # Enable cloud
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_ON,
+            {"entity_id": "switch.product_name_aabbccddeeff_cloud_connection"},
+            blocking=True,
+        )
+
+        await hass.async_block_till_done()
+        assert len(api.system_set.mock_calls) == 1
+        assert (
+            hass.states.get("switch.product_name_aabbccddeeff_cloud_connection").state
+            == STATE_ON
+        )
+
+        # Disable cloud
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_OFF,
+            {"entity_id": "switch.product_name_aabbccddeeff_cloud_connection"},
+            blocking=True,
+        )
+
+        await hass.async_block_till_done()
+        assert (
+            hass.states.get("switch.product_name_aabbccddeeff_cloud_connection").state
+            == STATE_OFF
+        )
+        assert len(api.system_set.mock_calls) == 2

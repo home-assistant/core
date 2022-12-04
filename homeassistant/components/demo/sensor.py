@@ -126,6 +126,17 @@ async def async_setup_platform(
                 None,
                 "total_gas_ft3",
             ),
+            DemoSensor(
+                unique_id="sensor_10",
+                name="Thermostat mode",
+                state="eco",
+                device_class=SensorDeviceClass.ENUM,
+                state_class=None,
+                unit_of_measurement=None,
+                battery=None,
+                options=["away", "comfort", "eco", "sleep"],
+                translation_key="thermostat_mode",
+            ),
         ]
     )
 
@@ -149,10 +160,12 @@ class DemoSensor(SensorEntity):
         unique_id: str,
         name: str,
         state: StateType,
-        device_class: SensorDeviceClass,
+        device_class: SensorDeviceClass | str,
         state_class: SensorStateClass | None,
         unit_of_measurement: str | None,
         battery: StateType,
+        options: list[str] | None = None,
+        translation_key: str | None = None,
     ) -> None:
         """Initialize the sensor."""
         self._attr_device_class = device_class
@@ -161,6 +174,8 @@ class DemoSensor(SensorEntity):
         self._attr_native_value = state
         self._attr_state_class = state_class
         self._attr_unique_id = unique_id
+        self._attr_options = options
+        self._attr_translation_key = translation_key
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},

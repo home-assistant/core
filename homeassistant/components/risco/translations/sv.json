@@ -24,11 +24,6 @@
                 }
             },
             "user": {
-                "data": {
-                    "password": "L\u00f6senord",
-                    "pin": "Pin-kod",
-                    "username": "Anv\u00e4ndarnamn"
-                },
                 "menu_options": {
                     "cloud": "Risco Cloud (rekommenderas)",
                     "local": "Lokal Risco Panel (avancerat)"

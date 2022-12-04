@@ -146,8 +146,7 @@ async def async_setup_entry(  # noqa: C901
         if service.data_template:
             try:
                 data_template = {
-                    key: Template(value)  # type: ignore[no-untyped-call]
-                    for key, value in service.data_template.items()
+                    key: Template(value) for key, value in service.data_template.items()
                 }
                 template.attach(hass, data_template)
                 service_data.update(

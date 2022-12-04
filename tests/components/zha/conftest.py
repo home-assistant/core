@@ -57,6 +57,7 @@ def zigpy_app_controller():
     type(app).nwk = PropertyMock(return_value=zigpy.types.NWK(0x0000))
     type(app).devices = PropertyMock(return_value={})
     type(app).backups = zigpy.backups.BackupManager(app)
+    type(app).topology = zigpy.topology.Topology(app)
 
     state = State()
     state.node_info.ieee = app.ieee.return_value
