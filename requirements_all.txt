@@ -156,7 +156,7 @@ aioecowitt==2022.11.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==13.0.0
+aioesphomeapi==13.0.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -738,7 +738,7 @@ gTTS==2.2.4
 garages-amsterdam==3.0.0
 
 # homeassistant.components.google
-gcal-sync==4.0.3
+gcal-sync==4.0.4
 
 # homeassistant.components.geniushub
 geniushub-client==0.6.30
@@ -926,7 +926,7 @@ ibm-watson==5.2.2
 ibmiotf==0.3.4
 
 # homeassistant.components.local_calendar
-ical==4.1.2
+ical==4.2.1
 
 # homeassistant.components.ping
 icmplib==3.0
