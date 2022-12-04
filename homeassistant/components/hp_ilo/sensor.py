@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SENSOR_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
+    CONF_STATE_CLASS,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
 )
@@ -61,6 +62,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                             cv.string, vol.In(SENSOR_TYPES)
                         ),
                         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+                        vol.Optional(CONF_STATE_CLASS): cv.string,
                         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
                     }
                 )
@@ -103,6 +105,7 @@ def setup_platform(
             sensor_type=monitored_variable[CONF_SENSOR_TYPE],
             sensor_value_template=monitored_variable.get(CONF_VALUE_TEMPLATE),
             unit_of_measurement=monitored_variable.get(CONF_UNIT_OF_MEASUREMENT),
+            state_class=monitored_variable.get(CONF_STATE_CLASS),
         )
         devices.append(new_device)
 
