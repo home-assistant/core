@@ -4,6 +4,7 @@ from unittest.mock import patch
 from elmax_api.exceptions import ElmaxBadLoginError, ElmaxBadPinError, ElmaxNetworkError
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components import zeroconf
 from homeassistant.components.elmax.const import (
     CONF_ELMAX_MODE,
     CONF_ELMAX_MODE_CLOUD,
@@ -37,6 +38,15 @@ from . import (
 
 from tests.common import MockConfigEntry
 
+MOCK_ZEROCONF_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
+    host="1.1.1.1",
+    addresses=["1.1.1.1"],
+    hostname="mock_hostname",
+    name="shelly1pm-12345",
+    port=None,
+    properties={zeroconf.ATTR_PROPERTIES_ID: "shelly1pm-12345"},
+    type="mock_type",
+)
 CONF_POLLING = "polling"
 
 
@@ -49,11 +59,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "choose_mode"
 
 
-<<<<<<< HEAD
-async def test_standard_setup(hass: HomeAssistant) -> None:
-    """Test the standard setup case."""
-=======
-async def test_direct_setup(hass):
+async def test_direct_setup(hass: HomeAssistant) -> None:
     """Test the standard direct setup case."""
     show_form_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -80,9 +86,29 @@ async def test_direct_setup(hass):
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
-async def test_cloud_setup(hass):
+async def test_direct_show_form(hass: HomeAssistant) -> None:
+    """Test the standard direct show form case."""
+    show_form_result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch(
+        "homeassistant.components.elmax.async_setup_entry",
+        return_value=True,
+    ):
+        set_mode_result = await hass.config_entries.flow.async_configure(
+            show_form_result["flow_id"],
+            {CONF_ELMAX_MODE: CONF_ELMAX_MODE_DIRECT},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            set_mode_result["flow_id"],
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "direct_setup"
+        assert result["errors"] is None
+
+
+async def test_cloud_setup(hass: HomeAssistant) -> None:
     """Test the standard cloud setup case."""
->>>>>>> 5f7c7068c3 (Improve test coverage to 100%)
     # Setup once.
     show_form_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -113,7 +139,23 @@ async def test_cloud_setup(hass):
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
-async def test_one_config_allowed(hass: HomeAssistant) -> None:
+async def test_zeroconf_form_setup(hass: HomeAssistant) -> None:
+    """Test the zeroconf setup case."""
+    # Setup once.
+    show_form_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DISCOVERY_INFO,
+    )
+    result = await hass.config_entries.flow.async_configure(
+        show_form_result["flow_id"],
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_setup"
+    assert result["errors"] is None
+
+
+async def test_one_config_allowed_cloud(hass: HomeAssistant) -> None:
     """Test that only one Elmax configuration is allowed for each panel."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -152,7 +194,7 @@ async def test_one_config_allowed(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_invalid_credentials(hass: HomeAssistant) -> None:
+async def test_cloud_invalid_credentials(hass: HomeAssistant) -> None:
     """Test that invalid credentials throws an error."""
     with patch(
         "elmax_api.http.Elmax.login",
@@ -177,11 +219,7 @@ async def test_invalid_credentials(hass: HomeAssistant) -> None:
         assert login_result["errors"] == {"base": "invalid_auth"}
 
 
-<<<<<<< HEAD
-async def test_connection_error(hass: HomeAssistant) -> None:
-=======
-async def test_cloud_connection_error(hass):
->>>>>>> 5f7c7068c3 (Improve test coverage to 100%)
+async def test_cloud_connection_error(hass: HomeAssistant) -> None:
     """Test other than invalid credentials throws an error."""
     with patch(
         "elmax_api.http.Elmax.login",
@@ -206,10 +244,7 @@ async def test_cloud_connection_error(hass):
         assert login_result["errors"] == {"base": "network_error"}
 
 
-<<<<<<< HEAD
-async def test_unhandled_error(hass: HomeAssistant) -> None:
-=======
-async def test_direct_connection_error(hass):
+async def test_direct_connection_error(hass: HomeAssistant) -> None:
     """Test network error while dealing with direct panel APIs."""
     with patch(
         "elmax_api.http.ElmaxLocal.login",
@@ -237,7 +272,7 @@ async def test_direct_connection_error(hass):
         assert result["errors"] == {"base": "network_error"}
 
 
-async def test_direct_wrong_panel_code(hass):
+async def test_direct_wrong_panel_code(hass: HomeAssistant) -> None:
     """Test wrong code being specified while dealing with direct panel APIs."""
     with patch(
         "elmax_api.http.ElmaxLocal.login",
@@ -265,8 +300,7 @@ async def test_direct_wrong_panel_code(hass):
         assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_unhandled_error(hass):
->>>>>>> 5f7c7068c3 (Improve test coverage to 100%)
+async def test_unhandled_error(hass: HomeAssistant) -> None:
     """Test unhandled exceptions."""
     with patch(
         "elmax_api.http.Elmax.get_panel_status",
