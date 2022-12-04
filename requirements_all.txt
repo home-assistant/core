@@ -1018,7 +1018,7 @@ kiwiki-client==0.1.1
 konnected==1.2.0
 
 # homeassistant.components.kostal_plenticore
-kostal_plenticore==0.2.0
+pykoplenti==1.0.0
 
 # homeassistant.components.kraken
 krakenex==2.1.0
