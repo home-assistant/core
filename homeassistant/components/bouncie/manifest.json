@@ -1,0 +1,13 @@
+{
+  "domain": "bouncie",
+  "name": "bouncie",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/bouncie",
+  "requirements": ["bounciepy==0.1.0"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@mandarons"],
+  "iot_class": "cloud_polling"
+}

@@ -466,6 +466,9 @@ boschshcpy==0.2.35
 # homeassistant.components.route53
 boto3==1.20.24
 
+# homeassistant.components.bouncie
+bounciepy==0.1.0
+
 # homeassistant.components.broadlink
 broadlink==0.18.3
 

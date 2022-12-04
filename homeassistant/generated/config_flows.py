@@ -64,6 +64,7 @@ FLOWS = {
         "bmw_connected_drive",
         "bond",
         "bosch_shc",
+        "bouncie",
         "braviatv",
         "broadlink",
         "brother",

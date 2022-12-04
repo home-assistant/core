@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "To generate client_id, client_secret, goto bouncie.dev",
+        "data": {
+          "client_id": "client_id from bouncie.dev",
+          "client_secret": "client_secret from bouncie.dev",
+          "redirect_uri": "redirect_uri from bouncie.dev",
+          "code": "authorization_code after permitting the app to access your data"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}
