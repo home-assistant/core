@@ -230,6 +230,7 @@ class DriverEvents:
     async def setup(self, driver: Driver) -> None:
         """Set up devices using the ready driver."""
         self.driver = driver
+        controller = driver.controller
 
         # If opt in preference hasn't been specified yet, we do nothing, otherwise
         # we apply the preference
@@ -244,7 +245,7 @@ class DriverEvents:
         )
         known_devices = [
             self.dev_reg.async_get_device({get_device_id(driver, node)})
-            for node in driver.controller.nodes.values()
+            for node in controller.nodes.values()
         ]
 
         # Devices that are in the device registry that are not known by the controller can be removed
@@ -254,8 +255,8 @@ class DriverEvents:
 
         # run discovery on controller node
         controller_node = None
-        if (controller_node_id := driver.controller.own_node_id is not None) and (
-            controller_node := driver.controller.nodes.get(controller_node_id)
+        if (controller_node_id := controller.own_node_id is not None) and (
+            controller_node := controller.nodes.get(controller_node_id)
         ):
             await self.controller_events.async_on_node_added(controller_node)
 
@@ -263,14 +264,14 @@ class DriverEvents:
         await asyncio.gather(
             *(
                 self.controller_events.async_on_node_added(node)
-                for node in driver.controller.nodes.values()
+                for node in controller.nodes.values()
                 if controller_node is None or node != controller_node
             )
         )
 
         # listen for new nodes being added to the mesh
         self.config_entry.async_on_unload(
-            driver.controller.on(
+            controller.on(
                 "node added",
                 lambda event: self.hass.async_create_task(
                     self.controller_events.async_on_node_added(event["node"])
@@ -280,9 +281,7 @@ class DriverEvents:
         # listen for nodes being removed from the mesh
         # NOTE: This will not remove nodes that were removed when HA was not running
         self.config_entry.async_on_unload(
-            driver.controller.on(
-                "node removed", self.controller_events.async_on_node_removed
-            )
+            controller.on("node removed", self.controller_events.async_on_node_removed)
         )
 
     async def async_setup_platform(self, platform: Platform) -> None:
@@ -392,13 +391,14 @@ class ControllerEvents:
         device_id_ext = get_device_id_ext(driver, node)
         device = self.dev_reg.async_get_device({device_id})
         via_device_id = None
+        controller = driver.controller
         # Get the controller node device ID if this node is not the controller
         if (
-            driver.controller.own_node_id is not None
-            and driver.controller.own_node_id != node.node_id
+            controller.own_node_id is not None
+            and controller.own_node_id != node.node_id
         ):
             via_device_id = get_device_id(
-                driver, driver.controller.nodes[driver.controller.own_node_id]
+                driver, controller.nodes[controller.own_node_id]
             )
 
         # Replace the device if it can be determined that this node is not the
