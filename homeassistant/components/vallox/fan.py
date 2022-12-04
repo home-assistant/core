@@ -32,7 +32,6 @@ from .const import (
     MODE_OFF,
     MODE_ON,
     PRESET_MODE_TO_VALLOX_PROFILE_SETTABLE,
-    VALLOX_PRESET_MODES_SUPPORTING_FAN_SPEED,
     VALLOX_PROFILE_TO_PRESET_MODE_REPORTABLE,
 )
 
@@ -85,6 +84,7 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
     """Representation of the fan."""
 
     _attr_has_entity_name = True
+    _attr_supported_features = FanEntityFeature.PRESET_MODE | FanEntityFeature.SET_SPEED
 
     def __init__(
         self,
@@ -110,15 +110,6 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
         """Return the current preset mode."""
         vallox_profile = self.coordinator.data.profile
         return VALLOX_PROFILE_TO_PRESET_MODE_REPORTABLE.get(vallox_profile)
-
-    @property
-    def supported_features(self) -> FanEntityFeature:
-        """Flag supported features."""
-        features = FanEntityFeature.PRESET_MODE
-        if self.preset_mode in VALLOX_PRESET_MODES_SUPPORTING_FAN_SPEED:
-            features |= FanEntityFeature.SET_SPEED
-
-        return features
 
     @property
     def percentage(self) -> int | None:
