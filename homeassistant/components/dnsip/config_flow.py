@@ -101,6 +101,10 @@ class DnsIPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             validate = await async_validate_hostname(hostname, resolver, resolver_ipv6)
 
+            set_resolver = resolver
+            if validate[CONF_IPV6]:
+                set_resolver = resolver_ipv6
+
             if (
                 not validate[CONF_IPV4]
                 and not validate[CONF_IPV6]
@@ -121,9 +125,7 @@ class DnsIPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     },
                     options={
                         CONF_RESOLVER: resolver,
-                        CONF_RESOLVER_IPV6: resolver_ipv6
-                        if validate[CONF_IPV6]
-                        else resolver,
+                        CONF_RESOLVER_IPV6: set_resolver,
                     },
                 )
 
