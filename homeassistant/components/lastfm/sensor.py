@@ -50,7 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             [
                 {
                     vol.Required(CONF_USERNAME): cv.string,
-                    vol.Optional(CONF_PASSWORD): cv.string,
+                    vol.Optional(CONF_PASSWORD, ""): cv.string,
                 }
             ],
         ),
