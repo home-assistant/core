@@ -27,13 +27,9 @@
         }
     },
     "issues": {
-        "deprecated_yaml": {
-            "description": "A Radarr YAML haszn\u00e1lat\u00e1val t\u00f6rt\u00e9n\u0151 konfigur\u00e1l\u00e1sa elt\u00e1vol\u00edt\u00e1sra ker\u00fcl.\n\nA megl\u00e9v\u0151 YAML konfigur\u00e1ci\u00f3 automatikusan import\u00e1l\u00e1sra ker\u00fclt a felhaszn\u00e1l\u00f3i fel\u00fcletre.\n\nA hiba kijav\u00edt\u00e1s\u00e1hoz t\u00e1vol\u00edtsa el a Radarr YAML konfigur\u00e1ci\u00f3t a configuration.yaml f\u00e1jlb\u00f3l, \u00e9s ind\u00edtsa \u00fajra a Home Assistantot.",
-            "title": "A Radarr YAML konfigur\u00e1ci\u00f3 elt\u00e1vol\u00edt\u00e1sra ker\u00fcl"
-        },
-        "removed_attributes": {
-            "description": "N\u00e9h\u00e1ny v\u00e1ltoztat\u00e1s t\u00f6rt\u00e9nt a Filmek sz\u00e1m\u00e1nak \u00e9rz\u00e9kel\u0151j\u00e9nek \u00f3vatoss\u00e1gb\u00f3l t\u00f6rt\u00e9n\u0151 letilt\u00e1s\u00e1ban.\n\nEz az \u00e9rz\u00e9kel\u0151 probl\u00e9m\u00e1kat okozhat hatalmas adatb\u00e1zisok eset\u00e9n. Ha tov\u00e1bbra is haszn\u00e1lni szeretn\u00e9, megteheti.\n\nA filmek nevei t\u00f6bb\u00e9 nem szerepelnek attrib\u00fatumk\u00e9nt a filmek \u00e9rz\u00e9kel\u0151ben.\n\nAz Upcoming elt\u00e1vol\u00edt\u00e1sra ker\u00fclt. Korszer\u0171s\u00edt\u00e9sre ker\u00fcl, ahogyan a napt\u00e1relemeknek is kell. A lemezter\u00fclet mostant\u00f3l k\u00fcl\u00f6nb\u00f6z\u0151 \u00e9rz\u00e9kel\u0151kre van felosztva, egy-egy mapp\u00e1hoz.\n\nA st\u00e1tusz \u00e9s a parancsok elt\u00e1vol\u00edt\u00e1sra ker\u00fcltek, mivel \u00fagy t\u0171nik, hogy nincs val\u00f3di \u00e9rt\u00e9k\u00fck az automatiz\u00e1l\u00e1sok sz\u00e1m\u00e1ra.",
-            "title": "A Radarr-integr\u00e1ci\u00f3 v\u00e1ltoz\u00e1sai"
+        "removed_yaml": {
+            "description": "A Radarr YAML haszn\u00e1lat\u00e1val t\u00f6rt\u00e9n\u0151 konfigur\u00e1l\u00e1sa elt\u00e1vol\u00edt\u00e1sra ker\u00fclt.\n\nA megl\u00e9v\u0151 YAML konfigur\u00e1ci\u00f3t a Home Assistant nem haszn\u00e1lja.\n\nA probl\u00e9ma megold\u00e1s\u00e1hoz t\u00e1vol\u00edtsa el a YAML konfigur\u00e1ci\u00f3t a configuration.yaml f\u00e1jlb\u00f3l, \u00e9s ind\u00edtsa \u00fajra a Home Assistantot.",
+            "title": "A Radarr YAML konfigur\u00e1ci\u00f3 elt\u00e1vol\u00edt\u00e1sra ker\u00fclt"
         }
     },
     "options": {

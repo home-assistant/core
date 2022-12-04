@@ -11,12 +11,6 @@
             "invalid_auth": "Autentikasi tidak valid"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "password": "Kata Sandi"
-                },
-                "description": "Token autentikasi menjadi tidak valid, masuk untuk membuat token lagi."
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Kata Sandi"

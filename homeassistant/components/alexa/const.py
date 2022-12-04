@@ -83,7 +83,8 @@ API_THERMOSTAT_MODES_CUSTOM = {
 }
 API_THERMOSTAT_PRESETS = {climate.PRESET_ECO: "ECO"}
 
-# AlexaModeController does not like a single mode for the fan preset, we add PRESET_MODE_NA if a fan has only one preset_mode
+# AlexaModeController does not like a single mode for the fan preset or humidifier mode,
+# we add PRESET_MODE_NA if a fan / humidifier has only one preset_mode
 PRESET_MODE_NA = "-"
 
 

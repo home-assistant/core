@@ -38,9 +38,11 @@ class EsphomeLock(EsphomeEntity[LockInfo, LockEntityState], LockEntity):
         return self._static_info.assumed_state
 
     @property
-    def supported_features(self) -> LockEntityFeature | int:
+    def supported_features(self) -> LockEntityFeature:
         """Flag supported features."""
-        return LockEntityFeature.OPEN if self._static_info.supports_open else 0
+        if self._static_info.supports_open:
+            return LockEntityFeature.OPEN
+        return LockEntityFeature(0)
 
     @property
     def code_format(self) -> str | None:

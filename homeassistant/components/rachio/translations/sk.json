@@ -1,12 +1,26 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+        },
         "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
             "invalid_auth": "Neplatn\u00e9 overenie"
         },
         "step": {
             "user": {
                 "data": {
                     "api_key": "API k\u013e\u00fa\u010d"
+                },
+                "description": "Budete potrebova\u0165 k\u013e\u00fa\u010d API zo str\u00e1nky https://app.rach.io/. Prejdite na Nastavenia a potom kliknite na polo\u017eku \"GET API KEY\"."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "manual_run_mins": "Trvanie v min\u00fatach pri aktiv\u00e1cii sp\u00edna\u010da z\u00f3ny"
                 }
             }
         }

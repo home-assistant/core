@@ -35,35 +35,12 @@
                     "baudrate": "poortsnelheid"
                 }
             },
-            "pick_radio": {
-                "data": {
-                    "radio_type": "Radio type"
-                },
-                "description": "Kies een type Zigbee-radio",
-                "title": "Radio type"
-            },
-            "port_config": {
-                "data": {
-                    "baudrate": "poort snelheid",
-                    "flow_control": "gegevensstroombeheer",
-                    "path": "Serieel apparaatpad"
-                },
-                "description": "Voer poortspecifieke instellingen in",
-                "title": "Instellingen"
-            },
             "upload_manual_backup": {
                 "data": {
                     "uploaded_backup_file": "Een bestand uploaden"
                 },
                 "description": "Herstel je netwerkinstellingen van ge-upload backup-JSON-bestand. Je kunt deze dpwnloaden van een andere ZHA installatie via **Netwerkinstellingen**, of gebruik een Zigbee2MQTT `coordinator_backup.json` bestand.",
                 "title": "Upload een handmatige back-up"
-            },
-            "user": {
-                "data": {
-                    "path": "Serieel apparaatpad"
-                },
-                "description": "Selecteer seri\u00eble poort voor Zigbee-radio",
-                "title": "ZHA"
             }
         }
     },

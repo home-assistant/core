@@ -16,7 +16,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry, entity_registry
@@ -27,7 +27,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import LOGGER, SHTRV_01_TEMPERATURE_SETTINGS
 from .coordinator import ShellyBlockCoordinator, get_entry_data
-from .utils import get_device_entry_gen
 
 
 async def async_setup_entry(
@@ -36,10 +35,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up climate device."""
-
-    if get_device_entry_gen(config_entry) == 2:
-        return
-
     coordinator = get_entry_data(hass)[config_entry.entry_id].block
     assert coordinator
     if coordinator.device.initialized:
@@ -113,7 +108,7 @@ class BlockSleepingClimate(
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
     _attr_target_temperature_step = SHTRV_01_TEMPERATURE_SETTINGS["step"]
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
         self,

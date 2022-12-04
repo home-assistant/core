@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "station": "Stanica"
+                },
+                "description": "Vyberte stanicu, ktor\u00fa chcete sledova\u0165"
+            }
+        }
+    }
+}

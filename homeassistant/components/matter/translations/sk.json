@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            }
+        }
+    }
+}

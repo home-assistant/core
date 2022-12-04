@@ -112,7 +112,7 @@ class LockEntity(Entity):
     _attr_is_unlocking: bool | None = None
     _attr_is_jammed: bool | None = None
     _attr_state: None = None
-    _attr_supported_features: LockEntityFeature | int = 0
+    _attr_supported_features: LockEntityFeature = LockEntityFeature(0)
 
     @property
     def changed_by(self) -> str | None:
@@ -193,6 +193,6 @@ class LockEntity(Entity):
         return STATE_LOCKED if locked else STATE_UNLOCKED
 
     @property
-    def supported_features(self) -> LockEntityFeature | int:
+    def supported_features(self) -> LockEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features

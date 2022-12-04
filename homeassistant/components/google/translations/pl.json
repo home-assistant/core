@@ -33,16 +33,6 @@
             }
         }
     },
-    "issues": {
-        "deprecated_yaml": {
-            "description": "Konfiguracja Kalendarza Google w configuration.yaml zostanie usuni\u0119ta w Home Assistant 2022.9. \n\nTwoje istniej\u0105ce po\u015bwiadczenia aplikacji OAuth i ustawienia dost\u0119pu zosta\u0142y automatycznie zaimportowane do interfejsu u\u017cytkownika. Usu\u0144 konfiguracj\u0119 YAML z pliku configuration.yaml i uruchom ponownie Home Assistanta, aby rozwi\u0105za\u0107 ten problem.",
-            "title": "Konfiguracja YAML dla Kalendarza Google zostanie usuni\u0119ta"
-        },
-        "removed_track_new_yaml": {
-            "description": "Wy\u0142\u0105czy\u0142e\u015b \u015bledzenie encji w Kalendarzu Google w pliku configuration.yaml, kt\u00f3ry nie jest ju\u017c obs\u0142ugiwany. Musisz r\u0119cznie zmieni\u0107 ustawienie w Opcjach Systemu integracji, aby wy\u0142\u0105czy\u0107 nowo wykryte encje w przysz\u0142o\u015bci. Usu\u0144 ustawienie track_new z pliku configuration.yaml i uruchom ponownie Home Assistanta, aby rozwi\u0105za\u0107 ten problem.",
-            "title": "\u015aledzenie encji Kalendarza Google uleg\u0142o zmianie"
-        }
-    },
     "options": {
         "step": {
             "init": {

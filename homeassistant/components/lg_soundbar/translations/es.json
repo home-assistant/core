@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositivo ya est\u00e1 configurado",
-            "existing_instance_updated": "Se ha actualizado la configuraci\u00f3n existente."
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
         },
         "error": {
-            "cannot_connect": "No se pudo conectar"
+            "cannot_connect": "No se pudo conectar",
+            "no_data": "El dispositivo no devolvi\u00f3 ning\u00fan dato requerido para una entrada."
         },
         "step": {
             "user": {

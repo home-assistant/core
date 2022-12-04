@@ -8,10 +8,11 @@
             "bad_birth": "Topik birth tidak valid",
             "bad_certificate": "Sertifikat CA tidak valid",
             "bad_client_cert": "Sertifikat klien tidak valid, pastikan file dengan format PEM diberikan",
-            "bad_client_cert_key": "Sertifikat klien dan pribadi bukan pasangan yang valid",
+            "bad_client_cert_key": "Sertifikat klien dan kunci pribadi bukan pasangan yang valid",
             "bad_client_key": "Kunci pribadi tidak valid, pastikan file dengan format PEM diberikan tanpa kata sandi",
             "bad_discovery_prefix": "Prefiks topik penemuan tidak valid",
             "bad_will": "Topik will tidak valid",
+            "bad_ws_headers": "Berikan header HTTP yang valid sebagai objek JSON",
             "cannot_connect": "Gagal terhubung",
             "invalid_inclusion": "Sertifikat klien dan kunci pribadi harus dikonfigurasi bersama"
         },
@@ -24,7 +25,6 @@
                     "client_cert": "Unggah file sertifikat klien",
                     "client_id": "ID Klien (biarkan kosong agar dihasilkan secara acak)",
                     "client_key": "Unggah file kunci pribadi",
-                    "discovery": "Aktifkan penemuan",
                     "keepalive": "Waktu antara mengirim pesan tetap hidup",
                     "password": "Kata Sandi",
                     "port": "Port",
@@ -32,7 +32,10 @@
                     "set_ca_cert": "Validasi sertifikat broker",
                     "set_client_cert": "Gunakan sertifikat klien",
                     "tls_insecure": "Abaikan validasi sertifikat broker",
-                    "username": "Nama Pengguna"
+                    "transport": "Transportasi MQTT",
+                    "username": "Nama Pengguna",
+                    "ws_headers": "Header WebSocket dalam format JSON",
+                    "ws_path": "Jalur WebSocket"
                 },
                 "description": "Masukkan informasi koneksi broker MQTT Anda."
             },
@@ -82,10 +85,11 @@
             "bad_birth": "Topik birth tidak valid",
             "bad_certificate": "Sertifikat CA tidak valid",
             "bad_client_cert": "Sertifikat klien tidak valid, pastikan file dengan format PEM diberikan",
-            "bad_client_cert_key": "Sertifikat klien dan pribadi bukan pasangan yang valid",
+            "bad_client_cert_key": "Sertifikat klien dan kunci pribadi bukan pasangan yang valid",
             "bad_client_key": "Kunci pribadi tidak valid, pastikan file dengan format PEM diberikan tanpa kata sandi",
             "bad_discovery_prefix": "Prefiks topik penemuan tidak valid",
             "bad_will": "Topik will tidak valid",
+            "bad_ws_headers": "Berikan header HTTP yang valid sebagai objek JSON",
             "cannot_connect": "Gagal terhubung",
             "invalid_inclusion": "Sertifikat klien dan kunci pribadi harus dikonfigurasi bersama"
         },
@@ -105,7 +109,10 @@
                     "set_ca_cert": "Validasi sertifikat broker",
                     "set_client_cert": "Gunakan sertifikat klien",
                     "tls_insecure": "Abaikan validasi sertifikat broker",
-                    "username": "Nama Pengguna"
+                    "transport": "Transportasi MQTT",
+                    "username": "Nama Pengguna",
+                    "ws_headers": "Header WebSocket dalam format JSON",
+                    "ws_path": "Jalur WebSocket"
                 },
                 "description": "Masukkan informasi koneksi broker MQTT Anda.",
                 "title": "Opsi broker"

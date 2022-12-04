@@ -1,19 +1,19 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "invalid_auth": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
+        },
         "step": {
             "user": {
                 "data": {
-                    "switch_as_light": "\uc2a4\uc704\uce58\ub97c \uc870\uba85 \uac1c\uccb4\ub85c \ucd08\uae30\ud654",
+                    "host": "\ud638\uc2a4\ud2b8",
+                    "password": "\ube44\ubc00\ubc88\ud638",
                     "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
-                }
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "devices": "\ud3ec\ud568\ud560 \uc7a5\uce58"
                 }
             }
         }

@@ -14,7 +14,7 @@
             "is_illuminance": "Aktuelle {entity_name} Helligkeit",
             "is_moisture": "Aktuelle Feuchtigkeit von {entity_name}",
             "is_nitrogen_dioxide": "Aktuelle Stickstoffdioxid-Konzentration von {entity_name}",
-            "is_nitrogen_monoxide": "Aktuelle Stickstoffmonoxidkonzentration von {entity_name}",
+            "is_nitrogen_monoxide": "Aktuelle Stickstoffmonoxid Konzentration von {entity_name}",
             "is_nitrous_oxide": "Aktuelle Lachgaskonzentration von {entity_name}",
             "is_ozone": "Aktuelle Ozonkonzentration von {entity_name}",
             "is_pm1": "Aktuelle PM1-Konzentration von {entity_name}",

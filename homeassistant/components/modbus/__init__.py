@@ -386,4 +386,3 @@ async def async_reset_platform(hass: HomeAssistant, integration_name: str) -> No
     hubs = hass.data[DOMAIN]
     for name in hubs:
         await hubs[name].async_close()
-    del hass.data[DOMAIN]

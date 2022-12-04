@@ -939,5 +939,8 @@ async def test_get_events_custom_calendars(hass, calendar, get_api_events):
             "summary": "This is a normal event",
             "location": "Hamburg",
             "description": "Surprisingly rainy",
+            "uid": None,
+            "recurrence_id": None,
+            "rrule": None,
         }
     ]
