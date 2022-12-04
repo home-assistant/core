@@ -13,6 +13,7 @@ from homeassistant.components.fan import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import patch_metrics, patch_metrics_set, patch_profile, patch_profile_set
 
@@ -148,7 +149,6 @@ async def test_turn_on_with_parameters(
         ("Boost", PROFILE.HOME, [call(PROFILE.BOOST)]),
         ("Fireplace", PROFILE.HOME, [call(PROFILE.FIREPLACE)]),
         ("Home", PROFILE.HOME, []),
-        ("Missing", PROFILE.HOME, []),
     ],
 )
 async def test_set_preset_mode(
@@ -171,6 +171,25 @@ async def test_set_preset_mode(
         assert profile_set.call_args_list == expected_call_args_list
 
 
+async def test_set_invalid_preset_mode(
+    mock_entry: MockConfigEntry,
+    hass: HomeAssistant,
+) -> None:
+    """Test set preset mode."""
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            service_data={
+                ATTR_ENTITY_ID: "fan.vallox",
+                ATTR_PRESET_MODE: "Invalid",
+            },
+            blocking=True,
+        )
+
+
 async def test_set_preset_mode_exception(
     mock_entry: MockConfigEntry,
     hass: HomeAssistant,
@@ -180,15 +199,13 @@ async def test_set_preset_mode_exception(
         profile_set.side_effect = ValloxApiException("Fake exception")
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
-        await hass.services.async_call(
-            FAN_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            service_data={ATTR_ENTITY_ID: "fan.vallox", ATTR_PRESET_MODE: "Away"},
-            blocking=True,
-        )
-        state = hass.states.get("fan.vallox")
-        assert state
-        assert state.attributes["preset_mode"] == "Home"
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                FAN_DOMAIN,
+                SERVICE_SET_PRESET_MODE,
+                service_data={ATTR_ENTITY_ID: "fan.vallox", ATTR_PRESET_MODE: "Away"},
+                blocking=True,
+            )
 
 
 @pytest.mark.parametrize(
@@ -233,13 +250,10 @@ async def test_set_fan_speed_exception(
         metrics_set.side_effect = ValloxApiException("Fake failure")
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
-        await hass.services.async_call(
-            FAN_DOMAIN,
-            SERVICE_SET_PERCENTAGE,
-            service_data={ATTR_ENTITY_ID: "fan.vallox", ATTR_PERCENTAGE: 5},
-            blocking=True,
-        )
-
-        state = hass.states.get("fan.vallox")
-        assert state
-        assert state.attributes["percentage"] == 30
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                FAN_DOMAIN,
+                SERVICE_SET_PERCENTAGE,
+                service_data={ATTR_ENTITY_ID: "fan.vallox", ATTR_PERCENTAGE: 5},
+                blocking=True,
+            )
