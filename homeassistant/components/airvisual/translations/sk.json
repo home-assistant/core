@@ -32,7 +32,8 @@
                 "data": {
                     "ip_address": "Hostite\u013e",
                     "password": "Heslo"
-                }
+                },
+                "title": "Nastavenie AirVisual Node/Pro"
             },
             "reauth_confirm": {
                 "data": {
@@ -41,6 +42,7 @@
                 "title": "Op\u00e4tovn\u00e9 overenie AirVisual"
             },
             "user": {
+                "description": "Vyberte, ak\u00fd typ d\u00e1t AirVisual chcete sledova\u0165.",
                 "title": "Nakonfigurujte AirVisual"
             }
         }

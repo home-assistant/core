@@ -12,7 +12,8 @@
             "invalid_ip_address": "Nieprawid\u0142owy adres IPv4.",
             "invalid_signature": "Has\u0142o do odszyfrowania pliku '.knxkeys' jest nieprawid\u0142owe.",
             "no_router_discovered": "Nie wykryto  w sieci routera KNXnet/IP.",
-            "no_tunnel_discovered": "Nie mo\u017cna znale\u017a\u0107 serwera tuneluj\u0105cego KNX w Twojej sieci."
+            "no_tunnel_discovered": "Nie mo\u017cna znale\u017a\u0107 serwera tuneluj\u0105cego KNX w Twojej sieci.",
+            "unsupported_tunnel_type": "Wybrany typ tunelowania nie jest obs\u0142ugiwany przez bramk\u0119."
         },
         "step": {
             "connection_type": {
@@ -111,7 +112,8 @@
             "invalid_ip_address": "Nieprawid\u0142owy adres IPv4.",
             "invalid_signature": "Has\u0142o do odszyfrowania pliku '.knxkeys' jest nieprawid\u0142owe.",
             "no_router_discovered": "Nie wykryto  w sieci routera KNXnet/IP.",
-            "no_tunnel_discovered": "Nie mo\u017cna znale\u017a\u0107 serwera tuneluj\u0105cego KNX w Twojej sieci."
+            "no_tunnel_discovered": "Nie mo\u017cna znale\u017a\u0107 serwera tuneluj\u0105cego KNX w Twojej sieci.",
+            "unsupported_tunnel_type": "Wybrany typ tunelowania nie jest obs\u0142ugiwany przez bramk\u0119."
         },
         "step": {
             "communication_settings": {

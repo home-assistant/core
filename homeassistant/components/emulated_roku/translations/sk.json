@@ -6,11 +6,14 @@
         "step": {
             "user": {
                 "data": {
+                    "advertise_port": "Port odosielania",
                     "host_ip": "IP adresa hostite\u013ea",
+                    "listen_port": "Port prij\u00edmania",
                     "name": "N\u00e1zov"
                 },
                 "title": "Definujte konfigur\u00e1ciu servera"
             }
         }
-    }
+    },
+    "title": "Emulovan\u00fd Roku"
 }
