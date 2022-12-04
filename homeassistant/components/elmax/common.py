@@ -18,6 +18,7 @@ from elmax_api.model.actuator import Actuator
 from elmax_api.model.endpoint import DeviceEndpoint
 from elmax_api.model.panel import PanelEntry, PanelStatus
 from httpx import ConnectError, ConnectTimeout
+from packaging import version
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
@@ -28,7 +29,12 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DEFAULT_TIMEOUT, DOMAIN, ELMAX_LOCAL_API_PATH
+from .const import (
+    DEFAULT_TIMEOUT,
+    DOMAIN,
+    ELMAX_LOCAL_API_PATH,
+    MIN_APIV2_SUPPORTED_VERSION,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,6 +52,13 @@ def build_direct_ssl_context(cadata: str) -> ssl.SSLContext:
     context.verify_mode = ssl.CERT_REQUIRED
     context.load_verify_locations(cadata=cadata)
     return context
+
+
+def check_local_version_supported(api_version: str | None) -> bool:
+    """Check whether the given API version is supported."""
+    if api_version is None:
+        return False
+    return version.parse(api_version) >= version.parse(MIN_APIV2_SUPPORTED_VERSION)
 
 
 class DummyPanel(PanelEntry):

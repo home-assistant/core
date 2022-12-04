@@ -4,6 +4,7 @@ from unittest.mock import patch
 from elmax_api.exceptions import ElmaxBadLoginError, ElmaxBadPinError, ElmaxNetworkError
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components import zeroconf
 from homeassistant.components.elmax.const import (
     CONF_ELMAX_MODE,
     CONF_ELMAX_MODE_CLOUD,
@@ -36,6 +37,15 @@ from . import (
 
 from tests.common import MockConfigEntry
 
+MOCK_ZEROCONF_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
+    host="1.1.1.1",
+    addresses=["1.1.1.1"],
+    hostname="mock_hostname",
+    name="shelly1pm-12345",
+    port=None,
+    properties={zeroconf.ATTR_PROPERTIES_ID: "shelly1pm-12345"},
+    type="mock_type",
+)
 CONF_POLLING = "polling"
 
 
@@ -75,6 +85,27 @@ async def test_direct_setup(hass):
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
+async def test_direct_show_form(hass):
+    """Test the standard direct show form case."""
+    show_form_result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch(
+        "homeassistant.components.elmax.async_setup_entry",
+        return_value=True,
+    ):
+        set_mode_result = await hass.config_entries.flow.async_configure(
+            show_form_result["flow_id"],
+            {CONF_ELMAX_MODE: CONF_ELMAX_MODE_DIRECT},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            set_mode_result["flow_id"],
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "direct_setup"
+        assert result["errors"] is None
+
+
 async def test_cloud_setup(hass):
     """Test the standard cloud setup case."""
     # Setup once.
@@ -105,6 +136,22 @@ async def test_cloud_setup(hass):
         )
         await hass.async_block_till_done()
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+
+
+async def test_zeroconf_form_setup(hass):
+    """Test the zeroconf setup case."""
+    # Setup once.
+    show_form_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DISCOVERY_INFO,
+    )
+    result = await hass.config_entries.flow.async_configure(
+        show_form_result["flow_id"],
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_setup"
+    assert result["errors"] is None
 
 
 async def test_one_config_allowed_cloud(hass):

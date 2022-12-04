@@ -44,7 +44,8 @@
             },
             "zeroconf_setup": {
                 "data": {
-                    "panel_pin": "Panel PIN code"
+                    "panel_pin": "Panel PIN code",
+                    "use_ssl": "Use SSL"
                 },
                 "description": "Configure discovered local Elmax panel"
             }
