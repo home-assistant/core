@@ -37,7 +37,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.20.8
+PySwitchbot==0.22.0
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -174,7 +174,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.3.6
+aiohomekit==2.4.0
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -362,7 +362,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.32.2
+async-upnp-client==0.32.3
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -929,7 +929,7 @@ ibm-watson==5.2.2
 ibmiotf==0.3.4
 
 # homeassistant.components.local_calendar
-ical==4.1.2
+ical==4.2.0
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -1172,7 +1172,7 @@ nextcord==2.0.0a8
 nextdns==1.2.2
 
 # homeassistant.components.nibe_heatpump
-nibe==1.4.0
+nibe==1.5.0
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
@@ -2609,13 +2609,13 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.3.9
 
 # homeassistant.components.yalexs_ble
-yalexs-ble==1.10.2
+yalexs-ble==1.10.3
 
 # homeassistant.components.august
 yalexs==1.2.6
 
 # homeassistant.components.august
-yalexs_ble==1.10.2
+yalexs_ble==1.10.3
 
 # homeassistant.components.yeelight
 yeelight==0.7.10
