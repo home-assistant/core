@@ -497,19 +497,22 @@ class HTML5NotificationService(BaseNotificationService):
                     "%s is not a valid HTML5 push notification target", target
                 )
                 continue
+            subscription = info[ATTR_SUBSCRIPTION]
             payload[ATTR_DATA][ATTR_JWT] = add_jwt(
                 timestamp,
                 target,
                 payload[ATTR_TAG],
-                info[ATTR_SUBSCRIPTION][ATTR_KEYS][ATTR_AUTH],
+                subscription[ATTR_KEYS][ATTR_AUTH],
             )
             webpusher = WebPusher(info[ATTR_SUBSCRIPTION])
-            vapid_headers = create_vapid_headers(
-                self._vapid_email,
-                info[ATTR_SUBSCRIPTION],
-                self._vapid_prv,
-                timestamp,
-            )
+
+            endpoint = urlparse(subscription[ATTR_ENDPOINT])
+            vapid_claims = {
+                "sub": f"mailto:{self._vapid_email}",
+                "aud": f"{endpoint.scheme}://{endpoint.netloc}",
+                "exp": timestamp + (VAPID_CLAIM_VALID_HOURS * 60 * 60),
+            }
+            vapid_headers = Vapid.from_string(self._vapid_prv).sign(vapid_claims)
             vapid_headers.update({"urgency": priority, "priority": priority})
             response = webpusher.send(
                 data=json.dumps(payload), headers=vapid_headers, ttl=ttl
@@ -545,19 +548,3 @@ def add_jwt(timestamp, target, tag, jwt_secret):
         ATTR_TAG: tag,
     }
     return jwt.encode(jwt_claims, jwt_secret)
-
-
-def create_vapid_headers(vapid_email, subscription_info, vapid_private_key, timestamp):
-    """Create encrypted headers to send to WebPusher."""
-
-    vapid_exp = datetime.fromtimestamp(timestamp) + timedelta(
-        hours=VAPID_CLAIM_VALID_HOURS
-    )
-    url = urlparse(subscription_info.get(ATTR_ENDPOINT))
-    vapid_claims = {
-        "sub": f"mailto:{vapid_email}",
-        "aud": f"{url.scheme}://{url.netloc}",
-        "exp": int(vapid_exp.timestamp()),
-    }
-    vapid = Vapid.from_string(private_key=vapid_private_key)
-    return vapid.sign(vapid_claims)
