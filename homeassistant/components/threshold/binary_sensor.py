@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import voluptuous as vol
 
@@ -101,6 +101,9 @@ async def async_setup_platform(
     hysteresis: float = config[CONF_HYSTERESIS]
     device_class: str | None = config.get(CONF_DEVICE_CLASS)
 
+    if lower is None and upper is None:
+        raise ValueError("Lower or Upper thresholds not provided")
+
     async_add_entities(
         [
             ThresholdSensor(
@@ -185,15 +188,13 @@ class ThresholdSensor(BinarySensorEntity):
         return self._device_class
 
     @property
-    def threshold_type(self) -> str | None:
+    def threshold_type(self) -> str:
         """Return the type of threshold this sensor represents."""
         if self._threshold_lower is not None and self._threshold_upper is not None:
             return TYPE_RANGE
         if self._threshold_lower is not None:
             return TYPE_LOWER
-        if self._threshold_upper is not None:
-            return TYPE_UPPER
-        return None
+        return TYPE_UPPER
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -212,47 +213,49 @@ class ThresholdSensor(BinarySensorEntity):
     def _update_state(self) -> None:
         """Update the state."""
 
-        def below(threshold: float | None) -> bool | None:
+        def below(sensor_value: float, threshold: float) -> bool:
             """Determine if the sensor value is below a threshold."""
-            if TYPE_CHECKING:
-                assert threshold is not None
-                assert self.sensor_value is not None
-            return self.sensor_value < (threshold - self._hysteresis)
+            return sensor_value < (threshold - self._hysteresis)
 
-        def above(threshold: float | None) -> bool | None:
+        def above(sensor_value: float, threshold: float) -> bool:
             """Determine if the sensor value is above a threshold."""
-            if TYPE_CHECKING:
-                assert threshold is not None
-                assert self.sensor_value is not None
-            return self.sensor_value > (threshold + self._hysteresis)
+            return sensor_value > (threshold + self._hysteresis)
 
         if self.sensor_value is None:
             self._state_position = POSITION_UNKNOWN
             self._state = False
+            return
 
-        elif self.threshold_type == TYPE_LOWER:
-            if below(self._threshold_lower):
+        if self.threshold_type == TYPE_LOWER and self._threshold_lower is not None:
+            if below(self.sensor_value, self._threshold_lower):
                 self._state_position = POSITION_BELOW
                 self._state = True
-            elif above(self._threshold_lower):
+            elif above(self.sensor_value, self._threshold_lower):
                 self._state_position = POSITION_ABOVE
                 self._state = False
 
-        elif self.threshold_type == TYPE_UPPER:
-            if above(self._threshold_upper):
+        if self.threshold_type == TYPE_UPPER and self._threshold_upper is not None:
+            if above(self.sensor_value, self._threshold_upper):
                 self._state_position = POSITION_ABOVE
                 self._state = True
-            elif below(self._threshold_upper):
+            elif below(self.sensor_value, self._threshold_upper):
                 self._state_position = POSITION_BELOW
                 self._state = False
 
-        elif self.threshold_type == TYPE_RANGE:
-            if below(self._threshold_lower):
+        if (
+            self.threshold_type == TYPE_RANGE
+            and self._threshold_lower is not None
+            and self._threshold_upper is not None
+        ):
+
+            if below(self.sensor_value, self._threshold_lower):
                 self._state_position = POSITION_BELOW
                 self._state = False
-            if above(self._threshold_upper):
+            if above(self.sensor_value, self._threshold_upper):
                 self._state_position = POSITION_ABOVE
                 self._state = False
-            elif above(self._threshold_lower) and below(self._threshold_upper):
+            elif above(self.sensor_value, self._threshold_lower) and below(
+                self.sensor_value, self._threshold_upper
+            ):
                 self._state_position = POSITION_IN_RANGE
                 self._state = True
