@@ -552,16 +552,40 @@ TEMP_FAHRENHEIT: Final = "°F"
 TEMP_KELVIN: Final = "K"
 """Deprecated: please use UnitOfTemperature.KELVIN"""
 
+
 # Time units
+class UnitOfTime(StrEnum):
+    """Time units."""
+
+    MICROSECONDS = "μs"
+    MILLISECONDS = "ms"
+    SECONDS = "s"
+    MINUTES = "min"
+    HOURS = "h"
+    DAYS = "d"
+    WEEKS = "w"
+    MONTHS = "m"
+    YEARS = "y"
+
+
 TIME_MICROSECONDS: Final = "μs"
+"""Deprecated: please use UnitOfTime.MICROSECONDS."""
 TIME_MILLISECONDS: Final = "ms"
+"""Deprecated: please use UnitOfTime.MILLISECONDS."""
 TIME_SECONDS: Final = "s"
+"""Deprecated: please use UnitOfTime.SECONDS."""
 TIME_MINUTES: Final = "min"
+"""Deprecated: please use UnitOfTime.MINUTES."""
 TIME_HOURS: Final = "h"
+"""Deprecated: please use UnitOfTime.HOURS."""
 TIME_DAYS: Final = "d"
+"""Deprecated: please use UnitOfTime.DAYS."""
 TIME_WEEKS: Final = "w"
+"""Deprecated: please use UnitOfTime.WEEKS."""
 TIME_MONTHS: Final = "m"
+"""Deprecated: please use UnitOfTime.MONTHS."""
 TIME_YEARS: Final = "y"
+"""Deprecated: please use UnitOfTime.YEARS."""
 
 
 # Length units
