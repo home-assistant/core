@@ -419,9 +419,8 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         # Unknown or unsupported data type
         if self._number is None:
             return None
-
-        # Raw value. Makes sure `0` is returned as a number, not as `undefined`
-        if (value := self.device.status.get(self.entity_description.key)) is None:
+        # Raw value
+        if not (value := self.device.status.get(self.entity_description.key)):
             return None
         return self._number.scale_value(value)
 
