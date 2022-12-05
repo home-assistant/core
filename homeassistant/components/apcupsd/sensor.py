@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_RESOURCES,
     PERCENTAGE,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
@@ -435,28 +434,13 @@ async def async_setup_entry(
     # lower cases throughout this integration.
     available_resources: set[str] = {k.lower() for k, _ in data_service.status.items()}
 
-    # We use user-specified resources from imported YAML config (if available) to
-    # determine whether to enable the entity by default. Here, we first collect the
-    # specified resources
-    specified_resources = None
-    if (resources := config_entry.data.get(CONF_RESOURCES)) is not None:
-        assert isinstance(resources, list)
-        specified_resources = set(resources)
-
     entities = []
     for resource in available_resources:
         if resource not in SENSORS:
             _LOGGER.warning("Invalid resource from APCUPSd: %s", resource.upper())
             continue
 
-        # To avoid breaking changes, we disable sensors not specified in resources.
-        description = SENSORS[resource]
-        enabled_by_default = description.entity_registry_enabled_default
-        if specified_resources is not None:
-            enabled_by_default = resource in specified_resources
-
-        entity = APCUPSdSensor(data_service, description, enabled_by_default)
-        entities.append(entity)
+        entities.append(APCUPSdSensor(data_service, SENSORS[resource]))
 
     async_add_entities(entities, update_before_add=True)
 
@@ -481,7 +465,6 @@ class APCUPSdSensor(SensorEntity):
         self,
         data_service: APCUPSdData,
         description: SensorEntityDescription,
-        enabled_by_default: bool,
     ) -> None:
         """Initialize the sensor."""
         # Set up unique id and device info if serial number is available.
@@ -496,7 +479,6 @@ class APCUPSdSensor(SensorEntity):
             )
 
         self.entity_description = description
-        self._attr_entity_registry_enabled_default = enabled_by_default
         self._data_service = data_service
 
     def update(self) -> None:
