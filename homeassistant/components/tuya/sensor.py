@@ -599,7 +599,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             key=DPCode.VALVE,
             name="Valve position",
             icon="mdi:valve",
-            device_class=SensorDeviceClass.POWER_FACTOR,
+            unit_of_measurement="%",
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
