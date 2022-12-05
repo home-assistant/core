@@ -1315,7 +1315,6 @@ build.json @home-assistant/supervisor
 /tests/components/ws66i/ @ssaenger
 /homeassistant/components/xbox/ @hunterjm
 /tests/components/xbox/ @hunterjm
-/homeassistant/components/xbox_live/ @MartinHjelmare
 /homeassistant/components/xiaomi_aqara/ @danielhiversen @syssi
 /tests/components/xiaomi_aqara/ @danielhiversen @syssi
 /homeassistant/components/xiaomi_ble/ @Jc2k @Ernst79
