@@ -359,6 +359,7 @@ class OnOffChannel(ZigbeeChannel):
                 self.ZCL_INIT_ATTRS.copy()
             )
             self.ZCL_INIT_ATTRS["backlight_mode"] = True
+            self.ZCL_INIT_ATTRS["child_lock"] = True
             self.ZCL_INIT_ATTRS["power_on_state"] = True
 
     @property
