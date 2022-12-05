@@ -448,8 +448,8 @@ class HaScannerStopWhileConnecting(HaScanner):
 
         self._connecting += 1
         try:
-            if self._connecting == 1 and self.scanning:
-                self._async_cancel_delayed_start()
+            self._async_cancel_delayed_start()
+            if self.scanning:
                 _LOGGER.debug("%s: Stopping scanner while connecting", self.name)
                 await self.async_stop()
             yield
