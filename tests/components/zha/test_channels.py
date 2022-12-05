@@ -170,7 +170,22 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
         (0x0404, 1, {"measured_value"}),
         (0x0405, 1, {"measured_value"}),
         (0x0406, 1, {"occupancy"}),
-        (0x0702, 1, {"instantaneous_demand"}),
+        (
+            0x0702,
+            1,
+            {
+                "instantaneous_demand",
+                "current_summ_delivered",
+                "current_tier1_summ_delivered",
+                "current_tier2_summ_delivered",
+                "current_tier3_summ_delivered",
+                "current_tier4_summ_delivered",
+                "current_tier5_summ_delivered",
+                "current_tier6_summ_delivered",
+                "active_register_tier_delivered",
+                "status",
+            },
+        ),
         (
             0x0B04,
             1,
