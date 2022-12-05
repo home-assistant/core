@@ -508,9 +508,9 @@ class SensorEntity(Entity):
         registry_entry = registry.async_get(entity_id)
         assert registry_entry
 
-        # If the sensor has 'unit_of_measuremeny' in its sensor options, the user has
+        # If the sensor has 'unit_of_measurement' in its sensor options, the user has
         # overridden the unit.
-        # If the sensor has 'sensor.private' in its entity options, it was added before
+        # If the sensor has 'sensor.private' in its entity options, it was added after
         # automatic unit conversion was implemented.
         registry_unit = registry_entry.unit_of_measurement
         if (
