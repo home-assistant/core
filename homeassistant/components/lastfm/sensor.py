@@ -1,11 +1,10 @@
 """Sensor for Last.fm account status."""
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 import hashlib
 import logging
 import re
-import time
 
 import pylast as lastfm
 from pylast import WSError
@@ -70,7 +69,7 @@ SERVICE_SCHEMA_SCROBBLE = vol.Schema(
         vol.Required(ATTR_TITLE): cv.string,
         vol.Optional(ATTR_ALBUM, ""): cv.string,
         vol.Optional(
-            ATTR_TIMESTAMP, datetime.date.today().strftime("%Y/%m/%d %H:%M:%S")
+            ATTR_TIMESTAMP, dt.date.today().strftime("%Y/%m/%d %H:%M:%S")
         ): cv.string,
     }
 )
@@ -108,26 +107,18 @@ def setup_platform(
         album = service.data.get(ATTR_ALBUM)
         timestamp = service.data.get(ATTR_TIMESTAMP)
 
+        now = dt.datetime.now()
         if timestamp is not None:
-            formatted_date = datetime.datetime.strptime(
-                timestamp.replace("-", "/"), "%Y/%m/%d %H:%M:%S"
-            )
-            unix_timestamp = datetime.datetime.timestamp(formatted_date)
-            now_timestamp = time.time()
+            timestamp = dt.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
 
-            within_range = (
-                abs(now_timestamp - unix_timestamp)
-                < datetime.timedelta(weeks=2).total_seconds()
-            )
-            if within_range is False:
+            if timestamp > now or timestamp < now - dt.timedelta(weeks=2):
                 raise HomeAssistantError(
-                    f"Scrobble timestamp {timestamp} is older than two weeks"
+                    f"Scrobbled timestamp {timestamp} is not within the past 2 weeks"
                 )
         else:
-            unix_timestamp = time.time()
+            timestamp = now
 
         for entity in entities:
-            _LOGGER.error(entity.name)
             if entity.entity_id == entity_id:
                 passwords = {d["username"]: d["password"] for d in users}
 
@@ -141,6 +132,8 @@ def setup_platform(
                 except WSError as error:
                     _LOGGER.error(error)
                     return
+
+        unix_timestamp = dt.datetime.timestamp(timestamp)
 
         network.scrobble(artist, title, int(unix_timestamp), album)
 
