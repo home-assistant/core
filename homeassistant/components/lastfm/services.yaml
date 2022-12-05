@@ -12,18 +12,28 @@ scrobble:
           integration: lastfm
           domain: sensor
     artist:
+      name: Artist
       description: Artist name
       example: Queen
+      selector:
+        text:
       required: true
     title:
+      name: Title
       description: Track name
       example: Bohemian Rhapsody
+      selector:
+        text:
       required: true
     album:
+      name: Album
       description: Album name
       example: A Night at the Opera
+      selector:
+        text:
       required: false
     timestamp:
+      name: Timestamp
       description: Timestamp of the scrobble
       example: "2022-12-03 13:00:00"
       required: false

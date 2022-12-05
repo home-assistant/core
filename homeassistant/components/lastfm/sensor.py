@@ -105,22 +105,26 @@ def setup_platform(
         entity_id = service.data[ATTR_ENTITY_ID]
         artist = service.data[ATTR_ARTIST]
         title = service.data[ATTR_TITLE]
-        album = service.data[ATTR_ALBUM]
-        timestamp = service.data[ATTR_TIMESTAMP]
-        formatted_date = datetime.datetime.strptime(
-            timestamp.replace("-", "/"), "%Y/%m/%d %H:%M:%S"
-        )
-        unix_timestamp = datetime.datetime.timestamp(formatted_date)
-        now_timestamp = time.time()
+        album = service.data.get(ATTR_ALBUM)
+        timestamp = service.data.get(ATTR_TIMESTAMP)
 
-        within_range = (
-            abs(now_timestamp - unix_timestamp)
-            < datetime.timedelta(weeks=2).total_seconds()
-        )
-        if within_range is False:
-            raise HomeAssistantError(
-                f"Scrobble timestamp {timestamp} is older than two weeks"
+        if timestamp is not None:
+            formatted_date = datetime.datetime.strptime(
+                timestamp.replace("-", "/"), "%Y/%m/%d %H:%M:%S"
             )
+            unix_timestamp = datetime.datetime.timestamp(formatted_date)
+            now_timestamp = time.time()
+
+            within_range = (
+                abs(now_timestamp - unix_timestamp)
+                < datetime.timedelta(weeks=2).total_seconds()
+            )
+            if within_range is False:
+                raise HomeAssistantError(
+                    f"Scrobble timestamp {timestamp} is older than two weeks"
+                )
+        else:
+            unix_timestamp = time.time()
 
         for entity in entities:
             _LOGGER.error(entity.name)
