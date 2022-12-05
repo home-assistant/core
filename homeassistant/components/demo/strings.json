@@ -63,6 +63,15 @@
     }
   },
   "entity": {
+    "select": {
+      "speed": {
+        "state": {
+          "light_speed": "Light Speed",
+          "ludicrous_speed": "Ludicrous Speed",
+          "ridiculous_speed": "Ridiculous Speed"
+        }
+      }
+    },
     "sensor": {
       "thermostat_mode": {
         "state": {

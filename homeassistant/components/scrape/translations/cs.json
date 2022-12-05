@@ -40,5 +40,25 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "edit_sensor": {
+                "data": {
+                    "attribute": "Atribut",
+                    "device_class": "T\u0159\u00edda za\u0159\u00edzen\u00ed",
+                    "index": "Index",
+                    "select": "Vybrat",
+                    "unit_of_measurement": "Jednotka m\u011b\u0159en\u00ed",
+                    "value_template": "\u0160ablona hodnoty"
+                },
+                "data_description": {
+                    "attribute": "Z\u00edskat hodnotu atributu na vybran\u00e9m tagu",
+                    "device_class": "Typ/t\u0159\u00edda senzoru pro nastaven\u00ed ikony v rozhran\u00ed",
+                    "index": "Definuje, kter\u00fd z prvk\u016f vr\u00e1cen\u00fdch selektorem CSS se m\u00e1 pou\u017e\u00edt",
+                    "select": "Definuje, jak\u00fd tag hledat. Podrobnosti najdete v selektorech CSS Beautifulsoup"
+                }
+            }
+        }
     }
 }

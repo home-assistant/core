@@ -10,7 +10,8 @@
         "step": {
             "user": {
                 "data": {
-                    "house_number": "\u010d\u00edslo domu"
+                    "house_number": "\u010d\u00edslo domu",
+                    "post_code": "Po\u0161tov\u00e9 smerovacie \u010d\u00edslo"
                 }
             }
         }

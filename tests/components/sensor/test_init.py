@@ -889,6 +889,14 @@ async def test_unit_conversion_priority_suggested_unit_change(
             621,
             SensorDeviceClass.DISTANCE,
         ),
+        (
+            US_CUSTOMARY_SYSTEM,
+            LENGTH_METERS,
+            LENGTH_MILES,
+            1000000,
+            621.371,
+            SensorDeviceClass.DISTANCE,
+        ),
     ],
 )
 async def test_unit_conversion_priority_legacy_conversion_removed(
