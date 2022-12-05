@@ -1,8 +1,9 @@
 """The Diagnostics integration."""
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Callable, Coroutine
-from dataclasses import dataclass, field
+from dataclasses import asdict as dataclass_asdict, dataclass
 from http import HTTPStatus
 import json
 import logging
@@ -34,6 +35,14 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
+class DiagnosticsSubscriptionSupport:
+    """Describe subscriptions supported by the platform."""
+
+    config_entry: bool
+    domain: bool
+
+
+@dataclass
 class DiagnosticsPlatformData:
     """Diagnostic platform data."""
 
@@ -43,13 +52,21 @@ class DiagnosticsPlatformData:
     device_diagnostics: Callable[
         [HomeAssistant, ConfigEntry, DeviceEntry], Coroutine[Any, Any, Any]
     ] | None
+    subscription_support: DiagnosticsSubscriptionSupport
 
 
-@dataclass
 class DiagnosticsData:
     """Diagnostic data."""
 
-    platforms: dict[str, DiagnosticsPlatformData] = field(default_factory=dict)
+    def __init__(self) -> None:
+        """Initialize diagnostic data."""
+        self.platforms: dict[str, DiagnosticsPlatformData] = {}
+        self.domain_subscriptions: defaultdict[
+            str, set[tuple[websocket_api.ActiveConnection, int]]
+        ] = defaultdict(set)
+        self.config_entry_subscriptions: defaultdict[
+            str, set[tuple[websocket_api.ActiveConnection, int]]
+        ] = defaultdict(set)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -62,6 +79,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     websocket_api.async_register_command(hass, handle_info)
     websocket_api.async_register_command(hass, handle_get)
+    websocket_api.async_register_command(hass, handle_subscribe_diagnostics)
     hass.http.register_view(DownloadDiagnosticsView)
 
     return True
@@ -80,15 +98,26 @@ class DiagnosticsProtocol(Protocol):
     ) -> Any:
         """Return diagnostics for a device."""
 
+    @callback
+    def async_supports_subscription(self) -> DiagnosticsSubscriptionSupport:
+        """Return if the platform supports subscribing to diagnostics."""
+
 
 async def _register_diagnostics_platform(
     hass: HomeAssistant, integration_domain: str, platform: DiagnosticsProtocol
 ) -> None:
     """Register a diagnostics platform."""
     diagnostics_data: DiagnosticsData = hass.data[DOMAIN]
+    subscription_support: DiagnosticsSubscriptionSupport
+    if hasattr(platform, "async_supports_subscription"):
+        subscription_support = platform.async_supports_subscription()
+    else:
+        subscription_support = DiagnosticsSubscriptionSupport(False, False)
+
     diagnostics_data.platforms[integration_domain] = DiagnosticsPlatformData(
         getattr(platform, "async_get_config_entry_diagnostics", None),
         getattr(platform, "async_get_device_diagnostics", None),
+        subscription_support,
     )
 
 
@@ -107,6 +136,7 @@ def handle_info(
                 DiagnosticsType.CONFIG_ENTRY: info.config_entry_diagnostics is not None,
                 DiagnosticsSubType.DEVICE: info.device_diagnostics is not None,
             },
+            "supports_subscription": dataclass_asdict(info.subscription_support),
         }
         for domain, info in diagnostics_data.platforms.items()
     ]
@@ -142,8 +172,46 @@ def handle_get(
                 DiagnosticsType.CONFIG_ENTRY: info.config_entry_diagnostics is not None,
                 DiagnosticsSubType.DEVICE: info.device_diagnostics is not None,
             },
+            "supports_subscription": dataclass_asdict(info.subscription_support),
         },
     )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "diagnostics/subscribe",
+        vol.Required("domain"): str,
+        vol.Optional("config_entry"): str,
+    }
+)
+@callback
+def handle_subscribe_diagnostics(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Subscribe to diagnostic messages."""
+
+    diagnostics_data: DiagnosticsData = hass.data[DOMAIN]
+
+    msg_id = msg["id"]
+    domain = msg["domain"]
+    config_entry = msg.get("config_entry")
+    diagnostics_data.domain_subscriptions[domain].add((connection, msg_id))
+    if config_entry:
+        diagnostics_data.config_entry_subscriptions[config_entry].add(
+            (connection, msg_id)
+        )
+
+    @callback
+    def cancel_subscription() -> None:
+        diagnostics_data.domain_subscriptions[domain].remove((connection, msg["id"]))
+        if config_entry:
+            diagnostics_data.config_entry_subscriptions[config_entry].remove(
+                (connection, msg_id)
+            )
+
+    connection.subscriptions[msg["id"]] = cancel_subscription
+
+    connection.send_message(websocket_api.result_message(msg["id"]))
 
 
 async def _async_get_json_file_response(
@@ -265,3 +333,62 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
         return await _async_get_json_file_response(
             hass, data, filename, config_entry.domain, d_id, sub_id
         )
+
+
+@callback
+def async_has_subscription(
+    hass: HomeAssistant, domain: str, config_entry_id: str | None = None
+) -> bool:
+    """Return True if there is a matching diagnostics subscription."""
+
+    diagnostics_data: DiagnosticsData = hass.data[DOMAIN]
+    if (
+        domain in diagnostics_data.domain_subscriptions
+        and diagnostics_data.domain_subscriptions[domain]
+    ):
+        return True
+
+    if not config_entry_id:
+        return False
+
+    if (
+        config_entry_id in diagnostics_data.config_entry_subscriptions
+        and diagnostics_data.config_entry_subscriptions[config_entry_id]
+    ):
+        return True
+
+    return False
+
+
+@callback
+def async_log_object(
+    hass: HomeAssistant,
+    data: Any,
+    domain: str,
+    config_entry_id: str | None = None,
+) -> None:
+    """Send diagnostic data to subscribers."""
+    diagnostics_data: DiagnosticsData = hass.data[DOMAIN]
+
+    json_data = json.dumps({"data": data}, cls=ExtendedJSONEncoder)
+
+    domain_subs: set[tuple[websocket_api.ActiveConnection, int]] = set()
+
+    if domain in diagnostics_data.domain_subscriptions:
+        for conn, msg_id in diagnostics_data.domain_subscriptions[domain]:
+            conn.send_message(websocket_api.event_message(msg_id, json_data))
+            domain_subs.add((conn, msg_id))
+
+    if not config_entry_id:
+        return
+
+    if (
+        config_entry_id in diagnostics_data.config_entry_subscriptions
+        and diagnostics_data.config_entry_subscriptions[config_entry_id]
+    ):
+        for conn, msg_id in diagnostics_data.config_entry_subscriptions[
+            config_entry_id
+        ]:
+            if (conn, msg_id) in domain_subs:
+                continue
+            conn.send_message(websocket_api.event_message(msg_id, json_data))
