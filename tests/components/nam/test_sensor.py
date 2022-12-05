@@ -6,6 +6,7 @@ from nettigo_air_monitor import ApiError
 
 from homeassistant.components.nam.const import DOMAIN
 from homeassistant.components.sensor import (
+    ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
@@ -231,12 +232,20 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.nettigo_air_monitor_pmsx003_caqi_level")
     assert state
     assert state.state == "very low"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == "nam__caqi_level"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
+    assert state.attributes.get(ATTR_OPTIONS) == [
+        "very low",
+        "low",
+        "medium",
+        "high",
+        "very high",
+    ]
     assert state.attributes.get(ATTR_ICON) == "mdi:air-filter"
 
     entry = registry.async_get("sensor.nettigo_air_monitor_pmsx003_caqi_level")
     assert entry
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff-pms_caqi_level"
+    assert entry.translation_key == "caqi_level"
 
     state = hass.states.get("sensor.nettigo_air_monitor_pmsx003_caqi")
     assert state
@@ -323,12 +332,20 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.nettigo_air_monitor_sds011_caqi_level")
     assert state
     assert state.state == "very low"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == "nam__caqi_level"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
+    assert state.attributes.get(ATTR_OPTIONS) == [
+        "very low",
+        "low",
+        "medium",
+        "high",
+        "very high",
+    ]
     assert state.attributes.get(ATTR_ICON) == "mdi:air-filter"
 
     entry = registry.async_get("sensor.nettigo_air_monitor_sds011_caqi_level")
     assert entry
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff-sds011_caqi_level"
+    assert entry.translation_key == "caqi_level"
 
     state = hass.states.get("sensor.nettigo_air_monitor_sds011_particulate_matter_2_5")
     assert state
@@ -358,12 +375,20 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.nettigo_air_monitor_sps30_caqi_level")
     assert state
     assert state.state == "medium"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == "nam__caqi_level"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
+    assert state.attributes.get(ATTR_OPTIONS) == [
+        "very low",
+        "low",
+        "medium",
+        "high",
+        "very high",
+    ]
     assert state.attributes.get(ATTR_ICON) == "mdi:air-filter"
 
     entry = registry.async_get("sensor.nettigo_air_monitor_sps30_caqi_level")
     assert entry
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff-sps30_caqi_level"
+    assert entry.translation_key == "caqi_level"
 
     state = hass.states.get("sensor.nettigo_air_monitor_sps30_particulate_matter_1_0")
     assert state
