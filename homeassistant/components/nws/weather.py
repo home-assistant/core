@@ -10,6 +10,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
+    Forecast,
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -47,14 +48,16 @@ from .const import (
 PARALLEL_UPDATES = 0
 
 
-def convert_condition(time, weather):
+def convert_condition(
+    time: str, weather: tuple[tuple[str, int | None], ...]
+) -> tuple[str, int | None]:
     """
     Convert NWS codes to HA condition.
 
     Choose first condition in CONDITION_CLASSES that exists in weather code.
     If no match is found, return first condition from NWS
     """
-    conditions = [w[0] for w in weather]
+    conditions: list[str] = [w[0] for w in weather]
     prec_probs = [w[1] or 0 for w in weather]
 
     # Choose condition with highest priority.
@@ -90,12 +93,19 @@ async def async_setup_entry(
     )
 
 
+class NWSForecast(Forecast):
+    """Forecast with extra fields needed for NWS."""
+
+    detailed_description: str | None
+    daytime: bool | None
+
+
 class NWSWeather(WeatherEntity):
     """Representation of a weather condition."""
 
     _attr_should_poll = False
 
-    def __init__(self, entry_data, hass_data, mode, units):
+    def __init__(self, entry_data, hass_data, mode, units) -> None:
         """Initialise the platform with a data instance and station name."""
         self.nws = hass_data[NWS_DATA]
         self.latitude = entry_data[CONF_LATITUDE]
@@ -219,11 +229,11 @@ class NWSWeather(WeatherEntity):
         return UnitOfLength.METERS
 
     @property
-    def forecast(self):
+    def forecast(self) -> list[Forecast] | None:
         """Return forecast."""
         if self._forecast is None:
             return None
-        forecast = []
+        forecast: list[NWSForecast] = []
         for forecast_entry in self._forecast:
             data = {
                 ATTR_FORECAST_DETAILED_DESCRIPTION: forecast_entry.get(

@@ -1,5 +1,8 @@
 """Config flow for National Weather Service (NWS) integration."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 import aiohttp
 from pynws import SimpleNWS
@@ -17,7 +20,9 @@ from .const import CONF_STATION, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(
+    hass: core.HomeAssistant, data: dict[str, Any]
+) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -47,7 +52,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             await self.async_set_unique_id(
                 base_unique_id(user_input[CONF_LATITUDE], user_input[CONF_LONGITUDE])
