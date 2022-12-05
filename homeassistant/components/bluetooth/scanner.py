@@ -185,7 +185,7 @@ class HaScanner(BaseHaScanner):
             self.current_scanner is self.passive_scanner,
             self.passive_scanner,
         )
-        if not self.scanning or not self.passive_scanner:
+        if not self.scanning or not self.passive_scanner or not self.active_scanner:
             yield
             return
 
