@@ -2403,31 +2403,114 @@ def validate_db_schema(
     return schema_errors
 
 
-def correct_db_schema(
-    engine: Engine, session_maker: Callable[[], Session], schema_errors: set[str]
+def _correct_utf8(instance: Recorder, session_maker: Callable[[], Session]) -> None:
+    """Attempt to convert the statistics_meta table to utf8mb4."""
+    if instance.dialect_name != SupportedDialect.MYSQL:
+        _LOGGER.warning(
+            "Don't know how to fix schema error %s for dialect %s",
+            "statistics_meta.4-byte UTF-8",
+            instance.dialect_name,
+        )
+        return
+
+    _LOGGER.warning(
+        "Updating character set and collation of table %s to utf8mb4. "
+        "Note: this can take several minutes on large databases and slow "
+        "computers. Please be patient!",
+        "statistics_meta",
+    )
+    with contextlib.suppress(SQLAlchemyError):
+        with session_scope(session=session_maker()) as session:
+            connection = session.connection()
+            connection.execute(
+                # Using LOCK=EXCLUSIVE to prevent the database from corrupting
+                # https://github.com/home-assistant/core/issues/56104
+                text(
+                    "ALTER TABLE statistics_meta CONVERT TO "
+                    "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, LOCK=EXCLUSIVE"
+                )
+            )
+
+
+def _correct_float_precision(
+    instance: Recorder,
+    engine: Engine,
+    session_maker: Callable[[], Session],
+    table: type[Statistics | StatisticsShortTerm],
 ) -> None:
-    """Correct issues detected by validate_db_schema."""
+    """Attempt to convert float columns to double precision."""
     from .migration import _modify_columns  # pylint: disable=import-outside-toplevel
 
-    if "statistics_meta.4-byte UTF-8" in schema_errors:
-        # Attempt to convert the table to utf8mb4
+    if instance.dialect_name not in (
+        SupportedDialect.MYSQL,
+        SupportedDialect.POSTGRESQL,
+    ):
         _LOGGER.warning(
-            "Updating character set and collation of table %s to utf8mb4. "
-            "Note: this can take several minutes on large databases and slow "
-            "computers. Please be patient!",
-            "statistics_meta",
+            "Don't know how to fix schema error %s for dialect %s",
+            f"{table.__tablename__}.double precision",
+            instance.dialect_name,
         )
-        with contextlib.suppress(SQLAlchemyError):
-            with session_scope(session=session_maker()) as session:
-                connection = session.connection()
-                connection.execute(
-                    # Using LOCK=EXCLUSIVE to prevent the database from corrupting
-                    # https://github.com/home-assistant/core/issues/56104
-                    text(
-                        "ALTER TABLE statistics_meta CONVERT TO "
-                        "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, LOCK=EXCLUSIVE"
-                    )
-                )
+        return
+
+    _modify_columns(
+        session_maker,
+        engine,
+        table.__tablename__,
+        [
+            "mean DOUBLE PRECISION",
+            "min DOUBLE PRECISION",
+            "max DOUBLE PRECISION",
+            "state DOUBLE PRECISION",
+            "sum DOUBLE PRECISION",
+        ],
+    )
+
+
+def _correct_datetime_precision(
+    instance: Recorder,
+    engine: Engine,
+    session_maker: Callable[[], Session],
+    table: type[Statistics | StatisticsShortTerm],
+) -> None:
+    """Attempt to convert datetime columns to µs precision."""
+    from .migration import _modify_columns  # pylint: disable=import-outside-toplevel
+
+    if instance.dialect_name not in (
+        SupportedDialect.MYSQL,
+        SupportedDialect.POSTGRESQL,
+    ):
+        _LOGGER.warning(
+            "Don't know how to fix schema error %s for dialect %s",
+            f"{table.__tablename__}.µs precision",
+            instance.dialect_name,
+        )
+        return
+
+    if instance.dialect_name == SupportedDialect.MYSQL:
+        datetime_type = "DATETIME(6)"
+    else:
+        datetime_type = "TIMESTAMP(6) WITH TIME ZONE"
+    _modify_columns(
+        session_maker,
+        engine,
+        table.__tablename__,
+        [
+            f"last_reset {datetime_type}",
+            f"start {datetime_type}",
+        ],
+    )
+    return
+
+
+def correct_db_schema(
+    instance: Recorder,
+    engine: Engine,
+    session_maker: Callable[[], Session],
+    schema_errors: set[str],
+) -> None:
+    """Correct issues detected by validate_db_schema."""
+    if "statistics_meta.4-byte UTF-8" in schema_errors:
+        _correct_utf8(instance, session_maker)
 
     tables: tuple[type[Statistics | StatisticsShortTerm], ...] = (
         Statistics,
@@ -2435,27 +2518,6 @@ def correct_db_schema(
     )
     for table in tables:
         if f"{table.__tablename__}.double precision" in schema_errors:
-            # Attempt to convert float columns to double precision
-            _modify_columns(
-                session_maker,
-                engine,
-                table.__tablename__,
-                [
-                    "mean DOUBLE PRECISION",
-                    "min DOUBLE PRECISION",
-                    "max DOUBLE PRECISION",
-                    "state DOUBLE PRECISION",
-                    "sum DOUBLE PRECISION",
-                ],
-            )
+            _correct_float_precision(instance, engine, session_maker, table)
         if f"{table.__tablename__}.µs precision" in schema_errors:
-            # Attempt to convert datetime columns to µs precision
-            _modify_columns(
-                session_maker,
-                engine,
-                table.__tablename__,
-                [
-                    "last_reset DATETIME(6)",
-                    "start DATETIME(6)",
-                ],
-            )
+            _correct_datetime_precision(instance, engine, session_maker, table)
