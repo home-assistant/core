@@ -127,8 +127,6 @@ class OverkizDeviceClass(StrEnum):
 
     BATTERY = "overkiz__battery"
     DISCRETE_RSSI_LEVEL = "overkiz__discrete_rssi_level"
-    MEMORIZED_SIMPLE_VOLUME = "overkiz__memorized_simple_volume"
-    OPEN_CLOSED_PEDESTRIAN = "overkiz__open_closed_pedestrian"
     PRIORITY_LOCK_ORIGINATOR = "overkiz__priority_lock_originator"
     SENSOR_DEFECT = "overkiz__sensor_defect"
     SENSOR_ROOM = "overkiz__sensor_room"
