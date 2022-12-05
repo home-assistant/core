@@ -30,7 +30,7 @@
             },
             "user": {
                 "data": {
-                    "authentication": "Hiteles\u00edt\u00e9s",
+                    "authentication": "V\u00e1lassza ki a hiteles\u00edt\u00e9si m\u00f3dot",
                     "headers": "Fejl\u00e9cek",
                     "method": "M\u00f3dszer",
                     "password": "Jelsz\u00f3",
@@ -109,7 +109,7 @@
             },
             "resource": {
                 "data": {
-                    "authentication": "Hiteles\u00edt\u00e9s",
+                    "authentication": "V\u00e1lassza ki a hiteles\u00edt\u00e9si m\u00f3dot",
                     "headers": "Fejl\u00e9cek",
                     "method": "M\u00f3dszer",
                     "password": "Jelsz\u00f3",
