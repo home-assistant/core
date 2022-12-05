@@ -111,7 +111,6 @@ SENSOR_TYPES: tuple[MeteoFranceSensorEntityDescription, ...] = (
         name="Daily precipitation",
         native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
         device_class=SensorDeviceClass.PRECIPITATION,
-        icon="mdi:cup-water",
         data_path="today_forecast:precipitation:24h",
     ),
     MeteoFranceSensorEntityDescription(
