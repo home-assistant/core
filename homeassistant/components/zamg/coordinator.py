@@ -40,10 +40,11 @@ class ZamgDataUpdateCoordinator(DataUpdateCoordinator[ZamgDevice]):
         try:
             if self.api_fields:
                 self.zamg.set_parameters(self.api_fields)
+            self.zamg.request_timeout = 60.0
             device = await self.zamg.update()
         except ZamgNoDataError as error:
             raise UpdateFailed("No response from API") from error
-        except (ValueError, ZamgError) as error:
+        except (ZamgError) as error:
             raise UpdateFailed(f"Invalid response from API: {error}") from error
         self.data = device
         self.data["last_update"] = self.zamg.last_update

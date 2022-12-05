@@ -40,28 +40,26 @@ class ZamgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self.hass.config.latitude,
                     self.hass.config.longitude,
                 )
-                LOGGER.debug("config_flow: closest station = %s", closest_station_id)
-                user_input = {}
-
-                schema = vol.Schema(
-                    {
-                        vol.Required(
-                            CONF_STATION_ID, default=closest_station_id
-                        ): vol.In(
-                            {
-                                station: f"{stations[station][2]} ({station})"
-                                for station in stations
-                            }
-                        )
-                    }
-                )
-                return self.async_show_form(step_id="user", data_schema=schema)
-            except (ZamgApiError, ZamgNoDataError, ValueError) as err:
+            except (ZamgApiError, ZamgNoDataError) as err:
                 LOGGER.error("Config_flow: Received error from ZAMG: %s", err)
                 errors["base"] = "cannot_connect"
                 return self.async_abort(
                     reason="cannot_connect", description_placeholders=errors
                 )
+            LOGGER.debug("config_flow: closest station = %s", closest_station_id)
+            user_input = {}
+
+            schema = vol.Schema(
+                {
+                    vol.Required(CONF_STATION_ID, default=closest_station_id): vol.In(
+                        {
+                            station: f"{stations[station][2]} ({station})"
+                            for station in stations
+                        }
+                    )
+                }
+            )
+            return self.async_show_form(step_id="user", data_schema=schema)
 
         station_id = user_input[CONF_STATION_ID]
 
