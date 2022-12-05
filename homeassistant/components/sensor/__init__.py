@@ -718,7 +718,6 @@ class SensorEntity(Entity):
         unit_of_measurement = self.unit_of_measurement
         value = self.native_value
         device_class = self.device_class
-        state_class = self.state_class
 
         # Received a datetime
         if value is not None and device_class == DEVICE_CLASS_TIMESTAMP:
@@ -755,6 +754,28 @@ class SensorEntity(Entity):
                     f"but provides state {value}:{type(value)} resulting in '{err}'"
                 ) from err
 
+        # Sensors with device classes indicating a non-numeric value
+        # should not have a state class or unit of measurement
+        if device_class in {
+            SensorDeviceClass.DATE,
+            SensorDeviceClass.DURATION,
+            SensorDeviceClass.ENUM,
+            SensorDeviceClass.TIMESTAMP,
+        }:
+            if self.state_class:
+                raise ValueError(
+                    f"Sensor {self.entity_id} has a state class and thus indicating "
+                    "it has a numeric value; however, it has the non-numeric "
+                    f"device class: {device_class}"
+                )
+
+            if unit_of_measurement:
+                raise ValueError(
+                    f"Sensor {self.entity_id} has a unit of measurement and thus "
+                    "indicating it has a numeric value; however, it has the "
+                    f"non-numeric device class: {device_class}"
+                )
+
         # Enum checks
         if value is not None and (
             device_class == SensorDeviceClass.ENUM or self.options is not None
@@ -765,19 +786,6 @@ class SensorEntity(Entity):
                     reason = f"has device class '{device_class}' instead of 'enum'"
                 raise ValueError(
                     f"Sensor {self.entity_id} is providing enum options, but {reason}"
-                )
-
-            if state_class:
-                raise ValueError(
-                    f"Sensor {self.entity_id} has an state_class and thus indicating "
-                    "it has a numeric value; however, it has the enum device class"
-                )
-
-            if unit_of_measurement:
-                raise ValueError(
-                    f"Sensor {self.entity_id} has an unit of measurement and thus "
-                    "indicating it has a numeric value; "
-                    "however, it has the enum device class"
                 )
 
             if (options := self.options) and value not in options:
