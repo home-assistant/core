@@ -3,7 +3,6 @@ from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.renault.const import (
     CONF_KAMEREON_ACCOUNT_ID,
     CONF_LOCALE,
-    DEVICE_CLASS_CHARGE_MODE,
     DEVICE_CLASS_CHARGE_STATE,
     DEVICE_CLASS_PLUG_STATE,
     DOMAIN,
@@ -121,7 +120,6 @@ MOCK_VEHICLES = {
         Platform.DEVICE_TRACKER: [],
         Platform.SELECT: [
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_CHARGE_MODE,
                 ATTR_ENTITY_ID: "select.reg_number_charge_mode",
                 ATTR_ICON: "mdi:calendar-remove",
                 ATTR_OPTIONS: ["always", "always_charging", "schedule_mode"],
@@ -340,7 +338,6 @@ MOCK_VEHICLES = {
         ],
         Platform.SELECT: [
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_CHARGE_MODE,
                 ATTR_ENTITY_ID: "select.reg_number_charge_mode",
                 ATTR_ICON: "mdi:calendar-clock",
                 ATTR_OPTIONS: ["always", "always_charging", "schedule_mode"],
@@ -559,7 +556,6 @@ MOCK_VEHICLES = {
         ],
         Platform.SELECT: [
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_CHARGE_MODE,
                 ATTR_ENTITY_ID: "select.reg_number_charge_mode",
                 ATTR_ICON: "mdi:calendar-remove",
                 ATTR_OPTIONS: ["always", "always_charging", "schedule_mode"],
