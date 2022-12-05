@@ -12,12 +12,7 @@ from bleak import BleakClient, BleakError
 from bleak.backends.client import BaseBleakClient, get_platform_client_backend_type
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementDataCallback, BaseBleakScanner
-from bleak_retry_connector import (
-    NO_RSSI_VALUE,
-    ble_device_description,
-    clear_cache,
-    get_device,
-)
+from bleak_retry_connector import NO_RSSI_VALUE, ble_device_description, clear_cache
 
 from homeassistant.core import CALLBACK_TYPE, callback as hass_callback
 from homeassistant.helpers.frame import report
@@ -193,15 +188,7 @@ class HaBleakClientWrapper(BleakClient):
     async def connect(self, **kwargs: Any) -> bool:
         """Connect to the specified GATT server."""
         assert models.MANAGER is not None
-        if not (
-            wrapped_backend := (
-                self._async_get_best_available_backend_and_device()
-                or await self._async_get_any_backend_and_device()
-            )
-        ):
-            raise BleakError(
-                f"No backend with an available connection slot that can reach address {self.__address} was found"
-            )
+        wrapped_backend = self._async_get_best_available_backend_and_device()
         self._backend = wrapped_backend.client(
             wrapped_backend.device,
             disconnected_callback=self.__disconnected_callback,
@@ -241,7 +228,7 @@ class HaBleakClientWrapper(BleakClient):
     @hass_callback
     def _async_get_best_available_backend_and_device(
         self,
-    ) -> _HaWrappedBleakBackend | None:
+    ) -> _HaWrappedBleakBackend:
         """Get a best available backend and device for the given address.
 
         This method will return the backend with the best rssi
@@ -263,22 +250,9 @@ class HaBleakClientWrapper(BleakClient):
             ):
                 return backend
 
-        return None
-
-    async def _async_get_any_backend_and_device(self) -> _HaWrappedBleakBackend | None:
-        """Get any backend and device for the given address.
-
-        This method will search the bus for the device and return
-        the first backend that can connect to it.
-
-        This method will find the device even if it is not in the
-        discovered devices list since it will search the bus.
-        """
-        if (device := await get_device(self.__address)) and (
-            backend := self._async_get_backend_for_ble_device(device)
-        ):
-            return backend
-        return None
+        raise BleakError(
+            f"No backend with an available connection slot that can reach address {address} was found"
+        )
 
     async def disconnect(self) -> bool:
         """Disconnect from the device."""
