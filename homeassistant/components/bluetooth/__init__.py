@@ -300,7 +300,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     details = adapters[adapter]
     adapter_manufacturer = details[ADAPTER_MANUFACTURER] or "unknown"
     needs_stop_during_connect = "realtek" in adapter_manufacturer.lower()
-    cls = HaScannerStopWhileConnecting if needs_stop_during_connect else BaseHaScanner
+    cls = HaScannerStopWhileConnecting if needs_stop_during_connect else HaScanner
     scanner = cls(hass, mode, adapter, address, new_info_callback)
     try:
         scanner.async_setup()
