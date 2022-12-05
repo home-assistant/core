@@ -331,7 +331,7 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
 )
 
-MOTION_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
+EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
     ProtectBinaryEventEntityDescription(
         key="doorbell",
         name="Doorbell",
@@ -486,7 +486,7 @@ async def async_setup_entry(
             ufp_device=device,
         )
         if device.is_adopted and isinstance(device, Camera):
-            entities += _async_motion_entities(data, ufp_device=device)
+            entities += _async_event_entities(data, ufp_device=device)
         async_add_entities(entities)
 
     entry.async_on_unload(
@@ -502,14 +502,14 @@ async def async_setup_entry(
         lock_descs=DOORLOCK_SENSORS,
         viewer_descs=VIEWER_SENSORS,
     )
-    entities += _async_motion_entities(data)
+    entities += _async_event_entities(data)
     entities += _async_nvr_entities(data)
 
     async_add_entities(entities)
 
 
 @callback
-def _async_motion_entities(
+def _async_event_entities(
     data: ProtectData,
     ufp_device: ProtectAdoptableDeviceModel | None = None,
 ) -> list[ProtectDeviceEntity]:
@@ -518,7 +518,7 @@ def _async_motion_entities(
         data.get_by_types({ModelType.CAMERA}) if ufp_device is None else [ufp_device]
     )
     for device in devices:
-        for description in MOTION_SENSORS:
+        for description in EVENT_SENSORS:
             if not description.has_required(device):
                 continue
             entities.append(ProtectEventBinarySensor(data, device, description))

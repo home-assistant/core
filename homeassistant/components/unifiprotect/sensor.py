@@ -521,7 +521,7 @@ NVR_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ),
 )
 
-MOTION_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
+EVENT_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
     ProtectSensorEventEntityDescription(
         key="detected_object",
         name="Detected Object",
@@ -641,7 +641,7 @@ async def async_setup_entry(
             ufp_device=device,
         )
         if device.is_adopted_by_us and isinstance(device, Camera):
-            entities += _async_motion_entities(data, ufp_device=device)
+            entities += _async_event_entities(data, ufp_device=device)
         async_add_entities(entities)
 
     entry.async_on_unload(
@@ -659,14 +659,14 @@ async def async_setup_entry(
         chime_descs=CHIME_SENSORS,
         viewer_descs=VIEWER_SENSORS,
     )
-    entities += _async_motion_entities(data)
+    entities += _async_event_entities(data)
     entities += _async_nvr_entities(data)
 
     async_add_entities(entities)
 
 
 @callback
-def _async_motion_entities(
+def _async_event_entities(
     data: ProtectData,
     ufp_device: Camera | None = None,
 ) -> list[ProtectDeviceEntity]:
@@ -687,7 +687,7 @@ def _async_motion_entities(
         if not device.feature_flags.has_smart_detect:
             continue
 
-        for event_desc in MOTION_SENSORS:
+        for event_desc in EVENT_SENSORS:
             if not event_desc.has_required(device):
                 continue
 
