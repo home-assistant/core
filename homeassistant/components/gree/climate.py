@@ -146,11 +146,9 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
     def temperature_unit(self) -> str:
         """Return the temperature units for the device."""
         units = self.coordinator.device.temperature_units
-        return (
-            UnitOfTemperature.CELSIUS
-            if units == TemperatureUnits.C
-            else UnitOfTemperature.FAHRENHEIT
-        )
+        if units == TemperatureUnits.C:
+            return UnitOfTemperature.CELSIUS
+        return UnitOfTemperature.FAHRENHEIT
 
     @property
     def current_temperature(self) -> float:
@@ -181,20 +179,16 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature supported by the device."""
-        return (
-            TEMP_MIN
-            if self.temperature_unit == UnitOfTemperature.CELSIUS
-            else TEMP_MIN_F
-        )
+        if self.temperature_unit == UnitOfTemperature.CELSIUS:
+            return TEMP_MIN
+        return TEMP_MIN_F
 
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature supported by the device."""
-        return (
-            TEMP_MAX
-            if self.temperature_unit == UnitOfTemperature.CELSIUS
-            else TEMP_MAX_F
-        )
+        if self.temperature_unit == UnitOfTemperature.CELSIUS:
+            return TEMP_MAX
+        return TEMP_MAX_F
 
     @property
     def target_temperature_step(self) -> float:
