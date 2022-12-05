@@ -7,14 +7,8 @@ import logging
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 import aiounifi
-from aiounifi.interfaces.api_handlers import (
-    APIHandler,
-    CallbackType,
-    ItemEvent,
-    UnsubscribeType,
-)
+from aiounifi.interfaces.api_handlers import CallbackType, ItemEvent, UnsubscribeType
 from aiounifi.interfaces.devices import Devices
-from aiounifi.models.api import APIItem
 from aiounifi.models.device import Device, DeviceUpgradeRequest
 
 from homeassistant.components.update import (
@@ -38,8 +32,8 @@ if TYPE_CHECKING:
 
     from .controller import UniFiController
 
-_DataT = TypeVar("_DataT", bound=APIItem)
-_HandlerT = TypeVar("_HandlerT", bound=APIHandler)
+_DataT = TypeVar("_DataT", bound=Device)
+_HandlerT = TypeVar("_HandlerT", bound=Devices)
 
 Subscription = Callable[[CallbackType, ItemEvent], UnsubscribeType]
 
@@ -126,7 +120,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up update entities for UniFi Network integration."""
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     @callback
     def async_load_entities(description: UnifiEntityDescription) -> None:
@@ -158,19 +152,19 @@ async def async_setup_entry(
         async_load_entities(description)
 
 
-class UnifiDeviceUpdateEntity(UpdateEntity):
+class UnifiDeviceUpdateEntity(UpdateEntity, Generic[_HandlerT, _DataT]):
     """Representation of a UniFi device update entity."""
 
-    entity_description: UnifiEntityDescription
+    entity_description: UnifiEntityDescription[_HandlerT, _DataT]
     _attr_should_poll = False
 
     def __init__(
         self,
         obj_id: str,
         controller: UniFiController,
-        description: UnifiEntityDescription,
+        description: UnifiEntityDescription[_HandlerT, _DataT],
     ) -> None:
-        """Set up UniFi switch entity."""
+        """Set up UniFi update entity."""
         self._obj_id = obj_id
         self.controller = controller
         self.entity_description = description

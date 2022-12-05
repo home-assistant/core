@@ -315,17 +315,17 @@ async def async_setup_entry(
         async_load_entities(description)
 
 
-class UnifiSwitchEntity(SwitchEntity):
+class UnifiSwitchEntity(SwitchEntity, Generic[_HandlerT, _DataT]):
     """Base representation of a UniFi switch."""
 
-    entity_description: UnifiEntityDescription
+    entity_description: UnifiEntityDescription[_HandlerT, _DataT]
     _attr_should_poll = False
 
     def __init__(
         self,
         obj_id: str,
         controller: UniFiController,
-        description: UnifiEntityDescription,
+        description: UnifiEntityDescription[_HandlerT, _DataT],
     ) -> None:
         """Set up UniFi switch entity."""
         self._obj_id = obj_id
