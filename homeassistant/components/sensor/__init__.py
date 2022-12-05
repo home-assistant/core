@@ -490,7 +490,8 @@ class SensorEntity(Entity):
         needed without breaking existing sensors. Only works for sensors which are in
         the entity registry.
 
-        This can be removed once core integrations have dropped custom unit conversion.
+        This can be removed once core integrations have dropped unneeded custom unit
+        conversion.
         """
         super().add_to_platform_start(hass, platform, parallel_updates)
 
@@ -509,7 +510,7 @@ class SensorEntity(Entity):
 
         # If the sensor has 'unit_of_measuremeny' in its sensor options, the user has
         # overridden the unit.
-        # If the sensor has 'sensor.private' in its entity options, it was added after
+        # If the sensor has 'sensor.private' in its entity options, it was added before
         # automatic unit conversion was implemented.
         registry_unit = registry_entry.unit_of_measurement
         if (
