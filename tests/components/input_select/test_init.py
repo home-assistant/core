@@ -238,7 +238,7 @@ async def test_select_antecedent(hass):
             DOMAIN: {
                 "test_1": {
                     "options": ["first option", "middle option", "last option"],
-                    "initial": "middle option",
+                    "initial": "last option",
                 }
             }
         },
