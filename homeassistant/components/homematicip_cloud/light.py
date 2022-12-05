@@ -8,6 +8,7 @@ from homematicip.aio.device import (
     AsyncBrandSwitchMeasuring,
     AsyncBrandSwitchNotificationLight,
     AsyncDimmer,
+    AsyncDinRailDimmer3,
     AsyncFullFlushDimmer,
     AsyncPluggableDimmer,
     AsyncWiredDimmer3,
@@ -54,6 +55,9 @@ async def async_setup_entry(
                 )
             )
         elif isinstance(device, AsyncWiredDimmer3):
+            for channel in range(1, 4):
+                entities.append(HomematicipMultiDimmer(hap, device, channel=channel))
+        elif isinstance(device, AsyncDinRailDimmer3):
             for channel in range(1, 4):
                 entities.append(HomematicipMultiDimmer(hap, device, channel=channel))
         elif isinstance(
