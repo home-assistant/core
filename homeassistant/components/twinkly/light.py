@@ -40,6 +40,9 @@ from .const import (
     DOMAIN,
     HIDDEN_DEV_VALUES,
     MIN_EFFECT_VERSION,
+    MODE_COLOR,
+    MODE_EFFECT,
+    MODE_MOVIE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -102,6 +105,8 @@ class TwinklyLight(LightEntity):
         self._software_version = ""
         # We guess that most devices are "new" and support effects
         self._attr_supported_features = LightEntityFeature.EFFECT
+        self._effets_number = 0
+        self._current_effect = 0
 
     @property
     def available(self) -> bool:
@@ -155,20 +160,27 @@ class TwinklyLight(LightEntity):
     @property
     def effect(self) -> str | None:
         """Return the current effect."""
-        if "name" in self._current_movie:
+        if self._client.default_mode == MODE_MOVIE and "name" in self._current_movie:
             return f"{self._current_movie['id']} {self._current_movie['name']}"
+        if self._client.default_mode == MODE_EFFECT:
+            return f"Effect {self._current_effect + 1}"
         return None
 
     @property
     def effect_list(self) -> list[str]:
         """Return the list of saved effects."""
         effect_list = []
+        for i in range(self._effets_number):
+            effect_list.append(f"Effect {i + 1}")
         for movie in self._movies:
             effect_list.append(f"{movie['id']} {movie['name']}")
         return effect_list
 
     async def async_added_to_hass(self) -> None:
         """Device is added to hass."""
+        mode = await self._client.get_mode()
+        if "mode" in mode:
+            self._client.default_mode = mode["mode"]
         software_version = await self._client.get_firmware_version()
         if ATTR_VERSION in software_version:
             self._software_version = software_version[ATTR_VERSION]
@@ -179,6 +191,9 @@ class TwinklyLight(LightEntity):
                 self._attr_supported_features = (
                     self.supported_features & ~LightEntityFeature.EFFECT
                 )
+            else:
+                # The effects are hardcoded and will never change
+                await self.async_update_effects()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
@@ -208,8 +223,8 @@ class TwinklyLight(LightEntity):
                         kwargs[ATTR_RGBW_COLOR][2],
                     )
                 )
-                await self._client.set_mode("color")
-                self._client.default_mode = "color"
+                await self._client.set_mode(MODE_COLOR)
+                self._client.default_mode = MODE_COLOR
             else:
                 await self._client.set_cycle_colours(
                     (
@@ -219,8 +234,8 @@ class TwinklyLight(LightEntity):
                         kwargs[ATTR_RGBW_COLOR][2],
                     )
                 )
-                await self._client.set_mode("movie")
-                self._client.default_mode = "movie"
+                await self._client.set_mode(MODE_MOVIE)
+                self._client.default_mode = MODE_MOVIE
             self._attr_rgbw_color = kwargs[ATTR_RGBW_COLOR]
 
         if ATTR_RGB_COLOR in kwargs and kwargs[ATTR_RGB_COLOR] != self._attr_rgb_color:
@@ -228,12 +243,12 @@ class TwinklyLight(LightEntity):
             await self._client.interview()
             if LightEntityFeature.EFFECT & self.supported_features:
                 await self._client.set_static_colour(kwargs[ATTR_RGB_COLOR])
-                await self._client.set_mode("color")
-                self._client.default_mode = "color"
+                await self._client.set_mode(MODE_COLOR)
+                self._client.default_mode = MODE_COLOR
             else:
                 await self._client.set_cycle_colours(kwargs[ATTR_RGB_COLOR])
-                await self._client.set_mode("movie")
-                self._client.default_mode = "movie"
+                await self._client.set_mode(MODE_MOVIE)
+                self._client.default_mode = MODE_MOVIE
 
             self._attr_rgb_color = kwargs[ATTR_RGB_COLOR]
 
@@ -242,13 +257,14 @@ class TwinklyLight(LightEntity):
             and LightEntityFeature.EFFECT & self.supported_features
         ):
             movie_id = kwargs[ATTR_EFFECT].split(" ")[0]
-            if "id" not in self._current_movie or int(movie_id) != int(
+            if movie_id == "Effect":
+                effect_id = kwargs[ATTR_EFFECT].split(" ")[1]
+                await self.async_set_effect(int(effect_id) - 1)
+            elif "id" not in self._current_movie or int(movie_id) != int(
                 self._current_movie["id"]
             ):
-                await self._client.interview()
-                await self._client.set_current_movie(int(movie_id))
-                await self._client.set_mode("movie")
-                self._client.default_mode = "movie"
+                await self.async_set_movie(int(movie_id))
+
         if not self._is_on:
             await self._client.turn_on()
 
@@ -304,6 +320,7 @@ class TwinklyLight(LightEntity):
             if LightEntityFeature.EFFECT & self.supported_features:
                 await self.async_update_movies()
                 await self.async_update_current_movie()
+                await self.async_update_current_effect()
 
             if not self._is_available:
                 _LOGGER.info("Twinkly '%s' is now available", self._client.host)
@@ -332,3 +349,40 @@ class TwinklyLight(LightEntity):
         _LOGGER.debug("Current movie: %s", current_movie)
         if current_movie and "id" in current_movie:
             self._current_movie = current_movie
+
+    async def async_update_effects(self) -> None:
+        """Update the number of effects."""
+        # pylint: disable=protected-access
+        effects = await self._client._get("led/effects")
+        if "effects_number" in effects:
+            self._effets_number = effects["effects_number"]
+
+    async def async_update_current_effect(self) -> None:
+        """Update current effect."""
+        # pylint: disable=protected-access
+        current_effect = await self._client._get("led/effects/current")
+        _LOGGER.debug("Current effect: %s", current_effect)
+        # Seems to have changed name sometime
+        if "effect_id" in current_effect:
+            self._current_effect = current_effect["effect_id"]
+        if "preset_id" in current_effect:
+            self._current_effect = current_effect["preset_id"]
+
+    async def async_set_movie(self, movie_id: int) -> None:
+        """Set current movie."""
+        await self._client.interview()
+        await self._client.set_current_movie(int(movie_id))
+        await self._client.set_mode(MODE_MOVIE)
+        self._client.default_mode = MODE_MOVIE
+
+    async def async_set_effect(self, effect_id: int) -> None:
+        """Set current effect."""
+        await self._client.interview()
+        # await self._client.set_current_effect(int(effect_id))
+        # pylint: disable=protected-access
+        await self._client._post(
+            "led/effects/current",
+            json={"effect_id": int(effect_id)},
+        )
+        await self._client.set_mode(MODE_EFFECT)
+        self._client.default_mode = MODE_EFFECT

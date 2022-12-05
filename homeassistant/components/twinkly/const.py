@@ -23,6 +23,10 @@ DEV_PROFILE_RGBW = "RGBW"
 DATA_CLIENT = "client"
 DATA_DEVICE_INFO = "device_info"
 
+MODE_COLOR = "color"
+MODE_EFFECT = "effect"
+MODE_MOVIE = "movie"
+
 HIDDEN_DEV_VALUES = (
     "code",  # This is the internal status code of the API response
     "copyright",  # We should not display a copyright "LEDWORKS 2018" in the Home-Assistant UI

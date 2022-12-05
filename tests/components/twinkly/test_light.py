@@ -173,6 +173,20 @@ async def test_turn_on_with_effect(hass: HomeAssistant):
     await hass.services.async_call(
         "light",
         "turn_on",
+        service_data={"entity_id": entity.entity_id, "effect": "Effect 3"},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity.entity_id)
+
+    assert state.state == "on"
+    assert client.current_effect["effect_id"] == 2
+    assert client.default_mode == "effect"
+    assert client.mode == "effect"
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
         service_data={"entity_id": entity.entity_id, "effect": "1 Rainbow"},
         blocking=True,
     )
@@ -259,6 +273,14 @@ async def test_turn_on_with_effect_missing_effects(hass: HomeAssistant):
     assert (
         not LightEntityFeature.EFFECT
         & hass.states.get(entity.entity_id).attributes["supported_features"]
+    )
+
+    # Turn on with color first to initiate values
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        service_data={"entity_id": entity.entity_id, "rgb_color": (128, 64, 32)},
+        blocking=True,
     )
 
     await hass.services.async_call(
