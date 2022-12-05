@@ -68,14 +68,6 @@ MOUNT_DEVICE_CLASS_MAP = {
 
 CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
-        key="doorbell",
-        name="Doorbell",
-        device_class=BinarySensorDeviceClass.OCCUPANCY,
-        icon="mdi:doorbell-video",
-        ufp_required_field="feature_flags.has_chime",
-        ufp_value="is_ringing",
-    ),
-    ProtectBinaryEntityDescription(
         key="dark",
         name="Is Dark",
         icon="mdi:brightness-6",
@@ -340,6 +332,15 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
 )
 
 MOTION_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
+    ProtectBinaryEventEntityDescription(
+        key="doorbell",
+        name="Doorbell",
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
+        icon="mdi:doorbell-video",
+        ufp_required_field="feature_flags.has_chime",
+        ufp_value="is_ringing",
+        ufp_event_obj="last_ring_event",
+    ),
     ProtectBinaryEventEntityDescription(
         key="motion",
         name="Motion",
