@@ -139,7 +139,6 @@ class HaScanner(BaseHaScanner):
         self._new_info_callback = new_info_callback
         self.scanning = False
         self.scanner: bleak.BleakScanner | None = None
-        self.scanner_failure: Exception | None = None
 
     @property
     def discovered_devices(self) -> list[BLEDevice]:
@@ -366,15 +365,12 @@ class HaScanner(BaseHaScanner):
             try:
                 await self._async_start()
             except ScannerStartError as ex:
-                self.scanner_failure = ex
                 _LOGGER.error(
                     "%s: Failed to restart Bluetooth scanner: %s",
                     self.name,
                     ex,
                     exc_info=True,
                 )
-            else:
-                self.scanner_failure = None
 
     async def _async_reset_adapter(self) -> None:
         """Reset the adapter."""
@@ -427,7 +423,9 @@ class HaScannerStopWhileConnecting(HaScanner):
         if self._connecting:
             _LOGGER.debug("%s: Delaying start of scanner", self.name)
             self._async_schedule_delayed_start()
-        await self.async_start()
+        if not self.scanning:
+            _LOGGER.debug("%s: Starting scanner after connecting", self.name)
+            await self.async_start()
 
     def _async_schedule_delayed_start(self) -> None:
         """Schedule delayed start of scanner."""
@@ -444,24 +442,19 @@ class HaScannerStopWhileConnecting(HaScanner):
     @asynccontextmanager
     async def connecting(self) -> AsyncIterator[None]:
         """Context manager to track connecting state."""
-        if self.scanner_failure:
-            _LOGGER.debug(
-                "%s: Scanner is in failure state, not stopping for connecting",
-                self.name,
-            )
+        if not self.scanning:
             yield
             return
 
         self._connecting += 1
         try:
-            if self._connecting == 1:
-                _LOGGER.debug("%s: Stopping scanner while connecting", self.name)
+            if self._connecting == 1 and self.scanning:
                 self._async_cancel_delayed_start()
+                _LOGGER.debug("%s: Stopping scanner while connecting", self.name)
                 await self.async_stop()
             yield
         finally:
             self._connecting -= 1
             if not self._connecting:
-                _LOGGER.debug("%s: Starting scanner after connecting", self.name)
                 self._async_cancel_delayed_start()
                 self._async_schedule_delayed_start()
