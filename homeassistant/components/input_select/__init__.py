@@ -43,6 +43,7 @@ SERVICE_SELECT_NEXT = "select_next"
 SERVICE_SELECT_PREVIOUS = "select_previous"
 SERVICE_SELECT_FIRST = "select_first"
 SERVICE_SELECT_LAST = "select_last"
+SERVICE_SELECT_ANTECEDENT = "select_antecedent"
 SERVICE_SET_OPTIONS = "set_options"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
@@ -215,6 +216,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     component.async_register_entity_service(
+        SERVICE_SELECT_ANTECEDENT,
+        {},
+        callback(lambda entity, call: entity.async_select_antecedent()),
+    )
+
+    component.async_register_entity_service(
         SERVICE_SET_OPTIONS,
         {
             vol.Required(ATTR_OPTIONS): vol.All(
@@ -262,6 +269,17 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
         self._attr_name = config.get(CONF_NAME)
         self._attr_options = config[CONF_OPTIONS]
         self._attr_unique_id = config[CONF_ID]
+        self._antecedent_option: str | None = None
+
+    @property
+    def antecedent_option(self) -> str | None:
+        """Return the antecedent option."""
+        return self._antecedent_option
+
+    def _set_current_option(self, option: str) -> None:
+        """Save the current option and set the new one."""
+        self._antecedent_option = self._attr_current_option
+        self._attr_current_option = option
 
     @classmethod
     def from_storage(cls, config: ConfigType) -> InputSelect:
@@ -286,9 +304,9 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
 
         state = await self.async_get_last_state()
         if not state or state.state not in self.options:
-            self._attr_current_option = self.options[0]
+            self._set_current_option(self.options[0])
         else:
-            self._attr_current_option = state.state
+            self._set_current_option(state.state)
 
     @property
     def extra_state_attributes(self) -> dict[str, bool]:
@@ -304,14 +322,14 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
                 ", ".join(self.options),
             )
             return
-        self._attr_current_option = option
+        self._set_current_option(option)
         self.async_write_ha_state()
 
     @callback
     def async_select_index(self, idx: int) -> None:
         """Select new option by index."""
         new_index = idx % len(self.options)
-        self._attr_current_option = self.options[new_index]
+        self._set_current_option(self.options[new_index])
         self.async_write_ha_state()
 
     @callback
@@ -332,7 +350,7 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
         elif new_index >= len(self.options):
             new_index = len(self.options) - 1
 
-        self._attr_current_option = self.options[new_index]
+        self._set_current_option(self.options[new_index])
         self.async_write_ha_state()
 
     @callback
@@ -353,6 +371,16 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
             return
         self.async_offset_index(-1, cycle)
 
+    @callback
+    def async_select_antecedent(self) -> None:
+        """Select antecedent option."""
+        # If there is no antecedent option, use first item
+        if self.antecedent_option is None:
+            self.async_select_index(0)
+            return
+        self._set_current_option(self.antecedent_option)
+        self.async_write_ha_state()
+
     async def async_set_options(self, options: list[str]) -> None:
         """Set options."""
         unique_options = list(dict.fromkeys(options))
@@ -367,7 +395,7 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
                 self.current_option,
                 ", ".join(self.options),
             )
-            self._attr_current_option = options[0]
+            self._set_current_option(options[0])
 
         self.async_write_ha_state()
 

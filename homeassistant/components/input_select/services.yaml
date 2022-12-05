@@ -55,6 +55,13 @@ select_last:
     entity:
       domain: input_select
 
+select_antecedent:
+  name: Antecedent
+  description: Select the antecedent option of an input select entity.
+  target:
+    entity:
+      domain: input_select
+
 set_options:
   name: Set options
   description: Set the options of an input select entity.
