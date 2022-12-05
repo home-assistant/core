@@ -11,7 +11,8 @@
             "2fa": {
                 "data": {
                     "2fa": "Dvojfaktorov\u00fd k\u00f3d"
-                }
+                },
+                "title": "Dvojfaktorov\u00e1 autentifik\u00e1cia"
             },
             "user": {
                 "data": {

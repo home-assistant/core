@@ -41,6 +41,9 @@
         }
     },
     "options": {
+        "abort": {
+            "failed_update": "Hiba t\u00f6rt\u00e9nt a forr\u00e1slista friss\u00edt\u00e9se k\u00f6zben. \n\n Gy\u0151z\u0151dj\u00f6n meg arr\u00f3l, hogy a TV be van kapcsolva, miel\u0151tt megpr\u00f3b\u00e1ln\u00e1 be\u00e1ll\u00edtani."
+        },
         "step": {
             "user": {
                 "data": {

@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "not_zha_device": "Toto zariadenie nie je zariadenie zha",
             "single_instance_allowed": "U\u017e je nakonfigurovan\u00fd. Mo\u017en\u00e1 len jedna konfigur\u00e1cia."
         },
         "error": {
@@ -26,14 +27,34 @@
             "choose_serial_port": {
                 "data": {
                     "path": "Cesta s\u00e9riov\u00e9ho zariadenia"
-                }
+                },
+                "title": "Vyberte s\u00e9riov\u00fd port"
             },
             "confirm": {
                 "description": "Chcete nastavi\u0165 {name}?"
             },
             "confirm_hardware": {
                 "description": "Chcete nastavi\u0165 {name}?"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "r\u00fdchlos\u0165 portu",
+                    "path": "Cesta s\u00e9riov\u00e9ho zariadenia"
+                },
+                "description": "Zadajte nastavenia s\u00e9riov\u00e9ho portu",
+                "title": "Nastavenia s\u00e9riov\u00e9ho portu"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "Nahrajte s\u00fabor"
+                },
+                "title": "Nahratie manu\u00e1lnej z\u00e1lohy"
             }
+        }
+    },
+    "config_panel": {
+        "zha_options": {
+            "title": "Glob\u00e1lne mo\u017enosti"
         }
     },
     "device_automation": {
@@ -49,10 +70,12 @@
             "left": "V\u013eavo",
             "open": "Otvori\u0165",
             "right": "Vpravo",
-            "turn_off": "Vypn\u00fa\u0165"
+            "turn_off": "Vypn\u00fa\u0165",
+            "turn_on": "Zapn\u00fa\u0165"
         },
         "trigger_type": {
             "device_offline": "Zariadenie je offline",
+            "device_shaken": "Zariadenie sa zatriaslo",
             "remote_button_alt_double_press": "dvojit\u00e9 kliknutie na tla\u010didlo \u201e{subtype}\u201c (Alternat\u00edvny re\u017eim)",
             "remote_button_alt_long_press": "Trvalo stla\u010den\u00e9 tla\u010didlo \u201e{subtype}\u201c (Alternat\u00edvny re\u017eim)",
             "remote_button_alt_long_release": "Tla\u010didlo \"{subtype}\" uvo\u013enen\u00e9 po dlhom stla\u010den\u00ed (alternat\u00edvny re\u017eim)",
@@ -73,6 +96,7 @@
     },
     "options": {
         "abort": {
+            "not_zha_device": "Toto zariadenie nie je zariadenie zha",
             "single_instance_allowed": "U\u017e je nakonfigurovan\u00fd. Mo\u017en\u00e1 len jedna konfigur\u00e1cia."
         },
         "error": {
@@ -98,15 +122,30 @@
             "choose_serial_port": {
                 "data": {
                     "path": "Cesta s\u00e9riov\u00e9ho zariadenia"
-                }
+                },
+                "title": "Vyberte s\u00e9riov\u00fd port"
             },
             "init": {
                 "description": "Doplnok ZHA bude zastaven\u00fd. Prajete si pokra\u010dova\u0165?",
                 "title": "Prekonfigurova\u0165 ZHA"
             },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "r\u00fdchlos\u0165 portu",
+                    "path": "Cesta s\u00e9riov\u00e9ho zariadenia"
+                },
+                "description": "Zadajte nastavenia s\u00e9riov\u00e9ho portu",
+                "title": "Nastavenia s\u00e9riov\u00e9ho portu"
+            },
             "prompt_migrate_or_reconfigure": {
                 "description": "Prech\u00e1dzate na nov\u00e9 r\u00e1dio alebo men\u00edte konfigur\u00e1ciu aktu\u00e1lneho r\u00e1dia?",
                 "title": "Migr\u00e1cia alebo zmena konfigur\u00e1cie"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "Nahrajte s\u00fabor"
+                },
+                "title": "Nahratie manu\u00e1lnej z\u00e1lohy"
             }
         }
     }
