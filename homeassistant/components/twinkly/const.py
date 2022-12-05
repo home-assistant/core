@@ -19,6 +19,7 @@ DEV_LED_PROFILE = "led_profile"
 
 DEV_PROFILE_RGB = "RGB"
 DEV_PROFILE_RGBW = "RGBW"
+DEV_PROFILE_AWW = "AWW"
 
 DATA_CLIENT = "client"
 DATA_DEVICE_INFO = "device_info"
