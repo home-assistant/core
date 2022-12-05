@@ -72,7 +72,7 @@ from .const import (
 from .manager import BluetoothManager
 from .match import BluetoothCallbackMatcher, IntegrationMatcher
 from .models import BluetoothCallback, BluetoothChange, BluetoothScanningMode
-from .scanner import HaScanner, ScannerStartError
+from .scanner import HaScanner, HaScannerStopWhileConnecting, ScannerStartError
 from .wrappers import HaBluetoothConnector
 
 if TYPE_CHECKING:
@@ -261,7 +261,7 @@ async def async_discover_adapters(
 
 
 async def async_update_device(
-    hass: HomeAssistant, entry: ConfigEntry, adapter: str
+    hass: HomeAssistant, entry: ConfigEntry, adapter: str, details: AdapterDetails
 ) -> None:
     """Update device registry entry.
 
@@ -270,10 +270,7 @@ async def async_update_device(
     update the device with the new location so they can
     figure out where the adapter is.
     """
-    manager: BluetoothManager = hass.data[DATA_MANAGER]
-    adapters = await manager.async_get_bluetooth_adapters()
-    details = adapters[adapter]
-    registry = dr.async_get(manager.hass)
+    registry = dr.async_get(hass)
     registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         name=adapter_human_name(adapter, details[ADAPTER_ADDRESS]),
@@ -298,7 +295,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     passive = entry.options.get(CONF_PASSIVE)
     mode = BluetoothScanningMode.PASSIVE if passive else BluetoothScanningMode.ACTIVE
     new_info_callback = async_get_advertisement_callback(hass)
-    scanner = HaScanner(hass, mode, adapter, address, new_info_callback)
+    manager: BluetoothManager = hass.data[DATA_MANAGER]
+    adapters = await manager.async_get_bluetooth_adapters()
+    details = adapters[adapter]
+    adapter_manufacturer = details[ADAPTER_MANUFACTURER] or "unknown"
+    needs_stop_during_connect = "realtek" in adapter_manufacturer.lower()
+    cls = HaScannerStopWhileConnecting if needs_stop_during_connect else BaseHaScanner
+    scanner = cls(hass, mode, adapter, address, new_info_callback)
     try:
         scanner.async_setup()
     except RuntimeError as err:
@@ -310,7 +313,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ScannerStartError as err:
         raise ConfigEntryNotReady from err
     entry.async_on_unload(async_register_scanner(hass, scanner, True))
-    await async_update_device(hass, entry, adapter)
+    await async_update_device(hass, entry, adapter, details)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = scanner
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
     return True
