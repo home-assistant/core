@@ -406,6 +406,8 @@ class HaScanner(BaseHaScanner):
 class HaScannerStopWhileConnecting(HaScanner):
     """Bluetooth scanner that stops scanning while connecting."""
 
+    SCANNER_RESTART_DELAY = 1.25
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -430,7 +432,7 @@ class HaScannerStopWhileConnecting(HaScanner):
     def _async_schedule_delayed_start(self) -> None:
         """Schedule delayed start of scanner."""
         self._delayed_scan_start = async_call_later(
-            self.hass, 5, self._async_delayed_start
+            self.hass, self.SCANNER_RESTART_DELAY, self._async_delayed_start
         )
 
     def _async_cancel_delayed_start(self) -> None:
@@ -450,9 +452,6 @@ class HaScannerStopWhileConnecting(HaScanner):
                 _LOGGER.debug("%s: Stopping scanner while connecting", self.name)
                 await self.async_stop()
             yield
-            # We need to fetch services to avoid "Operation failed with ATT error: 0x0e (Unlikely Error)"
-            # with these adapters
-            await client.get_services()
         finally:
             self._connecting -= 1
             if not self._connecting:
