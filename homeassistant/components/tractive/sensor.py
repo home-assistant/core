@@ -145,7 +145,7 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         # More states are available by polling the data
         key=ATTR_TRACKER_STATE,
         name="Tracker state",
-        device_class="tractive__tracker_state",
+        translation_key="tracker_state",
         entity_class=TractiveHardwareSensor,
     ),
     TractiveSensorEntityDescription(
