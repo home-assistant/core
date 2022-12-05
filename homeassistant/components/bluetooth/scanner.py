@@ -200,31 +200,33 @@ class HaScanner(BaseHaScanner):
         """Switch to passive scanning."""
         assert self.passive_scanner is not None
         assert self.active_scanner is not None
-        try:
-            await self._async_start(self.passive_scanner)
-        except ScannerStartError:
-            _LOGGER.warning("Failed to start passive scanner")
-            return
-        self.current_scanner = self.passive_scanner
-        try:
-            await self.active_scanner.stop()  # type: ignore[no-untyped-call]
-        except BleakError as ex:
-            _LOGGER.warning("Failed to stop active scanner: %s", ex)
+        async with self._start_stop_lock:
+            try:
+                await self._async_start(self.passive_scanner)
+            except ScannerStartError:
+                _LOGGER.warning("Failed to start passive scanner")
+                return
+            self.current_scanner = self.passive_scanner
+            try:
+                await self.active_scanner.stop()  # type: ignore[no-untyped-call]
+            except BleakError as ex:
+                _LOGGER.warning("Failed to stop active scanner: %s", ex)
 
     async def _async_switch_to_active(self) -> None:
         """Switch to active scanning."""
         assert self.passive_scanner is not None
         assert self.active_scanner is not None
-        try:
-            await self._async_start(self.active_scanner)
-        except ScannerStartError:
-            _LOGGER.warning("Failed to start active scanner")
-            return
-        self.current_scanner = self.active_scanner
-        try:
-            await self.passive_scanner.stop()  # type: ignore[no-untyped-call]
-        except BleakError as ex:
-            _LOGGER.warning("Failed to stop passive scanner: %s", ex)
+        async with self._start_stop_lock:
+            try:
+                await self._async_start(self.active_scanner)
+            except ScannerStartError:
+                _LOGGER.warning("Failed to start active scanner")
+                return
+            self.current_scanner = self.active_scanner
+            try:
+                await self.passive_scanner.stop()  # type: ignore[no-untyped-call]
+            except BleakError as ex:
+                _LOGGER.warning("Failed to stop passive scanner: %s", ex)
 
     @hass_callback
     def async_setup(self) -> None:
