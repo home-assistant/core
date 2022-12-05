@@ -24,5 +24,26 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "anna_with_adam": "Both Anna and Adam detected. Add your Adam instead of your Anna"
     }
+  },
+  "entity": {
+    "select": {
+      "dhw_mode": {
+        "state": {
+          "off": "Off",
+          "auto": "Auto",
+          "boost": "Boost",
+          "comfort": "Comfort"
+        }
+      },
+      "regulation_mode": {
+        "state": {
+          "bleeding_cold": "Bleeding cold",
+          "bleeding_hot": "Bleeding hot",
+          "cooling": "Cooling",
+          "heating": "Heating",
+          "off": "Off"
+        }
+      }
+    }
   }
 }
