@@ -185,22 +185,21 @@ class HaScanner(BaseHaScanner):
             self.current_scanner is self.passive_scanner,
             self.passive_scanner,
         )
-        if (
-            not self.scanning
-            or not self.passive_scanner
-            or self.current_scanner is self.passive_scanner
-        ):
+        if not self.scanning or not self.passive_scanner:
             yield
             return
 
         self._connecting += 1
         try:
-            if self._connecting == 1:
+            if (
+                self._connecting == 1
+                and self.current_scanner is not self.passive_scanner
+            ):
                 await self._async_switch_to_passive()
             yield
         finally:
             self._connecting -= 1
-            if not self._connecting:
+            if not self._connecting and self.current_scanner is not self.active_scanner:
                 await self._async_switch_to_active()
 
     async def _async_switch_to_passive(self) -> None:
