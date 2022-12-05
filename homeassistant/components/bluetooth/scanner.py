@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import AsyncIterator, Callable
+from contextlib import asynccontextmanager
 from datetime import datetime
 import logging
 import platform
@@ -22,7 +23,7 @@ from dbus_fast import InvalidMessageError
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.util.dt import monotonic_time_coarse
 from homeassistant.util.package import is_docker_env
 
@@ -119,8 +120,6 @@ class HaScanner(BaseHaScanner):
     over ethernet, usb over ethernet, etc.
     """
 
-    scanner: bleak.BleakScanner
-
     def __init__(
         self,
         hass: HomeAssistant,
@@ -140,10 +139,12 @@ class HaScanner(BaseHaScanner):
         self._start_time = 0.0
         self._new_info_callback = new_info_callback
         self.scanning = False
+        self.scanner: bleak.BleakScanner | None = None
 
     @property
     def discovered_devices(self) -> list[BLEDevice]:
         """Return a list of discovered devices."""
+        assert self.scanner is not None
         return self.scanner.discovered_devices
 
     @property
@@ -151,13 +152,16 @@ class HaScanner(BaseHaScanner):
         self,
     ) -> dict[str, tuple[BLEDevice, AdvertisementData]]:
         """Return a list of discovered devices and advertisement data."""
+        assert self.scanner is not None
         return self.scanner.discovered_devices_and_advertisement_data
 
     @hass_callback
     def async_setup(self) -> None:
         """Set up the scanner."""
         self.scanner = create_bleak_scanner(
-            self._async_detection_callback, self.mode, self.adapter
+            self._async_detection_callback,
+            self.mode,
+            self.adapter,
         )
 
     async def async_diagnostics(self) -> dict[str, Any]:
@@ -216,6 +220,7 @@ class HaScanner(BaseHaScanner):
 
     async def _async_start(self) -> None:
         """Start bluetooth scanner under the lock."""
+        assert self.scanner is not None
         for attempt in range(START_ATTEMPTS):
             _LOGGER.debug(
                 "%s: Starting bluetooth discovery attempt: (%s/%s)",
@@ -390,6 +395,7 @@ class HaScanner(BaseHaScanner):
         """Stop bluetooth discovery under the lock."""
         self.scanning = False
         _LOGGER.debug("%s: Stopping bluetooth discovery", self.name)
+        assert self.scanner is not None
         try:
             await self.scanner.stop()  # type: ignore[no-untyped-call]
         except BleakError as ex:
@@ -397,3 +403,59 @@ class HaScanner(BaseHaScanner):
             # the config entry to restart the scanner if they
             # change the bluetooth dongle.
             _LOGGER.error("%s: Error stopping scanner: %s", self.name, ex)
+
+
+class HaScannerStopWhileConnecting(HaScanner):
+    """Bluetooth scanner that stops scanning while connecting."""
+
+    SCANNER_RESTART_DELAY = 1.25
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        mode: BluetoothScanningMode,
+        adapter: str,
+        address: str,
+        new_info_callback: Callable[[BluetoothServiceInfoBleak], None],
+    ) -> None:
+        """Init bluetooth discovery."""
+        super().__init__(hass, mode, adapter, address, new_info_callback)
+        self._delayed_scan_start: CALLBACK_TYPE | None = None
+
+    async def _async_delayed_start(self, now: datetime) -> None:
+        """Start the scanner after a delay."""
+        if self._connecting:
+            _LOGGER.debug("%s: Delaying start of scanner", self.name)
+            self._async_schedule_delayed_start()
+        if not self.scanning:
+            _LOGGER.debug("%s: Starting scanner after connecting", self.name)
+            await self.async_start()
+
+    def _async_schedule_delayed_start(self) -> None:
+        """Schedule delayed start of scanner."""
+        self._delayed_scan_start = async_call_later(
+            self.hass, self.SCANNER_RESTART_DELAY, self._async_delayed_start
+        )
+
+    def _async_cancel_delayed_start(self) -> None:
+        """Cancel the delayed start."""
+        if self._delayed_scan_start:
+            self._delayed_scan_start()
+            self._delayed_scan_start = None
+
+    @asynccontextmanager
+    async def connecting(self, client: bleak.BleakClient) -> AsyncIterator[None]:
+        """Context manager to track connecting state."""
+        self._async_cancel_delayed_start()
+
+        self._connecting += 1
+        try:
+            if self.scanning:
+                _LOGGER.debug("%s: Stopping scanner while connecting", self.name)
+                await self.async_stop()
+            yield
+        finally:
+            self._connecting -= 1
+            if not self._connecting:
+                self._async_cancel_delayed_start()
+                self._async_schedule_delayed_start()
