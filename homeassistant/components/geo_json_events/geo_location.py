@@ -25,7 +25,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import GeoJsonEventsFeedEntityCoordinator
 from .const import (
@@ -146,7 +146,7 @@ class GeoJsonLocationEvent(CoordinatorEntity, GeolocationEvent):
             self._attr_distance = entry.distance_to_home
             # Convert distance if not metric system.
             if self.hass.config.units.name == IMPERIAL_UNITS:
-                self._attr_distance = IMPERIAL_SYSTEM.length(
+                self._attr_distance = US_CUSTOMARY_SYSTEM.length(
                     entry.distance_to_home, LENGTH_KILOMETERS
                 )
             else:
