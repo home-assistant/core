@@ -43,9 +43,6 @@ ATTR_POLLUTANT_SYMBOL = "pollutant_symbol"
 ATTR_POLLUTANT_UNIT = "pollutant_unit"
 ATTR_REGION = "region"
 
-DEVICE_CLASS_POLLUTANT_LABEL = "airvisual__pollutant_label"
-DEVICE_CLASS_POLLUTANT_LEVEL = "airvisual__pollutant_level"
-
 SENSOR_KIND_AQI = "air_quality_index"
 SENSOR_KIND_BATTERY_LEVEL = "battery_level"
 SENSOR_KIND_CO2 = "carbon_dioxide"
