@@ -442,13 +442,10 @@ class HaScannerStopWhileConnecting(HaScanner):
     @asynccontextmanager
     async def connecting(self) -> AsyncIterator[None]:
         """Context manager to track connecting state."""
-        if not self.scanning:
-            yield
-            return
+        self._async_cancel_delayed_start()
 
         self._connecting += 1
         try:
-            self._async_cancel_delayed_start()
             if self.scanning:
                 _LOGGER.debug("%s: Stopping scanner while connecting", self.name)
                 await self.async_stop()
