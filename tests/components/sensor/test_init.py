@@ -1022,7 +1022,6 @@ async def test_invalid_enumeration_entity_without_device_class(
     "device_class",
     {
         SensorDeviceClass.DATE,
-        SensorDeviceClass.DURATION,
         SensorDeviceClass.ENUM,
         SensorDeviceClass.TIMESTAMP,
     },
@@ -1057,7 +1056,6 @@ async def test_non_numeric_device_class_with_state_class(
     "device_class",
     {
         SensorDeviceClass.DATE,
-        SensorDeviceClass.DURATION,
         SensorDeviceClass.ENUM,
         SensorDeviceClass.TIMESTAMP,
     },

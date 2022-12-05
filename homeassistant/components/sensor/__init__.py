@@ -758,7 +758,6 @@ class SensorEntity(Entity):
         # should not have a state class or unit of measurement
         if device_class in {
             SensorDeviceClass.DATE,
-            SensorDeviceClass.DURATION,
             SensorDeviceClass.ENUM,
             SensorDeviceClass.TIMESTAMP,
         }:
