@@ -211,7 +211,9 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
                 )
             else:
                 raise ValueError(
-                    "'set_temperature' requires 'hvac_mode' when passing 'temperature' and 'hvac_mode' is not already set to 'heat' or 'cool'"
+                    "'set_temperature' requires 'hvac_mode' when passing"
+                    " 'temperature' and 'hvac_mode' is not already set to"
+                    " 'heat' or 'cool'"
                 )
 
         if (temperature := kwargs.get(ATTR_TARGET_TEMP_LOW)) is not None:
