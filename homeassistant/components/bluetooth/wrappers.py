@@ -200,15 +200,7 @@ class HaBleakClientWrapper(BleakClient):
             description = ble_device_description(wrapped_backend.device)
             rssi = wrapped_backend.device.rssi
             _LOGGER.debug("%s: Connecting (last rssi: %s)", description, rssi)
-
-        if not (
-            scanner := models.MANAGER.async_scanner_by_ble_device(
-                wrapped_backend.device
-            )
-        ):
-            raise BleakError("Scanner disappeared for {wrapped_backend.device}")
-        async with scanner.connecting(self):
-            connected = await super().connect(**kwargs)
+        connected = await super().connect(**kwargs)
         if debug_logging:
             _LOGGER.debug("%s: Connected (last rssi: %s)", description, rssi)
         return connected

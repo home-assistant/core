@@ -2,13 +2,12 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import AsyncIterator, Callable, Generator
-from contextlib import asynccontextmanager, contextmanager
+from collections.abc import Callable, Generator
+from contextlib import contextmanager
 import datetime
 from datetime import timedelta
 from typing import Any, Final
 
-import bleak
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 from bleak_retry_connector import NO_RSSI_VALUE
@@ -41,20 +40,9 @@ class BaseHaScanner:
         self.name = adapter_human_name(adapter, source) if adapter != source else source
         self.scanning = True
 
-    @asynccontextmanager
-    async def connecting(self, client: bleak.BleakClient) -> AsyncIterator[None]:
-        """Context manager to track connecting and resolving services.
-
-        This is a context manager around the entire connection process.
-        """
-        yield
-
     @contextmanager
-    def establishing(self) -> Generator[None, None, None]:
-        """Context manager to track connecting state.
-
-        This is a context manager only around the establishing of the connection.
-        """
+    def connecting(self) -> Generator[None, None, None]:
+        """Context manager to track connecting state."""
         self._connecting += 1
         self.scanning = not self._connecting
         try:
