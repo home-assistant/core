@@ -86,7 +86,6 @@ SENSOR_TYPES: tuple[MeteoFranceSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:weather-windy",
         entity_registry_enabled_default=False,
         data_path="current_forecast:wind:speed",
     ),
