@@ -22,7 +22,7 @@ from dbus_fast import InvalidMessageError
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.util.dt import monotonic_time_coarse
 from homeassistant.util.package import is_docker_env
 
@@ -410,6 +410,37 @@ class HaScanner(BaseHaScanner):
 class HaScannerStopWhileConnecting(HaScanner):
     """Bluetooth scanner that stops scanning while connecting."""
 
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        mode: BluetoothScanningMode,
+        adapter: str,
+        address: str,
+        new_info_callback: Callable[[BluetoothServiceInfoBleak], None],
+    ) -> None:
+        """Init bluetooth discovery."""
+        super().__init__(hass, mode, adapter, address, new_info_callback)
+        self._delayed_scan_start: CALLBACK_TYPE | None = None
+
+    async def _async_delayed_start(self, now: datetime) -> None:
+        """Start the scanner after a delay."""
+        if self._connecting:
+            _LOGGER.debug("%s: Delaying start of scanner", self.name)
+            self._async_schedule_delayed_start()
+        await self.async_start()
+
+    def _async_schedule_delayed_start(self) -> None:
+        """Schedule delayed start of scanner."""
+        self._delayed_scan_start = async_call_later(
+            self.hass, 5, self._async_delayed_start
+        )
+
+    def _async_cancel_delayed_start(self) -> None:
+        """Cancel the delayed start."""
+        if self._delayed_scan_start:
+            self._delayed_scan_start()
+            self._delayed_scan_start = None
+
     @asynccontextmanager
     async def connecting(self) -> AsyncIterator[None]:
         """Context manager to track connecting state."""
@@ -425,10 +456,12 @@ class HaScannerStopWhileConnecting(HaScanner):
         try:
             if self._connecting == 1:
                 _LOGGER.debug("%s: Stopping scanner while connecting", self.name)
+                self._async_cancel_delayed_start()
                 await self.async_stop()
             yield
         finally:
             self._connecting -= 1
             if not self._connecting:
                 _LOGGER.debug("%s: Starting scanner after connecting", self.name)
-                asyncio.create_task(self.async_start())
+                self._async_cancel_delayed_start()
+                self._async_schedule_delayed_start()
