@@ -619,11 +619,25 @@ LENGTH_YARD: Final = "yd"
 LENGTH_MILES: Final = "mi"
 """Deprecated: please use UnitOfLength.MILES."""
 
+
 # Frequency units
+class UnitOfFrequency(StrEnum):
+    """Frequency units."""
+
+    HERTZ = "Hz"
+    KILOHERTZ = "kHz"
+    MEGAHERTZ = "MHz"
+    GIGAHERTZ = "GHz"
+
+
 FREQUENCY_HERTZ: Final = "Hz"
+"""Deprecated: please use UnitOfFrequency.HERTZ"""
 FREQUENCY_KILOHERTZ: Final = "kHz"
+"""Deprecated: please use UnitOfFrequency.KILOHERTZ"""
 FREQUENCY_MEGAHERTZ: Final = "MHz"
+"""Deprecated: please use UnitOfFrequency.MEGAHERTZ"""
 FREQUENCY_GIGAHERTZ: Final = "GHz"
+"""Deprecated: please use UnitOfFrequency.GIGAHERTZ"""
 
 
 # Pressure units
