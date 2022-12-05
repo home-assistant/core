@@ -55,7 +55,6 @@ from .utils import async_dispatch_id as _ufpd, async_get_light_motion_current
 _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
 DEVICE_CLASS_DETECTION = "unifiprotect__detection"
-DEVICE_CLASS_LICENSE_PLATE = "unifiprotect__license_plate"
 
 
 @dataclass
@@ -534,11 +533,11 @@ EVENT_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
         key="smart_obj_licenseplate",
         name="License Plate Detected",
         icon="mdi:car",
-        device_class=DEVICE_CLASS_LICENSE_PLATE,
         ufp_value="is_smart_detected",
         ufp_required_field="can_detect_license_plate",
         ufp_event_obj="last_smart_detect_event",
         ufp_smart_type=SmartDetectObjectType.LICENSE_PLATE,
+        translation_key="license_plate",
     ),
 )
 
