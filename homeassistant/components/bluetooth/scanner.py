@@ -179,11 +179,18 @@ class HaScanner(BaseHaScanner):
     @asynccontextmanager
     async def connecting(self) -> AsyncIterator[None]:
         """Context manager to track connecting state."""
+        _LOGGER.warning(
+            "Connecting to scanning=%s, current_scanner_is_passive=%s, passive_scanner=%s",
+            self.scanning,
+            self.current_scanner is self.passive_scanner,
+            self.passive_scanner,
+        )
         if (
             not self.scanning
             or not self.passive_scanner
             or self.current_scanner is self.passive_scanner
         ):
+            yield
             return
 
         self._connecting += 1
