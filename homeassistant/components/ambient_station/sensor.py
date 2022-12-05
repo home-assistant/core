@@ -314,7 +314,6 @@ SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_MONTHLYRAININ,
         name="Monthly rain",
-        icon="mdi:water",
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.MEASUREMENT,
