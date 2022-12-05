@@ -535,7 +535,7 @@ ELECTRIC_CURRENT_AMPERE: Final = "A"
 
 
 # Electric_potential units
-class UnitOfElectricalPotential(StrEnum):
+class UnitOfElectricPotential(StrEnum):
     """Electric potential units."""
 
     MILLIVOLT = "mV"
@@ -543,9 +543,9 @@ class UnitOfElectricalPotential(StrEnum):
 
 
 ELECTRIC_POTENTIAL_MILLIVOLT: Final = "mV"
-"""Deprecated: please use UnitOfElectricalPotential.MILLIVOLT."""
+"""Deprecated: please use UnitOfElectricPotential.MILLIVOLT."""
 ELECTRIC_POTENTIAL_VOLT: Final = "V"
-"""Deprecated: please use UnitOfElectricalPotential.VOLT."""
+"""Deprecated: please use UnitOfElectricPotential.VOLT."""
 
 # Degree units
 DEGREE: Final = "°"
