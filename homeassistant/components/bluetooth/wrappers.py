@@ -18,6 +18,7 @@ from homeassistant.core import CALLBACK_TYPE, callback as hass_callback
 from homeassistant.helpers.frame import report
 
 from . import models
+from .api import _get_manager
 from .models import HaBluetoothConnector
 
 FILTER_UUIDS: Final = "UUIDs"
@@ -200,7 +201,15 @@ class HaBleakClientWrapper(BleakClient):
             description = ble_device_description(wrapped_backend.device)
             rssi = wrapped_backend.device.rssi
             _LOGGER.debug("%s: Connecting (last rssi: %s)", description, rssi)
-        connected = await super().connect(**kwargs)
+
+        if not (
+            scanner := _get_manager(models.MANAGER.hass).async_scanner_by_ble_device(
+                wrapped_backend.device
+            )
+        ):
+            raise BleakError("Scanner disappeared for {self._source}")
+        async with scanner.connecting():
+            connected = await super().connect(**kwargs)
         if debug_logging:
             _LOGGER.debug("%s: Connected (last rssi: %s)", description, rssi)
         return connected
