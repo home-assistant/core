@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Callable, Generator
-from contextlib import contextmanager
+from collections.abc import AsyncIterator, Callable, Generator
+from contextlib import asynccontextmanager, contextmanager
 import datetime
 from datetime import timedelta
 from typing import Any, Final
@@ -40,9 +40,20 @@ class BaseHaScanner:
         self.name = adapter_human_name(adapter, source) if adapter != source else source
         self.scanning = True
 
+    @asynccontextmanager
+    async def connecting(self) -> AsyncIterator[None]:
+        """Context manager to track connecting and resolving services.
+
+        This is a context manager around the entire connection process.
+        """
+        yield
+
     @contextmanager
-    def connecting(self) -> Generator[None, None, None]:
-        """Context manager to track connecting state."""
+    def establishing(self) -> Generator[None, None, None]:
+        """Context manager to track connecting state.
+
+        This is a context manager only around the establishing of the connection.
+        """
         self._connecting += 1
         self.scanning = not self._connecting
         try:

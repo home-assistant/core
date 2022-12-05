@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import AsyncIterator, Callable
+from contextlib import asynccontextmanager
 from datetime import datetime
 import logging
 import platform
@@ -25,6 +26,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.dt import monotonic_time_coarse
 from homeassistant.util.package import is_docker_env
 
+from . import models
 from .base_scanner import BaseHaScanner
 from .const import (
     SCANNER_WATCHDOG_INTERVAL,
@@ -118,8 +120,6 @@ class HaScanner(BaseHaScanner):
     over ethernet, usb over ethernet, etc.
     """
 
-    scanner: bleak.BleakScanner
-
     def __init__(
         self,
         hass: HomeAssistant,
@@ -139,25 +139,115 @@ class HaScanner(BaseHaScanner):
         self._start_time = 0.0
         self._new_info_callback = new_info_callback
         self.scanning = False
+        self.passive_scanner: bleak.BleakScanner | None = None
+        self.active_scanner: bleak.BleakScanner | None = None
+        self.current_scanner: bleak.BleakScanner | None = None
 
     @property
     def discovered_devices(self) -> list[BLEDevice]:
         """Return a list of discovered devices."""
-        return self.scanner.discovered_devices
+        active_scanner = self.active_scanner
+        passive_scanner = self.passive_scanner
+
+        if active_scanner and passive_scanner:
+            return (
+                active_scanner.discovered_devices + passive_scanner.discovered_devices
+            )
+        if active_scanner:
+            return active_scanner.discovered_devices
+        assert passive_scanner is not None
+        return passive_scanner.discovered_devices
 
     @property
     def discovered_devices_and_advertisement_data(
         self,
     ) -> dict[str, tuple[BLEDevice, AdvertisementData]]:
         """Return a list of discovered devices and advertisement data."""
-        return self.scanner.discovered_devices_and_advertisement_data
+        active_scanner = self.active_scanner
+        passive_scanner = self.passive_scanner
+
+        if active_scanner and passive_scanner:
+            return (
+                active_scanner.discovered_devices_and_advertisement_data
+                | passive_scanner.discovered_devices_and_advertisement_data
+            )
+        if active_scanner:
+            return active_scanner.discovered_devices_and_advertisement_data
+        assert passive_scanner is not None
+        return passive_scanner.discovered_devices_and_advertisement_data
+
+    @asynccontextmanager
+    async def connecting(self) -> AsyncIterator[None]:
+        """Context manager to track connecting state."""
+        if (
+            not self.scanning
+            or not self.passive_scanner
+            or self.current_scanner is self.passive_scanner
+        ):
+            return
+
+        self._connecting += 1
+        try:
+            if self._connecting == 1:
+                await self._async_switch_to_passive()
+            yield
+        finally:
+            self._connecting -= 1
+            if not self._connecting:
+                await self._async_switch_to_active()
+
+    async def _async_switch_to_passive(self) -> None:
+        """Switch to passive scanning."""
+        assert self.passive_scanner is not None
+        assert self.active_scanner is not None
+        try:
+            await self._async_start(self.passive_scanner)
+        except ScannerStartError:
+            _LOGGER.warning("Failed to start passive scanner")
+            return
+        self.current_scanner = self.passive_scanner
+        try:
+            await self.active_scanner.stop()  # type: ignore[no-untyped-call]
+        except BleakError as ex:
+            _LOGGER.warning("Failed to stop active scanner: %s", ex)
+
+    async def _async_switch_to_active(self) -> None:
+        """Switch to active scanning."""
+        assert self.passive_scanner is not None
+        assert self.active_scanner is not None
+        try:
+            await self._async_start(self.active_scanner)
+        except ScannerStartError:
+            _LOGGER.warning("Failed to start active scanner")
+            return
+        self.current_scanner = self.active_scanner
+        try:
+            await self.passive_scanner.stop()  # type: ignore[no-untyped-call]
+        except BleakError as ex:
+            _LOGGER.warning("Failed to stop passive scanner: %s", ex)
 
     @hass_callback
     def async_setup(self) -> None:
         """Set up the scanner."""
-        self.scanner = create_bleak_scanner(
-            self._async_detection_callback, self.mode, self.adapter
-        )
+        assert models.MANAGER is not None
+        if (
+            models.MANAGER.supports_passive_scan
+            or self.mode == BluetoothScanningMode.PASSIVE
+        ):
+            self.passive_scanner = create_bleak_scanner(
+                self._async_detection_callback,
+                BluetoothScanningMode.PASSIVE,
+                self.adapter,
+            )
+
+        if self.mode == BluetoothScanningMode.ACTIVE:
+            self.current_scanner = self.active_scanner = create_bleak_scanner(
+                self._async_detection_callback,
+                BluetoothScanningMode.ACTIVE,
+                self.adapter,
+            )
+        else:
+            self.current_scanner = self.passive_scanner
 
     async def async_diagnostics(self) -> dict[str, Any]:
         """Return diagnostic information about the scanner."""
@@ -211,9 +301,16 @@ class HaScanner(BaseHaScanner):
     async def async_start(self) -> None:
         """Start bluetooth scanner."""
         async with self._start_stop_lock:
-            await self._async_start()
+            assert self.current_scanner is not None
+            await self._async_start(self.current_scanner)
+            self._async_start_success()
 
-    async def _async_start(self) -> None:
+    def _async_start_success(self) -> None:
+        """Handle successful start."""
+        self.scanning = True
+        self._async_setup_scanner_watchdog()
+
+    async def _async_start(self, scanner: bleak.BleakScanner) -> None:
         """Start bluetooth scanner under the lock."""
         for attempt in range(START_ATTEMPTS):
             _LOGGER.debug(
@@ -224,7 +321,7 @@ class HaScanner(BaseHaScanner):
             )
             try:
                 async with async_timeout.timeout(START_TIMEOUT):
-                    await self.scanner.start()  # type: ignore[no-untyped-call]
+                    await scanner.start()  # type: ignore[no-untyped-call]
             except InvalidMessageError as ex:
                 _LOGGER.debug(
                     "%s: Invalid DBus message received: %s",
@@ -312,9 +409,6 @@ class HaScanner(BaseHaScanner):
             # Everything is fine, break out of the loop
             break
 
-        self.scanning = True
-        self._async_setup_scanner_watchdog()
-
     @hass_callback
     def _async_setup_scanner_watchdog(self) -> None:
         """If Dbus gets restarted or updated, we need to restart the scanner."""
@@ -357,8 +451,9 @@ class HaScanner(BaseHaScanner):
                 or time_since_last_detection > SCANNER_WATCHDOG_MULTIPLE
             ):
                 await self._async_reset_adapter()
+            assert self.current_scanner is not None
             try:
-                await self._async_start()
+                await self._async_start(self.current_scanner)
             except ScannerStartError as ex:
                 _LOGGER.error(
                     "%s: Failed to restart Bluetooth scanner: %s",
@@ -366,6 +461,8 @@ class HaScanner(BaseHaScanner):
                     ex,
                     exc_info=True,
                 )
+            else:
+                self._async_start_success()
 
     async def _async_reset_adapter(self) -> None:
         """Reset the adapter."""
@@ -388,8 +485,9 @@ class HaScanner(BaseHaScanner):
         """Stop bluetooth discovery under the lock."""
         self.scanning = False
         _LOGGER.debug("%s: Stopping bluetooth discovery", self.name)
+        assert self.current_scanner is not None
         try:
-            await self.scanner.stop()  # type: ignore[no-untyped-call]
+            await self.current_scanner.stop()  # type: ignore[no-untyped-call]
         except BleakError as ex:
             # This is not fatal, and they may want to reload
             # the config entry to restart the scanner if they
