@@ -451,6 +451,9 @@ class HaScannerStopWhileConnecting(HaScanner):
                 await self.async_stop()
             yield
         finally:
+            await asyncio.sleep(
+                0.01
+            )  # Avoid Operation failed with ATT error: 0x0e (Unlikely Error) race
             self._connecting -= 1
             if not self._connecting:
                 self._async_cancel_delayed_start()
