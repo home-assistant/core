@@ -103,11 +103,9 @@ class HoneywellUSThermostat(ClimateEntity):
 
         self._attr_unique_id = device.deviceid
         self._attr_name = device.name
-        self._attr_temperature_unit = (
-            UnitOfTemperature.CELSIUS
-            if device.temperature_unit == "C"
-            else UnitOfTemperature.FAHRENHEIT
-        )
+        self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+        if device.temperature_unit == "C":
+            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_preset_modes = [PRESET_NONE, PRESET_AWAY, PRESET_HOLD]
         self._attr_is_aux_heat = device.system_mode == "emheat"
 
