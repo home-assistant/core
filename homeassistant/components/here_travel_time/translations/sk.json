@@ -8,8 +8,14 @@
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "step": {
+            "destination_coordinates": {
+                "title": "Vyberte umiestnenie"
+            },
             "destination_entity_id": {
                 "title": "Vyberte cie\u013e"
+            },
+            "destination_menu": {
+                "title": "Vyberte umiestnenie"
             },
             "user": {
                 "data": {

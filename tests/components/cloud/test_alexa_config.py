@@ -129,7 +129,7 @@ async def test_alexa_config_report_state(hass, cloud_prefs, cloud_stub):
 async def test_alexa_config_invalidate_token(hass, cloud_prefs, aioclient_mock):
     """Test Alexa config should expose using prefs."""
     aioclient_mock.post(
-        "http://example/alexa_token",
+        "https://example/access_token",
         json={
             "access_token": "mock-token",
             "event_endpoint": "http://example.com/alexa_endpoint",
@@ -142,7 +142,7 @@ async def test_alexa_config_invalidate_token(hass, cloud_prefs, aioclient_mock):
         "mock-user-id",
         cloud_prefs,
         Mock(
-            alexa_access_token_url="http://example/alexa_token",
+            alexa_server="example",
             auth=Mock(async_check_token=AsyncMock()),
             websession=async_get_clientsession(hass),
         ),
@@ -181,7 +181,7 @@ async def test_alexa_config_fail_refresh_token(
     """Test Alexa config failing to refresh token."""
 
     aioclient_mock.post(
-        "http://example/alexa_token",
+        "https://example/access_token",
         json={
             "access_token": "mock-token",
             "event_endpoint": "http://example.com/alexa_endpoint",
@@ -198,7 +198,7 @@ async def test_alexa_config_fail_refresh_token(
         "mock-user-id",
         cloud_prefs,
         Mock(
-            alexa_access_token_url="http://example/alexa_token",
+            alexa_server="example",
             auth=Mock(async_check_token=AsyncMock()),
             websession=async_get_clientsession(hass),
         ),
@@ -228,7 +228,7 @@ async def test_alexa_config_fail_refresh_token(
     conf.async_invalidate_access_token()
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        "http://example/alexa_token",
+        "https://example/access_token",
         json={"reason": reject_reason},
         status=400,
     )
@@ -254,7 +254,7 @@ async def test_alexa_config_fail_refresh_token(
     # State reporting should now be re-enabled for Alexa
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        "http://example/alexa_token",
+        "https://example/access_token",
         json={
             "access_token": "mock-token",
             "event_endpoint": "http://example.com/alexa_endpoint",

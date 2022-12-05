@@ -21,6 +21,7 @@
             "user": {
                 "data": {
                     "api_key": "API k\u013e\u00fa\u010d",
+                    "fuel_types": "Druhy paliva",
                     "location": "Umiestnenie",
                     "radius": "Polomer vyh\u013ead\u00e1vania"
                 }

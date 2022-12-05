@@ -8,6 +8,7 @@
             "cannot_connect": "Chyba pripojenia \u2013 skontrolujte svoje internetov\u00e9 pripojenie",
             "expired_token": "Platnos\u0165 tokenu vypr\u0161ala \u2013 vygenerujte si nov\u00fd token",
             "invalid_pin": "Neplatn\u00fd k\u00f3d PIN",
+            "invalid_symbol": "Neplatn\u00fd symbol",
             "invalid_token": "Neplatn\u00fd token",
             "unknown": "Vyskytla sa nezn\u00e1ma chyba"
         },
@@ -18,12 +19,14 @@
             "auth": {
                 "data": {
                     "pin": "Pin",
+                    "region": "Symbol",
                     "token": "Token"
                 }
             },
             "reauth_confirm": {
                 "data": {
                     "pin": "Pin",
+                    "region": "Symbol",
                     "token": "Token"
                 }
             },

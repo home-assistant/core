@@ -23,6 +23,7 @@
     },
     "options": {
         "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
             "invalid_ip_address": "Neplatn\u00e1 adresa IPv4."
         },
         "step": {

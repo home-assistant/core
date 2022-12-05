@@ -1,5 +1,8 @@
 {
     "state": {
+        "yamaha_musiccast__zone_link_audio_delay": {
+            "balanced": "Vyv\u00e1\u017een\u00fd"
+        },
         "yamaha_musiccast__zone_link_audio_quality": {
             "compressed": "Komprimovan\u00e9",
             "uncompressed": "Nekomprimovan\u00e9"
@@ -8,7 +11,14 @@
             "120 min": "120 min\u00fat",
             "30 min": "30 min\u00fat",
             "60 min": "60 min\u00fat",
-            "90 min": "90 min\u00fat"
+            "90 min": "90 min\u00fat",
+            "off": "Vypnut\u00e9"
+        },
+        "yamaha_musiccast__zone_surr_decoder_type": {
+            "dolby_surround": "Dolby Surround"
+        },
+        "yamaha_musiccast__zone_tone_control_mode": {
+            "manual": "Ru\u010dne"
         }
     }
 }

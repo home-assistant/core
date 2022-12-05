@@ -3,7 +3,8 @@
         "abort": {
             "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
             "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha",
-            "cannot_connect": "Nepodarilo sa pripoji\u0165"
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "not_zwave_js_addon": "Doplnok Discovered nie je ofici\u00e1lnym doplnkom Z-Wave JS."
         },
         "error": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
@@ -25,16 +26,30 @@
             },
             "on_supervisor": {
                 "title": "Vyberte sp\u00f4sob pripojenia"
+            },
+            "zeroconf_confirm": {
+                "description": "Chcete prida\u0165 Z-Wawe JS Server s ID {home_id} nach\u00e1dzaj\u00faci sa na adrese {url} do Home Assistant?"
             }
         }
     },
     "device_automation": {
         "action_type": {
-            "ping": "Ping zariadenia"
+            "ping": "Ping zariadenia",
+            "refresh_value": "Obnovi\u0165 hodnoty pre {entity_name}",
+            "set_config_parameter": "Nastavi\u0165 hodnotu konfigura\u010dn\u00e9ho parametra {subtype}"
+        },
+        "condition_type": {
+            "config_parameter": "Hodnota konfigura\u010dn\u00e9ho parametra {subtype}",
+            "node_status": "Stav uzla",
+            "value": "Aktu\u00e1lna hodnota Z-Wave hodnoty"
         },
         "trigger_type": {
+            "event.notification.entry_control": "Odosla\u0165 ozn\u00e1menie o riaden\u00ed vstupu",
             "event.notification.notification": "Odosla\u0165 ozn\u00e1menie",
-            "event.value_notification.scene_activation": "Aktiv\u00e1cia sc\u00e9ny na {subtype}"
+            "event.value_notification.basic": "Z\u00e1kladn\u00e1 ud\u00e1los\u0165 CC na {subtype}",
+            "event.value_notification.central_scene": "Akcia centr\u00e1lnej sc\u00e9ny na {subtype}",
+            "event.value_notification.scene_activation": "Aktiv\u00e1cia sc\u00e9ny na {subtype}",
+            "state.node_status": "Stav uzlov zmenen\u00fd"
         }
     },
     "options": {

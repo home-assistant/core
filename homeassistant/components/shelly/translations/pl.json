@@ -58,5 +58,18 @@
             "single_push": "{subtype} zostanie pojedynczo naci\u015bni\u0119ty",
             "triple": "{subtype} zostanie trzykrotnie naci\u015bni\u0119ty"
         }
+    },
+    "options": {
+        "abort": {
+            "ble_unsupported": "Obs\u0142uga Bluetooth wymaga oprogramowania w wersji {ble_min_version} lub nowszej."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "ble_scanner_mode": "Tryb skanera Bluetooth"
+                },
+                "description": "Skanowanie Bluetooth mo\u017ce by\u0107 aktywne lub pasywne. Gdy jest aktywne, Shelly \u017c\u0105da danych z pobliskich urz\u0105dze\u0144; z pasywnym Shelly otrzymuje niechciane dane z pobliskich urz\u0105dze\u0144."
+            }
+        }
     }
 }

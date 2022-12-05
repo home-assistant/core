@@ -22,7 +22,8 @@
             "user": {
                 "data": {
                     "protocol": "Protokol"
-                }
+                },
+                "title": "Vyberte AlarmDecoder protokol"
             }
         }
     },

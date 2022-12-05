@@ -20,7 +20,8 @@
             "profile": {
                 "data": {
                     "profile": "N\u00e1zov profilu"
-                }
+                },
+                "title": "U\u017e\u00edvate\u013esk\u00fd profil."
             },
             "reauth_confirm": {
                 "title": "Znova overi\u0165 integr\u00e1ciu"

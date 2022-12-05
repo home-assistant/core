@@ -7,6 +7,9 @@
         },
         "flow_title": "{host}",
         "step": {
+            "confirm": {
+                "description": "Chcete prida\u0165 Arcam FMJ na `{host}` do Home Assistant?"
+            },
             "user": {
                 "data": {
                     "host": "Hostite\u013e",

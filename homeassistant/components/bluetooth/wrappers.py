@@ -12,7 +12,7 @@ from bleak import BleakClient, BleakError
 from bleak.backends.client import BaseBleakClient, get_platform_client_backend_type
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementDataCallback, BaseBleakScanner
-from bleak_retry_connector import NO_RSSI_VALUE
+from bleak_retry_connector import NO_RSSI_VALUE, ble_device_description, clear_cache
 
 from homeassistant.core import CALLBACK_TYPE, callback as hass_callback
 from homeassistant.helpers.frame import report
@@ -162,13 +162,18 @@ class HaBleakClientWrapper(BleakClient):
             self.__address = address_or_ble_device
         self.__disconnected_callback = disconnected_callback
         self.__timeout = timeout
-        self.__ble_device: BLEDevice | None = None
         self._backend: BaseBleakClient | None = None  # type: ignore[assignment]
 
     @property
     def is_connected(self) -> bool:
         """Return True if the client is connected to a device."""
         return self._backend is not None and self._backend.is_connected
+
+    async def clear_cache(self) -> bool:
+        """Clear the GATT cache."""
+        if self._backend is not None and hasattr(self._backend, "clear_cache"):
+            return await self._backend.clear_cache()  # type: ignore[no-any-return]
+        return await clear_cache(self.__address)
 
     def set_disconnected_callback(
         self,
@@ -183,17 +188,22 @@ class HaBleakClientWrapper(BleakClient):
     async def connect(self, **kwargs: Any) -> bool:
         """Connect to the specified GATT server."""
         assert models.MANAGER is not None
-        (
-            wrapped_backend,
-            self.__ble_device,
-        ) = self._async_get_best_available_backend_and_device()
+        wrapped_backend = self._async_get_best_available_backend_and_device()
         self._backend = wrapped_backend.client(
-            self.__ble_device,
+            wrapped_backend.device,
             disconnected_callback=self.__disconnected_callback,
             timeout=self.__timeout,
             hass=models.MANAGER.hass,
         )
-        return await super().connect(**kwargs)
+        if debug_logging := _LOGGER.isEnabledFor(logging.DEBUG):
+            # Only lookup the description if we are going to log it
+            description = ble_device_description(wrapped_backend.device)
+            rssi = wrapped_backend.device.rssi
+            _LOGGER.debug("%s: Connecting (last rssi: %s)", description, rssi)
+        connected = await super().connect(**kwargs)
+        if debug_logging:
+            _LOGGER.debug("%s: Connected (last rssi: %s)", description, rssi)
+        return connected
 
     @hass_callback
     def _async_get_backend_for_ble_device(
@@ -218,7 +228,7 @@ class HaBleakClientWrapper(BleakClient):
     @hass_callback
     def _async_get_best_available_backend_and_device(
         self,
-    ) -> tuple[_HaWrappedBleakBackend, BLEDevice]:
+    ) -> _HaWrappedBleakBackend:
         """Get a best available backend and device for the given address.
 
         This method will return the backend with the best rssi
@@ -235,9 +245,10 @@ class HaBleakClientWrapper(BleakClient):
             or NO_RSSI_VALUE,
             reverse=True,
         ):
-            ble_device = device_advertisement_data[0]
-            if backend := self._async_get_backend_for_ble_device(ble_device):
-                return backend, ble_device
+            if backend := self._async_get_backend_for_ble_device(
+                device_advertisement_data[0]
+            ):
+                return backend
 
         raise BleakError(
             f"No backend with an available connection slot that can reach address {address} was found"

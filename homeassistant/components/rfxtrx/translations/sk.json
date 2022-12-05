@@ -56,6 +56,9 @@
                     "device": "Vyberte zariadenie, ktor\u00e9 chcete nakonfigurova\u0165",
                     "protocols": "Protokoly"
                 }
+            },
+            "set_device_options": {
+                "title": "Konfigur\u00e1cia mo\u017enost\u00ed zariadenia"
             }
         }
     }

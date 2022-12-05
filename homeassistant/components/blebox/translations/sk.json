@@ -15,7 +15,9 @@
                 "data": {
                     "host": "IP adresa",
                     "port": "Port"
-                }
+                },
+                "description": "Nastavte BleBox k integr\u00e1cii s Home Assistant.",
+                "title": "Nastavenie zariadenia BleBox"
             }
         }
     }

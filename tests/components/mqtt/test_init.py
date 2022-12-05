@@ -1429,14 +1429,14 @@ async def test_handle_message_callback(
 ):
     """Test for handling an incoming message callback."""
     await mqtt_mock_entry_no_yaml_config()
-    msg = ReceiveMessage("some-topic", b"test-payload", 0, False)
+    msg = ReceiveMessage("some-topic", b"test-payload", 1, False)
     mqtt_client_mock.on_connect(mqtt_client_mock, None, None, 0)
     await mqtt.async_subscribe(hass, "some-topic", lambda *args: 0)
     mqtt_client_mock.on_message(mock_mqtt, None, msg)
 
     await hass.async_block_till_done()
     await hass.async_block_till_done()
-    assert "Received message on some-topic: b'test-payload'" in caplog.text
+    assert "Received message on some-topic (qos=1): b'test-payload'" in caplog.text
 
 
 async def test_setup_override_configuration(hass, caplog, tmp_path):
