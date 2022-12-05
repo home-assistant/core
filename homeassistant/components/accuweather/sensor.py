@@ -346,7 +346,6 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     AccuWeatherSensorDescription(
         key="WindGust",
         device_class=SensorDeviceClass.WIND_SPEED,
-        icon="mdi:weather-windy",
         name="Wind gust",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
