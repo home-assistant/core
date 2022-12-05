@@ -9,6 +9,7 @@ from homeassistant.components.input_select import (
     ATTR_OPTIONS,
     CONF_INITIAL,
     DOMAIN,
+    SERVICE_SELECT_ANTECEDENT,
     SERVICE_SELECT_FIRST,
     SERVICE_SELECT_LAST,
     SERVICE_SELECT_NEXT,
@@ -226,6 +227,53 @@ async def test_select_first_last(hass):
 
     state = hass.states.get(entity_id)
     assert state.state == "last option"
+
+
+async def test_select_antecedent(hass):
+    """Test select_antecedent methods."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "test_1": {
+                    "options": ["first option", "middle option", "last option"],
+                    "initial": "middle option",
+                }
+            }
+        },
+    )
+    entity_id = "input_select.test_1"
+
+    state = hass.states.get(entity_id)
+    assert state.state == "last option"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_PREVIOUS,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == "middle option"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_ANTECEDENT,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == "last option"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_ANTECEDENT,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == "middle option"
 
 
 async def test_config_options(hass):
