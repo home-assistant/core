@@ -1,0 +1,12 @@
+{
+    "state": {
+        "plugwise__dhw_mode": {
+            "off": "Vypnut\u00e9"
+        },
+        "plugwise__regulation_mode": {
+            "cooling": "Chladenie",
+            "heating": "Vykurovanie",
+            "off": "Vypnut\u00e9"
+        }
+    }
+}
