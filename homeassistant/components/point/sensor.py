@@ -22,8 +22,6 @@ from .const import DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW
 
 _LOGGER = logging.getLogger(__name__)
 
-DEVICE_CLASS_SOUND = "sound_level"
-
 
 @dataclass
 class MinutPointRequiredKeysMixin:
@@ -55,7 +53,6 @@ SENSOR_TYPES: tuple[MinutPointSensorEntityDescription, ...] = (
     MinutPointSensorEntityDescription(
         key="sound",
         precision=1,
-        device_class=DEVICE_CLASS_SOUND,
         icon="mdi:ear-hearing",
         native_unit_of_measurement=SOUND_PRESSURE_WEIGHTED_DBA,
     ),

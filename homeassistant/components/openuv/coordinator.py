@@ -32,10 +32,10 @@ class InvalidApiKeyMonitor:
 
     async def async_increment(self) -> None:
         """Increment the counter."""
-        LOGGER.debug("Invalid API key response detected (number %s)", self._count)
         async with self._lock:
             self._count += 1
             if self._count > self.DEFAULT_FAILED_API_CALL_THRESHOLD:
+                LOGGER.info("Starting reauth after multiple failed API calls")
                 self._reauth_flow_manager.start_reauth()
 
     async def async_reset(self) -> None:
@@ -114,10 +114,11 @@ class OpenUvCoordinator(DataUpdateCoordinator):
         """Fetch data from OpenUV."""
         try:
             data = await self.update_method()
-        except InvalidApiKeyError:
+        except InvalidApiKeyError as err:
             await self._invalid_api_key_monitor.async_increment()
+            raise UpdateFailed(str(err)) from err
         except OpenUvError as err:
-            raise UpdateFailed(f"Error during protection data update: {err}") from err
+            raise UpdateFailed(str(err)) from err
 
         await self._invalid_api_key_monitor.async_reset()
         return cast(dict[str, Any], data["result"])

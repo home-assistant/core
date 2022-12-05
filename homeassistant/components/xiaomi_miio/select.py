@@ -53,6 +53,7 @@ from .const import (
     MODEL_AIRPURIFIER_M1,
     MODEL_AIRPURIFIER_M2,
     MODEL_AIRPURIFIER_PROH,
+    MODEL_AIRPURIFIER_ZA1,
     MODEL_FAN_SA1,
     MODEL_FAN_V2,
     MODEL_FAN_V3,
@@ -113,6 +114,9 @@ MODEL_TO_ATTR_MAP: dict[str, list] = {
     MODEL_AIRPURIFIER_3: [
         AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
     ],
+    MODEL_AIRPURIFIER_ZA1: [
+        AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
+    ],
     MODEL_AIRPURIFIER_3H: [
         AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
     ],
@@ -152,7 +156,7 @@ SELECTOR_TYPES = (
         set_method="set_display_orientation",
         set_method_error_message="Setting the display orientation failed.",
         icon="mdi:tablet",
-        device_class="xiaomi_miio__display_orientation",
+        translation_key="display_orientation",
         options=["forward", "left", "right"],
         entity_category=EntityCategory.CONFIG,
     ),
@@ -163,7 +167,7 @@ SELECTOR_TYPES = (
         set_method="set_led_brightness",
         set_method_error_message="Setting the led brightness failed.",
         icon="mdi:brightness-6",
-        device_class="xiaomi_miio__led_brightness",
+        translation_key="led_brightness",
         options=["bright", "dim", "off"],
         entity_category=EntityCategory.CONFIG,
     ),
@@ -174,7 +178,7 @@ SELECTOR_TYPES = (
         set_method="set_ptc_level",
         set_method_error_message="Setting the ptc level failed.",
         icon="mdi:fire-circle",
-        device_class="xiaomi_miio__ptc_level",
+        translation_key="ptc_level",
         options=["low", "medium", "high"],
         entity_category=EntityCategory.CONFIG,
     ),

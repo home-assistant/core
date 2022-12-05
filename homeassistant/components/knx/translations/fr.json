@@ -55,6 +55,9 @@
                 },
                 "description": "Veuillez saisir les informations relatives \u00e0 votre fichier `.knxkeys`."
             },
+            "secure_routing_manual": {
+                "description": "Veuillez saisir vos informations de s\u00e9curit\u00e9 IP."
+            },
             "secure_tunnel_manual": {
                 "data": {
                     "device_authentication": "Mot de passe d\u2019authentification de l\u2019appareil",
@@ -67,13 +70,6 @@
                     "user_password": "Mot de passe pour la connexion de tunnel sp\u00e9cifique, d\u00e9fini dans le panneau \u00ab\u00a0Propri\u00e9t\u00e9s\u00a0\u00bb du tunnel dans ETS."
                 },
                 "description": "Veuillez saisir vos informations de s\u00e9curit\u00e9 IP."
-            },
-            "secure_tunneling": {
-                "description": "S\u00e9lectionnez la mani\u00e8re dont vous souhaitez configurer la s\u00e9curit\u00e9 IP de KNX.",
-                "menu_options": {
-                    "secure_knxkeys": "Utiliser un fichier `.knxkeys` contenant les cl\u00e9s de s\u00e9curit\u00e9 IP",
-                    "secure_tunnel_manual": "Configurer manuellement les cl\u00e9s de s\u00e9curit\u00e9 IP"
-                }
             },
             "tunnel": {
                 "data": {
@@ -141,6 +137,9 @@
                 },
                 "description": "Veuillez saisir les informations relatives \u00e0 votre fichier `.knxkeys`."
             },
+            "secure_routing_manual": {
+                "description": "Veuillez saisir vos informations de s\u00e9curit\u00e9 IP."
+            },
             "secure_tunnel_manual": {
                 "data": {
                     "device_authentication": "Mot de passe d\u2019authentification de l\u2019appareil",
@@ -153,13 +152,6 @@
                     "user_password": "Mot de passe pour la connexion de tunnel sp\u00e9cifique, d\u00e9fini dans le panneau \u00ab\u00a0Propri\u00e9t\u00e9s\u00a0\u00bb du tunnel dans ETS."
                 },
                 "description": "Veuillez saisir vos informations de s\u00e9curit\u00e9 IP."
-            },
-            "secure_tunneling": {
-                "description": "S\u00e9lectionnez la mani\u00e8re dont vous souhaitez configurer la s\u00e9curit\u00e9 IP de KNX.",
-                "menu_options": {
-                    "secure_knxkeys": "Utiliser un fichier `.knxkeys` contenant les cl\u00e9s de s\u00e9curit\u00e9 IP",
-                    "secure_tunnel_manual": "Configurer manuellement les cl\u00e9s de s\u00e9curit\u00e9 IP"
-                }
             },
             "tunnel": {
                 "data": {

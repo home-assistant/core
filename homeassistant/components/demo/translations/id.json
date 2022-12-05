@@ -1,4 +1,16 @@
 {
+    "entity": {
+        "sensor": {
+            "thermostat_mode": {
+                "state": {
+                    "away": "Keluar",
+                    "comfort": "Nyaman",
+                    "eco": "Eco",
+                    "sleep": "Tidur"
+                }
+            }
+        }
+    },
     "issues": {
         "bad_psu": {
             "fix_flow": {

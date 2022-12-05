@@ -16,15 +16,14 @@ repos:
     hooks:
       - id: black
         args:
-          - --safe
           - --quiet
         files: ^((homeassistant|pylint|script|tests)/.+)?[^/]+\.py$
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.1.0
+    rev: v2.2.2
     hooks:
       - id: codespell
         args:
-          - --ignore-words-list=alot,ba,bre,datas,dof,dur,ether,farenheit,fo,haa,hass,hist,iam,iff,iif,incomfort,ines,ist,lightsensor,mut,nd,pres,pullrequests,referer,rime,ser,serie,sur,te,technik,ue,uint,visability,wan,wanna,withing
+          - --ignore-words-list=additionals,alot,ba,bre,bund,datas,dof,dur,ether,farenheit,falsy,fo,haa,hass,hist,iam,iff,iif,incomfort,ines,ist,lightsensor,mut,nam,nd,pres,pullrequests,referer,resset,rime,ser,serie,sur,te,technik,ue,uint,unsecure,visability,wan,wanna,withing,zar
           - --skip="./.*,*.csv,*.json"
           - --quiet-level=2
         exclude_types: [csv, json]

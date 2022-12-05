@@ -5,7 +5,7 @@
             "credential_error": "Fehler beim Abrufen der Anmeldeinformationen.",
             "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden",
             "port_987_bind_error": "Konnte sich nicht an Port 987 binden. Weitere Informationen findest du in der [Dokumentation] (https://www.home-assistant.io/components/ps4/).",
-            "port_997_bind_error": "Bind to Port 997 nicht m\u00f6glich. Weitere Informationen findest du in der [Dokumentation](https://www.home-assistant.io/components/ps4/)"
+            "port_997_bind_error": "Bind auf Port 997 nicht m\u00f6glich. Weitere Informationen findest du in der [Dokumentation](https://www.home-assistant.io/components/ps4/)"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
@@ -15,7 +15,7 @@
         },
         "step": {
             "creds": {
-                "description": "Anmeldeinformationen ben\u00f6tigt. Dr\u00fccke auf \"Senden\" und dann in der PS4 2nd Screen App, aktualisiere die Ger\u00e4te und w\u00e4hle das \"Home-Assistant\"-Ger\u00e4t aus, um fortzufahren."
+                "description": "Anmeldeinformationen ben\u00f6tigt. Dr\u00fccke auf \"Senden\" und dann in der PS4 2nd Screen App, aktualisiere die Ger\u00e4te und w\u00e4hle das \"Home-Assistant\" Ger\u00e4t aus, um fortzufahren."
             },
             "link": {
                 "data": {

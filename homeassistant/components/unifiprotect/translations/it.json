@@ -42,6 +42,10 @@
         }
     },
     "issues": {
+        "deprecate_smart_sensor": {
+            "description": "Il sensore unificato \"Oggetto rilevato\" per i rilevamenti intelligenti \u00e8 ora deprecato. \u00c8 stato sostituito con singoli sensori binari di rilevamento intelligente per ogni tipo di rilevamento intelligente. Si prega di aggiornare eventuali modelli o automazioni di conseguenza.",
+            "title": "Sensore di rilevamento intelligente deprecato"
+        },
         "ea_setup_failed": {
             "description": "Stai utilizzando v{version} di UniFi Protect che \u00e8 una versione ad accesso anticipato. Si \u00e8 verificato un errore irreversibile durante il tentativo di caricare l'integrazione. [Esegui la retrocessione ad una versione stabile](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) di UniFi Protect per continuare ad utilizzare l'integrazione. \n\nErrore: {error}",
             "title": "Errore di configurazione durante l'utilizzo della versione ad accesso anticipato"

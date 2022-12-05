@@ -63,7 +63,7 @@ class SerialPortSettings:
     flow_control: bool
 
 
-def get_zigbee_socket(hass, addon_info: AddonInfo) -> str:
+def get_zigbee_socket(hass: HomeAssistant, addon_info: AddonInfo) -> str:
     """Return the zigbee socket.
 
     Raises AddonError on error
@@ -97,6 +97,10 @@ class BaseMultiPanFlow(FlowHandler):
         Passed to ZHA do determine if the ZHA config entry is connected to the radio
         being migrated.
         """
+
+    @abstractmethod
+    def _hardware_name(self) -> str:
+        """Return the name of the hardware."""
 
     @abstractmethod
     def _zha_name(self) -> str:
@@ -254,6 +258,7 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
                 data_schema=vol.Schema(
                     {vol.Required(CONF_ENABLE_MULTI_PAN, default=False): bool}
                 ),
+                description_placeholders={"hardware_name": self._hardware_name()},
             )
         if not user_input[CONF_ENABLE_MULTI_PAN]:
             return self.async_create_entry(title="", data={})
@@ -285,10 +290,8 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
                     "name": self._zha_name(),
                     "port": {
                         "path": get_zigbee_socket(self.hass, addon_info),
-                        "baudrate": 115200,
-                        "flow_control": "hardware",
                     },
-                    "radio_type": "efr32",
+                    "radio_type": "ezsp",
                 },
                 "old_discovery_info": await self._async_zha_physical_discovery(),
             }

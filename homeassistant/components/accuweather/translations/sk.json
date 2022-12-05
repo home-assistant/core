@@ -19,9 +19,19 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "pressure_tendency": {
+                "state": {
+                    "falling": "Klesaj\u00faci",
+                    "rising": "St\u00fapaj\u00faci"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
-            "user": {
+            "init": {
                 "data": {
                     "forecast": "Predpove\u010f po\u010dasia"
                 }

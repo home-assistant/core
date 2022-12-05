@@ -125,6 +125,10 @@ class TestWorkdaySetup:
         with pytest.raises(vol.Invalid):
             binary_sensor.valid_country("HomeAssistantLand")
 
+        # Valid country code validation must not raise an exception
+        for country in ("IM", "LI", "US"):
+            assert binary_sensor.valid_country(country) == country
+
     def test_setup_component_province(self):
         """Set up workday component."""
         with assert_setup_component(1, "binary_sensor"):

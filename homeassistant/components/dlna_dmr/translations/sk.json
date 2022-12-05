@@ -14,15 +14,20 @@
             "confirm": {
                 "description": "Chcete za\u010da\u0165 nastavova\u0165?"
             },
+            "import_turn_on": {
+                "description": "Ak chcete pokra\u010dova\u0165 v migr\u00e1cii, zapnite zariadenie a kliknite na tla\u010didlo Odosla\u0165"
+            },
             "manual": {
                 "data": {
                     "url": "URL"
-                }
+                },
+                "description": "URL adresa k XML s\u00faboru popisu zariadenia"
             },
             "user": {
                 "data": {
                     "host": "Hostite\u013e"
-                }
+                },
+                "description": "Vyberte zariadenie, ktor\u00e9 chcete nakonfigurova\u0165, alebo nechajte pr\u00e1zdne a zadajte adresu URL"
             }
         }
     },

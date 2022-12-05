@@ -10,11 +10,14 @@
             "user": {
                 "data": {
                     "host": "Hostite\u013e",
+                    "mode": "Re\u017eim",
                     "name": "N\u00e1zov",
                     "password": "Heslo",
                     "port": "Port",
-                    "protocol": "Komunika\u010dn\u00fd protokol, ktor\u00fd sa m\u00e1 pou\u017ei\u0165"
-                }
+                    "protocol": "Komunika\u010dn\u00fd protokol, ktor\u00fd sa m\u00e1 pou\u017ei\u0165",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
+                },
+                "description": "Nastavte po\u017eadovan\u00fd parameter na pripojenie k smerova\u010du"
             }
         }
     },
@@ -22,6 +25,7 @@
         "step": {
             "init": {
                 "data": {
+                    "consider_home": "Sekundy na \u010dakanie, k\u00fdm sa zariadenie neodstr\u00e1ni",
                     "require_ip": "Zariadenia musia ma\u0165 IP (pre re\u017eim pr\u00edstupov\u00e9ho bodu)"
                 }
             }
