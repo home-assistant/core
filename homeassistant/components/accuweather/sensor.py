@@ -192,7 +192,6 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     AccuWeatherSensorDescription(
         key="WindGustDay",
         device_class=SensorDeviceClass.WIND_SPEED,
-        icon="mdi:weather-windy",
         name="Wind gust day",
         entity_registry_enabled_default=False,
         metric_unit=UnitOfSpeed.KILOMETERS_PER_HOUR,
@@ -203,7 +202,6 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     AccuWeatherSensorDescription(
         key="WindGustNight",
         device_class=SensorDeviceClass.WIND_SPEED,
-        icon="mdi:weather-windy",
         name="Wind gust night",
         entity_registry_enabled_default=False,
         metric_unit=UnitOfSpeed.KILOMETERS_PER_HOUR,
@@ -214,7 +212,6 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     AccuWeatherSensorDescription(
         key="WindDay",
         device_class=SensorDeviceClass.WIND_SPEED,
-        icon="mdi:weather-windy",
         name="Wind day",
         metric_unit=UnitOfSpeed.KILOMETERS_PER_HOUR,
         us_customary_unit=UnitOfSpeed.MILES_PER_HOUR,
@@ -224,7 +221,6 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     AccuWeatherSensorDescription(
         key="WindNight",
         device_class=SensorDeviceClass.WIND_SPEED,
-        icon="mdi:weather-windy",
         name="Wind night",
         metric_unit=UnitOfSpeed.KILOMETERS_PER_HOUR,
         us_customary_unit=UnitOfSpeed.MILES_PER_HOUR,
@@ -295,7 +291,6 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     AccuWeatherSensorDescription(
         key="Precipitation",
         device_class=SensorDeviceClass.PRECIPITATION,
-        icon="mdi:weather-rainy",
         name="Precipitation",
         state_class=SensorStateClass.MEASUREMENT,
         metric_unit=UnitOfPrecipitationDepth.MILLIMETERS,
@@ -342,7 +337,6 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     AccuWeatherSensorDescription(
         key="Wind",
         device_class=SensorDeviceClass.WIND_SPEED,
-        icon="mdi:weather-windy",
         name="Wind",
         state_class=SensorStateClass.MEASUREMENT,
         metric_unit=UnitOfSpeed.KILOMETERS_PER_HOUR,
