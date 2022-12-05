@@ -26,5 +26,22 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reauth_wrong_account": "You can only reauthenticate this entry with the same Overkiz account and hub"
     }
+  },
+  "entity": {
+    "select": {
+      "open_closed_pedestrian": {
+        "state": {
+          "open": "Open",
+          "pedestrian": "Pedestrian",
+          "closed": "Closed"
+        }
+      },
+      "memorized_simple_volume": {
+        "state": {
+          "highest": "Highest",
+          "standard": "Standard"
+        }
+      }
+    }
   }
 }

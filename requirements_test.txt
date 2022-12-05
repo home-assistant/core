@@ -14,7 +14,7 @@ freezegun==1.2.2
 mock-open==1.4.0
 mypy==0.991
 pre-commit==2.20.0
-pylint==2.15.7
+pylint==2.15.8
 pipdeptree==2.3.1
 pytest-asyncio==0.20.2
 pytest-aiohttp==1.0.4

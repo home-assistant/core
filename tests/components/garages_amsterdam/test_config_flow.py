@@ -53,7 +53,7 @@ async def test_error_handling(
     """Test we get the form."""
 
     with patch(
-        "homeassistant.components.garages_amsterdam.config_flow.GaragesAmsterdam.all_garages",
+        "homeassistant.components.garages_amsterdam.config_flow.ODPAmsterdam.all_garages",
         side_effect=side_effect,
     ):
         result = await hass.config_entries.flow.async_init(
