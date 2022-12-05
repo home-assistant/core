@@ -440,7 +440,7 @@ class HaScannerStopWhileConnecting(HaScanner):
             self._delayed_scan_start = None
 
     @asynccontextmanager
-    async def connecting(self) -> AsyncIterator[None]:
+    async def connecting(self, client: bleak.BleakClient) -> AsyncIterator[None]:
         """Context manager to track connecting state."""
         self._async_cancel_delayed_start()
 
@@ -450,10 +450,10 @@ class HaScannerStopWhileConnecting(HaScanner):
                 _LOGGER.debug("%s: Stopping scanner while connecting", self.name)
                 await self.async_stop()
             yield
+            # We need to fetch services to avoid "Operation failed with ATT error: 0x0e (Unlikely Error)"
+            # with these adapters
+            await client.get_services()
         finally:
-            await asyncio.sleep(
-                0.01
-            )  # Avoid Operation failed with ATT error: 0x0e (Unlikely Error) race
             self._connecting -= 1
             if not self._connecting:
                 self._async_cancel_delayed_start()
