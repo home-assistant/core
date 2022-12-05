@@ -23,8 +23,8 @@
         "select": {
             "lamp_mode": {
                 "state": {
-                    "automatic": "automatic",
-                    "manual": "manual"
+                    "automatic": "Automatic",
+                    "manual": "Manual"
                 }
             }
         }
