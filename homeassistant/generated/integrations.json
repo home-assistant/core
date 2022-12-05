@@ -3810,6 +3810,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "onetracker": {
+      "name": "OneTracker",
+      "integration_type": "hub",
+      "config_flow": false,
+      "iot_class": "cloud_polling"
+    },
     "onewire": {
       "name": "1-Wire",
       "integration_type": "hub",

@@ -1,0 +1,9 @@
+{
+  "domain": "onetracker",
+  "name": "OneTracker",
+  "documentation": "https://www.home-assistant.io/integrations/onetracker",
+  "requirements": ["httpx==0.23.0"],
+  "codeowners": ["@packruler"],
+  "iot_class": "cloud_polling",
+  "loggers": ["onetracker"]
+}
