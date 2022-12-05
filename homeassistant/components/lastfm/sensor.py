@@ -5,6 +5,7 @@ import datetime
 import hashlib
 import logging
 import re
+import time
 
 import pylast as lastfm
 from pylast import WSError
@@ -19,6 +20,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -50,7 +52,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             [
                 {
                     vol.Required(CONF_USERNAME): cv.string,
-                    vol.Optional(CONF_PASSWORD, ""): cv.string,
+                    vol.Optional(CONF_PASSWORD): cv.string,
                 }
             ],
         ),
@@ -67,7 +69,9 @@ SERVICE_SCHEMA_SCROBBLE = vol.Schema(
         vol.Required(ATTR_ARTIST): cv.string,
         vol.Required(ATTR_TITLE): cv.string,
         vol.Optional(ATTR_ALBUM, ""): cv.string,
-        vol.Optional(ATTR_TIMESTAMP, ""): cv.string,
+        vol.Optional(
+            ATTR_TIMESTAMP, datetime.date.today().strftime("%Y/%m/%d %H:%M:%S")
+        ): cv.string,
     }
 )
 
@@ -96,18 +100,30 @@ def setup_platform(
     add_entities(entities, True)
 
     def scrobble(service: ServiceCall) -> None:
-        """Call when a user adds a new Aftership tracking from HASS."""
+        """Call when a user scrobbles a track from HASS."""
         api_secret = config[CONF_API_TOKEN]
         entity_id = service.data[ATTR_ENTITY_ID]
         artist = service.data[ATTR_ARTIST]
         title = service.data[ATTR_TITLE]
         album = service.data[ATTR_ALBUM]
         timestamp = service.data[ATTR_TIMESTAMP]
-        formatted_date = datetime.datetime.strptime(timestamp, "%Y/%m/%d %H:%M:%S")
+        formatted_date = datetime.datetime.strptime(
+            timestamp.replace("-", "/"), "%Y/%m/%d %H:%M:%S"
+        )
         unix_timestamp = datetime.datetime.timestamp(formatted_date)
+        now_timestamp = time.time()
+
+        within_range = (
+            abs(now_timestamp - unix_timestamp)
+            < datetime.timedelta(weeks=2).total_seconds()
+        )
+        if within_range is False:
+            raise HomeAssistantError(
+                f"Scrobble timestamp {timestamp} is older than two weeks"
+            )
 
         for entity in entities:
-            _LOGGER.error(entity.name)  # prints User1
+            _LOGGER.error(entity.name)
             if entity.entity_id == entity_id:
                 passwords = {d["username"]: d["password"] for d in users}
 
