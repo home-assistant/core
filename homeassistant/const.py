@@ -519,9 +519,19 @@ ENERGY_MEGA_WATT_HOUR: Final = "MWh"
 ENERGY_WATT_HOUR: Final = "Wh"
 """Deprecated: please use UnitOfEnergy.WATT_HOUR."""
 
+
 # Electric_current units
+class UnitOfElectricCurrent(StrEnum):
+    """Electric current units."""
+
+    MILLIAMPERE = "mA"
+    AMPERE = "A"
+
+
 ELECTRIC_CURRENT_MILLIAMPERE: Final = "mA"
+"""Deprecated: please use UnitOfElectricCurrent.MILLIAMPERE."""
 ELECTRIC_CURRENT_AMPERE: Final = "A"
+"""Deprecated: please use UnitOfElectricCurrent.AMPERE."""
 
 # Electric_potential units
 ELECTRIC_POTENTIAL_MILLIVOLT: Final = "mV"
