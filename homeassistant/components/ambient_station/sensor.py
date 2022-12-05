@@ -639,7 +639,6 @@ SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_WINDSPDMPH_AVG10M,
         name="Wind avg 10m",
-        icon="mdi:weather-windy",
         native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
         device_class=SensorDeviceClass.WIND_SPEED,
     ),
