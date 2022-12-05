@@ -886,18 +886,46 @@ DATA_ZEBIBYTES: Final = "ZiB"
 DATA_YOBIBYTES: Final = "YiB"
 """Deprecated: please use UnitOfData.YOBIBYTES"""
 
+
 # Data_rate units
+class UnitOfDataRate(StrEnum):
+    """Data rate units."""
+
+    BITS_PER_SECOND = "bit/s"
+    KILOBITS_PER_SECOND = "kbit/s"
+    MEGABITS_PER_SECOND = "Mbit/s"
+    GIGABITS_PER_SECOND = "Gbit/s"
+    BYTES_PER_SECOND = "B/s"
+    KILOBYTES_PER_SECOND = "kB/s"
+    MEGABYTES_PER_SECOND = "MB/s"
+    GIGABYTES_PER_SECOND = "GB/s"
+    KIBIBYTES_PER_SECOND = "KiB/s"
+    MEBIBYTES_PER_SECOND = "MiB/s"
+    GIBIBYTES_PER_SECOND = "GiB/s"
+
+
 DATA_RATE_BITS_PER_SECOND: Final = "bit/s"
+"""Deprecated: please use UnitOfDataRate.BITS_PER_SECOND"""
 DATA_RATE_KILOBITS_PER_SECOND: Final = "kbit/s"
+"""Deprecated: please use UnitOfDataRate.KILOBITS_PER_SECOND"""
 DATA_RATE_MEGABITS_PER_SECOND: Final = "Mbit/s"
+"""Deprecated: please use UnitOfDataRate.MEGABITS_PER_SECOND"""
 DATA_RATE_GIGABITS_PER_SECOND: Final = "Gbit/s"
+"""Deprecated: please use UnitOfDataRate.GIGABITS_PER_SECOND"""
 DATA_RATE_BYTES_PER_SECOND: Final = "B/s"
+"""Deprecated: please use UnitOfDataRate.BYTES_PER_SECOND"""
 DATA_RATE_KILOBYTES_PER_SECOND: Final = "kB/s"
+"""Deprecated: please use UnitOfDataRate.KILOBYTES_PER_SECOND"""
 DATA_RATE_MEGABYTES_PER_SECOND: Final = "MB/s"
+"""Deprecated: please use UnitOfDataRate.MEGABYTES_PER_SECOND"""
 DATA_RATE_GIGABYTES_PER_SECOND: Final = "GB/s"
+"""Deprecated: please use UnitOfDataRate.GIGABYTES_PER_SECOND"""
 DATA_RATE_KIBIBYTES_PER_SECOND: Final = "KiB/s"
+"""Deprecated: please use UnitOfDataRate.KIBIBYTES_PER_SECOND"""
 DATA_RATE_MEBIBYTES_PER_SECOND: Final = "MiB/s"
+"""Deprecated: please use UnitOfDataRate.MEBIBYTES_PER_SECOND"""
 DATA_RATE_GIBIBYTES_PER_SECOND: Final = "GiB/s"
+"""Deprecated: please use UnitOfDataRate.GIBIBYTES_PER_SECOND"""
 
 
 # #### SERVICES ####
