@@ -431,4 +431,4 @@ class HaScannerStopWhileConnecting(HaScanner):
             self._connecting -= 1
             if not self._connecting:
                 _LOGGER.debug("%s: Starting scanner after connecting", self.name)
-                await self.async_start()
+                asyncio.create_task(self.async_start())
