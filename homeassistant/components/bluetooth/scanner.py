@@ -205,6 +205,7 @@ class HaScanner(BaseHaScanner):
 
     async def _async_switch_to_passive(self) -> None:
         """Switch to passive scanning."""
+        _LOGGER.warning("Switching to passive scanning")
         assert self.passive_scanner is not None
         assert self.active_scanner is not None
         async with self._start_stop_lock:
@@ -218,9 +219,11 @@ class HaScanner(BaseHaScanner):
                 await self.active_scanner.stop()  # type: ignore[no-untyped-call]
             except BleakError as ex:
                 _LOGGER.warning("Failed to stop active scanner: %s", ex)
+        _LOGGER.warning("Finished switching to passive scanning")
 
     async def _async_switch_to_active(self) -> None:
         """Switch to active scanning."""
+        _LOGGER.warning("Switching to active scanning")
         assert self.passive_scanner is not None
         assert self.active_scanner is not None
         async with self._start_stop_lock:
@@ -234,6 +237,7 @@ class HaScanner(BaseHaScanner):
                 await self.passive_scanner.stop()  # type: ignore[no-untyped-call]
             except BleakError as ex:
                 _LOGGER.warning("Failed to stop passive scanner: %s", ex)
+        _LOGGER.warning("Finished switching to active scanning")
 
     @hass_callback
     def async_setup(self) -> None:
