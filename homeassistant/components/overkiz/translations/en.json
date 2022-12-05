@@ -26,5 +26,22 @@
                 "description": "The Overkiz platform is used by various vendors like Somfy (Connexoon / TaHoma), Hitachi (Hi Kumo), Rexel (Energeasy Connect) and Atlantic (Cozytouch). Enter your application credentials and select your hub."
             }
         }
+    },
+    "entity": {
+        "select": {
+            "memorized_simple_volume": {
+                "state": {
+                    "highest": "Highest",
+                    "standard": "Standard"
+                }
+            },
+            "open_closed_pedestrian": {
+                "state": {
+                    "closed": "Closed",
+                    "open": "Open",
+                    "pedestrian": "Pedestrian"
+                }
+            }
+        }
     }
 }
