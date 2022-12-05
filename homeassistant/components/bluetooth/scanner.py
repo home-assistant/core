@@ -185,6 +185,31 @@ class HaScanner(BaseHaScanner):
             self.current_scanner is self.passive_scanner,
             self.passive_scanner,
         )
+        if not self.scanning or not self.current_scanner:
+            yield
+            return
+
+        self._connecting += 1
+        try:
+            if self._connecting == 1:
+                async with self._start_stop_lock:
+                    await self.current_scanner.stop()  # type: ignore[no-untyped-call]
+            yield
+        finally:
+            self._connecting -= 1
+            if not self._connecting:
+                async with self._start_stop_lock:
+                    await self._async_start(self.current_scanner)
+
+    @asynccontextmanager
+    async def connecting_switch(self) -> AsyncIterator[None]:
+        """Context manager to track connecting state."""
+        _LOGGER.warning(
+            "Connecting to scanning=%s, current_scanner_is_passive=%s, passive_scanner=%s",
+            self.scanning,
+            self.current_scanner is self.passive_scanner,
+            self.passive_scanner,
+        )
         if not self.scanning or not self.passive_scanner or not self.active_scanner:
             yield
             return
