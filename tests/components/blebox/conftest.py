@@ -8,7 +8,6 @@ import pytest
 from homeassistant.components.blebox.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
@@ -76,13 +75,15 @@ def feature_fixture(request):
     return request.getfixturevalue(request.param)
 
 
-async def async_setup_entities(hass, config, entity_ids):
+async def async_setup_entities(hass, entity_ids):
     """Return configured entries with the given entity ids."""
 
-    config_entry = mock_config()
-    config_entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, config)
+    config = mock_config()
+    config.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config.entry_id)
     await hass.async_block_till_done()
+
     entity_registry = er.async_get(hass)
     return [entity_registry.async_get(entity_id) for entity_id in entity_ids]
 
