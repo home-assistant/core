@@ -36,13 +36,13 @@ CONF_IS_BATTERY_LEVEL = "is_battery_level"
 CONF_IS_CO = "is_carbon_monoxide"
 CONF_IS_CO2 = "is_carbon_dioxide"
 CONF_IS_CURRENT = "is_current"
+CONF_IS_DATA_SIZE = "is_data_size"
 CONF_IS_DISTANCE = "is_distance"
 CONF_IS_ENERGY = "is_energy"
 CONF_IS_FREQUENCY = "is_frequency"
 CONF_IS_HUMIDITY = "is_humidity"
 CONF_IS_GAS = "is_gas"
 CONF_IS_ILLUMINANCE = "is_illuminance"
-CONF_IS_INFORMATION = "is_information"
 CONF_IS_MOISTURE = "is_moisture"
 CONF_IS_NITROGEN_DIOXIDE = "is_nitrogen_dioxide"
 CONF_IS_NITROGEN_MONOXIDE = "is_nitrogen_monoxide"
@@ -75,13 +75,13 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.CO: [{CONF_TYPE: CONF_IS_CO}],
     SensorDeviceClass.CO2: [{CONF_TYPE: CONF_IS_CO2}],
     SensorDeviceClass.CURRENT: [{CONF_TYPE: CONF_IS_CURRENT}],
+    SensorDeviceClass.DATA_SIZE: [{CONF_TYPE: CONF_IS_DATA_SIZE}],
     SensorDeviceClass.DISTANCE: [{CONF_TYPE: CONF_IS_DISTANCE}],
     SensorDeviceClass.ENERGY: [{CONF_TYPE: CONF_IS_ENERGY}],
     SensorDeviceClass.FREQUENCY: [{CONF_TYPE: CONF_IS_FREQUENCY}],
     SensorDeviceClass.GAS: [{CONF_TYPE: CONF_IS_GAS}],
     SensorDeviceClass.HUMIDITY: [{CONF_TYPE: CONF_IS_HUMIDITY}],
     SensorDeviceClass.ILLUMINANCE: [{CONF_TYPE: CONF_IS_ILLUMINANCE}],
-    SensorDeviceClass.INFORMATION: [{CONF_TYPE: CONF_IS_INFORMATION}],
     SensorDeviceClass.MOISTURE: [{CONF_TYPE: CONF_IS_MOISTURE}],
     SensorDeviceClass.NITROGEN_DIOXIDE: [{CONF_TYPE: CONF_IS_NITROGEN_DIOXIDE}],
     SensorDeviceClass.NITROGEN_MONOXIDE: [{CONF_TYPE: CONF_IS_NITROGEN_MONOXIDE}],
@@ -124,13 +124,13 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_CO,
                     CONF_IS_CO2,
                     CONF_IS_CURRENT,
+                    CONF_IS_DATA_SIZE,
                     CONF_IS_DISTANCE,
                     CONF_IS_ENERGY,
                     CONF_IS_FREQUENCY,
                     CONF_IS_GAS,
                     CONF_IS_HUMIDITY,
                     CONF_IS_ILLUMINANCE,
-                    CONF_IS_INFORMATION,
                     CONF_IS_MOISTURE,
                     CONF_IS_NITROGEN_DIOXIDE,
                     CONF_IS_NITROGEN_MONOXIDE,

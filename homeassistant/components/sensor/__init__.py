@@ -157,6 +157,12 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `A`
     """
 
+    DATA_SIZE = "data_size"
+    """Data size.
+
+    Unit of measurement: UnitOfInformation
+    """
+
     DISTANCE = "distance"
     """Generic distance.
 
@@ -193,12 +199,6 @@ class SensorDeviceClass(StrEnum):
     """Illuminance.
 
     Unit of measurement: `lx`, `lm`
-    """
-
-    INFORMATION = "information"
-    """Information.
-
-    Unit of measurement: UnitOfInformation
     """
 
     MOISTURE = "moisture"

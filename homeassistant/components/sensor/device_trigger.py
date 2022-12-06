@@ -35,13 +35,13 @@ CONF_BATTERY_LEVEL = "battery_level"
 CONF_CO = "carbon_monoxide"
 CONF_CO2 = "carbon_dioxide"
 CONF_CURRENT = "current"
+CONF_DATA_SIZE = "data_size"
 CONF_DISTANCE = "distance"
 CONF_ENERGY = "energy"
 CONF_FREQUENCY = "frequency"
 CONF_GAS = "gas"
 CONF_HUMIDITY = "humidity"
 CONF_ILLUMINANCE = "illuminance"
-CONF_INFORMATION = "information"
 CONF_MOISTURE = "moisture"
 CONF_NITROGEN_DIOXIDE = "nitrogen_dioxide"
 CONF_NITROGEN_MONOXIDE = "nitrogen_monoxide"
@@ -74,13 +74,13 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.CO: [{CONF_TYPE: CONF_CO}],
     SensorDeviceClass.CO2: [{CONF_TYPE: CONF_CO2}],
     SensorDeviceClass.CURRENT: [{CONF_TYPE: CONF_CURRENT}],
+    SensorDeviceClass.DATA_SIZE: [{CONF_TYPE: CONF_DATA_SIZE}],
     SensorDeviceClass.DISTANCE: [{CONF_TYPE: CONF_DISTANCE}],
     SensorDeviceClass.ENERGY: [{CONF_TYPE: CONF_ENERGY}],
     SensorDeviceClass.FREQUENCY: [{CONF_TYPE: CONF_FREQUENCY}],
     SensorDeviceClass.GAS: [{CONF_TYPE: CONF_GAS}],
     SensorDeviceClass.HUMIDITY: [{CONF_TYPE: CONF_HUMIDITY}],
     SensorDeviceClass.ILLUMINANCE: [{CONF_TYPE: CONF_ILLUMINANCE}],
-    SensorDeviceClass.INFORMATION: [{CONF_TYPE: CONF_INFORMATION}],
     SensorDeviceClass.MOISTURE: [{CONF_TYPE: CONF_MOISTURE}],
     SensorDeviceClass.NITROGEN_DIOXIDE: [{CONF_TYPE: CONF_NITROGEN_DIOXIDE}],
     SensorDeviceClass.NITROGEN_MONOXIDE: [{CONF_TYPE: CONF_NITROGEN_MONOXIDE}],
@@ -124,13 +124,13 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_CO,
                     CONF_CO2,
                     CONF_CURRENT,
+                    CONF_DATA_SIZE,
                     CONF_DISTANCE,
                     CONF_ENERGY,
                     CONF_FREQUENCY,
                     CONF_GAS,
                     CONF_HUMIDITY,
                     CONF_ILLUMINANCE,
-                    CONF_INFORMATION,
                     CONF_MOISTURE,
                     CONF_NITROGEN_DIOXIDE,
                     CONF_NITROGEN_MONOXIDE,
