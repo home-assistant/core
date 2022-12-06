@@ -46,7 +46,7 @@
       "attribute_id": 3,
       "attribute_type": "chip.clusters.Objects.Basic.Attributes.ProductName",
       "attribute_name": "ProductName",
-      "value": "Mock HumiditySensor"
+      "value": "Mock LightSensor"
     },
     "0/40/4": {
       "node_id": 1,
@@ -211,7 +211,7 @@
       "attribute_id": 18,
       "attribute_type": "chip.clusters.Objects.Basic.Attributes.UniqueID",
       "attribute_name": "UniqueID",
-      "value": "mock-humidity-sensor"
+      "value": "mock-light-sensor"
     },
     "0/40/19": {
       "node_id": 1,
@@ -320,7 +320,7 @@
       "attribute_name": "DeviceTypeList",
       "value": [
         {
-          "type": 775,
+          "type": 262,
           "revision": 1
         }
       ]
@@ -413,93 +413,181 @@
       "attribute_name": "AttributeList",
       "value": [0, 1, 2, 3, 65528, 65529, 65531, 65532, 65533]
     },
-    "0/1029/0": {
-      "node_id": 3,
-      "endpoint": 0,
-      "cluster_id": 1029,
-      "cluster_type": "chip.clusters.Objects.RelativeHumidityMeasurement",
-      "cluster_name": "RelativeHumidityMeasurement",
+    "1/30/0": {
+      "node_id": 1,
+      "endpoint": 1,
+      "cluster_id": 30,
+      "cluster_type": "chip.clusters.Objects.Binding",
+      "cluster_name": "Binding",
       "attribute_id": 0,
-      "attribute_type": "chip.clusters.Objects.RelativeHumidityMeasurement.Attributes.MeasuredValue",
-      "attribute_name": "MeasuredValue",
-      "value": 0
+      "attribute_type": "chip.clusters.Objects.Binding.Attributes.Binding",
+      "attribute_name": "Binding",
+      "value": []
     },
-    "0/1029/1": {
-      "node_id": 3,
-      "endpoint": 0,
-      "cluster_id": 1029,
-      "cluster_type": "chip.clusters.Objects.RelativeHumidityMeasurement",
-      "cluster_name": "RelativeHumidityMeasurement",
-      "attribute_id": 1,
-      "attribute_type": "chip.clusters.Objects.RelativeHumidityMeasurement.Attributes.MinMeasuredValue",
-      "attribute_name": "MinMeasuredValue",
-      "value": 0
-    },
-    "0/1029/2": {
-      "node_id": 3,
-      "endpoint": 0,
-      "cluster_id": 1029,
-      "cluster_type": "chip.clusters.Objects.RelativeHumidityMeasurement",
-      "cluster_name": "RelativeHumidityMeasurement",
-      "attribute_id": 2,
-      "attribute_type": "chip.clusters.Objects.RelativeHumidityMeasurement.Attributes.MaxMeasuredValue",
-      "attribute_name": "MaxMeasuredValue",
-      "value": 10000
-    },
-    "0/1029/65532": {
-      "node_id": 3,
-      "endpoint": 0,
-      "cluster_id": 1029,
-      "cluster_type": "chip.clusters.Objects.RelativeHumidityMeasurement",
-      "cluster_name": "RelativeHumidityMeasurement",
+    "1/30/65532": {
+      "node_id": 1,
+      "endpoint": 1,
+      "cluster_id": 30,
+      "cluster_type": "chip.clusters.Objects.Binding",
+      "cluster_name": "Binding",
       "attribute_id": 65532,
-      "attribute_type": "chip.clusters.Objects.RelativeHumidityMeasurement.Attributes.FeatureMap",
+      "attribute_type": "chip.clusters.Objects.Binding.Attributes.FeatureMap",
       "attribute_name": "FeatureMap",
       "value": 0
     },
-    "0/1029/65533": {
-      "node_id": 3,
-      "endpoint": 0,
-      "cluster_id": 1029,
-      "cluster_type": "chip.clusters.Objects.RelativeHumidityMeasurement",
-      "cluster_name": "RelativeHumidityMeasurement",
+    "1/30/65533": {
+      "node_id": 1,
+      "endpoint": 1,
+      "cluster_id": 30,
+      "cluster_type": "chip.clusters.Objects.Binding",
+      "cluster_name": "Binding",
       "attribute_id": 65533,
-      "attribute_type": "chip.clusters.Objects.RelativeHumidityMeasurement.Attributes.ClusterRevision",
+      "attribute_type": "chip.clusters.Objects.Binding.Attributes.ClusterRevision",
       "attribute_name": "ClusterRevision",
-      "value": 3
+      "value": 1
     },
-    "0/1029/65528": {
-      "node_id": 3,
-      "endpoint": 0,
-      "cluster_id": 1029,
-      "cluster_type": "chip.clusters.Objects.RelativeHumidityMeasurement",
-      "cluster_name": "RelativeHumidityMeasurement",
+    "1/30/65528": {
+      "node_id": 1,
+      "endpoint": 1,
+      "cluster_id": 30,
+      "cluster_type": "chip.clusters.Objects.Binding",
+      "cluster_name": "Binding",
       "attribute_id": 65528,
-      "attribute_type": "chip.clusters.Objects.RelativeHumidityMeasurement.Attributes.GeneratedCommandList",
+      "attribute_type": "chip.clusters.Objects.Binding.Attributes.GeneratedCommandList",
       "attribute_name": "GeneratedCommandList",
       "value": []
     },
-    "0/1029/65529": {
-      "node_id": 3,
-      "endpoint": 0,
-      "cluster_id": 1029,
-      "cluster_type": "chip.clusters.Objects.RelativeHumidityMeasurement",
-      "cluster_name": "RelativeHumidityMeasurement",
+    "1/30/65529": {
+      "node_id": 1,
+      "endpoint": 1,
+      "cluster_id": 30,
+      "cluster_type": "chip.clusters.Objects.Binding",
+      "cluster_name": "Binding",
       "attribute_id": 65529,
-      "attribute_type": "chip.clusters.Objects.RelativeHumidityMeasurement.Attributes.AcceptedCommandList",
+      "attribute_type": "chip.clusters.Objects.Binding.Attributes.AcceptedCommandList",
       "attribute_name": "AcceptedCommandList",
       "value": []
     },
-    "0/1029/65531": {
-      "node_id": 3,
-      "endpoint": 0,
-      "cluster_id": 1029,
-      "cluster_type": "chip.clusters.Objects.RelativeHumidityMeasurement",
-      "cluster_name": "RelativeHumidityMeasurement",
+    "1/30/65531": {
+      "node_id": 1,
+      "endpoint": 1,
+      "cluster_id": 30,
+      "cluster_type": "chip.clusters.Objects.Binding",
+      "cluster_name": "Binding",
       "attribute_id": 65531,
-      "attribute_type": "chip.clusters.Objects.RelativeHumidityMeasurement.Attributes.AttributeList",
+      "attribute_type": "chip.clusters.Objects.Binding.Attributes.AttributeList",
       "attribute_name": "AttributeList",
-      "value": [0, 1, 2, 65528, 65529, 65531, 65532, 65533]
+      "value": [0, 65528, 65529, 65531, 65532, 65533]
+    },
+    "1/1024/0": {
+      "node_id": 1,
+      "endpoint": 1,
+      "cluster_id": 1024,
+      "cluster_type": "chip.clusters.Objects.IlluminanceMeasurement",
+      "cluster_name": "IlluminanceMeasurement",
+      "attribute_id": 0,
+      "attribute_type": "chip.clusters.Objects.IlluminanceMeasurement.Attributes.MeasuredValue",
+      "attribute_name": "MeasuredValue",
+      "value": 1000
+    },
+    "1/1024/1": {
+      "node_id": 1,
+      "endpoint": 1,
+      "cluster_id": 1024,
+      "cluster_type": "chip.clusters.Objects.IlluminanceMeasurement",
+      "cluster_name": "IlluminanceMeasurement",
+      "attribute_id": 1,
+      "attribute_type": "chip.clusters.Objects.IlluminanceMeasurement.Attributes.MinMeasuredValue",
+      "attribute_name": "MinMeasuredValue",
+      "value": 1
+    },
+    "1/1024/2": {
+      "node_id": 1,
+      "endpoint": 1,
+      "cluster_id": 1024,
+      "cluster_type": "chip.clusters.Objects.IlluminanceMeasurement",
+      "cluster_name": "IlluminanceMeasurement",
+      "attribute_id": 2,
+      "attribute_type": "chip.clusters.Objects.IlluminanceMeasurement.Attributes.MaxMeasuredValue",
+      "attribute_name": "MaxMeasuredValue",
+      "value": 65534
+    },
+    "1/1024/3": {
+      "node_id": 1,
+      "endpoint": 1,
+      "cluster_id": 1024,
+      "cluster_type": "chip.clusters.Objects.IlluminanceMeasurement",
+      "cluster_name": "IlluminanceMeasurement",
+      "attribute_id": 3,
+      "attribute_type": "chip.clusters.Objects.IlluminanceMeasurement.Attributes.Tolerance",
+      "attribute_name": "Tolerance",
+      "value": 0
+    },
+    "1/1024/4": {
+      "node_id": 1,
+      "endpoint": 1,
+      "cluster_id": 1024,
+      "cluster_type": "chip.clusters.Objects.IlluminanceMeasurement",
+      "cluster_name": "IlluminanceMeasurement",
+      "attribute_id": 4,
+      "attribute_type": "chip.clusters.Objects.IlluminanceMeasurement.Attributes.LightSensorType",
+      "attribute_name": "LightSensorType",
+      "value": null
+    },
+    "1/1024/65532": {
+      "node_id": 1,
+      "endpoint": 1,
+      "cluster_id": 1024,
+      "cluster_type": "chip.clusters.Objects.IlluminanceMeasurement",
+      "cluster_name": "IlluminanceMeasurement",
+      "attribute_id": 65532,
+      "attribute_type": "chip.clusters.Objects.IlluminanceMeasurement.Attributes.FeatureMap",
+      "attribute_name": "FeatureMap",
+      "value": 0
+    },
+    "1/1024/65533": {
+      "node_id": 1,
+      "endpoint": 1,
+      "cluster_id": 1024,
+      "cluster_type": "chip.clusters.Objects.IlluminanceMeasurement",
+      "cluster_name": "IlluminanceMeasurement",
+      "attribute_id": 65533,
+      "attribute_type": "chip.clusters.Objects.IlluminanceMeasurement.Attributes.ClusterRevision",
+      "attribute_name": "ClusterRevision",
+      "value": 3
+    },
+    "1/1024/65528": {
+      "node_id": 1,
+      "endpoint": 1,
+      "cluster_id": 1024,
+      "cluster_type": "chip.clusters.Objects.IlluminanceMeasurement",
+      "cluster_name": "IlluminanceMeasurement",
+      "attribute_id": 65528,
+      "attribute_type": "chip.clusters.Objects.IlluminanceMeasurement.Attributes.GeneratedCommandList",
+      "attribute_name": "GeneratedCommandList",
+      "value": []
+    },
+    "1/1024/65529": {
+      "node_id": 1,
+      "endpoint": 1,
+      "cluster_id": 1024,
+      "cluster_type": "chip.clusters.Objects.IlluminanceMeasurement",
+      "cluster_name": "IlluminanceMeasurement",
+      "attribute_id": 65529,
+      "attribute_type": "chip.clusters.Objects.IlluminanceMeasurement.Attributes.AcceptedCommandList",
+      "attribute_name": "AcceptedCommandList",
+      "value": []
+    },
+    "1/1024/65531": {
+      "node_id": 1,
+      "endpoint": 1,
+      "cluster_id": 1024,
+      "cluster_type": "chip.clusters.Objects.IlluminanceMeasurement",
+      "cluster_name": "IlluminanceMeasurement",
+      "attribute_id": 65531,
+      "attribute_type": "chip.clusters.Objects.IlluminanceMeasurement.Attributes.AttributeList",
+      "attribute_name": "AttributeList",
+      "value": [0, 1, 2, 3, 4, 65528, 65529, 65531, 65532, 65533]
     }
   },
   "endpoints": [0, 1],
