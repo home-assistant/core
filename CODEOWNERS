@@ -454,6 +454,8 @@ build.json @home-assistant/supervisor
 /tests/components/hassio/ @home-assistant/supervisor
 /homeassistant/components/hatchrest/ @ViViDboarder
 /tests/components/hatchrest/ @ViViDboarder
+/homeassistant/components/hdmi_cec/ @inytar
+/tests/components/hdmi_cec/ @inytar
 /homeassistant/components/heatmiser/ @andylockran
 /homeassistant/components/heos/ @andrewsayre
 /tests/components/heos/ @andrewsayre

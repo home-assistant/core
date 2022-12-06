@@ -2069,6 +2069,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "hatchrest": {
+      "name": "hatchrest",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "havana_shade": {
       "name": "Havana Shade",
       "integration_type": "virtual",
