@@ -7,6 +7,7 @@
         "step": {
             "user": {
                 "data": {
+                    "access_id": "Tuya IoT Access ID",
                     "country_code": "Krajina",
                     "password": "Heslo",
                     "username": "\u00da\u010det"
@@ -44,6 +45,12 @@
                 "state": {
                     "morning": "R\u00e1no",
                     "night": "Noc"
+                }
+            },
+            "curtain_motor_mode": {
+                "state": {
+                    "back": "Sp\u00e4\u0165",
+                    "forward": "Dopredu"
                 }
             },
             "fan_angle": {
@@ -84,6 +91,13 @@
                     "power_off": "Neakt\u00edvny",
                     "power_on": "Akt\u00edvny"
                 }
+            },
+            "vacuum_mode": {
+                "state": {
+                    "point": "Bod",
+                    "random": "N\u00e1hodn\u00fd",
+                    "zone": "Z\u00f3na"
+                }
             }
         },
         "sensor": {
@@ -91,7 +105,10 @@
                 "state": {
                     "cooling": "Chladenie",
                     "heating": "Vykurovanie",
-                    "heating_temp": "Teplota vykurovania"
+                    "heating_temp": "Teplota vykurovania",
+                    "reserve_1": "Rezerva 1",
+                    "reserve_2": "Rezerva 2",
+                    "reserve_3": "Rezerva 3"
                 }
             }
         }

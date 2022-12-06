@@ -44,6 +44,16 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "brightness_mode": {
+                "state": {
+                    "auto": "Automatisch",
+                    "manual": "Manuell"
+                }
+            }
+        }
+    },
     "issues": {
         "manual_migration": {
             "description": "Die LaMetric-Integration wurde modernisiert: Sie wird nun \u00fcber die Benutzeroberfl\u00e4che konfiguriert und eingerichtet und die Kommunikation erfolgt nun lokal.\n\nLeider gibt es keinen automatischen Migrationspfad, so dass du dein LaMetric mit Home Assistant neu einrichten musst. Bitte konsultiere die Dokumentation zur LaMetric-Integration von Home Assistant, um zu erfahren, wie du diese einrichten kannst.\n\nEntferne die alte LaMetric YAML-Konfiguration aus deiner configuration.yaml-Datei und starte Home Assistant neu, um das Problem zu beheben.",

@@ -41,6 +41,15 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "license_plate": {
+                "state": {
+                    "none": "Nincs"
+                }
+            }
+        }
+    },
     "issues": {
         "deprecate_smart_sensor": {
             "description": "Az intelligens \u00e9szlel\u00e9sek egys\u00e9ges \"Detected Object\" \u00e9rz\u00e9kel\u0151je elavult. Hely\u00e9t az egyes intelligens \u00e9szlel\u00e9si t\u00edpusokhoz tartoz\u00f3 egyedi intelligens \u00e9szlel\u00e9si bin\u00e1ris \u00e9rz\u00e9kel\u0151k vett\u00e9k \u00e1t. K\u00e9rj\u00fck, ennek megfelel\u0151en friss\u00edtse a sablonokat \u00e9s automatiz\u00e1l\u00e1sokat.",

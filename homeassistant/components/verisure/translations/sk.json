@@ -6,7 +6,8 @@
         },
         "error": {
             "invalid_auth": "Neplatn\u00e9 overenie",
-            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba",
+            "unknown_mfa": "Po\u010das nastavovania MFA sa vyskytla nezn\u00e1ma chyba"
         },
         "step": {
             "installation": {

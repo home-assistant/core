@@ -12,5 +12,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Interval aktualiz\u00e1cie (sekundy, minim\u00e1lne 30)"
+                }
+            }
+        }
     }
 }

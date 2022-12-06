@@ -1,12 +1,19 @@
 {
     "config": {
         "abort": {
+            "addon_get_discovery_info_failed": "Nepodarilo sa z\u00edska\u0165 inform\u00e1cie o zis\u0165ovan\u00ed doplnku Z-Wave JS.",
+            "addon_info_failed": "Nepodarilo sa z\u00edska\u0165 inform\u00e1cie o doplnku Z-Wave JS.",
+            "addon_install_failed": "Nepodarilo sa nain\u0161talova\u0165 doplnok Z-Wave JS.",
+            "addon_set_config_failed": "Nepodarilo sa nastavi\u0165 konfigur\u00e1ciu Z-Wave JS.",
+            "addon_start_failed": "Nepodarilo sa spusti\u0165 doplnok Z-Wave JS.",
             "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
             "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha",
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "not_zwave_device": "Objaven\u00e9 zariadenie nie je zariadenie Z-Wave.",
             "not_zwave_js_addon": "Doplnok Discovered nie je ofici\u00e1lnym doplnkom Z-Wave JS."
         },
         "error": {
+            "addon_start_failed": "Nepodarilo sa spusti\u0165 doplnok Z-Wave JS. Skontrolujte konfigur\u00e1ciu.",
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
             "invalid_ws_url": "Neplatn\u00e1 adresa URL webov\u00e9ho soketu",
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"

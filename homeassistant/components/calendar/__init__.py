@@ -1,10 +1,11 @@
 """Support for Google Calendar event device sensors."""
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 import dataclasses
 import datetime
 from http import HTTPStatus
+from itertools import groupby
 import logging
 import re
 from typing import Any, cast, final
@@ -365,17 +366,67 @@ class CalendarListView(http.HomeAssistantView):
         return self.json(sorted(calendar_list, key=lambda x: cast(str, x["name"])))
 
 
+def _has_same_type(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
+    """Verify that all values are of the same type."""
+
+    def validate(obj: dict[str, Any]) -> dict[str, Any]:
+        """Test that all keys in the dict have values of the same type."""
+        uniq_values = groupby(type(obj[k]) for k in keys)
+        if len(list(uniq_values)) > 1:
+            raise vol.Invalid(f"Expected all values to be the same type: {keys}")
+        return obj
+
+    return validate
+
+
+def _has_consistent_timezone(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
+    """Verify that all datetime values have a consistent timezone."""
+
+    def validate(obj: dict[str, Any]) -> dict[str, Any]:
+        """Test that all keys that are datetime values have the same timezone."""
+        values = [obj[k] for k in keys]
+        if all(isinstance(value, datetime.datetime) for value in values):
+            uniq_values = groupby(value.tzinfo for value in values)
+            if len(list(uniq_values)) > 1:
+                raise vol.Invalid(
+                    f"Expected all values to have the same timezone: {values}"
+                )
+        return obj
+
+    return validate
+
+
+def _is_sorted(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
+    """Verify that the specified values are sequential."""
+
+    def validate(obj: dict[str, Any]) -> dict[str, Any]:
+        """Test that all keys in the dict are in order."""
+        values = [obj[k] for k in keys]
+        if values != sorted(values):
+            raise vol.Invalid(f"Values were not in order: {values}")
+        return obj
+
+    return validate
+
+
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "calendar/event/create",
         vol.Required("entity_id"): cv.entity_id,
-        vol.Required(CONF_EVENT): {
-            vol.Required(EVENT_START): vol.Any(cv.date, cv.datetime),
-            vol.Required(EVENT_END): vol.Any(cv.date, cv.datetime),
-            vol.Required(EVENT_SUMMARY): cv.string,
-            vol.Optional(EVENT_DESCRIPTION): cv.string,
-            vol.Optional(EVENT_RRULE): _validate_rrule,
-        },
+        CONF_EVENT: vol.Schema(
+            vol.All(
+                {
+                    vol.Required(EVENT_START): vol.Any(cv.date, cv.datetime),
+                    vol.Required(EVENT_END): vol.Any(cv.date, cv.datetime),
+                    vol.Required(EVENT_SUMMARY): cv.string,
+                    vol.Optional(EVENT_DESCRIPTION): cv.string,
+                    vol.Optional(EVENT_RRULE): _validate_rrule,
+                },
+                _has_same_type(EVENT_START, EVENT_END),
+                _has_consistent_timezone(EVENT_START, EVENT_END),
+                _is_sorted(EVENT_START, EVENT_END),
+            )
+        ),
     }
 )
 @websocket_api.async_response

@@ -385,6 +385,65 @@ async def test_zwave_js_value_updated_bypass_dynamic_validation_no_nodes(
     assert len(no_value_filter) == 0
 
 
+async def test_zwave_js_value_updated_bypass_dynamic_validation_no_driver(
+    hass, client, lock_schlage_be469, integration
+):
+    """Test zwave_js.value_updated trigger without driver."""
+    trigger_type = f"{DOMAIN}.value_updated"
+    node: Node = lock_schlage_be469
+    driver = client.driver
+    client.driver = None
+
+    no_value_filter = async_capture_events(hass, "no_value_filter")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                # no value filter
+                {
+                    "trigger": {
+                        "platform": trigger_type,
+                        "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                        "command_class": CommandClass.DOOR_LOCK.value,
+                        "property": "latchStatus",
+                    },
+                    "action": {
+                        "event": "no_value_filter",
+                    },
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    client.driver = driver
+
+    # Test that no value filter is NOT triggered because automation failed setup
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Door Lock",
+                "commandClass": 98,
+                "endpoint": 0,
+                "property": "latchStatus",
+                "newValue": "boo",
+                "prevValue": "hiss",
+                "propertyName": "latchStatus",
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    assert len(no_value_filter) == 0
+
+
 async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
     """Test for zwave_js.event automation trigger."""
     trigger_type = f"{DOMAIN}.event"

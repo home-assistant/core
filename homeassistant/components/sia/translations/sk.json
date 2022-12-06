@@ -12,6 +12,8 @@
             "additional_account": {
                 "data": {
                     "account": "ID \u00fa\u010dtu",
+                    "additional_account": "\u010eal\u0161ie \u00fa\u010dty",
+                    "encryption_key": "\u0160ifrovac\u00ed k\u013e\u00fa\u010d",
                     "ping_interval": "Ping Interval (min)"
                 },
                 "title": "Pridajte \u010fal\u0161\u00ed \u00fa\u010det k aktu\u00e1lnemu portu."
@@ -19,10 +21,19 @@
             "user": {
                 "data": {
                     "account": "ID \u00fa\u010dtu",
+                    "additional_account": "\u010eal\u0161ie \u00fa\u010dty",
+                    "encryption_key": "\u0160ifrovac\u00ed k\u013e\u00fa\u010d",
                     "ping_interval": "Ping Interval (min)",
                     "port": "Port",
                     "protocol": "Protokol"
                 }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "options": {
+                "description": "Nastavte mo\u017enosti pre \u00fa\u010det: {account}"
             }
         }
     }
