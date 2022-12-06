@@ -15,16 +15,15 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    AREA_SQUARE_METERS,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
+    IRRADIATION_WATTS_PER_SQUARE_METER,
     LIGHT_LUX,
     PERCENTAGE,
     UV_INDEX,
     UnitOfElectricPotential,
     UnitOfLength,
-    UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
@@ -69,7 +68,7 @@ ECOWITT_SENSORS_MAPPING: Final = {
     ),
     EcoWittSensorTypes.WATT_METERS_SQUARED: SensorEntityDescription(
         key="WATT_METERS_SQUARED",
-        native_unit_of_measurement=f"{UnitOfPower.WATT}/{AREA_SQUARE_METERS}",
+        native_unit_of_measurement=IRRADIATION_WATTS_PER_SQUARE_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     EcoWittSensorTypes.UV_INDEX: SensorEntityDescription(
