@@ -14,13 +14,10 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN, LOGGER
 
-# DONE adjust the data schema to the data that you need
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CLIENT_ID): str,
-        vol.Required(
-            CONF_CLIENT_SECRET,
-        ): str,
+        vol.Required(CONF_CLIENT_SECRET): str,
         vol.Required("redirect_uri"): str,
         vol.Required("code"): str,
     }
