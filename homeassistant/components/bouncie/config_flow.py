@@ -32,12 +32,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    # If your PyPI package is not built with async, pass your methods
-    # to the executor:
-    # await hass.async_add_executor_job(
-    #     your_validate_func, data["username"], data["password"]
-    # )
-
     bouncie_client = AsyncRESTAPIClient(
         client_id=data["client_id"],
         client_secret=data["client_secret"],
@@ -48,7 +42,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     if not result:
         raise InvalidAuth
     data["access_token"] = bouncie_client.access_token
-    # Return info that you want to store in the config entry.
     return data
 
 
