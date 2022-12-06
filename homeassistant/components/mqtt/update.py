@@ -172,14 +172,22 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
                 )
                 return
 
-            json_payload = {}
+            json_payload: Any | dict = {}
             try:
                 json_payload = json_loads(payload)
-                _LOGGER.debug(
-                    "JSON payload detected after processing payload '%s' on topic %s",
-                    json_payload,
-                    msg.topic,
-                )
+                if isinstance(json_payload, dict):
+                    _LOGGER.debug(
+                        "JSON payload detected after processing payload '%s' on topic %s",
+                        json_payload,
+                        msg.topic,
+                    )
+                else:
+                    _LOGGER.debug(
+                        "Non-dictionary JSON payload detected after processing payload '%s' on topic %s",
+                        payload,
+                        msg.topic,
+                    )
+                    json_payload = {"installed_version": payload}
             except JSON_DECODE_EXCEPTIONS:
                 _LOGGER.debug(
                     "No valid (JSON) payload detected after processing payload '%s' on topic %s",
@@ -253,9 +261,9 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
         get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> UpdateEntityFeature:
         """Return the list of supported features."""
-        support = 0
+        support = UpdateEntityFeature(0)
 
         if self._config.get(CONF_COMMAND_TOPIC) is not None:
             support |= UpdateEntityFeature.INSTALL

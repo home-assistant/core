@@ -8,10 +8,11 @@
             "bad_birth": "Argomento di nascita non valido",
             "bad_certificate": "Il certificato CA non \u00e8 valido",
             "bad_client_cert": "Certificato client non valido, assicurarsi che venga fornito un file codificato PEM",
-            "bad_client_cert_key": "Il certificato del client e il certificato privato non sono una coppia valida",
+            "bad_client_cert_key": "Il certificato client e la chiave privata non sono una coppia valida",
             "bad_client_key": "Chiave privata non valida, assicurarsi che venga fornito un file codificato PEM senza password",
             "bad_discovery_prefix": "Prefisso di rilevamento non valido",
             "bad_will": "Argomento testamento non valido",
+            "bad_ws_headers": "Fornisci intestazioni HTTP valide come oggetto JSON",
             "cannot_connect": "Impossibile connettersi",
             "invalid_inclusion": "Il certificato del client e la chiave privata devono essere configurati insieme"
         },
@@ -24,7 +25,6 @@
                     "client_cert": "Carica il file del certificato client",
                     "client_id": "ID client (lasciare vuoto per generarne uno casualmente)",
                     "client_key": "Carica il file della chiave privata",
-                    "discovery": "Attiva il rilevamento",
                     "keepalive": "L'intervallo di tempo tra l'invio di messaggi di mantenimento in attivit\u00e0",
                     "password": "Password",
                     "port": "Porta",
@@ -32,7 +32,10 @@
                     "set_ca_cert": "Convalida del certificato del broker",
                     "set_client_cert": "Usa un certificato client",
                     "tls_insecure": "Ignora la convalida del certificato del broker",
-                    "username": "Nome utente"
+                    "transport": "Trasporto MQTT",
+                    "username": "Nome utente",
+                    "ws_headers": "Intestazioni WebSocket in formato JSON",
+                    "ws_path": "Percorso WebSocket"
                 },
                 "description": "Inserisci le informazioni di connessione del tuo broker MQTT."
             },
@@ -82,10 +85,11 @@
             "bad_birth": "Argomento di nascita non valido",
             "bad_certificate": "Il certificato CA non \u00e8 valido",
             "bad_client_cert": "Certificato client non valido, assicurarsi che venga fornito un file codificato PEM",
-            "bad_client_cert_key": "Il certificato del client e il certificato privato non sono una coppia valida",
+            "bad_client_cert_key": "Il certificato client e la chiave privata non sono una coppia valida",
             "bad_client_key": "Chiave privata non valida, assicurarsi che venga fornito un file codificato PEM senza password",
             "bad_discovery_prefix": "Prefisso di rilevamento non valido",
             "bad_will": "Argomento testamento non valido",
+            "bad_ws_headers": "Fornisci intestazioni HTTP valide come oggetto JSON",
             "cannot_connect": "Impossibile connettersi",
             "invalid_inclusion": "Il certificato del client e la chiave privata devono essere configurati insieme"
         },
@@ -105,7 +109,10 @@
                     "set_ca_cert": "Convalida del certificato del broker",
                     "set_client_cert": "Usa un certificato client",
                     "tls_insecure": "Ignora la convalida del certificato del broker",
-                    "username": "Nome utente"
+                    "transport": "Trasporto MQTT",
+                    "username": "Nome utente",
+                    "ws_headers": "Intestazioni WebSocket in formato JSON",
+                    "ws_path": "Percorso WebSocket"
                 },
                 "description": "Inserisci le informazioni di connessione del tuo broker MQTT.",
                 "title": "Opzioni del broker"

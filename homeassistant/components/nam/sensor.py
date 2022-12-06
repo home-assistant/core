@@ -150,7 +150,9 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         key=ATTR_PMSX003_CAQI_LEVEL,
         name="PMSx003 CAQI level",
         icon="mdi:air-filter",
-        device_class="nam__caqi_level",
+        device_class=SensorDeviceClass.ENUM,
+        options=["very low", "low", "medium", "high", "very high"],
+        translation_key="caqi_level",
     ),
     SensorEntityDescription(
         key=ATTR_PMSX003_P0,
@@ -182,7 +184,9 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         key=ATTR_SDS011_CAQI_LEVEL,
         name="SDS011 CAQI level",
         icon="mdi:air-filter",
-        device_class="nam__caqi_level",
+        device_class=SensorDeviceClass.ENUM,
+        options=["very low", "low", "medium", "high", "very high"],
+        translation_key="caqi_level",
     ),
     SensorEntityDescription(
         key=ATTR_SDS011_P1,
@@ -221,7 +225,9 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         key=ATTR_SPS30_CAQI_LEVEL,
         name="SPS30 CAQI level",
         icon="mdi:air-filter",
-        device_class="nam__caqi_level",
+        device_class=SensorDeviceClass.ENUM,
+        options=["very low", "low", "medium", "high", "very high"],
+        translation_key="caqi_level",
     ),
     SensorEntityDescription(
         key=ATTR_SPS30_P0,

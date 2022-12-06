@@ -12,6 +12,7 @@
             "bad_client_key": "Ongeldige priv\u00e9sleutel (private key), zorg voor een PEM gecodeerd bestand zonder wachtwoord",
             "bad_discovery_prefix": "Ongeldig discovery voorvoegsel",
             "bad_will": "Ongeldig `will` topic",
+            "bad_ws_headers": "Geef geldige HTTP-headers op als een JSON-object",
             "cannot_connect": "Kan geen verbinding maken",
             "invalid_inclusion": "Het client-certificaat en priv\u00e9sleutel moeten samen worden geconfigureerd"
         },
@@ -20,8 +21,10 @@
                 "data": {
                     "advanced_options": "Geavanceerde opties",
                     "broker": "Broker",
+                    "certificate": "Aangepast CA certificaatbestand uploaden",
+                    "client_cert": "Clientcertificaatbestand uploaden",
                     "client_id": "Client ID (leeg laten voor een willekeurig ID)",
-                    "discovery": "Detectie inschakelen",
+                    "client_key": "Priv\u00e9sleutelbestand bestand uploaden",
                     "keepalive": "Tijd tussen het verzenden van keep-a-live berichten",
                     "password": "Wachtwoord",
                     "port": "Poort",
@@ -29,7 +32,10 @@
                     "set_ca_cert": "Broker certificaatvalidatie",
                     "set_client_cert": "Gebruik een client-certificaat",
                     "tls_insecure": "Negeer validatie van brokercertificaten",
-                    "username": "Gebruikersnaam"
+                    "transport": "MQTT transport",
+                    "username": "Gebruikersnaam",
+                    "ws_headers": "HTTP-headers in JSON-object formaat",
+                    "ws_path": "WebSocket pad"
                 },
                 "description": "MQTT"
             },
@@ -70,7 +76,7 @@
             "title": "Handmatig geconfigureerd platform {platform}(s) vereist aandacht"
         },
         "deprecated_yaml_broker_settings": {
-            "description": "De volgende instellingen gevonden in `configuration.yaml` zijn gemigreerd naar de MQTT configuratieinstellingen en overschrijven nu de instellingen in `configuration.yaml`:\n`{deprecated_settings}`\n\nVerwijderd deze instellingen van `configuration.yaml` en herstart Home Assistant om dit probleem op te lossen. Zie de [documentatie]({more_info_url}), voor meer informatie.",
+            "description": "De volgende instellingen gevonden in `configuration.yaml` zijn gemigreerd naar de MQTT configuratieinstellingen en overschrijven nu de instellingen in `configuration.yaml`:\n`{deprecated_settings}`\n\nVerwijder deze instellingen van `configuration.yaml` en herstart Home Assistant om dit probleem op te lossen. Zie de [documentatie]({more_info_url}), voor meer informatie.",
             "title": "Verouderde MQTT instellingen gevonden in `configuration.yaml`"
         }
     },
@@ -83,6 +89,7 @@
             "bad_client_key": "Ongeldige priv\u00e9sleutel (private key), zorg voor een PEM gecodeerd bestand zonder wachtwoord",
             "bad_discovery_prefix": "Ongeldig discovery voorvoegsel",
             "bad_will": "Ongeldig will topic",
+            "bad_ws_headers": "Geef geldige HTTP-headers op als een JSON-object",
             "cannot_connect": "Kan geen verbinding maken",
             "invalid_inclusion": "Het client-certificaat en priv\u00e9sleutel moeten samen worden geconfigureerd"
         },
@@ -102,7 +109,10 @@
                     "set_ca_cert": "Broker certificaatvalidatie",
                     "set_client_cert": "Gebruik een client-certificaat",
                     "tls_insecure": "Negeer validatie van brokercertificaten",
-                    "username": "Gebruikersnaam"
+                    "transport": "MQTT transport",
+                    "username": "Gebruikersnaam",
+                    "ws_headers": "WebSocket headers in JSON formaat",
+                    "ws_path": "WebSocket pad"
                 },
                 "description": "Voer de verbindingsgegevens van uw MQTT-broker in.",
                 "title": "Broker opties"

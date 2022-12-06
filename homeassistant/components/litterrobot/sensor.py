@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MASS_POUNDS, PERCENTAGE
@@ -73,6 +74,7 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
             name="Waste Drawer",
             native_unit_of_measurement=PERCENTAGE,
             icon_fn=lambda state: icon_for_gauge_level(state, 10),
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         RobotSensorEntityDescription[LitterRobot](
             key="sleep_mode_start_time",
@@ -105,12 +107,14 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
             name="Litter level",
             native_unit_of_measurement=PERCENTAGE,
             icon_fn=lambda state: icon_for_gauge_level(state, 10),
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         RobotSensorEntityDescription[LitterRobot4](
             key="pet_weight",
             name="Pet weight",
             native_unit_of_measurement=MASS_POUNDS,
             device_class=SensorDeviceClass.WEIGHT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
     ],
     FeederRobot: [
@@ -119,6 +123,7 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
             name="Food level",
             native_unit_of_measurement=PERCENTAGE,
             icon_fn=lambda state: icon_for_gauge_level(state, 10),
+            state_class=SensorStateClass.MEASUREMENT,
         )
     ],
 }

@@ -309,7 +309,7 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         return self._device_class
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
         supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 

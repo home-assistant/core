@@ -22,13 +22,24 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "pressure_tendency": {
+                "state": {
+                    "falling": "Dalende",
+                    "rising": "Stijgende",
+                    "steady": "Stabiel"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
-            "user": {
+            "init": {
                 "data": {
-                    "forecast": "Weervoorspelling"
+                    "forecast": "Weersverwachting"
                 },
-                "description": "Vanwege de beperkingen van de gratis versie van de AccuWeather API-sleutel, worden gegevensupdates elke 64 minuten in plaats van elke 32 minuten uitgevoerd wanneer u weersvoorspelling inschakelt."
+                "description": "Wanneer je de weersverwachting ingeschakeld zullen updates elke 80 minuten plaatsvinden i.p.v. elke 40 minuten, dit komt door de beperkingen van de gratis versie van de AccuWeather API sleutel."
             }
         }
     },

@@ -5,17 +5,12 @@ from .model import Config, Integration
 from .serializer import format_python_namespace
 
 
-def generate_and_validate(integrations: list[dict[str, str]]):
+def generate_and_validate(integrations: dict[str, Integration]) -> str:
     """Validate and generate dhcp data."""
     match_list = []
 
     for domain in sorted(integrations):
-        integration = integrations[domain]
-
-        if not integration.manifest or not integration.config_flow:
-            continue
-
-        match_types = integration.manifest.get("dhcp", [])
+        match_types = integrations[domain].manifest.get("dhcp", [])
 
         if not match_types:
             continue
@@ -29,7 +24,7 @@ def generate_and_validate(integrations: list[dict[str, str]]):
     )
 
 
-def validate(integrations: dict[str, Integration], config: Config):
+def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Validate dhcp file."""
     dhcp_path = config.root / "homeassistant/generated/dhcp.py"
     config.cache["dhcp"] = content = generate_and_validate(integrations)
@@ -48,7 +43,7 @@ def validate(integrations: dict[str, Integration], config: Config):
         return
 
 
-def generate(integrations: dict[str, Integration], config: Config):
+def generate(integrations: dict[str, Integration], config: Config) -> None:
     """Generate dhcp file."""
     dhcp_path = config.root / "homeassistant/generated/dhcp.py"
     with open(str(dhcp_path), "w") as fp:

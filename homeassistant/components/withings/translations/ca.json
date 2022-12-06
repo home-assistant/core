@@ -24,10 +24,6 @@
                 "description": "Ha de proporcionar un nom de perfil \u00fanic per a aquestes dades. Normalment \u00e9s el nom del perfil seleccionat en el pas anterior.",
                 "title": "Perfil d'usuari."
             },
-            "reauth": {
-                "description": "El perfil \"{profile}\" s'ha de tornar a autenticar per poder continuar rebent dades de Withings.",
-                "title": "Reautenticaci\u00f3 de la integraci\u00f3"
-            },
             "reauth_confirm": {
                 "description": "El perfil \"{profile}\" s'ha de tornar a autenticar per poder continuar rebent dades de Withings.",
                 "title": "Reautenticar la integraci\u00f3"

@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u00da\u010det je u\u017e nakonfigurovan\u00fd"
+        },
+        "error": {
+            "db_url_invalid": "Adresa URL datab\u00e1zy je neplatn\u00e1",
+            "query_invalid": "SQL neplatn\u00e1 po\u017eiadavka"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "column": "St\u013apec",
+                    "db_url": "URL datab\u00e1zy",
+                    "name": "N\u00e1zov",
+                    "unit_of_measurement": "Mern\u00e1 jednotka"
+                },
+                "data_description": {
+                    "db_url": "Adresa URL datab\u00e1zy, nechajte pr\u00e1zdnu, ak chcete pou\u017ei\u0165 predvolen\u00fa datab\u00e1zu HA",
+                    "unit_of_measurement": "Jednotka miery (volite\u013en\u00e9)"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "db_url_invalid": "Adresa URL datab\u00e1zy je neplatn\u00e1",
+            "query_invalid": "SQL neplatn\u00e1 po\u017eiadavka"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "column": "St\u013apec",
+                    "db_url": "URL datab\u00e1zy",
+                    "name": "N\u00e1zov",
+                    "unit_of_measurement": "Mern\u00e1 jednotka"
+                },
+                "data_description": {
+                    "db_url": "Adresa URL datab\u00e1zy, nechajte pr\u00e1zdnu, ak chcete pou\u017ei\u0165 predvolen\u00fa datab\u00e1zu HA",
+                    "unit_of_measurement": "Jednotka miery (volite\u013en\u00e9)"
+                }
+            }
+        }
+    }
+}

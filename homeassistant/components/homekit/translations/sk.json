@@ -1,0 +1,34 @@
+{
+    "config": {
+        "step": {
+            "pairing": {
+                "description": "Na dokon\u010denie p\u00e1rovania postupujte pod\u013ea pokynov v \u010dasti \u201eUpozornenia\u201c v \u010dasti \u201eP\u00e1rovanie HomeKit\u201c."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "accessory": {
+                "data": {
+                    "entities": "Entita"
+                }
+            },
+            "advanced": {
+                "title": "Roz\u0161\u00edren\u00e1 konfigur\u00e1cia"
+            },
+            "exclude": {
+                "data": {
+                    "entities": "Entity"
+                }
+            },
+            "include": {
+                "data": {
+                    "entities": "Entity"
+                }
+            },
+            "yaml": {
+                "description": "T\u00e1to polo\u017eka sa ovl\u00e1da pomocou YAML"
+            }
+        }
+    }
+}

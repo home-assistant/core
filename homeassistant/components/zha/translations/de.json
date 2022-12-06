@@ -64,35 +64,12 @@
                 "description": "Dein Backup hat eine andere IEEE-Adresse als dein Funkger\u00e4t. Damit dein Netzwerk ordnungsgem\u00e4\u00df funktioniert, sollte auch die IEEE-Adresse deines Funkger\u00e4ts ge\u00e4ndert werden.\n\nDies ist ein permanenter Vorgang.",
                 "title": "Funk-IEEE-Adresse \u00fcberschreiben"
             },
-            "pick_radio": {
-                "data": {
-                    "radio_type": "Funktyp"
-                },
-                "description": "W\u00e4hle den Typ deines Zigbee-Funks",
-                "title": "Funktyp"
-            },
-            "port_config": {
-                "data": {
-                    "baudrate": "Port-Geschwindigkeit",
-                    "flow_control": "Datenflusskontrolle",
-                    "path": "Serieller Ger\u00e4tepfad"
-                },
-                "description": "Gib die portspezifischen Einstellungen ein",
-                "title": "Einstellungen"
-            },
             "upload_manual_backup": {
                 "data": {
                     "uploaded_backup_file": "Datei hochladen"
                 },
-                "description": "Stelle deine Netzwerkeinstellungen aus einer hochgeladenen Backup-JSON-Datei wieder her. Du kannst eine von einer anderen ZHA-Installation unter **Netzwerkeinstellungen** herunterladen oder eine Zigbee2MQTT-Datei \"coordinator_backup.json\" verwenden.",
+                "description": "Stelle deine Netzwerkeinstellungen aus einer hochgeladenen Backup-JSON-Datei wieder her. Du kannst eine von einer anderen ZHA Installation unter **Netzwerkeinstellungen** herunterladen oder eine Zigbee2MQTT-Datei \"coordinator_backup.json\" verwenden.",
                 "title": "Manuelles Backup hochladen"
-            },
-            "user": {
-                "data": {
-                    "path": "Serieller Ger\u00e4tepfad"
-                },
-                "description": "W\u00e4hle die serielle Schnittstelle f\u00fcr den ZigBee-Funk",
-                "title": "ZHA"
             }
         }
     },
@@ -104,7 +81,7 @@
             "title": "Optionen f\u00fcr die Alarmsteuerung"
         },
         "zha_options": {
-            "always_prefer_xy_color_mode": "Immer den XY-Farbmodus bevorzugen",
+            "always_prefer_xy_color_mode": "Immer den XY Farbmodus bevorzugen",
             "consider_unavailable_battery": "Batteriebetriebene Ger\u00e4te als nicht verf\u00fcgbar betrachten nach (Sekunden)",
             "consider_unavailable_mains": "Netzbetriebene Ger\u00e4te als nicht verf\u00fcgbar betrachten nach (Sekunden)",
             "default_light_transition": "Standardlicht\u00fcbergangszeit (Sekunden)",
@@ -255,7 +232,7 @@
                 "data": {
                     "uploaded_backup_file": "Datei hochladen"
                 },
-                "description": "Stelle deine Netzwerkeinstellungen aus einer hochgeladenen Backup-JSON-Datei wieder her. Du kannst eine von einer anderen ZHA-Installation unter **Netzwerkeinstellungen** herunterladen oder eine Zigbee2MQTT-Datei \"coordinator_backup.json\" verwenden.",
+                "description": "Stelle deine Netzwerkeinstellungen aus einer hochgeladenen Backup-JSON-Datei wieder her. Du kannst eine von einer anderen ZHA Installation unter **Netzwerkeinstellungen** herunterladen oder eine Zigbee2MQTT-Datei \"coordinator_backup.json\" verwenden.",
                 "title": "Manuelles Backup hochladen"
             }
         }

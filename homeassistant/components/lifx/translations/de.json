@@ -3,19 +3,15 @@
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
-            "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden",
-            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
+            "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
-        "flow_title": "{label} ({host}) {serial}",
+        "flow_title": "{label} ({group})",
         "step": {
-            "confirm": {
-                "description": "M\u00f6chtest du LIFX einrichten?"
-            },
             "discovery_confirm": {
-                "description": "M\u00f6chtest du {label} ({host}) {serial} einrichten?"
+                "description": "M\u00f6chtest du {label} ({group}) einrichten?"
             },
             "pick_device": {
                 "data": {

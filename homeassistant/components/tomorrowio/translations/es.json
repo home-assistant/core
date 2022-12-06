@@ -17,13 +17,46 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "health_concern": {
+                "state": {
+                    "good": "Bueno",
+                    "hazardous": "Peligroso",
+                    "moderate": "Moderado",
+                    "unhealthy": "Poco saludable",
+                    "unhealthy_for_sensitive_groups": "No es saludable para grupos sensibles",
+                    "very_unhealthy": "Muy poco saludable"
+                }
+            },
+            "pollen_index": {
+                "state": {
+                    "high": "Alto",
+                    "low": "Bajo",
+                    "medium": "Medio",
+                    "none": "Ninguno",
+                    "very_high": "Muy alto",
+                    "very_low": "Muy bajo"
+                }
+            },
+            "precipitation_type": {
+                "state": {
+                    "freezing_rain": "Lluvia helada",
+                    "ice_pellets": "Granizo",
+                    "none": "Ninguno",
+                    "rain": "Lluvia",
+                    "snow": "Nieve"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {
                 "data": {
                     "timestep": "Min. entre previsiones de NowCast"
                 },
-                "description": "Si eliges habilitar la entidad de pron\u00f3stico del tiempo `nowcast`, puedes configurar la cantidad de minutos entre cada pron\u00f3stico. La cantidad de pron\u00f3sticos proporcionados depende de la cantidad de minutos elegidos entre los pron\u00f3sticos.",
+                "description": "Si eliges habilitar la entidad de previsi\u00f3n `nowcast`, puedes configurar la cantidad de minutos entre cada previsi\u00f3n. La cantidad de previsiones proporcionadas depende de la cantidad de minutos elegidos entre las mismas.",
                 "title": "Actualizar las opciones de Tomorrow.io"
             }
         }

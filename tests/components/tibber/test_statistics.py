@@ -35,7 +35,8 @@ async def test_async_setup_entry(recorder_mock, hass):
             None,
             [statistic_id],
             "hour",
-            True,
+            None,
+            {"start", "state", "mean", "min", "max", "last_reset", "sum"},
         )
 
         assert len(stats) == 1
