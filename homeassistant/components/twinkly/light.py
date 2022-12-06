@@ -77,7 +77,7 @@ class TwinklyLight(LightEntity):
             self._attr_supported_color_modes = {ColorMode.RGBW}
             self._attr_color_mode = ColorMode.RGBW
             self._attr_rgbw_color = (255, 255, 255, 0)
-        elif device_info.get(DEV_LED_PROFILE) in (DEV_PROFILE_RGB):
+        elif device_info.get(DEV_LED_PROFILE) == DEV_PROFILE_RGB:
             self._attr_supported_color_modes = {ColorMode.RGB}
             self._attr_color_mode = ColorMode.RGB
             self._attr_rgb_color = (255, 255, 255)
@@ -102,7 +102,7 @@ class TwinklyLight(LightEntity):
         self._software_version = ""
         # We guess that most devices are "new" and support effects
         self._attr_supported_features = LightEntityFeature.EFFECT
-        self._attr_device_brightness = 0
+        self._attr_mode = "effect"
 
     @property
     def available(self) -> bool:
@@ -196,9 +196,9 @@ class TwinklyLight(LightEntity):
 
         if self._attr_brightness == 0:
             # if the device is "off", the component brightness is 0
-            # the device brightness has the right value but we need to fix
-            # the default mode to movie without a movie in the list
-            await self._client.set_mode("color")
+            # the device brightness has the right value
+            # we need to set the mode to the one before turn off
+            await self._client.set_mode(self._attr_mode)
 
         if (
             ATTR_RGBW_COLOR in kwargs
@@ -262,6 +262,8 @@ class TwinklyLight(LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
+        mode = await self._client.get_mode()
+        self._attr_mode = mode.get("mode")
         await self._client.turn_off()
 
     async def async_update(self) -> None:
@@ -275,7 +277,6 @@ class TwinklyLight(LightEntity):
             brightness_value = (
                 int(brightness["value"]) if brightness["mode"] == "enabled" else 100
             )
-            self._attr_device_brightness = brightness_value
 
             self._attr_brightness = (
                 int(round(brightness_value * 2.55)) if self._is_on else 0
