@@ -251,9 +251,7 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
-        new_version = self.entity_description.latest_version(
-            self.coordinator.device.status[self.key][self.entity_description.sub_key],
-        )
+        new_version = self.entity_description.latest_version(self.sub_status)
         if new_version:
             return cast(str, new_version)
 
