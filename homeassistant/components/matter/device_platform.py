@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 from homeassistant.const import Platform
 
+from .binary_sensor import DEVICE_ENTITY as BINARY_SENSOR_DEVICE_ENTITY
 from .light import DEVICE_ENTITY as LIGHT_DEVICE_ENTITY
 
 if TYPE_CHECKING:
@@ -20,5 +21,6 @@ DEVICE_PLATFORM: dict[
         MatterEntityDescriptionBaseClass | list[MatterEntityDescriptionBaseClass],
     ],
 ] = {
+    Platform.BINARY_SENSOR: BINARY_SENSOR_DEVICE_ENTITY,
     Platform.LIGHT: LIGHT_DEVICE_ENTITY,
 }
