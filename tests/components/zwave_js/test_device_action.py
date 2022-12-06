@@ -25,6 +25,7 @@ async def test_get_actions(
     hass: HomeAssistant,
     client: Client,
     lock_schlage_be469: Node,
+    controller_node: Node,
     integration: ConfigEntry,
 ) -> None:
     """Test we get the expected actions from a zwave_js node."""
@@ -90,6 +91,14 @@ async def test_get_actions(
     )
     for action in expected_actions:
         assert action in actions
+
+    # Test that we don't return actions for a controller node
+    device = dev_reg.async_get_device({get_device_id(driver, controller_node)})
+    assert device
+    assert (
+        await async_get_device_automations(hass, DeviceAutomationType.ACTION, device.id)
+        == []
+    )
 
 
 async def test_get_actions_meter(

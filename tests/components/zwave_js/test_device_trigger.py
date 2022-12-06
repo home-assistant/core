@@ -36,6 +36,19 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
+async def test_no_controller_triggers(hass, client, controller_node, integration):
+    """Test that we do not get triggers for the controller."""
+    dev_reg = async_get_dev_reg(hass)
+    device = dev_reg.async_get_device({get_device_id(client.driver, controller_node)})
+    assert device
+    assert (
+        await async_get_device_automations(
+            hass, DeviceAutomationType.TRIGGER, device.id
+        )
+        == []
+    )
+
+
 async def test_get_notification_notification_triggers(
     hass, client, lock_schlage_be469, integration
 ):

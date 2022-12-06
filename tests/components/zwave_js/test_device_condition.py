@@ -32,7 +32,9 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_get_conditions(hass, client, lock_schlage_be469, integration) -> None:
+async def test_get_conditions(
+    hass, client, lock_schlage_be469, controller_node, integration
+) -> None:
     """Test we get the expected onditions from a zwave_js."""
     dev_reg = device_registry.async_get(hass)
     device = dev_reg.async_get_device(
@@ -73,6 +75,16 @@ async def test_get_conditions(hass, client, lock_schlage_be469, integration) -> 
     )
     for condition in expected_conditions:
         assert condition in conditions
+
+    # Test that we don't return actions for a controller node
+    device = dev_reg.async_get_device({get_device_id(client.driver, controller_node)})
+    assert device
+    assert (
+        await async_get_device_automations(
+            hass, DeviceAutomationType.CONDITION, device.id
+        )
+        == []
+    )
 
 
 async def test_node_status_state(
