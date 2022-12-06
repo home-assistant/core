@@ -371,9 +371,26 @@ def _has_same_type(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
 
     def validate(obj: dict[str, Any]) -> dict[str, Any]:
         """Test that all keys in the dict have values of the same type."""
-        uniq_values = groupby([type(obj[k]) for k in keys])
+        uniq_values = groupby(type(obj[k]) for k in keys)
         if len(list(uniq_values)) > 1:
             raise vol.Invalid(f"Expected all values to be the same type: {keys}")
+        return obj
+
+    return validate
+
+
+def _has_consistent_timezone(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
+    """Verify that all datetime values have a consistent timezone."""
+
+    def validate(obj: dict[str, Any]) -> dict[str, Any]:
+        """Test that all keys that are datetime values have the same timezone."""
+        values = [obj[k] for k in keys]
+        if all(isinstance(value, datetime.datetime) for value in values):
+            uniq_values = groupby(value.tzinfo for value in values)
+            if len(list(uniq_values)) > 1:
+                raise vol.Invalid(
+                    f"Expected all values to have the same timezone: {values}"
+                )
         return obj
 
     return validate
@@ -406,6 +423,7 @@ def _is_sorted(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
                     vol.Optional(EVENT_RRULE): _validate_rrule,
                 },
                 _has_same_type(EVENT_START, EVENT_END),
+                _has_consistent_timezone(EVENT_START, EVENT_END),
                 _is_sorted(EVENT_START, EVENT_END),
             )
         ),

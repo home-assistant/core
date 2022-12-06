@@ -682,3 +682,26 @@ async def test_invalid_recurrence_rule(
     assert "error" in result
     assert "code" in result.get("error")
     assert result["error"]["code"] == "invalid_format"
+
+
+async def test_invalid_date_formats(
+    ws_client: ClientFixture, setup_integration: None, get_events: GetEventsFn
+):
+    """Exercises a validation error within rfc5545 parsing in ical."""
+    client = await ws_client()
+    result = await client.cmd(
+        "create",
+        {
+            "entity_id": TEST_ENTITY,
+            "event": {
+                "summary": "Bastille Day Party",
+                # Can't mix offset aware and floating dates
+                "dtstart": "1997-07-15T04:00:00+08:00",
+                "dtend": "1997-07-14T17:00:00",
+            },
+        },
+    )
+    assert not result.get("success")
+    assert "error" in result
+    assert "code" in result.get("error")
+    assert result["error"]["code"] == "invalid_format"
