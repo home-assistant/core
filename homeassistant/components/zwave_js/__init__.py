@@ -717,7 +717,7 @@ class NodeEvents:
 
         raw_value = value_ = value.value
         if value.metadata.states:
-            value_ = value.metadata.states.get(str(value), value_)
+            value_ = value.metadata.states.get(str(value_), value_)
 
         self.hass.bus.async_fire(
             ZWAVE_JS_VALUE_UPDATED_EVENT,
