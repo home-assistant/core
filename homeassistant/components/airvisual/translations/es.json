@@ -50,6 +50,30 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "pollutant_label": {
+                "state": {
+                    "co": "Mon\u00f3xido de carbono",
+                    "n2": "Di\u00f3xido de nitr\u00f3geno",
+                    "o3": "Ozono",
+                    "p1": "PM10",
+                    "p2": "PM2.5",
+                    "s2": "Di\u00f3xido de azufre"
+                }
+            },
+            "pollutant_level": {
+                "state": {
+                    "good": "Bueno",
+                    "hazardous": "Peligroso",
+                    "moderate": "Moderado",
+                    "unhealthy": "Poco saludable",
+                    "unhealthy_sensitive": "Poco saludable para grupos sensibles",
+                    "very_unhealthy": "Muy poco saludable"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

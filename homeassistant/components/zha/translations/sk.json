@@ -18,9 +18,11 @@
                 "title": "Obnovenie automatickej z\u00e1lohy"
             },
             "choose_formation_strategy": {
+                "description": "Vyberte sie\u0165ov\u00e9 nastavenia pre va\u0161e r\u00e1dio.",
                 "menu_options": {
                     "choose_automatic_backup": "Obnovenie automatickej z\u00e1lohy",
                     "form_new_network": "Vyma\u017ete nastavenia siete a vytvorte nov\u00fa sie\u0165",
+                    "reuse_settings": "Ponechajte nastavenia siete r\u00e1dia",
                     "upload_manual_backup": "Nahratie manu\u00e1lnej z\u00e1lohy"
                 }
             },
@@ -28,6 +30,7 @@
                 "data": {
                     "path": "Cesta s\u00e9riov\u00e9ho zariadenia"
                 },
+                "description": "Vyberte s\u00e9riov\u00fd port pre va\u0161e r\u00e1dio Zigbee",
                 "title": "Vyberte s\u00e9riov\u00fd port"
             },
             "confirm": {
@@ -36,6 +39,11 @@
             "confirm_hardware": {
                 "description": "Chcete nastavi\u0165 {name}?"
             },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "Typ r\u00e1dia"
+                }
+            },
             "manual_port_config": {
                 "data": {
                     "baudrate": "r\u00fdchlos\u0165 portu",
@@ -43,6 +51,9 @@
                 },
                 "description": "Zadajte nastavenia s\u00e9riov\u00e9ho portu",
                 "title": "Nastavenia s\u00e9riov\u00e9ho portu"
+            },
+            "maybe_confirm_ezsp_restore": {
+                "title": "Prep\u00edsa\u0165 adresu IEEE r\u00e1dia"
             },
             "upload_manual_backup": {
                 "data": {
@@ -67,6 +78,12 @@
             "button_5": "Piate tla\u010didlo",
             "button_6": "\u0160ieste tla\u010didlo",
             "close": "Zavrie\u0165",
+            "face_1": "Aktivovan\u00e9 tv\u00e1rou 1",
+            "face_2": "Aktivovan\u00e9 tv\u00e1rou 2",
+            "face_3": "Aktivovan\u00e9 tv\u00e1rou 3",
+            "face_4": "Aktivovan\u00e9 tv\u00e1rou 4",
+            "face_5": "Aktivovan\u00e9 tv\u00e1rou 5",
+            "face_6": "Aktivovan\u00e9 tv\u00e1rou 6",
             "left": "V\u013eavo",
             "open": "Otvori\u0165",
             "right": "Vpravo",
@@ -113,9 +130,11 @@
                 "title": "Obnovenie automatickej z\u00e1lohy"
             },
             "choose_formation_strategy": {
+                "description": "Vyberte sie\u0165ov\u00e9 nastavenia pre va\u0161e r\u00e1dio.",
                 "menu_options": {
                     "choose_automatic_backup": "Obnovenie automatickej z\u00e1lohy",
                     "form_new_network": "Vyma\u017ete nastavenia siete a vytvorte nov\u00fa sie\u0165",
+                    "reuse_settings": "Ponechajte nastavenia siete r\u00e1dia",
                     "upload_manual_backup": "Nahratie manu\u00e1lnej z\u00e1lohy"
                 }
             },
@@ -123,11 +142,17 @@
                 "data": {
                     "path": "Cesta s\u00e9riov\u00e9ho zariadenia"
                 },
+                "description": "Vyberte s\u00e9riov\u00fd port pre va\u0161e r\u00e1dio Zigbee",
                 "title": "Vyberte s\u00e9riov\u00fd port"
             },
             "init": {
                 "description": "Doplnok ZHA bude zastaven\u00fd. Prajete si pokra\u010dova\u0165?",
                 "title": "Prekonfigurova\u0165 ZHA"
+            },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "Typ r\u00e1dia"
+                }
             },
             "manual_port_config": {
                 "data": {
@@ -136,6 +161,9 @@
                 },
                 "description": "Zadajte nastavenia s\u00e9riov\u00e9ho portu",
                 "title": "Nastavenia s\u00e9riov\u00e9ho portu"
+            },
+            "maybe_confirm_ezsp_restore": {
+                "title": "Prep\u00edsa\u0165 adresu IEEE r\u00e1dia"
             },
             "prompt_migrate_or_reconfigure": {
                 "description": "Prech\u00e1dzate na nov\u00e9 r\u00e1dio alebo men\u00edte konfigur\u00e1ciu aktu\u00e1lneho r\u00e1dia?",

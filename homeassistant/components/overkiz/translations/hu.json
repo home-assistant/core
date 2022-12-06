@@ -26,5 +26,22 @@
                 "description": "Az Overkiz platformot k\u00fcl\u00f6nb\u00f6z\u0151 gy\u00e1rt\u00f3k haszn\u00e1lj\u00e1k, mint p\u00e9ld\u00e1ul a Somfy (Connexoon / TaHoma), a Hitachi (Hi Kumo), a Rexel (Energeasy Connect) \u00e9s az Atlantic (Cozytouch). Adja meg az alkalmaz\u00e1s hiteles\u00edt\u0151 adatait, \u00e9s v\u00e1lassza ki a hubot."
             }
         }
+    },
+    "entity": {
+        "select": {
+            "memorized_simple_volume": {
+                "state": {
+                    "highest": "Legmagasabb",
+                    "standard": "Standard"
+                }
+            },
+            "open_closed_pedestrian": {
+                "state": {
+                    "closed": "Z\u00e1rva",
+                    "open": "Nyitva",
+                    "pedestrian": "Gyalogos"
+                }
+            }
+        }
     }
 }

@@ -9,7 +9,8 @@
         "step": {
             "user": {
                 "data": {
-                    "name": "N\u00e1zov"
+                    "name": "N\u00e1zov",
+                    "region": "Regi\u00f3n"
                 }
             }
         }
@@ -25,5 +26,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "\u010cas cesty Waze"
 }

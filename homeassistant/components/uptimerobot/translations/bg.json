@@ -23,5 +23,14 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "monitor_status": {
+                "state": {
+                    "pause": "\u041f\u0430\u0443\u0437\u0430"
+                }
+            }
+        }
     }
 }

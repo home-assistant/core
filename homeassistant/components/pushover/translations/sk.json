@@ -24,5 +24,10 @@
                 }
             }
         }
+    },
+    "issues": {
+        "removed_yaml": {
+            "title": "Konfigur\u00e1cia Pushover YAML bola odstr\u00e1nen\u00e1"
+        }
     }
 }

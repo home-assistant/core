@@ -50,6 +50,30 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "pollutant_label": {
+                "state": {
+                    "co": "tlenek w\u0119gla",
+                    "n2": "dwutlenek azotu",
+                    "o3": "ozon",
+                    "p1": "PM10",
+                    "p2": "PM2.5",
+                    "s2": "dwutlenek siarki"
+                }
+            },
+            "pollutant_level": {
+                "state": {
+                    "good": "dobry",
+                    "hazardous": "niebezpieczny",
+                    "moderate": "umiarkowany",
+                    "unhealthy": "niezdrowy",
+                    "unhealthy_sensitive": "niezdrowy dla grup wra\u017cliwych",
+                    "very_unhealthy": "bardzo niezdrowy"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {
