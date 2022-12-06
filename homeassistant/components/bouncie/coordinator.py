@@ -2,12 +2,12 @@
 import datetime
 import logging
 
-from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
 from bounciepy import AsyncRESTAPIClient
 from bounciepy.exceptions import BouncieException, UnauthorizedError
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -24,7 +24,6 @@ class BouncieDataUpdateCoordinator(DataUpdateCoordinator):
         client_secret: str,
         redirect_uri: str,
         code: str,
-        session: ClientSession,
         update_interval: datetime.timedelta,
     ) -> None:
         """Init the coordinator."""
@@ -38,7 +37,7 @@ class BouncieDataUpdateCoordinator(DataUpdateCoordinator):
             client_secret=client_secret,
             redirect_url=redirect_uri,
             auth_code=code,
-            session=session,
+            session=async_get_clientsession(hass=hass),
         )
 
         super().__init__(
