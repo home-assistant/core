@@ -15,6 +15,7 @@ from homeassistant.const import (
     UV_INDEX,
     UnitOfPower,
     UnitOfPrecipitationDepth,
+    UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfVolumetricFlux,
@@ -115,7 +116,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     SENSOR_TYPE_BAROMETRIC_PRESSURE: SensorEntityDescription(
         key=SENSOR_TYPE_BAROMETRIC_PRESSURE,
         name="Barometric Pressure",
-        native_unit_of_measurement="kPa",
+        native_unit_of_measurement=UnitOfPressure.KPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }
