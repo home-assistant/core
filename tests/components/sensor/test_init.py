@@ -1020,11 +1020,11 @@ async def test_invalid_enumeration_entity_without_device_class(
 
 @pytest.mark.parametrize(
     "device_class",
-    {
+    (
         SensorDeviceClass.DATE,
         SensorDeviceClass.ENUM,
         SensorDeviceClass.TIMESTAMP,
-    },
+    ),
 )
 async def test_non_numeric_device_class_with_state_class(
     hass: HomeAssistant,
@@ -1054,11 +1054,11 @@ async def test_non_numeric_device_class_with_state_class(
 
 @pytest.mark.parametrize(
     "device_class",
-    {
+    (
         SensorDeviceClass.DATE,
         SensorDeviceClass.ENUM,
         SensorDeviceClass.TIMESTAMP,
-    },
+    ),
 )
 async def test_non_numeric_device_class_with_unit_of_measurement(
     hass: HomeAssistant,
