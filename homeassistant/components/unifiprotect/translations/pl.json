@@ -41,6 +41,15 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "license_plate": {
+                "state": {
+                    "none": "brak"
+                }
+            }
+        }
+    },
     "issues": {
         "deprecate_smart_sensor": {
             "description": "Ujednolicony sensor \u201eWykryty obiekt\u201d do inteligentnego wykrywania jest teraz przestarza\u0142y. Zosta\u0142 on zast\u0105piony indywidualnymi sensorami binarnymi dla ka\u017cdego typu inteligentnej detekcji. Zaktualizuj odpowiednio wszystkie szablony lub automatyzacje.",

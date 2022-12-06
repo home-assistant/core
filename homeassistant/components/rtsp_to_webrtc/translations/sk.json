@@ -13,5 +13,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "stun_server": "Adresa servera Stun (host:port)"
+                }
+            }
+        }
     }
 }

@@ -1,5 +1,11 @@
 {
     "config": {
+        "abort": {
+            "no_available_locations": "V aplik\u00e1cii Home Assistant nie s\u00fa k dispoz\u00edcii \u017eiadne umiestnenia SmartThings na nastavenie."
+        },
+        "error": {
+            "app_setup_error": "Nie je mo\u017en\u00e9 nastavi\u0165 aplik\u00e1ciu SmartApp. Pros\u00edm sk\u00faste znova."
+        },
         "step": {
             "pat": {
                 "data": {
@@ -9,7 +15,8 @@
             "select_location": {
                 "data": {
                     "location_id": "Umiestnenie"
-                }
+                },
+                "title": "Vyberte umiestnenie"
             },
             "user": {
                 "title": "Potvr\u010fte URL sp\u00e4tn\u00e9ho volania"

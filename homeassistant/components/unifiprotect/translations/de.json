@@ -41,6 +41,15 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "license_plate": {
+                "state": {
+                    "none": "L\u00f6schen"
+                }
+            }
+        }
+    },
     "issues": {
         "deprecate_smart_sensor": {
             "description": "Der einheitliche Sensor \u201eErkanntes Objekt\u201c f\u00fcr intelligente Erkennungen ist jetzt veraltet. Er wurde durch einzelne bin\u00e4re Smart Detection Sensoren f\u00fcr jeden Smart Detection Typ ersetzt. Bitte aktualisiere alle Vorlagen oder Automatisierungen entsprechend.",

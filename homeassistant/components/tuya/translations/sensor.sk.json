@@ -7,7 +7,8 @@
             "heating_temp": "Teplota vykurovania",
             "reserve_1": "Rezerva 1",
             "reserve_2": "Rezerva 2",
-            "reserve_3": "Rezerva 3"
+            "reserve_3": "Rezerva 3",
+            "standby": "Pohotovostn\u00fd re\u017eim"
         }
     }
 }

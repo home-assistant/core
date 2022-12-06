@@ -10,5 +10,17 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "season": {
+                "state": {
+                    "autumn": "Jese\u0148",
+                    "spring": "Jar",
+                    "summer": "Leto",
+                    "winter": "Zima"
+                }
+            }
+        }
     }
 }
