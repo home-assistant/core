@@ -12,8 +12,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_WATT,
     UV_INDEX,
+    UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -95,7 +95,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     SENSOR_TYPE_WATT: SensorEntityDescription(
         key=SENSOR_TYPE_WATT,
         name="Power",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_TYPE_LUMINANCE: SensorEntityDescription(
