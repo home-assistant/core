@@ -68,7 +68,7 @@ class BouncieDataUpdateCoordinator(DataUpdateCoordinator):
         redirect_uri: str,
         code: str,
         session: ClientSession,
-        update_interval: datetime.timedelta | None = None,
+        update_interval: datetime.timedelta,
     ) -> None:
         """Init the coordinator."""
         self._client_id = client_id
