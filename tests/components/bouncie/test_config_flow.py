@@ -35,7 +35,7 @@ async def test_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == DOMAIN
+    assert result2["title"].lower() == DOMAIN
     print(result2["data"])
     assert result2["data"] == {
         "client_id": "mock_client_id",

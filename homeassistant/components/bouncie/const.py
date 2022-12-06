@@ -5,6 +5,9 @@ import logging
 DOMAIN = "bouncie"
 LOGGER = logging.getLogger(__name__)
 
+CONF_REDIRECT_URI = "redirect_uri"
+CONF_CODE = "code"
+
 VEHICLE_MODEL_KEY = "model"
 VEHICLE_MAKE_KEY = "make"
 VEHICLE_NAME_KEY = "name"
