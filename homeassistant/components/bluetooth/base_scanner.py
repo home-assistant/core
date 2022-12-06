@@ -238,3 +238,19 @@ class BaseHaRemoteScanner(BaseHaScanner):
                 time=now,
             )
         )
+
+    async def async_diagnostics(self) -> dict[str, Any]:
+        """Return diagnostic information about the scanner."""
+        return await super().async_diagnostics() | {
+            "type": self.__class__.__name__,
+            "discovered_devices_and_advertisement_data": [
+                {
+                    "name": device_adv[0].name,
+                    "address": device_adv[0].address,
+                    "rssi": device_adv[0].rssi,
+                    "advertisement_data": device_adv[1],
+                    "details": device_adv[0].details,
+                }
+                for device_adv in self.discovered_devices_and_advertisement_data.values()
+            ],
+        }

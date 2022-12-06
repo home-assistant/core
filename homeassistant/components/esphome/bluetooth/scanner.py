@@ -1,8 +1,6 @@
 """Bluetooth scanner for esphome."""
 from __future__ import annotations
 
-from typing import Any
-
 from aioesphomeapi import BluetoothLEAdvertisement
 
 from homeassistant.components.bluetooth import BaseHaRemoteScanner
@@ -27,19 +25,3 @@ class ESPHomeScanner(BaseHaRemoteScanner):
             None,
             {"address_type": adv.address_type},
         )
-
-    async def async_diagnostics(self) -> dict[str, Any]:
-        """Return diagnostic information about the scanner."""
-        return await super().async_diagnostics() | {
-            "type": self.__class__.__name__,
-            "discovered_devices_and_advertisement_data": [
-                {
-                    "name": device_adv[0].name,
-                    "address": device_adv[0].address,
-                    "rssi": device_adv[0].rssi,
-                    "advertisement_data": device_adv[1],
-                    "details": device_adv[0].details,
-                }
-                for device_adv in self.discovered_devices_and_advertisement_data.values()
-            ],
-        }
