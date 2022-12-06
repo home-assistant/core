@@ -9,9 +9,9 @@ import logging
 from typing import Generic, TypeVar
 
 import aiounifi
-from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
+from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.devices import Devices
-from aiounifi.models.api import SOURCE_DATA, SOURCE_EVENT, APIItem
+from aiounifi.models.api import SOURCE_DATA, SOURCE_EVENT
 from aiounifi.models.device import Device
 from aiounifi.models.event import Event, EventKey
 
@@ -69,8 +69,8 @@ WIRELESS_CONNECTION = (
 )
 
 
-_DataT = TypeVar("_DataT", bound=APIItem)
-_HandlerT = TypeVar("_HandlerT", bound=APIHandler)
+_DataT = TypeVar("_DataT", bound=Device)
+_HandlerT = TypeVar("_HandlerT", bound=Devices)
 
 
 @callback
@@ -104,7 +104,6 @@ class UnifiEntityDescription(EntityDescription, UnifiEntityLoader[_HandlerT, _Da
 
 
 ENTITY_DESCRIPTIONS: tuple[UnifiEntityDescription, ...] = (
-    # UnifiEntityDescription[Clients, Client](),
     UnifiEntityDescription[Devices, Device](
         key="Device scanner",
         has_entity_name=True,
@@ -390,17 +389,17 @@ class UniFiClientTracker(UniFiClientBase, ScannerEntity):
             await self.remove_item({self.client.mac})
 
 
-class UnifiScannerEntity(ScannerEntity):
+class UnifiScannerEntity(ScannerEntity, Generic[_HandlerT, _DataT]):
     """Representation of a UniFi scanner."""
 
-    entity_description: UnifiEntityDescription
+    entity_description: UnifiEntityDescription[_HandlerT, _DataT]
     _attr_should_poll = False
 
     def __init__(
         self,
         obj_id: str,
         controller: UniFiController,
-        description: UnifiEntityDescription,
+        description: UnifiEntityDescription[_HandlerT, _DataT],
     ) -> None:
         """Set up UniFi scanner entity."""
         self._obj_id = obj_id
