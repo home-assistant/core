@@ -219,3 +219,7 @@ class MockBleakClient(BleakClient):
     async def get_services(self, *args, **kwargs):
         """Mock get_services."""
         return []
+
+    async def clear_cache(self, *args, **kwargs):
+        """Mock clear_cache."""
+        return True

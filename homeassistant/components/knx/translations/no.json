@@ -12,7 +12,8 @@
             "invalid_ip_address": "Ugyldig IPv4-adresse.",
             "invalid_signature": "Passordet for \u00e5 dekryptere `.knxkeys`-filen er feil.",
             "no_router_discovered": "Ingen KNXnet/IP-ruter ble oppdaget p\u00e5 nettverket.",
-            "no_tunnel_discovered": "Kunne ikke finne en KNX-tunnelserver p\u00e5 nettverket ditt."
+            "no_tunnel_discovered": "Kunne ikke finne en KNX-tunnelserver p\u00e5 nettverket ditt.",
+            "unsupported_tunnel_type": "Den valgte tunneltypen st\u00f8ttes ikke av gatewayen."
         },
         "step": {
             "connection_type": {
@@ -94,13 +95,6 @@
                 },
                 "description": "Vennligst skriv inn din sikre IP-informasjon."
             },
-            "secure_tunneling": {
-                "description": "Velg hvordan du vil konfigurere KNX/IP Secure.",
-                "menu_options": {
-                    "secure_knxkeys": "Bruk en `.knxkeys`-fil som inneholder IP-sikre n\u00f8kler",
-                    "secure_tunnel_manual": "Konfigurer IP-sikre n\u00f8kler manuelt"
-                }
-            },
             "tunnel": {
                 "data": {
                     "gateway": "KNX Tunneltilkobling"
@@ -118,7 +112,8 @@
             "invalid_ip_address": "Ugyldig IPv4-adresse.",
             "invalid_signature": "Passordet for \u00e5 dekryptere `.knxkeys`-filen er feil.",
             "no_router_discovered": "Ingen KNXnet/IP-ruter ble oppdaget p\u00e5 nettverket.",
-            "no_tunnel_discovered": "Kunne ikke finne en KNX-tunnelserver p\u00e5 nettverket ditt."
+            "no_tunnel_discovered": "Kunne ikke finne en KNX-tunnelserver p\u00e5 nettverket ditt.",
+            "unsupported_tunnel_type": "Den valgte tunneltypen st\u00f8ttes ikke av gatewayen."
         },
         "step": {
             "communication_settings": {
@@ -215,13 +210,6 @@
                     "user_password": "Passord for den spesifikke tunnelforbindelsen satt i 'Egenskaper'-panelet i tunnelen i ETS."
                 },
                 "description": "Vennligst skriv inn din sikre IP-informasjon."
-            },
-            "secure_tunneling": {
-                "description": "Velg hvordan du vil konfigurere KNX/IP Secure.",
-                "menu_options": {
-                    "secure_knxkeys": "Bruk en `.knxkeys`-fil som inneholder IP-sikre n\u00f8kler",
-                    "secure_tunnel_manual": "Konfigurer IP-sikre n\u00f8kler manuelt"
-                }
             },
             "tunnel": {
                 "data": {

@@ -16,7 +16,7 @@
             },
             "user": {
                 "data": {
-                    "account": "OVO-Konto-ID (nur hinzuf\u00fcgen, wenn mehrere Konten vorhanden sind)",
+                    "account": "OVO Konto-ID (nur hinzuf\u00fcgen, wenn mehrere Konten vorhanden sind)",
                     "password": "Passwort",
                     "username": "Benutzername"
                 },

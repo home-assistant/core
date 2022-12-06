@@ -4,7 +4,7 @@
             "already_configured_device": "Ger\u00e4t ist bereits konfiguriert",
             "cannot_connect": "Verbindung fehlgeschlagen",
             "no_unconfigured_devices": "Keine unkonfigurierten Ger\u00e4te gefunden.",
-            "switchbot_unsupported_type": "Nicht unterst\u00fctzter Switchbot-Typ.",
+            "switchbot_unsupported_type": "Nicht unterst\u00fctzter Switchbot Typ.",
             "unknown": "Unerwarteter Fehler"
         },
         "flow_title": "{name} ({address})",

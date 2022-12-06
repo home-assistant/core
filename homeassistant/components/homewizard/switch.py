@@ -22,20 +22,16 @@ async def async_setup_entry(
     """Set up switches."""
     coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
+    entities: list[SwitchEntity] = []
+
     if coordinator.data["state"]:
-        async_add_entities(
-            [
-                HWEnergyMainSwitchEntity(coordinator, entry),
-                HWEnergySwitchLockEntity(coordinator, entry),
-            ]
-        )
+        entities.append(HWEnergyMainSwitchEntity(coordinator, entry))
+        entities.append(HWEnergySwitchLockEntity(coordinator, entry))
 
     if coordinator.data["system"]:
-        async_add_entities(
-            [
-                HWEnergyEnableCloudEntity(hass, coordinator, entry),
-            ]
-        )
+        entities.append(HWEnergyEnableCloudEntity(hass, coordinator, entry))
+
+    async_add_entities(entities)
 
 
 class HWEnergySwitchEntity(
@@ -54,13 +50,7 @@ class HWEnergySwitchEntity(
         """Initialize the switch."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{entry.unique_id}_{key}"
-        self._attr_device_info = {
-            "name": entry.title,
-            "manufacturer": "HomeWizard",
-            "sw_version": coordinator.data["device"].firmware_version,
-            "model": coordinator.data["device"].product_type,
-            "identifiers": {(DOMAIN, coordinator.data["device"].serial)},
-        }
+        self._attr_device_info = coordinator.device_info
 
 
 class HWEnergyMainSwitchEntity(HWEnergySwitchEntity):

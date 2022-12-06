@@ -18,7 +18,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -147,16 +147,16 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         ) or all(
             dpcode in device.status for dpcode in (DPCode.TEMP_SET, DPCode.TEMP_SET_F)
         ):
-            prefered_temperature_unit = TEMP_CELSIUS
+            prefered_temperature_unit = UnitOfTemperature.CELSIUS
             if any(
                 "f" in device.status[dpcode].lower()
                 for dpcode in (DPCode.C_F, DPCode.TEMP_UNIT_CONVERT)
                 if isinstance(device.status.get(dpcode), str)
             ):
-                prefered_temperature_unit = TEMP_FAHRENHEIT
+                prefered_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
         # Default to Celsius
-        self._attr_temperature_unit = TEMP_CELSIUS
+        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
 
         # Figure out current temperature, use preferred unit or what is available
         celsius_type = self.find_dpcode(
@@ -166,13 +166,16 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             (DPCode.TEMP_CURRENT_F, DPCode.UPPER_TEMP_F), dptype=DPType.INTEGER
         )
         if farhenheit_type and (
-            prefered_temperature_unit == TEMP_FAHRENHEIT
-            or (prefered_temperature_unit == TEMP_CELSIUS and not celsius_type)
+            prefered_temperature_unit == UnitOfTemperature.FAHRENHEIT
+            or (
+                prefered_temperature_unit == UnitOfTemperature.CELSIUS
+                and not celsius_type
+            )
         ):
-            self._attr_temperature_unit = TEMP_FAHRENHEIT
+            self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
             self._current_temperature = farhenheit_type
         elif celsius_type:
-            self._attr_temperature_unit = TEMP_CELSIUS
+            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
             self._current_temperature = celsius_type
 
         # Figure out setting temperature, use preferred unit or what is available
@@ -183,8 +186,11 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             DPCode.TEMP_SET_F, dptype=DPType.INTEGER, prefer_function=True
         )
         if farhenheit_type and (
-            prefered_temperature_unit == TEMP_FAHRENHEIT
-            or (prefered_temperature_unit == TEMP_CELSIUS and not celsius_type)
+            prefered_temperature_unit == UnitOfTemperature.FAHRENHEIT
+            or (
+                prefered_temperature_unit == UnitOfTemperature.CELSIUS
+                and not celsius_type
+            )
         ):
             self._set_temperature = farhenheit_type
         elif celsius_type:

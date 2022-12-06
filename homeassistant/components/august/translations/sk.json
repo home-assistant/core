@@ -27,6 +27,7 @@
                 "data": {
                     "code": "Overovac\u00ed k\u00f3d"
                 },
+                "description": "Skontrolujte pros\u00edm {login_method} ({username}) a ni\u017e\u0161ie zadajte overovac\u00ed k\u00f3d",
                 "title": "Dvojfaktorov\u00e1 autentifik\u00e1cia"
             }
         }

@@ -26,7 +26,7 @@ from homeassistant.const import (
     PRECISION_TENTHS,
     STATE_OFF,
     STATE_ON,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_platform
@@ -304,7 +304,7 @@ class Thermostat(ClimateEntity):
     """A thermostat class for Ecobee."""
 
     _attr_precision = PRECISION_TENTHS
-    _attr_temperature_unit = TEMP_FAHRENHEIT
+    _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
     def __init__(self, data, thermostat_index, thermostat):
         """Initialize the thermostat."""
@@ -766,12 +766,12 @@ class Thermostat(ClimateEntity):
         cool_temp = TemperatureConverter.convert(
             service_data[ATTR_COOL_TEMP],
             self.hass.config.units.temperature_unit,
-            TEMP_FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
         )
         heat_temp = TemperatureConverter.convert(
             service_data[ATTR_HEAT_TEMP],
             self.hass.config.units.temperature_unit,
-            TEMP_FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
         )
         start_date = service_data.get(ATTR_START_DATE)
         start_time = service_data.get(ATTR_START_TIME)

@@ -28,6 +28,7 @@
                 "data": {
                     "pin": "PIN k\u00f3d"
                 },
+                "description": "U protokolu `{protocol}` je vy\u017eadovan\u00e9 p\u00e1rovanie. Zadajte pros\u00edm PIN k\u00f3d zobrazen\u00fd na obrazovke. \u00davodn\u00e9 nuly musia b\u00fd\u0165 vynechan\u00e9, tj. zadajte 123, pokia\u013e je zobrazen\u00fd k\u00f3d 0123.",
                 "title": "P\u00e1rovanie"
             },
             "password": {
@@ -49,6 +50,7 @@
                 "data": {
                     "device_input": "Zariadenie"
                 },
+                "description": "Za\u010dnite zadan\u00edm n\u00e1zvu zariadenia (napr. Kuchy\u0148a alebo sp\u00e1l\u0148a) alebo IP adresy Apple TV, ktor\u00fa chcete prida\u0165. Pokia\u013e bola vo va\u0161ej sieti automaticky n\u00e1jden\u00e9 niektor\u00e9 zariadenia, s\u00fa uveden\u00e9 ni\u017e\u0161ie. \n\n Pokia\u013e nevid\u00edte svoje zariadenie alebo nastali nejak\u00e9 probl\u00e9my, sk\u00faste zada\u0165 IP adresu zariadenia. \n\n {devices}",
                 "title": "Nastavte nov\u00fa Apple TV"
             }
         }

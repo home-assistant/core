@@ -15,9 +15,14 @@
             "select": {
                 "data": {
                     "select_ip": "IP adresa"
-                }
+                },
+                "description": "Vyberte br\u00e1nu Xiaomi Aqara, ktor\u00fa chcete pripoji\u0165"
             },
             "settings": {
+                "data": {
+                    "key": "K\u013e\u00fa\u010d va\u0161ej br\u00e1ny",
+                    "name": "N\u00e1zov br\u00e1ny"
+                },
                 "title": "Volite\u013en\u00e9 nastavenia"
             },
             "user": {

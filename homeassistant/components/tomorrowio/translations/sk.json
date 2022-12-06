@@ -11,9 +11,21 @@
                 "data": {
                     "api_key": "API k\u013e\u00fa\u010d",
                     "location": "Umiestnenie",
-                    "name": "Meno"
+                    "name": "N\u00e1zov"
                 },
                 "description": "Ak chcete z\u00edska\u0165 k\u013e\u00fa\u010d API, zaregistrujte sa na [Tomorrow.io] (https://app.tomorrow.io/signup)."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "precipitation_type": {
+                "state": {
+                    "freezing_rain": "Mrzn\u00faci d\u00e1\u017e\u010f",
+                    "ice_pellets": "\u013dadovec",
+                    "rain": "D\u00e1\u017e\u010f",
+                    "snow": "Sneh"
+                }
             }
         }
     }

@@ -6,6 +6,14 @@
         "error": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
             "invalid_address": "Adresa sa nena\u0161la v servisnej oblasti Twente Milieu."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "house_number": "\u010d\u00edslo domu",
+                    "post_code": "Po\u0161tov\u00e9 smerovacie \u010d\u00edslo"
+                }
+            }
         }
     }
 }

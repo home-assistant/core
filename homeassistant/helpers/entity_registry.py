@@ -61,7 +61,7 @@ SAVE_DELAY = 10
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 8
+STORAGE_VERSION_MINOR = 9
 STORAGE_KEY = "core.entity_registry"
 
 # Attributes relevant to describing entity
@@ -125,6 +125,7 @@ class RegistryEntry:
     original_icon: str | None = attr.ib(default=None)
     original_name: str | None = attr.ib(default=None)
     supported_features: int = attr.ib(default=0)
+    translation_key: str | None = attr.ib(default=None)
     unit_of_measurement: str | None = attr.ib(default=None)
 
     @domain.default
@@ -233,6 +234,11 @@ class EntityRegistryStore(storage.Store):
                 if domain in [Platform.BINARY_SENSOR, Platform.COVER]:
                     continue
                 entity["device_class"] = None
+
+        if old_major_version == 1 and old_minor_version < 9:
+            # Version 1.9 adds translation_key
+            for entity in data["entities"]:
+                entity["translation_key"] = entity.get("translation_key")
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -412,6 +418,7 @@ class EntityRegistry:
         original_icon: str | None | UndefinedType = UNDEFINED,
         original_name: str | None | UndefinedType = UNDEFINED,
         supported_features: int | None | UndefinedType = UNDEFINED,
+        translation_key: str | None | UndefinedType = UNDEFINED,
         unit_of_measurement: str | None | UndefinedType = UNDEFINED,
     ) -> RegistryEntry:
         """Get entity. Create if it doesn't exist."""
@@ -437,6 +444,7 @@ class EntityRegistry:
                 original_icon=original_icon,
                 original_name=original_name,
                 supported_features=supported_features,
+                translation_key=translation_key,
                 unit_of_measurement=unit_of_measurement,
             )
 
@@ -487,6 +495,7 @@ class EntityRegistry:
             original_name=none_if_undefined(original_name),
             platform=platform,
             supported_features=none_if_undefined(supported_features) or 0,
+            translation_key=none_if_undefined(translation_key),
             unique_id=unique_id,
             unit_of_measurement=none_if_undefined(unit_of_measurement),
         )
@@ -592,13 +601,14 @@ class EntityRegistry:
         name: str | None | UndefinedType = UNDEFINED,
         new_entity_id: str | UndefinedType = UNDEFINED,
         new_unique_id: str | UndefinedType = UNDEFINED,
+        options: EntityOptionsType | UndefinedType = UNDEFINED,
         original_device_class: str | None | UndefinedType = UNDEFINED,
         original_icon: str | None | UndefinedType = UNDEFINED,
         original_name: str | None | UndefinedType = UNDEFINED,
-        supported_features: int | UndefinedType = UNDEFINED,
-        unit_of_measurement: str | None | UndefinedType = UNDEFINED,
         platform: str | None | UndefinedType = UNDEFINED,
-        options: EntityOptionsType | UndefinedType = UNDEFINED,
+        supported_features: int | UndefinedType = UNDEFINED,
+        translation_key: str | None | UndefinedType = UNDEFINED,
+        unit_of_measurement: str | None | UndefinedType = UNDEFINED,
     ) -> RegistryEntry:
         """Private facing update properties method."""
         old = self.entities[entity_id]
@@ -640,13 +650,14 @@ class EntityRegistry:
             ("icon", icon),
             ("has_entity_name", has_entity_name),
             ("name", name),
+            ("options", options),
             ("original_device_class", original_device_class),
             ("original_icon", original_icon),
             ("original_name", original_name),
-            ("supported_features", supported_features),
-            ("unit_of_measurement", unit_of_measurement),
             ("platform", platform),
-            ("options", options),
+            ("supported_features", supported_features),
+            ("translation_key", translation_key),
+            ("unit_of_measurement", unit_of_measurement),
         ):
             if value is not UNDEFINED and value != getattr(old, attr_name):
                 new_values[attr_name] = value
@@ -720,6 +731,7 @@ class EntityRegistry:
         original_icon: str | None | UndefinedType = UNDEFINED,
         original_name: str | None | UndefinedType = UNDEFINED,
         supported_features: int | UndefinedType = UNDEFINED,
+        translation_key: str | None | UndefinedType = UNDEFINED,
         unit_of_measurement: str | None | UndefinedType = UNDEFINED,
     ) -> RegistryEntry:
         """Update properties of an entity."""
@@ -742,6 +754,7 @@ class EntityRegistry:
             original_icon=original_icon,
             original_name=original_name,
             supported_features=supported_features,
+            translation_key=translation_key,
             unit_of_measurement=unit_of_measurement,
         )
 
@@ -831,6 +844,7 @@ class EntityRegistry:
                     original_name=entity["original_name"],
                     platform=entity["platform"],
                     supported_features=entity["supported_features"],
+                    translation_key=entity["translation_key"],
                     unique_id=entity["unique_id"],
                     unit_of_measurement=entity["unit_of_measurement"],
                 )
@@ -868,6 +882,7 @@ class EntityRegistry:
                 "original_name": entry.original_name,
                 "platform": entry.platform,
                 "supported_features": entry.supported_features,
+                "translation_key": entry.translation_key,
                 "unique_id": entry.unique_id,
                 "unit_of_measurement": entry.unit_of_measurement,
             }

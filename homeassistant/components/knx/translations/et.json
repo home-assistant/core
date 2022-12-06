@@ -12,7 +12,8 @@
             "invalid_ip_address": "Kehtetu IPv4 aadress.",
             "invalid_signature": "Parool faili `.knxkeys` dekr\u00fcpteerimiseks on vale.",
             "no_router_discovered": "V\u00f5rgus ei leitud \u00fchtegi KNXnet/IP-ruuterit.",
-            "no_tunnel_discovered": "V\u00f5rgust ei leitud KNX tunneliserverit."
+            "no_tunnel_discovered": "V\u00f5rgust ei leitud KNX tunneliserverit.",
+            "unsupported_tunnel_type": "L\u00fc\u00fcs ei toeta valitud tunnelit\u00fc\u00fcpi."
         },
         "step": {
             "connection_type": {
@@ -94,13 +95,6 @@
                 },
                 "description": "Sisesta oma IP secure teave."
             },
-            "secure_tunneling": {
-                "description": "Vali kuidas soovid KNX/IP Secure'i seadistada.",
-                "menu_options": {
-                    "secure_knxkeys": "Kasuta knxkeys fail, mis sisaldab IP Secure teavet.",
-                    "secure_tunnel_manual": "IP Secure v\u00f5tmete k\u00e4sitsi seadistamine"
-                }
-            },
             "tunnel": {
                 "data": {
                     "gateway": "KNX tunneli \u00fchendus"
@@ -118,7 +112,8 @@
             "invalid_ip_address": "Vigane IPv4 aadress",
             "invalid_signature": "'.knxkeys' kirje dekr\u00fcptimisv\u00f5ti on vale.",
             "no_router_discovered": "V\u00f5rgus ei leitud \u00fchtegi KNXnet/IP-ruuterit.",
-            "no_tunnel_discovered": "V\u00f5rgust ei leitud KNX tunneliserverit."
+            "no_tunnel_discovered": "V\u00f5rgust ei leitud KNX tunneliserverit.",
+            "unsupported_tunnel_type": "L\u00fc\u00fcs ei toeta valitud tunnelit\u00fc\u00fcpi."
         },
         "step": {
             "communication_settings": {
@@ -215,13 +210,6 @@
                     "user_password": "Konkreetse tunneli\u00fchenduse parool, mis on m\u00e4\u00e4ratud ETS-i tunneli paneelil \u201eAtribuudid\u201d."
                 },
                 "description": "Sisesta IP secure teave."
-            },
-            "secure_tunneling": {
-                "description": "Vali kuidas seadistada KNX/IP Secure",
-                "menu_options": {
-                    "secure_knxkeys": "Kasuta IP secure jaoks kirjet '.knxkeys'",
-                    "secure_tunnel_manual": "Seadista IP secure v\u00f5tmed k\u00e4sitsi"
-                }
             },
             "tunnel": {
                 "data": {

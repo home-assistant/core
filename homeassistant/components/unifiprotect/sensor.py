@@ -15,6 +15,7 @@ from pyunifiprotect.data import (
     ProtectDeviceModel,
     ProtectModelWithId,
     Sensor,
+    SmartDetectObjectType,
 )
 
 from homeassistant.components.sensor import (
@@ -40,7 +41,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEVICE_CLASS_DETECTION, DISPATCH_ADOPT, DOMAIN
+from .const import DISPATCH_ADOPT, DOMAIN
 from .data import ProtectData
 from .entity import (
     EventEntityMixin,
@@ -53,6 +54,7 @@ from .utils import async_dispatch_id as _ufpd, async_get_light_motion_current
 
 _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
+DEVICE_CLASS_DETECTION = "unifiprotect__detection"
 
 
 @dataclass
@@ -518,13 +520,23 @@ NVR_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ),
 )
 
-MOTION_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
+EVENT_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
     ProtectSensorEventEntityDescription(
         key="detected_object",
         name="Detected Object",
         device_class=DEVICE_CLASS_DETECTION,
         entity_registry_enabled_default=False,
         ufp_value="is_smart_detected",
+        ufp_event_obj="last_smart_detect_event",
+    ),
+    ProtectSensorEventEntityDescription(
+        key="smart_obj_licenseplate",
+        name="License Plate Detected",
+        icon="mdi:car",
+        translation_key="license_plate",
+        ufp_smart_type=SmartDetectObjectType.LICENSE_PLATE,
+        ufp_value="is_smart_detected",
+        ufp_required_field="can_detect_license_plate",
         ufp_event_obj="last_smart_detect_event",
     ),
 )
@@ -628,7 +640,7 @@ async def async_setup_entry(
             ufp_device=device,
         )
         if device.is_adopted_by_us and isinstance(device, Camera):
-            entities += _async_motion_entities(data, ufp_device=device)
+            entities += _async_event_entities(data, ufp_device=device)
         async_add_entities(entities)
 
     entry.async_on_unload(
@@ -646,14 +658,14 @@ async def async_setup_entry(
         chime_descs=CHIME_SENSORS,
         viewer_descs=VIEWER_SENSORS,
     )
-    entities += _async_motion_entities(data)
+    entities += _async_event_entities(data)
     entities += _async_nvr_entities(data)
 
     async_add_entities(entities)
 
 
 @callback
-def _async_motion_entities(
+def _async_event_entities(
     data: ProtectData,
     ufp_device: Camera | None = None,
 ) -> list[ProtectDeviceEntity]:
@@ -674,7 +686,10 @@ def _async_motion_entities(
         if not device.feature_flags.has_smart_detect:
             continue
 
-        for event_desc in MOTION_SENSORS:
+        for event_desc in EVENT_SENSORS:
+            if not event_desc.has_required(device):
+                continue
+
             entities.append(ProtectEventSensor(data, device, event_desc))
             _LOGGER.debug(
                 "Adding sensor entity %s for %s",
@@ -756,7 +771,20 @@ class ProtectEventSensor(EventEntityMixin, SensorEntity):
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         # do not call ProtectDeviceSensor method since we want event to get value here
         EventEntityMixin._async_update_device_from_protect(self, device)
-        if self._event is None:
-            self._attr_native_value = OBJECT_TYPE_NONE
+        if (
+            self.entity_description.ufp_smart_type
+            == SmartDetectObjectType.LICENSE_PLATE
+        ):
+            if (
+                self._event is None
+                or self._event.metadata is None
+                or self._event.metadata.license_plate is None
+            ):
+                self._attr_native_value = OBJECT_TYPE_NONE
+            else:
+                self._attr_native_value = self._event.metadata.license_plate.name
         else:
-            self._attr_native_value = self._event.smart_detect_types[0].value
+            if self._event is None:
+                self._attr_native_value = OBJECT_TYPE_NONE
+            else:
+                self._attr_native_value = self._event.smart_detect_types[0].value

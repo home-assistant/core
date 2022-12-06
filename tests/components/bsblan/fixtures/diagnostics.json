@@ -50,34 +50,6 @@
       "value": "18.5",
       "dataType": 0
     },
-    "target_temperature_high": {
-      "name": "Komfortsollwert Maximum",
-      "unit": "&deg;C",
-      "desc": "",
-      "value": "23.0",
-      "dataType": 0
-    },
-    "target_temperature_low": {
-      "name": "Room temp reduced setpoint",
-      "unit": "&deg;C",
-      "desc": "",
-      "value": "17.0",
-      "dataType": 0
-    },
-    "min_temp": {
-      "name": "Room temp frost protection setpoint",
-      "unit": "&deg;C",
-      "desc": "",
-      "value": "8.0",
-      "dataType": 0
-    },
-    "max_temp": {
-      "name": "Summer/winter changeover temp heat circuit 1",
-      "unit": "&deg;C",
-      "desc": "",
-      "value": "20.0",
-      "dataType": 0
-    },
     "hvac_action": {
       "name": "Status heating circuit 1",
       "unit": "",
@@ -98,13 +70,6 @@
       "desc": "Kein Bedarf",
       "value": "0",
       "dataType": 1
-    },
-    "outside_temperature": {
-      "name": "Outside temp sensor local",
-      "unit": "&deg;C",
-      "desc": "",
-      "value": "6.1",
-      "dataType": 0
     }
   }
 }

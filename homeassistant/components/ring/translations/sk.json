@@ -11,13 +11,15 @@
             "2fa": {
                 "data": {
                     "2fa": "Dvojfaktorov\u00fd k\u00f3d"
-                }
+                },
+                "title": "Dvojfaktorov\u00e1 autentifik\u00e1cia"
             },
             "user": {
                 "data": {
                     "password": "Heslo",
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
-                }
+                },
+                "title": "Prihl\u00e1senie pomocou konta Ring"
             }
         }
     }

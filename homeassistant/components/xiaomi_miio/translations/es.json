@@ -51,6 +51,31 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "display_orientation": {
+                "state": {
+                    "forward": "Adelante",
+                    "left": "Izquierda",
+                    "right": "Derecha"
+                }
+            },
+            "led_brightness": {
+                "state": {
+                    "bright": "Brillo",
+                    "dim": "Atenuar",
+                    "off": "Apagado"
+                }
+            },
+            "ptc_level": {
+                "state": {
+                    "high": "Alto",
+                    "low": "Bajo",
+                    "medium": "Medio"
+                }
+            }
+        }
+    },
     "options": {
         "error": {
             "cloud_credentials_incomplete": "Las credenciales de la nube est\u00e1n incompletas, por favor, completa el nombre de usuario, la contrase\u00f1a y el pa\u00eds"

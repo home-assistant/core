@@ -25,6 +25,7 @@
         "step": {
             "init": {
                 "data": {
+                    "consider_home": "Sekundy na \u010dakanie, k\u00fdm sa zariadenie neodstr\u00e1ni",
                     "require_ip": "Zariadenia musia ma\u0165 IP (pre re\u017eim pr\u00edstupov\u00e9ho bodu)"
                 }
             }

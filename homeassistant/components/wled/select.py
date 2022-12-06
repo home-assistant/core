@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEVICE_CLASS_WLED_LIVE_OVERRIDE, DOMAIN
+from .const import DOMAIN
 from .coordinator import WLEDDataUpdateCoordinator
 from .helpers import wled_exception_handler
 from .models import WLEDEntity
@@ -48,10 +48,10 @@ async def async_setup_entry(
 class WLEDLiveOverrideSelect(WLEDEntity, SelectEntity):
     """Defined a WLED Live Override select."""
 
-    _attr_device_class = DEVICE_CLASS_WLED_LIVE_OVERRIDE
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon = "mdi:theater"
     _attr_name = "Live override"
+    _attr_translation_key = "live_override"
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED ."""

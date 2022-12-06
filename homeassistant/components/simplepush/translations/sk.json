@@ -9,7 +9,9 @@
         "step": {
             "user": {
                 "data": {
-                    "name": "N\u00e1zov"
+                    "device_key": "K\u013e\u00fa\u010d zariadenia v\u00e1\u0161ho zariadenia",
+                    "name": "N\u00e1zov",
+                    "password": "Heslo \u0161ifrovania pou\u017e\u00edvan\u00e9ho va\u0161\u00edm zariaden\u00edm"
                 }
             }
         }

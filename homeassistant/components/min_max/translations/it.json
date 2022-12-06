@@ -9,10 +9,10 @@
                     "type": "Caratteristica statistica"
                 },
                 "data_description": {
-                    "round_digits": "Controlla il numero di cifre decimali nell'output quando la caratteristica statistica \u00e8 media o mediana."
+                    "round_digits": "Controlla il numero di cifre decimali nell'output quando la caratteristica statistica \u00e8 media, mediana o somma."
                 },
-                "description": "Crea un sensore che calcoli un valore minimo, massimo, medio o mediano da un elenco di sensori di input.",
-                "title": "Aggiungi sensore min / max / media / mediana"
+                "description": "Crea un sensore che calcola un minimo, un massimo, una media, una mediana o una somma da un elenco di sensori di input.",
+                "title": "Combina lo stato di diversi sensori"
             }
         }
     },
@@ -25,10 +25,10 @@
                     "type": "Caratteristica statistica"
                 },
                 "data_description": {
-                    "round_digits": "Controlla il numero di cifre decimali nell'output quando la caratteristica statistica \u00e8 media o mediana."
+                    "round_digits": "Controlla il numero di cifre decimali nell'output quando la caratteristica statistica \u00e8 media, mediana o somma."
                 }
             }
         }
     },
-    "title": "Sensore min / max / media / mediana"
+    "title": "Combina lo stato di diversi sensori"
 }
