@@ -461,7 +461,7 @@ class AqaraPetFeederChildLock(ZHASwitchConfigurationEntity, id_suffix="child_loc
 
 @CONFIG_DIAGNOSTIC_MATCH(
     channel_names=CHANNEL_ON_OFF,
-    models={"TS011F", "TS0121", "TS0001", "TS0002", "TS0003", "TS0004"},
+    models={"TS011F"},
 )
 class TuyaChildLockSwitch(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
     """Representation of a child lock configuration entity."""
