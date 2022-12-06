@@ -2269,7 +2269,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=[
                 TypeHintMatch(
                     function_name="device_class",
-                    return_type=["SwitchDeviceClass", "str", None],
+                    return_type=["SwitchDeviceClass", None],
                 ),
             ],
         ),
