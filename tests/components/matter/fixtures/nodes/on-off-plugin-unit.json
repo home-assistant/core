@@ -211,7 +211,7 @@
       "attribute_id": 18,
       "attribute_type": "chip.clusters.Objects.Basic.Attributes.UniqueID",
       "attribute_name": "UniqueID",
-      "value": "mock-temperature-sensor"
+      "value": "mock-onoff-plugin-unit"
     },
     "0/40/19": {
       "node_id": 1,

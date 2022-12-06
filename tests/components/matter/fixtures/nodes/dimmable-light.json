@@ -502,7 +502,7 @@
       "attribute_id": 18,
       "attribute_type": "chip.clusters.Objects.Basic.Attributes.UniqueID",
       "attribute_name": "UniqueID",
-      "value": "DBA4320EA1D881D3"
+      "value": "mock-dimmable-light"
     },
     "0/40/19": {
       "node_id": 1,
