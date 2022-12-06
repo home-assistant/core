@@ -11,9 +11,8 @@ from datetime import datetime, timedelta
 from typing import Generic, TypeVar
 
 import aiounifi
-from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
+from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.clients import Clients
-from aiounifi.models.api import APIItem
 from aiounifi.models.client import Client
 
 from homeassistant.components.sensor import (
@@ -34,8 +33,8 @@ import homeassistant.util.dt as dt_util
 from .const import DOMAIN as UNIFI_DOMAIN
 from .controller import UniFiController
 
-_DataT = TypeVar("_DataT", bound=APIItem)
-_HandlerT = TypeVar("_HandlerT", bound=APIHandler)
+_DataT = TypeVar("_DataT", bound=Client)
+_HandlerT = TypeVar("_HandlerT", bound=Clients)
 
 
 @callback
@@ -152,7 +151,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors for UniFi Network integration."""
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     @callback
     def async_load_entities(description: UnifiEntityDescription) -> None:
@@ -184,17 +183,17 @@ async def async_setup_entry(
         async_load_entities(description)
 
 
-class UnifiSensorEntity(SensorEntity):
+class UnifiSensorEntity(SensorEntity, Generic[_HandlerT, _DataT]):
     """Base representation of a UniFi switch."""
 
-    entity_description: UnifiEntityDescription
+    entity_description: UnifiEntityDescription[_HandlerT, _DataT]
     _attr_should_poll = False
 
     def __init__(
         self,
         obj_id: str,
         controller: UniFiController,
-        description: UnifiEntityDescription,
+        description: UnifiEntityDescription[_HandlerT, _DataT],
     ) -> None:
         """Set up UniFi switch entity."""
         self._obj_id = obj_id
