@@ -13,6 +13,34 @@ from .common import (
 )
 
 
+@pytest.fixture(name="pressure_sensor_node")
+async def pressure_sensor_node_fixture(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> MatterNode:
+    """Fixture for a pressure sensor node."""
+    return await setup_integration_with_node_fixture(
+        hass, "pressure-sensor", matter_client
+    )
+
+
+async def test_pressure_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    pressure_sensor_node: MatterNode,
+) -> None:
+    """Test pressure sensor."""
+    state = hass.states.get("sensor.mock_pressure_sensor_pressure")
+    assert state
+    assert state.state == "0.0"
+
+    set_node_attribute(pressure_sensor_node, 1, 1027, 0, 1010)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.mock_pressure_sensor_pressure")
+    assert state
+    assert state.state == "101.0"
+
+
 @pytest.fixture(name="temperature_sensor_node")
 async def temperature_sensor_node_fixture(
     hass: HomeAssistant, matter_client: MagicMock
