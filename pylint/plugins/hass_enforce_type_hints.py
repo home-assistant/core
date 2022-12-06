@@ -1649,7 +1649,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=[
                 TypeHintMatch(
                     function_name="device_class",
-                    return_type=["MediaPlayerDeviceClass", "str", None],
+                    return_type=["MediaPlayerDeviceClass", None],
                 ),
                 TypeHintMatch(
                     function_name="state",
