@@ -1080,6 +1080,74 @@ async def test_if_value_updated_value_fires(
     )
 
 
+async def test_value_updated_value_no_driver(
+    hass, client, lock_schlage_be469, integration, calls
+):
+    """Test zwave_js.value_updated.value trigger with missing driver."""
+    node: Node = lock_schlage_be469
+    dev_reg = async_get_dev_reg(hass)
+    device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
+    driver = client.driver
+    client.driver = None
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device.id,
+                        "type": "zwave_js.value_updated.value",
+                        "command_class": CommandClass.DOOR_LOCK.value,
+                        "property": "latchStatus",
+                        "property_key": None,
+                        "endpoint": None,
+                        "from": "open",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "zwave_js.value_updated.value - "
+                                "{{ trigger.platform}} - "
+                                "{{ trigger.previous_value }}"
+                            )
+                        },
+                    },
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    client.driver = driver
+
+    # No trigger as automation failed to setup.
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Door Lock",
+                "commandClass": 98,
+                "endpoint": 0,
+                "property": "latchStatus",
+                "newValue": "closed",
+                "prevValue": "open",
+                "propertyName": "latchStatus",
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+
 async def test_get_trigger_capabilities_value_updated_value(
     hass, client, lock_schlage_be469, integration
 ):
