@@ -254,10 +254,9 @@ class DriverEvents:
                 self.dev_reg.async_remove_device(device.id)
 
         # run discovery on controller node
-        controller_node = None
-        if (controller_node_id := controller.own_node_id is not None) and (
-            controller_node := controller.nodes.get(controller_node_id)
-        ):
+        c_node_id = controller.own_node_id
+        controller_node = controller.nodes.get(c_node_id) if c_node_id else None
+        if controller_node:
             await self.controller_events.async_on_node_added(controller_node)
 
         # run discovery on all other ready nodes
