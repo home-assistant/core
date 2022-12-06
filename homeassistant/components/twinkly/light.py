@@ -170,6 +170,7 @@ class TwinklyLight(LightEntity):
     def effect_list(self) -> list[str]:
         """Return the list of saved effects."""
         effect_list = []
+        _LOGGER.debug("Config: %s", self._conf)
         for i in range(self._effets_number):
             effect_list.append(f"Effect {i + 1}")
         for movie in self._movies:

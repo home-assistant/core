@@ -12,6 +12,7 @@ from voluptuous import Required, Schema
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp
 from homeassistant.const import CONF_HOST, CONF_MODEL
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_ID, CONF_NAME, DEV_ID, DEV_MODEL, DEV_NAME, DOMAIN
@@ -28,7 +29,15 @@ class TwinklyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_device: tuple[dict[str, Any], str] | None = None
 
-    async def async_step_user(self, user_input=None):
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
+        """Create the options flow."""
+        return OptionsFlowHandler(config_entry)
+
+    async def async_step_user(self, user_input=None) -> data_entry_flow.FlowResult:
         """Handle config steps."""
         host = user_input[CONF_HOST] if user_input else None
 
@@ -98,4 +107,33 @@ class TwinklyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_NAME: device_info[DEV_NAME],
                 CONF_MODEL: device_info[DEV_MODEL],
             },
+        )
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """The Options Fow Handler."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=Schema(
+                {
+                    Required(
+                        "show_predefined_effects",
+                        default=self.config_entry.options.get(
+                            "show_predefined_effects", True
+                        ),
+                    ): bool
+                }
+            ),
         )
