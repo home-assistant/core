@@ -161,6 +161,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/bosch_shc/ @tschamm
 /tests/components/bosch_shc/ @tschamm
 /homeassistant/components/bouncie/ @mandarons
+/tests/components/bouncie/ @mandarons
 /homeassistant/components/braviatv/ @bieniu @Drafteed
 /tests/components/braviatv/ @bieniu @Drafteed
 /homeassistant/components/broadlink/ @danielhiversen @felipediel @L-I-Am
