@@ -14,5 +14,35 @@
                 }
             }
         }
+    },
+    "entity": {
+        "select": {
+            "zone_link_audio_quality": {
+                "state": {
+                    "compressed": "Komprimovan\u00e9",
+                    "uncompressed": "Nekomprimovan\u00e9"
+                }
+            },
+            "zone_link_control": {
+                "state": {
+                    "speed": "R\u00fdchlos\u0165",
+                    "stability": "Stabilita",
+                    "standard": "\u0160tandard"
+                }
+            },
+            "zone_sleep": {
+                "state": {
+                    "120 min": "120 min\u00fat",
+                    "30 min": "30 min\u00fat",
+                    "60 min": "60 min\u00fat",
+                    "90 min": "90 min\u00fat"
+                }
+            },
+            "zone_surr_decoder_type": {
+                "state": {
+                    "dolby_surround": "Dolby Surround"
+                }
+            }
+        }
     }
 }

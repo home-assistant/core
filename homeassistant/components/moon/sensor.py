@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -27,8 +28,8 @@ STATE_LAST_QUARTER = "last_quarter"
 STATE_NEW_MOON = "new_moon"
 STATE_WANING_CRESCENT = "waning_crescent"
 STATE_WANING_GIBBOUS = "waning_gibbous"
-STATE_WAXING_GIBBOUS = "waxing_gibbous"
 STATE_WAXING_CRESCENT = "waxing_crescent"
+STATE_WAXING_GIBBOUS = "waxing_gibbous"
 
 MOON_ICONS = {
     STATE_FIRST_QUARTER: "mdi:moon-first-quarter",
@@ -83,9 +84,20 @@ async def async_setup_entry(
 class MoonSensorEntity(SensorEntity):
     """Representation of a Moon sensor."""
 
-    _attr_device_class = "moon__phase"
     _attr_has_entity_name = True
     _attr_name = "Phase"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = [
+        STATE_FIRST_QUARTER,
+        STATE_FULL_MOON,
+        STATE_LAST_QUARTER,
+        STATE_NEW_MOON,
+        STATE_WANING_CRESCENT,
+        STATE_WANING_GIBBOUS,
+        STATE_WAXING_CRESCENT,
+        STATE_WAXING_GIBBOUS,
+    ]
+    _attr_translation_key = "phase"
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the moon sensor."""

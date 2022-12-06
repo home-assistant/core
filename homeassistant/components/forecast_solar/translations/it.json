@@ -15,6 +15,9 @@
         }
     },
     "options": {
+        "error": {
+            "invalid_api_key": "Chiave API non valida"
+        },
         "step": {
             "init": {
                 "data": {

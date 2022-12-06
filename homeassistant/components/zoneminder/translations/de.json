@@ -19,10 +19,10 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Host und Port (z. B. 10.10.0.4:8010)",
+                    "host": "Host und Port (z.B. 10.10.0.4:8010)",
                     "password": "Passwort",
-                    "path": "ZM-Pfad",
-                    "path_zms": "ZMS-Pfad",
+                    "path": "ZM Pfad",
+                    "path_zms": "ZMS Pfad",
                     "ssl": "Verwendet ein SSL-Zertifikat",
                     "username": "Benutzername",
                     "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"

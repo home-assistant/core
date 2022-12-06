@@ -8,5 +8,11 @@
                 "description": "Chcete za\u010da\u0165 nastavova\u0165?"
             }
         }
-    }
+    },
+    "issues": {
+        "removed_yaml": {
+            "title": "Konfigur\u00e1cia Uptime YAML bola odstr\u00e1nen\u00e1"
+        }
+    },
+    "title": "Uptime"
 }

@@ -12,7 +12,8 @@
             "device": {
                 "data": {
                     "device_name": "Zariadenie"
-                }
+                },
+                "title": "Vyberte zariadenie WOLF"
             },
             "user": {
                 "data": {

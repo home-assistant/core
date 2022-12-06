@@ -1,6 +1,18 @@
 """Support for Meteoclimatic sensor."""
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    DEGREE,
+    PERCENTAGE,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -10,7 +22,88 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import ATTRIBUTION, DOMAIN, MANUFACTURER, MODEL, SENSOR_TYPES
+from .const import ATTRIBUTION, DOMAIN, MANUFACTURER, MODEL
+
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="temp_current",
+        name="Temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key="temp_max",
+        name="Daily Max Temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key="temp_min",
+        name="Daily Min Temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key="humidity_current",
+        name="Humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+    ),
+    SensorEntityDescription(
+        key="humidity_max",
+        name="Daily Max Humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+    ),
+    SensorEntityDescription(
+        key="humidity_min",
+        name="Daily Min Humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+    ),
+    SensorEntityDescription(
+        key="pressure_current",
+        name="Pressure",
+        native_unit_of_measurement=UnitOfPressure.HPA,
+        device_class=SensorDeviceClass.PRESSURE,
+    ),
+    SensorEntityDescription(
+        key="pressure_max",
+        name="Daily Max Pressure",
+        native_unit_of_measurement=UnitOfPressure.HPA,
+        device_class=SensorDeviceClass.PRESSURE,
+    ),
+    SensorEntityDescription(
+        key="pressure_min",
+        name="Daily Min Pressure",
+        native_unit_of_measurement=UnitOfPressure.HPA,
+        device_class=SensorDeviceClass.PRESSURE,
+    ),
+    SensorEntityDescription(
+        key="wind_current",
+        name="Wind Speed",
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
+    ),
+    SensorEntityDescription(
+        key="wind_max",
+        name="Daily Max Wind Speed",
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
+    ),
+    SensorEntityDescription(
+        key="wind_bearing",
+        name="Wind Bearing",
+        native_unit_of_measurement=DEGREE,
+        icon="mdi:weather-windy",
+    ),
+    SensorEntityDescription(
+        key="rain",
+        name="Daily Precipitation",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
+    ),
+)
 
 
 async def async_setup_entry(

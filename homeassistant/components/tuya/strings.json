@@ -16,5 +16,201 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "login_error": "Login error ({code}): {msg}"
     }
+  },
+  "entity": {
+    "select": {
+      "basic_anti_flicker": {
+        "state": {
+          "0": "Disabled",
+          "1": "50 Hz",
+          "2": "60 Hz"
+        }
+      },
+      "basic_nightvision": {
+        "state": {
+          "0": "Automatic",
+          "1": "[%key:common::state::off%]",
+          "2": "[%key:common::state::on%]"
+        }
+      },
+      "decibel_sensitivity": {
+        "state": {
+          "0": "Low sensitivity",
+          "1": "High sensitivity"
+        }
+      },
+      "ipc_work_mode": {
+        "state": {
+          "0": "Low power mode",
+          "1": "Continuous working mode"
+        }
+      },
+      "led_type": {
+        "state": {
+          "halogen": "Halogen",
+          "incandescent": "Incandescent",
+          "led": "LED"
+        }
+      },
+      "light_mode": {
+        "state": {
+          "none": "[%key:common::state::off%]",
+          "pos": "Indicate switch location",
+          "relay": "Indicate switch on/off state"
+        }
+      },
+      "motion_sensitivity": {
+        "state": {
+          "0": "Low sensitivity",
+          "1": "Medium sensitivity",
+          "2": "High sensitivity"
+        }
+      },
+      "record_mode": {
+        "state": {
+          "1": "Record events only",
+          "2": "Continuous recording"
+        }
+      },
+      "relay_status": {
+        "state": {
+          "last": "Remember last state",
+          "memory": "Remember last state",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "power_off": "[%key:common::state::off%]",
+          "power_on": "[%key:common::state::on%]"
+        }
+      },
+      "fingerbot_mode": {
+        "state": {
+          "click": "Push",
+          "switch": "Switch"
+        }
+      },
+      "vacuum_cistern": {
+        "state": {
+          "low": "Low",
+          "middle": "Middle",
+          "high": "High",
+          "closed": "Closed"
+        }
+      },
+      "vacuum_collection": {
+        "state": {
+          "small": "Small",
+          "middle": "Middle",
+          "large": "Large"
+        }
+      },
+      "vacuum_mode": {
+        "state": {
+          "standby": "Standby",
+          "random": "Random",
+          "smart": "Smart",
+          "wall_follow": "Follow Wall",
+          "mop": "Mop",
+          "spiral": "Spiral",
+          "left_spiral": "Spiral Left",
+          "right_spiral": "Spiral Right",
+          "bow": "Bow",
+          "left_bow": "Bow Left",
+          "right_bow": "Bow Right",
+          "partial_bow": "Bow Partially",
+          "chargego": "Return to dock",
+          "single": "Single",
+          "zone": "Zone",
+          "pose": "Pose",
+          "point": "Point",
+          "part": "Part",
+          "pick_zone": "Pick Zone"
+        }
+      },
+      "fan_angle": {
+        "state": {
+          "30": "30°",
+          "60": "60°",
+          "90": "90°"
+        }
+      },
+      "curtain_mode": {
+        "state": {
+          "morning": "Morning",
+          "night": "Night"
+        }
+      },
+      "curtain_motor_mode": {
+        "state": {
+          "forward": "Forward",
+          "back": "Back"
+        }
+      },
+      "countdown": {
+        "state": {
+          "cancel": "Cancel",
+          "1h": "1 hour",
+          "2h": "2 hours",
+          "3h": "3 hours",
+          "4h": "4 hours",
+          "5h": "5 hours",
+          "6h": "6 hours"
+        }
+      },
+      "humidifier_spray_mode": {
+        "state": {
+          "auto": "Auto",
+          "health": "Health",
+          "sleep": "Sleep",
+          "humidity": "Humidity",
+          "work": "Work"
+        }
+      },
+      "humidifier_level": {
+        "state": {
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8",
+          "level_9": "Level 9",
+          "level_10": "Level 10"
+        }
+      },
+      "humidifier_moodlighting": {
+        "state": {
+          "1": "Mood 1",
+          "2": "Mood 2",
+          "3": "Mood 3",
+          "4": "Mood 4",
+          "5": "Mood 5"
+        }
+      }
+    },
+    "sensor": {
+      "status": {
+        "state": {
+          "boiling_temp": "Boiling temperature",
+          "cooling": "Cooling",
+          "heating_temp": "Heating temperature",
+          "heating": "Heating",
+          "reserve_1": "Reserve 1",
+          "reserve_2": "Reserve 2",
+          "reserve_3": "Reserve 3",
+          "standby": "Standby",
+          "warm": "Heat preservation"
+        }
+      },
+      "air_quality": {
+        "state": {
+          "great": "Great",
+          "mild": "Mild",
+          "good": "Good",
+          "severe": "Severe"
+        }
+      }
+    }
   }
 }

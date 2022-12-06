@@ -1,4 +1,25 @@
 {
+    "entity": {
+        "select": {
+            "speed": {
+                "state": {
+                    "light_speed": "Kecepatan Cahaya",
+                    "ludicrous_speed": "Kecepatan Menggelikan",
+                    "ridiculous_speed": "Kecepatan Konyol"
+                }
+            }
+        },
+        "sensor": {
+            "thermostat_mode": {
+                "state": {
+                    "away": "Keluar",
+                    "comfort": "Nyaman",
+                    "eco": "Eco",
+                    "sleep": "Tidur"
+                }
+            }
+        }
+    },
     "issues": {
         "bad_psu": {
             "fix_flow": {

@@ -16,13 +16,28 @@
             "select_station": {
                 "data": {
                     "stations": "Stanice"
-                }
+                },
+                "description": "n\u00e1jden\u00fdch {stations_count} stan\u00edc v okruhu",
+                "title": "Vyberte stanice, ktor\u00e9 chcete prida\u0165"
             },
             "user": {
                 "data": {
                     "api_key": "API k\u013e\u00fa\u010d",
+                    "fuel_types": "Druhy paliva",
                     "location": "Umiestnenie",
-                    "radius": "Polomer vyh\u013ead\u00e1vania"
+                    "name": "N\u00e1zov regi\u00f3nu",
+                    "radius": "Polomer vyh\u013ead\u00e1vania",
+                    "stations": "\u010eal\u0161ie \u010derpacie stanice"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Zobrazi\u0165 stanice na mape",
+                    "stations": "Stanice"
                 }
             }
         }

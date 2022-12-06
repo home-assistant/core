@@ -28,7 +28,11 @@
         "step": {
             "init": {
                 "data": {
-                    "model": "Model"
+                    "model": "Model",
+                    "nightlight_switch": "Pou\u017eite prep\u00edna\u010d no\u010dn\u00e9ho osvetlenia",
+                    "save_on_change": "Ulo\u017ei\u0165 stav pri zmene",
+                    "transition": "\u010cas prechodu (v ms)",
+                    "use_music_mode": "Povoli\u0165 hudobn\u00fd re\u017eim"
                 }
             }
         }

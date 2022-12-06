@@ -424,11 +424,12 @@ class MQTT:
                 self._mqttc.publish, topic, payload, qos, retain
             )
             _LOGGER.debug(
-                "Transmitting%s message on %s: '%s', mid: %s",
+                "Transmitting%s message on %s: '%s', mid: %s, qos: %s",
                 " retained" if retain else "",
                 topic,
                 payload,
                 msg_info.mid,
+                qos,
             )
             _raise_on_error(msg_info.rc)
         await self._wait_for_mid(msg_info.mid)
@@ -551,7 +552,7 @@ class MQTT:
             for topic, qos in subscriptions:
                 result, mid = self._mqttc.subscribe(topic, qos)
                 subscribe_result_list.append((result, mid))
-                _LOGGER.debug("Subscribing to %s, mid: %s", topic, mid)
+                _LOGGER.debug("Subscribing to %s, mid: %s, qos: %s", topic, mid, qos)
             return subscribe_result_list
 
         async with self._paho_lock:
@@ -654,9 +655,10 @@ class MQTT:
     @callback
     def _mqtt_handle_message(self, msg: mqtt.MQTTMessage) -> None:
         _LOGGER.debug(
-            "Received%s message on %s: %s",
+            "Received%s message on %s (qos=%s): %s",
             " retained" if msg.retain else "",
             msg.topic,
+            msg.qos,
             msg.payload[0:8192],
         )
         timestamp = dt_util.utcnow()
