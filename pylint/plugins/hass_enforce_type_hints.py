@@ -1413,7 +1413,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="device_class",
-                    return_type=["HumidifierDeviceClass", "str", None],
+                    return_type=["HumidifierDeviceClass", None],
                 ),
                 TypeHintMatch(
                     function_name="min_humidity",
