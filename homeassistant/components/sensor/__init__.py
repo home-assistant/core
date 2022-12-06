@@ -195,6 +195,12 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `lx`, `lm`
     """
 
+    INFORMATION = "information"
+    """Information.
+
+    Unit of measurement: UnitOfInformation
+    """
+
     MOISTURE = "moisture"
     """Moisture.
 
