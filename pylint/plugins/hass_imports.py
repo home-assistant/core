@@ -260,16 +260,52 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
     ],
     "homeassistant.const": [
         ObsoleteImportMatch(
-            reason="replaced by SensorDeviceClass enum",
+            reason="replaced by local constants",
+            constant=re.compile(r"^CONF_UNIT_SYSTEM_(\w*)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by ***DeviceClass enum",
             constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by unit enums",
+            constant=re.compile(r"^ENERGY_(\w*)$"),
         ),
         ObsoleteImportMatch(
             reason="replaced by EntityCategory enum",
             constant=re.compile(r"^(ENTITY_CATEGORY_(\w*))|(ENTITY_CATEGORIES)$"),
         ),
         ObsoleteImportMatch(
-            reason="replaced by local constants",
-            constant=re.compile(r"^(CONF_UNIT_SYSTEM_(\w*))$"),
+            reason="replaced by unit enums",
+            constant=re.compile(r"^LENGTH_(\w*)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by unit enums",
+            constant=re.compile(r"^MASS_(\w*)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by unit enums",
+            constant=re.compile(r"^POWER_(\w*)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by unit enums",
+            constant=re.compile(r"^PRECIPITATION_(\w*)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by unit enums",
+            constant=re.compile(r"^PRESSURE_(\w*)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by unit enums",
+            constant=re.compile(r"^SPEED_(\w*)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by unit enums",
+            constant=re.compile(r"^TEMP_(\w*)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by unit enums",
+            constant=re.compile(r"^VOLUME_(\w*)$"),
         ),
     ],
     "homeassistant.core": [
