@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any
 from unittest.mock import Mock
 
 from matter_server.client import MatterClient
+from matter_server.common.helpers.util import dataclass_from_dict
 from matter_server.common.models.node import MatterNode
 from matter_server.common.models.server_information import ServerInfo
 import pytest
@@ -113,8 +114,8 @@ async def setup_integration_with_node_fixture(
 ) -> MatterNode:
     """Set up Matter integration with fixture as node."""
     node_data = load_and_parse_node_fixture(node_fixture)
-    node = MatterNode(
-        await get_mock_matter(),
+    node = dataclass_from_dict(
+        MatterNode,
         node_data,
     )
     config_entry = MockConfigEntry(
