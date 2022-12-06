@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from typing import Any
-from urllib.parse import urlparse
 
 from pyoverkiz.enums import UIClass, UIWidget, UpdateBoxStatus
 from pyoverkiz.models import Gateway
@@ -13,12 +12,12 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantOverkizData
-from .const import DOMAIN, LOGGER
-from .coordinator import OverkizDataUpdateCoordinator
+from .const import DOMAIN
 from .entity import OverkizEntity
 
 UPDATE_COMMAND = "update"
@@ -39,31 +38,20 @@ async def async_setup_entry(
     """Set up the Overkiz update from a config entry."""
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
 
-    gateways = await data.coordinator.client.get_gateways()
-    gateway_by_ids: dict[str, Gateway] = {}
-    for gateway in gateways:
-        gateway_by_ids[gateway.id] = gateway
+    entities: list[OverkizUpdateEntity] = []
 
-    for device in data.coordinator.data.values():
+    for device in data.platforms[Platform.UPDATE]:
         if device.widget == UIWidget.POD or device.ui_class == UIClass.POD:
-            url = urlparse(device.device_url)
-            gateway_id = url.netloc
-            if gateway_id in gateway_by_ids:
-                LOGGER.info("POD detected for %s", gateway_id)
-                for command in device.definition.commands:
-                    LOGGER.info(command.command_name)
-                    if command.command_name == UPDATE_COMMAND:
-                        LOGGER.info(device)
-                        LOGGER.info(gateway_by_ids[gateway_id])
-                        async_add_entities(
-                            [
-                                OverkizUpdateEntity(
-                                    gateway_id,
-                                    device.device_url,
-                                    data.coordinator,
-                                )
-                            ]
+            for command in device.definition.commands:
+                if command.command_name == UPDATE_COMMAND:
+                    entities.append(
+                        OverkizUpdateEntity(
+                            device.device_url,
+                            data.coordinator,
                         )
+                    )
+
+    async_add_entities(entities)
 
 
 class OverkizUpdateEntity(OverkizEntity, UpdateEntity):
@@ -74,23 +62,13 @@ class OverkizUpdateEntity(OverkizEntity, UpdateEntity):
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
     )
 
-    def __init__(
-        self,
-        gateway_id: str,
-        device_url: str,
-        coordinator: OverkizDataUpdateCoordinator,
-    ) -> None:
-        """Initialize the update entity."""
-        super().__init__(device_url, coordinator)
-        self.gateway_id = gateway_id
-
     def get_gateway(self) -> Gateway | None:
         """Get associated gateway."""
         gateways = self.coordinator.client.gateways
 
         if gateways:
             for gateway in gateways:
-                if gateway.id == self.gateway_id:
+                if gateway.id == self.device.gateway_id:
                     return gateway
 
         return None
@@ -115,7 +93,7 @@ class OverkizUpdateEntity(OverkizEntity, UpdateEntity):
             and gateway.update_status in UPDATE_AVAILABLE_STATUS
             and self.installed_version is not None
         ):
-            return self.installed_version + ".new"
+            return "new version available"
 
         return None
 
