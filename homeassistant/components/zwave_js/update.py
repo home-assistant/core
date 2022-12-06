@@ -110,10 +110,9 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
     def _update_progress(self, event: dict[str, Any]) -> None:
         """Update install progress on event."""
         progress: FirmwareUpdateProgress = event["firmware_update_progress"]
-        if not self._latest_version_firmware:
-            return
-        self._attr_in_progress = int(progress.progress)
-        self.async_write_ha_state()
+        if self._latest_version_firmware:
+            self._attr_in_progress = int(progress.progress)
+            self.async_write_ha_state()
 
     @callback
     def _update_finished(self, event: dict[str, Any]) -> None:
