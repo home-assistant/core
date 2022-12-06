@@ -6,7 +6,8 @@
         },
         "step": {
             "user": {
-                "description": "Naozaj chcete nastavi\u0165 OwnTracks?"
+                "description": "Naozaj chcete nastavi\u0165 OwnTracks?",
+                "title": "Nastavenie OwnTracks"
             }
         }
     }

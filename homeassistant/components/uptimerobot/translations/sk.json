@@ -9,6 +9,7 @@
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
             "invalid_api_key": "Neplatn\u00fd API k\u013e\u00fa\u010d",
             "not_main_key": "Bol zisten\u00fd nespr\u00e1vny typ k\u013e\u00fa\u010da API, pou\u017eite \u201emain\u201c k\u013e\u00fa\u010d API",
+            "reauth_failed_matching_account": "Zadan\u00fd k\u013e\u00fa\u010d API sa nezhoduje s ID \u00fa\u010dtu pre existuj\u00facu konfigur\u00e1ciu.",
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "step": {
@@ -16,11 +17,22 @@
                 "data": {
                     "api_key": "API k\u013e\u00fa\u010d"
                 },
+                "description": "Mus\u00edte doda\u0165 nov\u00fd \u201ehlavn\u00fd\u201c k\u013e\u00fa\u010d API od UptimeRobot",
                 "title": "Znova overi\u0165 integr\u00e1ciu"
             },
             "user": {
                 "data": {
                     "api_key": "API k\u013e\u00fa\u010d"
+                },
+                "description": "Mus\u00edte doda\u0165 \u201ehlavn\u00fd\u201c k\u013e\u00fa\u010d API od UptimeRobot"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "monitor_status": {
+                "state": {
+                    "not_checked_yet": "Zatia\u013e neskontrolovan\u00e9"
                 }
             }
         }

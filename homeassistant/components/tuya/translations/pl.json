@@ -29,8 +29,8 @@
             "basic_nightvision": {
                 "state": {
                     "0": "automatyczny",
-                    "1": "wy\u0142.",
-                    "2": "w\u0142."
+                    "1": "wy\u0142\u0105czony",
+                    "2": "w\u0142\u0105czony"
                 }
             },
             "countdown": {
@@ -122,7 +122,7 @@
             },
             "light_mode": {
                 "state": {
-                    "none": "wy\u0142.",
+                    "none": "wy\u0142\u0105czony",
                     "pos": "wska\u017c lokalizacj\u0119 prze\u0142\u0105cznika",
                     "relay": "wska\u017c stan w\u0142./wy\u0142."
                 }
@@ -144,10 +144,10 @@
                 "state": {
                     "last": "zapami\u0119taj ostatni stan",
                     "memory": "zapami\u0119taj ostatni stan",
-                    "off": "wy\u0142.",
-                    "on": "w\u0142.",
-                    "power_off": "wy\u0142.",
-                    "power_on": "w\u0142."
+                    "off": "wy\u0142\u0105czony",
+                    "on": "w\u0142\u0105czony",
+                    "power_off": "wy\u0142\u0105czony",
+                    "power_on": "w\u0142\u0105czony"
                 }
             },
             "vacuum_cistern": {

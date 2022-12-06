@@ -13,10 +13,13 @@
                 "data": {
                     "password": "Heslo",
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
-                }
+                },
+                "description": "Chcete nastavi\u0165 {name} ({ip_address})? ",
+                "title": "Objaven\u00fd UniFi Protect"
             },
             "reauth_confirm": {
                 "data": {
+                    "host": "IP/hostite\u013e servera UniFi Protect Server",
                     "password": "Heslo",
                     "port": "Port",
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
@@ -33,11 +36,30 @@
             }
         }
     },
+    "issues": {
+        "ea_setup_failed": {
+            "title": "Chyba nastavenia pri pou\u017eit\u00ed verzie predbe\u017en\u00e9ho pr\u00edstupu"
+        },
+        "ea_warning": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Naozaj chcete spusti\u0165 nepodporovan\u00e9 verzie UniFi Protect? M\u00f4\u017ee to sp\u00f4sobi\u0165 zlyhanie integr\u00e1cie dom\u00e1ceho asistenta.",
+                        "title": "v {version} je verzia predbe\u017en\u00e9ho pr\u00edstupu"
+                    },
+                    "start": {
+                        "title": "v {version} je verzia predbe\u017en\u00e9ho pr\u00edstupu"
+                    }
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {
                 "data": {
-                    "all_updates": "Metriky v re\u00e1lnom \u010dase (UPOZORNENIE: V\u00fdrazne zvy\u0161uje vyu\u017eitie procesora)"
+                    "all_updates": "Metriky v re\u00e1lnom \u010dase (UPOZORNENIE: V\u00fdrazne zvy\u0161uje vyu\u017eitie procesora)",
+                    "allow_ea": "Povoli\u0165 prednostn\u00fd pr\u00edstup verzie Protect (UPOZORNENIE: Va\u0161a integr\u00e1cia bude ozna\u010den\u00e1 ako nepodporovan\u00e1)"
                 }
             }
         }

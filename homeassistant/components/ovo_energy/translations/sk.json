@@ -11,13 +11,16 @@
                 "data": {
                     "password": "Heslo"
                 },
-                "description": "Autentifik\u00e1cia pre OVO Energy zlyhala. Zadajte svoje aktu\u00e1lne poverenia."
+                "description": "Autentifik\u00e1cia pre OVO Energy zlyhala. Zadajte svoje aktu\u00e1lne poverenia.",
+                "title": "Op\u00e4tovn\u00e9 overenie"
             },
             "user": {
                 "data": {
                     "password": "Heslo",
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
-                }
+                },
+                "description": "Nastavte in\u0161tanciu OVO Energy na pr\u00edstup k va\u0161ej spotrebe energie.",
+                "title": "Prida\u0165 \u00fa\u010det OVO Energy"
             }
         }
     }

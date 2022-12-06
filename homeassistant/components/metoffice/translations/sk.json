@@ -14,7 +14,8 @@
                     "latitude": "Zemepisn\u00e1 \u0161\u00edrka",
                     "longitude": "Zemepisn\u00e1 d\u013a\u017eka"
                 },
-                "description": "Zemepisn\u00e1 \u0161\u00edrka a d\u013a\u017eka sa pou\u017eije na n\u00e1jdenie najbli\u017e\u0161ej meteorologickej stanice."
+                "description": "Zemepisn\u00e1 \u0161\u00edrka a d\u013a\u017eka sa pou\u017eije na n\u00e1jdenie najbli\u017e\u0161ej meteorologickej stanice.",
+                "title": "Pripojenie k Met Office UK"
             }
         }
     }
