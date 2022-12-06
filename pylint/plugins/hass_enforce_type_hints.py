@@ -1373,6 +1373,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     return_type=["float", None],
                 ),
                 TypeHintMatch(
+                    function_name="device_class",
+                    return_type=["ImageProcessingDeviceClass", None],
+                ),
+                TypeHintMatch(
                     function_name="process_image",
                     arg_types={1: "bytes"},
                     return_type=None,
