@@ -163,7 +163,7 @@ class BlockSleepingClimate(
         if self.block is not None:
             return cast(float, self.block.targetTemp)
         # The restored value can be in Fahrenheit so we have to convert it to Celsius
-        # because we use this unit in integration.
+        # because we use this unit internally in integration.
         target_temp = self.last_state_attributes.get("temperature")
         if self.hass.config.units is US_CUSTOMARY_SYSTEM and target_temp:
             return TemperatureConverter.convert(
@@ -179,7 +179,7 @@ class BlockSleepingClimate(
         if self.block is not None:
             return cast(float, self.block.temp)
         # The restored value can be in Fahrenheit so we have to convert it to Celsius
-        # because we use this unit in integration.
+        # because we use this unit internally in integration.
         current_temp = self.last_state_attributes.get("current_temperature")
         if self.hass.config.units is US_CUSTOMARY_SYSTEM and current_temp:
             return TemperatureConverter.convert(
