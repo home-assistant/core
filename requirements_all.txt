@@ -778,7 +778,7 @@ goalzero==0.2.1
 goodwe==0.2.18
 
 # homeassistant.components.google_pubsub
-google-cloud-pubsub==2.13.10
+google-cloud-pubsub==2.13.11
 
 # homeassistant.components.google_cloud
 google-cloud-texttospeech==2.12.3
