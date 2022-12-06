@@ -12,7 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
-from .hap import HomematicipHAP
 
 ATTR_AUTO_RELOCK_DELAY = "auto_relock_delay"
 ATTR_DOOR_HANDLE_TYPE = "door_handle_type"
@@ -44,22 +43,17 @@ async def async_setup_entry(
     if entities:
         async_add_entities(entities)
 
+    async_add_entities(
+        HomematicipDoorLockDrive(hap, device)
+        for device in hap.home.devices
+        if isinstance(device, AsyncDoorLockDrive)
+    )
+
 
 class HomematicipDoorLockDrive(HomematicipGenericEntity, LockEntity):
     """Representation of the HomematicIP DoorLockDrive."""
 
     _attr_supported_features = LockEntityFeature.OPEN
-
-    def __init__(
-        self,
-        hap: HomematicipHAP,
-        device,
-        post: str | None = None,
-        channel: int | None = None,
-        is_multi_channel: bool | None = False,
-    ) -> None:
-        """Initialize DoorLockDrive."""
-        super().__init__(hap, device)
 
     @property
     def is_locked(self) -> bool | None:
@@ -102,10 +96,8 @@ class HomematicipDoorLockDrive(HomematicipGenericEntity, LockEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the device."""
-        state_attr = super().extra_state_attributes
-
-        for attr, attr_key in DEVICE_DLD_ATTRIBUTES.items():
-            if attr_value := getattr(self._device, attr, None):
-                state_attr[attr_key] = attr_value
-
-        return state_attr
+        return super().extra_state_attributes | {
+            attr_key: attr_value
+            for attr, attr_key in DEVICE_DLD_ATTRIBUTES.items()
+            if (attr_value := getattr(self._device, attr, None)) is not None
+        }
