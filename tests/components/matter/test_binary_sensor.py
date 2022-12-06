@@ -39,3 +39,31 @@ async def test_contact_sensor(
     state = hass.states.get("binary_sensor.mock_contact_sensor_contact")
     assert state
     assert state.state == "off"
+
+
+@pytest.fixture(name="occupancy_sensor_node")
+async def occupancy_sensor_node_fixture(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> MatterNode:
+    """Fixture for a occupancy sensor node."""
+    return await setup_integration_with_node_fixture(
+        hass, "occupancy-sensor", matter_client
+    )
+
+
+async def test_occupancy_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    occupancy_sensor_node: MatterNode,
+) -> None:
+    """Test occupancy sensor."""
+    state = hass.states.get("binary_sensor.mock_occupancy_sensor_occupancy")
+    assert state
+    assert state.state == "on"
+
+    set_node_attribute(occupancy_sensor_node, 1, 1030, 0, 0)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.mock_occupancy_sensor_occupancy")
+    assert state
+    assert state.state == "off"
