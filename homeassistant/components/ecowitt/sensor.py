@@ -19,12 +19,12 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
-    ELECTRIC_POTENTIAL_VOLT,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_WATT,
     UV_INDEX,
+    UnitOfElectricPotential,
     UnitOfLength,
+    UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
@@ -69,7 +69,7 @@ ECOWITT_SENSORS_MAPPING: Final = {
     ),
     EcoWittSensorTypes.WATT_METERS_SQUARED: SensorEntityDescription(
         key="WATT_METERS_SQUARED",
-        native_unit_of_measurement=f"{POWER_WATT}/{AREA_SQUARE_METERS}",
+        native_unit_of_measurement=f"{UnitOfPower.WATT}/{AREA_SQUARE_METERS}",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     EcoWittSensorTypes.UV_INDEX: SensorEntityDescription(
@@ -98,7 +98,7 @@ ECOWITT_SENSORS_MAPPING: Final = {
     EcoWittSensorTypes.BATTERY_VOLTAGE: SensorEntityDescription(
         key="BATTERY_VOLTAGE",
         device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     EcoWittSensorTypes.CO2_PPM: SensorEntityDescription(
@@ -119,7 +119,7 @@ ECOWITT_SENSORS_MAPPING: Final = {
     EcoWittSensorTypes.VOLTAGE: SensorEntityDescription(
         key="VOLTAGE",
         device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     EcoWittSensorTypes.LIGHTNING_COUNT: SensorEntityDescription(
