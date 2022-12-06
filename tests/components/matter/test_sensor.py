@@ -67,6 +67,34 @@ async def test_humidity_sensor(
     assert state.state == "40.0"
 
 
+@pytest.fixture(name="light_sensor_node")
+async def light_sensor_node_fixture(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> MatterNode:
+    """Fixture for a light sensor node."""
+    return await setup_integration_with_node_fixture(
+        hass, "light-sensor", matter_client
+    )
+
+
+async def test_light_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    light_sensor_node: MatterNode,
+) -> None:
+    """Test light sensor."""
+    state = hass.states.get("sensor.mock_light_sensor_light")
+    assert state
+    assert state.state == "1.3"
+
+    set_node_attribute(light_sensor_node, 1, 1024, 0, 3000)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.mock_light_sensor_light")
+    assert state
+    assert state.state == "2.0"
+
+
 @pytest.fixture(name="pressure_sensor_node")
 async def pressure_sensor_node_fixture(
     hass: HomeAssistant, matter_client: MagicMock
