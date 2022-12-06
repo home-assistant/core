@@ -37,7 +37,7 @@ FAILED_SCAN_INTERVAL = datetime.timedelta(minutes=1)
 DEBOUNCE_TIME = 60  # in seconds
 
 
-def base_unique_id(latitude: str, longitude: str):
+def base_unique_id(latitude: str, longitude: str) -> str:
     """Return unique id for entries in configuration."""
     return f"{latitude}_{longitude}"
 
