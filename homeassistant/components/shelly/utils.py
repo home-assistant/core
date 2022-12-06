@@ -398,3 +398,13 @@ def device_update_info(
         dev_registry.async_update_device(
             device.id, sw_version=shellydevice.firmware_version
         )
+
+
+def brightness_to_percentage(brightness: int) -> int:
+    """Convert brightness level to percentage."""
+    return int(100 * (brightness + 1) / 255)
+
+
+def percentage_to_brightness(percentage: int) -> int:
+    """Convert percentage to brightness level."""
+    return round(255 * percentage / 100)
