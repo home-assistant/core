@@ -619,14 +619,6 @@ def mock_client_fixture(
         yield client
 
 
-@pytest.fixture(name="controller_node")
-def controller_node_fixture(client, controller_node_state):
-    """Mock a controller node."""
-    node = Node(client, copy.deepcopy(controller_node_state))
-    client.driver.controller.nodes[node.node_id] = node
-    return node
-
-
 @pytest.fixture(name="multisensor_6")
 def multisensor_6_fixture(client, multisensor_6_state):
     """Mock a multisensor 6 node."""
