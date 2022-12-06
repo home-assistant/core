@@ -35,7 +35,6 @@ from .const import (
     DEV_LED_PROFILE,
     DEV_MODEL,
     DEV_NAME,
-    DEV_PROFILE_AWW,
     DEV_PROFILE_RGB,
     DEV_PROFILE_RGBW,
     DOMAIN,
@@ -78,7 +77,7 @@ class TwinklyLight(LightEntity):
             self._attr_supported_color_modes = {ColorMode.RGBW}
             self._attr_color_mode = ColorMode.RGBW
             self._attr_rgbw_color = (255, 255, 255, 0)
-        elif device_info.get(DEV_LED_PROFILE) in (DEV_PROFILE_RGB, DEV_PROFILE_AWW):
+        elif device_info.get(DEV_LED_PROFILE) in (DEV_PROFILE_RGB):
             self._attr_supported_color_modes = {ColorMode.RGB}
             self._attr_color_mode = ColorMode.RGB
             self._attr_rgb_color = (255, 255, 255)
@@ -103,7 +102,7 @@ class TwinklyLight(LightEntity):
         self._software_version = ""
         # We guess that most devices are "new" and support effects
         self._attr_supported_features = LightEntityFeature.EFFECT
-        self._attr_internal_brightness = 0
+        self._attr_device_brightness = 0
 
     @property
     def available(self) -> bool:
@@ -195,7 +194,13 @@ class TwinklyLight(LightEntity):
 
             await self._client.set_brightness(brightness)
 
-        elif (
+        if self._attr_brightness == 0:
+            # if the device is "off", the component brightness is 0
+            # the device brightness has the right value but we need to fix
+            # the default mode to movie without a movie in the list
+            await self._client.set_mode("color")
+
+        if (
             ATTR_RGBW_COLOR in kwargs
             and kwargs[ATTR_RGBW_COLOR] != self._attr_rgbw_color
         ):
@@ -225,9 +230,7 @@ class TwinklyLight(LightEntity):
                 self._client.default_mode = "movie"
             self._attr_rgbw_color = kwargs[ATTR_RGBW_COLOR]
 
-        elif (
-            ATTR_RGB_COLOR in kwargs and kwargs[ATTR_RGB_COLOR] != self._attr_rgb_color
-        ):
+        if ATTR_RGB_COLOR in kwargs and kwargs[ATTR_RGB_COLOR] != self._attr_rgb_color:
 
             await self._client.interview()
             if LightEntityFeature.EFFECT & self.supported_features:
@@ -241,7 +244,7 @@ class TwinklyLight(LightEntity):
 
             self._attr_rgb_color = kwargs[ATTR_RGB_COLOR]
 
-        elif (
+        if (
             ATTR_EFFECT in kwargs
             and LightEntityFeature.EFFECT & self.supported_features
         ):
@@ -253,8 +256,6 @@ class TwinklyLight(LightEntity):
                 await self._client.set_current_movie(int(movie_id))
                 await self._client.set_mode("movie")
                 self._client.default_mode = "movie"
-        else:
-            await self._client.set_brightness(self._attr_internal_brightness)
 
         if not self._is_on:
             await self._client.turn_on()
@@ -274,7 +275,7 @@ class TwinklyLight(LightEntity):
             brightness_value = (
                 int(brightness["value"]) if brightness["mode"] == "enabled" else 100
             )
-            self._attr_internal_brightness = brightness_value
+            self._attr_device_brightness = brightness_value
 
             self._attr_brightness = (
                 int(round(brightness_value * 2.55)) if self._is_on else 0
