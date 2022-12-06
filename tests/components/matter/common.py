@@ -114,7 +114,7 @@ def load_and_parse_node_fixture(fixture: str) -> dict[str, Any]:
 
 
 async def setup_integration_with_node_fixture(
-    hass: HomeAssistant, node_fixture: str, mock_matter: Mock
+    hass: HomeAssistant, node_fixture: str
 ) -> MatterNode:
     """Set up Matter integration with fixture as node."""
     node_data = load_and_parse_node_fixture(node_fixture)
@@ -127,15 +127,14 @@ async def setup_integration_with_node_fixture(
     )
     config_entry.add_to_hass(hass)
 
-    if mock_matter is None:
-        mock_matter = await get_mock_matter()
+    mock_matter = MockClient()
 
     with patch(
         "matter_server.client.MatterClient.get_nodes", return_value=[node]
-    ), patch(
-        "matter_server.client.MatterClient", return_value=mock_matter.matter_client
-    ):
+    ), patch("matter_server.client.MatterClient", return_value=mock_matter):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
+    # set the (mocked) matter client object on the nod eobject to easy access it from the tests
+    node.matter = mock_matter
     return node
