@@ -817,6 +817,9 @@ class UnitOfPrecipitationDepth(StrEnum):
     MILLIMETERS = "mm"
     """Derived from mm³/mm²"""
 
+    CENTIMETERS = "cm"
+    """Derived from cm³/cm²"""
+
 
 # Precipitation units
 PRECIPITATION_INCHES: Final = "in"
