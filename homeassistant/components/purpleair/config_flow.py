@@ -193,6 +193,7 @@ async def async_validate_coordinates(
     api = async_get_api(hass, api_key)
     errors = {}
 
+    print("AARON")
     try:
         nearby_sensor_results = await api.sensors.async_get_nearby_sensors(
             ["name"], latitude, longitude, distance, limit_results=5
