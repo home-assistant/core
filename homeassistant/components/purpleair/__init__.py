@@ -10,8 +10,8 @@ import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .config_flow import async_remove_sensor_device, async_untrack_sensor_index
-from .const import CONF_LAST_UPDATE_REMOVAL, DOMAIN
+from .config_flow import async_get_sensor_index, async_untrack_sensor_index
+from .const import CONF_LAST_UPDATE_SENSOR_ADD, DOMAIN
 from .coordinator import PurpleAirDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
@@ -32,23 +32,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_handle_entry_update(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle an options update."""
-    if entry.options[CONF_LAST_UPDATE_REMOVAL]:
-        # If the last options update was to remove a sensor, we return immediately and
-        # don't reload (in order to avoid calling async_remove twice on the old device's
-        # entities):
-        return
-    await hass.config_entries.async_reload(entry.entry_id)
+    if entry.options[CONF_LAST_UPDATE_SENSOR_ADD]:
+        # If the last options update was to add a sensor, we reload the config entry:
+        await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
-    removed_sensor_index = async_remove_sensor_device(
-        hass, config_entry, device_entry.id
-    )
-    new_options = async_untrack_sensor_index(config_entry, removed_sensor_index)
-    hass.config_entries.async_update_entry(config_entry, options=new_options)
+    removed_sensor_index = async_get_sensor_index(hass, config_entry, device_entry)
+    new_entry_options = async_untrack_sensor_index(config_entry, removed_sensor_index)
+    hass.config_entries.async_update_entry(config_entry, options=new_entry_options)
 
     return True
 

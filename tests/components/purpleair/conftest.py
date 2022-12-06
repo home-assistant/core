@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry, load_fixture
 @pytest.fixture(name="api")
 def api_fixture(check_api_key, get_nearby_sensors, get_sensors):
     """Define a fixture to return a mocked aiopurple API object."""
-    api = Mock(async_check_api_key=check_api_key)
+    api = Mock(async_check_api_key=check_api_key, get_map_url=Mock())
     api.sensors.async_get_nearby_sensors = get_nearby_sensors
     api.sensors.async_get_sensors = get_sensors
     return api
@@ -88,8 +88,6 @@ async def setup_purpleair_fixture(hass, api, config_entry_data):
         "homeassistant.components.purpleair.config_flow.API", return_value=api
     ), patch(
         "homeassistant.components.purpleair.coordinator.API", return_value=api
-    ), patch(
-        "homeassistant.components.purpleair.PLATFORMS", []
     ):
         assert await async_setup_component(hass, DOMAIN, config_entry_data)
         await hass.async_block_till_done()

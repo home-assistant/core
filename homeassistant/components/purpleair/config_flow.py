@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, cast
 
 from aiopurpleair import API
 from aiopurpleair.endpoints.sensors import NearbySensorResult
@@ -27,7 +27,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_LAST_UPDATE_REMOVAL, CONF_SENSOR_INDICES, DOMAIN, LOGGER
+from .const import CONF_LAST_UPDATE_SENSOR_ADD, CONF_SENSOR_INDICES, DOMAIN, LOGGER
 
 CONF_DISTANCE = "distance"
 CONF_NEARBY_SENSOR_OPTIONS = "nearby_sensor_options"
@@ -99,7 +99,7 @@ def async_get_remove_sensor_options(
     """Return a set of already-configured sensors as SelectOptionDict objects."""
     device_registry = dr.async_get(hass)
     return [
-        SelectOptionDict(value=device_entry.id, label=device_entry.name)
+        SelectOptionDict(value=device_entry.id, label=cast(str, device_entry.name))
         for device_entry in device_registry.devices.values()
         if config_entry.entry_id in device_entry.config_entries
     ]
@@ -118,16 +118,16 @@ def async_get_remove_sensor_schema(sensors: list[SelectOptionDict]) -> vol.Schem
 
 
 @callback
-def async_remove_sensor_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry_id: str
+def async_get_sensor_index(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
 ) -> int:
-    """Remove a sensor from the device registry and return its index.
+    """Get the sensor index related to a config and device entry.
 
     Note that this method expects that there will always be a single sensor index per
     DeviceEntry.
     """
     device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get(device_entry_id)
+    device_entry = cast(dr.DeviceEntry, device_registry.async_get(device_entry.id))
 
     [sensor_index] = [
         sensor_index
@@ -135,20 +135,16 @@ def async_remove_sensor_device(
         if (DOMAIN, str(sensor_index)) in device_entry.identifiers
     ]
 
-    device_registry.async_update_device(
-        device_entry.id, remove_config_entry_id=config_entry.entry_id
-    )
-
-    return sensor_index
+    return cast(int, sensor_index)
 
 
 @callback
 def async_untrack_sensor_index(
     config_entry: ConfigEntry, sensor_index: int
-) -> list[int]:
+) -> dict[str, Any]:
     """Untrack a sensor index from a config entry and return the current index list."""
     options = deepcopy({**config_entry.options})
-    options[CONF_LAST_UPDATE_REMOVAL] = True
+    options[CONF_LAST_UPDATE_SENSOR_ADD] = False
     options[CONF_SENSOR_INDICES].remove(sensor_index)
     return options
 
@@ -197,6 +193,7 @@ async def async_validate_coordinates(
     api = async_get_api(hass, api_key)
     errors = {}
 
+    print("AARON")
     try:
         nearby_sensor_results = await api.sensors.async_get_nearby_sensors(
             ["name"], latitude, longitude, distance, limit_results=5
@@ -363,7 +360,7 @@ class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_abort(reason="already_configured")
 
         options = deepcopy({**self.config_entry.options})
-        options[CONF_LAST_UPDATE_REMOVAL] = False
+        options[CONF_LAST_UPDATE_SENSOR_ADD] = True
         options[CONF_SENSOR_INDICES].append(sensor_index)
         return self.async_create_entry(title="", data=options)
 
@@ -388,13 +385,22 @@ class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
                 ),
             )
 
-        # Remove the sensor from the device registry:
-        removed_sensor_index = async_remove_sensor_device(
-            self.hass, self.config_entry, user_input[CONF_SENSOR_DEVICE_ID]
+        device_registry = dr.async_get(self.hass)
+        device_entry = cast(
+            dr.DeviceEntry, device_registry.async_get(user_input[CONF_SENSOR_DEVICE_ID])
+        )
+
+        removed_sensor_index = async_get_sensor_index(
+            self.hass, self.config_entry, device_entry
+        )
+
+        # Remove the sensor's device from the device registry:
+        device_registry.async_update_device(
+            device_entry.id, remove_config_entry_id=self.config_entry.entry_id
         )
 
         # Untrack the sensor index in config entry options:
-        new_options = async_untrack_sensor_index(
+        new_entry_options = async_untrack_sensor_index(
             self.config_entry, removed_sensor_index
         )
-        return self.async_create_entry(title="", data=new_options)
+        return self.async_create_entry(title="", data=new_entry_options)
