@@ -189,7 +189,7 @@ async def test_entry_unload_device_not_ready(
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_entry_unload_firmware_upgrade(hass, mock_rpc_device, monkeypatch):
+async def test_entry_unload_not_connected(hass, mock_rpc_device, monkeypatch):
     """Test entry unload when not connected."""
     with patch(
         "homeassistant.components.shelly.coordinator.async_stop_scanner"
