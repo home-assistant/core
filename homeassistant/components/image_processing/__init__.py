@@ -149,7 +149,7 @@ class ImageProcessingEntity(Entity):
 
     @property
     def confidence(self) -> float | None:
-        """Return minimum confidence for do some things."""
+        """Return minimum confidence to do some things."""
         if hasattr(self, "_attr_confidence"):
             return self._attr_confidence
         if hasattr(self, "entity_description"):
