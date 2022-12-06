@@ -129,6 +129,7 @@ omit =
     homeassistant/components/bloomsky/*
     homeassistant/components/bouncie/__init__.py
     homeassistant/components/bouncie/sensor.py
+    homeassistant/components/bouncie/coordinator.py
     homeassistant/components/bluesound/*
     homeassistant/components/bluetooth_tracker/*
     homeassistant/components/bmw_connected_drive/__init__.py
