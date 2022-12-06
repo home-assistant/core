@@ -202,8 +202,8 @@ class NumberDeviceClass(StrEnum):
     PRECIPITATION = "precipitation"
     """Precipitation.
 
-    Unit of measurement:
-    - SI / metric: `mm`
+    Unit of measurement: UnitOfPrecipitationDepth
+    - SI / metric: `cm`, `mm`
     - USCS / imperial: `in`
     """
 
