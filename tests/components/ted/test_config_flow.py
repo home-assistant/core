@@ -152,8 +152,6 @@ async def test_options_flow(hass):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    result = await hass.config_entries.options.async_init(
-        config_entry.entry_id, context={"show_advanced_options": False}
-    )
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == "form"
     assert result["step_id"] == "options"

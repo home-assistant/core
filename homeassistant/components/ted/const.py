@@ -1,7 +1,8 @@
 """The TED component."""
+from homeassistant.const import Platform
 
 DOMAIN = "ted"
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 COORDINATOR = "coordinator"
 NAME = "name"

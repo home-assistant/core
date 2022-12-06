@@ -128,7 +128,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             entities.append(sensor)
         else:
             entity_id = entity_registry.async_get_entity_id(
-                "sensor", DOMAIN, sensor.unique_id
+                Platform.SENSOR, DOMAIN, sensor.unique_id
             )
             if entity_id:
                 _LOGGER.debug("Removing entity: %s", sensor.unique_id)

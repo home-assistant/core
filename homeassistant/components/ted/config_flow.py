@@ -19,8 +19,6 @@ from .const import DOMAIN, OPTION_DEFAULTS
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_SERIAL = "serial"
-
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for TED."""
