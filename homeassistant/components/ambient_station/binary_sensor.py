@@ -279,28 +279,24 @@ BINARY_SENSOR_DESCRIPTIONS = (
         key=TYPE_LEAK1,
         name="Leak detector 1",
         device_class=BinarySensorDeviceClass.MOISTURE,
-        entity_category=EntityCategory.DIAGNOSTIC,
         on_state=1,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_LEAK2,
         name="Leak detector 2",
         device_class=BinarySensorDeviceClass.MOISTURE,
-        entity_category=EntityCategory.DIAGNOSTIC,
         on_state=1,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_LEAK3,
         name="Leak detector 3",
         device_class=BinarySensorDeviceClass.MOISTURE,
-        entity_category=EntityCategory.DIAGNOSTIC,
         on_state=1,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_LEAK4,
         name="Leak detector 4",
         device_class=BinarySensorDeviceClass.MOISTURE,
-        entity_category=EntityCategory.DIAGNOSTIC,
         on_state=1,
     ),
     AmbientBinarySensorDescription(
