@@ -129,9 +129,13 @@ class BlockSleepingClimate(
         self.last_state_attributes: Mapping[str, Any]
         self._preset_modes: list[str] = []
         if coordinator.hass.config.units is US_CUSTOMARY_SYSTEM:
-            self._last_target_temp = 68.0
+            self._last_target_temp = TemperatureConverter.convert(
+                SHTRV_01_TEMPERATURE_SETTINGS["default"],
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+            )
         else:
-            self._last_target_temp = 20.0
+            self._last_target_temp = SHTRV_01_TEMPERATURE_SETTINGS["default"]
 
         if self.block is not None and self.device_block is not None:
             self._unique_id = f"{self.coordinator.mac}-{self.block.description}"
