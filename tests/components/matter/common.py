@@ -6,10 +6,11 @@ from functools import cache
 import json
 import logging
 from typing import TYPE_CHECKING, Any
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from matter_server.client import MatterClient
 from matter_server.common.helpers.util import dataclass_from_dict
+from matter_server.common.models.api_command import APICommand
 from matter_server.common.models.node import MatterNode
 from matter_server.common.models.server_information import ServerInfo
 import pytest
@@ -54,7 +55,7 @@ class MockClient(MatterClient):
         self.mock_client_disconnect = asyncio.Event()
         await self.mock_client_disconnect.wait()
 
-    def mock_command(self, command_type: type, response: Any) -> None:
+    def mock_command(self, command_type: str, response: Any) -> None:
         """Mock a command."""
         self.mock_commands[command_type] = response
 
@@ -62,8 +63,10 @@ class MockClient(MatterClient):
         self, command: str, require_schema: int | None = None, **kwargs
     ) -> dict:
         """Send mock commands."""
-        if command == "device_controller.SendCommand" and (
-            (cmd_type := type(kwargs.get("payload"))) in self.mock_commands
+        print("########")
+        print(self.mock_commands)
+        if command == APICommand.DEVICE_COMMAND and (
+            (cmd_type := kwargs["payload"]["_type"]) in self.mock_commands
         ):
             self.mock_sent_commands.append(kwargs)
             return self.mock_commands[cmd_type]
@@ -92,9 +95,10 @@ async def mock_matter() -> Mock:
 
 
 async def get_mock_matter() -> Mock:
-    """Get mock Matter."""
+    """Get mock MatterAdapter."""
     return Mock(
-        adapter=Mock(logger=logging.getLogger("mock_matter")), client=MockClient()
+        adapter=Mock(logger=logging.getLogger("mock_matter")),
+        matter_client=MockClient(),
     )
 
 
@@ -110,7 +114,7 @@ def load_and_parse_node_fixture(fixture: str) -> dict[str, Any]:
 
 
 async def setup_integration_with_node_fixture(
-    hass: HomeAssistant, node_fixture: str
+    hass: HomeAssistant, node_fixture: str, mock_matter: Mock
 ) -> MatterNode:
     """Set up Matter integration with fixture as node."""
     node_data = load_and_parse_node_fixture(node_fixture)
@@ -123,7 +127,15 @@ async def setup_integration_with_node_fixture(
     )
     config_entry.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    if mock_matter is None:
+        mock_matter = await get_mock_matter()
+
+    with patch(
+        "matter_server.client.MatterClient.get_nodes", return_value=[node]
+    ), patch(
+        "matter_server.client.MatterClient", return_value=mock_matter.matter_client
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
     return node
