@@ -68,7 +68,7 @@
       "attribute_id": 5,
       "attribute_type": "chip.clusters.Objects.Basic.Attributes.NodeLabel",
       "attribute_name": "NodeLabel",
-      "value": ""
+      "value": "Mock OnOff Plugin Unit"
     },
     "0/40/6": {
       "node_id": 1,

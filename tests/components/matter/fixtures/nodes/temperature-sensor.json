@@ -4,6 +4,138 @@
   "last_interview": "2022-11-29T21:23:48.485057",
   "interview_version": 1,
   "attributes": {
+    "0/40/0": {
+      "node_id": 1,
+      "endpoint": 0,
+      "cluster_id": 40,
+      "cluster_type": "chip.clusters.Objects.Basic",
+      "cluster_name": "Basic",
+      "attribute_id": 0,
+      "attribute_type": "chip.clusters.Objects.Basic.Attributes.DataModelRevision",
+      "attribute_name": "DataModelRevision",
+      "value": 1
+    },
+    "0/40/1": {
+      "node_id": 1,
+      "endpoint": 0,
+      "cluster_id": 40,
+      "cluster_type": "chip.clusters.Objects.Basic",
+      "cluster_name": "Basic",
+      "attribute_id": 1,
+      "attribute_type": "chip.clusters.Objects.Basic.Attributes.VendorName",
+      "attribute_name": "VendorName",
+      "value": "Nabu Casa"
+    },
+    "0/40/2": {
+      "node_id": 1,
+      "endpoint": 0,
+      "cluster_id": 40,
+      "cluster_type": "chip.clusters.Objects.Basic",
+      "cluster_name": "Basic",
+      "attribute_id": 2,
+      "attribute_type": "chip.clusters.Objects.Basic.Attributes.VendorID",
+      "attribute_name": "VendorID",
+      "value": 65521
+    },
+    "0/40/3": {
+      "node_id": 1,
+      "endpoint": 0,
+      "cluster_id": 40,
+      "cluster_type": "chip.clusters.Objects.Basic",
+      "cluster_name": "Basic",
+      "attribute_id": 3,
+      "attribute_type": "chip.clusters.Objects.Basic.Attributes.ProductName",
+      "attribute_name": "ProductName",
+      "value": "Mock PressureSensor"
+    },
+    "0/40/4": {
+      "node_id": 1,
+      "endpoint": 0,
+      "cluster_id": 40,
+      "cluster_type": "chip.clusters.Objects.Basic",
+      "cluster_name": "Basic",
+      "attribute_id": 4,
+      "attribute_type": "chip.clusters.Objects.Basic.Attributes.ProductID",
+      "attribute_name": "ProductID",
+      "value": 32768
+    },
+    "0/40/5": {
+      "node_id": 1,
+      "endpoint": 0,
+      "cluster_id": 40,
+      "cluster_type": "chip.clusters.Objects.Basic",
+      "cluster_name": "Basic",
+      "attribute_id": 5,
+      "attribute_type": "chip.clusters.Objects.Basic.Attributes.NodeLabel",
+      "attribute_name": "NodeLabel",
+      "value": "Mock Temperature Sensor"
+    },
+    "0/40/6": {
+      "node_id": 1,
+      "endpoint": 0,
+      "cluster_id": 40,
+      "cluster_type": "chip.clusters.Objects.Basic",
+      "cluster_name": "Basic",
+      "attribute_id": 6,
+      "attribute_type": "chip.clusters.Objects.Basic.Attributes.Location",
+      "attribute_name": "Location",
+      "value": "XX"
+    },
+    "0/40/7": {
+      "node_id": 1,
+      "endpoint": 0,
+      "cluster_id": 40,
+      "cluster_type": "chip.clusters.Objects.Basic",
+      "cluster_name": "Basic",
+      "attribute_id": 7,
+      "attribute_type": "chip.clusters.Objects.Basic.Attributes.HardwareVersion",
+      "attribute_name": "HardwareVersion",
+      "value": 0
+    },
+    "0/40/8": {
+      "node_id": 1,
+      "endpoint": 0,
+      "cluster_id": 40,
+      "cluster_type": "chip.clusters.Objects.Basic",
+      "cluster_name": "Basic",
+      "attribute_id": 8,
+      "attribute_type": "chip.clusters.Objects.Basic.Attributes.HardwareVersionString",
+      "attribute_name": "HardwareVersionString",
+      "value": "v1.0"
+    },
+    "0/40/9": {
+      "node_id": 1,
+      "endpoint": 0,
+      "cluster_id": 40,
+      "cluster_type": "chip.clusters.Objects.Basic",
+      "cluster_name": "Basic",
+      "attribute_id": 9,
+      "attribute_type": "chip.clusters.Objects.Basic.Attributes.SoftwareVersion",
+      "attribute_name": "SoftwareVersion",
+      "value": 1
+    },
+    "0/40/10": {
+      "node_id": 1,
+      "endpoint": 0,
+      "cluster_id": 40,
+      "cluster_type": "chip.clusters.Objects.Basic",
+      "cluster_name": "Basic",
+      "attribute_id": 10,
+      "attribute_type": "chip.clusters.Objects.Basic.Attributes.SoftwareVersionString",
+      "attribute_name": "SoftwareVersionString",
+      "value": "v1.0"
+    },
+    "0/40/11": {
+      "node_id": 1,
+      "endpoint": 0,
+      "cluster_id": 40,
+      "cluster_type": "chip.clusters.Objects.Basic",
+      "cluster_name": "Basic",
+      "attribute_id": 11,
+      "attribute_type": "chip.clusters.Objects.Basic.Attributes.ManufacturingDate",
+      "attribute_name": "ManufacturingDate",
+      "value": "20221206"
+    },
     "0/40/12": {
       "node_id": 1,
       "endpoint": 0,
