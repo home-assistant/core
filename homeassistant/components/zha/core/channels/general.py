@@ -348,13 +348,18 @@ class OnOffChannel(ZigbeeChannel):
         self._off_listener = None
 
         if self.cluster.endpoint.model in (
-            "TS011F",
             "TS0121",
             "TS0001",
             "TS0002",
             "TS0003",
             "TS0004",
         ):
+            self.ZCL_INIT_ATTRS = (  # pylint: disable=invalid-name
+                self.ZCL_INIT_ATTRS.copy()
+            )
+            self.ZCL_INIT_ATTRS["backlight_mode"] = True
+            self.ZCL_INIT_ATTRS["power_on_state"] = True
+        elif self.cluster.endpoint.model == "TS011F":
             self.ZCL_INIT_ATTRS = (  # pylint: disable=invalid-name
                 self.ZCL_INIT_ATTRS.copy()
             )
