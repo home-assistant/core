@@ -1,5 +1,4 @@
 """Test Matter lights."""
-from typing import Any
 
 from chip.clusters import Objects as clusters
 from matter_server.common.models.node import MatterNode
@@ -7,76 +6,71 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 
-from .common import setup_integration_with_node_fixture
-
-# TEMP: Tests need to be fixed
-pytestmark = pytest.mark.skip("all tests still WIP")
+from .common import MockClient, setup_integration_with_node_fixture
 
 
 @pytest.fixture(name="light_node")
-async def light_node_fixture(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
-) -> MatterNode:
+async def light_node_fixture(hass: HomeAssistant) -> MatterNode:
     """Fixture for a light node."""
-    return await setup_integration_with_node_fixture(
-        hass, hass_storage, "lighting-example-app"
-    )
+    return await setup_integration_with_node_fixture(hass, "dimmable-light")
 
 
-async def test_turn_on(hass: HomeAssistant, light_node: MatterNode) -> None:
+async def test_turn_on(
+    hass: HomeAssistant, light_node: MatterNode, mock_matter: MockClient
+) -> None:
     """Test turning on a light."""
-    light_node.matter.client.mock_command(clusters.OnOff.Commands.On, None)
+    mock_matter.mock_command(clusters.OnOff.Commands.On, None)
 
     await hass.services.async_call(
         "light",
         "turn_on",
         {
-            "entity_id": "light.my_cool_light",
+            "entity_id": "light.mock_dimmable_light",
         },
         blocking=True,
     )
 
-    assert len(light_node.matter.client.mock_sent_commands) == 1
-    args = light_node.matter.client.mock_sent_commands[0]
+    assert len(mock_matter.mock_sent_commands) == 1
+    args = mock_matter.mock_sent_commands[0]
     assert args["nodeid"] == light_node.node_id
     assert args["endpoint"] == 1
 
-    light_node.matter.client.mock_command(
-        clusters.LevelControl.Commands.MoveToLevelWithOnOff, None
-    )
+    mock_matter.mock_command(clusters.LevelControl.Commands.MoveToLevelWithOnOff, None)
 
     await hass.services.async_call(
         "light",
         "turn_on",
         {
-            "entity_id": "light.my_cool_light",
+            "entity_id": "light.mock_dimmable_light",
             "brightness": 128,
         },
         blocking=True,
     )
 
-    assert len(light_node.matter.client.mock_sent_commands) == 2
-    args = light_node.matter.client.mock_sent_commands[1]
+    assert len(mock_matter.mock_sent_commands) == 2
+    args = mock_matter.mock_sent_commands[1]
     assert args["nodeid"] == light_node.node_id
     assert args["endpoint"] == 1
     assert args["payload"].level == 127
     assert args["payload"].transitionTime == 0
 
 
-async def test_turn_off(hass: HomeAssistant, light_node: MatterNode) -> None:
+async def test_turn_off(
+    hass: HomeAssistant, light_node: MatterNode, mock_matter: MockClient
+) -> None:
     """Test turning off a light."""
-    light_node.matter.client.mock_command(clusters.OnOff.Commands.Off, None)
+    mock_matter.mock_command(clusters.OnOff.Commands.Off, None)
 
     await hass.services.async_call(
         "light",
         "turn_off",
         {
-            "entity_id": "light.my_cool_light",
+            "entity_id": "light.mock_dimmable_light",
         },
         blocking=True,
     )
 
-    assert len(light_node.matter.client.mock_sent_commands) == 1
-    args = light_node.matter.client.mock_sent_commands[0]
+    assert len(mock_matter.mock_sent_commands) == 1
+    args = mock_matter.mock_sent_commands[0]
     assert args["nodeid"] == light_node.node_id
     assert args["endpoint"] == 1
