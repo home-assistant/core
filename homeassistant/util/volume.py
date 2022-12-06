@@ -1,7 +1,7 @@
 """Volume conversion util functions."""
 from __future__ import annotations
 
-from homeassistant.const import (  # pylint: disable=unused-import # noqa: F401
+from homeassistant.const import (  # pylint: disable=unused-import,hass-deprecated-import # noqa: F401
     UNIT_NOT_RECOGNIZED_TEMPLATE,
     VOLUME,
     VOLUME_CUBIC_FEET,

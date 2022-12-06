@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from homeassistant.const import (  # pylint: disable=unused-import # noqa: F401
+from homeassistant.const import (  # pylint: disable=unused-import,hass-deprecated-import # noqa: F401
     LENGTH,
     LENGTH_CENTIMETERS,
     LENGTH_FEET,

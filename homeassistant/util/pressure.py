@@ -1,7 +1,7 @@
 """Pressure util functions."""
 from __future__ import annotations
 
-from homeassistant.const import (  # pylint: disable=unused-import # noqa: F401
+from homeassistant.const import (  # pylint: disable=unused-import,hass-deprecated-import # noqa: F401
     PRESSURE,
     PRESSURE_BAR,
     PRESSURE_CBAR,
