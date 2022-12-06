@@ -37,7 +37,7 @@ FAILED_SCAN_INTERVAL = datetime.timedelta(minutes=1)
 DEBOUNCE_TIME = 60  # in seconds
 
 
-def base_unique_id(latitude, longitude):
+def base_unique_id(latitude: str, longitude: str):
     """Return unique id for entries in configuration."""
     return f"{latitude}_{longitude}"
 
@@ -174,7 +174,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-def device_info(latitude, longitude) -> DeviceInfo:
+def device_info(latitude: str, longitude: str) -> DeviceInfo:
     """Return device registry information."""
     return DeviceInfo(
         entry_type=DeviceEntryType.SERVICE,

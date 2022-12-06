@@ -9,6 +9,9 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from types import MappingProxyType
+from typing import Any
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
@@ -172,11 +175,11 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        entry_data,
-        hass_data,
+        entry_data: MappingProxyType[str, Any],
+        hass_data: dict[str, Any],
         description: NWSSensorEntityDescription,
-        station,
-    ):
+        station: str,
+    ) -> None:
         """Initialise the platform with a data instance."""
         super().__init__(hass_data[COORDINATOR_OBSERVATION])
         self._nws = hass_data[NWS_DATA]

@@ -1,6 +1,9 @@
 """Support for NWS weather service."""
 from __future__ import annotations
 
+from types import MappingProxyType
+from typing import Any
+
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_SUNNY,
@@ -27,6 +30,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 from homeassistant.util.unit_conversion import SpeedConverter, TemperatureConverter
+from homeassistant.util.unit_system import UnitSystem
 
 from . import base_unique_id, device_info
 from .const import (
@@ -105,7 +109,13 @@ class NWSWeather(WeatherEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, entry_data, hass_data, mode, units) -> None:
+    def __init__(
+        self,
+        entry_data: MappingProxyType[str, Any],
+        hass_data: dict[str, Any],
+        mode: str,
+        units: UnitSystem,
+    ) -> None:
         """Initialise the platform with a data instance and station name."""
         self.nws = hass_data[NWS_DATA]
         self.latitude = entry_data[CONF_LATITUDE]
