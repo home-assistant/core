@@ -59,11 +59,3 @@ async def test_hmip_doorlockdrive(hass, default_mock_hap_factory):
 
     assert hmip_device.mock_calls[-1][0] == "set_lock_state"
     assert hmip_device.mock_calls[-1][1] == (LockState.UNLOCKED,)
-
-    #     await async_manipulate_test_data(hass, hmip_device, "dimLevel", 1, 2)
-    # await async_manipulate_test_data(
-    #     hass, hmip_device, "simpleRGBColorState", RGBColorState.PURPLE, 2
-    # )
-    # ha_state = hass.states.get(entity_id)
-    # assert ha_state.state == STATE_ON
-    # # assert service_call_counter + 1 == len(hmip_device.mock_calls)
