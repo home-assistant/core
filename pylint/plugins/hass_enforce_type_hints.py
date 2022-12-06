@@ -1987,7 +1987,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=[
                 TypeHintMatch(
                     function_name="device_class",
-                    return_type=["NumberDeviceClass", "str", None],
+                    return_type=["NumberDeviceClass", None],
                 ),
                 TypeHintMatch(
                     function_name="capability_attributes",
