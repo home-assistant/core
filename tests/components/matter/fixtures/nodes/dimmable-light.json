@@ -337,7 +337,7 @@
       "attribute_id": 3,
       "attribute_type": "chip.clusters.Objects.Basic.Attributes.ProductName",
       "attribute_name": "ProductName",
-      "value": "M5STAMP Lighting App"
+      "value": "Mock Dimmable Light device"
     },
     "0/40/4": {
       "node_id": 1,
