@@ -87,10 +87,10 @@ def get_device(hass, node):
     return dev_reg.async_get_device({device_id})
 
 
-async def test_no_client(
+async def test_no_driver(
     hass, client, multisensor_6, controller_state, integration, hass_ws_client
 ):
-    """Test client missing results in error."""
+    """Test driver missing results in error."""
     entry = integration
     ws_client = await hass_ws_client(hass)
     client.driver = None

@@ -1,10 +1,8 @@
 """Test the Z-Wave JS number platform."""
-import copy
 from unittest.mock import patch
 
 import pytest
 from zwave_js_server.event import Event
-from zwave_js_server.model.node import Node
 
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.exceptions import HomeAssistantError
@@ -96,20 +94,14 @@ async def test_number_no_target_value(
         )
 
 
-async def test_number_writeable(hass, client, aeotec_radiator_thermostat_state):
+async def test_number_writeable(hass, client, aeotec_radiator_thermostat):
     """Test the number entity where current value is writeable."""
-    new_state = copy.deepcopy(aeotec_radiator_thermostat_state)
-    # Find currentValue value and set it to writeable
-    value_ = next(
-        value_
-        for value_ in new_state["values"]
-        if value_["commandClass"] == 38 and value_["property"] == "currentValue"
-    )
-    value_["metadata"]["writeable"] = True
+    aeotec_radiator_thermostat.values["4-38-0-currentValue"].metadata.data[
+        "writeable"
+    ] = True
+    aeotec_radiator_thermostat.values.pop("4-38-0-targetValue")
 
-    # Create node and add it to client then set up config entry
-    node = Node(client, new_state)
-    client.driver.controller.nodes[node.node_id] = node
+    # set up config entry
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
