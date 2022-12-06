@@ -1,6 +1,9 @@
 """Constants for the bouncie integration."""
 
+import logging
+
 DOMAIN = "bouncie"
+LOGGER = logging.getLogger(__name__)
 
 VEHICLE_MODEL_KEY = "model"
 VEHICLE_MAKE_KEY = "make"

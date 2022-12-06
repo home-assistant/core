@@ -2,20 +2,16 @@
 from __future__ import annotations
 
 import datetime
-import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 from .coordinator import BouncieDataUpdateCoordinator
 
-# For your initial PR, limit it to 1 platform.
 PLATFORMS: list[Platform] = [Platform.SENSOR]
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -25,7 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     session = async_get_clientsession(hass=hass)
     coordinator = BouncieDataUpdateCoordinator(
         hass=hass,
-        logger=_LOGGER,
+        logger=LOGGER,
         client_id=entry.data["client_id"],
         client_secret=entry.data["client_secret"],
         redirect_uri=entry.data["redirect_uri"],
