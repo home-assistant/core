@@ -63,8 +63,7 @@ class MockClient(MatterClient):
         self, command: str, require_schema: int | None = None, **kwargs
     ) -> dict:
         """Send mock commands."""
-        print("########")
-        print(self.mock_commands)
+
         if command == APICommand.DEVICE_COMMAND and (
             (cmd_type := kwargs["payload"]["_type"]) in self.mock_commands
         ):
@@ -73,19 +72,17 @@ class MockClient(MatterClient):
 
         return await super().send_command(command, require_schema, **kwargs)
 
-    async def async_send_command_no_wait(
+    async def send_command_no_wait(
         self, command: str, require_schema: int | None = None, **kwargs
     ) -> None:
         """Send a command without waiting for the response."""
-        if command == "SendCommand" and (
-            (cmd_type := type(kwargs.get("payload"))) in self.mock_commands
+        if command == APICommand.DEVICE_COMMAND and (
+            (cmd_type := kwargs["payload"]["_type"]) in self.mock_commands
         ):
             self.mock_sent_commands.append(kwargs)
             return self.mock_commands[cmd_type]
 
-        return await super().async_send_command_no_wait(
-            command, require_schema, **kwargs
-        )
+        return await super().send_command_no_wait(command, require_schema, **kwargs)
 
 
 @pytest.fixture
