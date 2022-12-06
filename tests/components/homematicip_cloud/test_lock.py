@@ -1,12 +1,18 @@
 """Tests for HomematicIP Cloud locks."""
-from homematicip.base.enums import LockState
+from homematicip.base.enums import LockState, MotorState
 
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
-from homeassistant.components.lock import DOMAIN, LockEntityFeature
+from homeassistant.components.lock import (
+    DOMAIN,
+    STATE_JAMMED,
+    STATE_LOCKING,
+    STATE_UNLOCKING,
+    LockEntityFeature,
+)
 from homeassistant.const import ATTR_SUPPORTED_FEATURES
 from homeassistant.setup import async_setup_component
 
-from .helper import get_and_check_entity_basics
+from .helper import async_manipulate_test_data, get_and_check_entity_basics
 
 
 async def test_manually_configured_platform(hass):
@@ -59,3 +65,22 @@ async def test_hmip_doorlockdrive(hass, default_mock_hap_factory):
 
     assert hmip_device.mock_calls[-1][0] == "set_lock_state"
     assert hmip_device.mock_calls[-1][1] == (LockState.UNLOCKED,)
+
+    await async_manipulate_test_data(hass, hmip_device, "lockState", LockState.LOCKED)
+    await async_manipulate_test_data(
+        hass, hmip_device, "motorState", MotorState.STOPPED
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_JAMMED
+
+    await async_manipulate_test_data(
+        hass, hmip_device, "motorState", MotorState.CLOSING
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_LOCKING
+
+    await async_manipulate_test_data(
+        hass, hmip_device, "motorState", MotorState.OPENING
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_UNLOCKING

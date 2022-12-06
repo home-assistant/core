@@ -82,7 +82,10 @@ class HomematicipDoorLockDrive(HomematicipGenericEntity, LockEntity):
     @property
     def is_jammed(self) -> bool:
         """Return true if device is jammed."""
-        return self._device.lockState == LockState.LOCKED
+        return (
+            self._device.lockState == LockState.LOCKED
+            and self._device.motorState == MotorState.STOPPED
+        )
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
