@@ -4,10 +4,10 @@ from __future__ import annotations
 import datetime
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_CODE, CONF_REDIRECT_URI, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 from .coordinator import BouncieDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -19,10 +19,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = BouncieDataUpdateCoordinator(
         hass=hass,
         logger=LOGGER,
-        client_id=entry.data[CONF_CLIENT_ID],
-        client_secret=entry.data[CONF_CLIENT_SECRET],
-        redirect_uri=entry.data[CONF_REDIRECT_URI],
-        code=entry.data[CONF_CODE],
+        config_entry=entry,
         update_interval=datetime.timedelta(seconds=60),
     )
     await coordinator.async_config_entry_first_refresh()

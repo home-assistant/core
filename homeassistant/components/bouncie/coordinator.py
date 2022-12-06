@@ -6,11 +6,13 @@ from aiohttp.client_exceptions import ClientConnectorError
 from bounciepy import AsyncRESTAPIClient
 from bounciepy.exceptions import BouncieException, UnauthorizedError
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import CONF_CODE, CONF_REDIRECT_URI, DOMAIN
 
 
 class BouncieDataUpdateCoordinator(DataUpdateCoordinator):
@@ -20,23 +22,20 @@ class BouncieDataUpdateCoordinator(DataUpdateCoordinator):
         self,
         hass: HomeAssistant,
         logger: logging.Logger,
-        client_id: str,
-        client_secret: str,
-        redirect_uri: str,
-        code: str,
+        config_entry: ConfigEntry,
         update_interval: datetime.timedelta,
     ) -> None:
         """Init the coordinator."""
-        self._client_id = client_id
-        self._client_secret = client_secret
-        self._redirect_uri = redirect_uri
-        self._code = code
+        self._client_id = (config_entry.data[CONF_CLIENT_ID],)
+        self._client_secret = (config_entry.data[CONF_CLIENT_SECRET],)
+        self._redirect_uri = (config_entry.data[CONF_REDIRECT_URI],)
+        self._code = (config_entry.data[CONF_CODE],)
 
         self.bouncie_client = AsyncRESTAPIClient(
-            client_id=client_id,
-            client_secret=client_secret,
-            redirect_url=redirect_uri,
-            auth_code=code,
+            client_id=self._client_id,
+            client_secret=self._client_secret,
+            redirect_url=self._redirect_uri,
+            auth_code=self._code,
             session=async_get_clientsession(hass=hass),
         )
 
