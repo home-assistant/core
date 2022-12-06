@@ -105,7 +105,6 @@ class BouncieSensor(CoordinatorEntity[BouncieDataUpdateCoordinator], SensorEntit
         self.entity_description = description
         self._state = None
         self._attrs: dict[str, str] = {}
-        self._attr_name = f"{description.name}"
         self._attr_unique_id = f"{coordinator._client_id}-{description.key.lower()}"
         self._vehicle_info = next(
             (
