@@ -158,7 +158,7 @@ class DemoSensor(SensorEntity):
         unique_id: str,
         name: str,
         state: StateType,
-        device_class: SensorDeviceClass | str,
+        device_class: SensorDeviceClass,
         state_class: SensorStateClass | None,
         unit_of_measurement: str | None,
         battery: StateType,
