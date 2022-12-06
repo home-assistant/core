@@ -49,7 +49,7 @@ async def test_switchbox_init(switchbox, hass, config):
     feature_mock, entity_id = switchbox
 
     feature_mock.async_update = AsyncMock()
-    entry = await async_setup_entity(hass, config, entity_id)
+    entry = await async_setup_entity(hass, entity_id)
     assert entry.unique_id == "BleBox-switchBox-1afe34e750b8-0.relay"
 
     state = hass.states.get(entity_id)
@@ -69,7 +69,7 @@ async def test_switchbox_init(switchbox, hass, config):
     assert device.sw_version == "1.23"
 
 
-async def test_switchbox_update_when_off(switchbox, hass, config):
+async def test_switchbox_update_when_off(switchbox, hass):
     """Test switch updating when off."""
 
     feature_mock, entity_id = switchbox
@@ -78,13 +78,13 @@ async def test_switchbox_update_when_off(switchbox, hass, config):
         feature_mock.is_on = False
 
     feature_mock.async_update = AsyncMock(side_effect=initial_update)
-    await async_setup_entity(hass, config, entity_id)
+    await async_setup_entity(hass, entity_id)
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
 
 
-async def test_switchbox_update_when_on(switchbox, hass, config):
+async def test_switchbox_update_when_on(switchbox, hass):
     """Test switch updating when on."""
 
     feature_mock, entity_id = switchbox
@@ -93,13 +93,13 @@ async def test_switchbox_update_when_on(switchbox, hass, config):
         feature_mock.is_on = True
 
     feature_mock.async_update = AsyncMock(side_effect=initial_update)
-    await async_setup_entity(hass, config, entity_id)
+    await async_setup_entity(hass, entity_id)
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
 
 
-async def test_switchbox_on(switchbox, hass, config):
+async def test_switchbox_on(switchbox, hass):
     """Test turning switch on."""
 
     feature_mock, entity_id = switchbox
@@ -108,7 +108,7 @@ async def test_switchbox_on(switchbox, hass, config):
         feature_mock.is_on = False
 
     feature_mock.async_update = AsyncMock(side_effect=initial_update)
-    await async_setup_entity(hass, config, entity_id)
+    await async_setup_entity(hass, entity_id)
     feature_mock.async_update = AsyncMock()
 
     def turn_on():
@@ -127,7 +127,7 @@ async def test_switchbox_on(switchbox, hass, config):
     assert state.state == STATE_ON
 
 
-async def test_switchbox_off(switchbox, hass, config):
+async def test_switchbox_off(switchbox, hass):
     """Test turning switch off."""
 
     feature_mock, entity_id = switchbox
@@ -136,7 +136,7 @@ async def test_switchbox_off(switchbox, hass, config):
         feature_mock.is_on = True
 
     feature_mock.async_update = AsyncMock(side_effect=initial_update)
-    await async_setup_entity(hass, config, entity_id)
+    await async_setup_entity(hass, entity_id)
     feature_mock.async_update = AsyncMock()
 
     def turn_off():
@@ -188,14 +188,14 @@ def switchbox_d_fixture():
     return (features, ["switch.switchboxd_0_relay", "switch.switchboxd_1_relay"])
 
 
-async def test_switchbox_d_init(switchbox_d, hass, config):
+async def test_switchbox_d_init(switchbox_d, hass):
     """Test switch default state."""
 
     feature_mocks, entity_ids = switchbox_d
 
     feature_mocks[0].async_update = AsyncMock()
     feature_mocks[1].async_update = AsyncMock()
-    entries = await async_setup_entities(hass, config, entity_ids)
+    entries = await async_setup_entities(hass, entity_ids)
 
     entry = entries[0]
     assert entry.unique_id == "BleBox-switchBoxD-1afe34e750b8-0.relay"
@@ -232,7 +232,7 @@ async def test_switchbox_d_init(switchbox_d, hass, config):
     assert device.sw_version == "1.23"
 
 
-async def test_switchbox_d_update_when_off(switchbox_d, hass, config):
+async def test_switchbox_d_update_when_off(switchbox_d, hass):
     """Test switch updating when off."""
 
     feature_mocks, entity_ids = switchbox_d
@@ -243,13 +243,13 @@ async def test_switchbox_d_update_when_off(switchbox_d, hass, config):
 
     feature_mocks[0].async_update = AsyncMock(side_effect=initial_update0)
     feature_mocks[1].async_update = AsyncMock()
-    await async_setup_entities(hass, config, entity_ids)
+    await async_setup_entities(hass, entity_ids)
 
     assert hass.states.get(entity_ids[0]).state == STATE_OFF
     assert hass.states.get(entity_ids[1]).state == STATE_OFF
 
 
-async def test_switchbox_d_update_when_second_off(switchbox_d, hass, config):
+async def test_switchbox_d_update_when_second_off(switchbox_d, hass):
     """Test switch updating when off."""
 
     feature_mocks, entity_ids = switchbox_d
@@ -260,13 +260,13 @@ async def test_switchbox_d_update_when_second_off(switchbox_d, hass, config):
 
     feature_mocks[0].async_update = AsyncMock(side_effect=initial_update0)
     feature_mocks[1].async_update = AsyncMock()
-    await async_setup_entities(hass, config, entity_ids)
+    await async_setup_entities(hass, entity_ids)
 
     assert hass.states.get(entity_ids[0]).state == STATE_ON
     assert hass.states.get(entity_ids[1]).state == STATE_OFF
 
 
-async def test_switchbox_d_turn_first_on(switchbox_d, hass, config):
+async def test_switchbox_d_turn_first_on(switchbox_d, hass):
     """Test turning switch on."""
 
     feature_mocks, entity_ids = switchbox_d
@@ -277,7 +277,7 @@ async def test_switchbox_d_turn_first_on(switchbox_d, hass, config):
 
     feature_mocks[0].async_update = AsyncMock(side_effect=initial_update0)
     feature_mocks[1].async_update = AsyncMock()
-    await async_setup_entities(hass, config, entity_ids)
+    await async_setup_entities(hass, entity_ids)
     feature_mocks[0].async_update = AsyncMock()
 
     def turn_on0():
@@ -295,7 +295,7 @@ async def test_switchbox_d_turn_first_on(switchbox_d, hass, config):
     assert hass.states.get(entity_ids[1]).state == STATE_OFF
 
 
-async def test_switchbox_d_second_on(switchbox_d, hass, config):
+async def test_switchbox_d_second_on(switchbox_d, hass):
     """Test turning switch on."""
 
     feature_mocks, entity_ids = switchbox_d
@@ -306,7 +306,7 @@ async def test_switchbox_d_second_on(switchbox_d, hass, config):
 
     feature_mocks[0].async_update = AsyncMock(side_effect=initial_update0)
     feature_mocks[1].async_update = AsyncMock()
-    await async_setup_entities(hass, config, entity_ids)
+    await async_setup_entities(hass, entity_ids)
     feature_mocks[0].async_update = AsyncMock()
 
     def turn_on1():
@@ -324,7 +324,7 @@ async def test_switchbox_d_second_on(switchbox_d, hass, config):
     assert hass.states.get(entity_ids[1]).state == STATE_ON
 
 
-async def test_switchbox_d_first_off(switchbox_d, hass, config):
+async def test_switchbox_d_first_off(switchbox_d, hass):
     """Test turning switch on."""
 
     feature_mocks, entity_ids = switchbox_d
@@ -335,7 +335,7 @@ async def test_switchbox_d_first_off(switchbox_d, hass, config):
 
     feature_mocks[0].async_update = AsyncMock(side_effect=initial_update_any)
     feature_mocks[1].async_update = AsyncMock()
-    await async_setup_entities(hass, config, entity_ids)
+    await async_setup_entities(hass, entity_ids)
     feature_mocks[0].async_update = AsyncMock()
 
     def turn_off0():
@@ -353,7 +353,7 @@ async def test_switchbox_d_first_off(switchbox_d, hass, config):
     assert hass.states.get(entity_ids[1]).state == STATE_ON
 
 
-async def test_switchbox_d_second_off(switchbox_d, hass, config):
+async def test_switchbox_d_second_off(switchbox_d, hass):
     """Test turning switch on."""
 
     feature_mocks, entity_ids = switchbox_d
@@ -364,7 +364,7 @@ async def test_switchbox_d_second_off(switchbox_d, hass, config):
 
     feature_mocks[0].async_update = AsyncMock(side_effect=initial_update_any)
     feature_mocks[1].async_update = AsyncMock()
-    await async_setup_entities(hass, config, entity_ids)
+    await async_setup_entities(hass, entity_ids)
     feature_mocks[0].async_update = AsyncMock()
 
     def turn_off1():
@@ -385,7 +385,7 @@ ALL_SWITCH_FIXTURES = ["switchbox", "switchbox_d"]
 
 
 @pytest.mark.parametrize("feature", ALL_SWITCH_FIXTURES, indirect=["feature"])
-async def test_update_failure(feature, hass, config, caplog):
+async def test_update_failure(feature, hass, caplog):
     """Test that update failures are logged."""
 
     caplog.set_level(logging.ERROR)
@@ -399,6 +399,6 @@ async def test_update_failure(feature, hass, config, caplog):
         entity_id = entity_id[0]
 
     feature_mock.async_update = AsyncMock(side_effect=blebox_uniapi.error.ClientError)
-    await async_setup_entity(hass, config, entity_id)
+    await async_setup_entity(hass, entity_id)
 
     assert f"Updating '{feature_mock.full_name}' failed: " in caplog.text

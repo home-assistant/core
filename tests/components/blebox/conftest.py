@@ -88,7 +88,7 @@ async def async_setup_entities(hass, entity_ids):
     return [entity_registry.async_get(entity_id) for entity_id in entity_ids]
 
 
-async def async_setup_entity(hass, config, entity_id):
+async def async_setup_entity(hass, entity_id):
     """Return a configured entry with the given entity_id."""
 
-    return (await async_setup_entities(hass, config, [entity_id]))[0]
+    return (await async_setup_entities(hass, [entity_id]))[0]
