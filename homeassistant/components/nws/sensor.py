@@ -96,7 +96,7 @@ SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
     NWSSensorEntityDescription(
         key="windSpeed",
         name="Wind Speed",
-        icon="mdi:weather-windy",
+        device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         unit_convert=UnitOfSpeed.MILES_PER_HOUR,
@@ -104,7 +104,7 @@ SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
     NWSSensorEntityDescription(
         key="windGust",
         name="Wind Gust",
-        icon="mdi:weather-windy",
+        device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         unit_convert=UnitOfSpeed.MILES_PER_HOUR,
