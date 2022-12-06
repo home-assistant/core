@@ -2325,7 +2325,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="device_class",
-                    return_type=["UpdateDeviceClass", "str", None],
+                    return_type=["UpdateDeviceClass", None],
                 ),
                 TypeHintMatch(
                     function_name="in_progress",
