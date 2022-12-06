@@ -304,6 +304,10 @@ class TwinklyLight(LightEntity):
             if LightEntityFeature.EFFECT & self.supported_features:
                 await self.async_update_movies()
                 await self.async_update_current_movie()
+                await self.async_update_current_color()
+                _LOGGER.debug("Sett mode color: %s", self._movies)
+                if len(self._movies) == 0:
+                    self._client.default_mode = "color"
 
             if not self._is_available:
                 _LOGGER.info("Twinkly '%s' is now available", self._client.host)
@@ -332,3 +336,23 @@ class TwinklyLight(LightEntity):
         _LOGGER.debug("Current movie: %s", current_movie)
         if current_movie and "id" in current_movie:
             self._current_movie = current_movie
+
+    async def async_update_current_color(self) -> None:
+        """Update the current active color."""
+        # pylint: disable=protected-access
+        current_color = await self._client._get("led/color")
+        _LOGGER.debug("Current color: %s", current_color)
+        if int(current_color.get("code")) == 1000:
+            if self._attr_color_mode == ColorMode.RGBW:
+                self._attr_rgbw_color = (
+                    current_color["red"],
+                    current_color["green"],
+                    current_color["blue"],
+                    0,
+                )
+            elif self._attr_color_mode == ColorMode.RGB:
+                self._attr_rgb_color = (
+                    current_color["red"],
+                    current_color["green"],
+                    current_color["blue"],
+                )

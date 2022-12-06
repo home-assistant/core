@@ -22,7 +22,9 @@ class ClientMock:
         self.state = True
         self.brightness = {"mode": "enabled", "value": 10}
         self.color = None
-        self.movies = [{"id": 1, "name": "Rainbow"}, {"id": 2, "name": "Flare"}]
+        self.movies = {
+            "movies": [{"id": 1, "name": "Rainbow"}, {"id": 2, "name": "Flare"}]
+        }
         self.current_movie = {}
         self.default_mode = "movie"
         self.mode = None
@@ -117,3 +119,6 @@ class ClientMock:
     async def get_firmware_version(self) -> dict:
         """Get firmware version."""
         return {"version": self.version}
+
+    async def _get(self, url) -> dict:
+        return {"code": 1000, "red": 255, "green": 255, "blue": 255}
