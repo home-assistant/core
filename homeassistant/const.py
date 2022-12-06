@@ -779,9 +779,20 @@ PERCENTAGE: Final = "%"
 # Rotational speed units
 REVOLUTIONS_PER_MINUTE: Final = "rpm"
 
+
+# Irradiance units
+class UnitOfIrradiance(StrEnum):
+    """Irradiance units."""
+
+    WATTS_PER_SQUARE_METER = "W/m²"
+    BTUS_PER_HOUR_SQUARE_FOOT = "BTU/(h.ft²)"
+
+
 # Irradiation units
 IRRADIATION_WATTS_PER_SQUARE_METER: Final = "W/m²"
+"""Deprecated: please use UnitOfIrradiance.WATTS_PER_SQUARE_METER"""
 IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT: Final = "BTU/(h×ft²)"
+"""Deprecated: please use UnitOfIrradiance.BTUS_PER_HOUR_SQUARE_FOOT"""
 
 
 class UnitOfVolumetricFlux(StrEnum):
