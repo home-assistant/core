@@ -64,12 +64,10 @@ class OverkizUpdateEntity(OverkizEntity, UpdateEntity):
 
     def get_gateway(self) -> Gateway | None:
         """Get associated gateway."""
-        gateways = self.coordinator.client.gateways
 
-        if gateways:
-            for gateway in gateways:
-                if gateway.id == self.device.gateway_id:
-                    return gateway
+        for gateway in self.coordinator.client.gateways:
+            if gateway.id == self.device.gateway_id:
+                return gateway
 
         return None
 
