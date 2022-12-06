@@ -3,8 +3,6 @@ from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.renault.const import (
     CONF_KAMEREON_ACCOUNT_ID,
     CONF_LOCALE,
-    DEVICE_CLASS_CHARGE_STATE,
-    DEVICE_CLASS_PLUG_STATE,
     DOMAIN,
 )
 from homeassistant.components.select import ATTR_OPTIONS
@@ -169,7 +167,6 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
             },
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_CHARGE_STATE,
                 ATTR_ENTITY_ID: "sensor.reg_number_charge_state",
                 ATTR_ICON: "mdi:flash",
                 ATTR_STATE: "charge_in_progress",
@@ -222,7 +219,6 @@ MOCK_VEHICLES = {
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_hvac_last_activity",
             },
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_PLUG_STATE,
                 ATTR_ENTITY_ID: "sensor.reg_number_plug_state",
                 ATTR_ICON: "mdi:power-plug",
                 ATTR_STATE: "plugged",
@@ -387,7 +383,6 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
             },
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_CHARGE_STATE,
                 ATTR_ENTITY_ID: "sensor.reg_number_charge_state",
                 ATTR_ICON: "mdi:flash-off",
                 ATTR_STATE: "charge_error",
@@ -440,7 +435,6 @@ MOCK_VEHICLES = {
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_hvac_last_activity",
             },
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_PLUG_STATE,
                 ATTR_ENTITY_ID: "sensor.reg_number_plug_state",
                 ATTR_ICON: "mdi:power-plug-off",
                 ATTR_STATE: "unplugged",
@@ -605,7 +599,6 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
             },
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_CHARGE_STATE,
                 ATTR_ENTITY_ID: "sensor.reg_number_charge_state",
                 ATTR_ICON: "mdi:flash",
                 ATTR_STATE: "charge_in_progress",
@@ -655,7 +648,6 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
             },
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_PLUG_STATE,
                 ATTR_ENTITY_ID: "sensor.reg_number_plug_state",
                 ATTR_ICON: "mdi:power-plug",
                 ATTR_STATE: "plugged",
