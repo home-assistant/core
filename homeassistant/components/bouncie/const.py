@@ -2,10 +2,6 @@
 
 DOMAIN = "bouncie"
 
-USER_EMAIL_KEY = "email"
-USER_NAME_KEY = "name"
-USER_ID_KEY = "id"
-
 VEHICLE_MODEL_KEY = "model"
 VEHICLE_MAKE_KEY = "make"
 VEHICLE_NAME_KEY = "name"
