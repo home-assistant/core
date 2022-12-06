@@ -28,15 +28,5 @@
                 "description": "La clave API se puede recuperar autom\u00e1ticamente si las credenciales de inicio de sesi\u00f3n no se configuraron en la aplicaci\u00f3n.\nTu clave API se puede encontrar en Configuraci\u00f3n > General en la IU web de Lidarr."
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "max_records": "N\u00famero m\u00e1ximo de registros para mostrar en b\u00fasqueda y cola",
-                    "upcoming_days": "N\u00famero de pr\u00f3ximos d\u00edas para mostrar en el calendario"
-                }
-            }
-        }
     }
 }

@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.device_tracker.legacy import YAML_DEVICES
-from homeassistant.components.homekit.accessories import HomeDriver, HomeIIDManager
+from homeassistant.components.homekit.accessories import HomeDriver
 from homeassistant.components.homekit.const import BRIDGE_NAME, EVENT_HOMEKIT_CHANGED
 from homeassistant.components.homekit.iidmanager import AccessoryIIDStorage
 
@@ -21,7 +21,7 @@ def iid_storage(hass):
 
 
 @pytest.fixture()
-def run_driver(hass, loop, iid_storage):
+def run_driver(hass, event_loop, iid_storage):
     """Return a custom AccessoryDriver instance for HomeKit accessory init.
 
     This mock does not mock async_stop, so the driver will not be stopped
@@ -39,14 +39,14 @@ def run_driver(hass, loop, iid_storage):
             entry_id="",
             entry_title="mock entry",
             bridge_name=BRIDGE_NAME,
-            iid_manager=HomeIIDManager(iid_storage),
+            iid_storage=iid_storage,
             address="127.0.0.1",
-            loop=loop,
+            loop=event_loop,
         )
 
 
 @pytest.fixture
-def hk_driver(hass, loop, iid_storage):
+def hk_driver(hass, event_loop, iid_storage):
     """Return a custom AccessoryDriver instance for HomeKit accessory init."""
     with patch("pyhap.accessory_driver.AsyncZeroconf"), patch(
         "pyhap.accessory_driver.AccessoryEncoder"
@@ -63,14 +63,14 @@ def hk_driver(hass, loop, iid_storage):
             entry_id="",
             entry_title="mock entry",
             bridge_name=BRIDGE_NAME,
-            iid_manager=HomeIIDManager(iid_storage),
+            iid_storage=iid_storage,
             address="127.0.0.1",
-            loop=loop,
+            loop=event_loop,
         )
 
 
 @pytest.fixture
-def mock_hap(hass, loop, iid_storage, mock_zeroconf):
+def mock_hap(hass, event_loop, iid_storage, mock_zeroconf):
     """Return a custom AccessoryDriver instance for HomeKit accessory init."""
     with patch("pyhap.accessory_driver.AsyncZeroconf"), patch(
         "pyhap.accessory_driver.AccessoryEncoder"
@@ -91,9 +91,9 @@ def mock_hap(hass, loop, iid_storage, mock_zeroconf):
             entry_id="",
             entry_title="mock entry",
             bridge_name=BRIDGE_NAME,
-            iid_manager=HomeIIDManager(iid_storage),
+            iid_storage=iid_storage,
             address="127.0.0.1",
-            loop=loop,
+            loop=event_loop,
         )
 
 

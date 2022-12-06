@@ -24,7 +24,7 @@ from homeassistant.const import (
     ATTR_SUGGESTED_AREA,
     ATTR_VIA_DEVICE,
     PRECISION_TENTHS,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
@@ -69,10 +69,7 @@ async def async_setup_entry(
     )
 
     # Add zones as entities
-    async_add_entities(
-        [NoboZone(zone_id, hub, override_type) for zone_id in hub.zones],
-        True,
-    )
+    async_add_entities(NoboZone(zone_id, hub, override_type) for zone_id in hub.zones)
 
 
 class NoboZone(ClimateEntity):
@@ -87,7 +84,7 @@ class NoboZone(ClimateEntity):
     _attr_precision = PRECISION_TENTHS
     _attr_preset_modes = PRESET_MODES
     _attr_supported_features = SUPPORT_FLAGS
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 1
     # Need to poll to get preset change when in HVACMode.AUTO, so can't set _attr_should_poll = False
 
@@ -107,6 +104,7 @@ class NoboZone(ClimateEntity):
             ATTR_VIA_DEVICE: (DOMAIN, hub.hub_info[ATTR_SERIAL]),
             ATTR_SUGGESTED_AREA: hub.zones[zone_id][ATTR_NAME],
         }
+        self._read_state()
 
     async def async_added_to_hass(self) -> None:
         """Register callback from hub."""

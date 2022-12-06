@@ -15,7 +15,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_conversion import DistanceConverter
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import GeonetnzQuakesFeedEntityManager
 from .const import DOMAIN, FEED
@@ -93,7 +93,7 @@ class GeonetnzQuakesEvent(GeolocationEvent):
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
-        if self.hass.config.units is IMPERIAL_SYSTEM:
+        if self.hass.config.units is US_CUSTOMARY_SYSTEM:
             self._attr_unit_of_measurement = LENGTH_MILES
         self._remove_signal_delete = async_dispatcher_connect(
             self.hass,
@@ -136,7 +136,7 @@ class GeonetnzQuakesEvent(GeolocationEvent):
         """Update the internal state from the provided feed entry."""
         self._attr_name = feed_entry.title
         # Convert distance if not metric system.
-        if self.hass.config.units is IMPERIAL_SYSTEM:
+        if self.hass.config.units is US_CUSTOMARY_SYSTEM:
             self._attr_distance = DistanceConverter.convert(
                 feed_entry.distance_to_home, LENGTH_KILOMETERS, LENGTH_MILES
             )

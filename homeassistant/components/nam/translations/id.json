@@ -37,5 +37,18 @@
                 "description": "Siapkan integrasi Nettigo Air Monitor."
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "caqi_level": {
+                "state": {
+                    "high": "Tinggi",
+                    "low": "Rendah",
+                    "medium": "Sedang",
+                    "very high": "Sangat tinggi",
+                    "very low": "Sangat rendah"
+                }
+            }
+        }
     }
 }

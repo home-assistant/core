@@ -607,14 +607,16 @@ class EntityPlatform:
                 device_id=device_id,
                 disabled_by=disabled_by,
                 entity_category=entity.entity_category,
+                get_initial_options=entity.get_initial_entity_options,
+                has_entity_name=entity.has_entity_name,
                 hidden_by=hidden_by,
                 known_object_ids=self.entities.keys(),
-                has_entity_name=entity.has_entity_name,
                 original_device_class=entity.device_class,
                 original_icon=entity.icon,
                 original_name=entity.name,
                 suggested_object_id=suggested_object_id,
                 supported_features=entity.supported_features,
+                translation_key=entity.translation_key,
                 unit_of_measurement=entity.unit_of_measurement,
             )
 

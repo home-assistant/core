@@ -51,7 +51,7 @@ class Blueprint:
 
     def __init__(
         self,
-        data: dict,
+        data: dict[str, Any],
         *,
         path: str | None = None,
         expected_domain: str | None = None,

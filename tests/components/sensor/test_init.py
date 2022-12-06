@@ -5,13 +5,16 @@ from decimal import Decimal
 import pytest
 from pytest import approx
 
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.number import NumberDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     LENGTH_CENTIMETERS,
     LENGTH_INCHES,
     LENGTH_KILOMETERS,
+    LENGTH_METERS,
     LENGTH_MILES,
+    LENGTH_YARD,
     MASS_GRAMS,
     MASS_OUNCES,
     PRESSURE_HPA,
@@ -29,13 +32,14 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
     VOLUME_FLUID_OUNCE,
     VOLUME_LITERS,
+    UnitOfTemperature,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.common import mock_restore_cache_with_extra_data
 
@@ -43,8 +47,8 @@ from tests.common import mock_restore_cache_with_extra_data
 @pytest.mark.parametrize(
     "unit_system,native_unit,state_unit,native_value,state_value",
     [
-        (IMPERIAL_SYSTEM, TEMP_FAHRENHEIT, TEMP_FAHRENHEIT, 100, 100),
-        (IMPERIAL_SYSTEM, TEMP_CELSIUS, TEMP_FAHRENHEIT, 38, 100),
+        (US_CUSTOMARY_SYSTEM, TEMP_FAHRENHEIT, TEMP_FAHRENHEIT, 100, 100),
+        (US_CUSTOMARY_SYSTEM, TEMP_CELSIUS, TEMP_FAHRENHEIT, 38, 100),
         (METRIC_SYSTEM, TEMP_FAHRENHEIT, TEMP_CELSIUS, 100, 38),
         (METRIC_SYSTEM, TEMP_CELSIUS, TEMP_CELSIUS, 38, 38),
     ],
@@ -565,11 +569,11 @@ async def test_custom_unit(
             SensorDeviceClass.VOLUME,
         ),
         (
+            VOLUME_LITERS,
             VOLUME_FLUID_OUNCE,
-            VOLUME_LITERS,
-            VOLUME_LITERS,
-            78,
+            VOLUME_FLUID_OUNCE,
             2.3,
+            77.8,
             SensorDeviceClass.VOLUME,
         ),
         (
@@ -661,3 +665,422 @@ async def test_custom_unit_change(
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == approx(float(native_value))
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
+
+
+@pytest.mark.parametrize(
+    "unit_system, native_unit, automatic_unit, suggested_unit, custom_unit, native_value, automatic_value, suggested_value, custom_value, device_class",
+    [
+        # Distance
+        (
+            US_CUSTOMARY_SYSTEM,
+            LENGTH_KILOMETERS,
+            LENGTH_MILES,
+            LENGTH_METERS,
+            LENGTH_YARD,
+            1000,
+            621,
+            1000000,
+            1093613,
+            SensorDeviceClass.DISTANCE,
+        ),
+    ],
+)
+async def test_unit_conversion_priority(
+    hass,
+    enable_custom_integrations,
+    unit_system,
+    native_unit,
+    automatic_unit,
+    suggested_unit,
+    custom_unit,
+    native_value,
+    automatic_value,
+    suggested_value,
+    custom_value,
+    device_class,
+):
+    """Test priority of unit conversion."""
+
+    hass.config.units = unit_system
+
+    entity_registry = er.async_get(hass)
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+        unique_id="very_unique",
+    )
+    entity0 = platform.ENTITIES["0"]
+
+    platform.ENTITIES["1"] = platform.MockSensor(
+        name="Test",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+    )
+    entity1 = platform.ENTITIES["1"]
+
+    platform.ENTITIES["2"] = platform.MockSensor(
+        name="Test",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+        suggested_unit_of_measurement=suggested_unit,
+        unique_id="very_unique_2",
+    )
+    entity2 = platform.ENTITIES["2"]
+
+    platform.ENTITIES["3"] = platform.MockSensor(
+        name="Test",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+        suggested_unit_of_measurement=suggested_unit,
+    )
+    entity3 = platform.ENTITIES["3"]
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    # Registered entity -> Follow automatic unit conversion
+    state = hass.states.get(entity0.entity_id)
+    assert float(state.state) == approx(float(automatic_value))
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == automatic_unit
+    # Assert the automatic unit conversion is stored in the registry
+    entry = entity_registry.async_get(entity0.entity_id)
+    assert entry.options == {
+        "sensor.private": {"suggested_unit_of_measurement": automatic_unit}
+    }
+
+    # Unregistered entity -> Follow native unit
+    state = hass.states.get(entity1.entity_id)
+    assert float(state.state) == approx(float(native_value))
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
+
+    # Registered entity with suggested unit
+    state = hass.states.get(entity2.entity_id)
+    assert float(state.state) == approx(float(suggested_value))
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == suggested_unit
+    # Assert the suggested unit is stored in the registry
+    entry = entity_registry.async_get(entity2.entity_id)
+    assert entry.options == {
+        "sensor.private": {"suggested_unit_of_measurement": suggested_unit}
+    }
+
+    # Unregistered entity with suggested unit
+    state = hass.states.get(entity3.entity_id)
+    assert float(state.state) == approx(float(suggested_value))
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == suggested_unit
+
+    # Set a custom unit, this should have priority over the automatic unit conversion
+    entity_registry.async_update_entity_options(
+        entity0.entity_id, "sensor", {"unit_of_measurement": custom_unit}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert float(state.state) == approx(float(custom_value))
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+
+    entity_registry.async_update_entity_options(
+        entity2.entity_id, "sensor", {"unit_of_measurement": custom_unit}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity2.entity_id)
+    assert float(state.state) == approx(float(custom_value))
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+
+
+@pytest.mark.parametrize(
+    "unit_system, native_unit, original_unit, suggested_unit, native_value, original_value, device_class",
+    [
+        # Distance
+        (
+            US_CUSTOMARY_SYSTEM,
+            LENGTH_KILOMETERS,
+            LENGTH_YARD,
+            LENGTH_METERS,
+            1000,
+            1093613,
+            SensorDeviceClass.DISTANCE,
+        ),
+    ],
+)
+async def test_unit_conversion_priority_suggested_unit_change(
+    hass,
+    enable_custom_integrations,
+    unit_system,
+    native_unit,
+    original_unit,
+    suggested_unit,
+    native_value,
+    original_value,
+    device_class,
+):
+    """Test priority of unit conversion."""
+
+    hass.config.units = unit_system
+
+    entity_registry = er.async_get(hass)
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+
+    # Pre-register entities
+    entry = entity_registry.async_get_or_create("sensor", "test", "very_unique")
+    entity_registry.async_update_entity_options(
+        entry.entity_id,
+        "sensor.private",
+        {"suggested_unit_of_measurement": original_unit},
+    )
+    entry = entity_registry.async_get_or_create("sensor", "test", "very_unique_2")
+    entity_registry.async_update_entity_options(
+        entry.entity_id,
+        "sensor.private",
+        {"suggested_unit_of_measurement": original_unit},
+    )
+
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+        unique_id="very_unique",
+    )
+    entity0 = platform.ENTITIES["0"]
+
+    platform.ENTITIES["1"] = platform.MockSensor(
+        name="Test",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+        suggested_unit_of_measurement=suggested_unit,
+        unique_id="very_unique_2",
+    )
+    entity1 = platform.ENTITIES["1"]
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    # Registered entity -> Follow automatic unit conversion the first time the entity was seen
+    state = hass.states.get(entity0.entity_id)
+    assert float(state.state) == approx(float(original_value))
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == original_unit
+
+    # Registered entity -> Follow suggested unit the first time the entity was seen
+    state = hass.states.get(entity1.entity_id)
+    assert float(state.state) == approx(float(original_value))
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == original_unit
+
+
+@pytest.mark.parametrize(
+    "unit_system, native_unit, original_unit, native_value, original_value, device_class",
+    [
+        # Distance
+        (
+            US_CUSTOMARY_SYSTEM,
+            LENGTH_KILOMETERS,
+            LENGTH_MILES,
+            1000,
+            621,
+            SensorDeviceClass.DISTANCE,
+        ),
+        (
+            US_CUSTOMARY_SYSTEM,
+            LENGTH_METERS,
+            LENGTH_MILES,
+            1000000,
+            621.371,
+            SensorDeviceClass.DISTANCE,
+        ),
+    ],
+)
+async def test_unit_conversion_priority_legacy_conversion_removed(
+    hass,
+    enable_custom_integrations,
+    unit_system,
+    native_unit,
+    original_unit,
+    native_value,
+    original_value,
+    device_class,
+):
+    """Test priority of unit conversion."""
+
+    hass.config.units = unit_system
+
+    entity_registry = er.async_get(hass)
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+
+    # Pre-register entities
+    entity_registry.async_get_or_create(
+        "sensor", "test", "very_unique", unit_of_measurement=original_unit
+    )
+
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+        unique_id="very_unique",
+    )
+    entity0 = platform.ENTITIES["0"]
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert float(state.state) == approx(float(original_value))
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == original_unit
+
+
+def test_device_classes_aligned():
+    """Make sure all number device classes are also available in SensorDeviceClass."""
+
+    for device_class in NumberDeviceClass:
+        assert hasattr(SensorDeviceClass, device_class.name)
+        assert getattr(SensorDeviceClass, device_class.name).value == device_class.value
+
+
+async def test_value_unknown_in_enumeration(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+):
+    """Test warning on invalid enum value."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value="invalid_option",
+        device_class=SensorDeviceClass.ENUM,
+        options=["option1", "option2"],
+    )
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    assert (
+        "Sensor sensor.test provides state value 'invalid_option', "
+        "which is not in the list of options provided"
+    ) in caplog.text
+
+
+async def test_invalid_enumeration_entity_with_device_class(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+):
+    """Test warning on entities that provide an enum with a device class."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=21,
+        device_class=SensorDeviceClass.POWER,
+        options=["option1", "option2"],
+    )
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    assert (
+        "Sensor sensor.test is providing enum options, but has device class 'power' "
+        "instead of 'enum'"
+    ) in caplog.text
+
+
+async def test_invalid_enumeration_entity_without_device_class(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+):
+    """Test warning on entities that provide an enum without a device class."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=21,
+        options=["option1", "option2"],
+    )
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    assert (
+        "Sensor sensor.test is providing enum options, but is missing "
+        "the enum device class"
+    ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    "device_class",
+    (
+        SensorDeviceClass.DATE,
+        SensorDeviceClass.ENUM,
+        SensorDeviceClass.TIMESTAMP,
+    ),
+)
+async def test_non_numeric_device_class_with_state_class(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+    device_class: SensorDeviceClass,
+):
+    """Test error on numeric entities that provide an state class."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=None,
+        device_class=device_class,
+        state_class=SensorStateClass.MEASUREMENT,
+        options=["option1", "option2"],
+    )
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    assert (
+        "Sensor sensor.test has a state class and thus indicating it has a numeric "
+        f"value; however, it has the non-numeric device class: {device_class}"
+    ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    "device_class",
+    (
+        SensorDeviceClass.DATE,
+        SensorDeviceClass.ENUM,
+        SensorDeviceClass.TIMESTAMP,
+    ),
+)
+async def test_non_numeric_device_class_with_unit_of_measurement(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+    device_class: SensorDeviceClass,
+):
+    """Test error on numeric entities that provide an unit of measurement."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=None,
+        device_class=device_class,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        options=["option1", "option2"],
+    )
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    assert (
+        "Sensor sensor.test has a unit of measurement and thus indicating it has "
+        f"a numeric value; however, it has the non-numeric device class: {device_class}"
+    ) in caplog.text

@@ -1090,11 +1090,17 @@ async def websocket_update_zha_configuration(
             ):
                 data_to_save[CUSTOM_CONFIGURATION][section].pop(entry)
             # remove entire section block if empty
-            if not data_to_save[CUSTOM_CONFIGURATION][section]:
+            if (
+                not data_to_save[CUSTOM_CONFIGURATION].get(section)
+                and section in data_to_save[CUSTOM_CONFIGURATION]
+            ):
                 data_to_save[CUSTOM_CONFIGURATION].pop(section)
 
     # remove entire custom_configuration block if empty
-    if not data_to_save[CUSTOM_CONFIGURATION]:
+    if (
+        not data_to_save.get(CUSTOM_CONFIGURATION)
+        and CUSTOM_CONFIGURATION in data_to_save
+    ):
         data_to_save.pop(CUSTOM_CONFIGURATION)
 
     _LOGGER.info(

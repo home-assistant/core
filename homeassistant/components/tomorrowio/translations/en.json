@@ -17,6 +17,39 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "health_concern": {
+                "state": {
+                    "good": "Good",
+                    "hazardous": "Hazardous",
+                    "moderate": "Moderate",
+                    "unhealthy": "Unhealthy",
+                    "unhealthy_for_sensitive_groups": "Unhealthy for Sensitive Groups",
+                    "very_unhealthy": "Very Unhealthy"
+                }
+            },
+            "pollen_index": {
+                "state": {
+                    "high": "High",
+                    "low": "Low",
+                    "medium": "Medium",
+                    "none": "None",
+                    "very_high": "Very High",
+                    "very_low": "Very Low"
+                }
+            },
+            "precipitation_type": {
+                "state": {
+                    "freezing_rain": "Freezing Rain",
+                    "ice_pellets": "Ice Pellets",
+                    "none": "None",
+                    "rain": "Rain",
+                    "snow": "Snow"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

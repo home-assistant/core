@@ -31,7 +31,7 @@ async def test_watching(
     assert state.attributes.get(ATTR_ICON) == "mdi:television-play"
     assert state.attributes.get(ATTR_STATE_CLASS) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Watching"
-    assert state.state == "1"
+    assert state.state == "3"
 
     entry = entity_registry.async_get(state.entity_id)
     assert entry

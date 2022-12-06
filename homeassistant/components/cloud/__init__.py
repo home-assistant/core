@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable
+from datetime import timedelta
 from enum import Enum
 
 from hass_nabucasa import Cloud
@@ -26,6 +27,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -34,27 +36,30 @@ from homeassistant.util.aiohttp import MockRequest
 from . import account_link, http_api
 from .client import CloudClient
 from .const import (
-    CONF_ACCOUNT_LINK_URL,
-    CONF_ACME_DIRECTORY_SERVER,
+    CONF_ACCOUNT_LINK_SERVER,
+    CONF_ACCOUNTS_SERVER,
+    CONF_ACME_SERVER,
     CONF_ALEXA,
-    CONF_ALEXA_ACCESS_TOKEN_URL,
+    CONF_ALEXA_SERVER,
     CONF_ALIASES,
-    CONF_CLOUDHOOK_CREATE_URL,
+    CONF_CLOUDHOOK_SERVER,
     CONF_COGNITO_CLIENT_ID,
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
     CONF_GOOGLE_ACTIONS,
-    CONF_GOOGLE_ACTIONS_REPORT_STATE_URL,
-    CONF_RELAYER,
-    CONF_REMOTE_API_URL,
-    CONF_SUBSCRIPTION_INFO_URL,
+    CONF_RELAYER_SERVER,
+    CONF_REMOTE_SNI_SERVER,
+    CONF_REMOTESTATE_SERVER,
+    CONF_THINGTALK_SERVER,
     CONF_USER_POOL_ID,
-    CONF_VOICE_API_URL,
+    CONF_VOICE_SERVER,
     DOMAIN,
     MODE_DEV,
     MODE_PROD,
 )
 from .prefs import CloudPreferences
+from .repairs import async_manage_legacy_subscription_issue
+from .subscription import async_subscription_info
 
 DEFAULT_MODE = MODE_PROD
 
@@ -92,7 +97,6 @@ GACTIONS_SCHEMA = ASSISTANT_SCHEMA.extend(
     {vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: GOOGLE_ENTITY_SCHEMA}}
 )
 
-# pylint: disable=no-value-for-parameter
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -103,17 +107,18 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_COGNITO_CLIENT_ID): str,
                 vol.Optional(CONF_USER_POOL_ID): str,
                 vol.Optional(CONF_REGION): str,
-                vol.Optional(CONF_RELAYER): str,
-                vol.Optional(CONF_SUBSCRIPTION_INFO_URL): vol.Url(),
-                vol.Optional(CONF_CLOUDHOOK_CREATE_URL): vol.Url(),
-                vol.Optional(CONF_REMOTE_API_URL): vol.Url(),
-                vol.Optional(CONF_ACME_DIRECTORY_SERVER): vol.Url(),
                 vol.Optional(CONF_ALEXA): ALEXA_SCHEMA,
                 vol.Optional(CONF_GOOGLE_ACTIONS): GACTIONS_SCHEMA,
-                vol.Optional(CONF_ALEXA_ACCESS_TOKEN_URL): vol.Url(),
-                vol.Optional(CONF_GOOGLE_ACTIONS_REPORT_STATE_URL): vol.Url(),
-                vol.Optional(CONF_ACCOUNT_LINK_URL): vol.Url(),
-                vol.Optional(CONF_VOICE_API_URL): vol.Url(),
+                vol.Optional(CONF_ACCOUNT_LINK_SERVER): str,
+                vol.Optional(CONF_ACCOUNTS_SERVER): str,
+                vol.Optional(CONF_ACME_SERVER): str,
+                vol.Optional(CONF_ALEXA_SERVER): str,
+                vol.Optional(CONF_CLOUDHOOK_SERVER): str,
+                vol.Optional(CONF_RELAYER_SERVER): str,
+                vol.Optional(CONF_REMOTE_SNI_SERVER): str,
+                vol.Optional(CONF_REMOTESTATE_SERVER): str,
+                vol.Optional(CONF_THINGTALK_SERVER): str,
+                vol.Optional(CONF_VOICE_SERVER): str,
             }
         )
     },
@@ -258,6 +263,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     loaded = False
 
+    async def async_startup_repairs(_=None) -> None:
+        """Create repair issues after startup."""
+        if not cloud.is_logged_in:
+            return
+
+        if subscription_info := await async_subscription_info(cloud):
+            async_manage_legacy_subscription_issue(hass, subscription_info)
+
     async def _on_connect():
         """Discover RemoteUI binary sensor."""
         nonlocal loaded
@@ -293,6 +306,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await http_api.async_setup(hass)
 
     account_link.async_setup(hass)
+
+    async_call_later(
+        hass=hass,
+        delay=timedelta(hours=1),
+        action=async_startup_repairs,
+    )
 
     return True
 

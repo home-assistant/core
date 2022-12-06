@@ -1,5 +1,11 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "error": {
+            "unexpected_response": "Neo\u010dak\u00e1van\u00e1 odpove\u010f zo servera whois"
+        },
         "step": {
             "user": {
                 "data": {

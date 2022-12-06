@@ -38,19 +38,19 @@ def config_fixture(hass):
     }
 
 
-@pytest.fixture(name="data_bridge", scope="session")
+@pytest.fixture(name="data_bridge", scope="package")
 def data_bridge_fixture():
     """Define bridge data."""
     return json.loads(load_fixture("bridge_data.json", "notion"))
 
 
-@pytest.fixture(name="data_sensor", scope="session")
+@pytest.fixture(name="data_sensor", scope="package")
 def data_sensor_fixture():
     """Define sensor data."""
     return json.loads(load_fixture("sensor_data.json", "notion"))
 
 
-@pytest.fixture(name="data_task", scope="session")
+@pytest.fixture(name="data_task", scope="package")
 def data_task_fixture():
     """Define task data."""
     return json.loads(load_fixture("task_data.json", "notion"))

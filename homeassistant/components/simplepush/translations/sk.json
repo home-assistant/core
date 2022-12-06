@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+        },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "device_key": "K\u013e\u00fa\u010d zariadenia v\u00e1\u0161ho zariadenia",
+                    "name": "N\u00e1zov",
+                    "password": "Heslo \u0161ifrovania pou\u017e\u00edvan\u00e9ho va\u0161\u00edm zariaden\u00edm"
+                }
+            }
+        }
+    }
+}

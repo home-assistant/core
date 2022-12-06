@@ -30,6 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ALLOWED_CONDITION_BASED_SERVICE_KEYS = {
     "BRAKE_FLUID",
+    "EMISSION_CHECK",
     "ENGINE_OIL",
     "OIL",
     "TIRE_WEAR_FRONT",

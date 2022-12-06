@@ -240,9 +240,14 @@ async def test_if_fires_on_click_event_rpc_device(hass, calls, mock_rpc_device):
     assert calls[0].data["some"] == "test_trigger_single_push"
 
 
-async def test_validate_trigger_block_device_not_ready(hass, calls, mock_block_device):
+async def test_validate_trigger_block_device_not_ready(
+    hass, calls, mock_block_device, monkeypatch
+):
     """Test validate trigger config when block device is not ready."""
-    await init_integration(hass, 1)
+    monkeypatch.setattr(mock_block_device, "initialized", False)
+    entry = await init_integration(hass, 1)
+    dev_reg = async_get_dev_reg(hass)
+    device = async_entries_for_config_entry(dev_reg, entry.entry_id)[0]
 
     assert await async_setup_component(
         hass,
@@ -253,7 +258,7 @@ async def test_validate_trigger_block_device_not_ready(hass, calls, mock_block_d
                     "trigger": {
                         CONF_PLATFORM: "device",
                         CONF_DOMAIN: DOMAIN,
-                        CONF_DEVICE_ID: "device_not_ready",
+                        CONF_DEVICE_ID: device.id,
                         CONF_TYPE: "single",
                         CONF_SUBTYPE: "button1",
                     },
@@ -266,7 +271,7 @@ async def test_validate_trigger_block_device_not_ready(hass, calls, mock_block_d
         },
     )
     message = {
-        CONF_DEVICE_ID: "device_not_ready",
+        CONF_DEVICE_ID: device.id,
         ATTR_CLICK_TYPE: "single",
         ATTR_CHANNEL: 1,
     }
@@ -277,8 +282,15 @@ async def test_validate_trigger_block_device_not_ready(hass, calls, mock_block_d
     assert calls[0].data["some"] == "test_trigger_single_click"
 
 
-async def test_validate_trigger_rpc_device_not_ready(hass, calls, mock_rpc_device):
+async def test_validate_trigger_rpc_device_not_ready(
+    hass, calls, mock_rpc_device, monkeypatch
+):
     """Test validate trigger config when RPC device is not ready."""
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+    entry = await init_integration(hass, 2)
+    dev_reg = async_get_dev_reg(hass)
+    device = async_entries_for_config_entry(dev_reg, entry.entry_id)[0]
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -288,7 +300,7 @@ async def test_validate_trigger_rpc_device_not_ready(hass, calls, mock_rpc_devic
                     "trigger": {
                         CONF_PLATFORM: "device",
                         CONF_DOMAIN: DOMAIN,
-                        CONF_DEVICE_ID: "device_not_ready",
+                        CONF_DEVICE_ID: device.id,
                         CONF_TYPE: "single_push",
                         CONF_SUBTYPE: "button1",
                     },
@@ -301,7 +313,7 @@ async def test_validate_trigger_rpc_device_not_ready(hass, calls, mock_rpc_devic
         },
     )
     message = {
-        CONF_DEVICE_ID: "device_not_ready",
+        CONF_DEVICE_ID: device.id,
         ATTR_CLICK_TYPE: "single_push",
         ATTR_CHANNEL: 1,
     }

@@ -4,7 +4,8 @@
             "already_configured": "La ubicaci\u00f3 ja est\u00e0 configurada"
         },
         "error": {
-            "cannot_connect": "Ha fallat la connexi\u00f3"
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
         },
         "step": {
             "user": {
@@ -27,6 +28,7 @@
                     "mode": "Mode de transport",
                     "time": "Temps",
                     "time_type": "Tipus de temps",
+                    "traffic_mode": "Mode tr\u00e0nsit",
                     "transit_mode": "Tipus de transport",
                     "transit_routing_preference": "Prefer\u00e8ncia de rutes de tr\u00e0nsit",
                     "units": "Unitats"

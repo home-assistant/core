@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "cannot_connect": "Nepodarilo sa pripoji\u0165"
+        },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostite\u013e"
+                },
+                "description": "Nastavte si WLED na integr\u00e1ciu s Home Assistant."
+            },
+            "zeroconf_confirm": {
+                "description": "Chcete prida\u0165 WLED s n\u00e1zvom `{name}` do Home Assistant?",
+                "title": "Objaven\u00e9 zariadenie WLED"
+            }
+        }
+    },
+    "entity": {
+        "select": {
+            "live_override": {
+                "state": {
+                    "0": "Neakt\u00edvny",
+                    "1": "Akt\u00edvny",
+                    "2": "K\u00fdm sa zariadenie nere\u0161tartuje"
+                }
+            }
+        }
+    }
+}

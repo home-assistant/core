@@ -7,6 +7,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import VOLUME_GALLONS
@@ -40,34 +41,40 @@ FLUME_QUERIES_SENSOR: tuple[SensorEntityDescription, ...] = (
         key="month_to_date",
         name="Current Month",
         native_unit_of_measurement=VOLUME_GALLONS,
-        device_class=SensorDeviceClass.VOLUME,
+        device_class=SensorDeviceClass.WATER,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="week_to_date",
         name="Current Week",
         native_unit_of_measurement=VOLUME_GALLONS,
-        device_class=SensorDeviceClass.VOLUME,
+        device_class=SensorDeviceClass.WATER,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="today",
         name="Current Day",
         native_unit_of_measurement=VOLUME_GALLONS,
-        device_class=SensorDeviceClass.VOLUME,
+        device_class=SensorDeviceClass.WATER,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="last_60_min",
         name="60 Minutes",
         native_unit_of_measurement=f"{VOLUME_GALLONS}/h",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="last_24_hrs",
         name="24 Hours",
         native_unit_of_measurement=f"{VOLUME_GALLONS}/d",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="last_30_days",
         name="30 Days",
         native_unit_of_measurement=f"{VOLUME_GALLONS}/mo",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -120,8 +127,7 @@ async def async_setup_entry(
             ]
         )
 
-    if flume_entity_list:
-        async_add_entities(flume_entity_list)
+    async_add_entities(flume_entity_list)
 
 
 class FlumeSensor(FlumeEntity, SensorEntity):

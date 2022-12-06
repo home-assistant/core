@@ -2,6 +2,9 @@
 from datetime import timedelta
 from typing import Any
 
+from blebox_uniapi.box import Box
+import blebox_uniapi.climate
+
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
@@ -9,11 +12,12 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BleBoxEntity, create_blebox_entities
+from . import BleBoxEntity
+from .const import DOMAIN, PRODUCT
 
 SCAN_INTERVAL = timedelta(seconds=5)
 
@@ -24,18 +28,20 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a BleBox climate entity."""
+    product: Box = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
 
-    create_blebox_entities(
-        hass, config_entry, async_add_entities, BleBoxClimateEntity, "climates"
-    )
+    entities = [
+        BleBoxClimateEntity(feature) for feature in product.features.get("climates", [])
+    ]
+    async_add_entities(entities, True)
 
 
-class BleBoxClimateEntity(BleBoxEntity, ClimateEntity):
+class BleBoxClimateEntity(BleBoxEntity[blebox_uniapi.climate.Climate], ClimateEntity):
     """Representation of a BleBox climate feature (saunaBox)."""
 
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     @property
     def hvac_mode(self):

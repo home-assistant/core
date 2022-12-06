@@ -14,5 +14,18 @@
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "not_supported": "Only PrusaLink API v2 is supported"
     }
+  },
+  "entity": {
+    "sensor": {
+      "printer_state": {
+        "state": {
+          "cancelling": "Cancelling",
+          "idle": "Idle",
+          "paused": "Paused",
+          "pausing": "Pausing",
+          "printing": "Printing"
+        }
+      }
+    }
   }
 }

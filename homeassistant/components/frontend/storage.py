@@ -9,18 +9,45 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.connection import ActiveConnection
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 
 DATA_STORAGE = "frontend_storage"
 STORAGE_VERSION_USER_DATA = 1
 
 
+@callback
+def _initialize_frontend_storage(hass: HomeAssistant) -> None:
+    """Set up frontend storage."""
+    if DATA_STORAGE in hass.data:
+        return
+    hass.data[DATA_STORAGE] = ({}, {})
+
+
 async def async_setup_frontend_storage(hass: HomeAssistant) -> None:
     """Set up frontend storage."""
-    hass.data[DATA_STORAGE] = ({}, {})
+    _initialize_frontend_storage(hass)
     websocket_api.async_register_command(hass, websocket_set_user_data)
     websocket_api.async_register_command(hass, websocket_get_user_data)
+
+
+async def async_user_store(
+    hass: HomeAssistant, user_id: str
+) -> tuple[Store, dict[str, Any]]:
+    """Access a user store."""
+    _initialize_frontend_storage(hass)
+    stores, data = hass.data[DATA_STORAGE]
+    if (store := stores.get(user_id)) is None:
+        store = stores[user_id] = Store(
+            hass,
+            STORAGE_VERSION_USER_DATA,
+            f"frontend.user_data_{user_id}",
+        )
+
+    if user_id not in data:
+        data[user_id] = await store.async_load() or {}
+
+    return store, data[user_id]
 
 
 def with_store(orig_func: Callable) -> Callable:
@@ -31,20 +58,11 @@ def with_store(orig_func: Callable) -> Callable:
         hass: HomeAssistant, connection: ActiveConnection, msg: dict
     ) -> None:
         """Provide user specific data and store to function."""
-        stores, data = hass.data[DATA_STORAGE]
         user_id = connection.user.id
 
-        if (store := stores.get(user_id)) is None:
-            store = stores[user_id] = Store(
-                hass,
-                STORAGE_VERSION_USER_DATA,
-                f"frontend.user_data_{connection.user.id}",
-            )
+        store, user_data = await async_user_store(hass, user_id)
 
-        if user_id not in data:
-            data[user_id] = await store.async_load() or {}
-
-        await orig_func(hass, connection, msg, store, data[user_id])
+        await orig_func(hass, connection, msg, store, user_data)
 
     return with_store_func
 
@@ -61,7 +79,7 @@ def with_store(orig_func: Callable) -> Callable:
 async def websocket_set_user_data(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     store: Store,
     data: dict[str, Any],
 ) -> None:
@@ -82,7 +100,7 @@ async def websocket_set_user_data(
 async def websocket_get_user_data(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     store: Store,
     data: dict[str, Any],
 ) -> None:

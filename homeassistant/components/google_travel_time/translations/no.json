@@ -28,6 +28,7 @@
                     "mode": "Reisemodus",
                     "time": "Tid",
                     "time_type": "Tidstype",
+                    "traffic_mode": "Trafikkmodus",
                     "transit_mode": "Transittmodus",
                     "transit_routing_preference": "Ruteinnstillinger for kollektivtransport",
                     "units": "Enheter"

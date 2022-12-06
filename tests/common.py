@@ -22,7 +22,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
 import voluptuous as vol
 
-from homeassistant import auth, config_entries, core as ha, loader
+from homeassistant import auth, bootstrap, config_entries, core as ha, loader
 from homeassistant.auth import (
     auth_store,
     models as auth_models,
@@ -160,7 +160,7 @@ def get_test_home_assistant():
 
 
 # pylint: disable=protected-access
-async def async_test_home_assistant(loop, load_registries=True):
+async def async_test_home_assistant(event_loop, load_registries=True):
     """Return a Home Assistant object pointing at test config dir."""
     hass = ha.HomeAssistant()
     store = auth_store.AuthStore(hass)
@@ -289,6 +289,7 @@ async def async_test_home_assistant(loop, load_registries=True):
     hass.config.units = METRIC_SYSTEM
     hass.config.media_dirs = {"local": get_test_config_dir("media")}
     hass.config.skip_pip = True
+    hass.config.skip_pip_packages = []
 
     hass.config_entries = config_entries.ConfigEntries(
         hass,
@@ -306,6 +307,7 @@ async def async_test_home_assistant(loop, load_registries=True):
             issue_registry.async_load(hass),
         )
         await hass.async_block_till_done()
+        hass.data[bootstrap.DATA_REGISTRIES_LOADED] = None
 
     hass.state = ha.CoreState.running
 
@@ -380,16 +382,58 @@ fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
 
 
 @ha.callback
-def async_fire_time_changed(
-    hass: HomeAssistant, datetime_: datetime = None, fire_all: bool = False
+def async_fire_time_changed_exact(
+    hass: HomeAssistant, datetime_: datetime | None = None, fire_all: bool = False
 ) -> None:
-    """Fire a time changed event."""
+    """Fire a time changed event at an exact microsecond.
+
+    Consider that it is not possible to actually achieve an exact
+    microsecond in production as the event loop is not precise enough.
+    If your code relies on this level of precision, consider a different
+    approach, as this is only for testing.
+    """
     if datetime_ is None:
         utc_datetime = date_util.utcnow()
     else:
         utc_datetime = date_util.as_utc(datetime_)
-    timestamp = date_util.utc_to_timestamp(utc_datetime)
 
+    _async_fire_time_changed(hass, utc_datetime, fire_all)
+
+
+@ha.callback
+def async_fire_time_changed(
+    hass: HomeAssistant, datetime_: datetime | None = None, fire_all: bool = False
+) -> None:
+    """Fire a time changed event.
+
+    This function will add up to 0.5 seconds to the time to ensure that
+    it accounts for the accidental synchronization avoidance code in repeating
+    listeners.
+
+    As asyncio is cooperative, we can't guarantee that the event loop will
+    run an event at the exact time we want. If you need to fire time changed
+    for an exact microsecond, use async_fire_time_changed_exact.
+    """
+    if datetime_ is None:
+        utc_datetime = date_util.utcnow()
+    else:
+        utc_datetime = date_util.as_utc(datetime_)
+
+    if utc_datetime.microsecond < 500000:
+        # Allow up to 500000 microseconds to be added to the time
+        # to handle update_coordinator's and
+        # async_track_time_interval's
+        # staggering to avoid thundering herd.
+        utc_datetime = utc_datetime.replace(microsecond=500000)
+
+    _async_fire_time_changed(hass, utc_datetime, fire_all)
+
+
+@ha.callback
+def _async_fire_time_changed(
+    hass: HomeAssistant, utc_datetime: datetime | None, fire_all: bool
+) -> None:
+    timestamp = date_util.utc_to_timestamp(utc_datetime)
     for task in list(hass.loop._scheduled):
         if not isinstance(task, asyncio.TimerHandle):
             continue
@@ -925,17 +969,15 @@ def assert_setup_component(count, domain=None):
 SetupRecorderInstanceT = Callable[..., Awaitable[recorder.Recorder]]
 
 
-def init_recorder_component(hass, add_config=None):
+def init_recorder_component(hass, add_config=None, db_url="sqlite://"):
     """Initialize the recorder."""
     config = dict(add_config) if add_config else {}
     if recorder.CONF_DB_URL not in config:
-        config[recorder.CONF_DB_URL] = "sqlite://"  # In memory DB
+        config[recorder.CONF_DB_URL] = db_url
         if recorder.CONF_COMMIT_INTERVAL not in config:
             config[recorder.CONF_COMMIT_INTERVAL] = 0
 
-    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
-        "homeassistant.components.recorder.migration.migrate_schema"
-    ):
+    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True):
         if recorder.DOMAIN not in hass.data:
             recorder_helper.async_initialize_recorder(hass)
         assert setup_component(hass, recorder.DOMAIN, {recorder.DOMAIN: config})
@@ -1070,6 +1112,11 @@ class MockEntity(entity.Entity):
     def supported_features(self):
         """Info about supported features."""
         return self._handle("supported_features")
+
+    @property
+    def translation_key(self):
+        """Return the translation key."""
+        return self._handle("translation_key")
 
     @property
     def unique_id(self):

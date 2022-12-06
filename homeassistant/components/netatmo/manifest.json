@@ -1,8 +1,9 @@
 {
   "domain": "netatmo",
   "name": "Netatmo",
+  "integration_type": "hub",
   "documentation": "https://www.home-assistant.io/integrations/netatmo",
-  "requirements": ["pyatmo==7.1.1"],
+  "requirements": ["pyatmo==7.4.0"],
   "after_dependencies": ["cloud", "media_source"],
   "dependencies": ["application_credentials", "webhook"],
   "codeowners": ["@cgtobi"],
@@ -11,11 +12,5 @@
     "models": ["Healty Home Coach", "Netatmo Relay", "Presence", "Welcome"]
   },
   "iot_class": "cloud_polling",
-  "loggers": ["pyatmo"],
-  "supported_brands": {
-    "legrand": "Legrand",
-    "bubendorff": "Bubendorff",
-    "smarther": "Smarther",
-    "bticino": "BTicino"
-  }
+  "loggers": ["pyatmo"]
 }

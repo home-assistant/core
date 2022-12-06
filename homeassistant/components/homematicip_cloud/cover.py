@@ -62,8 +62,7 @@ async def async_setup_entry(
         if isinstance(group, AsyncExtendedLinkedShutterGroup):
             entities.append(HomematicipCoverShutterGroup(hap, group))
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class HomematicipBlindModule(HomematicipGenericEntity, CoverEntity):

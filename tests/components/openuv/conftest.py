@@ -40,13 +40,13 @@ def config_fixture(hass):
     }
 
 
-@pytest.fixture(name="data_protection_window", scope="session")
+@pytest.fixture(name="data_protection_window", scope="package")
 def data_protection_window_fixture():
     """Define a fixture to return UV protection window data."""
     return json.loads(load_fixture("protection_window_data.json", "openuv"))
 
 
-@pytest.fixture(name="data_uv_index", scope="session")
+@pytest.fixture(name="data_uv_index", scope="package")
 def data_uv_index_fixture():
     """Define a fixture to return UV index data."""
     return json.loads(load_fixture("uv_index_data.json", "openuv"))
@@ -56,8 +56,6 @@ def data_uv_index_fixture():
 async def setup_openuv_fixture(hass, config, data_protection_window, data_uv_index):
     """Define a fixture to set up OpenUV."""
     with patch(
-        "homeassistant.components.openuv.async_get_entity_id_from_unique_id_suffix",
-    ), patch(
         "homeassistant.components.openuv.Client.uv_index", return_value=data_uv_index
     ), patch(
         "homeassistant.components.openuv.Client.uv_protection_window",

@@ -1,13 +1,11 @@
 """Climate support for Shelly."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 from typing import Any, cast
 
 from aioshelly.block_device import Block
-from aioshelly.exceptions import AuthRequired
-import async_timeout
+from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
@@ -18,17 +16,17 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, LOGGER, SHTRV_01_TEMPERATURE_SETTINGS
+from .const import LOGGER, SHTRV_01_TEMPERATURE_SETTINGS
 from .coordinator import ShellyBlockCoordinator, get_entry_data
-from .utils import get_device_entry_gen
 
 
 async def async_setup_entry(
@@ -37,10 +35,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up climate device."""
-
-    if get_device_entry_gen(config_entry) == 2:
-        return
-
     coordinator = get_entry_data(hass)[config_entry.entry_id].block
     assert coordinator
     if coordinator.device.initialized:
@@ -110,11 +104,11 @@ class BlockSleepingClimate(
     _attr_icon = "mdi:thermostat"
     _attr_max_temp = SHTRV_01_TEMPERATURE_SETTINGS["max"]
     _attr_min_temp = SHTRV_01_TEMPERATURE_SETTINGS["min"]
-    _attr_supported_features: int = (
+    _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
     _attr_target_temperature_step = SHTRV_01_TEMPERATURE_SETTINGS["step"]
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
         self,
@@ -132,6 +126,7 @@ class BlockSleepingClimate(
         self.last_state: State | None = None
         self.last_state_attributes: Mapping[str, Any]
         self._preset_modes: list[str] = []
+        self._last_target_temp = 20.0
 
         if self.block is not None and self.device_block is not None:
             self._unique_id = f"{self.coordinator.mac}-{self.block.description}"
@@ -237,19 +232,16 @@ class BlockSleepingClimate(
         """Set block state (HTTP request)."""
         LOGGER.debug("Setting state for entity %s, state: %s", self.name, kwargs)
         try:
-            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-                return await self.coordinator.device.http_request(
-                    "get", f"thermostat/{self._channel}", kwargs
-                )
-        except (asyncio.TimeoutError, OSError) as err:
-            LOGGER.error(
-                "Setting state for entity %s failed, state: %s, error: %s",
-                self.name,
-                kwargs,
-                repr(err),
+            return await self.coordinator.device.http_request(
+                "get", f"thermostat/{self._channel}", kwargs
             )
+        except DeviceConnectionError as err:
             self.coordinator.last_update_success = False
-            return None
+            raise HomeAssistantError(
+                f"Setting state for entity {self.name} failed, state: {kwargs}, error: {repr(err)}"
+            ) from err
+        except InvalidAuthError:
+            self.coordinator.entry.async_start_reauth(self.hass)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -260,8 +252,14 @@ class BlockSleepingClimate(
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         if hvac_mode == HVACMode.OFF:
+            if isinstance(self.target_temperature, float):
+                self._last_target_temp = self.target_temperature
             await self.set_state_full_path(
                 target_t_enabled=1, target_t=f"{self._attr_min_temp}"
+            )
+        if hvac_mode == HVACMode.HEAT:
+            await self.set_state_full_path(
+                target_t_enabled=1, target_t=self._last_target_temp
             )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -320,7 +318,7 @@ class BlockSleepingClimate(
                         int(self.block.channel)
                     ]["schedule_profile_names"],
                 ]
-            except AuthRequired:
+            except InvalidAuthError:
                 self.coordinator.entry.async_start_reauth(self.hass)
             else:
                 self.async_write_ha_state()
