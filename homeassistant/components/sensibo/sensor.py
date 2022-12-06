@@ -131,7 +131,7 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         icon="mdi:air-filter",
         value_fn=lambda data: data.pure_sensitivity,
         extra_fn=None,
-        device_class="sensibo__sensitivity",
+        translation_key="sensitivity",
     ),
     FILTER_LAST_RESET_DESCRIPTION,
 )
@@ -174,7 +174,7 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
     ),
     SensiboDeviceSensorEntityDescription(
         key="climate_react_type",
-        device_class="sensibo__smart_type",
+        translation_key="smart_type",
         name="Climate React type",
         value_fn=lambda data: data.smart_type,
         extra_fn=None,

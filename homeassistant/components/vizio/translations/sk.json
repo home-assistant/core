@@ -13,6 +13,12 @@
                     "pin": "PIN k\u00f3d"
                 }
             },
+            "pairing_complete": {
+                "title": "P\u00e1rovanie dokon\u010den\u00e9"
+            },
+            "pairing_complete_import": {
+                "title": "P\u00e1rovanie dokon\u010den\u00e9"
+            },
             "user": {
                 "data": {
                     "access_token": "Pr\u00edstupov\u00fd token",
@@ -20,6 +26,18 @@
                     "host": "Hostite\u013e",
                     "name": "N\u00e1zov"
                 }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "apps_to_include_or_exclude": "Aplik\u00e1cie, ktor\u00e9 chcete zahrn\u00fa\u0165 alebo vyl\u00fa\u010di\u0165",
+                    "include_or_exclude": "Zahrn\u00fa\u0165 alebo vyl\u00fa\u010di\u0165 aplik\u00e1cie?",
+                    "volume_step": "Ve\u013ekos\u0165 kroku hlasitosti"
+                },
+                "title": "Aktualizujte mo\u017enosti "
             }
         }
     }

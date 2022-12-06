@@ -1,14 +1,39 @@
 {
     "state": {
+        "yamaha_musiccast__dimmer": {
+            "auto": "Auto"
+        },
+        "yamaha_musiccast__zone_equalizer_mode": {
+            "auto": "Auto"
+        },
+        "yamaha_musiccast__zone_link_audio_delay": {
+            "balanced": "Vyv\u00e1\u017een\u00fd"
+        },
         "yamaha_musiccast__zone_link_audio_quality": {
             "compressed": "Komprimovan\u00e9",
             "uncompressed": "Nekomprimovan\u00e9"
+        },
+        "yamaha_musiccast__zone_link_control": {
+            "speed": "R\u00fdchlos\u0165",
+            "stability": "Stabilita",
+            "standard": "\u0160tandard"
         },
         "yamaha_musiccast__zone_sleep": {
             "120 min": "120 min\u00fat",
             "30 min": "30 min\u00fat",
             "60 min": "60 min\u00fat",
-            "90 min": "90 min\u00fat"
+            "90 min": "90 min\u00fat",
+            "off": "Vypnut\u00e9"
+        },
+        "yamaha_musiccast__zone_surr_decoder_type": {
+            "auto": "Auto",
+            "dolby_surround": "Dolby Surround",
+            "toggle": "Prepn\u00fa\u0165"
+        },
+        "yamaha_musiccast__zone_tone_control_mode": {
+            "auto": "Auto",
+            "bypass": "Bypass",
+            "manual": "Ru\u010dne"
         }
     }
 }

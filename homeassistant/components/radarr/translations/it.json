@@ -27,8 +27,8 @@
         }
     },
     "issues": {
-        "deprecated_yaml": {
-            "description": "La configurazione di Radarr tramite YAML \u00e8 stata rimossa.\n\nLa configurazione YAML esistente \u00e8 stata importata automaticamente nell'interfaccia utente.\n\nRimuovere la configurazione YAML di Radarr dal file configuration.yaml e riavviare Home Assistant per risolvere il problema.",
+        "removed_yaml": {
+            "description": "La configurazione di Radarr tramite YAML \u00e8 stata rimossa. \n\nLa tua configurazione YAML esistente non \u00e8 utilizzata da Home Assistant. \n\nRimuovi la configurazione YAML dal tuo file configuration.yaml e riavvia Home Assistant per risolvere questo problema.",
             "title": "La configurazione YAML di Radarr \u00e8 stata rimossa"
         }
     },

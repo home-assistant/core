@@ -113,7 +113,7 @@ async def browse_node(
     media_content_type,
     media_content_id,
 ):
-    """List the contents of a navigation directory (or preset list) on a Frontier Silicon device."""
+    """List the contents of a navigation directory (or preset list)."""
 
     player_mode, browse_type, *parent_keys = media_content_id.split("/")
 

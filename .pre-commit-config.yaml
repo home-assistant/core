@@ -16,7 +16,6 @@ repos:
     hooks:
       - id: black
         args:
-          - --safe
           - --quiet
         files: ^((homeassistant|pylint|script|tests)/.+)?[^/]+\.py$
   - repo: https://github.com/codespell-project/codespell

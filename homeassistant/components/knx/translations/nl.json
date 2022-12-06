@@ -50,12 +50,6 @@
                 },
                 "description": "Voer de informatie voor uw `.knxkeys` bestand in."
             },
-            "secure_tunneling": {
-                "description": "Kies hoe u KNX/IP Secure wilt configureren.",
-                "menu_options": {
-                    "secure_knxkeys": "Gebruik een `.knxkeys` bestand met IP beveiligde sleutels"
-                }
-            },
             "tunnel": {
                 "data": {
                     "gateway": "KNX Tunnel Connection"
@@ -101,12 +95,6 @@
                     "knxkeys_password": "Dit werd ingesteld bij het exporteren van het bestand van ETS."
                 },
                 "description": "Voer de informatie voor uw `.knxkeys` bestand in."
-            },
-            "secure_tunneling": {
-                "description": "Kies hoe u KNX/IP Secure wilt configureren.",
-                "menu_options": {
-                    "secure_knxkeys": "Gebruik een `.knxkeys` bestand met IP beveiligde sleutels"
-                }
             },
             "tunnel": {
                 "data": {

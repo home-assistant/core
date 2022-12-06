@@ -10,22 +10,30 @@
             "sensor": {
                 "data": {
                     "attribute": "Atrib\u00fat",
+                    "device_class": "Trieda zariadenia",
+                    "index": "Index",
                     "name": "N\u00e1zov",
                     "select": "Vyberte",
                     "unit_of_measurement": "Jednotka merania",
                     "value_template": "\u0160abl\u00f3na hodnoty"
                 },
                 "data_description": {
+                    "attribute": "Z\u00edskajte hodnotu atrib\u00fatu na vybranom tagu",
                     "unit_of_measurement": "Vyberte si meranie teploty alebo si vytvorte vlastn\u00e9"
                 }
             },
             "user": {
                 "data": {
+                    "authentication": "Vyberte met\u00f3du overenia",
+                    "headers": "Hlavi\u010dky",
+                    "method": "Met\u00f3da",
                     "password": "Heslo",
+                    "timeout": "\u010casov\u00fd limit",
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno",
                     "verify_ssl": "Overi\u0165 SSL certifik\u00e1t"
                 },
                 "data_description": {
+                    "resource": "Adresa URL webovej lokality, ktor\u00e1 obsahuje hodnotu",
                     "timeout": "\u010casov\u00fd limit pre pripojenie k webovej str\u00e1nke"
                 }
             }
@@ -33,13 +41,53 @@
     },
     "options": {
         "step": {
-            "init": {
+            "add_sensor": {
                 "data": {
-                    "password": "Heslo",
-                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno",
-                    "verify_ssl": "Overi\u0165 SSL certifik\u00e1t"
+                    "attribute": "Atrib\u00fat",
+                    "device_class": "Trieda zariadenia",
+                    "index": "Index",
+                    "select": "Vyberte",
+                    "unit_of_measurement": "Jednotka merania",
+                    "value_template": "\u0160abl\u00f3na hodnoty"
                 },
                 "data_description": {
+                    "attribute": "Z\u00edskajte hodnotu atrib\u00fatu na vybranom tagu",
+                    "unit_of_measurement": "Vyberte si meranie teploty alebo si vytvorte vlastn\u00e9"
+                }
+            },
+            "edit_sensor": {
+                "data": {
+                    "attribute": "Atrib\u00fat",
+                    "device_class": "Trieda zariadenia",
+                    "index": "Index",
+                    "name": "N\u00e1zov",
+                    "select": "Vyberte",
+                    "unit_of_measurement": "Jednotka merania",
+                    "value_template": "\u0160abl\u00f3na hodnoty"
+                },
+                "data_description": {
+                    "attribute": "Z\u00edskajte hodnotu atrib\u00fatu na vybranom tagu",
+                    "unit_of_measurement": "Vyberte si meranie teploty alebo si vytvorte vlastn\u00e9"
+                }
+            },
+            "init": {
+                "menu_options": {
+                    "add_sensor": "Pridanie sn\u00edma\u010da",
+                    "remove_sensor": "Odstr\u00e1nenie sn\u00edma\u010da",
+                    "select_edit_sensor": "Konfigur\u00e1cia sn\u00edma\u010da"
+                }
+            },
+            "resource": {
+                "data": {
+                    "authentication": "Vyberte met\u00f3du overenia",
+                    "headers": "Hlavi\u010dky",
+                    "method": "Met\u00f3da",
+                    "password": "Heslo",
+                    "timeout": "\u010casov\u00fd limit",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
+                },
+                "data_description": {
+                    "resource": "Adresa URL webovej lokality, ktor\u00e1 obsahuje hodnotu",
                     "timeout": "\u010casov\u00fd limit pre pripojenie k webovej str\u00e1nke"
                 }
             }

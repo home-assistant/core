@@ -12,7 +12,8 @@
             "invalid_ip_address": "Alamat IPv4 tidak valid",
             "invalid_signature": "Kata sandi untuk mendekripsi file `.knxkeys` salah.",
             "no_router_discovered": "Tidak ada router KNXnet/IP yang ditemukan di jaringan.",
-            "no_tunnel_discovered": "Tidak dapat menemukan server tunneling KNX di jaringan Anda."
+            "no_tunnel_discovered": "Tidak dapat menemukan server tunneling KNX di jaringan Anda.",
+            "unsupported_tunnel_type": "Jenis tunneling yang dipilih tidak didukung oleh gateway."
         },
         "step": {
             "connection_type": {
@@ -94,13 +95,6 @@
                 },
                 "description": "Masukkan informasi IP aman Anda."
             },
-            "secure_tunneling": {
-                "description": "Pilih cara Anda ingin mengonfigurasi KNX/IP Secure.",
-                "menu_options": {
-                    "secure_knxkeys": "Gunakan file `.knxkeys` yang berisi kunci aman IP",
-                    "secure_tunnel_manual": "Konfigurasikan kunci aman IP secara manual"
-                }
-            },
             "tunnel": {
                 "data": {
                     "gateway": "Koneksi Tunnel KNX"
@@ -118,7 +112,8 @@
             "invalid_ip_address": "Alamat IPv4 tidak valid",
             "invalid_signature": "Kata sandi untuk mendekripsi file `.knxkeys` salah.",
             "no_router_discovered": "Tidak ada router KNXnet/IP yang ditemukan di jaringan.",
-            "no_tunnel_discovered": "Tidak dapat menemukan server tunneling KNX di jaringan Anda."
+            "no_tunnel_discovered": "Tidak dapat menemukan server tunneling KNX di jaringan Anda.",
+            "unsupported_tunnel_type": "Jenis tunneling yang dipilih tidak didukung oleh gateway."
         },
         "step": {
             "communication_settings": {
@@ -215,13 +210,6 @@
                     "user_password": "Kata sandi untuk koneksi tunnel tertentu yang diatur di panel 'Properties' tunnel di ETS."
                 },
                 "description": "Masukkan informasi IP aman Anda."
-            },
-            "secure_tunneling": {
-                "description": "Pilih cara Anda ingin mengonfigurasi KNX/IP Secure.",
-                "menu_options": {
-                    "secure_knxkeys": "Gunakan file `.knxkeys` yang berisi kunci aman IP",
-                    "secure_tunnel_manual": "Konfigurasikan kunci aman IP secara manual"
-                }
             },
             "tunnel": {
                 "data": {

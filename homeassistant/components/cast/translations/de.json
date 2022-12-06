@@ -12,7 +12,7 @@
                     "known_hosts": "Bekannte Hosts"
                 },
                 "description": "Bekannte Hosts - Eine durch Kommas getrennte Liste von Hostnamen oder IP-Adressen von Cast-Ger\u00e4ten, die verwendet wird, wenn die mDNS-Erkennung nicht funktioniert.",
-                "title": "Google Cast-Konfiguration"
+                "title": "Google Cast Konfiguration"
             },
             "confirm": {
                 "description": "M\u00f6chtest Du mit der Einrichtung beginnen?"

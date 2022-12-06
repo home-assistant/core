@@ -7,7 +7,8 @@
             "user": {
                 "data": {
                     "station": "Stanica"
-                }
+                },
+                "description": "Vyberte stanicu, ktor\u00fa chcete sledova\u0165"
             }
         }
     }

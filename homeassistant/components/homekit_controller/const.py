@@ -1,6 +1,5 @@
 """Constants for the homekit_controller component."""
 import asyncio
-from typing import Final
 
 from aiohomekit.exceptions import (
     AccessoryDisconnectedError,
@@ -96,10 +95,6 @@ CHARACTERISTIC_PLATFORMS = {
     CharacteristicsTypes.IDENTIFY: "button",
     CharacteristicsTypes.THREAD_NODE_CAPABILITIES: "sensor",
 }
-
-
-# Device classes
-DEVICE_CLASS_ECOBEE_MODE: Final = "homekit_controller__ecobee_mode"
 
 STARTUP_EXCEPTIONS = (
     asyncio.TimeoutError,

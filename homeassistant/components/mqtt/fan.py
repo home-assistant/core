@@ -77,20 +77,12 @@ CONF_PRESET_MODE_VALUE_TEMPLATE = "preset_mode_value_template"
 CONF_PRESET_MODE_COMMAND_TEMPLATE = "preset_mode_command_template"
 CONF_PRESET_MODES_LIST = "preset_modes"
 CONF_PAYLOAD_RESET_PRESET_MODE = "payload_reset_preset_mode"
-CONF_SPEED_STATE_TOPIC = "speed_state_topic"
-CONF_SPEED_COMMAND_TOPIC = "speed_command_topic"
-CONF_SPEED_VALUE_TEMPLATE = "speed_value_template"
 CONF_OSCILLATION_STATE_TOPIC = "oscillation_state_topic"
 CONF_OSCILLATION_COMMAND_TOPIC = "oscillation_command_topic"
 CONF_OSCILLATION_VALUE_TEMPLATE = "oscillation_value_template"
 CONF_OSCILLATION_COMMAND_TEMPLATE = "oscillation_command_template"
 CONF_PAYLOAD_OSCILLATION_ON = "payload_oscillation_on"
 CONF_PAYLOAD_OSCILLATION_OFF = "payload_oscillation_off"
-CONF_PAYLOAD_OFF_SPEED = "payload_off_speed"
-CONF_PAYLOAD_LOW_SPEED = "payload_low_speed"
-CONF_PAYLOAD_MEDIUM_SPEED = "payload_medium_speed"
-CONF_PAYLOAD_HIGH_SPEED = "payload_high_speed"
-CONF_SPEED_LIST = "speeds"
 
 DEFAULT_NAME = "MQTT Fan"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -176,9 +168,6 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
         vol.Optional(
             CONF_PAYLOAD_OSCILLATION_ON, default=OSCILLATE_ON_PAYLOAD
         ): cv.string,
-        vol.Optional(CONF_SPEED_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_SPEED_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_SPEED_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
@@ -190,32 +179,12 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 PLATFORM_SCHEMA_MODERN = vol.All(
-    # CONF_SPEED_COMMAND_TOPIC, CONF_SPEED_LIST, CONF_SPEED_STATE_TOPIC, CONF_SPEED_VALUE_TEMPLATE and
-    # Speeds SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH SPEED_OFF,
-    # are no longer supported, support was removed in release 2021.12
-    cv.removed(CONF_PAYLOAD_HIGH_SPEED),
-    cv.removed(CONF_PAYLOAD_LOW_SPEED),
-    cv.removed(CONF_PAYLOAD_MEDIUM_SPEED),
-    cv.removed(CONF_SPEED_COMMAND_TOPIC),
-    cv.removed(CONF_SPEED_LIST),
-    cv.removed(CONF_SPEED_STATE_TOPIC),
-    cv.removed(CONF_SPEED_VALUE_TEMPLATE),
     _PLATFORM_SCHEMA_BASE,
     valid_speed_range_configuration,
     valid_preset_mode_configuration,
 )
 
 DISCOVERY_SCHEMA = vol.All(
-    # CONF_SPEED_COMMAND_TOPIC, CONF_SPEED_LIST, CONF_SPEED_STATE_TOPIC, CONF_SPEED_VALUE_TEMPLATE and
-    # Speeds SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH SPEED_OFF,
-    # are no longer supported, support was removed in release 2021.12
-    cv.removed(CONF_PAYLOAD_HIGH_SPEED),
-    cv.removed(CONF_PAYLOAD_LOW_SPEED),
-    cv.removed(CONF_PAYLOAD_MEDIUM_SPEED),
-    cv.removed(CONF_SPEED_COMMAND_TOPIC),
-    cv.removed(CONF_SPEED_LIST),
-    cv.removed(CONF_SPEED_STATE_TOPIC),
-    cv.removed(CONF_SPEED_VALUE_TEMPLATE),
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
     valid_speed_range_configuration,
     valid_preset_mode_configuration,

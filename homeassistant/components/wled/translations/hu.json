@@ -22,6 +22,17 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "live_override": {
+                "state": {
+                    "0": "Ki",
+                    "1": "Be",
+                    "2": "Am\u00edg az eszk\u00f6z \u00fajraindul"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

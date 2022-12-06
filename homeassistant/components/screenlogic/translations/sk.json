@@ -12,12 +12,25 @@
                 "data": {
                     "ip_address": "IP adresa",
                     "port": "Port"
-                }
+                },
+                "title": "ScreenLogic"
             },
             "gateway_select": {
                 "data": {
                     "selected_gateway": "Gateway"
-                }
+                },
+                "title": "ScreenLogic"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Sekundy medzi skenovaniami"
+                },
+                "description": "Zadajte nastavenia pre {gateway_name}",
+                "title": "ScreenLogic"
             }
         }
     }

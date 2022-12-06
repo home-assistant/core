@@ -21,6 +21,14 @@
         "error": {
             "currency_unavailable": "Jeden alebo viacero po\u017eadovan\u00fdch zostatkov mien nie s\u00fa poskytovan\u00e9 Va\u0161\u00edm Coinbase API.",
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "exchange_base": "Z\u00e1kladn\u00e1 mena pre sn\u00edma\u010de zmenov\u00fdch kurzov.",
+                    "exchnage_rate_precision": "Po\u010det desatinn\u00fdch miest pre v\u00fdmenn\u00e9 kurzy."
+                }
+            }
         }
     }
 }

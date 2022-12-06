@@ -1,13 +1,28 @@
 """Support for Meteo-France raining forecast sensor."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from meteofrance_api.helpers import (
     get_warning_text_status_from_indice_color,
     readeable_phenomenoms_dict,
 )
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    PERCENTAGE,
+    UV_INDEX,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -28,11 +43,136 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
     MODEL,
-    SENSOR_TYPES,
-    SENSOR_TYPES_ALERT,
-    SENSOR_TYPES_PROBABILITY,
-    SENSOR_TYPES_RAIN,
-    MeteoFranceSensorEntityDescription,
+)
+
+
+@dataclass
+class MeteoFranceRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    data_path: str
+
+
+@dataclass
+class MeteoFranceSensorEntityDescription(
+    SensorEntityDescription, MeteoFranceRequiredKeysMixin
+):
+    """Describes Meteo-France sensor entity."""
+
+
+SENSOR_TYPES: tuple[MeteoFranceSensorEntityDescription, ...] = (
+    MeteoFranceSensorEntityDescription(
+        key="pressure",
+        name="Pressure",
+        native_unit_of_measurement=UnitOfPressure.HPA,
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        data_path="current_forecast:sea_level",
+    ),
+    MeteoFranceSensorEntityDescription(
+        key="wind_gust",
+        name="Wind gust",
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:weather-windy-variant",
+        entity_registry_enabled_default=False,
+        data_path="current_forecast:wind:gust",
+    ),
+    MeteoFranceSensorEntityDescription(
+        key="wind_speed",
+        name="Wind speed",
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        data_path="current_forecast:wind:speed",
+    ),
+    MeteoFranceSensorEntityDescription(
+        key="temperature",
+        name="Temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        data_path="current_forecast:T:value",
+    ),
+    MeteoFranceSensorEntityDescription(
+        key="uv",
+        name="UV",
+        native_unit_of_measurement=UV_INDEX,
+        icon="mdi:sunglasses",
+        data_path="today_forecast:uv",
+    ),
+    MeteoFranceSensorEntityDescription(
+        key="precipitation",
+        name="Daily precipitation",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
+        data_path="today_forecast:precipitation:24h",
+    ),
+    MeteoFranceSensorEntityDescription(
+        key="cloud",
+        name="Cloud cover",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:weather-partly-cloudy",
+        data_path="current_forecast:clouds",
+    ),
+    MeteoFranceSensorEntityDescription(
+        key="original_condition",
+        name="Original condition",
+        entity_registry_enabled_default=False,
+        data_path="current_forecast:weather:desc",
+    ),
+    MeteoFranceSensorEntityDescription(
+        key="daily_original_condition",
+        name="Daily original condition",
+        entity_registry_enabled_default=False,
+        data_path="today_forecast:weather12H:desc",
+    ),
+)
+
+SENSOR_TYPES_RAIN: tuple[MeteoFranceSensorEntityDescription, ...] = (
+    MeteoFranceSensorEntityDescription(
+        key="next_rain",
+        name="Next rain",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        data_path="",
+    ),
+)
+
+SENSOR_TYPES_ALERT: tuple[MeteoFranceSensorEntityDescription, ...] = (
+    MeteoFranceSensorEntityDescription(
+        key="weather_alert",
+        name="Weather alert",
+        icon="mdi:weather-cloudy-alert",
+        data_path="",
+    ),
+)
+
+SENSOR_TYPES_PROBABILITY: tuple[MeteoFranceSensorEntityDescription, ...] = (
+    MeteoFranceSensorEntityDescription(
+        key="rain_chance",
+        name="Rain chance",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:weather-rainy",
+        data_path="probability_forecast:rain:3h",
+    ),
+    MeteoFranceSensorEntityDescription(
+        key="snow_chance",
+        name="Snow chance",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:weather-snowy",
+        data_path="probability_forecast:snow:3h",
+    ),
+    MeteoFranceSensorEntityDescription(
+        key="freeze_chance",
+        name="Freeze chance",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:snowflake",
+        data_path="probability_forecast:freezing",
+    ),
 )
 
 

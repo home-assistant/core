@@ -28,5 +28,18 @@
                 "description": "Musisz poda\u0107 \"g\u0142\u00f3wny\" klucz API od Uptime Robot"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "monitor_status": {
+                "state": {
+                    "down": "offline",
+                    "not_checked_yet": "jeszcze nie sprawdzone",
+                    "pause": "wstrzymano",
+                    "seems_down": "prawdopodobnie offline",
+                    "up": "online"
+                }
+            }
+        }
     }
 }

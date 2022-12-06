@@ -63,7 +63,7 @@ class SerialPortSettings:
     flow_control: bool
 
 
-def get_zigbee_socket(hass, addon_info: AddonInfo) -> str:
+def get_zigbee_socket(hass: HomeAssistant, addon_info: AddonInfo) -> str:
     """Return the zigbee socket.
 
     Raises AddonError on error

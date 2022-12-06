@@ -20,8 +20,10 @@
             "user": {
                 "data": {
                     "email": "Email",
-                    "password": "Heslo"
-                }
+                    "password": "Heslo",
+                    "timeout": "\u010casov\u00fd limit"
+                },
+                "title": "Pripojenie k monitoru Sense Energy"
             },
             "validation": {
                 "data": {

@@ -9,7 +9,8 @@
         "step": {
             "user": {
                 "data": {
-                    "name": "N\u00e1zov"
+                    "name": "N\u00e1zov",
+                    "region": "Regi\u00f3n"
                 }
             }
         }
@@ -18,9 +19,13 @@
         "step": {
             "init": {
                 "data": {
-                    "units": "Jednotky"
+                    "avoid_ferries": "Vyhn\u00fa\u0165 sa trajektom?",
+                    "avoid_toll_roads": "Vyhn\u00fa\u0165 sa spoplatnen\u00fdm cest\u00e1m?",
+                    "units": "Jednotky",
+                    "vehicle_type": "Typ vozidla"
                 }
             }
         }
-    }
+    },
+    "title": "\u010cas cesty Waze"
 }
