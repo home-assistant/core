@@ -26,7 +26,6 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up bouncie from a config entry."""
 
-    hass.data.setdefault(DOMAIN, {})
     update_interval = datetime.timedelta(seconds=60)
     session = async_get_clientsession(hass=hass)
     coordinator = BouncieDataUpdateCoordinator(
