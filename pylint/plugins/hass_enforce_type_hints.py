@@ -1086,7 +1086,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=[
                 TypeHintMatch(
                     function_name="device_class",
-                    return_type=["CoverDeviceClass", "str", None],
+                    return_type=["CoverDeviceClass", None],
                 ),
                 TypeHintMatch(
                     function_name="current_cover_position",
