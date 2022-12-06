@@ -767,8 +767,23 @@ MASS_POUNDS: Final = "lb"
 # Conductivity units
 CONDUCTIVITY: Final = "µS/cm"
 
+
 # Light units
+class UnitOfLuminousFlux(StrEnum):
+    """Luminous flux units."""
+
+    LUMEN = "lm"
+
+
+class UnitOfIlluminance(StrEnum):
+    """Illuminance units."""
+
+    LUX = "lx"
+    """Derived from lm/m²"""
+
+
 LIGHT_LUX: Final = "lx"
+"""Deprecated: please use UnitOfIlluminance.LUX"""
 
 # UV Index units
 UV_INDEX: Final = "UV index"
