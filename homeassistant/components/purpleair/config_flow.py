@@ -7,7 +7,7 @@ from typing import Any, cast
 
 from aiopurpleair import API
 from aiopurpleair.endpoints.sensors import NearbySensorResult
-from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
+from aiopurpleair.errors import InvalidApiKeyError, NotFoundError, PurpleAirError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -39,6 +39,13 @@ DEFAULT_DISTANCE = 5
 API_KEY_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): cv.string,
+    }
+)
+
+SENSOR_INDEX_SCHEMA = vol.Schema(
+    {
+        # The PurpleAir sensor index is an integer, but the UI for a string fits better:
+        vol.Required(CONF_SENSOR_INDEX): cv.string,
     }
 )
 
@@ -193,7 +200,6 @@ async def async_validate_coordinates(
     api = async_get_api(hass, api_key)
     errors = {}
 
-    print("AARON")
     try:
         nearby_sensor_results = await api.sensors.async_get_nearby_sensors(
             ["name"], latitude, longitude, distance, limit_results=5
@@ -212,6 +218,34 @@ async def async_validate_coordinates(
         return ValidationResult(errors=errors)
 
     return ValidationResult(data=nearby_sensor_results)
+
+
+async def async_validate_sensor_index(
+    hass: HomeAssistant,
+    api_key: str,
+    sensor_index: int,
+) -> ValidationResult:
+    """Validate a sensor index."""
+    api = async_get_api(hass, api_key)
+    errors = {}
+
+    try:
+        sensor_response = await api.sensors.async_get_sensor(
+            sensor_index, fields=["name"]
+        )
+    except NotFoundError:
+        errors["base"] = "unknown_sensor_index"
+    except PurpleAirError as err:
+        LOGGER.error("PurpleAir error while getting sensor: %s", err)
+        errors["base"] = "unknown"
+    except Exception as err:  # pylint: disable=broad-except
+        LOGGER.exception("Unexpected exception while getting sensor: %s", err)
+        errors["base"] = "unknown"
+
+    if errors:
+        return ValidationResult(errors=errors)
+
+    return ValidationResult(data=sensor_response)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -262,6 +296,46 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_choose_sensor()
 
+    async def async_step_by_sensor_index(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the input of a sensor index."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="by_sensor_index", data_schema=SENSOR_INDEX_SCHEMA
+            )
+
+        input_sensor_index = user_input[CONF_SENSOR_INDEX]
+        real_sensor_index = int(input_sensor_index)
+
+        validation = await async_validate_sensor_index(
+            self.hass, self._flow_data[CONF_API_KEY], real_sensor_index
+        )
+
+        if validation.errors:
+            return self.async_show_form(
+                step_id="by_sensor_index",
+                data_schema=SENSOR_INDEX_SCHEMA,
+                errors=validation.errors,
+            )
+
+        return self.async_create_entry(
+            title=self._flow_data[CONF_API_KEY][:5],
+            data=self._flow_data,
+            # Note that we store the sensor indices in options so that later on, we can
+            # add/remove additional sensors via an options flow:
+            options={CONF_SENSOR_INDICES: [real_sensor_index]},
+        )
+
+    async def async_step_choose_method(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the choice of how to add a sensor."""
+        return self.async_show_menu(
+            step_id="choose_method",
+            menu_options=["by_coordinates", "by_sensor_index"],
+        )
+
     async def async_step_choose_sensor(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -301,7 +375,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         self._flow_data = {CONF_API_KEY: api_key}
-        return await self.async_step_by_coordinates()
+        return await self.async_step_choose_method()
 
 
 class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
@@ -312,13 +386,21 @@ class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
         self._flow_data: dict[str, Any] = {}
         self.config_entry = config_entry
 
-    async def async_step_add_sensor(
+    @callback
+    def _async_update_entry(self, sensor_index: int) -> FlowResult:
+        """Update the entry."""
+        options = deepcopy({**self.config_entry.options})
+        options[CONF_LAST_UPDATE_SENSOR_ADD] = True
+        options[CONF_SENSOR_INDICES].append(sensor_index)
+        return self.async_create_entry(title="", data=options)
+
+    async def async_step_add_sensor_by_coordinates(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Add a sensor."""
         if user_input is None:
             return self.async_show_form(
-                step_id="add_sensor",
+                step_id="add_sensor_by_coordinates",
                 data_schema=async_get_coordinates_schema(self.hass),
             )
 
@@ -332,7 +414,7 @@ class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
 
         if validation.errors:
             return self.async_show_form(
-                step_id="add_sensor",
+                step_id="add_sensor_by_coordinates",
                 data_schema=async_get_coordinates_schema(self.hass),
                 errors=validation.errors,
             )
@@ -342,6 +424,44 @@ class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
         )
 
         return await self.async_step_choose_sensor()
+
+    async def async_step_add_sensor_by_index(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Add a sensor."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="add_sensor_by_index", data_schema=SENSOR_INDEX_SCHEMA
+            )
+
+        input_sensor_index = user_input[CONF_SENSOR_INDEX]
+        real_sensor_index = int(input_sensor_index)
+
+        validation = await async_validate_sensor_index(
+            self.hass, self.config_entry.data[CONF_API_KEY], real_sensor_index
+        )
+
+        if validation.errors:
+            return self.async_show_form(
+                step_id="add_sensor_by_index",
+                data_schema=SENSOR_INDEX_SCHEMA,
+                errors=validation.errors,
+            )
+
+        device_registry = dr.async_get(self.hass)
+        if _ := device_registry.async_get_device({(DOMAIN, input_sensor_index)}):
+            return self.async_abort(reason="already_configured")
+
+        return self._async_update_entry(real_sensor_index)
+
+    async def async_step_choose_add_sensor_method(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the choice of how to add a sensor."""
+        return self.async_show_menu(
+            step_id="choose_add_sensor_method",
+            menu_options=["add_sensor_by_coordinates", "add_sensor_by_index"],
+        )
 
     async def async_step_choose_sensor(
         self, user_input: dict[str, Any] | None = None
@@ -359,10 +479,7 @@ class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
         if sensor_index in self.config_entry.options[CONF_SENSOR_INDICES]:
             return self.async_abort(reason="already_configured")
 
-        options = deepcopy({**self.config_entry.options})
-        options[CONF_LAST_UPDATE_SENSOR_ADD] = True
-        options[CONF_SENSOR_INDICES].append(sensor_index)
-        return self.async_create_entry(title="", data=options)
+        return self._async_update_entry(sensor_index)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -370,7 +487,7 @@ class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the options."""
         return self.async_show_menu(
             step_id="init",
-            menu_options=["add_sensor", "remove_sensor"],
+            menu_options=["choose_add_sensor_method", "remove_sensor"],
         )
 
     async def async_step_remove_sensor(

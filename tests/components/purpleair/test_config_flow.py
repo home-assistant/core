@@ -1,7 +1,7 @@
 """Define tests for the PurpleAir config flow."""
 from unittest.mock import AsyncMock, patch
 
-from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
+from aiopurpleair.errors import InvalidApiKeyError, NotFoundError, PurpleAirError
 import pytest
 
 from homeassistant import data_entry_flow
@@ -62,6 +62,12 @@ async def test_create_entry_by_coordinates(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"api_key": "abcde12345"}
     )
+    assert result["type"] == data_entry_flow.FlowResultType.MENU
+    assert result["step_id"] == "choose_method"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "by_coordinates"}
+    )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "by_coordinates"
 
@@ -105,17 +111,112 @@ async def test_create_entry_by_coordinates(
     }
 
 
-async def test_options_add_sensor(hass, config_entry, setup_purpleair):
-    """Test adding a sensor via the options flow."""
+@pytest.mark.parametrize(
+    "get_sensor_mock,get_sensor_errors",
+    [
+        (AsyncMock(side_effect=Exception), {"base": "unknown"}),
+        (AsyncMock(side_effect=PurpleAirError), {"base": "unknown"}),
+        (AsyncMock(side_effect=NotFoundError), {"base": "unknown_sensor_index"}),
+    ],
+)
+async def test_create_entry_by_index(
+    hass,
+    api,
+    get_sensor_errors,
+    get_sensor_mock,
+    setup_purpleair,
+):
+    """Test creating an entry by entering a sensor index (including errors)."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"api_key": "abcde12345"}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.MENU
+    assert result["step_id"] == "choose_method"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "by_sensor_index"}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "by_sensor_index"
+
+    # Test errors that can arise when searching for nearby sensors:
+    with patch.object(api.sensors, "async_get_sensor", get_sensor_mock):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                "sensor_index": "123456",
+            },
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["errors"] == get_sensor_errors
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            "sensor_index": "123456",
+        },
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == "abcde"
+    assert result["data"] == {
+        "api_key": "abcde12345",
+    }
+    assert result["options"] == {
+        "sensor_indices": [123456],
+    }
+
+
+@pytest.mark.parametrize(
+    "get_nearby_sensors_mock,get_nearby_sensors_errors",
+    [
+        (AsyncMock(return_value=[]), {"base": "no_sensors_near_coordinates"}),
+        (AsyncMock(side_effect=Exception), {"base": "unknown"}),
+        (AsyncMock(side_effect=PurpleAirError), {"base": "unknown"}),
+    ],
+)
+async def test_options_add_sensor_by_coordinates(
+    hass,
+    api,
+    config_entry,
+    get_nearby_sensors_errors,
+    get_nearby_sensors_mock,
+    setup_purpleair,
+):
+    """Test adding a sensor by coordinates via the options flow (including errors)."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == data_entry_flow.FlowResultType.MENU
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"next_step_id": "add_sensor"}
+        result["flow_id"], user_input={"next_step_id": "choose_add_sensor_method"}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.MENU
+    assert result["step_id"] == "choose_add_sensor_method"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"next_step_id": "add_sensor_by_coordinates"}
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "add_sensor"
+    assert result["step_id"] == "add_sensor_by_coordinates"
+
+    # Test errors that can arise when searching for nearby sensors:
+    with patch.object(api.sensors, "async_get_nearby_sensors", get_nearby_sensors_mock):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                "latitude": 51.5285582,
+                "longitude": -0.2416796,
+                "distance": 5,
+            },
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["errors"] == get_nearby_sensors_errors
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -143,17 +244,25 @@ async def test_options_add_sensor(hass, config_entry, setup_purpleair):
     assert config_entry.options["sensor_indices"] == [123456, 567890]
 
 
-async def test_options_add_sensor_duplicate(hass, config_entry, setup_purpleair):
-    """Test adding a duplicate sensor via the options flow."""
+async def test_options_add_sensor_by_coordinates_duplicate(
+    hass, config_entry, setup_purpleair
+):
+    """Test adding a duplicate sensor by coordinates via the options flow."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == data_entry_flow.FlowResultType.MENU
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"next_step_id": "add_sensor"}
+        result["flow_id"], user_input={"next_step_id": "choose_add_sensor_method"}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.MENU
+    assert result["step_id"] == "choose_add_sensor_method"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"next_step_id": "add_sensor_by_coordinates"}
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "add_sensor"
+    assert result["step_id"] == "add_sensor_by_coordinates"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -177,122 +286,43 @@ async def test_options_add_sensor_duplicate(hass, config_entry, setup_purpleair)
 
 
 @pytest.mark.parametrize(
-    "get_nearby_sensors,errors",
+    "get_sensor_mock,get_sensor_errors",
     [
-        (AsyncMock(return_value=[]), {"base": "no_sensors_near_coordinates"}),
         (AsyncMock(side_effect=Exception), {"base": "unknown"}),
         (AsyncMock(side_effect=PurpleAirError), {"base": "unknown"}),
+        (AsyncMock(side_effect=NotFoundError), {"base": "unknown_sensor_index"}),
     ],
 )
-async def test_options_add_sensor_errors(
-    hass, config_entry, config_entry_options, errors, setup_purpleair
+async def test_options_add_sensor_by_sensor_index(
+    hass, api, config_entry, get_sensor_errors, get_sensor_mock, setup_purpleair
 ):
-    """Test errors while adding a new sensor via the options flow."""
+    """Test adding a sensor by sensor index via the options flow (including errors)."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == data_entry_flow.FlowResultType.MENU
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"next_step_id": "add_sensor"}
+        result["flow_id"], user_input={"next_step_id": "choose_add_sensor_method"}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "add_sensor"
-
-    device_registry = dr.async_get(hass)
-    assert len(device_registry.devices.values()) == 1
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            "latitude": 51.5285582,
-            "longitude": -0.2416796,
-            "distance": 5,
-        },
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["errors"] == errors
-
-
-async def test_options_remove_sensor(hass, config_entry, setup_purpleair):
-    """Test removing a sensor via the options flow."""
-    device_registry = dr.async_get(hass)
-    assert len(device_registry.devices.values()) == 1
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == data_entry_flow.FlowResultType.MENU
-    assert result["step_id"] == "init"
+    assert result["step_id"] == "choose_add_sensor_method"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"next_step_id": "remove_sensor"}
+        result["flow_id"], user_input={"next_step_id": "add_sensor_by_index"}
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "remove_sensor"
-
-    device_entry = device_registry.async_get_device({(DOMAIN, "123456")})
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={"sensor_device_id": device_entry.id},
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["data"] == {
-        "last_update_sensor_add": False,
-        "sensor_indices": [],
-    }
-
-    assert config_entry.options["sensor_indices"] == []
-    assert len(device_registry.devices.values()) == 0
-
-
-@pytest.mark.parametrize(
-    "get_nearby_sensors_mock,get_nearby_sensors_errors",
-    [
-        (AsyncMock(return_value=[]), {"base": "no_sensors_near_coordinates"}),
-        (AsyncMock(side_effect=Exception), {"base": "unknown"}),
-        (AsyncMock(side_effect=PurpleAirError), {"base": "unknown"}),
-    ],
-)
-async def test_options_add_sensor(
-    hass,
-    api,
-    config_entry,
-    get_nearby_sensors_errors,
-    get_nearby_sensors_mock,
-    setup_purpleair,
-):
-    """Test adding a sensor via the options flow (including errors)."""
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == data_entry_flow.FlowResultType.MENU
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"next_step_id": "add_sensor"}
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "add_sensor"
+    assert result["step_id"] == "add_sensor_by_index"
 
     # Test errors that can arise when searching for nearby sensors:
-    with patch.object(api.sensors, "async_get_nearby_sensors", get_nearby_sensors_mock):
+    with patch.object(api.sensors, "async_get_sensor", get_sensor_mock):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
-                "latitude": 51.5285582,
-                "longitude": -0.2416796,
-                "distance": 5,
+                "sensor_index": "567890",
             },
         )
         assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == "add_sensor"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            "latitude": 51.5285582,
-            "longitude": -0.2416796,
-            "distance": 5,
-        },
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "choose_sensor"
+        assert result["errors"] == get_sensor_errors
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -309,28 +339,25 @@ async def test_options_add_sensor(
     assert config_entry.options["sensor_indices"] == [123456, 567890]
 
 
-async def test_options_add_sensor_duplicate(hass, config_entry, setup_purpleair):
-    """Test adding a duplicate sensor via the options flow."""
+async def test_options_add_sensor_by_index_duplicate(
+    hass, config_entry, setup_purpleair
+):
+    """Test adding a duplicate sensor by sensor index via the options flow."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == data_entry_flow.FlowResultType.MENU
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"next_step_id": "add_sensor"}
+        result["flow_id"], user_input={"next_step_id": "choose_add_sensor_method"}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "add_sensor"
+    assert result["type"] == data_entry_flow.FlowResultType.MENU
+    assert result["step_id"] == "choose_add_sensor_method"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            "latitude": 51.5285582,
-            "longitude": -0.2416796,
-            "distance": 5,
-        },
+        result["flow_id"], user_input={"next_step_id": "add_sensor_by_index"}
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "choose_sensor"
+    assert result["step_id"] == "add_sensor_by_index"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],

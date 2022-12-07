@@ -2,7 +2,7 @@
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiopurpleair.endpoints.sensors import NearbySensorResult
-from aiopurpleair.models.sensors import GetSensorsResponse
+from aiopurpleair.models.sensors import GetSensorResponse, GetSensorsResponse
 import pytest
 
 from homeassistant.components.purpleair import DOMAIN
@@ -12,10 +12,11 @@ from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture(name="api")
-def api_fixture(check_api_key, get_nearby_sensors, get_sensors):
+def api_fixture(check_api_key, get_nearby_sensors, get_sensor, get_sensors):
     """Define a fixture to return a mocked aiopurple API object."""
     api = Mock(async_check_api_key=check_api_key, get_map_url=Mock())
     api.sensors.async_get_nearby_sensors = get_nearby_sensors
+    api.sensors.async_get_sensor = get_sensor
     api.sensors.async_get_sensors = get_sensors
     return api
 
@@ -67,10 +68,24 @@ def get_nearby_sensors_fixture(get_sensors_response):
     )
 
 
+@pytest.fixture(name="get_sensor")
+def get_sensor_fixture(get_sensor_response):
+    """Define a mocked API.sensors.async_get_sensor."""
+    return AsyncMock(return_value=get_sensor_response)
+
+
 @pytest.fixture(name="get_sensors")
 def get_sensors_fixture(get_sensors_response):
     """Define a mocked API.sensors.async_get_sensors."""
     return AsyncMock(return_value=get_sensors_response)
+
+
+@pytest.fixture(name="get_sensor_response", scope="package")
+def get_sensor_response_fixture():
+    """Define a fixture to mock an aiopurpleair GetsensorResponse object."""
+    return GetSensorResponse.parse_raw(
+        load_fixture("get_sensor_response.json", "purpleair")
+    )
 
 
 @pytest.fixture(name="get_sensors_response", scope="package")

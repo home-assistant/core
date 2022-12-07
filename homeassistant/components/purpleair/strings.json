@@ -14,13 +14,29 @@
           "distance": "The radius (in kilometers) of the circle to search within"
         }
       },
+      "by_sensor_index": {
+        "description": "Add a PurpleAir sensor by its index (ID number). Note that this is a fully numeric ID number.",
+        "data": {
+          "sensor_index": "Sensor Index"
+        },
+        "data_description": {
+          "sensor_index": "The sensor to track"
+        }
+      },
+      "choose_method": {
+        "description": "How do you want to add a sensor?",
+        "menu_options": {
+          "by_coordinates": "Search for sensors near a latitude/longitude",
+          "by_sensor_index": "Enter the PurpleAir sensor index for a specific sensor"
+        }
+      },
       "choose_sensor": {
         "description": "Which of the nearby sensors would you like to track?",
         "data": {
           "sensor_index": "Sensor"
         },
         "data_description": {
-          "sensor_index": "The sensor to track"
+          "sensor_index": "[%key:component::purpleair::config::step::by_sensor_index::data_description::sensor_index%]"
         }
       },
       "user": {
@@ -35,7 +51,8 @@
     "error": {
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
       "no_sensors_near_coordinates": "No sensors found near coordinates (within distance)",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unknown_sensor_index": "Could not find sensor with provided index"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
@@ -43,8 +60,8 @@
   },
   "options": {
     "step": {
-      "add_sensor": {
-        "title": "Add Sensor",
+      "add_sensor_by_coordinates": {
+        "title": "Add Sensor by Coordinates",
         "description": "[%key:component::purpleair::config::step::by_coordinates::description%]",
         "data": {
           "latitude": "[%key:component::purpleair::config::step::by_coordinates::data::latitude%]",
@@ -55,6 +72,23 @@
           "latitude": "[%key:component::purpleair::config::step::by_coordinates::data_description::latitude%]",
           "longitude": "[%key:component::purpleair::config::step::by_coordinates::data_description::longitude%]",
           "distance": "[%key:component::purpleair::config::step::by_coordinates::data_description::distance%]"
+        }
+      },
+      "add_sensor_by_index": {
+        "title": "Add Sensor by Index",
+        "description": "[%key:component::purpleair::config::step::by_sensor_index::description%]",
+        "data": {
+          "sensor_index": "[%key:component::purpleair::config::step::by_sensor_index::data::sensor_index%]"
+        },
+        "data_description": {
+          "sensor_index": "[%key:component::purpleair::config::step::by_sensor_index::data_description::sensor_index%]"
+        }
+      },
+      "choose_add_sensor_method": {
+        "description": "[%key:component::purpleair::config::step::choose_method::description%]",
+        "menu_options": {
+          "add_sensor_by_coordinates": "[%key:component::purpleair::config::step::choose_method::menu_options::by_coordinates%]",
+          "add_sensor_by_index": "[%key:component::purpleair::config::step::choose_method::menu_options::by_sensor_index%]"
         }
       },
       "choose_sensor": {
@@ -69,7 +103,7 @@
       },
       "init": {
         "menu_options": {
-          "add_sensor": "Add sensor",
+          "choose_add_sensor_method": "Add sensor",
           "remove_sensor": "Remove sensor"
         }
       },
@@ -86,7 +120,8 @@
     "error": {
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
       "no_sensors_near_coordinates": "[%key:component::purpleair::config::error::no_sensors_near_coordinates%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unknown_sensor_index": "[%key:component::purpleair::config::error::unknown_sensor_index%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
