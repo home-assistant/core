@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "wrong_ip_address": "La direcci\u00f3n IP es incorrecta o no se puede acceder localmente al SHC.",
+            "wrong_password": "La contrase\u00f1a es incorrecta."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Direcci\u00f3n IP",
+                    "password": "Contrase\u00f1a"
+                },
+                "description": "Introduce la direcci\u00f3n IP y la contrase\u00f1a (local) del SHC."
+            }
+        }
+    }
+}

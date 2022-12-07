@@ -950,6 +950,145 @@ async def test_single_preset_mode_fan(hass, caplog):
     caplog.clear()
 
 
+@freeze_time("2022-04-19 07:53:05")
+async def test_humidifier(hass, caplog):
+    """Test humidifier controller."""
+    device = (
+        "humidifier.test_1",
+        "on",
+        {
+            "friendly_name": "Humidifier test 1",
+            "humidity": 66,
+            "supported_features": 1,
+            "mode": "Auto",
+            "available_modes": ["Auto", "Low", "Medium", "High"],
+            "min_humidity": 20,
+            "max_humidity": 90,
+        },
+    )
+    await discovery_test(device, hass)
+
+    await assert_power_controller_works(
+        "humidifier#test_1",
+        "humidifier.turn_on",
+        "humidifier.turn_off",
+        hass,
+        "2022-04-19T07:53:05Z",
+    )
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.ModeController",
+        "SetMode",
+        "humidifier#test_1",
+        "humidifier.set_mode",
+        hass,
+        payload={"mode": "mode.Auto"},
+        instance="humidifier.mode",
+    )
+    assert call.data["mode"] == "Auto"
+
+    with pytest.raises(AssertionError):
+        await assert_request_calls_service(
+            "Alexa.ModeController",
+            "SetMode",
+            "humidifier#test_1",
+            "humidifier.set_mode",
+            hass,
+            payload={"mode": "mode.-"},
+            instance="humidifier.mode",
+        )
+    assert "Entity 'humidifier.test_1' does not support Mode '-'" in caplog.text
+    caplog.clear()
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.RangeController",
+        "SetRangeValue",
+        "humidifier#test_1",
+        "humidifier.set_humidity",
+        hass,
+        payload={"rangeValue": "67"},
+        instance="humidifier.humidity",
+    )
+    assert call.data["humidity"] == 67
+    call, _ = await assert_request_calls_service(
+        "Alexa.RangeController",
+        "SetRangeValue",
+        "humidifier#test_1",
+        "humidifier.set_humidity",
+        hass,
+        payload={"rangeValue": "33"},
+        instance="humidifier.humidity",
+    )
+    assert call.data["humidity"] == 33
+
+
+async def test_humidifier_without_modes(hass):
+    """Test humidifier discovery without modes."""
+
+    device = (
+        "humidifier.test_2",
+        "on",
+        {
+            "friendly_name": "Humidifier test 2",
+            "humidity": 33,
+            "supported_features": 0,
+            "min_humidity": 20,
+            "max_humidity": 90,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "humidifier#test_2"
+    assert appliance["displayCategories"][0] == "OTHER"
+    assert appliance["friendlyName"] == "Humidifier test 2"
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa.RangeController",
+        "Alexa.PowerController",
+        "Alexa.EndpointHealth",
+        "Alexa",
+    )
+
+    power_capability = get_capability(capabilities, "Alexa.PowerController")
+    assert "capabilityResources" not in power_capability
+    assert "configuration" not in power_capability
+
+
+async def test_humidifier_with_modes(hass):
+    """Test humidifier discovery with modes."""
+
+    device = (
+        "humidifier.test_1",
+        "on",
+        {
+            "friendly_name": "Humidifier test 1",
+            "humidity": 66,
+            "supported_features": 1,
+            "mode": "Auto",
+            "available_modes": ["Auto", "Low", "Medium", "High"],
+            "min_humidity": 20,
+            "max_humidity": 90,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "humidifier#test_1"
+    assert appliance["displayCategories"][0] == "OTHER"
+    assert appliance["friendlyName"] == "Humidifier test 1"
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa.ModeController",
+        "Alexa.RangeController",
+        "Alexa.PowerController",
+        "Alexa.EndpointHealth",
+        "Alexa",
+    )
+
+    power_capability = get_capability(capabilities, "Alexa.PowerController")
+    assert "capabilityResources" not in power_capability
+    assert "configuration" not in power_capability
+
+
 async def test_lock(hass):
     """Test lock discovery."""
     device = ("lock.test", "off", {"friendly_name": "Test lock"})

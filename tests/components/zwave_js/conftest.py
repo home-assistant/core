@@ -26,10 +26,11 @@ def addon_info_side_effect_fixture():
 def mock_addon_info(addon_info_side_effect):
     """Mock Supervisor add-on info."""
     with patch(
-        "homeassistant.components.zwave_js.addon.async_get_addon_info",
+        "homeassistant.components.hassio.addon_manager.async_get_addon_info",
         side_effect=addon_info_side_effect,
     ) as addon_info:
         addon_info.return_value = {
+            "hostname": None,
             "options": {},
             "state": None,
             "update_available": False,
@@ -48,7 +49,7 @@ def addon_store_info_side_effect_fixture():
 def mock_addon_store_info(addon_store_info_side_effect):
     """Mock Supervisor add-on info."""
     with patch(
-        "homeassistant.components.zwave_js.addon.async_get_addon_store_info",
+        "homeassistant.components.hassio.addon_manager.async_get_addon_store_info",
         side_effect=addon_store_info_side_effect,
     ) as addon_store_info:
         addon_store_info.return_value = {
@@ -112,7 +113,7 @@ def set_addon_options_side_effect_fixture(addon_options):
 def mock_set_addon_options(set_addon_options_side_effect):
     """Mock set add-on options."""
     with patch(
-        "homeassistant.components.zwave_js.addon.async_set_addon_options",
+        "homeassistant.components.hassio.addon_manager.async_set_addon_options",
         side_effect=set_addon_options_side_effect,
     ) as set_options:
         yield set_options
@@ -139,7 +140,7 @@ def install_addon_side_effect_fixture(addon_store_info, addon_info):
 def mock_install_addon(install_addon_side_effect):
     """Mock install add-on."""
     with patch(
-        "homeassistant.components.zwave_js.addon.async_install_addon",
+        "homeassistant.components.hassio.addon_manager.async_install_addon",
         side_effect=install_addon_side_effect,
     ) as install_addon:
         yield install_addon
@@ -149,7 +150,7 @@ def mock_install_addon(install_addon_side_effect):
 def mock_update_addon():
     """Mock update add-on."""
     with patch(
-        "homeassistant.components.zwave_js.addon.async_update_addon"
+        "homeassistant.components.hassio.addon_manager.async_update_addon"
     ) as update_addon:
         yield update_addon
 
@@ -174,7 +175,7 @@ def start_addon_side_effect_fixture(addon_store_info, addon_info):
 def mock_start_addon(start_addon_side_effect):
     """Mock start add-on."""
     with patch(
-        "homeassistant.components.zwave_js.addon.async_start_addon",
+        "homeassistant.components.hassio.addon_manager.async_start_addon",
         side_effect=start_addon_side_effect,
     ) as start_addon:
         yield start_addon
@@ -184,7 +185,7 @@ def mock_start_addon(start_addon_side_effect):
 def stop_addon_fixture():
     """Mock stop add-on."""
     with patch(
-        "homeassistant.components.zwave_js.addon.async_stop_addon"
+        "homeassistant.components.hassio.addon_manager.async_stop_addon"
     ) as stop_addon:
         yield stop_addon
 
@@ -199,7 +200,7 @@ def restart_addon_side_effect_fixture():
 def mock_restart_addon(restart_addon_side_effect):
     """Mock restart add-on."""
     with patch(
-        "homeassistant.components.zwave_js.addon.async_restart_addon",
+        "homeassistant.components.hassio.addon_manager.async_restart_addon",
         side_effect=restart_addon_side_effect,
     ) as restart_addon:
         yield restart_addon
@@ -209,7 +210,7 @@ def mock_restart_addon(restart_addon_side_effect):
 def uninstall_addon_fixture():
     """Mock uninstall add-on."""
     with patch(
-        "homeassistant.components.zwave_js.addon.async_uninstall_addon"
+        "homeassistant.components.hassio.addon_manager.async_uninstall_addon"
     ) as uninstall_addon:
         yield uninstall_addon
 
@@ -218,7 +219,7 @@ def uninstall_addon_fixture():
 def create_backup_fixture():
     """Mock create backup."""
     with patch(
-        "homeassistant.components.zwave_js.addon.async_create_backup"
+        "homeassistant.components.hassio.addon_manager.async_create_backup"
     ) as create_backup:
         yield create_backup
 
@@ -582,7 +583,9 @@ def lock_home_connect_620_state_fixture():
 
 
 @pytest.fixture(name="client")
-def mock_client_fixture(controller_state, version_state, log_config_state):
+def mock_client_fixture(
+    controller_state, controller_node_state, version_state, log_config_state
+):
     """Mock a client."""
 
     with patch(
@@ -607,19 +610,13 @@ def mock_client_fixture(controller_state, version_state, log_config_state):
         client.listen = AsyncMock(side_effect=listen)
         client.disconnect = AsyncMock(side_effect=disconnect)
         client.driver = Driver(client, controller_state, log_config_state)
+        node = Node(client, copy.deepcopy(controller_node_state))
+        client.driver.controller.nodes[node.node_id] = node
 
         client.version = VersionInfo.from_message(version_state)
         client.ws_server_url = "ws://test:3000/zjs"
 
         yield client
-
-
-@pytest.fixture(name="controller_node")
-def controller_node_fixture(client, controller_node_state):
-    """Mock a controller node."""
-    node = Node(client, copy.deepcopy(controller_node_state))
-    client.driver.controller.nodes[node.node_id] = node
-    return node
 
 
 @pytest.fixture(name="multisensor_6")

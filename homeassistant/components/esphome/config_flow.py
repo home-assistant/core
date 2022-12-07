@@ -17,7 +17,7 @@ from aioesphomeapi import (
 import voluptuous as vol
 
 from homeassistant.components import dhcp, zeroconf
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
@@ -40,6 +40,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self._password: str | None = None
         self._noise_psk: str | None = None
         self._device_info: DeviceInfo | None = None
+        self._reauth_entry: ConfigEntry | None = None
 
     async def _async_step_user_base(
         self, user_input: dict[str, Any] | None = None, error: str | None = None
@@ -72,6 +73,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by a reauth event."""
         entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         assert entry is not None
+        self._reauth_entry = entry
         self._host = entry.data[CONF_HOST]
         self._port = entry.data[CONF_PORT]
         self._password = entry.data[CONF_PASSWORD]
@@ -245,10 +247,11 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_PASSWORD: self._password or "",
             CONF_NOISE_PSK: self._noise_psk or "",
         }
-        if "entry_id" in self.context:
-            entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-            assert entry is not None
-            self.hass.config_entries.async_update_entry(entry, data=config_data)
+        if self._reauth_entry:
+            entry = self._reauth_entry
+            self.hass.config_entries.async_update_entry(
+                entry, data=self._reauth_entry.data | config_data
+            )
             # Reload the config entry to notify of updated config
             self.hass.async_create_task(
                 self.hass.config_entries.async_reload(entry.entry_id)
@@ -332,7 +335,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._name = self._device_info.name
         await self.async_set_unique_id(self._name, raise_on_progress=False)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
+        if not self._reauth_entry:
+            self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
         return None
 

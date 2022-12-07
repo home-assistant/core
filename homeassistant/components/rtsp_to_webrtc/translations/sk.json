@@ -1,0 +1,7 @@
+{
+    "config": {
+        "error": {
+            "invalid_url": "Mus\u00ed to by\u0165 platn\u00e1 adresa URL servera RTSPtoWebRTC, napr. https://example.com"
+        }
+    }
+}

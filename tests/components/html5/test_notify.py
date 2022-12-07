@@ -93,6 +93,7 @@ class TestHtml5Notify:
     def test_dismissing_message(self, mock_wp):
         """Test dismissing message."""
         hass = MagicMock()
+        mock_wp().send().status_code = 201
 
         data = {"device": SUBSCRIPTION_1}
 
@@ -104,15 +105,13 @@ class TestHtml5Notify:
 
         service.dismiss(target=["device", "non_existing"], data={"tag": "test"})
 
-        assert len(mock_wp.mock_calls) == 3
+        assert len(mock_wp.mock_calls) == 4
 
         # WebPusher constructor
-        assert mock_wp.mock_calls[0][1][0] == SUBSCRIPTION_1["subscription"]
-        # Third mock_call checks the status_code of the response.
-        assert mock_wp.mock_calls[2][0] == "().send().status_code.__eq__"
+        assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_1["subscription"]
 
         # Call to send
-        payload = json.loads(mock_wp.mock_calls[1][1][0])
+        payload = json.loads(mock_wp.mock_calls[3][1][0])
 
         assert payload["dismiss"] is True
         assert payload["tag"] == "test"
@@ -121,6 +120,7 @@ class TestHtml5Notify:
     def test_sending_message(self, mock_wp):
         """Test sending message."""
         hass = MagicMock()
+        mock_wp().send().status_code = 201
 
         data = {"device": SUBSCRIPTION_1}
 
@@ -134,15 +134,13 @@ class TestHtml5Notify:
             "Hello", target=["device", "non_existing"], data={"icon": "beer.png"}
         )
 
-        assert len(mock_wp.mock_calls) == 3
+        assert len(mock_wp.mock_calls) == 4
 
         # WebPusher constructor
-        assert mock_wp.mock_calls[0][1][0] == SUBSCRIPTION_1["subscription"]
-        # Third mock_call checks the status_code of the response.
-        assert mock_wp.mock_calls[2][0] == "().send().status_code.__eq__"
+        assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_1["subscription"]
 
         # Call to send
-        payload = json.loads(mock_wp.mock_calls[1][1][0])
+        payload = json.loads(mock_wp.mock_calls[3][1][0])
 
         assert payload["body"] == "Hello"
         assert payload["icon"] == "beer.png"
@@ -151,6 +149,7 @@ class TestHtml5Notify:
     def test_gcm_key_include(self, mock_wp):
         """Test if the gcm_key is only included for GCM endpoints."""
         hass = MagicMock()
+        mock_wp().send().status_code = 201
 
         data = {"chrome": SUBSCRIPTION_1, "firefox": SUBSCRIPTION_2}
 
@@ -167,21 +166,18 @@ class TestHtml5Notify:
         assert len(mock_wp.mock_calls) == 6
 
         # WebPusher constructor
-        assert mock_wp.mock_calls[0][1][0] == SUBSCRIPTION_1["subscription"]
-        assert mock_wp.mock_calls[3][1][0] == SUBSCRIPTION_2["subscription"]
-
-        # Third mock_call checks the status_code of the response.
-        assert mock_wp.mock_calls[2][0] == "().send().status_code.__eq__"
-        assert mock_wp.mock_calls[5][0] == "().send().status_code.__eq__"
+        assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_1["subscription"]
+        assert mock_wp.mock_calls[4][1][0] == SUBSCRIPTION_2["subscription"]
 
         # Get the keys passed to the WebPusher's send method
-        assert mock_wp.mock_calls[1][2]["gcm_key"] is not None
-        assert mock_wp.mock_calls[4][2]["gcm_key"] is None
+        assert mock_wp.mock_calls[3][2]["gcm_key"] is not None
+        assert mock_wp.mock_calls[5][2]["gcm_key"] is None
 
     @patch("homeassistant.components.html5.notify.WebPusher")
     def test_fcm_key_include(self, mock_wp):
         """Test if the FCM header is included."""
         hass = MagicMock()
+        mock_wp().send().status_code = 201
 
         data = {"chrome": SUBSCRIPTION_5}
 
@@ -193,20 +189,18 @@ class TestHtml5Notify:
 
         service.send_message("Hello", target=["chrome"])
 
-        assert len(mock_wp.mock_calls) == 3
+        assert len(mock_wp.mock_calls) == 4
         # WebPusher constructor
-        assert mock_wp.mock_calls[0][1][0] == SUBSCRIPTION_5["subscription"]
-
-        # Third mock_call checks the status_code of the response.
-        assert mock_wp.mock_calls[2][0] == "().send().status_code.__eq__"
+        assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_5["subscription"]
 
         # Get the keys passed to the WebPusher's send method
-        assert mock_wp.mock_calls[1][2]["headers"]["Authorization"] is not None
+        assert mock_wp.mock_calls[3][2]["headers"]["Authorization"] is not None
 
     @patch("homeassistant.components.html5.notify.WebPusher")
     def test_fcm_send_with_unknown_priority(self, mock_wp):
         """Test if the gcm_key is only included for GCM endpoints."""
         hass = MagicMock()
+        mock_wp().send().status_code = 201
 
         data = {"chrome": SUBSCRIPTION_5}
 
@@ -218,20 +212,18 @@ class TestHtml5Notify:
 
         service.send_message("Hello", target=["chrome"], priority="undefined")
 
-        assert len(mock_wp.mock_calls) == 3
+        assert len(mock_wp.mock_calls) == 4
         # WebPusher constructor
-        assert mock_wp.mock_calls[0][1][0] == SUBSCRIPTION_5["subscription"]
-
-        # Third mock_call checks the status_code of the response.
-        assert mock_wp.mock_calls[2][0] == "().send().status_code.__eq__"
+        assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_5["subscription"]
 
         # Get the keys passed to the WebPusher's send method
-        assert mock_wp.mock_calls[1][2]["headers"]["priority"] == "normal"
+        assert mock_wp.mock_calls[3][2]["headers"]["priority"] == "normal"
 
     @patch("homeassistant.components.html5.notify.WebPusher")
     def test_fcm_no_targets(self, mock_wp):
         """Test if the gcm_key is only included for GCM endpoints."""
         hass = MagicMock()
+        mock_wp().send().status_code = 201
 
         data = {"chrome": SUBSCRIPTION_5}
 
@@ -243,20 +235,18 @@ class TestHtml5Notify:
 
         service.send_message("Hello")
 
-        assert len(mock_wp.mock_calls) == 3
+        assert len(mock_wp.mock_calls) == 4
         # WebPusher constructor
-        assert mock_wp.mock_calls[0][1][0] == SUBSCRIPTION_5["subscription"]
-
-        # Third mock_call checks the status_code of the response.
-        assert mock_wp.mock_calls[2][0] == "().send().status_code.__eq__"
+        assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_5["subscription"]
 
         # Get the keys passed to the WebPusher's send method
-        assert mock_wp.mock_calls[1][2]["headers"]["priority"] == "normal"
+        assert mock_wp.mock_calls[3][2]["headers"]["priority"] == "normal"
 
     @patch("homeassistant.components.html5.notify.WebPusher")
     def test_fcm_additional_data(self, mock_wp):
         """Test if the gcm_key is only included for GCM endpoints."""
         hass = MagicMock()
+        mock_wp().send().status_code = 201
 
         data = {"chrome": SUBSCRIPTION_5}
 
@@ -268,21 +258,18 @@ class TestHtml5Notify:
 
         service.send_message("Hello", data={"mykey": "myvalue"})
 
-        assert len(mock_wp.mock_calls) == 3
+        assert len(mock_wp.mock_calls) == 4
         # WebPusher constructor
-        assert mock_wp.mock_calls[0][1][0] == SUBSCRIPTION_5["subscription"]
-
-        # Third mock_call checks the status_code of the response.
-        assert mock_wp.mock_calls[2][0] == "().send().status_code.__eq__"
+        assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_5["subscription"]
 
         # Get the keys passed to the WebPusher's send method
-        assert mock_wp.mock_calls[1][2]["headers"]["priority"] == "normal"
+        assert mock_wp.mock_calls[3][2]["headers"]["priority"] == "normal"
 
 
 def test_create_vapid_withoutvapid():
     """Test creating empty vapid."""
     resp = html5.create_vapid_headers(
-        vapid_email=None, vapid_private_key=None, subscription_info=None
+        vapid_email=None, vapid_private_key=None, subscription_info=None, timestamp=None
     )
     assert resp is None
 
@@ -478,6 +465,7 @@ async def test_callback_view_with_jwt(hass, hass_client):
     client = await mock_client(hass, hass_client, registrations)
 
     with patch("homeassistant.components.html5.notify.WebPusher") as mock_wp:
+        mock_wp().send().status_code = 201
         await hass.services.async_call(
             "notify",
             "notify",
@@ -485,15 +473,13 @@ async def test_callback_view_with_jwt(hass, hass_client):
             blocking=True,
         )
 
-    assert len(mock_wp.mock_calls) == 3
+    assert len(mock_wp.mock_calls) == 4
 
     # WebPusher constructor
-    assert mock_wp.mock_calls[0][1][0] == SUBSCRIPTION_1["subscription"]
-    # Third mock_call checks the status_code of the response.
-    assert mock_wp.mock_calls[2][0] == "().send().status_code.__eq__"
+    assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_1["subscription"]
 
     # Call to send
-    push_payload = json.loads(mock_wp.mock_calls[1][1][0])
+    push_payload = json.loads(mock_wp.mock_calls[3][1][0])
 
     assert push_payload["body"] == "Hello"
     assert push_payload["icon"] == "beer.png"
@@ -514,6 +500,7 @@ async def test_send_fcm_without_targets(hass, hass_client):
     registrations = {"device": SUBSCRIPTION_5}
     await mock_client(hass, hass_client, registrations)
     with patch("homeassistant.components.html5.notify.WebPusher") as mock_wp:
+        mock_wp().send().status_code = 201
         await hass.services.async_call(
             "notify",
             "notify",
@@ -521,12 +508,10 @@ async def test_send_fcm_without_targets(hass, hass_client):
             blocking=True,
         )
 
-    assert len(mock_wp.mock_calls) == 3
+    assert len(mock_wp.mock_calls) == 4
 
     # WebPusher constructor
-    assert mock_wp.mock_calls[0][1][0] == SUBSCRIPTION_5["subscription"]
-    # Third mock_call checks the status_code of the response.
-    assert mock_wp.mock_calls[2][0] == "().send().status_code.__eq__"
+    assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_5["subscription"]
 
 
 async def test_send_fcm_expired(hass, hass_client):

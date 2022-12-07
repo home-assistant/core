@@ -6,8 +6,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Vert",
-                    "name": "Navn"
+                    "host": "Vert"
                 },
                 "data_description": {
                     "host": "IP-adressen eller vertsnavnet til P1 Monitor-installasjonen."

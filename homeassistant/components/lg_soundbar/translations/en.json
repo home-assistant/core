@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
-            "existing_instance_updated": "Updated existing configuration."
+            "no_uuid": "Device missing unique identification required for discovery."
         },
         "error": {
             "cannot_connect": "Failed to connect"

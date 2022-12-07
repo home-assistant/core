@@ -99,6 +99,7 @@ SCHEMA_WS_APPKEY = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
 # The number of days after the moment a notification is sent that a JWT
 # is valid.
 JWT_VALID_DAYS = 7
+VAPID_CLAIM_VALID_HOURS = 12
 
 KEYS_SCHEMA = vol.All(
     dict,
@@ -514,7 +515,10 @@ class HTML5NotificationService(BaseNotificationService):
             webpusher = WebPusher(info[ATTR_SUBSCRIPTION])
             if self._vapid_prv and self._vapid_email:
                 vapid_headers = create_vapid_headers(
-                    self._vapid_email, info[ATTR_SUBSCRIPTION], self._vapid_prv
+                    self._vapid_email,
+                    info[ATTR_SUBSCRIPTION],
+                    self._vapid_prv,
+                    timestamp,
                 )
                 vapid_headers.update({"urgency": priority, "priority": priority})
                 response = webpusher.send(
@@ -540,6 +544,12 @@ class HTML5NotificationService(BaseNotificationService):
                     _LOGGER.error("Error saving registration")
                 else:
                     _LOGGER.info("Configuration saved")
+            elif response.status_code > 399:
+                _LOGGER.error(
+                    "There was an issue sending the notification %s: %s",
+                    response.status,
+                    response.text,
+                )
 
 
 def add_jwt(timestamp, target, tag, jwt_secret):
@@ -556,14 +566,23 @@ def add_jwt(timestamp, target, tag, jwt_secret):
     return jwt.encode(jwt_claims, jwt_secret)
 
 
-def create_vapid_headers(vapid_email, subscription_info, vapid_private_key):
+def create_vapid_headers(vapid_email, subscription_info, vapid_private_key, timestamp):
     """Create encrypted headers to send to WebPusher."""
 
-    if vapid_email and vapid_private_key and ATTR_ENDPOINT in subscription_info:
+    if (
+        vapid_email
+        and vapid_private_key
+        and ATTR_ENDPOINT in subscription_info
+        and timestamp
+    ):
+        vapid_exp = datetime.fromtimestamp(timestamp) + timedelta(
+            hours=VAPID_CLAIM_VALID_HOURS
+        )
         url = urlparse(subscription_info.get(ATTR_ENDPOINT))
         vapid_claims = {
             "sub": f"mailto:{vapid_email}",
             "aud": f"{url.scheme}://{url.netloc}",
+            "exp": int(vapid_exp.timestamp()),
         }
         vapid = Vapid.from_string(private_key=vapid_private_key)
         return vapid.sign(vapid_claims)

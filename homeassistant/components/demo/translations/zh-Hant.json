@@ -11,6 +11,14 @@
             },
             "title": "\u96fb\u6e90\u4f9b\u61c9\u4e0d\u7a69\u5b9a"
         },
+        "cold_tea": {
+            "fix_flow": {
+                "abort": {
+                    "not_tea_time": "\u76ee\u524d\u7121\u6cd5\u518d\u52a0\u71b1\u8336"
+                }
+            },
+            "title": "\u8336\u6dbc\u4e86"
+        },
         "out_of_blinker_fluid": {
             "fix_flow": {
                 "step": {

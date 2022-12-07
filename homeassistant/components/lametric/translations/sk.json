@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "authorize_url_timeout": "\u010casov\u00fd limit generovania autorizovanej adresy URL.",
+            "invalid_discovery_info": "Prijat\u00e9 neplatn\u00e9 inform\u00e1cie o zis\u0165ovan\u00ed",
+            "link_local_address": "Lok\u00e1lne adresy odkazov nie s\u00fa podporovan\u00e9",
+            "no_url_available": "Nie je k dispoz\u00edcii \u017eiadna adresa URL. Inform\u00e1cie o tejto chybe n\u00e1jdete [pozrite si sekciu pomocn\u00edka]({docs_url})",
+            "reauth_successful": "Op\u00e4tovn\u00e9 overenie bolo \u00faspe\u0161n\u00e9",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "choice_enter_manual_or_fetch_cloud": {
+                "menu_options": {
+                    "manual_entry": "Zadajte manu\u00e1lne"
+                }
+            },
+            "manual_entry": {
+                "data": {
+                    "api_key": "API k\u013e\u00fa\u010d",
+                    "host": "Hostite\u013e"
+                }
+            },
+            "pick_implementation": {
+                "title": "Vyberte met\u00f3du overenia"
+            }
+        }
+    }
+}

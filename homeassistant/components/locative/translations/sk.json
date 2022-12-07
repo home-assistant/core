@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "cloud_not_connected": "Nie je pripojen\u00e9 k Home Assistant Cloud.",
+            "single_instance_allowed": "U\u017e je nakonfigurovan\u00fd. Mo\u017en\u00e1 len jedna konfigur\u00e1cia.",
+            "webhook_not_internet_accessible": "Va\u0161a in\u0161tancia Home Assistant mus\u00ed by\u0165 pr\u00edstupn\u00e1 z internetu, aby ste mohli prij\u00edma\u0165 spr\u00e1vy webhooku."
+        },
+        "step": {
+            "user": {
+                "description": "Chcete za\u010da\u0165 nastavova\u0165?"
+            }
+        }
+    }
+}

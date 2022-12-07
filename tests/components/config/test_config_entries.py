@@ -69,7 +69,6 @@ async def test_get_entries(hass, client, clear_handlers):
         @callback
         def async_get_options_flow(config_entry):
             """Get options flow."""
-            pass
 
         @classmethod
         @callback

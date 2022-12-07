@@ -89,6 +89,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "airq": {
+      "name": "air-Q",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "airthings": {
       "name": "Airthings",
       "integrations": {
@@ -317,6 +323,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
+    },
+    "aranet": {
+      "name": "Aranet",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "arcam_fmj": {
       "name": "Arcam FMJ Receivers",
@@ -604,6 +616,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "brandt": {
+      "name": "Brandt Smart Control",
+      "integration_type": "virtual",
+      "supported_by": "overkiz"
     },
     "brel_home": {
       "name": "Brel Home",
@@ -944,7 +961,7 @@
     },
     "deluge": {
       "name": "Deluge",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -1044,7 +1061,7 @@
     },
     "discord": {
       "name": "Discord",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -1614,7 +1631,7 @@
     },
     "flick_electric": {
       "name": "Flick Electric",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -1791,7 +1808,7 @@
     },
     "gdacs": {
       "name": "Global Disaster Alert and Coordination System (GDACS)",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -1847,13 +1864,13 @@
       "name": "GeoNet",
       "integrations": {
         "geonetnz_quakes": {
-          "integration_type": "hub",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "GeoNet NZ Quakes"
         },
         "geonetnz_volcano": {
-          "integration_type": "hub",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "GeoNet NZ Volcano"
@@ -1915,7 +1932,7 @@
     },
     "goalzero": {
       "name": "Goal Zero Yeti",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -1965,7 +1982,7 @@
           "name": "Google Pub/Sub"
         },
         "google_sheets": {
-          "integration_type": "hub",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Google Sheets"
@@ -2004,12 +2021,6 @@
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "Google Cast"
-        },
-        "hangouts": {
-          "integration_type": "hub",
-          "config_flow": true,
-          "iot_class": "cloud_push",
-          "name": "Google Chat"
         },
         "dialogflow": {
           "integration_type": "hub",
@@ -2141,6 +2152,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "hexaom": {
+      "name": "Hexaom Hexaconnect",
+      "integration_type": "virtual",
+      "supported_by": "overkiz"
     },
     "hi_kumo": {
       "name": "Hitachi Hi Kumo",
@@ -2366,7 +2382,7 @@
     },
     "ign_sismologia": {
       "name": "IGN Sismolog\u00eda",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -2780,7 +2796,7 @@
     },
     "lidarr": {
       "name": "Lidarr",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -2850,11 +2866,23 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "livisi": {
+      "name": "LIVISI Smart Home",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "llamalab_automate": {
       "name": "LlamaLab Automate",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
+    },
+    "local_calendar": {
+      "name": "Local Calendar",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "local_file": {
       "name": "Local File",
@@ -3017,6 +3045,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
+    },
+    "matter": {
+      "name": "Matter (BETA)",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "mazda": {
       "name": "Mazda Connected Services",
@@ -3257,7 +3291,7 @@
     },
     "modem_callerid": {
       "name": "Phone Modem",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -3510,7 +3544,7 @@
     },
     "nfandroidtv": {
       "name": "Notifications for Android TV / Fire TV",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -3605,7 +3639,7 @@
     },
     "nsw_rural_fire_service_feed": {
       "name": "NSW Rural Fire Service Incidents",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -3885,7 +3919,7 @@
     },
     "ovo_energy": {
       "name": "OVO Energy",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4140,7 +4174,7 @@
     "pushbullet": {
       "name": "Pushbullet",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "pushover": {
@@ -4192,7 +4226,7 @@
     },
     "qld_bushfire": {
       "name": "Queensland Bushfire Alert",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -4245,7 +4279,7 @@
     },
     "radarr": {
       "name": "Radarr",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -4513,6 +4547,12 @@
         }
       }
     },
+    "ruuvitag_ble": {
+      "name": "RuuviTag BLE",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "sabnzbd": {
       "name": "SABnzbd",
       "integration_type": "hub",
@@ -4535,7 +4575,7 @@
           "name": "Samsung Family Hub"
         },
         "samsungtv": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_push",
           "name": "Samsung Smart TV"
@@ -4563,7 +4603,7 @@
     "scrape": {
       "name": "Scrape",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "screenaway": {
@@ -4612,6 +4652,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "sensirion_ble": {
+      "name": "Sensirion BLE",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "sensorblue": {
       "name": "SensorBlue",
@@ -4747,6 +4793,11 @@
       "name": "Simply Automated",
       "integration_type": "virtual",
       "supported_by": "upb"
+    },
+    "simu": {
+      "name": "SIMU LiveIn2",
+      "integration_type": "virtual",
+      "supported_by": "overkiz"
     },
     "simulated": {
       "name": "Simulated",
@@ -5074,7 +5125,7 @@
     },
     "steam_online": {
       "name": "Steam",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -5216,7 +5267,7 @@
     },
     "system_bridge": {
       "name": "System Bridge",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -5668,6 +5719,11 @@
         }
       }
     },
+    "ubiwizz": {
+      "name": "Ubiwizz",
+      "integration_type": "virtual",
+      "supported_by": "overkiz"
+    },
     "uk_transport": {
       "name": "UK Transport",
       "integration_type": "hub",
@@ -5728,7 +5784,7 @@
     },
     "usgs_earthquakes_feed": {
       "name": "U.S. Geological Survey Earthquake Hazards (USGS)",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -6106,16 +6162,21 @@
       }
     },
     "yamaha": {
-      "name": "Yamaha Network Receivers",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
-    "yamaha_musiccast": {
-      "name": "MusicCast",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_push"
+      "name": "Yamaha",
+      "integrations": {
+        "yamaha": {
+          "integration_type": "hub",
+          "config_flow": false,
+          "iot_class": "local_polling",
+          "name": "Yamaha Network Receivers"
+        },
+        "yamaha_musiccast": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "MusicCast"
+        }
+      }
     },
     "yandex": {
       "name": "Yandex",
@@ -6297,7 +6358,7 @@
     "min_max": {
       "integration_type": "helper",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "calculated"
     },
     "schedule": {
       "integration_type": "helper",

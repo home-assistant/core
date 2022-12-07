@@ -108,7 +108,7 @@ def create_light(item_class, coordinator, bridge, is_group, rooms, api, item_id)
 
     if is_group:
         supported_color_modes = set()
-        supported_features = 0
+        supported_features = LightEntityFeature(0)
         for light_id in api_item.lights:
             if light_id not in bridge.api.lights:
                 continue

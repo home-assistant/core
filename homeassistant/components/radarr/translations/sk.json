@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba u\u017e je nakonfigurovan\u00e1"
+        },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "invalid_auth": "Neplatn\u00e9 overenie",
+            "zeroconf_failed": "K\u013e\u00fa\u010d API sa nena\u0161iel. Zadajte ho ru\u010dne"
+        },
+        "step": {
+            "reauth_confirm": {
+                "title": "Znova overi\u0165 integr\u00e1ciu"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API k\u013e\u00fa\u010d",
+                    "url": "URL",
+                    "verify_ssl": "Overi\u0165 SSL certifik\u00e1t"
+                }
+            }
+        }
+    }
+}

@@ -489,7 +489,15 @@ async def test_logbook_describe_event(recorder_mock, hass, hass_client):
         await async_wait_recording_done(hass)
 
     client = await hass_client()
-    response = await client.get("/api/logbook")
+    # Today time 00:00:00
+    start = dt_util.utcnow().date()
+    start_date = datetime(start.year, start.month, start.day)
+
+    # Test today entries with filter by end_time
+    end_time = start + timedelta(hours=24)
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}"
+    )
     results = await response.json()
     assert len(results) == 1
     event = results[0]
@@ -553,7 +561,15 @@ async def test_exclude_described_event(recorder_mock, hass, hass_client):
         await async_wait_recording_done(hass)
 
     client = await hass_client()
-    response = await client.get("/api/logbook")
+    # Today time 00:00:00
+    start = dt_util.utcnow().date()
+    start_date = datetime(start.year, start.month, start.day)
+
+    # Test today entries with filter by end_time
+    end_time = start + timedelta(hours=24)
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}"
+    )
     results = await response.json()
     assert len(results) == 1
     event = results[0]

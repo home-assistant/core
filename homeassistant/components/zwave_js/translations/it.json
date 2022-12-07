@@ -62,7 +62,7 @@
             },
             "zeroconf_confirm": {
                 "description": "Vuoi aggiungere il server Z-Wave JS con l'ID casa {home_id} trovato in {url} a Home Assistant?",
-                "title": "Server JS Z-Wave rilevato"
+                "title": "Rilevato Server JS Z-Wave"
             }
         }
     },

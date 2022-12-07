@@ -7,14 +7,14 @@ from .backports.enum import StrEnum
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2022
-MINOR_VERSION: Final = 11
-PATCH_VERSION: Final = "5"
+MINOR_VERSION: Final = 12
+PATCH_VERSION: Final = "0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 9, 0)
-REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 9, 0)
+REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 10, 0)
 # Truthy date string triggers showing related deprecation warning messages.
-REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
+REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = "2023.2"
 
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
@@ -49,6 +49,7 @@ class Platform(StrEnum):
     SIREN = "siren"
     STT = "stt"
     SWITCH = "switch"
+    TEXT = "text"
     TTS = "tts"
     VACUUM = "vacuum"
     UPDATE = "update"
@@ -120,6 +121,7 @@ CONF_CONDITIONS: Final = "conditions"
 CONF_CONTINUE_ON_ERROR: Final = "continue_on_error"
 CONF_CONTINUE_ON_TIMEOUT: Final = "continue_on_timeout"
 CONF_COUNT: Final = "count"
+CONF_COUNTRY: Final = "country"
 CONF_COVERS: Final = "covers"
 CONF_CURRENCY: Final = "currency"
 CONF_CUSTOMIZE: Final = "customize"
@@ -174,6 +176,7 @@ CONF_IF: Final = "if"
 CONF_INCLUDE: Final = "include"
 CONF_INTERNAL_URL: Final = "internal_url"
 CONF_IP_ADDRESS: Final = "ip_address"
+CONF_LANGUAGE: Final = "language"
 CONF_LATITUDE: Final = "latitude"
 CONF_LEGACY_TEMPLATES: Final = "legacy_templates"
 CONF_LIGHTS: Final = "lights"
@@ -743,15 +746,27 @@ class UnitOfVolumetricFlux(StrEnum):
     """Derived from mm³/(mm².h)"""
 
 
-# Precipitation units
-# The derivation of these units is a volume of rain amassing in a container
-# with constant cross section
-PRECIPITATION_INCHES: Final = "in"
-PRECIPITATION_MILLIMETERS: Final = "mm"
+class UnitOfPrecipitationDepth(StrEnum):
+    """Precipitation depth.
 
+    The derivation of these units is a volume of rain amassing in a container
+    with constant cross section
+    """
+
+    INCHES = "in"
+    """Derived from in³/in²"""
+
+    MILLIMETERS = "mm"
+    """Derived from mm³/mm²"""
+
+
+# Precipitation units
+PRECIPITATION_INCHES: Final = "in"
+"""Deprecated: please use UnitOfPrecipitationDepth.INCHES"""
+PRECIPITATION_MILLIMETERS: Final = "mm"
+"""Deprecated: please use UnitOfPrecipitationDepth.MILLIMETERS"""
 PRECIPITATION_MILLIMETERS_PER_HOUR: Final = "mm/h"
 """Deprecated: please use UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR"""
-
 PRECIPITATION_INCHES_PER_HOUR: Final = "in/h"
 """Deprecated: please use UnitOfVolumetricFlux.INCHES_PER_HOUR"""
 

@@ -5,12 +5,12 @@ from datetime import timedelta
 from typing import TypedDict
 
 # Set up.
-from homewizard_energy.models import Data, Device, State
+from homewizard_energy.models import Data, Device, State, System
 
 from homeassistant.const import Platform
 
 DOMAIN = "homewizard"
-PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.BUTTON, Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
 
 # Platform config.
 CONF_API_ENABLED = "api_enabled"
@@ -30,3 +30,4 @@ class DeviceResponseEntry(TypedDict):
     device: Device
     data: Data
     state: State
+    system: System

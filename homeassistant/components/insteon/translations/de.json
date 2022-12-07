@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "cannot_connect": "Verbindung fehlgeschlagen",
-            "not_insteon_device": "Erkanntes Ger\u00e4t ist kein Insteon-Ger\u00e4t",
+            "not_insteon_device": "Erkanntes Ger\u00e4t ist kein Insteon Ger\u00e4t",
             "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
         },
         "error": {
