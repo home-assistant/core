@@ -21,7 +21,7 @@ class ClientMock:
         self.is_offline = False
         self.state = True
         self.brightness = {"mode": "enabled", "value": 10}
-        self.color = None
+        self.color = (255, 255, 255)
         self.movies = {
             "movies": [{"id": 1, "name": "Rainbow"}, {"id": 2, "name": "Flare"}]
         }
@@ -120,5 +120,11 @@ class ClientMock:
         """Get firmware version."""
         return {"version": self.version}
 
-    async def _get(self, url) -> dict:
-        return {"code": 1000, "red": 255, "green": 255, "blue": 255}
+    async def get_current_colour(self) -> dict:
+        """Get current color."""
+        return {
+            "code": 1000,
+            "red": int(self.color[0]),
+            "green": int(self.color[1]),
+            "blue": int(self.color[1]),
+        }

@@ -222,7 +222,6 @@ class TwinklyLight(LightEntity):
                 await self._client.set_mode("movie")
                 self._client.default_mode = "movie"
             self._attr_rgbw_color = kwargs[ATTR_RGBW_COLOR]
-
         if ATTR_RGB_COLOR in kwargs and kwargs[ATTR_RGB_COLOR] != self._attr_rgb_color:
 
             await self._client.interview()
@@ -305,9 +304,8 @@ class TwinklyLight(LightEntity):
                 await self.async_update_movies()
                 await self.async_update_current_movie()
                 await self.async_update_current_color()
-                _LOGGER.debug("Sett mode color: %s", self._movies)
                 if len(self._movies) == 0:
-                    self._client.default_mode = "color"
+                    self._client.default_mode = "effect"
 
             if not self._is_available:
                 _LOGGER.info("Twinkly '%s' is now available", self._client.host)
@@ -339,8 +337,7 @@ class TwinklyLight(LightEntity):
 
     async def async_update_current_color(self) -> None:
         """Update the current active color."""
-        # pylint: disable=protected-access
-        current_color = await self._client._get("led/color")
+        current_color = await self._client.get_current_colour()
         _LOGGER.debug("Current color: %s", current_color)
         if int(current_color.get("code")) == 1000:
             if self._attr_color_mode == ColorMode.RGBW:

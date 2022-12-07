@@ -291,7 +291,7 @@ async def test_turn_on_without_movies(hass: HomeAssistant):
         LightEntityFeature.EFFECT
         & hass.states.get(entity.entity_id).attributes["supported_features"]
     )
-    assert client.default_mode == "color"
+    assert client.default_mode == "effect"
 
     await hass.services.async_call(
         "light",
@@ -303,7 +303,7 @@ async def test_turn_on_without_movies(hass: HomeAssistant):
     state = hass.states.get(entity.entity_id)
 
     assert state.state == "on"
-    assert state.attributes["rgb_color"] == (255, 255, 255)
+    assert client.default_mode == "effect"
 
 
 async def test_turn_off(hass: HomeAssistant):
