@@ -318,14 +318,14 @@ class MinMaxSensor(SensorEntity):
                 _LOGGER.warning(
                     "Unable to store state. Only numerical states are supported"
                 )
-            if entity_state:
-                try:
-                    self.last = float(entity_state.state)
-                    self.last_entity_id = entity
-                except ValueError:
-                    pass
 
         if entity_state:
+            try:
+                self.last = float(entity_state.state)
+                self.last_entity_id = entity
+            except ValueError:
+                pass
+
             if self._unit_of_measurement is None:
                 self._unit_of_measurement = entity_state.attributes.get(
                     ATTR_UNIT_OF_MEASUREMENT
