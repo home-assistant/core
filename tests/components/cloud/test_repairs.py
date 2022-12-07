@@ -89,7 +89,7 @@ async def test_legacy_subscription_repair_flow(
         json={"provider": None},
     )
     aioclient_mock.post(
-        "https://accounts.nabucasa.com/migrate_paypal_agreement",
+        "https://accounts.nabucasa.com/payments/migrate_paypal_agreement",
         json={"url": "https://paypal.com"},
     )
 
@@ -170,7 +170,7 @@ async def test_legacy_subscription_repair_flow_timeout(
 ):
     """Test timeout flow of the fix flow for legacy subscription."""
     aioclient_mock.post(
-        "https://accounts.nabucasa.com/migrate_paypal_agreement",
+        "https://accounts.nabucasa.com/payments/migrate_paypal_agreement",
         status=403,
     )
 
