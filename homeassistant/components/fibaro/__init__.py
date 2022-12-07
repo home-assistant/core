@@ -344,10 +344,10 @@ class FibaroController:
             if "name" not in device.raw_data or "id" not in device.raw_data:
                 continue
             device.fibaro_controller = self
-            if "roomID" not in device.raw_data or device.raw_data.get("roomID") == 0:
+            if device.room_id == 0:
                 room_name = "Unknown"
             else:
-                room_name = self._room_map[device.raw_data.get("roomID")].name
+                room_name = self._room_map[device.room_id].name
             device.room_name = room_name
             device.friendly_name = f"{room_name} {device.name}"
             device.ha_id = (
