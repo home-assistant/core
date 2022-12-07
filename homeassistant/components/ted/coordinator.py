@@ -21,10 +21,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class TedUpdateCoordinator(DataUpdateCoordinator):
-    """Class to manage fetching IPP data from single endpoint."""
+    """Class to manage fetching TED data from the gateway."""
 
     def __init__(self, hass: HomeAssistant, *, name: str, ted_reader: TED) -> None:
-        """Initialize global IPP data updater."""
+        """Initialize global TED data updater."""
         self.ted_reader = ted_reader
 
         super().__init__(
