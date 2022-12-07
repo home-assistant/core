@@ -37,6 +37,7 @@ CONF_OPTIONS = "options"
 
 ATTR_OPTIONS = "options"
 ATTR_CYCLE = "cycle"
+ATTR_ANTECEDENT = "antecedent"
 
 SERVICE_SELECT_OPTION = "select_option"
 SERVICE_SELECT_NEXT = "select_next"
@@ -260,6 +261,7 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
     """Representation of a select input."""
 
     _attr_should_poll = False
+    _antecedent_option: str | None = None
     editable: bool
 
     def __init__(self, config: ConfigType) -> None:
@@ -269,7 +271,6 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
         self._attr_name = config.get(CONF_NAME)
         self._attr_options = config[CONF_OPTIONS]
         self._attr_unique_id = config[CONF_ID]
-        self._antecedent_option: str | None = None
 
     @property
     def antecedent_option(self) -> str | None:
@@ -309,9 +310,9 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
             self._set_current_option(state.state)
 
     @property
-    def extra_state_attributes(self) -> dict[str, bool]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        return {ATTR_EDITABLE: self.editable}
+        return {ATTR_EDITABLE: self.editable, ATTR_ANTECEDENT: self.antecedent_option}
 
     async def async_select_option(self, option: str) -> None:
         """Select new option."""
