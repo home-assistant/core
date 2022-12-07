@@ -69,6 +69,12 @@ class NumberDeviceClass(StrEnum):
     Unit of measurement: `None`
     """
 
+    ATMOSPHERIC_PRESSURE = "atmospheric_pressure"
+    """Atmospheric pressure.
+
+    Unit of measurement: `UnitOfPressure` units
+    """
+
     BATTERY = "battery"
     """Percentage of battery that is left.
 

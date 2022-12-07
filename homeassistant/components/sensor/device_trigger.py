@@ -31,6 +31,7 @@ from . import ATTR_STATE_CLASS, DOMAIN, SensorDeviceClass
 DEVICE_CLASS_NONE = "none"
 
 CONF_APPARENT_POWER = "apparent_power"
+CONF_ATMOSPHERIC_PRESSURE = "atmospheric_pressure"
 CONF_BATTERY_LEVEL = "battery_level"
 CONF_CO = "carbon_monoxide"
 CONF_CO2 = "carbon_dioxide"
@@ -69,6 +70,7 @@ CONF_WIND_SPEED = "wind_speed"
 
 ENTITY_TRIGGERS = {
     SensorDeviceClass.APPARENT_POWER: [{CONF_TYPE: CONF_APPARENT_POWER}],
+    SensorDeviceClass.ATMOSPHERIC_PRESSURE: [{CONF_TYPE: CONF_ATMOSPHERIC_PRESSURE}],
     SensorDeviceClass.BATTERY: [{CONF_TYPE: CONF_BATTERY_LEVEL}],
     SensorDeviceClass.CO: [{CONF_TYPE: CONF_CO}],
     SensorDeviceClass.CO2: [{CONF_TYPE: CONF_CO2}],
@@ -118,6 +120,7 @@ TRIGGER_SCHEMA = vol.All(
             vol.Required(CONF_TYPE): vol.In(
                 [
                     CONF_APPARENT_POWER,
+                    CONF_ATMOSPHERIC_PRESSURE,
                     CONF_BATTERY_LEVEL,
                     CONF_CO,
                     CONF_CO2,

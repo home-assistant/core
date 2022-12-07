@@ -32,6 +32,7 @@ from . import ATTR_STATE_CLASS, DOMAIN, SensorDeviceClass
 DEVICE_CLASS_NONE = "none"
 
 CONF_IS_APPARENT_POWER = "is_apparent_power"
+CONF_IS_ATMOSPHERIC_PRESSURE = "atmospheric_pressure"
 CONF_IS_BATTERY_LEVEL = "is_battery_level"
 CONF_IS_CO = "is_carbon_monoxide"
 CONF_IS_CO2 = "is_carbon_dioxide"
@@ -70,6 +71,7 @@ CONF_IS_WIND_SPEED = "is_wind_speed"
 
 ENTITY_CONDITIONS = {
     SensorDeviceClass.APPARENT_POWER: [{CONF_TYPE: CONF_IS_APPARENT_POWER}],
+    SensorDeviceClass.ATMOSPHERIC_PRESSURE: [{CONF_TYPE: CONF_IS_ATMOSPHERIC_PRESSURE}],
     SensorDeviceClass.BATTERY: [{CONF_TYPE: CONF_IS_BATTERY_LEVEL}],
     SensorDeviceClass.CO: [{CONF_TYPE: CONF_IS_CO}],
     SensorDeviceClass.CO2: [{CONF_TYPE: CONF_IS_CO2}],
@@ -118,6 +120,7 @@ CONDITION_SCHEMA = vol.All(
             vol.Required(CONF_TYPE): vol.In(
                 [
                     CONF_IS_APPARENT_POWER,
+                    CONF_IS_ATMOSPHERIC_PRESSURE,
                     CONF_IS_BATTERY_LEVEL,
                     CONF_IS_CO,
                     CONF_IS_CO2,
