@@ -30,5 +30,14 @@
         "haos_outdated": {
             "title": "Aktualizujte na opera\u010dn\u00fd syst\u00e9m Home Assistant 9.0 alebo nov\u0161\u00ed"
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "passive": "Pas\u00edvne skenovanie"
+                }
+            }
+        }
     }
 }

@@ -19,6 +19,15 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "pressure_tendency": {
+                "state": {
+                    "steady": "Stabiln\u00ed"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

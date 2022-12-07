@@ -5,12 +5,14 @@
         },
         "error": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "invalid_upb_file": "Ch\u00fdbaj\u00faci alebo neplatn\u00fd exportn\u00fd s\u00fabor UPB UPSstart, skontrolujte n\u00e1zov a cestu k s\u00faboru.",
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "step": {
             "user": {
                 "data": {
                     "address": "Adresa (pozri popis vy\u0161\u0161ie)",
+                    "file_path": "Cesta a n\u00e1zov exportn\u00e9ho s\u00faboru UPSstart UPB.",
                     "protocol": "Protokol"
                 },
                 "title": "Pripojte sa k UPB PIM"

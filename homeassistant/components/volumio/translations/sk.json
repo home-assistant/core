@@ -9,6 +9,10 @@
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "step": {
+            "discovery_confirm": {
+                "description": "Chcete prida\u0165 Volumio (`{name}`) do Home Assistant?",
+                "title": "Objaven\u00fd Volumio"
+            },
             "user": {
                 "data": {
                     "host": "Hostite\u013e",

@@ -1,4 +1,13 @@
 {
+    "entity": {
+        "sensor": {
+            "thermostat_mode": {
+                "state": {
+                    "eco": "Eco"
+                }
+            }
+        }
+    },
     "issues": {
         "bad_psu": {
             "fix_flow": {
@@ -48,5 +57,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Demo"
 }

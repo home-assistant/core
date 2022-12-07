@@ -637,7 +637,7 @@ ha-philipsjs==2.9.0
 habitipy==0.2.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.59.0
+hass-nabucasa==0.61.0
 
 # homeassistant.components.tasmota
 hatasmota==0.6.1
@@ -661,7 +661,7 @@ hole==0.7.0
 holidays==0.17.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20221206.0
+home-assistant-frontend==20221207.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1473,7 +1473,7 @@ pyuptimerobot==22.2.0
 pyvera==0.3.13
 
 # homeassistant.components.vesync
-pyvesync==2.0.3
+pyvesync==2.1.1
 
 # homeassistant.components.vizio
 pyvizio==0.1.57
@@ -1840,7 +1840,7 @@ zamg==0.1.1
 zeroconf==0.39.4
 
 # homeassistant.components.zha
-zha-quirks==0.0.87
+zha-quirks==0.0.88
 
 # homeassistant.components.zha
 zigpy-deconz==0.19.2

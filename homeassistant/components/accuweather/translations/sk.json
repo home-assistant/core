@@ -3,6 +3,9 @@
         "abort": {
             "single_instance_allowed": "U\u017e je nakonfigurovan\u00fd. Mo\u017en\u00e1 len jedna konfigur\u00e1cia."
         },
+        "create_entry": {
+            "default": "Niektor\u00e9 sn\u00edma\u010de nie s\u00fa predvolene povolen\u00e9. M\u00f4\u017eete ich povoli\u0165 v registri ent\u00edt po konfigur\u00e1cii integr\u00e1cie.\n Predpove\u010f po\u010dasia nie je predvolene zapnut\u00e1. M\u00f4\u017eete to povoli\u0165 v mo\u017enostiach integr\u00e1cie."
+        },
         "error": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
             "invalid_api_key": "Neplatn\u00fd API k\u013e\u00fa\u010d",
@@ -24,7 +27,8 @@
             "pressure_tendency": {
                 "state": {
                     "falling": "Klesaj\u00faci",
-                    "rising": "St\u00fapaj\u00faci"
+                    "rising": "St\u00fapaj\u00faci",
+                    "steady": "Stabiln\u00fd"
                 }
             }
         }
@@ -34,7 +38,8 @@
             "init": {
                 "data": {
                     "forecast": "Predpove\u010f po\u010dasia"
-                }
+                },
+                "description": "Z d\u00f4vodu obmedzen\u00ed bezplatnej verzie k\u013e\u00fa\u010da AccuWeather API, ke\u010f povol\u00edte predpove\u010f po\u010dasia, aktualiz\u00e1cie \u00fadajov sa bud\u00fa vykon\u00e1va\u0165 ka\u017ed\u00fdch 80 min\u00fat namiesto ka\u017ed\u00fdch 40 min\u00fat."
             }
         }
     },

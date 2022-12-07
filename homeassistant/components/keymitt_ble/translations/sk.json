@@ -15,7 +15,8 @@
                 "data": {
                     "address": "Adresa zariadenia",
                     "name": "N\u00e1zov"
-                }
+                },
+                "title": "Nastavte zariadenie MicroBot"
             },
             "link": {
                 "title": "P\u00e1rovanie"

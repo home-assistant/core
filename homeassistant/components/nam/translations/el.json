@@ -37,5 +37,18 @@
                 "description": "\u03a1\u03cd\u03b8\u03bc\u03b9\u03c3\u03b7 \u03c4\u03b7\u03c2 \u03b5\u03bd\u03c3\u03c9\u03bc\u03ac\u03c4\u03c9\u03c3\u03b7\u03c2 \u03c4\u03bf\u03c5 Nettigo Air Monitor."
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "caqi_level": {
+                "state": {
+                    "high": "\u03a5\u03c8\u03b7\u03bb\u03cc",
+                    "low": "\u03a7\u03b1\u03bc\u03b7\u03bb\u03cc",
+                    "medium": "\u039c\u03b5\u03c3\u03b1\u03af\u03bf",
+                    "very high": "\u03a0\u03bf\u03bb\u03cd \u03c5\u03c8\u03b7\u03bb\u03cc",
+                    "very low": "\u03a0\u03bf\u03bb\u03cd \u03c7\u03b1\u03bc\u03b7\u03bb\u03cc"
+                }
+            }
+        }
     }
 }

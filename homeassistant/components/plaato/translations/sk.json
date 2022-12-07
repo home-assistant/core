@@ -15,7 +15,8 @@
         "step": {
             "api_method": {
                 "data": {
-                    "token": "Sem vlo\u017ete autoriza\u010dn\u00fd token"
+                    "token": "Sem vlo\u017ete autoriza\u010dn\u00fd token",
+                    "use_webhook": "Pou\u017eite webhook"
                 },
                 "title": "Vyberte met\u00f3du API"
             },
@@ -26,6 +27,9 @@
                 },
                 "description": "Chcete za\u010da\u0165 nastavova\u0165?",
                 "title": "Nastavte zariadenia Plaato"
+            },
+            "webhook": {
+                "title": "Webhook na pou\u017eitie"
             }
         }
     },
@@ -39,7 +43,8 @@
                 "title": "Mo\u017enosti pre Plaato"
             },
             "webhook": {
-                "description": "Inform\u00e1cie o webhooku: \n\n - URL: `{webhook_url}`\n - Met\u00f3da: POST \n\n"
+                "description": "Inform\u00e1cie o webhooku: \n\n - URL: `{webhook_url}`\n - Met\u00f3da: POST \n\n",
+                "title": "Mo\u017enosti pre Plaato Airlock"
             }
         }
     }

@@ -16,13 +16,15 @@
             "arch": "Architekt\u00fara CPU",
             "config_dir": "Adres\u00e1r konfigur\u00e1cie",
             "docker": "Docker",
+            "hassio": "Supervisor",
             "installation_type": "Typ in\u0161tal\u00e1cie",
             "os_name": "Rodina opera\u010dn\u00fdch syst\u00e9mov",
             "os_version": "Verzia opera\u010dn\u00e9ho syst\u00e9mu",
             "python_version": "Verzia Pythonu",
             "timezone": "\u010casov\u00e9 p\u00e1smo",
             "user": "Pou\u017e\u00edvate\u013e",
-            "version": "Verzia"
+            "version": "Verzia",
+            "virtualenv": "Virtu\u00e1lne prostredie"
         }
     }
 }

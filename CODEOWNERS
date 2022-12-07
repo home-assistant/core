@@ -841,8 +841,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/oralb/ @bdraco
 /tests/components/oralb/ @bdraco
 /homeassistant/components/oru/ @bvlaicu
-/homeassistant/components/overkiz/ @imicknl @vlebourl @tetienne
-/tests/components/overkiz/ @imicknl @vlebourl @tetienne
+/homeassistant/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev
+/tests/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev
 /homeassistant/components/ovo_energy/ @timmo001
 /tests/components/ovo_energy/ @timmo001
 /homeassistant/components/p1_monitor/ @klaasnicolaas
