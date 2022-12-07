@@ -22,6 +22,7 @@ from .default_agent import DefaultAgent, async_register
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_TEXT = "text"
+ATTR_LANGUAGE = "language"
 
 DOMAIN = "conversation"
 
@@ -31,7 +32,9 @@ DATA_CONFIG = "conversation_config"
 
 SERVICE_PROCESS = "process"
 
-SERVICE_PROCESS_SCHEMA = vol.Schema({vol.Required(ATTR_TEXT): cv.string})
+SERVICE_PROCESS_SCHEMA = vol.Schema(
+    {vol.Required(ATTR_TEXT): cv.string, vol.Optional(ATTR_LANGUAGE): cv.string}
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -66,7 +69,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.debug("Processing: <%s>", text)
         agent = await _get_agent(hass)
         try:
-            await agent.async_process(text, service.context)
+            await agent.async_process(
+                text, service.context, language=service.data.get(ATTR_LANGUAGE)
+            )
         except intent.IntentHandleError as err:
             _LOGGER.error("Error processing %s: %s", text, err)
 
