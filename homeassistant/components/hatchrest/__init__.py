@@ -5,7 +5,7 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-from bleak.exc import BleakError
+from bleak import BleakError
 from pyhatchbabyrest import PyHatchBabyRestAsync, connect_async
 
 from homeassistant.components import bluetooth
@@ -102,21 +102,13 @@ class HatchRestEntity(CoordinatorEntity):
         """Name of the Hatch Rest device."""
         return self._device.name
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self.async_write_ha_state()
-
     @property
     def device_info(self) -> DeviceInfo:
         """Provide info about the Hatch Rest device for all entities."""
-        return (
-            {
+        assert self.unique_id is not None
+        return {
                 "identifiers": {(DOMAIN, self.unique_id)},
                 "name": self.device_name,
                 "manufacturer": "Hatch",
                 "model": "Rest",
             }
-            if self.unique_id
-            else {}
-        )
