@@ -12,7 +12,8 @@
             "invalid_ip_address": "Ugyldig IPv4-adresse.",
             "invalid_signature": "Passordet for \u00e5 dekryptere `.knxkeys`-filen er feil.",
             "no_router_discovered": "Ingen KNXnet/IP-ruter ble oppdaget p\u00e5 nettverket.",
-            "no_tunnel_discovered": "Kunne ikke finne en KNX-tunnelserver p\u00e5 nettverket ditt."
+            "no_tunnel_discovered": "Kunne ikke finne en KNX-tunnelserver p\u00e5 nettverket ditt.",
+            "unsupported_tunnel_type": "Den valgte tunneltypen st\u00f8ttes ikke av gatewayen."
         },
         "step": {
             "connection_type": {
@@ -111,7 +112,8 @@
             "invalid_ip_address": "Ugyldig IPv4-adresse.",
             "invalid_signature": "Passordet for \u00e5 dekryptere `.knxkeys`-filen er feil.",
             "no_router_discovered": "Ingen KNXnet/IP-ruter ble oppdaget p\u00e5 nettverket.",
-            "no_tunnel_discovered": "Kunne ikke finne en KNX-tunnelserver p\u00e5 nettverket ditt."
+            "no_tunnel_discovered": "Kunne ikke finne en KNX-tunnelserver p\u00e5 nettverket ditt.",
+            "unsupported_tunnel_type": "Den valgte tunneltypen st\u00f8ttes ikke av gatewayen."
         },
         "step": {
             "communication_settings": {

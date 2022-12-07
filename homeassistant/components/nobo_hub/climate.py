@@ -24,7 +24,7 @@ from homeassistant.const import (
     ATTR_SUGGESTED_AREA,
     ATTR_VIA_DEVICE,
     PRECISION_TENTHS,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
@@ -84,7 +84,7 @@ class NoboZone(ClimateEntity):
     _attr_precision = PRECISION_TENTHS
     _attr_preset_modes = PRESET_MODES
     _attr_supported_features = SUPPORT_FLAGS
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 1
     # Need to poll to get preset change when in HVACMode.AUTO, so can't set _attr_should_poll = False
 

@@ -41,7 +41,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEVICE_CLASS_DETECTION, DISPATCH_ADOPT, DOMAIN
+from .const import DISPATCH_ADOPT, DOMAIN
 from .data import ProtectData
 from .entity import (
     EventEntityMixin,
@@ -54,6 +54,7 @@ from .utils import async_dispatch_id as _ufpd, async_get_light_motion_current
 
 _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
+DEVICE_CLASS_DETECTION = "unifiprotect__detection"
 
 
 @dataclass
@@ -519,7 +520,7 @@ NVR_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ),
 )
 
-MOTION_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
+EVENT_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
     ProtectSensorEventEntityDescription(
         key="detected_object",
         name="Detected Object",
@@ -532,10 +533,11 @@ MOTION_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
         key="smart_obj_licenseplate",
         name="License Plate Detected",
         icon="mdi:car",
-        device_class=DEVICE_CLASS_DETECTION,
-        ufp_value="is_smart_detected",
-        ufp_event_obj="last_smart_detect_event",
+        translation_key="license_plate",
         ufp_smart_type=SmartDetectObjectType.LICENSE_PLATE,
+        ufp_value="is_smart_detected",
+        ufp_required_field="can_detect_license_plate",
+        ufp_event_obj="last_smart_detect_event",
     ),
 )
 
@@ -638,7 +640,7 @@ async def async_setup_entry(
             ufp_device=device,
         )
         if device.is_adopted_by_us and isinstance(device, Camera):
-            entities += _async_motion_entities(data, ufp_device=device)
+            entities += _async_event_entities(data, ufp_device=device)
         async_add_entities(entities)
 
     entry.async_on_unload(
@@ -656,14 +658,14 @@ async def async_setup_entry(
         chime_descs=CHIME_SENSORS,
         viewer_descs=VIEWER_SENSORS,
     )
-    entities += _async_motion_entities(data)
+    entities += _async_event_entities(data)
     entities += _async_nvr_entities(data)
 
     async_add_entities(entities)
 
 
 @callback
-def _async_motion_entities(
+def _async_event_entities(
     data: ProtectData,
     ufp_device: Camera | None = None,
 ) -> list[ProtectDeviceEntity]:
@@ -684,7 +686,10 @@ def _async_motion_entities(
         if not device.feature_flags.has_smart_detect:
             continue
 
-        for event_desc in MOTION_SENSORS:
+        for event_desc in EVENT_SENSORS:
+            if not event_desc.has_required(device):
+                continue
+
             entities.append(ProtectEventSensor(data, device, event_desc))
             _LOGGER.debug(
                 "Adding sensor entity %s for %s",

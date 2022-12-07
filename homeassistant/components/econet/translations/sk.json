@@ -14,7 +14,8 @@
                 "data": {
                     "email": "Email",
                     "password": "Heslo"
-                }
+                },
+                "title": "Nastavte \u00fa\u010det Rheem EcoNet"
             }
         }
     }

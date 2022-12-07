@@ -11,12 +11,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    Platform,
-)
+from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -96,7 +91,9 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateEntity):
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         return (
-            TEMP_CELSIUS if self.hass.config.units is METRIC_SYSTEM else TEMP_FAHRENHEIT
+            UnitOfTemperature.CELSIUS
+            if self.hass.config.units is METRIC_SYSTEM
+            else UnitOfTemperature.FAHRENHEIT
         )
 
     @property

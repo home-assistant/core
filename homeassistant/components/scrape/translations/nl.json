@@ -48,5 +48,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "menu_options": {
+                    "select_edit_sensor": "Sensor configureren"
+                }
+            }
+        }
     }
 }

@@ -41,6 +41,15 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "license_plate": {
+                "state": {
+                    "none": "Tidak ada"
+                }
+            }
+        }
+    },
     "issues": {
         "deprecate_smart_sensor": {
             "description": "Sensor \"Objek Terdeteksi\" terpadu untuk deteksi cerdas sekarang sudah tidak digunakan lagi. Sensor ini telah diganti dengan sensor biner deteksi cerdas individual untuk setiap jenis deteksi cerdas. Perbarui semua templat atau otomasi yang terkait.",

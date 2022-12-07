@@ -12,7 +12,8 @@
             "invalid_ip_address": "Alamat IPv4 tidak valid",
             "invalid_signature": "Kata sandi untuk mendekripsi file `.knxkeys` salah.",
             "no_router_discovered": "Tidak ada router KNXnet/IP yang ditemukan di jaringan.",
-            "no_tunnel_discovered": "Tidak dapat menemukan server tunneling KNX di jaringan Anda."
+            "no_tunnel_discovered": "Tidak dapat menemukan server tunneling KNX di jaringan Anda.",
+            "unsupported_tunnel_type": "Jenis tunneling yang dipilih tidak didukung oleh gateway."
         },
         "step": {
             "connection_type": {
@@ -111,7 +112,8 @@
             "invalid_ip_address": "Alamat IPv4 tidak valid",
             "invalid_signature": "Kata sandi untuk mendekripsi file `.knxkeys` salah.",
             "no_router_discovered": "Tidak ada router KNXnet/IP yang ditemukan di jaringan.",
-            "no_tunnel_discovered": "Tidak dapat menemukan server tunneling KNX di jaringan Anda."
+            "no_tunnel_discovered": "Tidak dapat menemukan server tunneling KNX di jaringan Anda.",
+            "unsupported_tunnel_type": "Jenis tunneling yang dipilih tidak didukung oleh gateway."
         },
         "step": {
             "communication_settings": {

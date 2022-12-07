@@ -1,4 +1,25 @@
 {
+    "entity": {
+        "select": {
+            "speed": {
+                "state": {
+                    "light_speed": "F\u00e9nysebess\u00e9g",
+                    "ludicrous_speed": "Hihetetlen sebess\u00e9g",
+                    "ridiculous_speed": "K\u00e9ptelen sebess\u00e9g"
+                }
+            }
+        },
+        "sensor": {
+            "thermostat_mode": {
+                "state": {
+                    "away": "T\u00e1vol",
+                    "comfort": "Komfort",
+                    "eco": "Takar\u00e9kos",
+                    "sleep": "Alv\u00e1s"
+                }
+            }
+        }
+    },
     "issues": {
         "bad_psu": {
             "fix_flow": {
@@ -15,6 +36,10 @@
             "fix_flow": {
                 "abort": {
                     "not_tea_time": "A te\u00e1t jelenleg nem lehet \u00fajra felmeleg\u00edteni."
+                },
+                "step": {
+                    "one": "\u00dcres",
+                    "other": "\u00dcres"
                 }
             },
             "title": "A tea hideg"

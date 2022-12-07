@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.sensor import ATTR_OPTIONS, SensorDeviceClass
 from homeassistant.components.zodiac.const import (
     ATTR_ELEMENT,
     ATTR_MODALITY,
@@ -17,6 +18,8 @@ from homeassistant.components.zodiac.const import (
     SIGN_SCORPIO,
     SIGN_TAURUS,
 )
+from homeassistant.const import ATTR_DEVICE_CLASS
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -48,3 +51,24 @@ async def test_zodiac_day(hass, now, sign, element, modality):
     assert state.attributes
     assert state.attributes[ATTR_ELEMENT] == element
     assert state.attributes[ATTR_MODALITY] == modality
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
+    assert state.attributes[ATTR_OPTIONS] == [
+        "aquarius",
+        "aries",
+        "cancer",
+        "capricorn",
+        "gemini",
+        "leo",
+        "libra",
+        "pisces",
+        "sagittarius",
+        "scorpio",
+        "taurus",
+        "virgo",
+    ]
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get("sensor.zodiac")
+    assert entry
+    assert entry.unique_id == "zodiac"
+    assert entry.translation_key == "sign"

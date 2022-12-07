@@ -17,5 +17,17 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reauth_failed_existing": "Could not update the config entry, please remove the integration and set it up again."
     }
+  },
+  "entity": {
+    "sensor": {
+      "tracker_state": {
+        "state": {
+          "not_reporting": "Not reporting",
+          "operational": "Operational",
+          "system_shutdown_user": "System shutdown user",
+          "system_startup": "System startup"
+        }
+      }
+    }
   }
 }

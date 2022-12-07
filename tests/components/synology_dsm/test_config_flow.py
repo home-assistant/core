@@ -281,6 +281,7 @@ async def test_reauth(hass: HomeAssistant, service: MagicMock):
                 "source": SOURCE_REAUTH,
                 "entry_id": entry.entry_id,
                 "unique_id": entry.unique_id,
+                "title_placeholders": {"name": entry.title},
             },
             data={
                 CONF_HOST: HOST,
@@ -409,7 +410,7 @@ async def test_form_ssdp(hass: HomeAssistant, service: MagicMock):
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == SERIAL
-    assert result["title"] == "192.168.1.5"
+    assert result["title"] == "mydsm"
     assert result["data"][CONF_HOST] == "192.168.1.5"
     assert result["data"][CONF_PORT] == 5001
     assert result["data"][CONF_SSL] == DEFAULT_USE_SSL

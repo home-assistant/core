@@ -5,7 +5,8 @@
                 "data": {
                     "name": "N\u00e1zov",
                     "round": "Presnos\u0165",
-                    "source": "Vstupn\u00fd sn\u00edma\u010d"
+                    "source": "Vstupn\u00fd sn\u00edma\u010d",
+                    "unit_time": "\u010casov\u00e1 jednotka"
                 }
             }
         }

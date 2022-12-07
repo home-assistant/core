@@ -11,7 +11,7 @@ from typing import Any, Generic, TypeVar
 from nibe.coil import Coil
 from nibe.connection import Connection
 from nibe.connection.modbus import Modbus
-from nibe.connection.nibegw import NibeGW
+from nibe.connection.nibegw import NibeGW, ProductInfo
 from nibe.exceptions import CoilNotFoundException, CoilReadException
 from nibe.heatpump import HeatPump, Model, Series
 
@@ -99,13 +99,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data[entry.entry_id] = coordinator
 
     reg = dr.async_get(hass)
-    reg.async_get_or_create(
+    device_entry = reg.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.unique_id or entry.entry_id)},
         manufacturer="NIBE Energy Systems",
-        model=heatpump.model.name,
         name=heatpump.model.name,
     )
+
+    def _on_product_info(product_info: ProductInfo):
+        reg.async_update_device(
+            device_id=device_entry.id,
+            model=product_info.model,
+            sw_version=str(product_info.firmware_version),
+        )
+
+    if isinstance(connection, NibeGW):
+        connection.subscribe(connection.PRODUCT_INFO_EVENT, _on_product_info)
+    else:
+        reg.async_update_device(device_id=device_entry.id, model=heatpump.model.name)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

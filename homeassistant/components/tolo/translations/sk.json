@@ -18,5 +18,15 @@
                 "description": "Zadajte n\u00e1zov hostite\u013ea alebo IP adresu v\u00e1\u0161ho zariadenia TOLO Sauna."
             }
         }
+    },
+    "entity": {
+        "select": {
+            "lamp_mode": {
+                "state": {
+                    "automatic": "Automaticky",
+                    "manual": "Manu\u00e1lny"
+                }
+            }
+        }
     }
 }

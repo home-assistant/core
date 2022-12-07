@@ -17,5 +17,12 @@
                 "title": "Vypl\u0148te svoje \u00fadaje"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Konfigur\u00e1cia RainMachine"
+            }
+        }
     }
 }

@@ -1,7 +1,8 @@
 """Sensors for National Weather Service (NWS)."""
 import pytest
 
-from homeassistant.components.nws.const import ATTRIBUTION, DOMAIN, SENSOR_TYPES
+from homeassistant.components.nws.const import ATTRIBUTION, DOMAIN
+from homeassistant.components.nws.sensor import SENSOR_TYPES
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNKNOWN
 from homeassistant.helpers import entity_registry as er
