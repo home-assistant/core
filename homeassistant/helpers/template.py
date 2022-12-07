@@ -38,8 +38,8 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     ATTR_PERSONS,
     ATTR_UNIT_OF_MEASUREMENT,
-    LENGTH_METERS,
     STATE_UNKNOWN,
+    UnitOfLength,
 )
 from homeassistant.core import (
     Context,
@@ -1364,7 +1364,7 @@ def distance(hass, *args):
         return hass.config.distance(*locations[0])
 
     return hass.config.units.length(
-        loc_util.distance(*locations[0] + locations[1]), LENGTH_METERS
+        loc_util.distance(*locations[0] + locations[1]), UnitOfLength.METERS
     )
 
 

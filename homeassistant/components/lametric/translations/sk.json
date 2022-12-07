@@ -16,7 +16,8 @@
         "step": {
             "choice_enter_manual_or_fetch_cloud": {
                 "menu_options": {
-                    "manual_entry": "Zadajte manu\u00e1lne"
+                    "manual_entry": "Zadajte manu\u00e1lne",
+                    "pick_implementation": "Importova\u0165 z LaMetric.com (odpor\u00fa\u010da sa)"
                 }
             },
             "manual_entry": {
@@ -28,6 +29,21 @@
             "pick_implementation": {
                 "title": "Vyberte met\u00f3du overenia"
             }
+        }
+    },
+    "entity": {
+        "select": {
+            "brightness_mode": {
+                "state": {
+                    "auto": "Automatick\u00e9",
+                    "manual": "Manu\u00e1lne"
+                }
+            }
+        }
+    },
+    "issues": {
+        "manual_migration": {
+            "title": "Pre LaMetric je potrebn\u00e1 manu\u00e1lna migr\u00e1cia"
         }
     }
 }

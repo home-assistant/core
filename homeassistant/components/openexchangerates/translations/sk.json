@@ -15,7 +15,8 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API k\u013e\u00fa\u010d"
+                    "api_key": "API k\u013e\u00fa\u010d",
+                    "base": "Z\u00e1kladn\u00e1 mena"
                 }
             }
         }

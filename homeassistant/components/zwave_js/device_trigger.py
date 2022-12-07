@@ -248,15 +248,18 @@ async def async_get_triggers(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, Any]]:
     """List device triggers for Z-Wave JS devices."""
-    dev_reg = device_registry.async_get(hass)
-    node = async_get_node_from_device_id(hass, device_id, dev_reg)
-
     triggers: list[dict] = []
     base_trigger = {
         CONF_PLATFORM: "device",
         CONF_DEVICE_ID: device_id,
         CONF_DOMAIN: DOMAIN,
     }
+
+    dev_reg = device_registry.async_get(hass)
+    node = async_get_node_from_device_id(hass, device_id, dev_reg)
+
+    if node.client.driver and node.client.driver.controller.own_node_id == node.node_id:
+        return triggers
 
     # We can add a node status trigger if the node status sensor is enabled
     ent_reg = entity_registry.async_get(hass)

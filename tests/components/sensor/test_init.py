@@ -889,6 +889,14 @@ async def test_unit_conversion_priority_suggested_unit_change(
             621,
             SensorDeviceClass.DISTANCE,
         ),
+        (
+            US_CUSTOMARY_SYSTEM,
+            LENGTH_METERS,
+            LENGTH_MILES,
+            1000000,
+            621.371,
+            SensorDeviceClass.DISTANCE,
+        ),
     ],
 )
 async def test_unit_conversion_priority_legacy_conversion_removed(
@@ -1010,18 +1018,27 @@ async def test_invalid_enumeration_entity_without_device_class(
     ) in caplog.text
 
 
-async def test_invalid_enumeration_with_state_class(
+@pytest.mark.parametrize(
+    "device_class",
+    (
+        SensorDeviceClass.DATE,
+        SensorDeviceClass.ENUM,
+        SensorDeviceClass.TIMESTAMP,
+    ),
+)
+async def test_non_numeric_device_class_with_state_class(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     enable_custom_integrations: None,
+    device_class: SensorDeviceClass,
 ):
-    """Test warning on numeric entities that provide an enum."""
+    """Test error on numeric entities that provide an state class."""
     platform = getattr(hass.components, "test.sensor")
     platform.init(empty=True)
     platform.ENTITIES["0"] = platform.MockSensor(
         name="Test",
-        native_value=42,
-        device_class=SensorDeviceClass.ENUM,
+        native_value=None,
+        device_class=device_class,
         state_class=SensorStateClass.MEASUREMENT,
         options=["option1", "option2"],
     )
@@ -1030,23 +1047,32 @@ async def test_invalid_enumeration_with_state_class(
     await hass.async_block_till_done()
 
     assert (
-        "Sensor sensor.test has an state_class and thus indicating "
-        "it has a numeric value; however, it has the enum device class"
+        "Sensor sensor.test has a state class and thus indicating it has a numeric "
+        f"value; however, it has the non-numeric device class: {device_class}"
     ) in caplog.text
 
 
-async def test_invalid_enumeration_with_unit_of_measurement(
+@pytest.mark.parametrize(
+    "device_class",
+    (
+        SensorDeviceClass.DATE,
+        SensorDeviceClass.ENUM,
+        SensorDeviceClass.TIMESTAMP,
+    ),
+)
+async def test_non_numeric_device_class_with_unit_of_measurement(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     enable_custom_integrations: None,
+    device_class: SensorDeviceClass,
 ):
-    """Test warning on numeric entities that provide an enum."""
+    """Test error on numeric entities that provide an unit of measurement."""
     platform = getattr(hass.components, "test.sensor")
     platform.init(empty=True)
     platform.ENTITIES["0"] = platform.MockSensor(
         name="Test",
-        native_value=42,
-        device_class=SensorDeviceClass.ENUM,
+        native_value=None,
+        device_class=device_class,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         options=["option1", "option2"],
     )
@@ -1055,6 +1081,6 @@ async def test_invalid_enumeration_with_unit_of_measurement(
     await hass.async_block_till_done()
 
     assert (
-        "Sensor sensor.test has an unit of measurement and thus indicating "
-        "it has a numeric value; however, it has the enum device class"
+        "Sensor sensor.test has a unit of measurement and thus indicating it has "
+        f"a numeric value; however, it has the non-numeric device class: {device_class}"
     ) in caplog.text

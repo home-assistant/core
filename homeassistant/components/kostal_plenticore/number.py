@@ -9,11 +9,11 @@ import logging
 from kostal.plenticore import SettingsData
 
 from homeassistant.components.number import (
+    NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, POWER_WATT
 from homeassistant.core import HomeAssistant
@@ -62,7 +62,7 @@ NUMBER_SETTINGS_DATA = [
     ),
     PlenticoreNumberEntityDescription(
         key="battery_min_home_consumption",
-        device_class=SensorDeviceClass.POWER,
+        device_class=NumberDeviceClass.POWER,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         name="Battery min Home Consumption",

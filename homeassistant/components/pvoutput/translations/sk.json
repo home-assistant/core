@@ -18,7 +18,8 @@
                 "data": {
                     "api_key": "API k\u013e\u00fa\u010d",
                     "system_id": "ID syst\u00e9mu"
-                }
+                },
+                "description": "Na overenie pomocou PVOutput budete musie\u0165 z\u00edska\u0165 k\u013e\u00fa\u010d API na adrese {account_url}. \n\n Syst\u00e9mov\u00e9 ID registrovan\u00fdch syst\u00e9mov s\u00fa uveden\u00e9 na tej istej str\u00e1nke."
             }
         }
     }

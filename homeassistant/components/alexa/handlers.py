@@ -47,8 +47,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
     STATE_ALARM_DISARMED,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.helpers import network
 from homeassistant.util import color as color_util, dt as dt_util
@@ -758,11 +757,11 @@ async def async_api_previous(
 def temperature_from_object(hass, temp_obj, interval=False):
     """Get temperature from Temperature object in requested unit."""
     to_unit = hass.config.units.temperature_unit
-    from_unit = TEMP_CELSIUS
+    from_unit = UnitOfTemperature.CELSIUS
     temp = float(temp_obj["value"])
 
     if temp_obj["scale"] == "FAHRENHEIT":
-        from_unit = TEMP_FAHRENHEIT
+        from_unit = UnitOfTemperature.FAHRENHEIT
     elif temp_obj["scale"] == "KELVIN" and not interval:
         # convert to Celsius if absolute temperature
         temp -= 273.15

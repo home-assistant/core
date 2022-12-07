@@ -179,7 +179,7 @@ async def async_get_trigger_capabilities(
         }
 
     if trigger_type == "current_temperature_changed":
-        unit_of_measurement = hass.config.units.temperature_unit
+        unit_of_measurement: str = hass.config.units.temperature_unit
     else:
         unit_of_measurement = PERCENTAGE
 

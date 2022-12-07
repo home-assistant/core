@@ -19,11 +19,21 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "activities": {
+                "state": {
+                    "power_off": "Vypn\u00fa\u0165"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {
                 "data": {
-                    "activity": "Predvolen\u00e1 aktivita, ktor\u00e1 sa m\u00e1 vykona\u0165, ke\u010f nie je zadan\u00e1 \u017eiadna."
+                    "activity": "Predvolen\u00e1 aktivita, ktor\u00e1 sa m\u00e1 vykona\u0165, ke\u010f nie je zadan\u00e1 \u017eiadna.",
+                    "delay_secs": "Oneskorenie medzi odoslan\u00edm pr\u00edkazov."
                 }
             }
         }

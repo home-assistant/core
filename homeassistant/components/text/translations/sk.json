@@ -3,5 +3,6 @@
         "action_type": {
             "set_value": "Nastavi\u0165 hodnotu pre {entity_name}"
         }
-    }
+    },
+    "title": "Text"
 }

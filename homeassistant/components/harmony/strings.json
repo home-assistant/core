@@ -32,5 +32,14 @@
         }
       }
     }
+  },
+  "entity": {
+    "select": {
+      "activities": {
+        "state": {
+          "power_off": "Power Off"
+        }
+      }
+    }
   }
 }

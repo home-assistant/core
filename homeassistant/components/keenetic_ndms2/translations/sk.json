@@ -22,7 +22,8 @@
         "step": {
             "user": {
                 "data": {
-                    "interfaces": "Vyberte rozhrania na skenovanie"
+                    "interfaces": "Vyberte rozhrania na skenovanie",
+                    "scan_interval": "Interval skenovania"
                 }
             }
         }

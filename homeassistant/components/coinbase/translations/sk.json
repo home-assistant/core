@@ -12,8 +12,10 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API k\u013e\u00fa\u010d"
-                }
+                    "api_key": "API k\u013e\u00fa\u010d",
+                    "api_token": "API Secret"
+                },
+                "title": "Podrobnosti o k\u013e\u00fa\u010di API Coinbase"
             }
         }
     },

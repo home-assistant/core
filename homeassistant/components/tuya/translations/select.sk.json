@@ -27,6 +27,7 @@
             "forward": "Dopredu"
         },
         "tuya__decibel_sensitivity": {
+            "0": "N\u00edzka citlivos\u0165",
             "1": "Vysok\u00e1 citlivos\u0165"
         },
         "tuya__fan_angle": {
@@ -39,6 +40,10 @@
         },
         "tuya__humidifier_spray_mode": {
             "humidity": "Vlhkos\u0165"
+        },
+        "tuya__ipc_work_mode": {
+            "0": "Re\u017eim n\u00edzkej spotreby",
+            "1": "Nepretr\u017eit\u00fd pracovn\u00fd re\u017eim"
         },
         "tuya__led_type": {
             "halogen": "Halog\u00e9n",
@@ -53,6 +58,10 @@
             "1": "Stredn\u00e1 citlivos\u0165",
             "2": "Vysok\u00e1 citlivos\u0165"
         },
+        "tuya__record_mode": {
+            "1": "Len z\u00e1znam udalost\u00ed",
+            "2": "Nepretr\u017eit\u00e9 nahr\u00e1vanie"
+        },
         "tuya__relay_status": {
             "last": "Zapam\u00e4ta\u0165 posledn\u00fd stav",
             "memory": "Zapam\u00e4ta\u0165 posledn\u00fd stav",
@@ -62,7 +71,11 @@
             "power_on": "Akt\u00edvny"
         },
         "tuya__vacuum_mode": {
-            "random": "N\u00e1hodn\u00fd"
+            "chargego": "N\u00e1vrat do doku",
+            "random": "N\u00e1hodn\u00fd",
+            "standby": "Pohotovostn\u00fd re\u017eim",
+            "wall_follow": "Sledovanie steny",
+            "zone": "Z\u00f3na"
         }
     }
 }

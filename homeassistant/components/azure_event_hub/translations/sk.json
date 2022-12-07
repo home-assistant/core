@@ -13,6 +13,10 @@
                 "description": "Zadajte re\u0165azec pripojenia pre: {event_hub_instance_name}",
                 "title": "Met\u00f3da re\u0165azca pripojenia"
             },
+            "sas": {
+                "description": "Zadajte prihlasovacie \u00fadaje SAS (zdie\u013ean\u00fd pr\u00edstupov\u00fd podpis) pre: {event_hub_instance_name}",
+                "title": "Met\u00f3da poveren\u00ed SAS"
+            },
             "user": {
                 "data": {
                     "use_connection_string": "Pou\u017eitie re\u0165azca pripojenia"
