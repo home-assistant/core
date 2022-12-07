@@ -156,7 +156,36 @@ async def test_options_flow(hass):
     )
     config_entry.add_to_hass(hass)
 
-    ted_mock = AsyncMock(tedpy.TED5000, spyders=[], mtus=[])
+    ted_mock = AsyncMock(tedpy.TED5000)
+    ted_mock.spyders = [
+        tedpy.TedSpyder(
+            position=0,
+            secondary=0,
+            mtu_parent=0,
+            ctgroups=[
+                tedpy.TedCtGroup(
+                    position=0,
+                    spyder_position=0,
+                    description="group",
+                    _ted=ted_mock,
+                    member_cts=[
+                        tedpy.TedCt(position=0, description="ct", type=0, multiplier=1)
+                    ],
+                )
+            ],
+        )
+    ]
+    ted_mock.mtus = [
+        tedpy.TedMtu(
+            id=0,
+            position=0,
+            description="mtu",
+            type=tedpy.MtuType.NET,
+            power_cal_factor=1,
+            voltage_cal_factor=1,
+            _ted=ted_mock,
+        )
+    ]
     with patch("tedpy.createTED", return_value=ted_mock):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
