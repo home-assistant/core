@@ -899,7 +899,7 @@ async def websocket_update_prefs(
     {
         vol.Required("type"): "camera/update_stream_source",
         vol.Required("entity_id"): cv.entity_id,
-        vol.Required("new_src"): str
+        vol.Required("new_src"): str,
     }
 )
 @websocket_api.async_response
