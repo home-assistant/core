@@ -17,7 +17,7 @@ from .const import COORDINATOR, DOMAIN, NAME, OPTION_DEFAULTS
 _LOGGER = logging.getLogger(__name__)
 
 
-def build_sensor_descs(prefix, stype, is_net):
+def build_sensor_descs(name, prefix, stype, is_net):
     """Return a list of sensors with given key prefix and type (Production / Consumption)."""
     if is_net:  # If the sensor represents a net energy
         total_state_class = SensorStateClass.TOTAL
@@ -26,21 +26,21 @@ def build_sensor_descs(prefix, stype, is_net):
     return [
         SensorEntityDescription(
             key=f"{prefix}_now",
-            name=f"Current {stype}",
+            name=f"{name} Current {stype}",
             native_unit_of_measurement=UnitOfPower.WATT,
             state_class=SensorStateClass.MEASUREMENT,
             device_class=SensorDeviceClass.POWER,
         ),
         SensorEntityDescription(
             key=f"{prefix}_daily",
-            name=f"Today's {stype}",
+            name=f"{name} Today's {stype}",
             native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
             state_class=total_state_class,
             device_class=SensorDeviceClass.ENERGY,
         ),
         SensorEntityDescription(
             key=f"{prefix}_mtd",
-            name=f"Month to Date {stype}",
+            name=f"{name} Month to Date {stype}",
             native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
             state_class=total_state_class,
             device_class=SensorDeviceClass.ENERGY,
@@ -48,13 +48,13 @@ def build_sensor_descs(prefix, stype, is_net):
     ]
 
 
-def build_mtu_sensor_descs(stype, is_net):
+def build_mtu_sensor_descs(name, stype, is_net):
     """Return a list of mtu sensors with given key prefix and type (Production / Consumption)."""
     return [
-        *build_sensor_descs("mtu_energy", stype, is_net),
+        *build_sensor_descs(name, "mtu_energy", stype, is_net),
         SensorEntityDescription(
             key="mtu_power_voltage",
-            name="Voltage",
+            name="{name} Voltage",
             native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
             device_class=SensorDeviceClass.VOLTAGE,
         ),
@@ -70,39 +70,34 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entity_registry = hass.helpers.entity_registry.async_get(hass)
     config_id = config_entry.unique_id
     entities = []
-    for desc in build_sensor_descs("consumption", "Energy Usage", False):
-        name = f"{config_name} {desc.name}"
-        entities.append(TedSensor(desc, name, config_id, coordinator))
+    for desc in build_sensor_descs(config_name, "consumption", "Energy Usage", False):
+        entities.append(TedSensor(desc, config_id, coordinator))
 
     if coordinator.data["type"] != SystemType.NET:
-        for desc in build_sensor_descs("net", "Net Grid Energy", True):
-            name = f"{config_name} {desc.name}"
-            entities.append(TedSensor(desc, name, config_id, coordinator))
-        for desc in build_sensor_descs("production", "Energy Production", False):
-            name = f"{config_name} {desc.name}"
-            entities.append(TedSensor(desc, name, config_id, coordinator))
+        for desc in build_sensor_descs(config_name, "net", "Net Grid Energy", True):
+            entities.append(TedSensor(desc, config_id, coordinator))
+        for desc in build_sensor_descs(
+            config_name, "production", "Energy Production", False
+        ):
+            entities.append(TedSensor(desc, config_id, coordinator))
 
     option_entities = []
 
     for spyder_id, spyder in coordinator.data["spyders"].items():
-        spyder_name = spyder["name"]
         for sensor_description in build_sensor_descs(
-            "spyder_energy", "Energy Usage", False
+            spyder["name"], "spyder_energy", "Energy Usage", False
         ):
-            entity_name = f"{spyder_name} {sensor_description.name}"
             option_entities.append(
                 TedBreakdownSensor(
                     "spyders",
                     spyder_id,
                     sensor_description,
-                    entity_name,
                     config_entry.unique_id,
                     coordinator,
                 )
             )
 
     for mtu_id, mtu in coordinator.data["mtus"].items():
-        mtu_name = mtu["name"]
         is_net = False
         if mtu["type"] == MtuType.LOAD:
             stype = "Energy Usage"
@@ -111,14 +106,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         else:
             stype = "Net Grid Energy"
             is_net = True
-        for sensor_description in build_mtu_sensor_descs(stype, is_net):
-            entity_name = f"{mtu_name} {sensor_description.name}"
+        for sensor_description in build_mtu_sensor_descs(mtu["name"], stype, is_net):
             option_entities.append(
                 TedBreakdownSensor(
                     "mtus",
                     mtu_id,
                     sensor_description,
-                    entity_name,
                     config_entry.unique_id,
                     coordinator,
                 )
@@ -143,23 +136,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class TedSensor(CoordinatorEntity, SensorEntity):
     """Implementation of a Ted5000 and Ted6000 sensor."""
 
-    def __init__(self, description, name, device_id, coordinator):
+    def __init__(self, description, device_id, coordinator):
         """Initialize the sensor."""
         self.entity_description = description
         self._device_id = device_id
-        self._name = name
 
         super().__init__(coordinator)
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return "mdi:flash"
 
     @property
     def unique_id(self):
@@ -176,11 +158,11 @@ class TedSensor(CoordinatorEntity, SensorEntity):
 class TedBreakdownSensor(TedSensor):
     """Implementation of a Ted5000 and Ted6000 mtu or spyder."""
 
-    def __init__(self, group, position, description, name, device_id, coordinator):
+    def __init__(self, group, position, description, device_id, coordinator):
         """Initialize the sensor."""
         self._group = group
         self._position = position
-        super().__init__(description, name, device_id, coordinator)
+        super().__init__(description, device_id, coordinator)
 
     @property
     def unique_id(self):
