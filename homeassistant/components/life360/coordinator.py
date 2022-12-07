@@ -23,8 +23,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import DistanceConverter
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
+    COMM_MAX_RETRIES,
     COMM_TIMEOUT,
     CONF_AUTHORIZATION,
     DOMAIN,
@@ -105,6 +107,7 @@ class Life360DataUpdateCoordinator(DataUpdateCoordinator[Life360Data]):
         self._api = Life360(
             session=async_get_clientsession(hass),
             timeout=COMM_TIMEOUT,
+            max_retries=COMM_MAX_RETRIES,
             authorization=entry.data[CONF_AUTHORIZATION],
         )
         self._missing_loc_reason = hass.data[DOMAIN].missing_loc_reason
@@ -115,10 +118,10 @@ class Life360DataUpdateCoordinator(DataUpdateCoordinator[Life360Data]):
             return await getattr(self._api, func)(*args)
         except LoginError as exc:
             LOGGER.debug("Login error: %s", exc)
-            raise ConfigEntryAuthFailed from exc
+            raise ConfigEntryAuthFailed(exc) from exc
         except Life360Error as exc:
             LOGGER.debug("%s: %s", exc.__class__.__name__, exc)
-            raise UpdateFailed from exc
+            raise UpdateFailed(exc) from exc
 
     async def _async_update_data(self) -> Life360Data:
         """Get & process data from Life360."""
@@ -206,7 +209,7 @@ class Life360DataUpdateCoordinator(DataUpdateCoordinator[Life360Data]):
                     address = address1 or address2
 
                 speed = max(0, float(loc["speed"]) * SPEED_FACTOR_MPH)
-                if self._hass.config.units.is_metric:
+                if self._hass.config.units is METRIC_SYSTEM:
                     speed = DistanceConverter.convert(
                         speed, LENGTH_MILES, LENGTH_KILOMETERS
                     )

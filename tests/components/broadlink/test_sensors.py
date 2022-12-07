@@ -3,7 +3,7 @@ from datetime import timedelta
 
 from homeassistant.components.broadlink.const import DOMAIN
 from homeassistant.components.broadlink.updater import BroadlinkSP4UpdateManager
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_FRIENDLY_NAME, Platform
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.util import dt
@@ -39,13 +39,16 @@ async def test_a1_sensor_setup(hass):
     assert len(sensors) == 5
 
     sensors_and_states = {
-        (sensor.original_name, hass.states.get(sensor.entity_id).state)
+        (
+            hass.states.get(sensor.entity_id).attributes[ATTR_FRIENDLY_NAME],
+            hass.states.get(sensor.entity_id).state,
+        )
         for sensor in sensors
     }
     assert sensors_and_states == {
         (f"{device.name} Temperature", "27.4"),
         (f"{device.name} Humidity", "59.3"),
-        (f"{device.name} Air Quality", "3"),
+        (f"{device.name} Air quality", "3"),
         (f"{device.name} Light", "2"),
         (f"{device.name} Noise", "1"),
     }
@@ -86,13 +89,16 @@ async def test_a1_sensor_update(hass):
     assert mock_setup.api.check_sensors_raw.call_count == 2
 
     sensors_and_states = {
-        (sensor.original_name, hass.states.get(sensor.entity_id).state)
+        (
+            hass.states.get(sensor.entity_id).attributes[ATTR_FRIENDLY_NAME],
+            hass.states.get(sensor.entity_id).state,
+        )
         for sensor in sensors
     }
     assert sensors_and_states == {
         (f"{device.name} Temperature", "22.5"),
         (f"{device.name} Humidity", "47.4"),
-        (f"{device.name} Air Quality", "2"),
+        (f"{device.name} Air quality", "2"),
         (f"{device.name} Light", "3"),
         (f"{device.name} Noise", "2"),
     }
@@ -118,7 +124,10 @@ async def test_rm_pro_sensor_setup(hass):
     assert len(sensors) == 1
 
     sensors_and_states = {
-        (sensor.original_name, hass.states.get(sensor.entity_id).state)
+        (
+            hass.states.get(sensor.entity_id).attributes[ATTR_FRIENDLY_NAME],
+            hass.states.get(sensor.entity_id).state,
+        )
         for sensor in sensors
     }
     assert sensors_and_states == {(f"{device.name} Temperature", "18.2")}
@@ -147,7 +156,10 @@ async def test_rm_pro_sensor_update(hass):
     assert mock_setup.api.check_sensors.call_count == 2
 
     sensors_and_states = {
-        (sensor.original_name, hass.states.get(sensor.entity_id).state)
+        (
+            hass.states.get(sensor.entity_id).attributes[ATTR_FRIENDLY_NAME],
+            hass.states.get(sensor.entity_id).state,
+        )
         for sensor in sensors
     }
     assert sensors_and_states == {(f"{device.name} Temperature", "25.8")}
@@ -179,7 +191,10 @@ async def test_rm_pro_filter_crazy_temperature(hass):
     assert mock_setup.api.check_sensors.call_count == 2
 
     sensors_and_states = {
-        (sensor.original_name, hass.states.get(sensor.entity_id).state)
+        (
+            hass.states.get(sensor.entity_id).attributes[ATTR_FRIENDLY_NAME],
+            hass.states.get(sensor.entity_id).state,
+        )
         for sensor in sensors
     }
     assert sensors_and_states == {(f"{device.name} Temperature", "22.9")}
@@ -225,7 +240,10 @@ async def test_rm4_pro_hts2_sensor_setup(hass):
     assert len(sensors) == 2
 
     sensors_and_states = {
-        (sensor.original_name, hass.states.get(sensor.entity_id).state)
+        (
+            hass.states.get(sensor.entity_id).attributes[ATTR_FRIENDLY_NAME],
+            hass.states.get(sensor.entity_id).state,
+        )
         for sensor in sensors
     }
     assert sensors_and_states == {
@@ -257,7 +275,10 @@ async def test_rm4_pro_hts2_sensor_update(hass):
     assert mock_setup.api.check_sensors.call_count == 2
 
     sensors_and_states = {
-        (sensor.original_name, hass.states.get(sensor.entity_id).state)
+        (
+            hass.states.get(sensor.entity_id).attributes[ATTR_FRIENDLY_NAME],
+            hass.states.get(sensor.entity_id).state,
+        )
         for sensor in sensors
     }
     assert sensors_and_states == {
@@ -316,7 +337,10 @@ async def test_scb1e_sensor_setup(hass):
     assert len(sensors) == 5
 
     sensors_and_states = {
-        (sensor.original_name, hass.states.get(sensor.entity_id).state)
+        (
+            hass.states.get(sensor.entity_id).attributes[ATTR_FRIENDLY_NAME],
+            hass.states.get(sensor.entity_id).state,
+        )
         for sensor in sensors
     }
     assert sensors_and_states == {
@@ -378,7 +402,10 @@ async def test_scb1e_sensor_update(hass):
     assert mock_setup.api.get_state.call_count == 2
 
     sensors_and_states = {
-        (sensor.original_name, hass.states.get(sensor.entity_id).state)
+        (
+            hass.states.get(sensor.entity_id).attributes[ATTR_FRIENDLY_NAME],
+            hass.states.get(sensor.entity_id).state,
+        )
         for sensor in sensors
     }
     assert sensors_and_states == {

@@ -7,14 +7,14 @@
         "error": {
             "cannot_connect": "Impossibile connettersi",
             "invalid_auth": "Autenticazione non valida",
-            "invalid_setup": "Aggiungi il tuo Adam invece di Anna, consulta la documentazione sull'integrazione di Home Assistant Plugwise per ulteriori informazioni",
-            "unknown": "Errore imprevisto"
+            "invalid_setup": "Aggiungi il tuo Adam invece della tua Anna, consulta la documentazione",
+            "response_error": "Dati XML non validi o indicazione di errore ricevuta",
+            "unknown": "Errore imprevisto",
+            "unsupported": "Dispositivo con firmware non supportato"
         },
-        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Tipo di connessione",
                     "host": "Indirizzo IP",
                     "password": "ID Smile",
                     "port": "Porta",
@@ -22,26 +22,6 @@
                 },
                 "description": "Inserisci",
                 "title": "Connettiti allo Smile"
-            },
-            "user_gateway": {
-                "data": {
-                    "host": "Indirizzo IP",
-                    "password": "ID Smile",
-                    "port": "Porta",
-                    "username": "Nome utente Smile"
-                },
-                "description": "Inserisci",
-                "title": "Connettiti allo Smile"
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval": "Intervallo di scansione (secondi)"
-                },
-                "description": "Regolare le opzioni Plugwise"
             }
         }
     }

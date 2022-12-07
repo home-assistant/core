@@ -33,6 +33,11 @@ from .coordinator import (
 from .entity import FlumeEntity
 from .util import get_valid_flume_devices
 
+BINARY_SENSOR_DESCRIPTION_CONNECTED = BinarySensorEntityDescription(
+    name="Connected",
+    key="connected",
+)
+
 
 @dataclass
 class FlumeBinarySensorRequiredKeysMixin:
@@ -93,10 +98,7 @@ async def async_setup_entry(
 
         connection_sensor = FlumeConnectionBinarySensor(
             coordinator=connection_coordinator,
-            description=BinarySensorEntityDescription(
-                name="Connected",
-                key="connected",
-            ),
+            description=BINARY_SENSOR_DESCRIPTION_CONNECTED,
             device_id=device_id,
             location_name=device_location_name,
             is_bridge=(device[KEY_DEVICE_TYPE] is FLUME_TYPE_BRIDGE),
@@ -120,8 +122,7 @@ async def async_setup_entry(
             ]
         )
 
-    if flume_entity_list:
-        async_add_entities(flume_entity_list)
+    async_add_entities(flume_entity_list)
 
 
 class FlumeNotificationBinarySensor(FlumeEntity, BinarySensorEntity):

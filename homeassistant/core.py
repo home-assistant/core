@@ -15,6 +15,7 @@ from collections.abc import (
     Iterable,
     Mapping,
 )
+from contextlib import suppress
 from contextvars import ContextVar
 import datetime
 import enum
@@ -49,7 +50,6 @@ from .const import (
     ATTR_FRIENDLY_NAME,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
-    CONF_UNIT_SYSTEM_IMPERIAL,
     EVENT_CALL_SERVICE,
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_HOMEASSISTANT_CLOSE,
@@ -82,7 +82,13 @@ from .util.async_ import (
 )
 from .util.read_only_dict import ReadOnlyDict
 from .util.timeout import TimeoutManager
-from .util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
+from .util.unit_system import (
+    _CONF_UNIT_SYSTEM_IMPERIAL,
+    _CONF_UNIT_SYSTEM_US_CUSTOMARY,
+    METRIC_SYSTEM,
+    UnitSystem,
+    get_unit_system,
+)
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
@@ -108,6 +114,7 @@ CALLBACK_TYPE = Callable[[], None]  # pylint: disable=invalid-name
 
 CORE_STORAGE_KEY = "core.config"
 CORE_STORAGE_VERSION = 1
+CORE_STORAGE_MINOR_VERSION = 3
 
 DOMAIN = "homeassistant"
 
@@ -1790,6 +1797,8 @@ class Config:
         """Initialize a new config object."""
         self.hass = hass
 
+        self._store = self._ConfigStore(self.hass)
+
         self.latitude: float = 0
         self.longitude: float = 0
         self.elevation: int = 0
@@ -1799,11 +1808,16 @@ class Config:
         self.internal_url: str | None = None
         self.external_url: str | None = None
         self.currency: str = "EUR"
+        self.country: str | None = None
+        self.language: str = "en"
 
         self.config_source: ConfigSource = ConfigSource.DEFAULT
 
         # If True, pip install is skipped for requirements on startup
         self.skip_pip: bool = False
+
+        # List of packages to skip when installing requirements on startup
+        self.skip_pip_packages: list[str] = []
 
         # List of loaded components
         self.components: set[str] = set()
@@ -1905,6 +1919,8 @@ class Config:
             "external_url": self.external_url,
             "internal_url": self.internal_url,
             "currency": self.currency,
+            "country": self.country,
+            "language": self.language,
         }
 
     def set_time_zone(self, time_zone_str: str) -> None:
@@ -1930,6 +1946,8 @@ class Config:
         external_url: str | dict[Any, Any] | None = _UNDEF,
         internal_url: str | dict[Any, Any] | None = _UNDEF,
         currency: str | None = None,
+        country: str | dict[Any, Any] | None = _UNDEF,
+        language: str | None = None,
     ) -> None:
         """Update the configuration from a dictionary."""
         self.config_source = source
@@ -1940,9 +1958,9 @@ class Config:
         if elevation is not None:
             self.elevation = elevation
         if unit_system is not None:
-            if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
-                self.units = IMPERIAL_SYSTEM
-            else:
+            try:
+                self.units = get_unit_system(unit_system)
+            except ValueError:
                 self.units = METRIC_SYSTEM
         if location_name is not None:
             self.location_name = location_name
@@ -1954,28 +1972,29 @@ class Config:
             self.internal_url = cast(Optional[str], internal_url)
         if currency is not None:
             self.currency = currency
+        if country is not _UNDEF:
+            self.country = cast(Optional[str], country)
+        if language is not None:
+            self.language = language
 
     async def async_update(self, **kwargs: Any) -> None:
         """Update the configuration from a dictionary."""
+        # pylint: disable-next=import-outside-toplevel
+        from .config import (
+            _raise_issue_if_historic_currency,
+            _raise_issue_if_no_country,
+        )
+
         self._update(source=ConfigSource.STORAGE, **kwargs)
-        await self.async_store()
+        await self._async_store()
         self.hass.bus.async_fire(EVENT_CORE_CONFIG_UPDATE, kwargs)
+
+        _raise_issue_if_historic_currency(self.hass, self.currency)
+        _raise_issue_if_no_country(self.hass, self.country)
 
     async def async_load(self) -> None:
         """Load [homeassistant] core config."""
-        # Circular dep
-        # pylint: disable=import-outside-toplevel
-        from .helpers.storage import Store
-
-        store = Store[dict[str, Any]](
-            self.hass,
-            CORE_STORAGE_VERSION,
-            CORE_STORAGE_KEY,
-            private=True,
-            atomic_writes=True,
-        )
-
-        if not (data := await store.async_load()):
+        if not (data := await self._store.async_load()):
             return
 
         # In 2021.9 we fixed validation to disallow a path (because that's never correct)
@@ -1997,37 +2016,103 @@ class Config:
             latitude=data.get("latitude"),
             longitude=data.get("longitude"),
             elevation=data.get("elevation"),
-            unit_system=data.get("unit_system"),
+            unit_system=data.get("unit_system_v2"),
             location_name=data.get("location_name"),
             time_zone=data.get("time_zone"),
             external_url=data.get("external_url", _UNDEF),
             internal_url=data.get("internal_url", _UNDEF),
             currency=data.get("currency"),
+            country=data.get("country"),
+            language=data.get("language"),
         )
 
-    async def async_store(self) -> None:
+    async def _async_store(self) -> None:
         """Store [homeassistant] core config."""
-        # Circular dep
-        # pylint: disable=import-outside-toplevel
-        from .helpers.storage import Store
-
         data = {
             "latitude": self.latitude,
             "longitude": self.longitude,
             "elevation": self.elevation,
-            "unit_system": self.units.name,
+            # We don't want any integrations to use the name of the unit system
+            # so we are using the private attribute here
+            "unit_system_v2": self.units._name,  # pylint: disable=protected-access
             "location_name": self.location_name,
             "time_zone": self.time_zone,
             "external_url": self.external_url,
             "internal_url": self.internal_url,
             "currency": self.currency,
+            "country": self.country,
+            "language": self.language,
         }
 
-        store: Store[dict[str, Any]] = Store(
-            self.hass,
-            CORE_STORAGE_VERSION,
-            CORE_STORAGE_KEY,
-            private=True,
-            atomic_writes=True,
-        )
-        await store.async_save(data)
+        await self._store.async_save(data)
+
+    # Circular dependency prevents us from generating the class at top level
+    # pylint: disable-next=import-outside-toplevel
+    from .helpers.storage import Store
+
+    class _ConfigStore(Store[dict[str, Any]]):
+        """Class to help storing Config data."""
+
+        def __init__(self, hass: HomeAssistant) -> None:
+            """Initialize storage class."""
+            super().__init__(
+                hass,
+                CORE_STORAGE_VERSION,
+                CORE_STORAGE_KEY,
+                private=True,
+                atomic_writes=True,
+                minor_version=CORE_STORAGE_MINOR_VERSION,
+            )
+            self._original_unit_system: str | None = None  # from old store 1.1
+
+        async def _async_migrate_func(
+            self,
+            old_major_version: int,
+            old_minor_version: int,
+            old_data: dict[str, Any],
+        ) -> dict[str, Any]:
+            """Migrate to the new version."""
+            data = old_data
+            if old_major_version == 1 and old_minor_version < 2:
+                # In 1.2, we remove support for "imperial", replaced by "us_customary"
+                # Using a new key to allow rollback
+                self._original_unit_system = data.get("unit_system")
+                data["unit_system_v2"] = self._original_unit_system
+                if data["unit_system_v2"] == _CONF_UNIT_SYSTEM_IMPERIAL:
+                    data["unit_system_v2"] = _CONF_UNIT_SYSTEM_US_CUSTOMARY
+            if old_major_version == 1 and old_minor_version < 3:
+                # In 1.3, we add the key "language", initialize it from the owner account
+                data["language"] = "en"
+                try:
+                    owner = await self.hass.auth.async_get_owner()
+                    if owner is not None:
+                        # pylint: disable-next=import-outside-toplevel
+                        from .components.frontend import storage as frontend_store
+
+                        # pylint: disable-next=import-outside-toplevel
+                        from .helpers import config_validation as cv
+
+                        _, owner_data = await frontend_store.async_user_store(
+                            self.hass, owner.id
+                        )
+
+                        if (
+                            "language" in owner_data
+                            and "language" in owner_data["language"]
+                        ):
+                            with suppress(vol.InInvalid):
+                                data["language"] = cv.language(
+                                    owner_data["language"]["language"]
+                                )
+                # pylint: disable-next=broad-except
+                except Exception:
+                    _LOGGER.exception("Unexpected error during core config migration")
+
+            if old_major_version > 1:
+                raise NotImplementedError
+            return data
+
+        async def async_save(self, data: dict[str, Any]) -> None:
+            if self._original_unit_system:
+                data["unit_system"] = self._original_unit_system
+            return await super().async_save(data)

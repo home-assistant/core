@@ -24,11 +24,6 @@
                 }
             },
             "user": {
-                "data": {
-                    "password": "Contrasenya",
-                    "pin": "Codi PIN",
-                    "username": "Nom d'usuari"
-                },
                 "menu_options": {
                     "cloud": "Risco Cloud (recomanat)",
                     "local": "Panell Risco local (avan\u00e7at)"

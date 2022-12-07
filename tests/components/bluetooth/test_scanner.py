@@ -1,14 +1,11 @@
 """Tests for the Bluetooth integration scanners."""
+import asyncio
 from datetime import timedelta
 import time
 from unittest.mock import MagicMock, patch
 
 from bleak import BleakError
-from bleak.backends.scanner import (
-    AdvertisementData,
-    AdvertisementDataCallback,
-    BLEDevice,
-)
+from bleak.backends.scanner import AdvertisementDataCallback, BLEDevice
 from dbus_fast import InvalidMessageError
 import pytest
 
@@ -22,7 +19,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.util import dt as dt_util
 
-from . import _get_manager, async_setup_with_one_adapter
+from . import _get_manager, async_setup_with_one_adapter, generate_advertisement_data
 
 from tests.common import async_fire_time_changed
 
@@ -222,7 +219,7 @@ async def test_recovery_from_dbus_restart(hass, one_adapter):
     ):
         _callback(
             BLEDevice("44:44:33:11:23:42", "any_name"),
-            AdvertisementData(local_name="any_name"),
+            generate_advertisement_data(local_name="any_name"),
         )
 
     # Ensure we don't restart the scanner if we don't need to
@@ -491,3 +488,68 @@ async def test_adapter_fails_to_start_and_takes_a_bit_to_init(
 
     assert len(mock_recover_adapter.mock_calls) == 1
     assert "Waiting for adapter to initialize" in caplog.text
+
+
+async def test_restart_takes_longer_than_watchdog_time(hass, one_adapter, caplog):
+    """Test we do not try to recover the adapter again if the restart is still in progress."""
+
+    release_start_event = asyncio.Event()
+    called_start = 0
+
+    class MockBleakScanner:
+        async def start(self, *args, **kwargs):
+            """Mock Start."""
+            nonlocal called_start
+            called_start += 1
+            if called_start == 1:
+                return
+            await release_start_event.wait()
+
+        async def stop(self, *args, **kwargs):
+            """Mock Start."""
+
+        @property
+        def discovered_devices(self):
+            """Mock discovered_devices."""
+            return []
+
+        def register_detection_callback(self, callback: AdvertisementDataCallback):
+            """Mock Register Detection Callback."""
+
+    scanner = MockBleakScanner()
+    start_time_monotonic = time.monotonic()
+
+    with patch(
+        "homeassistant.components.bluetooth.scanner.ADAPTER_INIT_TIME",
+        0,
+    ), patch(
+        "homeassistant.components.bluetooth.scanner.MONOTONIC_TIME",
+        return_value=start_time_monotonic,
+    ), patch(
+        "homeassistant.components.bluetooth.scanner.OriginalBleakScanner",
+        return_value=scanner,
+    ), patch(
+        "homeassistant.components.bluetooth.util.recover_adapter", return_value=True
+    ):
+        await async_setup_with_one_adapter(hass)
+
+        assert called_start == 1
+
+        # Now force a recover adapter 2x
+        for _ in range(2):
+            with patch(
+                "homeassistant.components.bluetooth.scanner.MONOTONIC_TIME",
+                return_value=start_time_monotonic
+                + SCANNER_WATCHDOG_TIMEOUT
+                + SCANNER_WATCHDOG_INTERVAL.total_seconds(),
+            ):
+                async_fire_time_changed(
+                    hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL
+                )
+                await asyncio.sleep(0)
+
+        # Now release the start event
+        release_start_event.set()
+        await hass.async_block_till_done()
+
+    assert "already restarting" in caplog.text

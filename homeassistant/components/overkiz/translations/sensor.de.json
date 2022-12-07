@@ -28,7 +28,7 @@
             "wind": "Wind"
         },
         "overkiz__sensor_defect": {
-            "dead": "nicht Erreichbar",
+            "dead": "Nicht Erreichbar",
             "low_battery": "Niedriger Batteriestatus",
             "maintenance_required": "Wartung erforderlich",
             "no_defect": "Kein Fehler"

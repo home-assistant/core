@@ -7,7 +7,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS, Platform
+from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -30,8 +30,7 @@ class AtagWaterHeater(AtagEntity, WaterHeaterEntity):
     """Representation of an ATAG water heater."""
 
     _attr_operation_list = OPERATION_LIST
-    _attr_supported_features = 0
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     @property
     def current_temperature(self):

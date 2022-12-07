@@ -27,13 +27,9 @@
         }
     },
     "issues": {
-        "deprecated_yaml": {
-            "description": "La configurazione di Radarr tramite YAML \u00e8 stata rimossa.\n\nLa configurazione YAML esistente \u00e8 stata importata automaticamente nell'interfaccia utente.\n\nRimuovere la configurazione YAML di Radarr dal file configuration.yaml e riavviare Home Assistant per risolvere il problema.",
+        "removed_yaml": {
+            "description": "La configurazione di Radarr tramite YAML \u00e8 stata rimossa. \n\nLa tua configurazione YAML esistente non \u00e8 utilizzata da Home Assistant. \n\nRimuovi la configurazione YAML dal tuo file configuration.yaml e riavvia Home Assistant per risolvere questo problema.",
             "title": "La configurazione YAML di Radarr \u00e8 stata rimossa"
-        },
-        "removed_attributes": {
-            "description": "Sono state apportate alcune modifiche alla disabilitazione del sensore di conteggio dei filmati per prudenza.\n\nQuesto sensore pu\u00f2 causare problemi con database di grandi dimensioni. Se si desidera ancora utilizzarlo, \u00e8 possibile farlo.\n\nI nomi dei film non sono pi\u00f9 inclusi come attributi nel sensore dei film.\n\nLa voce Upcoming \u00e8 stata rimossa. \u00c8 stato modernizzato come dovrebbero essere gli elementi del calendario. Lo spazio su disco \u00e8 ora suddiviso in diversi sensori, uno per ogni cartella.\n\nStato e comandi sono stati rimossi perch\u00e9 non sembrano avere un valore reale per le automazioni.",
-            "title": "Modifiche all'integrazione Radarr"
         }
     },
     "options": {

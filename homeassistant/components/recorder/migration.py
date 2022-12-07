@@ -1,9 +1,12 @@
 """Schema migration helpers."""
+from __future__ import annotations
+
 from collections.abc import Callable, Iterable
 import contextlib
+from dataclasses import dataclass, replace as dataclass_replace
 from datetime import timedelta
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING
 
 import sqlalchemy
 from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text
@@ -34,11 +37,16 @@ from .db_schema import (
 )
 from .models import process_timestamp
 from .statistics import (
+    correct_db_schema as statistics_correct_db_schema,
     delete_statistics_duplicates,
     delete_statistics_meta_duplicates,
     get_start_time,
+    validate_db_schema as statistics_validate_db_schema,
 )
 from .util import session_scope
+
+if TYPE_CHECKING:
+    from . import Recorder
 
 LIVE_MIGRATION_MIN_SCHEMA_VERSION = 0
 
@@ -56,47 +64,87 @@ def raise_if_exception_missing_str(ex: Exception, match_substrs: Iterable[str]) 
     raise ex
 
 
-def get_schema_version(session_maker: Callable[[], Session]) -> int:
+def _get_schema_version(session: Session) -> int | None:
     """Get the schema version."""
-    with session_scope(session=session_maker()) as session:
-        res = (
-            session.query(SchemaChanges)
-            .order_by(SchemaChanges.change_id.desc())
-            .first()
-        )
-        current_version = getattr(res, "schema_version", None)
-
-        if current_version is None:
-            current_version = _inspect_schema_version(session)
-            _LOGGER.debug(
-                "No schema version found. Inspected version: %s", current_version
-            )
-
-        return cast(int, current_version)
+    res = session.query(SchemaChanges).order_by(SchemaChanges.change_id.desc()).first()
+    return getattr(res, "schema_version", None)
 
 
-def schema_is_current(current_version: int) -> bool:
+def get_schema_version(session_maker: Callable[[], Session]) -> int | None:
+    """Get the schema version."""
+    try:
+        with session_scope(session=session_maker()) as session:
+            return _get_schema_version(session)
+    except Exception as err:  # pylint: disable=broad-except
+        _LOGGER.exception("Error when determining DB schema version: %s", err)
+        return None
+
+
+@dataclass
+class SchemaValidationStatus:
+    """Store schema validation status."""
+
+    current_version: int
+    statistics_schema_errors: set[str]
+    valid: bool
+
+
+def _schema_is_current(current_version: int) -> bool:
     """Check if the schema is current."""
     return current_version == SCHEMA_VERSION
 
 
-def live_migration(current_version: int) -> bool:
+def validate_db_schema(
+    hass: HomeAssistant, engine: Engine, session_maker: Callable[[], Session]
+) -> SchemaValidationStatus | None:
+    """Check if the schema is valid.
+
+    This checks that the schema is the current version as well as for some common schema
+    errors caused by manual migration between database engines, for example importing an
+    SQLite database to MariaDB.
+    """
+    schema_errors: set[str] = set()
+
+    current_version = get_schema_version(session_maker)
+    if current_version is None:
+        return None
+
+    if is_current := _schema_is_current(current_version):
+        # We can only check for further errors if the schema is current, because
+        # columns may otherwise not exist etc.
+        schema_errors |= statistics_validate_db_schema(hass, engine, session_maker)
+
+    valid = is_current and not schema_errors
+
+    return SchemaValidationStatus(current_version, schema_errors, valid)
+
+
+def live_migration(schema_status: SchemaValidationStatus) -> bool:
     """Check if live migration is possible."""
-    return current_version >= LIVE_MIGRATION_MIN_SCHEMA_VERSION
+    return schema_status.current_version >= LIVE_MIGRATION_MIN_SCHEMA_VERSION
 
 
 def migrate_schema(
-    instance: Any,
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
-    current_version: int,
+    schema_status: SchemaValidationStatus,
 ) -> None:
     """Check if the schema needs to be upgraded."""
-    _LOGGER.warning("Database is about to upgrade. Schema version: %s", current_version)
+    current_version = schema_status.current_version
+    if current_version != SCHEMA_VERSION:
+        _LOGGER.warning(
+            "Database is about to upgrade from schema version: %s to: %s",
+            current_version,
+            SCHEMA_VERSION,
+        )
     db_ready = False
     for version in range(current_version, SCHEMA_VERSION):
-        if live_migration(version) and not db_ready:
+        if (
+            live_migration(dataclass_replace(schema_status, current_version=version))
+            and not db_ready
+        ):
             db_ready = True
             instance.migration_is_live = True
             hass.add_job(instance.async_set_db_ready)
@@ -107,6 +155,13 @@ def migrate_schema(
             session.add(SchemaChanges(schema_version=new_version))
 
         _LOGGER.info("Upgrade to version %s done", new_version)
+
+    if schema_errors := schema_status.statistics_schema_errors:
+        _LOGGER.warning(
+            "Database is about to correct DB schema errors: %s",
+            ", ".join(sorted(schema_errors)),
+        )
+        statistics_correct_db_schema(instance, engine, session_maker, schema_errors)
 
 
 def _create_index(
@@ -758,8 +813,10 @@ def _apply_update(  # noqa: C901
         raise ValueError(f"No schema migration defined for version {new_version}")
 
 
-def _inspect_schema_version(session: Session) -> int:
-    """Determine the schema version by inspecting the db structure.
+def _initialize_database(session: Session) -> bool:
+    """Initialize a new database, or a database created before introducing schema changes.
+
+    The function determines the schema version by inspecting the db structure.
 
     When the schema version is not present in the db, either db was just
     created with the correct schema, or this is a db created before schema
@@ -775,9 +832,22 @@ def _inspect_schema_version(session: Session) -> int:
             # Schema addition from version 1 detected. New DB.
             session.add(StatisticsRuns(start=get_start_time()))
             session.add(SchemaChanges(schema_version=SCHEMA_VERSION))
-            return SCHEMA_VERSION
+            return True
 
     # Version 1 schema changes not found, this db needs to be migrated.
     current_version = SchemaChanges(schema_version=0)
     session.add(current_version)
-    return cast(int, current_version.schema_version)
+    return True
+
+
+def initialize_database(session_maker: Callable[[], Session]) -> bool:
+    """Initialize a new database, or a database created before introducing schema changes."""
+    try:
+        with session_scope(session=session_maker()) as session:
+            if _get_schema_version(session) is not None:
+                return True
+            return _initialize_database(session)
+
+    except Exception as err:  # pylint: disable=broad-except
+        _LOGGER.exception("Error when initialise database: %s", err)
+        return False

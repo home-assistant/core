@@ -125,7 +125,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class HumidifierEntityDescription(ToggleEntityDescription):
     """A class that describes humidifier entities."""
 
-    device_class: HumidifierDeviceClass | str | None = None
+    device_class: HumidifierDeviceClass | None = None
 
 
 class HumidifierEntity(ToggleEntity):
@@ -133,28 +133,28 @@ class HumidifierEntity(ToggleEntity):
 
     entity_description: HumidifierEntityDescription
     _attr_available_modes: list[str] | None
-    _attr_device_class: HumidifierDeviceClass | str | None
+    _attr_device_class: HumidifierDeviceClass | None
     _attr_max_humidity: int = DEFAULT_MAX_HUMIDITY
     _attr_min_humidity: int = DEFAULT_MIN_HUMIDITY
     _attr_mode: str | None
+    _attr_supported_features: HumidifierEntityFeature = HumidifierEntityFeature(0)
     _attr_target_humidity: int | None = None
 
     @property
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
-        supported_features = self.supported_features or 0
         data: dict[str, int | list[str] | None] = {
             ATTR_MIN_HUMIDITY: self.min_humidity,
             ATTR_MAX_HUMIDITY: self.max_humidity,
         }
 
-        if supported_features & HumidifierEntityFeature.MODES:
+        if self.supported_features & HumidifierEntityFeature.MODES:
             data[ATTR_AVAILABLE_MODES] = self.available_modes
 
         return data
 
     @property
-    def device_class(self) -> HumidifierDeviceClass | str | None:
+    def device_class(self) -> HumidifierDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
             return self._attr_device_class
@@ -166,13 +166,12 @@ class HumidifierEntity(ToggleEntity):
     @property
     def state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
-        supported_features = self.supported_features or 0
         data: dict[str, int | str | None] = {}
 
         if self.target_humidity is not None:
             data[ATTR_HUMIDITY] = self.target_humidity
 
-        if supported_features & HumidifierEntityFeature.MODES:
+        if self.supported_features & HumidifierEntityFeature.MODES:
             data[ATTR_MODE] = self.mode
 
         return data
@@ -223,3 +222,8 @@ class HumidifierEntity(ToggleEntity):
     def max_humidity(self) -> int:
         """Return the maximum humidity."""
         return self._attr_max_humidity
+
+    @property
+    def supported_features(self) -> HumidifierEntityFeature:
+        """Return the list of supported features."""
+        return self._attr_supported_features

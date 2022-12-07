@@ -26,7 +26,7 @@
                     "precision": "Sensorgenauigkeit"
                 },
                 "description": "Sensorgenauigkeit f\u00fcr {sensor_id} ausw\u00e4hlen",
-                "title": "OneWire-Sensorpr\u00e4zision"
+                "title": "OneWire Sensorpr\u00e4zision"
             },
             "device_selection": {
                 "data": {
@@ -34,7 +34,7 @@
                     "device_selection": "Zu konfigurierende Ger\u00e4te ausw\u00e4hlen"
                 },
                 "description": "W\u00e4hle die zu verarbeitenden Konfigurationsschritte aus",
-                "title": "OneWire-Ger\u00e4teoptionen"
+                "title": "OneWire Ger\u00e4teoptionen"
             }
         }
     }

@@ -28,15 +28,5 @@
                 "description": "Giri\u015f kimlik bilgileri uygulamada ayarlanmad\u0131ysa API anahtar\u0131 otomatik olarak al\u0131nabilir.\n API anahtar\u0131n\u0131z, Lidarr Web Kullan\u0131c\u0131 Aray\u00fcz\u00fcndeki Ayarlar > Genel b\u00f6l\u00fcm\u00fcnde bulunabilir."
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "max_records": "Aranan ve kuyrukta g\u00f6r\u00fcnt\u00fclenecek maksimum kay\u0131t say\u0131s\u0131",
-                    "upcoming_days": "Takvimde g\u00f6r\u00fcnt\u00fclenecek yakla\u015fan g\u00fcn say\u0131s\u0131"
-                }
-            }
-        }
     }
 }

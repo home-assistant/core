@@ -46,7 +46,7 @@ async def test_haa_fan_setup(hass):
                         EntityTestInfo(
                             entity_id="switch.haa_c718b3",
                             friendly_name="HAA-C718B3",
-                            unique_id="homekit-C718B3-2-8",
+                            unique_id="00:00:00:00:00:00_2_8",
                             state="off",
                         )
                     ],
@@ -56,7 +56,7 @@ async def test_haa_fan_setup(hass):
                 EntityTestInfo(
                     entity_id="fan.haa_c718b3",
                     friendly_name="HAA-C718B3",
-                    unique_id="homekit-C718B3-1-8",
+                    unique_id="00:00:00:00:00:00_1_8",
                     state="on",
                     supported_features=FanEntityFeature.SET_SPEED,
                     capabilities={
@@ -66,14 +66,14 @@ async def test_haa_fan_setup(hass):
                 EntityTestInfo(
                     entity_id="button.haa_c718b3_setup",
                     friendly_name="HAA-C718B3 Setup",
-                    unique_id="homekit-C718B3-1-aid:1-sid:1010-cid:1012",
+                    unique_id="00:00:00:00:00:00_1_1010_1012",
                     entity_category=EntityCategory.CONFIG,
                     state="unknown",
                 ),
                 EntityTestInfo(
                     entity_id="button.haa_c718b3_update",
                     friendly_name="HAA-C718B3 Update",
-                    unique_id="homekit-C718B3-1-aid:1-sid:1010-cid:1011",
+                    unique_id="00:00:00:00:00:00_1_1010_1011",
                     entity_category=EntityCategory.CONFIG,
                     state="unknown",
                 ),

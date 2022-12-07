@@ -27,7 +27,7 @@ from .entity import IBeaconEntity
 class IBeaconRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[iBeaconAdvertisement], int | None]
+    value_fn: Callable[[iBeaconAdvertisement], str | int | None]
 
 
 @dataclass
@@ -62,6 +62,12 @@ SENSOR_DESCRIPTIONS = (
         value_fn=lambda ibeacon_advertisement: ibeacon_advertisement.distance,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DISTANCE,
+    ),
+    IBeaconSensorEntityDescription(
+        key="vendor",
+        name="Vendor",
+        entity_registry_enabled_default=False,
+        value_fn=lambda ibeacon_advertisement: ibeacon_advertisement.vendor,
     ),
 )
 
@@ -132,6 +138,6 @@ class IBeaconSensorEntity(IBeaconEntity, SensorEntity):
         self.async_write_ha_state()
 
     @property
-    def native_value(self) -> int | None:
+    def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._ibeacon_advertisement)

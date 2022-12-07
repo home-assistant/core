@@ -1,6 +1,8 @@
 """Support for Radarr binary sensors."""
 from __future__ import annotations
 
+from aiopyarr import Health
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -32,7 +34,7 @@ async def async_setup_entry(
     async_add_entities([RadarrBinarySensor(coordinator, BINARY_SENSOR_TYPE)])
 
 
-class RadarrBinarySensor(RadarrEntity, BinarySensorEntity):
+class RadarrBinarySensor(RadarrEntity[list[Health]], BinarySensorEntity):
     """Implementation of a Radarr binary sensor."""
 
     @property

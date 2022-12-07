@@ -15,6 +15,9 @@
         }
     },
     "options": {
+        "error": {
+            "invalid_api_key": "Chiave API non valida"
+        },
         "step": {
             "init": {
                 "data": {
@@ -25,7 +28,7 @@
                     "inverter_size": "Dimensioni inverter (Watt)",
                     "modules power": "Potenza di picco totale in Watt dei tuoi moduli solari"
                 },
-                "description": "Questi valori consentono di modificare il risultato di Solar.Forecast. Fai riferimento alla documentazione se un campo non \u00e8 chiaro."
+                "description": "Questi valori consentono di modificare il risultato di Forecast.Solar. Se un campo non \u00e8 chiaro, consultare la documentazione."
             }
         }
     }

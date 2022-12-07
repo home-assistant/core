@@ -945,9 +945,9 @@ async def test_discovery_expansion(hass, mqtt_mock_entry_no_yaml_config, caplog)
         '      "payload_not_available": "not_available"'
         "    },"
         "    {"
-        '      "topic":"avail_item2/~",'
-        '      "payload_available": "available",'
-        '      "payload_not_available": "not_available"'
+        '      "t":"avail_item2/~",'
+        '      "pl_avail": "available",'
+        '      "pl_not_avail": "not_available"'
         "    }"
         "  ],"
         '  "dev":{'
@@ -999,9 +999,9 @@ async def test_discovery_expansion_2(hass, mqtt_mock_entry_no_yaml_config, caplo
         '  "stat_t": "test_topic/~",'
         '  "cmd_t": "~/test_topic",'
         '  "availability": {'
-        '    "topic":"~/avail_item1",'
-        '    "payload_available": "available",'
-        '    "payload_not_available": "not_available"'
+        '    "t":"~/avail_item1",'
+        '    "pl_avail": "available",'
+        '    "pl_not_avail": "not_available"'
         "  },"
         '  "dev":{'
         '    "ids":["5706DF"],'
@@ -1179,7 +1179,10 @@ ABBREVIATIONS_WHITE_LIST = [
     "CONF_KEEPALIVE",
     "CONF_TLS_INSECURE",
     "CONF_TLS_VERSION",
+    "CONF_TRANSPORT",
     "CONF_WILL_MESSAGE",
+    "CONF_WS_PATH",
+    "CONF_WS_HEADERS",
     # Undocumented device configuration
     "CONF_DEPRECATED_VIA_HUB",
     "CONF_VIA_DEVICE",
@@ -1235,7 +1238,6 @@ async def test_no_implicit_state_topic_switch(
 
     async_fire_mqtt_message(hass, "homeassistant/switch/bla/config", data)
     await hass.async_block_till_done()
-    assert "implicit state_topic is deprecated" not in caplog.text
 
     state = hass.states.get("switch.Test1")
     assert state is not None

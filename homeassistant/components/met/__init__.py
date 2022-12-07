@@ -26,6 +26,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import DistanceConverter
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
     CONF_TRACK_HOME,
@@ -95,7 +96,7 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator["MetWeatherData"]):
         """Initialize global Met data updater."""
         self._unsub_track_home: Callable[[], None] | None = None
         self.weather = MetWeatherData(
-            hass, config_entry.data, hass.config.units.is_metric
+            hass, config_entry.data, hass.config.units is METRIC_SYSTEM
         )
         self.weather.set_coordinates()
 

@@ -11,6 +11,18 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "season": {
+                "state": {
+                    "autumn": "Musim gugur",
+                    "spring": "Musim semi",
+                    "summer": "Musim panas",
+                    "winter": "Musim dingin"
+                }
+            }
+        }
+    },
     "issues": {
         "removed_yaml": {
             "description": "Proses konfigurasi Integrasi Musim lewat YAML telah dihapus.\n\nKonfigurasi YAML yang ada tidak digunakan oleh Home Assistant.\n\nHapus konfigurasi YAML dari file configuration.yaml dan mulai ulang Home Assistant untuk memperbaiki masalah ini.",

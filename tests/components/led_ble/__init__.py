@@ -1,8 +1,9 @@
 """Tests for the LED BLE Bluetooth integration."""
 from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementData
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+
+from tests.components.bluetooth import generate_advertisement_data
 
 LED_BLE_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     name="Triones:F30200000152C",
@@ -13,7 +14,7 @@ LED_BLE_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     service_data={},
     source="local",
     device=BLEDevice(address="AA:BB:CC:DD:EE:FF", name="Triones:F30200000152C"),
-    advertisement=AdvertisementData(),
+    advertisement=generate_advertisement_data(),
     time=0,
     connectable=True,
 )
@@ -27,7 +28,7 @@ UNSUPPORTED_LED_BLE_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     service_data={},
     source="local",
     device=BLEDevice(address="AA:BB:CC:DD:EE:FF", name="LEDnetWFF30200000152C"),
-    advertisement=AdvertisementData(),
+    advertisement=generate_advertisement_data(),
     time=0,
     connectable=True,
 )
@@ -45,7 +46,7 @@ NOT_LED_BLE_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     service_data={},
     source="local",
     device=BLEDevice(address="AA:BB:CC:DD:EE:FF", name="Aug"),
-    advertisement=AdvertisementData(),
+    advertisement=generate_advertisement_data(),
     time=0,
     connectable=True,
 )

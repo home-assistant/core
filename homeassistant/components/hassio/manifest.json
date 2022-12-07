@@ -6,6 +6,5 @@
   "after_dependencies": ["panel_custom"],
   "codeowners": ["@home-assistant/supervisor"],
   "iot_class": "local_polling",
-  "quality_scale": "internal",
-  "integration_type": "system"
+  "quality_scale": "internal"
 }

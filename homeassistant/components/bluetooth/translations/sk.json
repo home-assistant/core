@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba u\u017e je nakonfigurovan\u00e1",
+            "no_adapters": "Nena\u0161li sa \u017eiadne nenakonfigurovan\u00e9 adapt\u00e9ry Bluetooth"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Chcete nastavi\u0165 {name}?"
+            },
+            "multiple_adapters": {
+                "data": {
+                    "adapter": "Adapt\u00e9r"
+                },
+                "description": "Vyberte adapt\u00e9r Bluetooth, ktor\u00fd chcete nastavi\u0165"
+            },
+            "single_adapter": {
+                "description": "Chcete nastavi\u0165 adapt\u00e9r Bluetooth {name}?"
+            },
+            "user": {
+                "data": {
+                    "address": "Zaradenie"
+                },
+                "description": "Vyberte zariadenie, ktor\u00e9 chcete nastavi\u0165"
+            }
+        }
+    },
+    "issues": {
+        "haos_outdated": {
+            "title": "Aktualizujte na opera\u010dn\u00fd syst\u00e9m Home Assistant 9.0 alebo nov\u0161\u00ed"
+        }
+    }
+}

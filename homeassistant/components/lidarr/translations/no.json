@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Tjenesten er allerede konfigurert",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+            "reauth_successful": "Re-autentisering var vellykket"
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
@@ -26,16 +26,6 @@
                     "verify_ssl": "Verifisere SSL-sertifikat"
                 },
                 "description": "API-n\u00f8kkel kan hentes automatisk hvis p\u00e5loggingsinformasjon ikke ble angitt i applikasjonen.\n API-n\u00f8kkelen din finner du i Innstillinger > Generelt i Lidarr Web UI."
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "max_records": "Antall maksimale poster \u00e5 vise p\u00e5 \u00f8nsket og k\u00f8",
-                    "upcoming_days": "Antall kommende dager som skal vises i kalenderen"
-                }
             }
         }
     }

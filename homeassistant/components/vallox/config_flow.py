@@ -4,8 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from vallox_websocket_api import Vallox
-from vallox_websocket_api.exceptions import ValloxApiException
+from vallox_websocket_api import Vallox, ValloxApiException
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -23,11 +22,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
     }
-)
-
-VALLOX_CONNECTION_EXCEPTIONS = (
-    OSError,
-    ValloxApiException,
 )
 
 
@@ -61,7 +55,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except InvalidHost:
             _LOGGER.error("An invalid host is configured for Vallox: %s", host)
             reason = "invalid_host"
-        except VALLOX_CONNECTION_EXCEPTIONS:
+        except ValloxApiException:
             _LOGGER.error("Cannot connect to Vallox host %s", host)
             reason = "cannot_connect"
         except Exception:  # pylint: disable=broad-except
@@ -98,7 +92,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await validate_host(self.hass, host)
         except InvalidHost:
             errors[CONF_HOST] = "invalid_host"
-        except VALLOX_CONNECTION_EXCEPTIONS:
+        except ValloxApiException:
             errors[CONF_HOST] = "cannot_connect"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
