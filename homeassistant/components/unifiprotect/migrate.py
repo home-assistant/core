@@ -12,10 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
-from homeassistant.helpers.issue_registry import IssueSeverity
-
-from .const import DOMAIN
+from homeassistant.helpers import entity_registry as er
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,23 +29,6 @@ async def async_migrate_data(
     _LOGGER.debug("Start Migrate: async_migrate_device_ids")
     await async_migrate_device_ids(hass, entry, protect)
     _LOGGER.debug("Completed Migrate: async_migrate_device_ids")
-
-    entity_registry = er.async_get(hass)
-    for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
-        if (
-            entity.domain == Platform.SENSOR
-            and entity.disabled_by is None
-            and "detected_object" in entity.unique_id
-        ):
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                "deprecate_smart_sensor",
-                is_fixable=False,
-                breaks_in_ha_version="2023.2.0",
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecate_smart_sensor",
-            )
 
 
 async def async_get_bootstrap(protect: ProtectApiClient) -> Bootstrap:
