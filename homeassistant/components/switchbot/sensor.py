@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
+    POWER_WATT,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_CELSIUS,
 )
@@ -71,6 +72,13 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=TEMP_CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    "power": SensorEntityDescription(
+        key="power",
+        name="Power",
+        native_unit_of_measurement=POWER_WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
     ),
 }
 
