@@ -123,7 +123,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             )
 
     for sensor in option_entities:
-        option = "show_" + sensor.entity_description.key
+        option = sensor.entity_description.key
         if config_entry.options.get(option, OPTION_DEFAULTS[option]):
             entities.append(sensor)
         else:

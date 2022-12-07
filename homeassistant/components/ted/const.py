@@ -8,11 +8,11 @@ COORDINATOR = "coordinator"
 NAME = "name"
 
 OPTION_DEFAULTS = {
-    "show_spyder_energy_now": False,
-    "show_spyder_energy_daily": False,
-    "show_spyder_energy_mtd": True,
-    "show_mtu_power_voltage": True,
-    "show_mtu_energy_now": False,
-    "show_mtu_energy_daily": False,
-    "show_mtu_energy_mtd": True,
+    "spyder_energy_now": False,
+    "spyder_energy_daily": False,
+    "spyder_energy_mtd": True,
+    "mtu_power_voltage": True,
+    "mtu_energy_now": False,
+    "mtu_energy_daily": False,
+    "mtu_energy_mtd": True,
 }
