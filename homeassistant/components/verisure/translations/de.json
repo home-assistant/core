@@ -14,7 +14,7 @@
                 "data": {
                     "giid": "Installation"
                 },
-                "description": "Home Assistant hat mehrere Verisure-Installationen in deinen My Pages-Konto gefunden. Bitte w\u00e4hle die Installation aus, die du zu Home Assistant hinzuf\u00fcgen m\u00f6chtest."
+                "description": "Home Assistant hat mehrere Verisure-Installationen in deinem My Pages-Konto gefunden. Bitte w\u00e4hle die Installation aus, die du zu Home Assistant hinzuf\u00fcgen m\u00f6chtest."
             },
             "mfa": {
                 "data": {
@@ -52,7 +52,7 @@
             "init": {
                 "data": {
                     "lock_code_digits": "Anzahl der Ziffern im PIN-Code f\u00fcr Schl\u00f6sser",
-                    "lock_default_code": "Standard-PIN-Code f\u00fcr Schl\u00f6sser, wird verwendet wenn keiner angegeben wird"
+                    "lock_default_code": "Standard-PIN-Code f\u00fcr Schl\u00f6sser, wird verwendet, wenn keiner angegeben wird"
                 }
             }
         }

@@ -33,16 +33,6 @@
             }
         }
     },
-    "issues": {
-        "deprecated_yaml": {
-            "description": "Konfigurering av Google Kalender i configuration.yaml tas bort i Home Assistant 2022.9. \n\n Dina befintliga OAuth-applikationsuppgifter och \u00e5tkomstinst\u00e4llningar har importerats till anv\u00e4ndargr\u00e4nssnittet automatiskt. Ta bort YAML-konfigurationen fr\u00e5n filen configuration.yaml och starta om Home Assistant f\u00f6r att \u00e5tg\u00e4rda problemet.",
-            "title": "Google Kalender YAML-konfigurationen tas bort"
-        },
-        "removed_track_new_yaml": {
-            "description": "Du har inaktiverat enhetssp\u00e5rning f\u00f6r Google Kalender i configuration.yaml, som inte l\u00e4ngre st\u00f6ds. Du m\u00e5ste manuellt \u00e4ndra integrationssystemalternativen i anv\u00e4ndargr\u00e4nssnittet f\u00f6r att inaktivera nyuppt\u00e4ckta enheter fram\u00f6ver. Ta bort inst\u00e4llningen track_new fr\u00e5n configuration.yaml och starta om Home Assistant f\u00f6r att \u00e5tg\u00e4rda problemet.",
-            "title": "Sp\u00e5rning av enheter i Google Kalender har \u00e4ndrats"
-        }
-    },
     "options": {
         "step": {
             "init": {

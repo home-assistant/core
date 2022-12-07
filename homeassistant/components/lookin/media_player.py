@@ -82,7 +82,6 @@ class LookinMedia(LookinPowerPushRemoteEntity, MediaPlayerEntity):
     ) -> None:
         """Init the lookin media player."""
         self._attr_device_class = device_class
-        self._attr_supported_features: int = 0
         super().__init__(coordinator, uuid, device, lookin_data)
         for function_name, feature in _FUNCTION_NAME_TO_FEATURE.items():
             if function_name in self._function_names:

@@ -52,6 +52,7 @@ CONF_IS_PM10 = "is_pm10"
 CONF_IS_PM25 = "is_pm25"
 CONF_IS_POWER = "is_power"
 CONF_IS_POWER_FACTOR = "is_power_factor"
+CONF_IS_PRECIPITATION = "is_precipitation"
 CONF_IS_PRECIPITATION_INTENSITY = "is_precipitation_intensity"
 CONF_IS_PRESSURE = "is_pressure"
 CONF_IS_SPEED = "is_speed"
@@ -89,6 +90,7 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.PM1: [{CONF_TYPE: CONF_IS_PM1}],
     SensorDeviceClass.PM10: [{CONF_TYPE: CONF_IS_PM10}],
     SensorDeviceClass.PM25: [{CONF_TYPE: CONF_IS_PM25}],
+    SensorDeviceClass.PRECIPITATION: [{CONF_TYPE: CONF_IS_PRECIPITATION}],
     SensorDeviceClass.PRECIPITATION_INTENSITY: [
         {CONF_TYPE: CONF_IS_PRECIPITATION_INTENSITY}
     ],
@@ -126,16 +128,18 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_GAS,
                     CONF_IS_HUMIDITY,
                     CONF_IS_ILLUMINANCE,
-                    CONF_IS_OZONE,
                     CONF_IS_MOISTURE,
                     CONF_IS_NITROGEN_DIOXIDE,
                     CONF_IS_NITROGEN_MONOXIDE,
                     CONF_IS_NITROUS_OXIDE,
+                    CONF_IS_OZONE,
                     CONF_IS_POWER,
                     CONF_IS_POWER_FACTOR,
                     CONF_IS_PM1,
                     CONF_IS_PM10,
                     CONF_IS_PM25,
+                    CONF_IS_PRECIPITATION,
+                    CONF_IS_PRECIPITATION_INTENSITY,
                     CONF_IS_PRESSURE,
                     CONF_IS_REACTIVE_POWER,
                     CONF_IS_SIGNAL_STRENGTH,
@@ -143,6 +147,10 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_TEMPERATURE,
                     CONF_IS_VOLATILE_ORGANIC_COMPOUNDS,
                     CONF_IS_VOLTAGE,
+                    CONF_IS_VOLUME,
+                    CONF_IS_WATER,
+                    CONF_IS_WEIGHT,
+                    CONF_IS_WIND_SPEED,
                     CONF_IS_VALUE,
                 ]
             ),

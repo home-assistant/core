@@ -51,6 +51,7 @@ CONF_PM10 = "pm10"
 CONF_PM25 = "pm25"
 CONF_POWER = "power"
 CONF_POWER_FACTOR = "power_factor"
+CONF_PRECIPITATION = "precipitation"
 CONF_PRECIPITATION_INTENSITY = "precipitation_intensity"
 CONF_PRESSURE = "pressure"
 CONF_REACTIVE_POWER = "reactive_power"
@@ -88,6 +89,7 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.PM25: [{CONF_TYPE: CONF_PM25}],
     SensorDeviceClass.POWER: [{CONF_TYPE: CONF_POWER}],
     SensorDeviceClass.POWER_FACTOR: [{CONF_TYPE: CONF_POWER_FACTOR}],
+    SensorDeviceClass.PRECIPITATION: [{CONF_TYPE: CONF_PRECIPITATION}],
     SensorDeviceClass.PRECIPITATION_INTENSITY: [
         {CONF_TYPE: CONF_PRECIPITATION_INTENSITY}
     ],
@@ -136,6 +138,8 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_PM25,
                     CONF_POWER,
                     CONF_POWER_FACTOR,
+                    CONF_PRECIPITATION,
+                    CONF_PRECIPITATION_INTENSITY,
                     CONF_PRESSURE,
                     CONF_REACTIVE_POWER,
                     CONF_SIGNAL_STRENGTH,
@@ -143,6 +147,10 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_TEMPERATURE,
                     CONF_VOLATILE_ORGANIC_COMPOUNDS,
                     CONF_VOLTAGE,
+                    CONF_VOLUME,
+                    CONF_WATER,
+                    CONF_WEIGHT,
+                    CONF_WIND_SPEED,
                     CONF_VALUE,
                 ]
             ),

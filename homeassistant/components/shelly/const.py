@@ -5,6 +5,10 @@ from logging import Logger, getLogger
 import re
 from typing import Final
 
+from awesomeversion import AwesomeVersion
+
+from homeassistant.backports.enum import StrEnum
+
 DOMAIN: Final = "shelly"
 
 LOGGER: Logger = getLogger(__package__)
@@ -143,6 +147,7 @@ SHTRV_01_TEMPERATURE_SETTINGS: Final = {
     "min": 4,
     "max": 31,
     "step": 0.5,
+    "default": 20.0,
 }
 
 # Kelvin value for colorTemp
@@ -156,3 +161,15 @@ UPTIME_DEVIATION: Final = 5
 ENTRY_RELOAD_COOLDOWN = 60
 
 SHELLY_GAS_MODELS = ["SHGS-1"]
+
+BLE_MIN_VERSION = AwesomeVersion("0.12.0-beta2")
+
+CONF_BLE_SCANNER_MODE = "ble_scanner_mode"
+
+
+class BLEScannerMode(StrEnum):
+    """BLE scanner mode."""
+
+    DISABLED = "disabled"
+    ACTIVE = "active"
+    PASSIVE = "passive"

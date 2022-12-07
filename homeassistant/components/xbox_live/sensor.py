@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,6 +37,19 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Xbox platform."""
+    create_issue(
+        hass,
+        "xbox_live",
+        "pending_removal",
+        breaks_in_ha_version="2023.2.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="pending_removal",
+    )
+    _LOGGER.warning(
+        "The Xbox Live integration is deprecated "
+        "and will be removed in Home Assistant 2023.2"
+    )
     api = Client(api_key=config[CONF_API_KEY])
     entities = []
 

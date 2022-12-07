@@ -1,4 +1,13 @@
 {
+    "issues": {
+        "country_not_configured": {
+            "title": "Le pays n\u2019a pas \u00e9t\u00e9 configur\u00e9"
+        },
+        "historic_currency": {
+            "description": "La devise {currency} n\u2019est plus utilis\u00e9e, veuillez actualiser la configuration de la devise.",
+            "title": "La devise configur\u00e9e n\u2019est plus utilis\u00e9e"
+        }
+    },
     "system_health": {
         "info": {
             "arch": "Architecture du processeur",

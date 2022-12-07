@@ -6,6 +6,7 @@
         },
         "error": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "firmware_not_fully_provisioned": "Zariadenie nie je plne zabezpe\u010den\u00e9. Kontaktujte podporu spolo\u010dnosti Shelly",
             "invalid_auth": "Neplatn\u00e9 overenie",
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
@@ -20,7 +21,15 @@
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
                 }
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Heslo"
+                }
+            },
             "user": {
+                "data": {
+                    "host": "Hostite\u013e"
+                },
                 "description": "Pred nastaven\u00edm musia by\u0165 zariadenia nap\u00e1jan\u00e9 z bat\u00e9rie zobuden\u00e9. Zobu\u010fte zariadenie pomocou tla\u010didla na \u0148om."
             }
         }
@@ -45,6 +54,11 @@
             "single_long": "{subtype} stla\u010den\u00e9 raz a potom dlho",
             "single_push": "{subtype} stla\u010den\u00e9 raz",
             "triple": "{subtype} stla\u010den\u00e9 trikr\u00e1t"
+        }
+    },
+    "options": {
+        "abort": {
+            "ble_unsupported": "Podpora Bluetooth vy\u017eaduje verziu firmv\u00e9ru {ble_min_version} alebo nov\u0161iu."
         }
     }
 }

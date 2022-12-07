@@ -30,7 +30,6 @@ class AtagWaterHeater(AtagEntity, WaterHeaterEntity):
     """Representation of an ATAG water heater."""
 
     _attr_operation_list = OPERATION_LIST
-    _attr_supported_features = 0
     _attr_temperature_unit = TEMP_CELSIUS
 
     @property

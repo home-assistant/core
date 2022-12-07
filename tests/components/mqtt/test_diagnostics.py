@@ -23,6 +23,9 @@ default_config = {
     "port": 1883,
     "protocol": "3.1.1",
     "tls_version": "auto",
+    "transport": "tcp",
+    "ws_headers": {},
+    "ws_path": "/",
     "will_message": {
         "payload": "offline",
         "qos": 0,
@@ -248,7 +251,7 @@ async def test_redact_diagnostics(
                         "gps_accuracy": 1.5,
                         "latitude": "**REDACTED**",
                         "longitude": "**REDACTED**",
-                        "source_type": None,
+                        "source_type": "gps",
                     },
                     "entity_id": "device_tracker.mqtt_unique",
                     "last_changed": ANY,

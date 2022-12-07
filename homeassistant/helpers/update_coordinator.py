@@ -5,6 +5,7 @@ import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Generator
 from datetime import datetime, timedelta
 import logging
+from random import randint
 from time import monotonic
 from typing import Any, Generic, TypeVar
 import urllib.error
@@ -14,7 +15,11 @@ import requests
 
 from homeassistant import config_entries
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.util.dt import utcnow
 
 from . import entity, event
@@ -60,6 +65,12 @@ class DataUpdateCoordinator(Generic[_T]):
         # Set type to just T to remove annoying checks that data is not None
         # when it was already checked during setup.
         self.data: _T = None  # type: ignore[assignment]
+
+        # Pick a random microsecond to stagger the refreshes
+        # and avoid a thundering herd.
+        self._microsecond = randint(
+            event.RANDOM_MICROSECOND_MIN, event.RANDOM_MICROSECOND_MAX
+        )
 
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
         self._job = HassJob(self._handle_refresh_interval)
@@ -138,11 +149,17 @@ class DataUpdateCoordinator(Generic[_T]):
         # We _floor_ utcnow to create a schedule on a rounded second,
         # minimizing the time between the point and the real activation.
         # That way we obtain a constant update frequency,
-        # as long as the update process takes less than a second
+        # as long as the update process takes less than 500ms
+        #
+        # We do not align everything to happen at microsecond 0
+        # since it increases the risk of a thundering herd
+        # when multiple coordinators are scheduled to update at the same time.
+        #
+        # https://github.com/home-assistant/core/issues/82231
         self._unsub_refresh = event.async_track_point_in_utc_time(
             self.hass,
             self._job,
-            utcnow().replace(microsecond=0) + self.update_interval,
+            utcnow().replace(microsecond=self._microsecond) + self.update_interval,
         )
 
     async def _handle_refresh_interval(self, _now: datetime) -> None:
@@ -170,7 +187,9 @@ class DataUpdateCoordinator(Generic[_T]):
         fails. Additionally logging is handled by config entry setup
         to ensure that multiple retries do not cause log spam.
         """
-        await self._async_refresh(log_failures=False, raise_on_auth_failed=True)
+        await self._async_refresh(
+            log_failures=False, raise_on_auth_failed=True, raise_on_entry_error=True
+        )
         if self.last_update_success:
             return
         ex = ConfigEntryNotReady()
@@ -186,6 +205,7 @@ class DataUpdateCoordinator(Generic[_T]):
         log_failures: bool = True,
         raise_on_auth_failed: bool = False,
         scheduled: bool = False,
+        raise_on_entry_error: bool = False,
     ) -> None:
         """Refresh data."""
         if self._unsub_refresh:
@@ -236,6 +256,19 @@ class DataUpdateCoordinator(Generic[_T]):
                 if log_failures:
                     self.logger.error("Error fetching %s data: %s", self.name, err)
                 self.last_update_success = False
+
+        except ConfigEntryError as err:
+            self.last_exception = err
+            if self.last_update_success:
+                if log_failures:
+                    self.logger.error(
+                        "Config entry setup failed while fetching %s data: %s",
+                        self.name,
+                        err,
+                    )
+                self.last_update_success = False
+            if raise_on_entry_error:
+                raise
 
         except ConfigEntryAuthFailed as err:
             auth_failed = True

@@ -738,7 +738,8 @@ async def test_automation_stops(hass, calls, service):
     assert len(calls) == (1 if service == "turn_off_no_stop" else 0)
 
 
-async def test_reload_unchanged_does_not_stop(hass, calls):
+@pytest.mark.parametrize("extra_config", ({}, {"id": "sun"}))
+async def test_reload_unchanged_does_not_stop(hass, calls, extra_config):
     """Test that reloading stops any running actions as appropriate."""
     test_entity = "test.entity"
 
@@ -753,6 +754,7 @@ async def test_reload_unchanged_does_not_stop(hass, calls):
             ],
         }
     }
+    config[automation.DOMAIN].update(**extra_config)
     assert await async_setup_component(hass, automation.DOMAIN, config)
 
     running = asyncio.Event()
@@ -970,6 +972,41 @@ async def test_reload_identical_automations_without_id(hass, calls):
                 },
             }
         },
+        {
+            "id": "sun",
+            "trigger": {"platform": "event", "event_type": "test_event"},
+            "action": [{"service": "test.automation"}],
+        },
+        # An automation using templates
+        {
+            "id": "sun",
+            "trigger": {"platform": "event", "event_type": "test_event"},
+            "action": [{"service": "{{ 'test.automation' }}"}],
+        },
+        # An automation using blueprint
+        {
+            "id": "sun",
+            "use_blueprint": {
+                "path": "test_event_service.yaml",
+                "input": {
+                    "trigger_event": "test_event",
+                    "service_to_call": "test.automation",
+                    "a_number": 5,
+                },
+            },
+        },
+        # An automation using blueprint with templated input
+        {
+            "id": "sun",
+            "use_blueprint": {
+                "path": "test_event_service.yaml",
+                "input": {
+                    "trigger_event": "{{ 'test_event' }}",
+                    "service_to_call": "{{ 'test.automation' }}",
+                    "a_number": 5,
+                },
+            },
+        },
     ),
 )
 async def test_reload_unchanged_automation(hass, calls, automation_config):
@@ -1004,7 +1041,8 @@ async def test_reload_unchanged_automation(hass, calls, automation_config):
         assert len(calls) == 2
 
 
-async def test_reload_automation_when_blueprint_changes(hass, calls):
+@pytest.mark.parametrize("extra_config", ({}, {"id": "sun"}))
+async def test_reload_automation_when_blueprint_changes(hass, calls, extra_config):
     """Test an automation is updated at reload if the blueprint has changed."""
     with patch(
         "homeassistant.components.automation.AutomationEntity", wraps=AutomationEntity
@@ -1023,6 +1061,7 @@ async def test_reload_automation_when_blueprint_changes(hass, calls):
                 }
             ]
         }
+        config[automation.DOMAIN][0].update(**extra_config)
         assert await async_setup_component(hass, automation.DOMAIN, config)
         assert automation_entity_init.call_count == 1
         automation_entity_init.reset_mock()
@@ -2101,12 +2140,12 @@ async def test_recursive_automation_starting_script(
         hass.bus.async_listen("automation_triggered", async_automation_triggered)
 
         hass.bus.async_fire("trigger_automation")
-        await asyncio.wait_for(script_done_event.wait(), 1)
+        await asyncio.wait_for(script_done_event.wait(), 10)
 
         # Trigger 1st stage script shutdown
         hass.state = CoreState.stopping
         hass.bus.async_fire("homeassistant_stop")
-        await asyncio.wait_for(stop_scripts_at_shutdown_called.wait(), 1)
+        await asyncio.wait_for(stop_scripts_at_shutdown_called.wait(), 10)
 
         # Trigger 2nd stage script shutdown
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))

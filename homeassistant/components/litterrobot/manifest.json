@@ -7,5 +7,6 @@
   "codeowners": ["@natekspencer", "@tkdrob"],
   "dhcp": [{ "hostname": "litter-robot4" }],
   "iot_class": "cloud_push",
-  "loggers": ["pylitterbot"]
+  "loggers": ["pylitterbot"],
+  "integration_type": "hub"
 }

@@ -14,7 +14,7 @@
             "authentication_error": "Kode HomeKit salah. Periksa dan coba lagi.",
             "insecure_setup_code": "Kode penyiapan yang diminta tidak aman karena sifatnya yang sepele. Aksesori ini gagal memenuhi persyaratan keamanan dasar.",
             "max_peers_error": "Perangkat menolak untuk menambahkan pemasangan karena tidak memiliki penyimpanan pemasangan yang tersedia.",
-            "pairing_failed": "Terjadi kesalahan yang tidak tertangani saat mencoba memasangkan dengan perangkat ini. Ini mungkin kegagalan sementara atau perangkat Anda mungkin tidak didukung saat ini.",
+            "pairing_failed": "Terjadi kesalahan yang tidak tertangani saat mencoba memasangkan dengan perangkat ini. Ini mungkin kegagalan sementara atau perangkat Anda mungkin tidak didukung saat ini: {error}",
             "unable_to_pair": "Gagal memasangkan, coba lagi.",
             "unknown_error": "Perangkat melaporkan kesalahan yang tidak diketahui. Pemasangan gagal."
         },

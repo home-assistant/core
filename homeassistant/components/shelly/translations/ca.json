@@ -58,5 +58,17 @@
             "single_push": "{subtype} clicat una vegada",
             "triple": "{subtype} clicat tres vegades"
         }
+    },
+    "options": {
+        "abort": {
+            "ble_unsupported": "La compatibilitat amb Bluetooth necessita la versi\u00f3 de microprogramari {ble_min_version} o una de m\u00e9s recent."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "ble_scanner_mode": "Mode d'escaneig Bluetooth"
+                }
+            }
+        }
     }
 }

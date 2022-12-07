@@ -10,11 +10,9 @@
             "invalid_setup": "Adja hozz\u00e1 Adamot Anna helyett. Tov\u00e1bbi inform\u00e1ci\u00f3\u00e9rt tekintse meg a Home Assistant Plugwise integr\u00e1ci\u00f3s dokument\u00e1ci\u00f3j\u00e1t",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
-        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Kapcsolat t\u00edpusa",
                     "host": "IP c\u00edm",
                     "password": "Smile azonos\u00edt\u00f3",
                     "port": "Port",
@@ -22,26 +20,6 @@
                 },
                 "description": "K\u00e9rem, adja meg",
                 "title": "Csatlakoz\u00e1s a Smile-hoz"
-            },
-            "user_gateway": {
-                "data": {
-                    "host": "IP c\u00edm",
-                    "password": "Smile azonos\u00edt\u00f3",
-                    "port": "Port",
-                    "username": "Smile Felhaszn\u00e1l\u00f3n\u00e9v"
-                },
-                "description": "K\u00e9rem, adja meg",
-                "title": "Csatlakoz\u00e1s a Smile-hoz"
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval": "Szkennel\u00e9si intervallum (m\u00e1sodperc)"
-                },
-                "description": "\u00c1ll\u00edtsa be a Plugwise lehet\u0151s\u00e9get"
             }
         }
     }

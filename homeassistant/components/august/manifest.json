@@ -2,7 +2,7 @@
   "domain": "august",
   "name": "August",
   "documentation": "https://www.home-assistant.io/integrations/august",
-  "requirements": ["yalexs==1.2.6"],
+  "requirements": ["yalexs==1.2.6", "yalexs_ble==1.10.2"],
   "codeowners": ["@bdraco"],
   "dhcp": [
     {
@@ -24,6 +24,5 @@
   ],
   "config_flow": true,
   "iot_class": "cloud_push",
-  "loggers": ["pubnub", "yalexs"],
-  "after_dependencies": ["yalexs_ble"]
+  "loggers": ["pubnub", "yalexs"]
 }

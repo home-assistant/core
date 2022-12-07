@@ -21,14 +21,7 @@ from . import mock_cloud, mock_cloud_prefs
 
 from tests.components.google_assistant import MockConfig
 
-SUBSCRIPTION_INFO_URL = "https://api-test.hass.io/subscription_info"
-
-
-@pytest.fixture(name="mock_auth")
-def mock_auth_fixture():
-    """Mock check token."""
-    with patch("hass_nabucasa.auth.CognitoAuth.async_check_token"):
-        yield
+SUBSCRIPTION_INFO_URL = "https://api-test.hass.io/payments/subscription_info"
 
 
 @pytest.fixture(name="mock_cloud_login")
@@ -55,8 +48,8 @@ def setup_api_fixture(hass, aioclient_mock):
                 "cognito_client_id": "cognito_client_id",
                 "user_pool_id": "user_pool_id",
                 "region": "region",
-                "relayer": "relayer",
-                "subscription_info_url": SUBSCRIPTION_INFO_URL,
+                "relayer_server": "relayer",
+                "accounts_server": "api-test.hass.io",
                 "google_actions": {"filter": {"include_domains": "light"}},
                 "alexa": {
                     "filter": {"include_entities": ["light.kitchen", "switch.ac"]}
