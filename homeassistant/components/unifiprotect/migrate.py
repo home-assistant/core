@@ -10,13 +10,14 @@ from pyunifiprotect.exceptions import ClientError
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
-from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.issue_registry import IssueSeverity
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
