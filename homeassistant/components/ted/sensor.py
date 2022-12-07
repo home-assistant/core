@@ -17,7 +17,7 @@ from .const import COORDINATOR, DOMAIN, NAME, OPTION_DEFAULTS
 _LOGGER = logging.getLogger(__name__)
 
 
-def sensors(prefix, stype, is_net):
+def build_sensor_descs(prefix, stype, is_net):
     """Return a list of sensors with given key prefix and type (Production / Consumption)."""
     if is_net:  # If the sensor represents a net energy
         total_state_class = SensorStateClass.TOTAL
@@ -48,10 +48,10 @@ def sensors(prefix, stype, is_net):
     ]
 
 
-def mtu_sensors(stype, is_net):
+def build_mtu_sensor_descs(stype, is_net):
     """Return a list of mtu sensors with given key prefix and type (Production / Consumption)."""
     return [
-        *sensors("mtu_energy", stype, is_net),
+        *build_sensor_descs("mtu_energy", stype, is_net),
         SensorEntityDescription(
             key="mtu_power_voltage",
             name="Voltage",
@@ -70,15 +70,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entity_registry = hass.helpers.entity_registry.async_get(hass)
     config_id = config_entry.unique_id
     entities = []
-    for desc in sensors("consumption", "Energy Usage", False):
+    for desc in build_sensor_descs("consumption", "Energy Usage", False):
         name = f"{config_name} {desc.name}"
         entities.append(TedSensor(desc, name, config_id, coordinator))
 
     if coordinator.data["type"] != SystemType.NET:
-        for desc in sensors("net", "Net Grid Energy", True):
+        for desc in build_sensor_descs("net", "Net Grid Energy", True):
             name = f"{config_name} {desc.name}"
             entities.append(TedSensor(desc, name, config_id, coordinator))
-        for desc in sensors("production", "Energy Production", False):
+        for desc in build_sensor_descs("production", "Energy Production", False):
             name = f"{config_name} {desc.name}"
             entities.append(TedSensor(desc, name, config_id, coordinator))
 
@@ -86,7 +86,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     for spyder_id, spyder in coordinator.data["spyders"].items():
         spyder_name = spyder["name"]
-        for sensor_description in sensors("spyder_energy", "Energy Usage", False):
+        for sensor_description in build_sensor_descs(
+            "spyder_energy", "Energy Usage", False
+        ):
             entity_name = f"{spyder_name} {sensor_description.name}"
             option_entities.append(
                 TedBreakdownSensor(
@@ -109,7 +111,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         else:
             stype = "Net Grid Energy"
             is_net = True
-        for sensor_description in mtu_sensors(stype, is_net):
+        for sensor_description in build_mtu_sensor_descs(stype, is_net):
             entity_name = f"{mtu_name} {sensor_description.name}"
             option_entities.append(
                 TedBreakdownSensor(
