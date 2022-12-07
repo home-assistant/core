@@ -29,5 +29,15 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "smart_type": {
+                "state": {
+                    "humidity": "Vlhkos\u0165",
+                    "temperature": "Teplota"
+                }
+            }
+        }
     }
 }

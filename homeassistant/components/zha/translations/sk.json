@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "not_zha_device": "Toto zariadenie nie je zariadenie zha",
-            "single_instance_allowed": "U\u017e je nakonfigurovan\u00fd. Mo\u017en\u00e1 len jedna konfigur\u00e1cia."
+            "single_instance_allowed": "U\u017e je nakonfigurovan\u00fd. Mo\u017en\u00e1 len jedna konfigur\u00e1cia.",
+            "usb_probe_failed": "Nepodarilo sa presk\u00fama\u0165 zariadenie USB"
         },
         "error": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
@@ -18,9 +19,11 @@
                 "title": "Obnovenie automatickej z\u00e1lohy"
             },
             "choose_formation_strategy": {
+                "description": "Vyberte sie\u0165ov\u00e9 nastavenia pre va\u0161e r\u00e1dio.",
                 "menu_options": {
                     "choose_automatic_backup": "Obnovenie automatickej z\u00e1lohy",
                     "form_new_network": "Vyma\u017ete nastavenia siete a vytvorte nov\u00fa sie\u0165",
+                    "reuse_settings": "Ponechajte nastavenia siete r\u00e1dia",
                     "upload_manual_backup": "Nahratie manu\u00e1lnej z\u00e1lohy"
                 }
             },
@@ -28,6 +31,7 @@
                 "data": {
                     "path": "Cesta s\u00e9riov\u00e9ho zariadenia"
                 },
+                "description": "Vyberte s\u00e9riov\u00fd port pre va\u0161e r\u00e1dio Zigbee",
                 "title": "Vyberte s\u00e9riov\u00fd port"
             },
             "confirm": {
@@ -36,6 +40,13 @@
             "confirm_hardware": {
                 "description": "Chcete nastavi\u0165 {name}?"
             },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "Typ r\u00e1dia"
+                },
+                "description": "Vyberte si typ r\u00e1dia Zigbee",
+                "title": "Typ r\u00e1dia"
+            },
             "manual_port_config": {
                 "data": {
                     "baudrate": "r\u00fdchlos\u0165 portu",
@@ -43,6 +54,12 @@
                 },
                 "description": "Zadajte nastavenia s\u00e9riov\u00e9ho portu",
                 "title": "Nastavenia s\u00e9riov\u00e9ho portu"
+            },
+            "maybe_confirm_ezsp_restore": {
+                "data": {
+                    "overwrite_coordinator_ieee": "Natrvalo nahra\u010fte r\u00e1diov\u00fa adresu IEEE"
+                },
+                "title": "Prep\u00edsa\u0165 adresu IEEE r\u00e1dia"
             },
             "upload_manual_backup": {
                 "data": {
@@ -54,6 +71,13 @@
     },
     "config_panel": {
         "zha_options": {
+            "always_prefer_xy_color_mode": "V\u017edy uprednost\u0148ujete farebn\u00fd re\u017eim XY",
+            "consider_unavailable_battery": "Zariadenia nap\u00e1jan\u00e9 z bat\u00e9rie pova\u017eujte za nedostupn\u00e9 po (sekund\u00e1ch)",
+            "consider_unavailable_mains": "Zariadenia nap\u00e1jan\u00e9 zo siete pova\u017eujte za nedostupn\u00e9 po (sekund\u00e1ch)",
+            "default_light_transition": "Predvolen\u00fd \u010das prechodu svetla (sekundy)",
+            "enable_identify_on_join": "Povoli\u0165 efekt identifik\u00e1cie, ke\u010f sa zariadenia prip\u00e1jaj\u00fa k sieti",
+            "enhanced_light_transition": "Povoli\u0165 vylep\u0161en\u00fd prechod farby svetla/teploty z vypnut\u00e9ho stavu",
+            "light_transitioning_flag": "Povolenie vylep\u0161en\u00e9ho posuvn\u00edka jasu po\u010das prechodu svetla",
             "title": "Glob\u00e1lne mo\u017enosti"
         }
     },
@@ -67,6 +91,12 @@
             "button_5": "Piate tla\u010didlo",
             "button_6": "\u0160ieste tla\u010didlo",
             "close": "Zavrie\u0165",
+            "face_1": "Aktivovan\u00e9 tv\u00e1rou 1",
+            "face_2": "Aktivovan\u00e9 tv\u00e1rou 2",
+            "face_3": "Aktivovan\u00e9 tv\u00e1rou 3",
+            "face_4": "Aktivovan\u00e9 tv\u00e1rou 4",
+            "face_5": "Aktivovan\u00e9 tv\u00e1rou 5",
+            "face_6": "Aktivovan\u00e9 tv\u00e1rou 6",
             "left": "V\u013eavo",
             "open": "Otvori\u0165",
             "right": "Vpravo",
@@ -97,7 +127,8 @@
     "options": {
         "abort": {
             "not_zha_device": "Toto zariadenie nie je zariadenie zha",
-            "single_instance_allowed": "U\u017e je nakonfigurovan\u00fd. Mo\u017en\u00e1 len jedna konfigur\u00e1cia."
+            "single_instance_allowed": "U\u017e je nakonfigurovan\u00fd. Mo\u017en\u00e1 len jedna konfigur\u00e1cia.",
+            "usb_probe_failed": "Nepodarilo sa presk\u00fama\u0165 zariadenie USB"
         },
         "error": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
@@ -113,9 +144,11 @@
                 "title": "Obnovenie automatickej z\u00e1lohy"
             },
             "choose_formation_strategy": {
+                "description": "Vyberte sie\u0165ov\u00e9 nastavenia pre va\u0161e r\u00e1dio.",
                 "menu_options": {
                     "choose_automatic_backup": "Obnovenie automatickej z\u00e1lohy",
                     "form_new_network": "Vyma\u017ete nastavenia siete a vytvorte nov\u00fa sie\u0165",
+                    "reuse_settings": "Ponechajte nastavenia siete r\u00e1dia",
                     "upload_manual_backup": "Nahratie manu\u00e1lnej z\u00e1lohy"
                 }
             },
@@ -123,11 +156,26 @@
                 "data": {
                     "path": "Cesta s\u00e9riov\u00e9ho zariadenia"
                 },
+                "description": "Vyberte s\u00e9riov\u00fd port pre va\u0161e r\u00e1dio Zigbee",
                 "title": "Vyberte s\u00e9riov\u00fd port"
             },
             "init": {
                 "description": "Doplnok ZHA bude zastaven\u00fd. Prajete si pokra\u010dova\u0165?",
                 "title": "Prekonfigurova\u0165 ZHA"
+            },
+            "instruct_unplug": {
+                "description": "Va\u0161e star\u00e9 r\u00e1dio bolo resetovan\u00e9. Ak u\u017e hardv\u00e9r nepotrebujete, m\u00f4\u017eete ho odpoji\u0165.",
+                "title": "Odpojte star\u00e9 r\u00e1dio"
+            },
+            "intent_migrate": {
+                "title": "Prejdite na nov\u00e9 r\u00e1dio"
+            },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "Typ r\u00e1dia"
+                },
+                "description": "Vyberte si typ r\u00e1dia Zigbee",
+                "title": "Typ r\u00e1dia"
             },
             "manual_port_config": {
                 "data": {
@@ -137,8 +185,18 @@
                 "description": "Zadajte nastavenia s\u00e9riov\u00e9ho portu",
                 "title": "Nastavenia s\u00e9riov\u00e9ho portu"
             },
+            "maybe_confirm_ezsp_restore": {
+                "data": {
+                    "overwrite_coordinator_ieee": "Natrvalo nahra\u010fte r\u00e1diov\u00fa adresu IEEE"
+                },
+                "title": "Prep\u00edsa\u0165 adresu IEEE r\u00e1dia"
+            },
             "prompt_migrate_or_reconfigure": {
                 "description": "Prech\u00e1dzate na nov\u00e9 r\u00e1dio alebo men\u00edte konfigur\u00e1ciu aktu\u00e1lneho r\u00e1dia?",
+                "menu_options": {
+                    "intent_migrate": "Prejdite na nov\u00e9 r\u00e1dio",
+                    "intent_reconfigure": "Prekonfigurujte aktu\u00e1lne r\u00e1dio"
+                },
                 "title": "Migr\u00e1cia alebo zmena konfigur\u00e1cie"
             },
             "upload_manual_backup": {

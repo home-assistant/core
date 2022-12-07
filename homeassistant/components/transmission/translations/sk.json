@@ -44,6 +44,8 @@
         "step": {
             "init": {
                 "data": {
+                    "limit": "Limit",
+                    "order": "Poradie",
                     "scan_interval": "Frekvencia aktualiz\u00e1cie"
                 }
             }

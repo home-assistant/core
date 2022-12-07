@@ -4,6 +4,7 @@
             "already_configured_device": "Zariadenie u\u017e je nakonfigurovan\u00e9",
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
             "no_unconfigured_devices": "Nena\u0161li sa \u017eiadne nenakonfigurovan\u00e9 zariadenia.",
+            "switchbot_unsupported_type": "Nepodporovan\u00fd typ Switchbot.",
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "flow_title": "{name} ({address})",
@@ -20,6 +21,15 @@
             "user": {
                 "data": {
                     "address": "Adresa zariadenia"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "retry_count": "Po\u010det opakovan\u00ed"
                 }
             }
         }

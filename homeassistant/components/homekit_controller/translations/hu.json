@@ -70,6 +70,15 @@
         }
     },
     "entity": {
+        "select": {
+            "ecobee_mode": {
+                "state": {
+                    "away": "T\u00e1vol",
+                    "home": "Otthon",
+                    "sleep": "Alv\u00e1s"
+                }
+            }
+        },
         "sensor": {
             "thread_node_capabilities": {
                 "state": {

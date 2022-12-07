@@ -150,6 +150,9 @@ async def async_get_actions(
 
     node = async_get_node_from_device_id(hass, device_id)
 
+    if node.client.driver and node.client.driver.controller.own_node_id == node.node_id:
+        return actions
+
     base_action = {
         CONF_DEVICE_ID: device_id,
         CONF_DOMAIN: DOMAIN,

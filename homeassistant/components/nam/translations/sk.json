@@ -13,6 +13,9 @@
         },
         "flow_title": "{host}",
         "step": {
+            "confirm_discovery": {
+                "description": "Chcete nastavi\u0165 Nettigo Air Monitor na {host}?"
+            },
             "credentials": {
                 "data": {
                     "password": "Heslo",
@@ -30,7 +33,8 @@
             "user": {
                 "data": {
                     "host": "Hostite\u013e"
-                }
+                },
+                "description": "Nastavte integr\u00e1ciu Nettigo Air Monitor."
             }
         }
     }

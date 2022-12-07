@@ -10,9 +10,9 @@ atomicwrites-homeassistant==1.4.1
 attrs==21.2.0
 awesomeversion==22.9.0
 bcrypt==3.1.7
-bleak-retry-connector==2.9.0
+bleak-retry-connector==2.10.1
 bleak==0.19.2
-bluetooth-adapters==0.11.0
+bluetooth-adapters==0.12.0
 bluetooth-auto-recovery==0.5.4
 bluetooth-data-tools==0.3.0
 certifi>=2021.5.30
@@ -22,7 +22,7 @@ dbus-fast==1.75.0
 fnvhash==0.1.0
 hass-nabucasa==0.59.0
 home-assistant-bluetooth==1.8.1
-home-assistant-frontend==20221201.1
+home-assistant-frontend==20221206.0
 httpx==0.23.1
 ifaddr==0.1.7
 janus==1.0.0
@@ -60,8 +60,8 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.48.0
-grpcio-status==1.48.0
+grpcio==1.51.1
+grpcio-status==1.51.1
 
 # libcst >=0.4.0 requires a newer Rust than we currently have available,
 # thus our wheels builds fail. This pins it to the last working version,
