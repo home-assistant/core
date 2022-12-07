@@ -785,7 +785,7 @@ class UnitOfIrradiance(StrEnum):
     """Irradiance units."""
 
     WATTS_PER_SQUARE_METER = "W/m²"
-    BTUS_PER_HOUR_SQUARE_FOOT = "BTU/(h×ft²)"
+    BTUS_PER_HOUR_SQUARE_FOOT = "BTU/(h⋅ft²)"
 
 
 # Irradiation units
@@ -803,16 +803,16 @@ class UnitOfVolumetricFlux(StrEnum):
     """
 
     INCHES_PER_DAY = "in/d"
-    """Derived from in³/(in².d)"""
+    """Derived from in³/(in²⋅d)"""
 
     INCHES_PER_HOUR = "in/h"
-    """Derived from in³/(in².h)"""
+    """Derived from in³/(in²⋅h)"""
 
     MILLIMETERS_PER_DAY = "mm/d"
-    """Derived from mm³/(mm².d)"""
+    """Derived from mm³/(mm²⋅d)"""
 
     MILLIMETERS_PER_HOUR = "mm/h"
-    """Derived from mm³/(mm².h)"""
+    """Derived from mm³/(mm²⋅h)"""
 
 
 class UnitOfPrecipitationDepth(StrEnum):
