@@ -18,7 +18,7 @@
   },
   "options": {
     "step": {
-      "options": {
+      "init": {
         "data": {
           "spyder_energy_now": "Create Spyder Current Power entities",
           "spyder_energy_daily": "Create Spyder Daily Energy entities",

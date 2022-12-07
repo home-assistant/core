@@ -18,18 +18,16 @@
     },
     "options": {
         "step": {
-            "options": {
+            "init": {
                 "data": {
-                    "spyder_energy_now": "Create Spyder Current Power entities",
+                    "mtu_energy_daily": "Create MTU Daily Energy entities",
+                    "mtu_energy_mtd": "Create MTU Month-to-Date Energy entities",
+                    "mtu_energy_now": "Create MTU Current Power entities",
+                    "mtu_power_voltage": "Create MTU Current Voltage entities",
                     "spyder_energy_daily": "Create Spyder Daily Energy entities",
                     "spyder_energy_mtd": "Create Spyder Month-to-Date Energy entities",
-                    "mtu_power_voltage": "Create MTU Current Voltage entities",
-                    "mtu_energy_now": "Create MTU Current Power entities",
-                    "mtu_energy_daily": "Create MTU Daily Energy entities",
-                    "mtu_energy_mtd": "Create MTU Month-to-Date Energy entities"
-                },
-                "description": "Configure TED integration",
-                "title": "TED options"
+                    "spyder_energy_now": "Create Spyder Current Power entities"
+                }
             }
         }
     }
