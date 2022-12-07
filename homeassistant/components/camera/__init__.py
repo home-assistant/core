@@ -910,7 +910,7 @@ async def websocket_update_stream_source(
     camera = _get_camera_from_entity_id(hass, msg["entity_id"])
     new_stream_source = msg["new_src"]
     camera.stream.update_source(new_stream_source)
-    connection.send_result(msg["id"], new_stream_source)
+    connection.send_result(msg["id"], camera.stream.source)
 
 
 async def async_handle_snapshot_service(
