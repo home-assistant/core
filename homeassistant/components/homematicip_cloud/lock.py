@@ -35,13 +35,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the HomematicIP locks from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
-    entities: list[HomematicipGenericEntity] = []
-    for device in hap.home.devices:
-        if isinstance(device, AsyncDoorLockDrive):
-            entities.append(HomematicipDoorLockDrive(hap, device))
-
-    if entities:
-        async_add_entities(entities)
 
     async_add_entities(
         HomematicipDoorLockDrive(hap, device)
