@@ -18,7 +18,7 @@ from homeassistant.components.zwave_js.helpers import (
     get_device_id,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry
 from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
 from homeassistant.helpers.entity_registry import async_get as async_get_ent_reg
 from homeassistant.setup import async_setup_component
@@ -1156,7 +1156,9 @@ async def test_value_updated_value_no_driver(
     """Test zwave_js.value_updated.value trigger with missing driver."""
     node: Node = lock_schlage_be469
     dev_reg = async_get_dev_reg(hass)
-    device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
+    device = device_registry.async_entries_for_config_entry(
+        dev_reg, integration.entry_id
+    )[0]
     driver = client.driver
     client.driver = None
 
