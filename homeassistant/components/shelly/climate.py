@@ -16,7 +16,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry, entity_registry
@@ -110,7 +110,7 @@ class BlockSleepingClimate(
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
     _attr_target_temperature_step = SHTRV_01_TEMPERATURE_SETTINGS["step"]
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
         self,
