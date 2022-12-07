@@ -26,16 +26,11 @@ class BouncieDataUpdateCoordinator(DataUpdateCoordinator):
         update_interval: datetime.timedelta,
     ) -> None:
         """Init the coordinator."""
-        self._client_id = config_entry.data[CONF_CLIENT_ID]
-        self._client_secret = config_entry.data[CONF_CLIENT_SECRET]
-        self._redirect_uri = config_entry.data[CONF_REDIRECT_URI]
-        self._code = config_entry.data[CONF_CODE]
-
         self.bouncie_client = AsyncRESTAPIClient(
-            client_id=self._client_id,
-            client_secret=self._client_secret,
-            redirect_url=self._redirect_uri,
-            auth_code=self._code,
+            client_id=config_entry.data[CONF_CLIENT_ID],
+            client_secret=config_entry.data[CONF_CLIENT_SECRET],
+            redirect_url=config_entry.data[CONF_REDIRECT_URI],
+            auth_code=config_entry.data[CONF_CODE],
             session=async_get_clientsession(hass=hass),
         )
 
