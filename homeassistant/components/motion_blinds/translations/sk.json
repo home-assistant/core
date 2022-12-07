@@ -10,7 +10,8 @@
             "connect": {
                 "data": {
                     "api_key": "API k\u013e\u00fa\u010d"
-                }
+                },
+                "description": "Budete potrebova\u0165 16-znakov\u00fd k\u013e\u00fa\u010d API, pokyny n\u00e1jdete na https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key"
             },
             "select": {
                 "data": {

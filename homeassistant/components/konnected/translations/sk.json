@@ -58,6 +58,19 @@
                 },
                 "title": "Konfigur\u00e1cia I/O"
             },
+            "options_io_ext": {
+                "data": {
+                    "10": "Z\u00f3na 10",
+                    "11": "Z\u00f3na 11",
+                    "12": "Z\u00f3na 12",
+                    "8": "Z\u00f3na 8",
+                    "9": "Z\u00f3na 9",
+                    "alarm1": "ALARM1",
+                    "alarm2_out2": "OUT2/ALARM2",
+                    "out1": "OUT1"
+                },
+                "title": "Nakonfigurujte roz\u0161\u00edren\u00e9 I/O"
+            },
             "options_misc": {
                 "data": {
                     "api_host": "Prep\u00edsanie adresy URL hostite\u013ea API"

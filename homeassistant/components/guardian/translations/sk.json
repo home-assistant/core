@@ -6,11 +6,15 @@
             "cannot_connect": "Nepodarilo sa pripoji\u0165"
         },
         "step": {
+            "discovery_confirm": {
+                "description": "Chcete nastavi\u0165 toto zariadenie Guardian?"
+            },
             "user": {
                 "data": {
                     "ip_address": "IP adresa",
                     "port": "Port"
-                }
+                },
+                "description": "Nakonfigurujte miestne zariadenie Elexa Guardian."
             }
         }
     },

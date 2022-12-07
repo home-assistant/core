@@ -19,6 +19,13 @@
     },
     "entity": {
         "sensor": {
+            "health_concern": {
+                "state": {
+                    "good": "Dobr\u00e9",
+                    "hazardous": "Nebezpe\u010dn\u00e9",
+                    "moderate": "Mierne"
+                }
+            },
             "precipitation_type": {
                 "state": {
                     "freezing_rain": "Mrzn\u00faci d\u00e1\u017e\u010f",

@@ -24,5 +24,11 @@
                 }
             }
         }
-    }
+    },
+    "issues": {
+        "removed_yaml": {
+            "title": "Konfigur\u00e1cia Moon YAML bola odstr\u00e1nen\u00e1"
+        }
+    },
+    "title": "Mesiac"
 }

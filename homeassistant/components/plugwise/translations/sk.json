@@ -20,5 +20,21 @@
                 "description": "Pros\u00edm, zadajte"
             }
         }
+    },
+    "entity": {
+        "select": {
+            "dhw_mode": {
+                "state": {
+                    "off": "Vypnut\u00e9"
+                }
+            },
+            "regulation_mode": {
+                "state": {
+                    "cooling": "Chladenie",
+                    "heating": "Vykurovanie",
+                    "off": "Vypnut\u00e9"
+                }
+            }
+        }
     }
 }
