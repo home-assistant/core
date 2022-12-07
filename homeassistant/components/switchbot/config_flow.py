@@ -66,11 +66,16 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> FlowResult:
         """Handle the bluetooth discovery step."""
-        _LOGGER.debug("Discovered bluetooth device: %s", discovery_info)
+        _LOGGER.debug("Discovered bluetooth device: %s", discovery_info.as_dict())
         await self.async_set_unique_id(format_unique_id(discovery_info.address))
         self._abort_if_unique_id_configured()
         parsed = parse_advertisement_data(
             discovery_info.device, discovery_info.advertisement
+        )
+        _LOGGER.debug(
+            "Discovered switchbot device: %s, parsed: %s",
+            discovery_info.as_dict(),
+            parsed,
         )
         if not parsed or parsed.data.get("modelName") not in SUPPORTED_MODEL_TYPES:
             return self.async_abort(reason="not_supported")
