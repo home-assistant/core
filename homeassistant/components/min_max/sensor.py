@@ -227,9 +227,9 @@ class MinMaxSensor(SensorEntity):
             self._attr_name = name
         else:
             self._attr_name = f"{sensor_type} sensor".capitalize()
-        self._sensor_attr = SENSOR_TYPE_TO_ATTR[self._sensor_type]
-        self._unit_of_measurement = None
-        self._unit_of_measurement_mismatch = False
+        self._sensor_attr: str = SENSOR_TYPE_TO_ATTR[self._sensor_type]
+        self._unit_of_measurement: str | None = None
+        self._unit_of_measurement_mismatch: bool = False
         self.min_value: float | None = None
         self.max_value: float | None = None
         self.mean: float | None = None
@@ -241,7 +241,6 @@ class MinMaxSensor(SensorEntity):
         self.max_entity_id: str | None = None
         self.last_entity_id: str | None = None
         self.count_sensors = len(self._entity_ids)
-        self.states: dict[str, Any] = {}
         self._state_incorrect: list[str] = []
 
     async def async_added_to_hass(self) -> None:
@@ -257,8 +256,6 @@ class MinMaxSensor(SensorEntity):
             state = self.hass.states.get(entity_id)
             state_event = Event("", {"entity_id": entity_id, "new_state": state})
             self._async_min_max_sensor_state_listener(state_event, update_state=False)
-
-        self._calc_values()
 
     @property
     def native_value(self) -> StateType | datetime:
@@ -291,6 +288,8 @@ class MinMaxSensor(SensorEntity):
         self, event: EventType, update_state: bool = True
     ) -> None:
         """Handle the sensor state changes."""
+        calc_states: dict[str, float | str] = {}
+
         entity_state: State | None = event.data.get("new_state")
         entity: str = event.data["entity_id"]
 
@@ -309,15 +308,16 @@ class MinMaxSensor(SensorEntity):
                     STATE_UNAVAILABLE,
                 ]
             ):
-                self.states[entity_id] = STATE_UNKNOWN
+                calc_states[entity_id] = STATE_UNKNOWN
                 if not update_state:
+                    self._calc_values(calc_states)
                     return
             try:
-                self.states[entity_id] = float(new_state.state)
+                calc_states[entity_id] = float(new_state.state)
                 if entity_id in self._state_incorrect:
                     self._state_incorrect.remove(entity_id)
             except ValueError:
-                self.states[entity_id] = STATE_UNKNOWN
+                calc_states[entity_id] = STATE_UNKNOWN
                 if entity_id not in self._state_incorrect:
                     self._state_incorrect.append(entity_id)
                     _LOGGER.warning(
@@ -349,18 +349,19 @@ class MinMaxSensor(SensorEntity):
                 self._unit_of_measurement_mismatch = True
 
         if not update_state:
+            self._calc_values(calc_states)
             return
 
-        self._calc_values()
+        self._calc_values(calc_states)
         self.async_write_ha_state()
 
     @callback
-    def _calc_values(self) -> None:
+    def _calc_values(self, states: dict[str, Any]) -> None:
         """Calculate the values."""
         sensor_values = [
-            (entity_id, self.states[entity_id])
+            (entity_id, states[entity_id])
             for entity_id in self._entity_ids
-            if entity_id in self.states
+            if entity_id in states
         ]
         self.min_entity_id, self.min_value = calc_min(sensor_values)
         self.max_entity_id, self.max_value = calc_max(sensor_values)
