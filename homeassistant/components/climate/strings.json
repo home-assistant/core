@@ -33,7 +33,7 @@
       "current_temperature": { "name": "Current temperature" },
       "fan_mode": {
         "name": "Fan mode",
-        "values": {
+        "state": {
           "off": "[%key:common::state::off%]",
           "on": "[%key:common::state::on%]",
           "auto": "Auto",
@@ -47,24 +47,12 @@
         }
       },
       "fan_modes": {
-        "name": "Fan modes",
-        "values": {
-          "off": "[%key:common::state::off%]",
-          "on": "[%key:common::state::on%]",
-          "auto": "[%key:component::climate::state_attributes::_::fan_mode::values::auto%]",
-          "low": "[%key:component::climate::state_attributes::_::fan_mode::values::low%]",
-          "medium": "[%key:component::climate::state_attributes::_::fan_mode::values::medium%]",
-          "high": "[%key:component::climate::state_attributes::_::fan_mode::values::high%]",
-          "top": "[%key:component::climate::state_attributes::_::fan_mode::values::top%]",
-          "middle": "[%key:component::climate::state_attributes::_::fan_mode::values::middle%]",
-          "focus": "[%key:component::climate::state_attributes::_::fan_mode::values::focus%]",
-          "diffuse": "[%key:component::climate::state_attributes::_::fan_mode::values::diffuse%]"
-        }
+        "name": "Fan modes"
       },
       "humidity": { "name": "Target humidity" },
       "hvac_action": {
         "name": "Current action",
-        "values": {
+        "state": {
           "off": "Off",
           "heating": "Heating",
           "cooling": "Cooling",
@@ -74,16 +62,7 @@
         }
       },
       "hvac_modes": {
-        "name": "HVAC modes",
-        "values": {
-          "off": "[%key:common::state::off%]",
-          "heat": "[%key:component::climate::state::_::heat%]",
-          "cool": "[%key:component::climate::state::_::cool%]",
-          "heat_cool": "[%key:component::climate::state::_::heat_cool%]",
-          "auto": "[%key:component::climate::state::_::auto%]",
-          "dry": "[%key:component::climate::state::_::dry%]",
-          "fan_only": "[%key:component::climate::state::_::fan_only%]"
-        }
+        "name": "HVAC modes"
       },
       "max_humidity": { "name": "Max target humidity" },
       "max_temp": { "name": "Max target temperature" },
@@ -91,7 +70,7 @@
       "min_temp": { "name": "Min target temperature" },
       "preset_mode": {
         "name": "Preset",
-        "values": {
+        "state": {
           "none": "None",
           "eco": "Eco",
           "away": "Away",
@@ -103,21 +82,11 @@
         }
       },
       "preset_modes": {
-        "name": "Presets",
-        "values": {
-          "none": "[%key:component::climate::state_attributes::_::preset_mode::values::none%]",
-          "eco": "[%key:component::climate::state_attributes::_::preset_mode::values::eco%]",
-          "away": "[%key:component::climate::state_attributes::_::preset_mode::values::away%]",
-          "boost": "[%key:component::climate::state_attributes::_::preset_mode::values::boost%]",
-          "comfort": "[%key:component::climate::state_attributes::_::preset_mode::values::comfort%]",
-          "home": "[%key:component::climate::state_attributes::_::preset_mode::values::home%]",
-          "sleep": "[%key:component::climate::state_attributes::_::preset_mode::values::sleep%]",
-          "activity": "[%key:component::climate::state_attributes::_::preset_mode::values::activity%]"
-        }
+        "name": "Presets"
       },
       "swing_mode": {
         "name": "Swing mode",
-        "values": {
+        "state": {
           "off": "[%key:common::state::off%]",
           "on": "[%key:common::state::on%]",
           "both": "Both",
@@ -126,14 +95,7 @@
         }
       },
       "swing_modes": {
-        "name": "Swing modes",
-        "values": {
-          "off": "[%key:common::state::off%]",
-          "on": "[%key:common::state::on%]",
-          "both": "[%key:component::climate::state_attributes::_::swing_mode::values::both%]",
-          "vertical": "[%key:component::climate::state_attributes::_::swing_mode::values::vertical%]",
-          "horizontal": "[%key:component::climate::state_attributes::_::swing_mode::values::horizontal%]"
-        }
+        "name": "Swing modes"
       },
       "target_temp_high": { "name": "Upper target temperature" },
       "target_temp_low": { "name": "Lower target temperature" },
