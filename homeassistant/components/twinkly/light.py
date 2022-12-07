@@ -102,7 +102,6 @@ class TwinklyLight(LightEntity):
         self._software_version = ""
         # We guess that most devices are "new" and support effects
         self._attr_supported_features = LightEntityFeature.EFFECT
-        self._attr_mode = "effect"
 
     @property
     def available(self) -> bool:
@@ -194,12 +193,6 @@ class TwinklyLight(LightEntity):
 
             await self._client.set_brightness(brightness)
 
-        if self._attr_brightness == 0:
-            # if the device is "off", the component brightness is 0
-            # the device brightness has the right value
-            # we need to set the mode to the one before turn off
-            await self._client.set_mode(self._attr_mode)
-
         if (
             ATTR_RGBW_COLOR in kwargs
             and kwargs[ATTR_RGBW_COLOR] != self._attr_rgbw_color
@@ -262,8 +255,6 @@ class TwinklyLight(LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
-        mode = await self._client.get_mode()
-        self._attr_mode = mode.get("mode")
         await self._client.turn_off()
 
     async def async_update(self) -> None:
@@ -310,6 +301,10 @@ class TwinklyLight(LightEntity):
             for key, value in device_info.items():
                 if key not in HIDDEN_DEV_VALUES:
                     self._attributes[key] = value
+
+            mode = await self._client.get_mode()
+            if mode.get("mode", "off") != "off":
+                self._client.default_mode = mode.get("mode")
 
             if LightEntityFeature.EFFECT & self.supported_features:
                 await self.async_update_movies()
