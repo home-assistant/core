@@ -272,6 +272,11 @@ class IntentResponse:
         self.card: dict[str, dict[str, str]] = {}
         self.language = language
 
+    @property
+    def language(self) -> str | None:
+        """Return intent language if available."""
+        return self.intent.language if self.intent is not None else None
+
     @callback
     def async_set_speech(
         self,
