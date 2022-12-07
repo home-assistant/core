@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -105,9 +106,18 @@ class HatchRestEntity(CoordinatorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Provide info about the Hatch Rest device for all entities."""
-        assert self.unique_id is not None
+        # These should never be null or empty
+        if not all((self._device.address, self.unique_id)):
+            raise ValueError("Missing bluetooth address for hatch rest device")
+
+        assert self._device.address
+        assert self.unique_id
+
         return {
             "identifiers": {(DOMAIN, self.unique_id)},
+            "connections": {
+                (device_registry.CONNECTION_BLUETOOTH, self._device.address)
+            },
             "name": self.device_name,
             "manufacturer": "Hatch",
             "model": "Rest",
