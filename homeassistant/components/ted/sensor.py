@@ -9,7 +9,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import ELECTRIC_POTENTIAL_VOLT, UnitOfEnergy, UnitOfPower
+from homeassistant.const import (
+    ELECTRIC_POTENTIAL_VOLT,
+    Platform,
+    UnitOfEnergy,
+    UnitOfPower,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import COORDINATOR, DOMAIN, NAME, OPTION_DEFAULTS
