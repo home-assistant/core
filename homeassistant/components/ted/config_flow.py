@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.httpx_client import get_async_client
@@ -37,7 +37,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize an TED flow."""
-        self.ip_address = None
         self.name = None
         self.serial = None
         self.model = None
@@ -45,26 +44,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def _async_generate_schema(self):
         """Generate schema."""
-        schema = {}
-
-        if self.ip_address:
-            schema[vol.Required(CONF_HOST, default=self.ip_address)] = vol.In(
-                [self.ip_address]
-            )
-        else:
-            schema[vol.Required(CONF_HOST)] = str
+        schema = {vol.Required(CONF_HOST): str}
 
         return vol.Schema(schema)
-
-    async def async_step_import(self, import_config):
-        """Handle a flow import."""
-        self.ip_address = import_config[CONF_IP_ADDRESS]
-        self.name = import_config[CONF_NAME]
-        return await self.async_step_user(
-            {
-                CONF_HOST: import_config[CONF_IP_ADDRESS],
-            }
-        )
 
     @callback
     def _async_current_hosts(self):

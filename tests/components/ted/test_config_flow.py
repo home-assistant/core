@@ -115,35 +115,6 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_import(hass: HomeAssistant) -> None:
-    """Test we can import from yaml."""
-    with patch("tedpy.TED5000.check", return_value=True), patch(
-        "tedpy.TED5000.update", return_value=True
-    ), patch(
-        "tedpy.TED5000.gateway_id", new_callable=PropertyMock, return_value="test"
-    ), patch(
-        "homeassistant.components.ted.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                "ip_address": "1.1.1.1",
-                "name": "TED monitor",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "TED 5000"
-    assert result2["data"] == {
-        "host": "1.1.1.1",
-        "name": "TED 5000",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
 async def test_options_flow(hass):
     """Test config flow options."""
     config_entry = MockConfigEntry(
