@@ -34,10 +34,7 @@ from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.area_registry import async_get as async_get_area_reg
-from homeassistant.helpers.device_registry import (
-    async_entries_for_config_entry,
-    async_get as async_get_dev_reg,
-)
+from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
 from homeassistant.helpers.entity_registry import async_get as async_get_ent_reg
 from homeassistant.setup import async_setup_component
 
@@ -408,7 +405,8 @@ async def test_set_config_parameter_gather(
 async def test_bulk_set_config_parameters(hass, client, multisensor_6, integration):
     """Test the bulk_set_partial_config_parameters service."""
     dev_reg = async_get_dev_reg(hass)
-    device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
+    device = dev_reg.async_get_device({get_device_id(client.driver, multisensor_6)})
+    assert device
     # Test setting config parameter by property and property_key
     await hass.services.async_call(
         DOMAIN,
@@ -736,7 +734,10 @@ async def test_refresh_value(
 async def test_set_value(hass, client, climate_danfoss_lc_13, integration):
     """Test set_value service."""
     dev_reg = async_get_dev_reg(hass)
-    device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
+    device = dev_reg.async_get_device(
+        {get_device_id(client.driver, climate_danfoss_lc_13)}
+    )
+    assert device
 
     await hass.services.async_call(
         DOMAIN,
