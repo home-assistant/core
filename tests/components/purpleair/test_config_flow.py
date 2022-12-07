@@ -1,7 +1,7 @@
 """Define tests for the PurpleAir config flow."""
 from unittest.mock import AsyncMock, patch
 
-from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
+from aiopurpleair.errors import InvalidApiKeyError, NotFoundError, PurpleAirError
 import pytest
 
 from homeassistant import data_entry_flow
@@ -59,6 +59,12 @@ async def test_create_entry_by_coordinates(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"api_key": TEST_API_KEY}
     )
+    assert result["type"] == data_entry_flow.FlowResultType.MENU
+    assert result["step_id"] == "choose_method"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "by_coordinates"}
+    )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "by_coordinates"
 
@@ -99,6 +105,85 @@ async def test_create_entry_by_coordinates(
     }
     assert result["options"] == {
         "sensor_indices": [TEST_SENSOR_INDEX1],
+    }
+
+
+@pytest.mark.parametrize(
+    ("check_api_key_mock", "check_api_key_errors"),
+    [
+        (AsyncMock(side_effect=Exception), {"base": "unknown"}),
+        (AsyncMock(side_effect=InvalidApiKeyError), {"base": "invalid_api_key"}),
+        (AsyncMock(side_effect=PurpleAirError), {"base": "unknown"}),
+    ],
+)
+@pytest.mark.parametrize(
+    ("get_sensor_mock", "get_sensor_errors"),
+    [
+        (AsyncMock(side_effect=Exception), {"base": "unknown"}),
+        (AsyncMock(side_effect=PurpleAirError), {"base": "unknown"}),
+        (AsyncMock(side_effect=NotFoundError), {"base": "unknown_sensor_index"}),
+    ],
+)
+async def test_create_entry_by_index(
+    hass: HomeAssistant,
+    api,
+    check_api_key_errors,
+    check_api_key_mock,
+    get_sensor_errors,
+    get_sensor_mock,
+    mock_aiopurpleair,
+) -> None:
+    """Test creating an entry by entering a sensor ID/index."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    # Test errors that can arise when checking the API key:
+    with patch.object(api, "async_check_api_key", check_api_key_mock):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"api_key": TEST_API_KEY}
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["errors"] == check_api_key_errors
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"api_key": TEST_API_KEY}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.MENU
+    assert result["step_id"] == "choose_method"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "by_sensor_index"}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "by_sensor_index"
+
+    # Test errors that can arise when searching for nearby sensors:
+    with patch.object(api.sensors, "async_get_sensor", get_sensor_mock):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                "sensor_index": "123456",
+            },
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["errors"] == get_sensor_errors
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            "sensor_index": "123456",
+        },
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == "abcde"
+    assert result["data"] == {
+        "api_key": "abcde12345",
+    }
+    assert result["options"] == {
+        "sensor_indices": [123456],
     }
 
 
@@ -157,8 +242,9 @@ async def test_reauth(
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert len(hass.config_entries.async_entries()) == 1
+
     # Unload to make sure the update does not run after the
-    # mock is removed.
+    # mock is removed:
     await hass.config_entries.async_unload(config_entry.entry_id)
 
 
@@ -170,7 +256,7 @@ async def test_reauth(
         (AsyncMock(side_effect=PurpleAirError), {"base": "unknown"}),
     ],
 )
-async def test_options_add_sensor(
+async def test_options_add_sensor_by_coordinates(
     hass: HomeAssistant,
     mock_aiopurpleair,
     config_entry,
@@ -178,16 +264,22 @@ async def test_options_add_sensor(
     get_nearby_sensors_mock,
     setup_config_entry,
 ) -> None:
-    """Test adding a sensor via the options flow (including errors)."""
+    """Test adding a sensor via the options flow by coordinates (including errors)."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == data_entry_flow.FlowResultType.MENU
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"next_step_id": "add_sensor"}
+        result["flow_id"], user_input={"next_step_id": "choose_add_sensor_method"}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.MENU
+    assert result["step_id"] == "choose_add_sensor_method"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"next_step_id": "add_sensor_by_coordinates"}
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "add_sensor"
+    assert result["step_id"] == "add_sensor_by_coordinates"
 
     # Test errors that can arise when searching for nearby sensors:
     with patch.object(
@@ -202,7 +294,7 @@ async def test_options_add_sensor(
             },
         )
         assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == "add_sensor"
+        assert result["step_id"] == "add_sensor_by_coordinates"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -230,24 +322,94 @@ async def test_options_add_sensor(
         TEST_SENSOR_INDEX1,
         TEST_SENSOR_INDEX2,
     ]
+
     # Unload to make sure the update does not run after the
-    # mock is removed.
+    # mock is removed:
     await hass.config_entries.async_unload(config_entry.entry_id)
 
 
-async def test_options_add_sensor_duplicate(
-    hass: HomeAssistant, config_entry, setup_config_entry
+@pytest.mark.parametrize(
+    ("get_sensor_mock", "get_sensor_errors"),
+    [
+        (AsyncMock(side_effect=Exception), {"base": "unknown"}),
+        (AsyncMock(side_effect=PurpleAirError), {"base": "unknown"}),
+        (AsyncMock(side_effect=NotFoundError), {"base": "unknown_sensor_index"}),
+    ],
+)
+async def test_options_add_sensor_by_index(
+    hass: HomeAssistant,
+    api,
+    mock_aiopurpleair,
+    config_entry,
+    get_sensor_errors,
+    get_sensor_mock,
+    setup_config_entry,
 ) -> None:
-    """Test adding a duplicate sensor via the options flow."""
+    """Test adding a sensor via the options flow by sensor index(including errors)."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == data_entry_flow.FlowResultType.MENU
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"next_step_id": "add_sensor"}
+        result["flow_id"], user_input={"next_step_id": "choose_add_sensor_method"}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.MENU
+    assert result["step_id"] == "choose_add_sensor_method"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"next_step_id": "add_sensor_by_index"}
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "add_sensor"
+    assert result["step_id"] == "add_sensor_by_index"
+
+    # Test errors that can arise when searching for nearby sensors:
+    with patch.object(api.sensors, "async_get_sensor", get_sensor_mock):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                "sensor_index": "567890",
+            },
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["errors"] == get_sensor_errors
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "sensor_index": "567890",
+        },
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "sensor_indices": [123456, 567890],
+    }
+
+    assert config_entry.options["sensor_indices"] == [123456, 567890]
+
+    # Unload to make sure the update does not run after the
+    # mock is removed:
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+
+async def test_options_add_sensor_by_coordinates_duplicate(
+    hass: HomeAssistant, config_entry, setup_config_entry
+) -> None:
+    """Test adding a duplicate sensor by coordinates via the options flow."""
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == data_entry_flow.FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"next_step_id": "choose_add_sensor_method"}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.MENU
+    assert result["step_id"] == "choose_add_sensor_method"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"next_step_id": "add_sensor_by_coordinates"}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "add_sensor_by_coordinates"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -268,8 +430,43 @@ async def test_options_add_sensor_duplicate(
     )
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
     # Unload to make sure the update does not run after the
-    # mock is removed.
+    # mock is removed:
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+
+async def test_options_add_sensor_by_index_duplicate(
+    hass: HomeAssistant, config_entry, setup_config_entry
+) -> None:
+    """Test adding a duplicate sensor by sensor ID/index via the options flow."""
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == data_entry_flow.FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"next_step_id": "choose_add_sensor_method"}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.MENU
+    assert result["step_id"] == "choose_add_sensor_method"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"next_step_id": "add_sensor_by_index"}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "add_sensor_by_index"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "sensor_index": TEST_SENSOR_INDEX1,
+        },
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    # Unload to make sure the update does not run after the
+    # mock is removed:
     await hass.config_entries.async_unload(config_entry.entry_id)
 
 
@@ -299,6 +496,7 @@ async def test_options_remove_sensor(
     }
 
     assert config_entry.options["sensor_indices"] == []
+
     # Unload to make sure the update does not run after the
-    # mock is removed.
+    # mock is removed:
     await hass.config_entries.async_unload(config_entry.entry_id)
