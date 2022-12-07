@@ -24,6 +24,8 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util.unit_conversion import TemperatureConverter
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import LOGGER, SHTRV_01_TEMPERATURE_SETTINGS
 from .coordinator import ShellyBlockCoordinator, get_entry_data
@@ -126,7 +128,14 @@ class BlockSleepingClimate(
         self.last_state: State | None = None
         self.last_state_attributes: Mapping[str, Any]
         self._preset_modes: list[str] = []
-        self._last_target_temp = 20.0
+        if coordinator.hass.config.units is US_CUSTOMARY_SYSTEM:
+            self._last_target_temp = TemperatureConverter.convert(
+                SHTRV_01_TEMPERATURE_SETTINGS["default"],
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+            )
+        else:
+            self._last_target_temp = SHTRV_01_TEMPERATURE_SETTINGS["default"]
 
         if self.block is not None and self.device_block is not None:
             self._unique_id = f"{self.coordinator.mac}-{self.block.description}"
@@ -157,14 +166,32 @@ class BlockSleepingClimate(
         """Set target temperature."""
         if self.block is not None:
             return cast(float, self.block.targetTemp)
-        return self.last_state_attributes.get("temperature")
+        # The restored value can be in Fahrenheit so we have to convert it to Celsius
+        # because we use this unit internally in integration.
+        target_temp = self.last_state_attributes.get("temperature")
+        if self.hass.config.units is US_CUSTOMARY_SYSTEM and target_temp:
+            return TemperatureConverter.convert(
+                cast(float, target_temp),
+                UnitOfTemperature.FAHRENHEIT,
+                UnitOfTemperature.CELSIUS,
+            )
+        return target_temp
 
     @property
     def current_temperature(self) -> float | None:
         """Return current temperature."""
         if self.block is not None:
             return cast(float, self.block.temp)
-        return self.last_state_attributes.get("current_temperature")
+        # The restored value can be in Fahrenheit so we have to convert it to Celsius
+        # because we use this unit internally in integration.
+        current_temp = self.last_state_attributes.get("current_temperature")
+        if self.hass.config.units is US_CUSTOMARY_SYSTEM and current_temp:
+            return TemperatureConverter.convert(
+                cast(float, current_temp),
+                UnitOfTemperature.FAHRENHEIT,
+                UnitOfTemperature.CELSIUS,
+            )
+        return current_temp
 
     @property
     def available(self) -> bool:
