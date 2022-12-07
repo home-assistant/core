@@ -25,6 +25,9 @@
             "pairing": {
                 "description": "Chcete nastavi\u0165 {device}? Ak ste Home Assistant predt\u00fdm nikdy nepripojili, na va\u0161om telev\u00edzore by sa malo zobrazi\u0165 vyskakovacie okno so \u017eiados\u0165ou o autoriz\u00e1ciu."
             },
+            "reauth_confirm": {
+                "description": "Po odoslan\u00ed prijmite na {device} do 30 sek\u00fand kontextov\u00e9 okno so \u017eiados\u0165ou o autoriz\u00e1ciu alebo zadajte PIN."
+            },
             "reauth_confirm_encrypted": {
                 "description": "Zadajte k\u00f3d PIN zobrazen\u00fd na {device}."
             },

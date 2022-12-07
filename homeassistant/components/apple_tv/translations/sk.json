@@ -3,6 +3,10 @@
         "abort": {
             "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
             "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha",
+            "backoff": "Zariadenie moment\u00e1lne neprij\u00edma po\u017eiadavky na sp\u00e1rovanie (mo\u017eno ste pr\u00edli\u0161 ve\u013eakr\u00e1t zadali neplatn\u00fd PIN k\u00f3d), sk\u00faste to znova nesk\u00f4r.",
+            "device_did_not_pair": "Zo zariadenia nebol vykonan\u00fd \u017eiadny pokus o dokon\u010denie procesu p\u00e1rovania.",
+            "device_not_found": "Zariadenie sa po\u010das zis\u0165ovania nena\u0161lo, sk\u00faste ho prida\u0165 znova.",
+            "inconsistent_device": "Po\u010das objavovania sa nena\u0161li o\u010dak\u00e1van\u00e9 protokoly. Zvy\u010dajne to znamen\u00e1 probl\u00e9m s multicast DNS (Zeroconf). Sk\u00faste prida\u0165 zariadenie znova.",
             "ipv6_not_supported": "IPv6 nie je podporovan\u00e9",
             "no_devices_found": "V sieti sa nena\u0161li \u017eiadne zariadenia",
             "reauth_successful": "Op\u00e4tovn\u00e9 overenie bolo \u00faspe\u0161n\u00e9",

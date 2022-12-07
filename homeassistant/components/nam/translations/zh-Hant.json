@@ -37,5 +37,18 @@
                 "description": "\u8a2d\u5b9a Nettigo Air Monitor \u6574\u5408\u3002"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "caqi_level": {
+                "state": {
+                    "high": "\u9ad8",
+                    "low": "\u4f4e",
+                    "medium": "\u4e2d",
+                    "very high": "\u6975\u9ad8",
+                    "very low": "\u6975\u4f4e"
+                }
+            }
+        }
     }
 }

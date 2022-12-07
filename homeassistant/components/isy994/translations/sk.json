@@ -17,7 +17,8 @@
                     "password": "Heslo",
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
                 },
-                "description": "Poverenia pre {host} u\u017e nie s\u00fa platn\u00e9."
+                "description": "Poverenia pre {host} u\u017e nie s\u00fa platn\u00e9.",
+                "title": "Znova overte svoje ISY"
             },
             "user": {
                 "data": {

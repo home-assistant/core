@@ -17,11 +17,15 @@
                 "data": {
                     "advanced_options": "Pokro\u010dil\u00e9 nastavenia",
                     "broker": "Broker",
+                    "client_id": "ID klienta (ponechajte pr\u00e1zdne pre n\u00e1hodne vygenerovan\u00e9 \u010d\u00edslo)",
                     "client_key": "Nahrajte s\u00fabor so s\u00fakromn\u00fdm k\u013e\u00fa\u010dom",
+                    "keepalive": "\u010cas medzi odoslan\u00edm spr\u00e1v Keep Alive",
                     "password": "Heslo",
                     "port": "Port",
                     "protocol": "MQTT protokol",
+                    "set_ca_cert": "Overenie platnosti certifik\u00e1tu brokera",
                     "set_client_cert": "Pou\u017eite klientsky certifik\u00e1t",
+                    "tls_insecure": "Ignorova\u0165 overenie certifik\u00e1tu brokera",
                     "transport": "MQTT transport",
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno",
                     "ws_headers": "Hlavi\u010dky WebSocket vo form\u00e1te JSON",
@@ -60,6 +64,11 @@
             "button_triple_press": "\"{subtype}\" trojn\u00e1sobne kliknut\u00e9"
         }
     },
+    "issues": {
+        "deprecated_yaml": {
+            "title": "Va\u0161a manu\u00e1lne nakonfigurovan\u00e1 {platform}(y) MQTT vy\u017eaduje pozornos\u0165"
+        }
+    },
     "options": {
         "error": {
             "bad_certificate": "Certifik\u00e1t CA je neplatn\u00fd",
@@ -74,17 +83,22 @@
                 "data": {
                     "advanced_options": "Pokro\u010dil\u00e9 nastavenia",
                     "broker": "Broker",
+                    "client_id": "ID klienta (ponechajte pr\u00e1zdne pre n\u00e1hodne vygenerovan\u00e9 \u010d\u00edslo)",
                     "client_key": "Nahrajte s\u00fabor so s\u00fakromn\u00fdm k\u013e\u00fa\u010dom",
+                    "keepalive": "\u010cas medzi odoslan\u00edm spr\u00e1v Keep Alive",
                     "password": "Heslo",
                     "port": "Port",
                     "protocol": "MQTT protokol",
+                    "set_ca_cert": "Overenie platnosti certifik\u00e1tu brokera",
                     "set_client_cert": "Pou\u017eite klientsky certifik\u00e1t",
+                    "tls_insecure": "Ignorova\u0165 overenie certifik\u00e1tu brokera",
                     "transport": "MQTT transport",
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno",
                     "ws_headers": "Hlavi\u010dky WebSocket vo form\u00e1te JSON",
                     "ws_path": "Cesta WebSocket"
                 },
-                "description": "Zadajte inform\u00e1cie o pripojen\u00ed v\u00e1\u0161ho sprostredkovate\u013ea protokolu MQTT."
+                "description": "Zadajte inform\u00e1cie o pripojen\u00ed v\u00e1\u0161ho sprostredkovate\u013ea protokolu MQTT.",
+                "title": "Mo\u017enosti brokera"
             },
             "options": {
                 "data": {

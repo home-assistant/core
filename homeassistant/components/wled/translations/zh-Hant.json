@@ -22,6 +22,17 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "live_override": {
+                "state": {
+                    "0": "\u95dc\u9589",
+                    "1": "\u958b\u555f",
+                    "2": "\u76f4\u5230\u88dd\u7f6e\u91cd\u555f"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

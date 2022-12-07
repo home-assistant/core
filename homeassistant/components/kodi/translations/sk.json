@@ -20,6 +20,7 @@
                 }
             },
             "discovery_confirm": {
+                "description": "Chcete prida\u0165 Kodi (`{name}`) do Home Assistant?",
                 "title": "Objaven\u00e9 Kodi"
             },
             "user": {
