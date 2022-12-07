@@ -76,6 +76,8 @@ class Touchline(ClimateEntity):
         self._name = None
         self._current_temperature = None
         self._target_temperature = None
+        self._min_temp = None
+        self._max_temp = None
         self._current_operation_mode = None
         self._preset_mode = None
 
@@ -85,6 +87,8 @@ class Touchline(ClimateEntity):
         self._name = self.unit.get_name()
         self._current_temperature = self.unit.get_current_temperature()
         self._target_temperature = self.unit.get_target_temperature()
+        self._min_temp = self.unit.get_target_temperature_low()
+        self._max_temp = self.unit.get_target_temperature_high()
         self._preset_mode = TOUCHLINE_HA_PRESETS.get(
             (self.unit.get_operation_mode(), self.unit.get_week_program())
         )
@@ -95,7 +99,22 @@ class Touchline(ClimateEntity):
         return self._name
 
     @property
-    def current_temperature(self):
+    def unique_id(self) -> None:
+        """Return a unique ID."""
+        return self._controller_id + self._device_id
+
+    @property
+    def max_temp(self) -> float:
+        """Return the maximum temperature supported."""
+        return self._max_temp
+
+    @property
+    def min_temp(self) -> float:
+        """Return the maximum temperature supported."""
+        return self._min_temp
+
+    @property
+    def current_temperature(self) -> None:
         """Return the current temperature."""
         return self._current_temperature
 
