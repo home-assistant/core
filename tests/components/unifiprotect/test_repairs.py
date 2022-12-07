@@ -176,3 +176,24 @@ async def test_deprecate_smart_active(
         if i["issue_id"] == "deprecate_smart_sensor":
             issue = i
     assert issue is not None
+
+    entity_regitry = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(entity_regitry, ufp.entry.entry_id)
+    for entry in entries:
+        if entry.unique_id.endswith("_detected_object"):
+            entity_regitry.async_update_entity(
+                entry.entity_id, disabled_by=er.RegistryEntryDisabler.USER
+            )
+
+    await hass.config_entries.async_reload(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    issue = None
+    for i in msg["result"]["issues"]:
+        if i["issue_id"] == "deprecate_smart_sensor":
+            issue = i
+    assert issue is None

@@ -34,12 +34,14 @@ async def async_migrate_data(
     _LOGGER.debug("Completed Migrate: async_migrate_device_ids")
 
     entity_registry = er.async_get(hass)
+    created_issue = False
     for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
         if (
             entity.domain == Platform.SENSOR
             and entity.disabled_by is None
             and "detected_object" in entity.unique_id
         ):
+            created_issue = True
             ir.async_create_issue(
                 hass,
                 DOMAIN,
@@ -49,6 +51,9 @@ async def async_migrate_data(
                 severity=IssueSeverity.WARNING,
                 translation_key="deprecate_smart_sensor",
             )
+            break
+    if not created_issue:
+        ir.async_delete_issue(hass, DOMAIN, "deprecate_smart_sensor")
 
 
 async def async_get_bootstrap(protect: ProtectApiClient) -> Bootstrap:
