@@ -1,6 +1,7 @@
 """Config flow for PurpleAir integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -142,6 +143,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize."""
         self._flow_data: dict[str, Any] = {}
+        self._reauth_api_key: str | None = None
 
     async def async_step_by_coordinates(
         self, user_input: dict[str, Any] | None = None
@@ -178,6 +180,38 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_choose_sensor()
 
+    async def async_step_check_api_key(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the step to check the API key."""
+        if self._reauth_api_key:
+            error_step_id = "reauth_confirm"
+        else:
+            error_step_id = "user"
+
+        api_key = self._flow_data[CONF_API_KEY]
+
+        validation = await async_validate_api_key(self.hass, api_key)
+
+        if validation.errors:
+            return self.async_show_form(
+                step_id=error_step_id,
+                data_schema=API_KEY_SCHEMA,
+                errors=validation.errors,
+            )
+
+        if self._reauth_api_key:
+            if existing_entry := await self.async_set_unique_id(self._reauth_api_key):
+                self.hass.config_entries.async_update_entry(
+                    existing_entry, data=self._flow_data
+                )
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(existing_entry.entry_id)
+                )
+                return self.async_abort(reason="reauth_successful")
+
+        return await self.async_step_by_coordinates()
+
     async def async_step_choose_sensor(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -197,6 +231,23 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             options={CONF_SENSOR_INDICES: [int(user_input[CONF_SENSOR_INDEX])]},
         )
 
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Handle configuration by re-auth."""
+        self._reauth_api_key = entry_data[CONF_API_KEY]
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the re-auth step."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm", data_schema=API_KEY_SCHEMA
+            )
+
+        self._flow_data = {CONF_API_KEY: user_input[CONF_API_KEY]}
+        return await self.async_step_check_api_key()
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -209,12 +260,5 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(api_key)
         self._abort_if_unique_id_configured()
 
-        validation = await async_validate_api_key(self.hass, api_key)
-
-        if validation.errors:
-            return self.async_show_form(
-                step_id="user", data_schema=API_KEY_SCHEMA, errors=validation.errors
-            )
-
         self._flow_data = {CONF_API_KEY: api_key}
-        return await self.async_step_by_coordinates()
+        return await self.async_step_check_api_key()
