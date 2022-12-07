@@ -4,8 +4,17 @@ from unittest.mock import AsyncMock, PropertyMock, patch
 import httpx
 import tedpy
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.ted import DOMAIN
+from homeassistant.components.ted.const import (
+    CONF_MTU_ENERGY_DAILY,
+    CONF_MTU_ENERGY_MTD,
+    CONF_MTU_ENERGY_NOW,
+    CONF_MTU_POWER_VOLTAGE,
+    CONF_SPYDER_ENERGY_DAILY,
+    CONF_SPYDER_ENERGY_MTD,
+    CONF_SPYDER_ENERGY_NOW,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 
@@ -20,7 +29,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch("tedpy.TED5000.check", return_value=True), patch(
@@ -38,7 +47,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["data"] == CONFIG_FINAL
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -58,7 +67,7 @@ async def test_form_host_already_exists(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch("tedpy.TED5000.check", return_value=True), patch(
@@ -70,7 +79,7 @@ async def test_form_host_already_exists(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "abort"
+    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
 
@@ -86,7 +95,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             CONFIG,
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -102,7 +111,7 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
             {"host": "1.1.1.1"},
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -126,7 +135,7 @@ async def test_import(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == "TED 5000"
     assert result2["data"] == {
         "host": "1.1.1.1",
@@ -153,5 +162,26 @@ async def test_options_flow(hass):
         await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == "form"
-    assert result["step_id"] == "options"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_SPYDER_ENERGY_NOW: True,
+            CONF_SPYDER_ENERGY_DAILY: True,
+            CONF_SPYDER_ENERGY_MTD: True,
+            CONF_MTU_POWER_VOLTAGE: False,
+            CONF_MTU_ENERGY_NOW: False,
+            CONF_MTU_ENERGY_DAILY: False,
+            CONF_MTU_ENERGY_MTD: False,
+        },
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert config_entry.options[CONF_SPYDER_ENERGY_NOW]
+    assert config_entry.options[CONF_SPYDER_ENERGY_DAILY]
+    assert config_entry.options[CONF_SPYDER_ENERGY_MTD]
+    assert not config_entry.options[CONF_MTU_POWER_VOLTAGE]
+    assert not config_entry.options[CONF_MTU_ENERGY_NOW]
+    assert not config_entry.options[CONF_MTU_ENERGY_DAILY]
+    assert not config_entry.options[CONF_MTU_ENERGY_MTD]

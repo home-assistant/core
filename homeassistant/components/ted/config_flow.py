@@ -15,7 +15,17 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import DOMAIN, OPTION_DEFAULTS
+from .const import (
+    CONF_MTU_ENERGY_DAILY,
+    CONF_MTU_ENERGY_MTD,
+    CONF_MTU_ENERGY_NOW,
+    CONF_MTU_POWER_VOLTAGE,
+    CONF_SPYDER_ENERGY_DAILY,
+    CONF_SPYDER_ENERGY_MTD,
+    CONF_SPYDER_ENERGY_NOW,
+    DOMAIN,
+    OPTION_DEFAULTS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,32 +127,26 @@ class TedOptionsFlowHandler(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the TED options."""
-        return await self.async_step_options()
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    self.create_option_schema_field(CONF_SPYDER_ENERGY_NOW): bool,
+                    self.create_option_schema_field(CONF_SPYDER_ENERGY_DAILY): bool,
+                    self.create_option_schema_field(CONF_SPYDER_ENERGY_MTD): bool,
+                    self.create_option_schema_field(CONF_MTU_POWER_VOLTAGE): bool,
+                    self.create_option_schema_field(CONF_MTU_ENERGY_NOW): bool,
+                    self.create_option_schema_field(CONF_MTU_ENERGY_DAILY): bool,
+                    self.create_option_schema_field(CONF_MTU_ENERGY_MTD): bool,
+                }
+            ),
+        )
 
     def create_option_schema_field(self, name):
         """Create the schema for a specific TED option with the appropriate default value."""
         return vol.Required(
             name, default=self.config_entry.options.get(name, OPTION_DEFAULTS[name])
-        )
-
-    async def async_step_options(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        return self.async_show_form(
-            step_id="options",
-            data_schema=vol.Schema(
-                {
-                    self.create_option_schema_field("spyder_energy_now"): bool,
-                    self.create_option_schema_field("spyder_energy_daily"): bool,
-                    self.create_option_schema_field("spyder_energy_mtd"): bool,
-                    self.create_option_schema_field("mtu_power_voltage"): bool,
-                    self.create_option_schema_field("mtu_energy_now"): bool,
-                    self.create_option_schema_field("mtu_energy_daily"): bool,
-                    self.create_option_schema_field("mtu_energy_mtd"): bool,
-                }
-            ),
         )
