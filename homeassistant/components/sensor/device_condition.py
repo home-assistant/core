@@ -58,6 +58,7 @@ CONF_IS_PRESSURE = "is_pressure"
 CONF_IS_SPEED = "is_speed"
 CONF_IS_REACTIVE_POWER = "is_reactive_power"
 CONF_IS_SIGNAL_STRENGTH = "is_signal_strength"
+CONF_IS_SOUND_PRESSURE = "is_sound_pressure"
 CONF_IS_SULPHUR_DIOXIDE = "is_sulphur_dioxide"
 CONF_IS_TEMPERATURE = "is_temperature"
 CONF_IS_VALUE = "is_value"
@@ -97,6 +98,7 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.PRESSURE: [{CONF_TYPE: CONF_IS_PRESSURE}],
     SensorDeviceClass.REACTIVE_POWER: [{CONF_TYPE: CONF_IS_REACTIVE_POWER}],
     SensorDeviceClass.SIGNAL_STRENGTH: [{CONF_TYPE: CONF_IS_SIGNAL_STRENGTH}],
+    SensorDeviceClass.SOUND_PRESSURE: [{CONF_TYPE: CONF_IS_SOUND_PRESSURE}],
     SensorDeviceClass.SPEED: [{CONF_TYPE: CONF_IS_SPEED}],
     SensorDeviceClass.SULPHUR_DIOXIDE: [{CONF_TYPE: CONF_IS_SULPHUR_DIOXIDE}],
     SensorDeviceClass.TEMPERATURE: [{CONF_TYPE: CONF_IS_TEMPERATURE}],
@@ -143,6 +145,7 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_PRESSURE,
                     CONF_IS_REACTIVE_POWER,
                     CONF_IS_SIGNAL_STRENGTH,
+                    CONF_IS_SOUND_PRESSURE,
                     CONF_IS_SULPHUR_DIOXIDE,
                     CONF_IS_TEMPERATURE,
                     CONF_IS_VOLATILE_ORGANIC_COMPOUNDS,

@@ -56,6 +56,7 @@ CONF_PRECIPITATION_INTENSITY = "precipitation_intensity"
 CONF_PRESSURE = "pressure"
 CONF_REACTIVE_POWER = "reactive_power"
 CONF_SIGNAL_STRENGTH = "signal_strength"
+CONF_SOUND_PRESSURE = "sound_pressure"
 CONF_SPEED = "speed"
 CONF_SULPHUR_DIOXIDE = "sulphur_dioxide"
 CONF_TEMPERATURE = "temperature"
@@ -96,6 +97,7 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.PRESSURE: [{CONF_TYPE: CONF_PRESSURE}],
     SensorDeviceClass.REACTIVE_POWER: [{CONF_TYPE: CONF_REACTIVE_POWER}],
     SensorDeviceClass.SIGNAL_STRENGTH: [{CONF_TYPE: CONF_SIGNAL_STRENGTH}],
+    SensorDeviceClass.SOUND_PRESSURE: [{CONF_TYPE: CONF_SOUND_PRESSURE}],
     SensorDeviceClass.SPEED: [{CONF_TYPE: CONF_SPEED}],
     SensorDeviceClass.SULPHUR_DIOXIDE: [{CONF_TYPE: CONF_SULPHUR_DIOXIDE}],
     SensorDeviceClass.TEMPERATURE: [{CONF_TYPE: CONF_TEMPERATURE}],
@@ -143,6 +145,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_PRESSURE,
                     CONF_REACTIVE_POWER,
                     CONF_SIGNAL_STRENGTH,
+                    CONF_SOUND_PRESSURE,
                     CONF_SULPHUR_DIOXIDE,
                     CONF_TEMPERATURE,
                     CONF_VOLATILE_ORGANIC_COMPOUNDS,
