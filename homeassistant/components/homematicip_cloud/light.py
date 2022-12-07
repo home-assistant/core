@@ -54,10 +54,7 @@ async def async_setup_entry(
                     hap, device, device.bottomLightChannelIndex
                 )
             )
-        elif isinstance(device, AsyncWiredDimmer3):
-            for channel in range(1, 4):
-                entities.append(HomematicipMultiDimmer(hap, device, channel=channel))
-        elif isinstance(device, AsyncDinRailDimmer3):
+        elif isinstance(device, (AsyncWiredDimmer3, AsyncDinRailDimmer3)):
             for channel in range(1, 4):
                 entities.append(HomematicipMultiDimmer(hap, device, channel=channel))
         elif isinstance(
