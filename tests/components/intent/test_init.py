@@ -50,9 +50,9 @@ async def test_http_handle_intent(hass, hass_client, hass_admin_user):
             "plain": {
                 "extra_data": None,
                 "speech": "I've ordered a Belgian!",
-                "language": hass.config.language,
             }
         },
+        "language": hass.config.language,
     }
 
 
