@@ -466,7 +466,10 @@ async def test_sensor_incorrect_state(
     state = hass.states.get("sensor.test_failure")
 
     assert state.state == "15.3"
-    assert "Unable to store state. Only numerical states are supported" in caplog.text
+    assert (
+        "Unable to store state for entity sensor.test_2 with state string. Only numerical states are supported"
+        in caplog.text
+    )
 
 
 async def test_sum_sensor(hass: HomeAssistant) -> None:

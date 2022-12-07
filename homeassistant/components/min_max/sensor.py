@@ -242,6 +242,7 @@ class MinMaxSensor(SensorEntity):
         self.last_entity_id: str | None = None
         self.count_sensors = len(self._entity_ids)
         self.states: dict[str, Any] = {}
+        self._state_incorrect: list[str] = []
 
     async def async_added_to_hass(self) -> None:
         """Handle added to Hass."""
@@ -313,11 +314,17 @@ class MinMaxSensor(SensorEntity):
                     return
             try:
                 self.states[entity_id] = float(new_state.state)
+                if entity_id in self._state_incorrect:
+                    self._state_incorrect.remove(entity_id)
             except ValueError:
                 self.states[entity_id] = STATE_UNKNOWN
-                _LOGGER.warning(
-                    "Unable to store state. Only numerical states are supported"
-                )
+                if entity_id not in self._state_incorrect:
+                    self._state_incorrect.append(entity_id)
+                    _LOGGER.warning(
+                        "Unable to store state for entity %s with state %s. Only numerical states are supported",
+                        entity_id,
+                        new_state.state,
+                    )
 
         if entity_state:
             try:
@@ -334,9 +341,11 @@ class MinMaxSensor(SensorEntity):
             if self._unit_of_measurement != entity_state.attributes.get(
                 ATTR_UNIT_OF_MEASUREMENT
             ):
-                _LOGGER.warning(
-                    "Units of measurement do not match for entity %s", self.entity_id
-                )
+                if self._unit_of_measurement_mismatch is False:
+                    _LOGGER.warning(
+                        "Units of measurement do not match for entity %s",
+                        self.entity_id,
+                    )
                 self._unit_of_measurement_mismatch = True
 
         if not update_state:
