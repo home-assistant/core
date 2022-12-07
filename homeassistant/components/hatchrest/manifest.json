@@ -4,7 +4,7 @@
   "config_flow": true,
   "dependencies": ["bluetooth"],
   "documentation": "https://www.home-assistant.io/integrations/hatchrest",
-  "requirements": ["pyhatchbabyrest-hass==2.1.0"],
+  "requirements": ["pyhatchbabyrest==2.1.0"],
   "bluetooth": [
     {
       "manufacturer_id": 1076

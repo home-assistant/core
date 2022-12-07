@@ -1598,7 +1598,7 @@ pygtfs==0.1.7
 pygti==0.9.3
 
 # homeassistant.components.hatchrest
-pyhatchbabyrest-hass==2.1.0
+pyhatchbabyrest==2.1.0
 
 # homeassistant.components.version
 pyhaversion==22.8.0
