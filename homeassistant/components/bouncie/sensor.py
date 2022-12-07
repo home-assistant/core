@@ -82,12 +82,9 @@ async def async_setup_entry(
             )
         )
 
-    entities = [
-        BouncieSensor(coordinator=coordinator, description=description)
-        for description in sensor_types
-    ]
-
-    async_add_entities(entities, False)
+    async_add_entities(
+        BouncieSensor(coordinator, description) for description in sensor_types
+    )
 
 
 class BouncieSensor(CoordinatorEntity[BouncieDataUpdateCoordinator], SensorEntity):
