@@ -1,23 +1,18 @@
 """The TED integration."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
 import async_timeout
-import httpx
 import tedpy
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import COORDINATOR, DOMAIN, NAME, PLATFORMS
-
-SCAN_INTERVAL = timedelta(seconds=60)
-TIMEOUT = 50  # 10 seconds less than the scan interval
+from .coordinator import TIMEOUT, TedUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,47 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             async_client=get_async_client(hass),
         )
 
-    async def async_update_data():
-        """Fetch data from API endpoint."""
-        data = {}
-        async with async_timeout.timeout(TIMEOUT):
-            try:
-                await ted_reader.update()
-            except httpx.HTTPError as err:
-                raise UpdateFailed(f"Error communicating with API: {err}") from err
-
-            data["type"] = ted_reader.system_type
-            data["net"] = ted_reader.energy()
-            data["production"] = ted_reader.production()
-            data["consumption"] = ted_reader.consumption()
-            data["spyders"] = {}
-            for spyder in ted_reader.spyders:
-                for ctgroup in spyder.ctgroups:
-                    data["spyders"][f"{spyder.position}.{ctgroup.position}"] = {
-                        "name": ctgroup.description,
-                        "energy": ctgroup.energy(),
-                    }
-            data["mtus"] = {}
-            for mtu in ted_reader.mtus:
-                data["mtus"][mtu.position] = {
-                    "name": mtu.description,
-                    "type": mtu.type,
-                    "power": mtu.power(),
-                    "energy": mtu.energy(),
-                }
-
-            _LOGGER.debug("Retrieved data from API: %s", data)
-
-            return data
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=f"TED {name}",
-        update_method=async_update_data,
-        update_interval=SCAN_INTERVAL,
-    )
-
+    coordinator = TedUpdateCoordinator(hass, ted_reader=ted_reader, name=f"TED {name}")
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
