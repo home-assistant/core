@@ -104,12 +104,9 @@ class BouncieSensor(CoordinatorEntity[BouncieDataUpdateCoordinator], SensorEntit
         self._attrs: dict[str, str] = {}
         self._attr_unique_id = f"{coordinator._client_id}-{description.key.lower()}"
         self._vehicle_info = next(
-            (
-                v
-                for v in self.coordinator.data["vehicles"]
-                if v["vin"] == self.entity_description.key.split("-")[-1]
-            ),
-            None,
+            v
+            for v in self.coordinator.data["vehicles"]
+            if v["vin"] == self.entity_description.key.split("-")[-1]
         )
 
     def _update_car_info_state(self):
