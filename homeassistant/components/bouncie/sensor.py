@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
@@ -40,7 +41,7 @@ async def async_setup_entry(
                 key=f"car-odometer-{vehicle[const.VEHICLE_VIN_KEY]}",
                 icon="mdi:counter",
                 name=f"{vehicle[const.VEHICLE_NICKNAME_KEY]} Odometer",
-                device_class="distance",
+                device_class=SensorDeviceClass.DISTANCE,
             )
         )
         sensor_types.append(
@@ -55,7 +56,7 @@ async def async_setup_entry(
                 key=f"car-fuel-{vehicle[const.VEHICLE_VIN_KEY]}",
                 icon="mdi:gas-station",
                 name=f"{vehicle[const.VEHICLE_NICKNAME_KEY]} Fuel",
-                device_class="battery",
+                device_class=SensorDeviceClass.BATTERY,
             )
         )
         sensor_types.append(
@@ -63,7 +64,7 @@ async def async_setup_entry(
                 key=f"car-speed-{vehicle[const.VEHICLE_VIN_KEY]}",
                 icon="mdi:speedometer",
                 name=f"{vehicle[const.VEHICLE_NICKNAME_KEY]} Speed",
-                device_class="speed",
+                device_class=SensorDeviceClass.SPEED,
             )
         )
         sensor_types.append(
