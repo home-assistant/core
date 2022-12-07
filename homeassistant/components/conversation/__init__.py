@@ -82,7 +82,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 @websocket_api.websocket_command(
-    {"type": "conversation/process", "text": str, vol.Optional("conversation_id"): str}
+    {
+        "type": "conversation/process",
+        "text": str,
+        vol.Optional("conversation_id"): str,
+        vol.Optional("language"): str,
+    }
 )
 @websocket_api.async_response
 async def websocket_process(
@@ -94,7 +99,11 @@ async def websocket_process(
     connection.send_result(
         msg["id"],
         await _async_converse(
-            hass, msg["text"], msg.get("conversation_id"), connection.context(msg)
+            hass,
+            msg["text"],
+            msg.get("conversation_id"),
+            connection.context(msg),
+            msg.get("language"),
         ),
     )
 
@@ -143,7 +152,13 @@ class ConversationProcessView(http.HomeAssistantView):
     name = "api:conversation:process"
 
     @RequestDataValidator(
-        vol.Schema({vol.Required("text"): str, vol.Optional("conversation_id"): str})
+        vol.Schema(
+            {
+                vol.Required("text"): str,
+                vol.Optional("conversation_id"): str,
+                vol.Optional("language"): str,
+            }
+        )
     )
     async def post(self, request, data):
         """Send a request for processing."""
@@ -151,7 +166,11 @@ class ConversationProcessView(http.HomeAssistantView):
 
         try:
             intent_result = await _async_converse(
-                hass, data["text"], data.get("conversation_id"), self.context(request)
+                hass,
+                text=data["text"],
+                conversation_id=data.get("conversation_id"),
+                context=self.context(request),
+                language=data.get("language"),
             )
         except intent.IntentError as err:
             _LOGGER.error("Error handling intent: %s", err)
@@ -182,11 +201,14 @@ async def _async_converse(
     text: str,
     conversation_id: str | None,
     context: core.Context,
+    language: str | None = None,
 ) -> intent.IntentResponse:
     """Process text and get intent."""
     agent = await _get_agent(hass)
     try:
-        intent_result = await agent.async_process(text, context, conversation_id)
+        intent_result = await agent.async_process(
+            text, context, conversation_id, language
+        )
     except intent.IntentHandleError as err:
         intent_result = intent.IntentResponse()
         intent_result.async_set_speech(str(err))
