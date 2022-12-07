@@ -1,0 +1,13 @@
+{
+  "domain": "hsl",
+  "name": "Helsinki Regional Transport",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/hsl",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@Elmo-S"],
+  "iot_class": "cloud_polling"
+}
