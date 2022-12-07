@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheden er allerede konfigureret"
+        },
+        "error": {
+            "cannot_connect": "Forbindelsen kunne ikke oprettes. Tjek de oplysninger, du har angivet, og pr\u00f8v igen.",
+            "invalid_input": "Ugyldigt værtsnavn eller IP-adresse"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP-adresse"
+                },
+                "description": "Indtast IP-adressen til enheden",
+                "title": "Identificer enheden"
+            }
+        }
+    }
+}
