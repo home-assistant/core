@@ -785,7 +785,7 @@ class UnitOfIrradiance(StrEnum):
     """Irradiance units."""
 
     WATTS_PER_SQUARE_METER = "W/m²"
-    BTUS_PER_HOUR_SQUARE_FOOT = "BTU/(h.ft²)"
+    BTUS_PER_HOUR_SQUARE_FOOT = "BTU/(h×ft²)"
 
 
 # Irradiation units
