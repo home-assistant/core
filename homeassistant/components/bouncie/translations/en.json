@@ -11,11 +11,12 @@
         "step": {
             "user": {
                 "data": {
-                    "client_id": "Client ID",
-                    "client_secret": "Client Secret",
-                    "code": "Authorization Code",
-                    "redirect_uri": "Redirect URI"
-                }
+                    "client_id": "client_id",
+                    "client_secret": "client_secret",
+                    "code": "authorization_code",
+                    "redirect_uri": "redirect_uri"
+                },
+                "description": "To generate client_id, client_secret, goto bouncie.dev"
             }
         }
     }
