@@ -355,6 +355,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, ws_camera_web_rtc_offer)
     websocket_api.async_register_command(hass, websocket_get_prefs)
     websocket_api.async_register_command(hass, websocket_update_prefs)
+    websocket_api.async_register_command(hass, websocket_update_stream_source)
 
     await component.async_setup(config)
 
@@ -892,6 +893,24 @@ async def websocket_update_prefs(
         connection.send_error(msg["id"], "update_failed", str(ex))
     else:
         connection.send_result(msg["id"], entity_prefs)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "camera/update_stream_source",
+        vol.Required("entity_id"): cv.entity_id,
+        vol.Required("new_src"): str
+    }
+)
+@websocket_api.async_response
+async def websocket_update_stream_source(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle update stream source request"""
+    camera = _get_camera_from_entity_id(hass, msg["entity_id"])
+    new_stream_source = msg["new_src"]
+    camera.stream.update_source(new_stream_source)
+    connection.send_result(msg["id"], new_stream_source)
 
 
 async def async_handle_snapshot_service(
