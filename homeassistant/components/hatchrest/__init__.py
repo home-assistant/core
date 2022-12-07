@@ -11,7 +11,7 @@ from pyhatchbabyrest import PyHatchBabyRestAsync, connect_async
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
@@ -107,8 +107,8 @@ class HatchRestEntity(CoordinatorEntity):
         """Provide info about the Hatch Rest device for all entities."""
         assert self.unique_id is not None
         return {
-                "identifiers": {(DOMAIN, self.unique_id)},
-                "name": self.device_name,
-                "manufacturer": "Hatch",
-                "model": "Rest",
-            }
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.device_name,
+            "manufacturer": "Hatch",
+            "model": "Rest",
+        }
