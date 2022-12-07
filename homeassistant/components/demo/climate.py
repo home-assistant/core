@@ -104,7 +104,7 @@ class DemoClimate(ClimateEntity):
     """Representation of a demo climate device."""
 
     _attr_should_poll = False
-    _attr_translation_key = "demo_climate"
+    _attr_translation_key = "ubercool"
 
     def __init__(
         self,
