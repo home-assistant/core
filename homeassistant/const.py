@@ -702,9 +702,19 @@ PRESSURE_INHG: Final = "inHg"
 PRESSURE_PSI: Final = "psi"
 """Deprecated: please use UnitOfPressure.PSI"""
 
+
 # Sound pressure units
+class UnitOfSoundPressure(StrEnum):
+    """Sound pressure units."""
+
+    DECIBEL = "dB"
+    WEIGHTED_DECIBEL_A = "dBa"
+
+
 SOUND_PRESSURE_DB: Final = "dB"
+"""Deprecated: please use UnitOfSoundPressure.DECIBEL"""
 SOUND_PRESSURE_WEIGHTED_DBA: Final = "dBa"
+"""Deprecated: please use UnitOfSoundPressure.WEIGHTED_DECIBEL_A"""
 
 
 # Volume units
