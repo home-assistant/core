@@ -5,9 +5,11 @@
   "documentation": "https://www.home-assistant.io/integrations/sensirion_ble",
   "bluetooth": [
     {
+      "connectable": false,
       "manufacturer_id": 1749
     },
     {
+      "connectable": false,
       "local_name": "MyCO2*"
     }
   ],
