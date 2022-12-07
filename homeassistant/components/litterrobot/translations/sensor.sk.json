@@ -2,9 +2,11 @@
     "state": {
         "litterrobot__status_code": {
             "cd": "Zisten\u00e1 ma\u010dka",
+            "ec": "Pr\u00e1zdny cyklus",
             "off": "Vypnut\u00fd",
             "offline": "Offline",
             "p": "Pozastaven\u00fd",
+            "pwrd": "Vyp\u00edna sa",
             "rdy": "Pripraven\u00fd"
         }
     }

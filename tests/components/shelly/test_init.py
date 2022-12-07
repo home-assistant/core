@@ -1,12 +1,16 @@
 """Test cases for the Shelly component."""
 from __future__ import annotations
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 import pytest
 
-from homeassistant.components.shelly.const import DOMAIN
+from homeassistant.components.shelly.const import (
+    CONF_BLE_SCANNER_MODE,
+    DOMAIN,
+    BLEScannerMode,
+)
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.helpers import device_registry
@@ -183,3 +187,27 @@ async def test_entry_unload_device_not_ready(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_entry_unload_not_connected(hass, mock_rpc_device, monkeypatch):
+    """Test entry unload when not connected."""
+    with patch(
+        "homeassistant.components.shelly.coordinator.async_stop_scanner"
+    ) as mock_stop_scanner:
+
+        entry = await init_integration(
+            hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
+        )
+        entity_id = "switch.test_switch_0"
+
+        assert entry.state is ConfigEntryState.LOADED
+        assert hass.states.get(entity_id).state is STATE_ON
+        assert not mock_stop_scanner.call_count
+
+        monkeypatch.setattr(mock_rpc_device, "connected", False)
+
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert not mock_stop_scanner.call_count
+    assert entry.state is ConfigEntryState.LOADED

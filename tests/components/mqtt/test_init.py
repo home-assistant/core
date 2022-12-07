@@ -1429,14 +1429,14 @@ async def test_handle_message_callback(
 ):
     """Test for handling an incoming message callback."""
     await mqtt_mock_entry_no_yaml_config()
-    msg = ReceiveMessage("some-topic", b"test-payload", 0, False)
+    msg = ReceiveMessage("some-topic", b"test-payload", 1, False)
     mqtt_client_mock.on_connect(mqtt_client_mock, None, None, 0)
     await mqtt.async_subscribe(hass, "some-topic", lambda *args: 0)
     mqtt_client_mock.on_message(mock_mqtt, None, msg)
 
     await hass.async_block_till_done()
     await hass.async_block_till_done()
-    assert "Received message on some-topic: b'test-payload'" in caplog.text
+    assert "Received message on some-topic (qos=1): b'test-payload'" in caplog.text
 
 
 async def test_setup_override_configuration(hass, caplog, tmp_path):
@@ -2018,6 +2018,37 @@ async def test_mqtt_ws_subscription(
 
     # Unsubscribe
     await client.send_json({"id": 8, "type": "unsubscribe_events", "subscription": 5})
+    response = await client.receive_json()
+    assert response["success"]
+
+    # Subscribe with QoS 2
+    await client.send_json(
+        {"id": 9, "type": "mqtt/subscribe", "topic": "test-topic", "qos": 2}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    async_fire_mqtt_message(hass, "test-topic", "test1", 2)
+    async_fire_mqtt_message(hass, "test-topic", "test2", 2)
+    async_fire_mqtt_message(hass, "test-topic", b"\xDE\xAD\xBE\xEF", 2)
+
+    response = await client.receive_json()
+    assert response["event"]["topic"] == "test-topic"
+    assert response["event"]["payload"] == "test1"
+    assert response["event"]["qos"] == 2
+
+    response = await client.receive_json()
+    assert response["event"]["topic"] == "test-topic"
+    assert response["event"]["payload"] == "test2"
+    assert response["event"]["qos"] == 2
+
+    response = await client.receive_json()
+    assert response["event"]["topic"] == "test-topic"
+    assert response["event"]["payload"] == "b'\\xde\\xad\\xbe\\xef'"
+    assert response["event"]["qos"] == 2
+
+    # Unsubscribe
+    await client.send_json({"id": 15, "type": "unsubscribe_events", "subscription": 9})
     response = await client.receive_json()
     assert response["success"]
 

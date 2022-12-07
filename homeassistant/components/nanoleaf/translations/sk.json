@@ -13,6 +13,9 @@
         },
         "flow_title": "{name}",
         "step": {
+            "link": {
+                "description": "Stla\u010dte a podr\u017ete tla\u010didlo nap\u00e1jania na Nanoleaf na 5 sek\u00fand, k\u00fdm neza\u010dn\u00fa blika\u0165 LED di\u00f3dy tla\u010didiel, a potom do 30 sek\u00fand kliknite na **SUBMIT**."
+            },
             "user": {
                 "data": {
                     "host": "Hostite\u013e"

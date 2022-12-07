@@ -1601,7 +1601,19 @@ async def test_validate_db_schema_fix_float_issue(
 
 
 @pytest.mark.parametrize("enable_statistics_table_validation", [True])
-@pytest.mark.parametrize("db_engine", ("mysql", "postgresql"))
+@pytest.mark.parametrize(
+    "db_engine, modification",
+    (
+        ("mysql", ["last_reset DATETIME(6)", "start DATETIME(6)"]),
+        (
+            "postgresql",
+            [
+                "last_reset TIMESTAMP(6) WITH TIME ZONE",
+                "start TIMESTAMP(6) WITH TIME ZONE",
+            ],
+        ),
+    ),
+)
 @pytest.mark.parametrize(
     "table, replace_index", (("statistics", 0), ("statistics_short_term", 1))
 )
@@ -1617,6 +1629,7 @@ async def test_validate_db_schema_fix_statistics_datetime_issue(
     hass,
     caplog,
     db_engine,
+    modification,
     table,
     replace_index,
     column,
@@ -1664,7 +1677,6 @@ async def test_validate_db_schema_fix_statistics_datetime_issue(
         f"Database is about to correct DB schema errors: {table}.µs precision"
         in caplog.text
     )
-    modification = ["last_reset DATETIME(6)", "start DATETIME(6)"]
     modify_columns_mock.assert_called_once_with(ANY, ANY, table, modification)
 
 

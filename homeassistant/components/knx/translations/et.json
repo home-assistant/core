@@ -12,7 +12,8 @@
             "invalid_ip_address": "Kehtetu IPv4 aadress.",
             "invalid_signature": "Parool faili `.knxkeys` dekr\u00fcpteerimiseks on vale.",
             "no_router_discovered": "V\u00f5rgus ei leitud \u00fchtegi KNXnet/IP-ruuterit.",
-            "no_tunnel_discovered": "V\u00f5rgust ei leitud KNX tunneliserverit."
+            "no_tunnel_discovered": "V\u00f5rgust ei leitud KNX tunneliserverit.",
+            "unsupported_tunnel_type": "L\u00fc\u00fcs ei toeta valitud tunnelit\u00fc\u00fcpi."
         },
         "step": {
             "connection_type": {
@@ -111,7 +112,8 @@
             "invalid_ip_address": "Vigane IPv4 aadress",
             "invalid_signature": "'.knxkeys' kirje dekr\u00fcptimisv\u00f5ti on vale.",
             "no_router_discovered": "V\u00f5rgus ei leitud \u00fchtegi KNXnet/IP-ruuterit.",
-            "no_tunnel_discovered": "V\u00f5rgust ei leitud KNX tunneliserverit."
+            "no_tunnel_discovered": "V\u00f5rgust ei leitud KNX tunneliserverit.",
+            "unsupported_tunnel_type": "L\u00fc\u00fcs ei toeta valitud tunnelit\u00fc\u00fcpi."
         },
         "step": {
             "communication_settings": {

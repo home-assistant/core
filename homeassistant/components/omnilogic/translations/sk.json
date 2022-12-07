@@ -21,7 +21,8 @@
         "step": {
             "init": {
                 "data": {
-                    "ph_offset": "Offset pH (pozit\u00edvny alebo negat\u00edvny)"
+                    "ph_offset": "Offset pH (pozit\u00edvny alebo negat\u00edvny)",
+                    "polling_interval": "Interval dotazovania (v sekund\u00e1ch)"
                 }
             }
         }

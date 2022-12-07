@@ -234,6 +234,8 @@ async def test_notifications(hass, hank_binary_switch, integration, client):
 async def test_value_updated(hass, vision_security_zl7432, integration, client):
     """Test value updated events."""
     node = vision_security_zl7432
+    # Add states to the value we are updating to ensure the translation happens
+    node.values["7-37-1-currentValue"].metadata.data["states"] = {"1": "on", "0": "off"}
     events = async_capture_events(hass, "zwave_js_value_updated")
 
     event = Event(
@@ -266,7 +268,7 @@ async def test_value_updated(hass, vision_security_zl7432, integration, client):
     assert events[0].data["endpoint"] == 1
     assert events[0].data["property_name"] == "currentValue"
     assert events[0].data["property"] == "currentValue"
-    assert events[0].data["value"] == 1
+    assert events[0].data["value"] == "on"
     assert events[0].data["value_raw"] == 1
 
     # Try a value updated event on a value we aren't watching to make sure

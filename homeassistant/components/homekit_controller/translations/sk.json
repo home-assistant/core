@@ -5,6 +5,8 @@
             "already_configured": "Pr\u00edslu\u0161enstvo je u\u017e nakonfigurovan\u00e9 s t\u00fdmto kontrol\u00e9rom.",
             "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha",
             "already_paired": "Toto pr\u00edslu\u0161enstvo je u\u017e sp\u00e1rovan\u00e9 s in\u00fdm zariaden\u00edm. Resetujte pr\u00edslu\u0161enstvo a sk\u00faste to znova.",
+            "ignored_model": "Podpora HomeKit pre tento model je zablokovan\u00e1, preto\u017ee je k dispoz\u00edcii kompletnej\u0161ia nat\u00edvna integr\u00e1cia s viacer\u00fdmi funkciami.",
+            "invalid_properties": "Neplatn\u00e9 vlastnosti ozn\u00e1men\u00e9 zariaden\u00edm.",
             "no_devices": "Nena\u0161li sa \u017eiadne nesp\u00e1rovan\u00e9 zariadenia"
         },
         "error": {
@@ -57,5 +59,15 @@
             "long_press": "\"{subtype}\" stla\u010den\u00e9 a podr\u017ean\u00e9",
             "single_press": "\"{subtype}\" stla\u010den\u00e9"
         }
-    }
+    },
+    "entity": {
+        "sensor": {
+            "thread_status": {
+                "state": {
+                    "router": "Router"
+                }
+            }
+        }
+    },
+    "title": "HomeKit kontrol\u00e9r"
 }

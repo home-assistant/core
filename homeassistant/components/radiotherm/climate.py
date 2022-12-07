@@ -24,7 +24,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,
     PRECISION_HALVES,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -169,7 +169,7 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
     """Representation of a Radio Thermostat."""
 
     _attr_hvac_modes = OPERATION_LIST
-    _attr_temperature_unit = TEMP_FAHRENHEIT
+    _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
     _attr_precision = PRECISION_HALVES
 
     def __init__(self, coordinator: RadioThermUpdateCoordinator) -> None:

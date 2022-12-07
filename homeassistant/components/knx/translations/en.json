@@ -12,7 +12,8 @@
             "invalid_ip_address": "Invalid IPv4 address.",
             "invalid_signature": "The password to decrypt the `.knxkeys` file is wrong.",
             "no_router_discovered": "No KNXnet/IP router was discovered on the network.",
-            "no_tunnel_discovered": "Could not find a KNX tunneling server on your network."
+            "no_tunnel_discovered": "Could not find a KNX tunneling server on your network.",
+            "unsupported_tunnel_type": "Selected tunnelling type not supported by gateway."
         },
         "step": {
             "connection_type": {
@@ -111,7 +112,8 @@
             "invalid_ip_address": "Invalid IPv4 address.",
             "invalid_signature": "The password to decrypt the `.knxkeys` file is wrong.",
             "no_router_discovered": "No KNXnet/IP router was discovered on the network.",
-            "no_tunnel_discovered": "Could not find a KNX tunneling server on your network."
+            "no_tunnel_discovered": "Could not find a KNX tunneling server on your network.",
+            "unsupported_tunnel_type": "Selected tunnelling type not supported by gateway."
         },
         "step": {
             "communication_settings": {

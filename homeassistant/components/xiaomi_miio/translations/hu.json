@@ -51,6 +51,31 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "display_orientation": {
+                "state": {
+                    "forward": "El\u0151re",
+                    "left": "Bal",
+                    "right": "Jobb"
+                }
+            },
+            "led_brightness": {
+                "state": {
+                    "bright": "F\u00e9nyes",
+                    "dim": "Halv\u00e1ny",
+                    "off": "Ki"
+                }
+            },
+            "ptc_level": {
+                "state": {
+                    "high": "Magas",
+                    "low": "Alacsony",
+                    "medium": "K\u00f6zepes"
+                }
+            }
+        }
+    },
     "options": {
         "error": {
             "cloud_credentials_incomplete": "A felh\u0151alap\u00fa hiteles\u00edt\u0151 adatok hi\u00e1nyosak, k\u00e9rem, adja meg a felhaszn\u00e1l\u00f3nevet, a jelsz\u00f3t \u00e9s az orsz\u00e1got"

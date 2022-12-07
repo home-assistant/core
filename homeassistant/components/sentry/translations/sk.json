@@ -6,6 +6,25 @@
         "error": {
             "bad_dsn": "Neplatn\u00e9 DSN",
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "dsn": "Sentry DSN"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "environment": "Volite\u013en\u00fd n\u00e1zov prostredia.",
+                    "event_third_party_packages": "Odosielanie udalost\u00ed z bal\u00edkov tret\u00edch str\u00e1n",
+                    "tracing": "Povoli\u0165 sledovanie v\u00fdkonu",
+                    "tracing_sample_rate": "Vzorkovacia frekvencia; medzi 0,0 a 1,0 (1,0 = 100 %)"
+                }
+            }
         }
     }
 }
