@@ -97,6 +97,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         key=SENSOR_TYPE_WATT,
         name="Power",
         native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_TYPE_LUMINANCE: SensorEntityDescription(
