@@ -248,7 +248,7 @@ class Ted5000Data:
             gateway_hour = int(doc["LiveData"]["GatewayTime"]["Hour"])
             gateway_minute = int(doc["LiveData"]["GatewayTime"]["Minute"])
             gateway_second = int(doc["LiveData"]["GatewayTime"]["Second"])
-            
+
             gateway_datetime = datetime(gateway_year, gateway_month, gateway_day, gateway_hour, gateway_minute, gateway_second)
             gateway_utc_time = gateway_datetime.replace(tzinfo=get_time_zone(time_zone))
 
