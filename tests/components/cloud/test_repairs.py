@@ -70,7 +70,7 @@ async def test_legacy_subscription_delete_issue_if_no_longer_legacy(
         domain="cloud", issue_id="legacy_subscription"
     )
 
-    cloud_repairs.async_manage_legacy_subscription_issue(hass, {"provider": None})
+    cloud_repairs.async_manage_legacy_subscription_issue(hass, {})
     assert not issue_registry.async_get_issue(
         domain="cloud", issue_id="legacy_subscription"
     )
