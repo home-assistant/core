@@ -10,7 +10,6 @@ async def test_ping_entity(
     hass,
     client,
     climate_radio_thermostat_ct100_plus_different_endpoints,
-    controller_node,
     integration,
     caplog,
 ):
