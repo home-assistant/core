@@ -341,7 +341,6 @@ async def test_hmip_din_rail_dimmer_3_channel1(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == STATE_ON
-    # assert ATTR_COLOR_MODE not in ha_state.attributes
     assert ha_state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
     assert ha_state.attributes[ATTR_SUPPORTED_FEATURES] == 0
     service_call_counter = len(hmip_device.mock_calls)
@@ -399,7 +398,6 @@ async def test_hmip_din_rail_dimmer_3_channel2(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == STATE_ON
-    #  assert ATTR_COLOR_MODE not in ha_state.attributes
     assert ha_state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
     assert ha_state.attributes[ATTR_SUPPORTED_FEATURES] == 0
     service_call_counter = len(hmip_device.mock_calls)
@@ -457,7 +455,6 @@ async def test_hmip_din_rail_dimmer_3_channel3(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == STATE_ON
-    #  assert ATTR_COLOR_MODE not in ha_state.attributes
     assert ha_state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
     assert ha_state.attributes[ATTR_SUPPORTED_FEATURES] == 0
     service_call_counter = len(hmip_device.mock_calls)
