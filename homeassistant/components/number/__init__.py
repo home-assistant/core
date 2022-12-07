@@ -131,6 +131,14 @@ class NumberDeviceClass(StrEnum):
     Unit of measurement: `lx`, `lm`
     """
 
+    IRRADIANCE = "irradiance"
+    """Irradiance.
+
+    Unit of measurement:
+    - SI / metric: `W/m²`
+    - USCS / imperial: `BTU/(h.ft²)`
+    """
+
     MOISTURE = "moisture"
     """Moisture.
 
