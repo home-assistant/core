@@ -30,7 +30,7 @@ def async_manage_legacy_subscription_issue(
     If the provider is "legacy" create an issue,
     in all other cases remove the issue.
     """
-    if subscription_info["provider"] == "legacy":
+    if subscription_info.get("provider") == "legacy":
         ir.async_create_issue(
             hass=hass,
             domain=DOMAIN,
