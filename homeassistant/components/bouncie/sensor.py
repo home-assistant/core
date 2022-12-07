@@ -78,7 +78,6 @@ async def async_setup_entry(
                 key=f"car-battery-{vehicle[const.VEHICLE_VIN_KEY]}",
                 icon="mdi:car-battery",
                 name=f"{vehicle[const.VEHICLE_NICKNAME_KEY]} Battery",
-                device_class="",
             )
         )
 
