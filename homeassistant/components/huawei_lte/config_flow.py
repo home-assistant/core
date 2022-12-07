@@ -235,8 +235,6 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle SSDP initiated config flow."""
-        await self.async_set_unique_id(discovery_info.upnp[ssdp.ATTR_UPNP_UDN])
-        self._abort_if_unique_id_configured()
 
         # Attempt to distinguish from other non-LTE Huawei router devices, at least
         # some of the ones we are interested in include friendlyNames like
@@ -258,11 +256,11 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
         )
 
-        if serial_number := discovery_info.upnp.get(ssdp.ATTR_UPNP_SERIAL):
-            await self.async_set_unique_id(serial_number)
-            self._abort_if_unique_id_configured()
-        else:
-            await self._async_handle_discovery_without_unique_id()
+        unique_id = discovery_info.upnp.get(
+            ssdp.ATTR_UPNP_SERIAL, discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
+        )
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured(updates={CONF_URL: url})
 
         self.context.update(
             {
