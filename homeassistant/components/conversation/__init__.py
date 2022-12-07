@@ -215,11 +215,11 @@ async def _async_converse(
             text, context, conversation_id, language
         )
     except intent.IntentHandleError as err:
-        intent_result = intent.IntentResponse()
+        intent_result = intent.IntentResponse(language=language)
         intent_result.async_set_speech(str(err))
 
     if intent_result is None:
-        intent_result = intent.IntentResponse()
+        intent_result = intent.IntentResponse(language=language)
         intent_result.async_set_speech("Sorry, I didn't understand that")
 
     return intent_result

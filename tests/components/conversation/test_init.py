@@ -129,9 +129,9 @@ async def test_http_processing_intent(hass, hass_client, hass_admin_user):
             "plain": {
                 "extra_data": None,
                 "speech": "I've ordered a Grolsch!",
-                "language": hass.config.language,
             }
         },
+        "language": hass.config.language,
     }
 
 
@@ -257,8 +257,8 @@ async def test_custom_agent(hass, hass_client, hass_admin_user):
         async def async_process(self, text, context, conversation_id, language):
             """Process some text."""
             calls.append((text, context, conversation_id, language))
-            response = intent.IntentResponse()
-            response.async_set_speech("Test response", language=language)
+            response = intent.IntentResponse(language=language)
+            response.async_set_speech("Test response")
             return response
 
     conversation.async_set_agent(hass, MyAgent())
@@ -282,9 +282,9 @@ async def test_custom_agent(hass, hass_client, hass_admin_user):
             "plain": {
                 "extra_data": None,
                 "speech": "Test response",
-                "language": "test-language",
             }
         },
+        "language": "test-language",
     }
 
     assert len(calls) == 1
