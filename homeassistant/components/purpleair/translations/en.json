@@ -62,6 +62,7 @@
                     "latitude": "The latitude around which to search for sensors",
                     "longitude": "The longitude around which to search for sensors"
                 },
+                "description": "Search for a PurpleAir sensor within a certain distance of a latitude/longitude.",
                 "title": "Add Sensor"
             },
             "choose_sensor": {
