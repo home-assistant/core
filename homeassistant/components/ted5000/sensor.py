@@ -1,7 +1,7 @@
 """Support gathering ted5000 information."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 import logging
 
 import requests
@@ -17,7 +17,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONF_HOST,
-    CONF_MODE,
     CONF_NAME,
     CONF_PORT,
     ELECTRIC_POTENTIAL_VOLT,
@@ -31,6 +30,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
+from homeassistant.util.dt import as_local, get_time_zone
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,12 +51,13 @@ ENTITY_TOU = "CurrentTOU"
 ENTITY_TOUDESC = "CurrentTOUDescription"
 ENTITY_CARBONRATE = "CarbonRate"
 ENTITY_METERREAD = "MeterReadDate"
+ENTITY_GTWY_DATETIME = "GatewayDateTime"
 
 DEFAULT_NAME = DOMAIN
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
-SENSOR_TYPES_BASIC: tuple[SensorEntityDescription, ...] = (
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ENTITY_MTU_POWER,
         name="Power",
@@ -71,9 +72,6 @@ SENSOR_TYPES_BASIC: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
     ),
-)
-
-SENSOR_TYPES_ADVANCED: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ENTITY_MTU_TODAY,
         name="Energy Daily",
@@ -97,7 +95,7 @@ SENSOR_TYPES_ADVANCED: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
-SENSOR_TYPES_EXTENDED: tuple[SensorEntityDescription, ...] = (
+SENSOR_TYPES_UTILITY: tuple[SensorEntityDescription, ...] = (
     # MTUs Quantity
     SensorEntityDescription(
         key=ENTITY_MTUS,
@@ -138,7 +136,6 @@ SENSOR_TYPES_EXTENDED: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ENTITY_CARBONRATE,
         name="Carbon Rate",
-        device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="lbs/kW",
     ),
@@ -147,6 +144,12 @@ SENSOR_TYPES_EXTENDED: tuple[SensorEntityDescription, ...] = (
         key=ENTITY_METERREAD,
         name="Meter Read Date",
     ),
+    # Gateway date/time
+    SensorEntityDescription(
+        key=ENTITY_GTWY_DATETIME,
+        name="Gateway Date and Time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
 )
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
@@ -154,7 +157,6 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=80): cv.port,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_MODE, default="base"): cv.string,
     }
 )
 
@@ -169,10 +171,11 @@ def setup_platform(
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     name = config.get(CONF_NAME)
-    mode = config.get(CONF_MODE)
     url = f"http://{host}:{port}/api/LiveData.xml"
+    
+    time_zone = hass.config.time_zone
 
-    gateway = Ted5000Data(url)
+    gateway = Ted5000Data(url, time_zone)
     # Get MTU information to create the sensors.
     gateway.update()
 
@@ -180,101 +183,104 @@ def setup_platform(
 
     # Create MTU sensors
     for mtu in range(1, gateway.mtus + 1):
-        for description in SENSOR_TYPES_BASIC:
+        for description in SENSOR_TYPES:
             entities.append(Ted5000SensorEntity(gateway, mtu, description, name))
-        if mode in {"advanced", "extended"}:  # advanced or extended
-            for description in SENSOR_TYPES_ADVANCED:
-                entities.append(Ted5000SensorEntity(gateway, mtu, description, name))
 
     # Create utility sensors
-    if mode == "extended":  # extended only
-        for description in SENSOR_TYPES_EXTENDED:
-            entities.append(Ted5000SensorEntity(gateway, 0, description, name))
+    for description in SENSOR_TYPES_UTILITY:
+        entities.append(Ted5000SensorEntity(gateway, 0, description, name))
 
     add_entities(entities, True)
-
-
-def get_ted5000(self) -> int | None:
-    """Collect data from the ted5000 gateway."""
-
-    url = self.url
-    self.data = {}
-    self.data_utility = {}
-
-    try:
-        request = requests.get(url, timeout=10)
-    except requests.exceptions.RequestException as err:
-        _LOGGER.error("No connection to endpoint: %s", err)
-    else:
-        doc = xmltodict.parse(request.text)
-        mtus = int(doc["LiveData"]["System"]["NumberMTU"])
-
-        # MTU Data
-        for mtu in range(1, mtus + 1):
-            power = int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PowerNow"])
-            voltage = int(doc["LiveData"]["Voltage"]["MTU%d" % mtu]["VoltageNow"])
-            energy_tdy = int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PowerTDY"])
-            energy_mtd = int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PowerMTD"])
-            power_factor = int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PF"])
-
-            self.data[mtu] = {
-                ENTITY_MTU_POWER: power,
-                ENTITY_MTU_VOLTAGE: voltage / 10,
-                ENTITY_MTU_TODAY: energy_tdy / 1000,
-                ENTITY_MTU_MONTH: energy_mtd / 1000,
-                ENTITY_MTU_PF: power_factor / 10,
-            }
-
-        # Utility Data
-        current_rate = int(doc["LiveData"]["Utility"]["CurrentRate"])
-        days_left = int(doc["LiveData"]["Utility"]["DaysLeftInBillingCycle"])
-        plan_type = int(doc["LiveData"]["Utility"]["PlanType"])
-        plan_type_str = {0: "Flat", 1: "Tier", 2: "TOU", 3: "Tier+TOU"}
-        carbon_rate = int(doc["LiveData"]["Utility"]["CarbonRate"])
-        read_date = int(doc["LiveData"]["Utility"]["MeterReadDate"])
-
-        if plan_type in (0, 2):
-            current_tier = 0
-        else:
-            current_tier = int(doc["LiveData"]["Utility"]["CurrentTier"]) + 1
-
-        if plan_type < 2:
-            current_tou = 0
-            current_tou_str = "Not Configured"
-        else:
-            current_tou = int(doc["LiveData"]["Utility"]["CurrentTOU"]) + 1
-            current_tou_str = doc["LiveData"]["Utility"]["CurrentTOUDescription"]
-
-        self.data_utility = {
-            ENTITY_MTUS: mtus,
-            ENTITY_RATE: current_rate / 100000,
-            ENTITY_DAYSLEFT: days_left,
-            ENTITY_PLANTYPE: plan_type_str[plan_type],
-            ENTITY_TIER: current_tier,
-            ENTITY_TOU: current_tou,
-            ENTITY_TOUDESC: current_tou_str,
-            ENTITY_CARBONRATE: carbon_rate / 100,
-            ENTITY_METERREAD: read_date,
-        }
-
-        return mtus
-
-    return 0
 
 
 class Ted5000Data:
     """Collect data from the ted5000 gateway."""
 
-    def __init__(self, url):
+    def __init__(self, url, tz):
         """Initialize the data object."""
         self.url = url
+        self.tz = tz
         self.mtus = 0
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from ted5000."""
         # Update data
-        self.mtus = get_ted5000(self)
+        url = self.url
+        time_zone = self.tz
+        self.data = {}
+        self.data_utility = {}
+
+        try:
+            request = requests.get(url, timeout=10)
+        except requests.exceptions.RequestException as err:
+            _LOGGER.error("No connection to endpoint: %s", err)
+        else:
+            doc = xmltodict.parse(request.text)
+            mtus = int(doc["LiveData"]["System"]["NumberMTU"])
+
+            # MTUs Data
+            for mtu in range(1, mtus + 1):
+                power = int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PowerNow"])
+                voltage = int(doc["LiveData"]["Voltage"]["MTU%d" % mtu]["VoltageNow"])
+                energy_tdy = int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PowerTDY"])
+                energy_mtd = int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PowerMTD"])
+                power_factor = int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PF"])
+
+                self.data[mtu] = {
+                    ENTITY_MTU_POWER: power,
+                    ENTITY_MTU_VOLTAGE: voltage / 10,
+                    ENTITY_MTU_TODAY: energy_tdy / 1000,
+                    ENTITY_MTU_MONTH: energy_mtd / 1000,
+                    ENTITY_MTU_PF: power_factor / 10,
+                }
+
+            # Utility Data
+            current_rate = int(doc["LiveData"]["Utility"]["CurrentRate"])
+            days_left = int(doc["LiveData"]["Utility"]["DaysLeftInBillingCycle"])
+            plan_type = int(doc["LiveData"]["Utility"]["PlanType"])
+            plan_type_str = {0: "Flat", 1: "Tier", 2: "TOU", 3: "Tier+TOU"}
+            carbon_rate = int(doc["LiveData"]["Utility"]["CarbonRate"])
+            read_date = int(doc["LiveData"]["Utility"]["MeterReadDate"])
+            gateway_year = int(doc["LiveData"]["GatewayTime"]["Year"]) + 2000
+            gateway_month = int(doc["LiveData"]["GatewayTime"]["Month"])
+            gateway_day = int(doc["LiveData"]["GatewayTime"]["Day"])
+            gateway_hour = int(doc["LiveData"]["GatewayTime"]["Hour"])
+            gateway_minute = int(doc["LiveData"]["GatewayTime"]["Minute"])
+            gateway_second = int(doc["LiveData"]["GatewayTime"]["Second"])
+            
+            gateway_datetime = datetime(gateway_year, gateway_month, gateway_day, gateway_hour, gateway_minute, gateway_second)
+            gateway_utc_time = gateway_datetime.replace(tzinfo=get_time_zone(time_zone))
+
+            if plan_type in (0, 2):
+                current_tier = 0
+            else:
+                current_tier = int(doc["LiveData"]["Utility"]["CurrentTier"]) + 1
+
+            if plan_type < 2:
+                current_tou = 0
+                current_tou_str = "Not Configured"
+            else:
+                current_tou = int(doc["LiveData"]["Utility"]["CurrentTOU"]) + 1
+                current_tou_str = doc["LiveData"]["Utility"]["CurrentTOUDescription"]
+
+            self.data_utility = {
+                ENTITY_MTUS: mtus,
+                ENTITY_RATE: current_rate / 100000,
+                ENTITY_DAYSLEFT: days_left,
+                ENTITY_PLANTYPE: plan_type_str[plan_type],
+                ENTITY_TIER: current_tier,
+                ENTITY_TOU: current_tou,
+                ENTITY_TOUDESC: current_tou_str,
+                ENTITY_CARBONRATE: carbon_rate / 100,
+                ENTITY_METERREAD: read_date,
+                ENTITY_GTWY_DATETIME: gateway_utc_time,
+            }
+
+            self.mtus = mtus
+            return
+
+        self.mtus = 0
 
 
 class Ted5000SensorEntity(SensorEntity):
