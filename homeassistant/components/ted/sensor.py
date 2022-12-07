@@ -140,13 +140,9 @@ class TedSensor(CoordinatorEntity, SensorEntity):
         """Initialize the sensor."""
         self.entity_description = description
         self._device_id = device_id
+        self._attr_unique_id = f"{self._device_id}_{self.entity_description.key}"
 
         super().__init__(coordinator)
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the sensor."""
-        return f"{self._device_id}_{self.entity_description.key}"
 
     @property
     def native_value(self):
@@ -160,14 +156,10 @@ class TedBreakdownSensor(TedSensor):
 
     def __init__(self, group, position, description, device_id, coordinator):
         """Initialize the sensor."""
+        sensor_id = f"{device_id}_{group}_{position}"
         self._group = group
         self._position = position
-        super().__init__(description, device_id, coordinator)
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the sensor."""
-        return f"{self._device_id}_{self._group}_{self._position}_{self.entity_description.key}"
+        super().__init__(description, sensor_id, coordinator)
 
     @property
     def native_value(self):
