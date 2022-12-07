@@ -1,6 +1,7 @@
 """Sensors on Zigbee Home Automation networks."""
 from __future__ import annotations
 
+import enum
 import functools
 import numbers
 from typing import TYPE_CHECKING, Any, TypeVar
@@ -174,7 +175,7 @@ class Sensor(ZhaEntity, SensorEntity):
         """Handle state update from channel."""
         self.async_write_ha_state()
 
-    def formatter(self, value: int) -> int | float | None:
+    def formatter(self, value: int | enum.IntEnum) -> int | float | str | None:
         """Numeric pass-through formatter."""
         if self._decimals > 0:
             return round(
@@ -599,9 +600,9 @@ class RegisterTierDeliveredSensor(Sensor, id_suffix="register_tier_delivered"):
     _attr_icon = "mdi:calendar-clock"
     _attr_name: str = "Register tier delivered"
 
-    def formatter(self, value: int) -> int | None:
+    def formatter(self, value: enum.IntEnum) -> str:  # type: ignore[override]
         """Numeric pass-through formatter."""
-        return value
+        return value.name.replace("_", " ")
 
 
 @MULTI_MATCH(channel_names=CHANNEL_PRESSURE)
