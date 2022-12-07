@@ -306,7 +306,7 @@ class Ted5000SensorEntity(SensorEntity):
                 self._attr_native_value = self.gateway.data[self._mtu][
                     self.entity_description.key
                 ]
-        if self.entity_description.key in self.gateway.data_utility:
+        elif self.entity_description.key in self.gateway.data_utility:
             self._attr_native_value = self.gateway.data_utility[
                 self.entity_description.key
             ]
