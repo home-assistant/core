@@ -16,5 +16,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_predefined_effects": "Show pre-defined effects"
+                }
+            }
+        }
     }
 }

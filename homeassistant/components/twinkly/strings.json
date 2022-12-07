@@ -16,5 +16,14 @@
     "abort": {
       "device_exists": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "show_predefined_effects": "Show pre-defined effects"
+        }
+      }
+    }
   }
 }
