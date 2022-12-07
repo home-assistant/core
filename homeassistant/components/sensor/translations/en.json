@@ -42,7 +42,7 @@
             "carbon_dioxide": "{entity_name} carbon dioxide concentration changes",
             "carbon_monoxide": "{entity_name} carbon monoxide concentration changes",
             "current": "{entity_name} current changes",
-            "data_size": "{entity_name} data size",
+            "data_size": "{entity_name} data size changes",
             "distance": "{entity_name} distance changes",
             "energy": "{entity_name} energy changes",
             "frequency": "{entity_name} frequency changes",
