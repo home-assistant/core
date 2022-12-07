@@ -16,6 +16,7 @@
                     "password": "Heslo",
                     "port": "Port",
                     "rtsp_port": "RTSP port",
+                    "stream": "Stream",
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
                 }
             }

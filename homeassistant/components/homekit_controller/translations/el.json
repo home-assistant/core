@@ -70,6 +70,15 @@
         }
     },
     "entity": {
+        "select": {
+            "ecobee_mode": {
+                "state": {
+                    "away": "\u0395\u03ba\u03c4\u03cc\u03c2 \u03c3\u03c0\u03b9\u03c4\u03b9\u03bf\u03cd",
+                    "home": "\u03a3\u03c0\u03af\u03c4\u03b9",
+                    "sleep": "\u038e\u03c0\u03bd\u03bf\u03c2"
+                }
+            }
+        },
         "sensor": {
             "thread_node_capabilities": {
                 "state": {

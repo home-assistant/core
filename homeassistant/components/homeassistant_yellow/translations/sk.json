@@ -6,6 +6,9 @@
         "step": {
             "addon_installed_other_device": {
                 "title": "Podpora viacer\u00fdch protokolov je u\u017e povolen\u00e1 pre in\u00e9 zariadenie"
+            },
+            "start_addon": {
+                "title": "Sp\u00fa\u0161\u0165a sa doplnok Silicon Labs Multiprotocol."
             }
         }
     }

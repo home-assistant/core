@@ -16,5 +16,10 @@
                 "title": "Vyberte met\u00f3du overenia"
             }
         }
+    },
+    "issues": {
+        "removed_yaml": {
+            "title": "Konfigur\u00e1cia nVent RAYCHEM SENZ YAML bola odstr\u00e1nen\u00e1"
+        }
     }
 }

@@ -70,6 +70,15 @@
         }
     },
     "entity": {
+        "select": {
+            "ecobee_mode": {
+                "state": {
+                    "away": "Fora",
+                    "home": "Casa",
+                    "sleep": "Dorme"
+                }
+            }
+        },
         "sensor": {
             "thread_node_capabilities": {
                 "state": {

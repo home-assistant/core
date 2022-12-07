@@ -11,7 +11,8 @@
     },
     "issues": {
         "topic_duplicated": {
-            "description": "Nieko\u013eko zariaden\u00ed Tasmota zdie\u013ea t\u00e9mu {topic}. \n\n Zariadenia Tasmota s t\u00fdmto probl\u00e9mom: {offenders}."
+            "description": "Nieko\u013eko zariaden\u00ed Tasmota zdie\u013ea t\u00e9mu {topic}. \n\n Zariadenia Tasmota s t\u00fdmto probl\u00e9mom: {offenders}.",
+            "title": "Nieko\u013eko zariaden\u00ed Tasmota zdie\u013ea rovnak\u00fa t\u00e9mu"
         }
     }
 }

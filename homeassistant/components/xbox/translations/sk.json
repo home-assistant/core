@@ -13,5 +13,10 @@
                 "title": "Vyberte met\u00f3du overenia"
             }
         }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "title": "Konfigur\u00e1cia Xbox YAML sa odstra\u0148uje"
+        }
     }
 }

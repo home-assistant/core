@@ -1,0 +1,16 @@
+{
+    "options": {
+        "abort": {
+            "not_hassio": "Hardv\u00e9rov\u00e9 mo\u017enosti je mo\u017en\u00e9 nakonfigurova\u0165 iba v in\u0161tal\u00e1ci\u00e1ch HassOS.",
+            "zha_migration_failed": "Migr\u00e1cia ZHA nebola \u00faspe\u0161n\u00e1."
+        },
+        "error": {
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "start_addon": {
+                "title": "Sp\u00fa\u0161\u0165a sa doplnok Silicon Labs Multiprotocol."
+            }
+        }
+    }
+}
