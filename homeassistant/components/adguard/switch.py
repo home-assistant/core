@@ -17,8 +17,19 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DATA_ADGUARD_CLIENT, DATA_ADGUARD_VERSION, DOMAIN, LOGGER
 from .entity import AdGuardHomeEntity
 
+from . import BlockedServices
+
 SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 1
+
+
+@dataclass
+class AdGuardHomeBlockableServiceSwitchEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    is_on_fn: Callable[[AdGuardHome], Callable[[str], Coroutine[Any, Any, bool]]]
+    turn_on_fn: Callable[[AdGuardHome], Callable[[str], Coroutine[Any, Any, None]]]
+    turn_off_fn: Callable[[AdGuardHome], Callable[[str], Coroutine[Any, Any, None]]]
 
 
 @dataclass
@@ -35,6 +46,13 @@ class AdGuardHomeSwitchEntityDescription(
     SwitchEntityDescription, AdGuardHomeSwitchEntityDescriptionMixin
 ):
     """Describes AdGuard Home switch entity."""
+
+
+@dataclass
+class AdGuardHomeBlockableServiceSwitchEntityDescription(
+    SwitchEntityDescription, AdGuardHomeBlockableServiceSwitchEntityDescriptionMixin
+):
+    """Describes AdGuard Home Blockable Service switch entity."""
 
 
 SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
@@ -88,11 +106,13 @@ SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
     ),
 )
 
+BLOCKABLE_SERVICES: list[AdGuardHomeBlockableServiceSwitchEntityDescription, ...] = []
+
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up AdGuard Home switch based on a config entry."""
     adguard = hass.data[DOMAIN][entry.entry_id][DATA_ADGUARD_CLIENT]
@@ -108,6 +128,31 @@ async def async_setup_entry(
         [AdGuardHomeSwitch(adguard, entry, description) for description in SWITCHES],
         True,
     )
+
+    await async_setup_blockable_services(adguard)
+
+    async_add_entities(
+        [AdGuardHomeBlockableServiceSwitch(adguard, entry, service) for service in BLOCKABLE_SERVICES],
+        True
+    )
+
+
+async def async_setup_blockable_services(adguard: AdGuardHome) -> None:
+    all_services = await adguard.blocked_services.all_services()
+    all_blocked_services = await adguard.blocked_services.list_currently_blocked()
+    blocked_services = BlockedServices(adguard, all_blocked_services)
+
+    for service in all_services:
+        BLOCKABLE_SERVICES.append(
+            AdGuardHomeBlockableServiceSwitchEntityDescription(
+                key=service.get('id'),
+                name="block {}".format(service.get('name')),
+                icon="mdi:shield-check",
+                is_on_fn=lambda adguard: blocked_services.is_blocked,
+                turn_on_fn=lambda adguard: blocked_services.block,
+                turn_off_fn=lambda adguard: blocked_services.unblock,
+            )
+        )
 
 
 class AdGuardHomeSwitch(AdGuardHomeEntity, SwitchEntity):
@@ -147,3 +192,42 @@ class AdGuardHomeSwitch(AdGuardHomeEntity, SwitchEntity):
     async def _adguard_update(self) -> None:
         """Update AdGuard Home entity."""
         self._attr_is_on = await self.entity_description.is_on_fn(self.adguard)()
+
+
+class AdGuardHomeBlockableServiceSwitch(AdGuardHomeEntity, SwitchEntity):
+    """Defines a AdGuard Home switch."""
+
+    entity_description: AdGuardHomeBlockableServiceSwitchEntityDescription
+
+    def __init__(
+        self,
+        adguard: AdGuardHome,
+        entry: ConfigEntry,
+        description: AdGuardHomeBlockableServiceSwitchEntityDescription,
+    ) -> None:
+        """Initialize AdGuard Home switch."""
+        super().__init__(adguard, entry)
+        self.entity_description = description
+        self._attr_unique_id = "_".join(
+            [DOMAIN, adguard.host, str(adguard.port), "switch", description.key]
+        )
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the switch."""
+        try:
+            await self.entity_description.turn_off_fn(self.adguard)(self.entity_description.key)
+        except AdGuardHomeError:
+            LOGGER.error("An error occurred while turning off AdGuard Home switch")
+            self._attr_available = False
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the switch."""
+        try:
+            await self.entity_description.turn_on_fn(self.adguard)(self.entity_description.key)
+        except AdGuardHomeError:
+            LOGGER.error("An error occurred while turning on AdGuard Home switch")
+            self._attr_available = False
+
+    async def _adguard_update(self) -> None:
+        """Update AdGuard Home entity."""
+        self._attr_is_on = await self.entity_description.is_on_fn(self.adguard)(self.entity_description.key)
