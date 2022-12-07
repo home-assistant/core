@@ -353,15 +353,13 @@ class TwinklyLight(LightEntity):
 
     async def async_update_effects(self) -> None:
         """Update the number of effects."""
-        # pylint: disable=protected-access
-        effects = await self._client._get("led/effects")
+        effects = await self._client.get_predefined_effects()
         if "effects_number" in effects:
             self._effets_number = effects["effects_number"]
 
     async def async_update_current_effect(self) -> None:
         """Update current effect."""
-        # pylint: disable=protected-access
-        current_effect = await self._client._get("led/effects/current")
+        current_effect = await self._client.get_current_predefined_effect()
         _LOGGER.debug("Current effect: %s", current_effect)
         # Seems to have changed name sometime
         if "effect_id" in current_effect:
@@ -379,11 +377,6 @@ class TwinklyLight(LightEntity):
     async def async_set_effect(self, effect_id: int) -> None:
         """Set current effect."""
         await self._client.interview()
-        # await self._client.set_current_effect(int(effect_id))
-        # pylint: disable=protected-access
-        await self._client._post(
-            "led/effects/current",
-            json={"effect_id": int(effect_id)},
-        )
+        await self._client.set_current_predefined_effect(int(effect_id))
         await self._client.set_mode(MODE_EFFECT)
         self._client.default_mode = MODE_EFFECT

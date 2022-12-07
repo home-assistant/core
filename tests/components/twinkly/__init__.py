@@ -123,27 +123,15 @@ class ClientMock:
         """Get current mode."""
         return {"mode": self.mode}
 
-    async def get_effects(self) -> dict:
+    async def get_predefined_effects(self) -> dict:
         """Get number of predefined effects."""
         return {"effects_number": 5}
 
-    async def get_current_effect(self) -> dict:
+    async def get_current_predefined_effect(self) -> dict:
         """Get current predefined effect."""
         return self.current_effect
 
-    async def set_current_effect(self, effect_id: int) -> None:
+    async def set_current_predefined_effect(self, effect_id: int) -> None:
         """Set current effect."""
         self.current_effect = {"effect_id": effect_id}
-        return self.get_current_effect()
-
-    async def _get(self, url: str) -> dict:
-        """Temp function to pass tests."""
-        if url == "led/effects":
-            return await self.get_effects()
-        if url == "led/effects/current":
-            return await self.get_current_effect()
-
-    async def _post(self, url: str, json=dict) -> dict:
-        """Temp function to pass tests."""
-        if url == "led/effects/current":
-            return await self.set_current_effect(effect_id=json.get("effect_id"))
+        return self.get_current_predefined_effect()
