@@ -290,47 +290,54 @@ class MinMaxSensor(SensorEntity):
         self, event: EventType, update_state: bool = True
     ) -> None:
         """Handle the sensor state changes."""
-        new_state: State | None = event.data.get("new_state")
+        entity_state: State | None = event.data.get("new_state")
         entity: str = event.data["entity_id"]
 
-        if (
-            new_state is None
-            or new_state.state is None
-            or new_state.state
-            in [
-                STATE_UNKNOWN,
-                STATE_UNAVAILABLE,
-            ]
-        ):
-            self.states[entity] = STATE_UNKNOWN
-            if not update_state:
-                return
+        states: list[tuple[str, State]] = [
+            (entity_id, state)
+            for entity_id in self._entity_ids
+            if (state := self.hass.states.get(entity_id))
+        ]
+        for entity_id, new_state in states:
+            if (
+                new_state is None
+                or new_state.state is None
+                or new_state.state
+                in [
+                    STATE_UNKNOWN,
+                    STATE_UNAVAILABLE,
+                ]
+            ):
+                self.states[entity_id] = STATE_UNKNOWN
+                if not update_state:
+                    return
+            try:
+                self.states[entity_id] = float(new_state.state)
+            except ValueError:
+                self.states[entity_id] = STATE_UNKNOWN
+                _LOGGER.warning(
+                    "Unable to store state. Only numerical states are supported"
+                )
+            if entity_state:
+                try:
+                    self.last = float(entity_state.state)
+                    self.last_entity_id = entity
+                except ValueError:
+                    pass
 
-            self._calc_values()
-            self.async_write_ha_state()
-            return
+        if entity_state:
+            if self._unit_of_measurement is None:
+                self._unit_of_measurement = entity_state.attributes.get(
+                    ATTR_UNIT_OF_MEASUREMENT
+                )
 
-        if self._unit_of_measurement is None:
-            self._unit_of_measurement = new_state.attributes.get(
+            if self._unit_of_measurement != entity_state.attributes.get(
                 ATTR_UNIT_OF_MEASUREMENT
-            )
-
-        if self._unit_of_measurement != new_state.attributes.get(
-            ATTR_UNIT_OF_MEASUREMENT
-        ):
-            _LOGGER.warning(
-                "Units of measurement do not match for entity %s", self.entity_id
-            )
-            self._unit_of_measurement_mismatch = True
-
-        try:
-            self.states[entity] = float(new_state.state)
-            self.last = float(new_state.state)
-            self.last_entity_id = entity
-        except ValueError:
-            _LOGGER.warning(
-                "Unable to store state. Only numerical states are supported"
-            )
+            ):
+                _LOGGER.warning(
+                    "Units of measurement do not match for entity %s", self.entity_id
+                )
+                self._unit_of_measurement_mismatch = True
 
         if not update_state:
             return
