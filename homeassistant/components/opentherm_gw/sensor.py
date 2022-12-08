@@ -85,7 +85,7 @@ SENSOR_INFO: dict[str, list] = {
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_SLAVE_MAX_CAPACITY: [
-        None,
+        SensorDeviceClass.POWER,
         UnitOfPower.KILO_WATT,
         "Boiler Maximum Capacity {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
@@ -109,7 +109,7 @@ SENSOR_INFO: dict[str, list] = {
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_CH_WATER_PRESS: [
-        None,
+        SensorDeviceClass.PRESSURE,
         UnitOfPressure.BAR,
         "Central Heating Water Pressure {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
@@ -253,25 +253,25 @@ SENSOR_INFO: dict[str, list] = {
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_TOTAL_BURNER_HOURS: [
-        None,
+        SensorDeviceClass.DURATION,
         UnitOfTime.HOURS,
         "Total Burner Hours {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_CH_PUMP_HOURS: [
-        None,
+        SensorDeviceClass.DURATION,
         UnitOfTime.HOURS,
         "Central Heating Pump Hours {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_DHW_PUMP_HOURS: [
-        None,
+        SensorDeviceClass.DURATION,
         UnitOfTime.HOURS,
         "Hot Water Pump Hours {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_DHW_BURNER_HOURS: [
-        None,
+        SensorDeviceClass.DURATION,
         UnitOfTime.HOURS,
         "Hot Water Burner Hours {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
