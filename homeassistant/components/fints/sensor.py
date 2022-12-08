@@ -170,8 +170,12 @@ class FinTsClient:
 
         if 1 <= account_information["type"] <= 9:
             return True
+<<<<<<< HEAD
 
         if (
+=======
+        elif (
+>>>>>>> c6fb9d1efd (Possibility to configure unsupported account_types)
             account_information["iban"] in self.account_config
             or account_information["account_number"] in self.account_config
         ):
@@ -190,8 +194,12 @@ class FinTsClient:
 
         if 30 <= account_information["type"] <= 39:
             return True
+<<<<<<< HEAD
 
         if (
+=======
+        elif (
+>>>>>>> c6fb9d1efd (Possibility to configure unsupported account_types)
             account_information["iban"] in self.holdings_config
             or account_information["account_number"] in self.holdings_config
         ):
