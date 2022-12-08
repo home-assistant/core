@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-import re
 from typing import Any
 
 from pytouchline import PyTouchline
@@ -36,7 +35,6 @@ def _try_connect_and_fetch_basic_info(host):
         number_of_devices = int(py_touchline.get_number_of_devices(host))
         if number_of_devices:
             result["type"] = RESULT_SUCCESS
-            result["data"] = None
 
             _LOGGER.debug(
                 "Number of devices found: %s",
@@ -69,19 +67,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
 
-        # Abort if an entry with same host and port is present.
+        # Abort if an entry with same host is present.
         self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
         errors = {}
-        host = user_input[CONF_HOST]
-        # Remove HTTPS and HTTP from URL
-        pattern = "https?://"
-        user_input[CONF_HOST] = re.sub(pattern, "", user_input[CONF_HOST])
-        user_input[CONF_HOST] = "http://" + user_input[CONF_HOST]
         if not cv.url(user_input[CONF_HOST]):
             errors["base"] = "invalid_input"
         else:
-            self._async_abort_entries_match({CONF_HOST: host})
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             result = await self.hass.async_add_executor_job(
                 _try_connect_and_fetch_basic_info, user_input[CONF_HOST]
             )
