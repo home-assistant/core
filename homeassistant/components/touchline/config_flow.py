@@ -31,19 +31,14 @@ def _try_connect_and_fetch_basic_info(host):
     py_touchline = PyTouchline()
     result = {"type": None, "data": {}}
     number_of_devices = None
+    device = PyTouchline(id=0)
     try:
         number_of_devices = int(py_touchline.get_number_of_devices(host))
         if number_of_devices:
-            result["type"] = RESULT_SUCCESS
-
-            _LOGGER.debug(
-                "Number of devices found: %s",
-                number_of_devices,
-            )
-            device = PyTouchline(id=0)
             device.update()
-            controller_id = device.get_controller_id()
-            result["data"] = controller_id
+            result["data"] = device.get_controller_id()
+            if result["data"]:
+                result["type"] = RESULT_SUCCESS
             return result
     except ConnectionRefusedError:
         _LOGGER.debug(
@@ -52,6 +47,10 @@ def _try_connect_and_fetch_basic_info(host):
             host,
         )
         result["type"] = RESULT_CANNOT_CONNECT
+    _LOGGER.debug(
+        "Number of devices found: %s",
+        number_of_devices,
+    )
     return result
 
 

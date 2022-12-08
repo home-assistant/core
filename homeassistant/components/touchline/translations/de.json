@@ -12,7 +12,7 @@
                 "data": {
                     "ip_address": "IP-Adresse"
                 },
-                "description": "Gib die IP-Adresse oder den mDNS des Ger\u00e4ts und sein Passwort an",
+                "description": "Gib die IP-Adresse oder den mDNS des Ger\u00e4ts an",
                 "title": "Identifizieren des Ger\u00e4ts"
             }
         }

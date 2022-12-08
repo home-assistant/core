@@ -12,7 +12,7 @@
                 "data": {
                     "ip_address": "IP adresse"
                 },
-                "description": "Oppgi IP-adressen eller mDNS til enheten og passordet",
+                "description": "Oppgi IP-adressen eller mDNS til enheten",
                 "title": "Identifiser enheten"
             }
         }
