@@ -708,7 +708,7 @@ class UnitOfSoundPressure(StrEnum):
     """Sound pressure units."""
 
     DECIBEL = "dB"
-    WEIGHTED_DECIBEL_A = "dB(A)"
+    WEIGHTED_DECIBEL_A = "dBA"
 
 
 SOUND_PRESSURE_DB: Final = "dB"
