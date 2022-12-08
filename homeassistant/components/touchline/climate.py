@@ -157,7 +157,7 @@ class Touchline(ClimateEntity):
         )
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         """Return the name of the climate device."""
         return self._name
 
@@ -167,30 +167,30 @@ class Touchline(ClimateEntity):
         return self._controller_id + self._device_id
 
     @property
-    def current_temperature(self) -> None:
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._current_temperature
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._target_temperature
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         return self._preset_mode
 
     @property
-    def preset_modes(self):
+    def preset_modes(self) -> list[str] | None:
         """Return available preset modes."""
         return list(PRESET_MODES)
 
-    def set_preset_mode(self, preset_mode):
+    def set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
-        preset_mode = PRESET_MODES[preset_mode]
-        self.unit.set_operation_mode(preset_mode.mode)
-        self.unit.set_week_program(preset_mode.program)
+        new_preset_mode = PRESET_MODES[preset_mode]
+        self.unit.set_operation_mode(new_preset_mode.mode)
+        self.unit.set_week_program(new_preset_mode.program)
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
