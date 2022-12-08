@@ -168,14 +168,12 @@ class FinTsClient:
         if not account_information:
             return False
 
-        if not account_information["type"]:
-            # bank does not support account types, use value from config
-            if (
-                account_information["iban"] in self.account_config
-                or account_information["account_number"] in self.account_config
-            ):
-                return True
-        elif 1 <= account_information["type"] <= 9:
+        if 1 <= account_information["type"] <= 9:
+            return True
+        elif (
+            account_information["iban"] in self.account_config
+            or account_information["account_number"] in self.account_config
+        ):
             return True
 
         return False
@@ -189,14 +187,12 @@ class FinTsClient:
         if not account_information:
             return False
 
-        if not account_information["type"]:
-            # bank does not support account types, use value from config
-            if (
-                account_information["iban"] in self.holdings_config
-                or account_information["account_number"] in self.holdings_config
-            ):
-                return True
-        elif 30 <= account_information["type"] <= 39:
+        if 30 <= account_information["type"] <= 39:
+            return True
+        elif (
+            account_information["iban"] in self.holdings_config
+            or account_information["account_number"] in self.holdings_config
+        ):
             return True
 
         return False
