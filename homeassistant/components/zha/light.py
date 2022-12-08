@@ -895,8 +895,8 @@ class HueLight(Light):
         "Quotra-Vision",
         "eWeLight",
         "eWeLink",
-        "_TZ3000_92chsky7",    # Tuya in-wall 0-10V dimmer module TS110F
-        "_TZ3210_wdexaypg",    # Tuya in-wall AC dimmer module TS110E
+        "_TZ3000_92chsky7",  # Tuya in-wall 0-10V dimmer module TS110F
+        "_TZ3210_wdexaypg",  # Tuya in-wall AC dimmer module TS110E
     },
 )
 class ForceOnLight(Light):
