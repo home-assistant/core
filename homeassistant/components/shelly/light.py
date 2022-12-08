@@ -39,10 +39,12 @@ from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry
 from .entity import ShellyBlockEntity, ShellyRpcEntity
 from .utils import (
     async_remove_shelly_entity,
+    brightness_to_percentage,
     get_device_entry_gen,
     get_rpc_key_ids,
     is_block_channel_type_light,
     is_rpc_channel_type_light,
+    percentage_to_brightness,
 )
 
 
@@ -109,10 +111,15 @@ def async_setup_rpc_entry(
         unique_id = f"{coordinator.mac}-switch:{id_}"
         async_remove_shelly_entity(hass, "switch", unique_id)
 
-    if not switch_ids:
+    if switch_ids:
+        async_add_entities(
+            RpcShellySwitchAsLight(coordinator, id_) for id_ in switch_ids
+        )
         return
 
-    async_add_entities(RpcShellyLight(coordinator, id_) for id_ in switch_ids)
+    light_key_ids = get_rpc_key_ids(coordinator.device.status, "light")
+    if light_key_ids:
+        async_add_entities(RpcShellyLight(coordinator, id_) for id_ in light_key_ids)
 
 
 class BlockShellyLight(ShellyBlockEntity, LightEntity):
@@ -184,19 +191,15 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
-        brightness_pct: int
         if self.mode == "color":
             if self.control_result:
-                brightness_pct = self.control_result["gain"]
-            else:
-                brightness_pct = cast(int, self.block.gain)
-        else:
-            if self.control_result:
-                brightness_pct = self.control_result["brightness"]
-            else:
-                brightness_pct = cast(int, self.block.brightness)
+                return percentage_to_brightness(self.control_result["gain"])
+            return percentage_to_brightness(cast(int, self.block.gain))
 
-        return round(255 * brightness_pct / 100)
+        # white mode
+        if self.control_result:
+            return percentage_to_brightness(self.control_result["brightness"])
+        return percentage_to_brightness(cast(int, self.block.brightness))
 
     @property
     def color_mode(self) -> ColorMode:
@@ -287,11 +290,10 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
             )
 
         if ATTR_BRIGHTNESS in kwargs and brightness_supported(supported_color_modes):
-            brightness_pct = int(100 * (kwargs[ATTR_BRIGHTNESS] + 1) / 255)
             if hasattr(self.block, "gain"):
-                params["gain"] = brightness_pct
+                params["gain"] = brightness_to_percentage(kwargs[ATTR_BRIGHTNESS])
             if hasattr(self.block, "brightness"):
-                params["brightness"] = brightness_pct
+                params["brightness"] = brightness_to_percentage(kwargs[ATTR_BRIGHTNESS])
 
         if (
             ATTR_COLOR_TEMP_KELVIN in kwargs
@@ -367,8 +369,8 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
         super()._update_callback()
 
 
-class RpcShellyLight(ShellyRpcEntity, LightEntity):
-    """Entity that controls a light on RPC based Shelly devices."""
+class RpcShellySwitchAsLight(ShellyRpcEntity, LightEntity):
+    """Entity that controls a relay as light on RPC based Shelly devices."""
 
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
@@ -381,7 +383,7 @@ class RpcShellyLight(ShellyRpcEntity, LightEntity):
     @property
     def is_on(self) -> bool:
         """If light is on."""
-        return bool(self.coordinator.device.status[self.key]["output"])
+        return bool(self.status["output"])
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
@@ -390,3 +392,38 @@ class RpcShellyLight(ShellyRpcEntity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
         await self.call_rpc("Switch.Set", {"id": self._id, "on": False})
+
+
+class RpcShellyLight(ShellyRpcEntity, LightEntity):
+    """Entity that controls a light on RPC based Shelly devices."""
+
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+
+    def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
+        """Initialize light."""
+        super().__init__(coordinator, f"light:{id_}")
+        self._id = id_
+
+    @property
+    def is_on(self) -> bool:
+        """If light is on."""
+        return bool(self.status["output"])
+
+    @property
+    def brightness(self) -> int:
+        """Return the brightness of this light between 0..255."""
+        return percentage_to_brightness(self.status["brightness"])
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on light."""
+        params: dict[str, Any] = {"id": self._id, "on": True}
+
+        if ATTR_BRIGHTNESS in kwargs:
+            params["brightness"] = brightness_to_percentage(kwargs[ATTR_BRIGHTNESS])
+
+        await self.call_rpc("Light.Set", params)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off light."""
+        await self.call_rpc("Light.Set", {"id": self._id, "on": False})

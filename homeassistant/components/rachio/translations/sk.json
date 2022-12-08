@@ -5,14 +5,16 @@
         },
         "error": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
-            "invalid_auth": "Neplatn\u00e9 overenie"
+            "invalid_auth": "Neplatn\u00e9 overenie",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "step": {
             "user": {
                 "data": {
                     "api_key": "API k\u013e\u00fa\u010d"
                 },
-                "description": "Budete potrebova\u0165 k\u013e\u00fa\u010d API zo str\u00e1nky https://app.rach.io/. Prejdite na Nastavenia a potom kliknite na polo\u017eku \"GET API KEY\"."
+                "description": "Budete potrebova\u0165 k\u013e\u00fa\u010d API zo str\u00e1nky https://app.rach.io/. Prejdite na Nastavenia a potom kliknite na polo\u017eku \"GET API KEY\".",
+                "title": "Pripojte sa k zariadeniu Rachio"
             }
         }
     },

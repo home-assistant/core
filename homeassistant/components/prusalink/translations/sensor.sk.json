@@ -2,6 +2,8 @@
     "state": {
         "prusalink__printer_state": {
             "cancelling": "Prebieha ru\u0161enie",
+            "idle": "Ne\u010dinn\u00fd",
+            "paused": "Pozastaven\u00e9",
             "printing": "Tla\u010d"
         }
     }

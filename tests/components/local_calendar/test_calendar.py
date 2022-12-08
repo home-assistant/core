@@ -612,3 +612,96 @@ async def test_all_day_iter_order(
 
     events = await get_events("2022-10-06T00:00:00Z", "2022-10-09T00:00:00Z")
     assert [event["summary"] for event in events] == event_order
+
+
+async def test_start_end_types(
+    ws_client: ClientFixture,
+    setup_integration: None,
+):
+    """Test a start and end with different date and date time types."""
+    client = await ws_client()
+    result = await client.cmd(
+        "create",
+        {
+            "entity_id": TEST_ENTITY,
+            "event": {
+                "summary": "Bastille Day Party",
+                "dtstart": "1997-07-15",
+                "dtend": "1997-07-14T17:00:00+00:00",
+            },
+        },
+    )
+    assert not result.get("success")
+    assert "error" in result
+    assert "code" in result.get("error")
+    assert result["error"]["code"] == "invalid_format"
+
+
+async def test_end_before_start(
+    ws_client: ClientFixture,
+    setup_integration: None,
+):
+    """Test an event with a start/end date time."""
+    client = await ws_client()
+    result = await client.cmd(
+        "create",
+        {
+            "entity_id": TEST_ENTITY,
+            "event": {
+                "summary": "Bastille Day Party",
+                "dtstart": "1997-07-15T04:00:00+00:00",
+                "dtend": "1997-07-14T17:00:00+00:00",
+            },
+        },
+    )
+    assert not result.get("success")
+    assert "error" in result
+    assert "code" in result.get("error")
+    assert result["error"]["code"] == "invalid_format"
+
+
+async def test_invalid_recurrence_rule(
+    ws_client: ClientFixture,
+    setup_integration: None,
+):
+    """Test an event with a recurrence rule."""
+    client = await ws_client()
+    result = await client.cmd(
+        "create",
+        {
+            "entity_id": TEST_ENTITY,
+            "event": {
+                "summary": "Monday meeting",
+                "dtstart": "2022-08-29T09:00:00",
+                "dtend": "2022-08-29T10:00:00",
+                "rrule": "FREQ=invalid;'",
+            },
+        },
+    )
+    assert not result.get("success")
+    assert "error" in result
+    assert "code" in result.get("error")
+    assert result["error"]["code"] == "invalid_format"
+
+
+async def test_invalid_date_formats(
+    ws_client: ClientFixture, setup_integration: None, get_events: GetEventsFn
+):
+    """Exercises a validation error within rfc5545 parsing in ical."""
+    client = await ws_client()
+    result = await client.cmd(
+        "create",
+        {
+            "entity_id": TEST_ENTITY,
+            "event": {
+                "summary": "Bastille Day Party",
+                # Can't mix offset aware and floating dates
+                "dtstart": "1997-07-15T04:00:00+08:00",
+                "dtend": "1997-07-14T17:00:00",
+            },
+        },
+    )
+    assert not result.get("success")
+    assert "error" in result
+    assert "code" in result.get("error")
+    assert result["error"]["code"] == "invalid_format"

@@ -1,7 +1,7 @@
 """Helpers for creating schema based data entry flows."""
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from collections.abc import Callable, Coroutine, Mapping
 import copy
 from dataclasses import dataclass
@@ -250,7 +250,7 @@ class SchemaCommonFlowHandler:
         )
 
 
-class SchemaConfigFlowHandler(config_entries.ConfigFlow):
+class SchemaConfigFlowHandler(config_entries.ConfigFlow, ABC):
     """Handle a schema based config flow."""
 
     config_flow: Mapping[str, SchemaFlowStep]

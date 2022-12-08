@@ -2404,7 +2404,10 @@ def validate_db_schema(
 
 
 def correct_db_schema(
-    engine: Engine, session_maker: Callable[[], Session], schema_errors: set[str]
+    instance: Recorder,
+    engine: Engine,
+    session_maker: Callable[[], Session],
+    schema_errors: set[str],
 ) -> None:
     """Correct issues detected by validate_db_schema."""
     from .migration import _modify_columns  # pylint: disable=import-outside-toplevel
@@ -2450,12 +2453,16 @@ def correct_db_schema(
             )
         if f"{table.__tablename__}.µs precision" in schema_errors:
             # Attempt to convert datetime columns to µs precision
+            if instance.dialect_name == SupportedDialect.MYSQL:
+                datetime_type = "DATETIME(6)"
+            else:
+                datetime_type = "TIMESTAMP(6) WITH TIME ZONE"
             _modify_columns(
                 session_maker,
                 engine,
                 table.__tablename__,
                 [
-                    "last_reset DATETIME(6)",
-                    "start DATETIME(6)",
+                    f"last_reset {datetime_type}",
+                    f"start {datetime_type}",
                 ],
             )

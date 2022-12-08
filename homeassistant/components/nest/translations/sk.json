@@ -27,13 +27,18 @@
                 "title": "Hniezdo: Zadajte ID projektu Cloud"
             },
             "init": {
-                "description": "Vyberte met\u00f3du overenia"
+                "data": {
+                    "flow_impl": "Poskytovate\u013e"
+                },
+                "description": "Vyberte met\u00f3du overenia",
+                "title": "Poskytovate\u013e overovania"
             },
             "link": {
                 "data": {
                     "code": "PIN k\u00f3d"
                 },
-                "description": "Ak chcete prepoji\u0165 svoje konto Nest, [autorizujte svoje konto]({url}).\n\nPo autoriz\u00e1cii skop\u00edrujte a vlo\u017ete poskytnut\u00fd k\u00f3d PIN uveden\u00fd ni\u017e\u0161ie."
+                "description": "Ak chcete prepoji\u0165 svoje konto Nest, [autorizujte svoje konto]({url}).\n\nPo autoriz\u00e1cii skop\u00edrujte a vlo\u017ete poskytnut\u00fd k\u00f3d PIN uveden\u00fd ni\u017e\u0161ie.",
+                "title": "Prepoji\u0165 \u00fa\u010det Nest"
             },
             "pick_implementation": {
                 "title": "Vyberte met\u00f3du overenia"
@@ -46,6 +51,7 @@
                 "title": "Nakonfigurujte Google Cloud"
             },
             "reauth_confirm": {
+                "description": "Integr\u00e1cia Nestu potrebuje op\u00e4tovn\u00e9 overenie v\u00e1\u0161ho konta",
                 "title": "Znova overi\u0165 integr\u00e1ciu"
             }
         }

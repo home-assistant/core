@@ -139,7 +139,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Handle a clear cache service call."""
         # clear the cache
         with suppress(FileNotFoundError):
-            if call.data[CONF_ADDRESS]:
+            if CONF_ADDRESS in call.data and call.data[CONF_ADDRESS]:
                 await hass.async_add_executor_job(
                     os.unlink,
                     hass.config.path(

@@ -9,6 +9,7 @@
         "step": {
             "user": {
                 "data": {
+                    "place_id": "ID miesta",
                     "service_id": "ID slu\u017eby"
                 }
             }

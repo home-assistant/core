@@ -36,7 +36,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import as_utc, parse_datetime
 
-from .const import DEVICE_CLASS_CHARGE_STATE, DEVICE_CLASS_PLUG_STATE, DOMAIN
+from .const import DOMAIN
 from .renault_coordinator import T
 from .renault_entities import RenaultDataEntity, RenaultDataEntityDescription
 from .renault_hub import RenaultHub
@@ -171,7 +171,6 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         key="charge_state",
         coordinator="battery",
         data_key="chargingStatus",
-        device_class=DEVICE_CLASS_CHARGE_STATE,
         entity_class=RenaultSensor[KamereonVehicleBatteryStatusData],
         icon_lambda=_get_charge_state_icon,
         name="Charge state",
@@ -219,7 +218,6 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         key="plug_state",
         coordinator="battery",
         data_key="plugStatus",
-        device_class=DEVICE_CLASS_PLUG_STATE,
         entity_class=RenaultSensor[KamereonVehicleBatteryStatusData],
         icon_lambda=_get_plug_state_icon,
         name="Plug state",

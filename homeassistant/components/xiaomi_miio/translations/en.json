@@ -51,6 +51,31 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "display_orientation": {
+                "state": {
+                    "forward": "Forward",
+                    "left": "Left",
+                    "right": "Right"
+                }
+            },
+            "led_brightness": {
+                "state": {
+                    "bright": "Bright",
+                    "dim": "Dim",
+                    "off": "Off"
+                }
+            },
+            "ptc_level": {
+                "state": {
+                    "high": "High",
+                    "low": "Low",
+                    "medium": "Medium"
+                }
+            }
+        }
+    },
     "options": {
         "error": {
             "cloud_credentials_incomplete": "Cloud credentials incomplete, please fill in username, password and country"

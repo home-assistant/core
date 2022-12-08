@@ -17,6 +17,7 @@
                 "title": "Vyberte met\u00f3du overenia"
             },
             "reauth_confirm": {
+                "description": "Integr\u00e1cia yolink mus\u00ed znova overi\u0165 v\u00e1\u0161 \u00fa\u010det",
                 "title": "Znova overi\u0165 integr\u00e1ciu"
             }
         }

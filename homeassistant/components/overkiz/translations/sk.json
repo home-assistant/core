@@ -18,8 +18,49 @@
             "user": {
                 "data": {
                     "host": "Hostite\u013e",
+                    "hub": "Hub",
                     "password": "Heslo",
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "discrete_rssi_level": {
+                "state": {
+                    "good": "Dobr\u00fd",
+                    "low": "N\u00edzky",
+                    "normal": "Norm\u00e1lny",
+                    "verylow": "Ve\u013emi n\u00edzky"
+                }
+            },
+            "priority_lock_originator": {
+                "state": {
+                    "external_gateway": "Extern\u00e1 br\u00e1na",
+                    "local_user": "Miestny pou\u017e\u00edvate\u013e",
+                    "lsc": "LSC",
+                    "rain": "D\u00e1\u017e\u010f",
+                    "saac": "SAAC",
+                    "sfc": "SFC",
+                    "temperature": "Teplota",
+                    "timer": "\u010casova\u010d",
+                    "ups": "UPS",
+                    "user": "Pou\u017e\u00edvate\u013e",
+                    "wind": "Vietor"
+                }
+            },
+            "sensor_defect": {
+                "state": {
+                    "low_battery": "N\u00edzky stav bat\u00e9rie",
+                    "maintenance_required": "Vy\u017eaduje sa \u00fadr\u017eba",
+                    "no_defect": "Bez defektu"
+                }
+            },
+            "sensor_room": {
+                "state": {
+                    "clean": "\u010cist\u00fd",
+                    "dirty": "\u0160pinav\u00fd"
                 }
             }
         }

@@ -10,7 +10,8 @@
                 "data": {
                     "site_name": "N\u00e1zov lokality",
                     "site_nmi": "Miesto NMI"
-                }
+                },
+                "description": "Vyberte NMI lokality, ktor\u00fa chcete prida\u0165"
             },
             "user": {
                 "data": {

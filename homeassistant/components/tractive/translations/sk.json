@@ -16,5 +16,14 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "tracker_state": {
+                "state": {
+                    "system_startup": "Spustenie syst\u00e9mu"
+                }
+            }
+        }
     }
 }

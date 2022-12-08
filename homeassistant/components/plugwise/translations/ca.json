@@ -8,6 +8,7 @@
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "invalid_setup": "Afegeix l'Adam en lloc de l'Anna, consulta la documentaci\u00f3",
+            "response_error": "Dades XML inv\u00e0lides o s'ha rebut una indicaci\u00f3 d'error",
             "unknown": "Error inesperat",
             "unsupported": "Dispositiu amb programari no compatible"
         },
@@ -21,6 +22,27 @@
                 },
                 "description": "Introdueix",
                 "title": "Connexi\u00f3 amb Smile"
+            }
+        }
+    },
+    "entity": {
+        "select": {
+            "dhw_mode": {
+                "state": {
+                    "auto": "Autom\u00e0tic",
+                    "boost": "Incrementat",
+                    "comfort": "Confort",
+                    "off": "OFF"
+                }
+            },
+            "regulation_mode": {
+                "state": {
+                    "bleeding_cold": "Molt fred",
+                    "bleeding_hot": "Molt calent",
+                    "cooling": "Refredant",
+                    "heating": "Escalfant",
+                    "off": "OFF"
+                }
             }
         }
     }

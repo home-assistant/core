@@ -26,5 +26,78 @@
                 "description": "Overkiz \u5e73\u53f0\u7531\u4f8b\u5982 Somfy (Connexoon / TaHoma)\u3001Hitachi (Hi Kumo)\u3001Rexel (Energeasy Connect) \u53ca Atlantic (Cozytouch) \u591a\u500b\u4f9b\u61c9\u5546\u6240\u5ee3\u6cdb\u4f7f\u7528\uff0c\u8f38\u5165\u61c9\u7528\u7a0b\u5f0f\u6191\u8b49\u4e26\u9078\u64c7 Hub\u3002"
             }
         }
+    },
+    "entity": {
+        "select": {
+            "memorized_simple_volume": {
+                "state": {
+                    "highest": "\u6700\u9ad8",
+                    "standard": "\u6a19\u6e96"
+                }
+            },
+            "open_closed_pedestrian": {
+                "state": {
+                    "closed": "\u95dc\u9589",
+                    "open": "\u958b\u555f",
+                    "pedestrian": "\u9598\u9580"
+                }
+            }
+        },
+        "sensor": {
+            "battery": {
+                "state": {
+                    "full": "\u5168\u6eff",
+                    "low": "\u4f4e",
+                    "normal": "\u6b63\u5e38",
+                    "verylow": "\u6975\u4f4e"
+                }
+            },
+            "discrete_rssi_level": {
+                "state": {
+                    "good": "\u826f\u597d",
+                    "low": "\u4f4e",
+                    "normal": "\u6b63\u5e38",
+                    "verylow": "\u6975\u4f4e"
+                }
+            },
+            "priority_lock_originator": {
+                "state": {
+                    "external_gateway": "\u5916\u90e8\u9598\u9053\u5668",
+                    "local_user": "\u672c\u5730\u4f7f\u7528\u8005",
+                    "lsc": "LSC",
+                    "myself": "\u672c\u4eba",
+                    "rain": "\u4e0b\u96e8",
+                    "saac": "SAAC",
+                    "security": "\u5b89\u5168\u6027",
+                    "sfc": "SFC",
+                    "temperature": "\u6eab\u5ea6",
+                    "timer": "\u8a08\u6642\u5668",
+                    "ups": "UPS",
+                    "user": "\u4f7f\u7528\u8005",
+                    "wind": "\u6709\u98a8"
+                }
+            },
+            "sensor_defect": {
+                "state": {
+                    "dead": "\u5931\u53bb\u9023\u7dda",
+                    "low_battery": "\u4f4e\u96fb\u91cf",
+                    "maintenance_required": "\u9700\u8981\u9032\u884c\u7dad\u8b77",
+                    "no_defect": "\u7121\u7f3a\u9677"
+                }
+            },
+            "sensor_room": {
+                "state": {
+                    "clean": "\u826f\u597d",
+                    "dirty": "\u4e0d\u4f73"
+                }
+            },
+            "three_way_handle_direction": {
+                "state": {
+                    "closed": "\u95dc\u9589",
+                    "open": "\u958b\u555f",
+                    "tilt": "\u50be\u659c"
+                }
+            }
+        }
     }
 }
