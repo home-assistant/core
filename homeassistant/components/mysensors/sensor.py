@@ -26,11 +26,11 @@ from homeassistant.const import (
     PERCENTAGE,
     POWER_VOLT_AMPERE,
     POWER_WATT,
-    SOUND_PRESSURE_DB,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     VOLUME_CUBIC_METERS,
     Platform,
+    UnitOfSoundPressure,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -134,8 +134,8 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "V_LEVEL_S_SOUND": SensorEntityDescription(
         key="V_LEVEL_S_SOUND",
-        native_unit_of_measurement=SOUND_PRESSURE_DB,
-        icon="mdi:volume-high",
+        native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
+        device_class=SensorDeviceClass.SOUND_PRESSURE,
     ),
     "V_LEVEL_S_VIBRATION": SensorEntityDescription(
         key="V_LEVEL_S_VIBRATION",
