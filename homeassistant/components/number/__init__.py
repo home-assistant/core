@@ -93,6 +93,12 @@ class NumberDeviceClass(StrEnum):
     Unit of measurement: `A`
     """
 
+    DATA_SIZE = "data_size"
+    """Data size.
+
+    Unit of measurement: UnitOfInformation
+    """
+
     DISTANCE = "distance"
     """Generic distance.
 

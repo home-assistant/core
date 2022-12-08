@@ -35,6 +35,7 @@ CONF_BATTERY_LEVEL = "battery_level"
 CONF_CO = "carbon_monoxide"
 CONF_CO2 = "carbon_dioxide"
 CONF_CURRENT = "current"
+CONF_DATA_SIZE = "data_size"
 CONF_DISTANCE = "distance"
 CONF_ENERGY = "energy"
 CONF_FREQUENCY = "frequency"
@@ -73,6 +74,7 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.CO: [{CONF_TYPE: CONF_CO}],
     SensorDeviceClass.CO2: [{CONF_TYPE: CONF_CO2}],
     SensorDeviceClass.CURRENT: [{CONF_TYPE: CONF_CURRENT}],
+    SensorDeviceClass.DATA_SIZE: [{CONF_TYPE: CONF_DATA_SIZE}],
     SensorDeviceClass.DISTANCE: [{CONF_TYPE: CONF_DISTANCE}],
     SensorDeviceClass.ENERGY: [{CONF_TYPE: CONF_ENERGY}],
     SensorDeviceClass.FREQUENCY: [{CONF_TYPE: CONF_FREQUENCY}],
@@ -122,6 +124,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_CO,
                     CONF_CO2,
                     CONF_CURRENT,
+                    CONF_DATA_SIZE,
                     CONF_DISTANCE,
                     CONF_ENERGY,
                     CONF_FREQUENCY,
