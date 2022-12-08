@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import datetime
 import logging
+from typing import Any
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import (
@@ -33,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 #  SensorTypes from ebusdpy module :
 #  0='decimal', 1='time-schedule', 2='switch', 3='string', 4='value;status'
 
-SENSOR_TYPES = {
+SENSOR_TYPES: dict[str, dict[str, list[Any]]] = {
     "700": {
         "ActualFlowTemperatureDesired": [
             "Hc1ActualFlowTempDesired",
@@ -315,12 +316,11 @@ def setup_platform(
     ebusd_api = hass.data[DOMAIN]
     monitored_conditions = discovery_info["monitored_conditions"]
     name = discovery_info["client_name"]
+    circuit = discovery_info["circuit"]
 
     dev = []
     for condition in monitored_conditions:
-        dev.append(
-            EbusdSensor(ebusd_api, discovery_info["sensor_types"][condition], name)
-        )
+        dev.append(EbusdSensor(ebusd_api, SENSOR_TYPES[circuit][condition], name))
 
     add_entities(dev, True)
 
