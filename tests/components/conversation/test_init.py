@@ -1,5 +1,6 @@
 """The tests for the Conversation component."""
 from http import HTTPStatus
+from unittest.mock import patch
 
 import pytest
 
@@ -229,6 +230,103 @@ async def test_http_api(hass, hass_client):
     assert call.domain == HASS_DOMAIN
     assert call.service == "turn_on"
     assert call.data == {"entity_id": "light.kitchen"}
+
+
+async def test_http_api_no_match(hass, hass_client):
+    """Test the HTTP conversation API with an intent match failure."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "conversation", {})
+    assert await async_setup_component(hass, "intent", {})
+
+    client = await hass_client()
+
+    # Sentence should not match any intents
+    resp = await client.post("/api/conversation/process", json={"text": "do something"})
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data == {
+        "card": {},
+        "speech": {
+            "plain": {
+                "extra_data": None,
+                "speech": "Sorry, I didn't understand that",
+            }
+        },
+        "language": hass.config.language,
+        "state": "failure",
+        "response_type": "error_message",
+        "error_reason": "no_intent_match",
+    }
+
+
+async def test_http_api_no_valid_targets(hass, hass_client):
+    """Test the HTTP conversation API with no valid targets."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "conversation", {})
+    assert await async_setup_component(hass, "intent", {})
+
+    client = await hass_client()
+
+    # No kitchen light
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on the kitchen"}
+    )
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data == {
+        "card": {},
+        "speech": {
+            "plain": {
+                "extra_data": None,
+                "speech": "Unable to find an entity called kitchen",
+            }
+        },
+        "language": hass.config.language,
+        "state": "failure",
+        "response_type": "error_message",
+        "error_reason": "no_valid_targets",
+    }
+
+
+async def test_http_api_handle_failure(hass, hass_client):
+    """Test the HTTP conversation API with an error during handling."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "conversation", {})
+    assert await async_setup_component(hass, "intent", {})
+
+    client = await hass_client()
+
+    hass.states.async_set("light.kitchen", "off")
+
+    # Raise an "unexpected" error during intent handling
+    def async_handle_error(*args, **kwargs):
+        raise intent.IntentUnexpectedError(
+            "Unexpected error turning on the kitchen light"
+        )
+
+    with patch("homeassistant.helpers.intent.async_handle", new=async_handle_error):
+        resp = await client.post(
+            "/api/conversation/process", json={"text": "turn on the kitchen"}
+        )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data == {
+        "card": {},
+        "speech": {
+            "plain": {
+                "extra_data": None,
+                "speech": "Unexpected error turning on the kitchen light",
+            }
+        },
+        "language": hass.config.language,
+        "state": "failure",
+        "response_type": "error_message",
+        "error_reason": "failed_to_handle",
+    }
 
 
 async def test_http_api_wrong_data(hass, hass_client):
