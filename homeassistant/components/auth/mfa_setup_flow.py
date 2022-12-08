@@ -145,7 +145,10 @@ def _prepare_result_json(
     result: data_entry_flow.FlowResult,
 ) -> data_entry_flow.FlowResult:
     """Convert result to JSON."""
-    if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
+    if result["type"] not in (
+        data_entry_flow.FlowResultType.CREATE_ENTRY,
+        data_entry_flow.FlowResultType.FINISH_FLOW,
+    ):
         data = result.copy()
         return data
 

@@ -398,7 +398,7 @@ class SchemaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
         data: Mapping[str, Any],
         **kwargs: Any,
     ) -> FlowResult:
-        """Finish config flow and create a config entry."""
+        """Finish options flow."""
         if self._async_options_flow_finished:
             self._async_options_flow_finished(self.hass, data)
         return super().async_create_entry(data=data, **kwargs)

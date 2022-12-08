@@ -52,7 +52,8 @@ flow for details.
 
 Progress the flow. Most flows will be 1 page, but could optionally add extra
 login challenges, like TFA. Once the flow has finished, the returned step will
-have type FlowResultType.CREATE_ENTRY and "result" key will contain an authorization code.
+have type FlowResultType.CREATE_ENTRY or FlowResultType.FINISH_FLOW and "result"
+key will contain an authorization code.
 The authorization code associated with an authorized user by default, it will
 associate with an credential if "type" set to "link_user" in
 "/auth/login_flow"
@@ -156,7 +157,10 @@ def _prepare_result_json(
     result: data_entry_flow.FlowResult,
 ) -> data_entry_flow.FlowResult:
     """Convert result to JSON."""
-    if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
+    if result["type"] in (
+        data_entry_flow.FlowResultType.CREATE_ENTRY,
+        data_entry_flow.FlowResultType.FINISH_FLOW,
+    ):
         data = result.copy()
         data.pop("result")
         data.pop("data")
@@ -196,7 +200,10 @@ class LoginFlowBaseView(HomeAssistantView):
         result: data_entry_flow.FlowResult,
     ) -> web.Response:
         """Convert the flow result to a response."""
-        if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
+        if result["type"] not in (
+            data_entry_flow.FlowResultType.CREATE_ENTRY,
+            data_entry_flow.FlowResultType.FINISH_FLOW,
+        ):
             # @log_invalid_auth does not work here since it returns HTTP 200.
             # We need to manually log failed login attempts.
             if (

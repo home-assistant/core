@@ -24,14 +24,16 @@ _LOGGER = logging.getLogger(__name__)
 class FlowResultType(StrEnum):
     """Result type for a data entry flow."""
 
-    FORM = "form"
-    CREATE_ENTRY = "create_entry"
     ABORT = "abort"
+    # CREATE_ENTRY is deprecated and replaced by FINISH_FLOW, to be removed in 2024.1
+    CREATE_ENTRY = "create_entry"
     EXTERNAL_STEP = "external"
     EXTERNAL_STEP_DONE = "external_done"
+    FINISH_FLOW = "finish_flow"
+    FORM = "form"
+    MENU = "menu"
     SHOW_PROGRESS = "progress"
     SHOW_PROGRESS_DONE = "progress_done"
-    MENU = "menu"
 
 
 # RESULT_TYPE_* is deprecated, to be removed in 2022.9
@@ -162,7 +164,7 @@ class FlowManager(abc.ABC):
     async def async_finish_flow(
         self, flow: FlowHandler, result: FlowResult
     ) -> FlowResult:
-        """Finish a config flow and add an entry."""
+        """Finish a flow."""
 
     async def async_post_init(self, flow: FlowHandler, result: FlowResult) -> None:
         """Entry has finished executing its first step asynchronously."""
@@ -503,7 +505,10 @@ class FlowHandler:
         description: str | None = None,
         description_placeholders: Mapping[str, str] | None = None,
     ) -> FlowResult:
-        """Finish config flow and create a config entry."""
+        """Finish a flow.
+
+        Deprecated and replaced by async_finish_flow, to be removed in 2024.1
+        """
         flow_result = FlowResult(
             version=self.VERSION,
             type=FlowResultType.CREATE_ENTRY,
@@ -517,6 +522,28 @@ class FlowHandler:
         if title is not None:
             flow_result["title"] = title
         return flow_result
+
+    @callback
+    def async_finish_flow(
+        self,
+        *,
+        title: str,
+        data: Mapping[str, Any],
+        description: str | None = None,
+        description_placeholders: Mapping[str, str] | None = None,
+    ) -> FlowResult:
+        """Finish a flow."""
+        return FlowResult(
+            version=self.VERSION,
+            type=FlowResultType.FINISH_FLOW,
+            flow_id=self.flow_id,
+            handler=self.handler,
+            title=title,
+            data=data,
+            description=description,
+            description_placeholders=description_placeholders,
+            context=self.context,
+        )
 
     @callback
     def async_abort(
