@@ -20,12 +20,8 @@
             },
             "user": {
                 "data": {
-                    "address": "Direcci\u00f3n del dispositivo",
-                    "mac": "Direcci\u00f3n MAC del dispositivo",
-                    "name": "Nombre",
-                    "password": "Contrase\u00f1a"
-                },
-                "title": "Configurar el dispositivo Switchbot"
+                    "address": "Direcci\u00f3n del dispositivo"
+                }
             }
         }
     },
@@ -33,10 +29,7 @@
         "step": {
             "init": {
                 "data": {
-                    "retry_count": "Recuento de reintentos",
-                    "retry_timeout": "Tiempo de espera entre reintentos",
-                    "scan_timeout": "Cu\u00e1nto tiempo escanear en busca de datos de anuncio",
-                    "update_time": "Tiempo entre actualizaciones (segundos)"
+                    "retry_count": "Recuento de reintentos"
                 }
             }
         }

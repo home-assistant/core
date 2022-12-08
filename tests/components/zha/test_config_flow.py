@@ -16,7 +16,7 @@ import zigpy.types
 from homeassistant import config_entries
 from homeassistant.components import ssdp, usb, zeroconf
 from homeassistant.components.ssdp import ATTR_UPNP_MANUFACTURER_URL, ATTR_UPNP_SERIAL
-from homeassistant.components.zha import config_flow
+from homeassistant.components.zha import config_flow, radio_manager
 from homeassistant.components.zha.core.const import (
     CONF_BAUDRATE,
     CONF_FLOWCONTROL,
@@ -49,7 +49,7 @@ def disable_platform_only():
 @pytest.fixture(autouse=True)
 def reduce_reconnect_timeout():
     """Reduces reconnect timeout to speed up tests."""
-    with patch("homeassistant.components.zha.config_flow.CONNECT_DELAY_S", 0.01):
+    with patch("homeassistant.components.zha.radio_manager.CONNECT_DELAY_S", 0.01):
         yield
 
 
@@ -76,12 +76,12 @@ def backup():
 
 
 def mock_detect_radio_type(radio_type=RadioType.ezsp, ret=True):
-    """Mock `_detect_radio_type` that just sets the appropriate attributes."""
+    """Mock `detect_radio_type` that just sets the appropriate attributes."""
 
     async def detect(self):
-        self._radio_type = radio_type
-        self._device_settings = radio_type.controller.SCHEMA_DEVICE(
-            {CONF_DEVICE_PATH: self._device_path}
+        self.radio_type = radio_type
+        self.device_settings = radio_type.controller.SCHEMA_DEVICE(
+            {CONF_DEVICE_PATH: self.device_path}
         )
 
         return ret
@@ -669,7 +669,7 @@ async def test_discovery_already_setup(hass):
 
 
 @patch(
-    "homeassistant.components.zha.config_flow.ZhaConfigFlowHandler._detect_radio_type",
+    "homeassistant.components.zha.radio_manager.ZhaRadioManager.detect_radio_type",
     mock_detect_radio_type(radio_type=RadioType.deconz),
 )
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
@@ -707,7 +707,7 @@ async def test_user_flow(hass):
 
 
 @patch(
-    "homeassistant.components.zha.config_flow.ZhaConfigFlowHandler._detect_radio_type",
+    "homeassistant.components.zha.radio_manager.ZhaRadioManager.detect_radio_type",
     mock_detect_radio_type(ret=False),
 )
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
@@ -799,12 +799,14 @@ async def test_detect_radio_type_success(
     """Test detect radios successfully."""
 
     handler = config_flow.ZhaConfigFlowHandler()
-    handler._device_path = "/dev/null"
+    handler._radio_mgr.device_path = "/dev/null"
 
-    await handler._detect_radio_type()
+    await handler._radio_mgr.detect_radio_type()
 
-    assert handler._radio_type == RadioType.znp
-    assert handler._device_settings[zigpy.config.CONF_DEVICE_PATH] == "/dev/null"
+    assert handler._radio_mgr.radio_type == RadioType.znp
+    assert (
+        handler._radio_mgr.device_settings[zigpy.config.CONF_DEVICE_PATH] == "/dev/null"
+    )
 
     assert bellows_probe.await_count == 1
     assert znp_probe.await_count == 1
@@ -825,12 +827,14 @@ async def test_detect_radio_type_success_with_settings(
     """Test detect radios successfully but probing returns new settings."""
 
     handler = config_flow.ZhaConfigFlowHandler()
-    handler._device_path = "/dev/null"
-    await handler._detect_radio_type()
+    handler._radio_mgr.device_path = "/dev/null"
+    await handler._radio_mgr.detect_radio_type()
 
-    assert handler._radio_type == RadioType.ezsp
-    assert handler._device_settings["new_setting"] == 123
-    assert handler._device_settings[zigpy.config.CONF_DEVICE_PATH] == "/dev/null"
+    assert handler._radio_mgr.radio_type == RadioType.ezsp
+    assert handler._radio_mgr.device_settings["new_setting"] == 123
+    assert (
+        handler._radio_mgr.device_settings[zigpy.config.CONF_DEVICE_PATH] == "/dev/null"
+    )
 
     assert bellows_probe.await_count == 1
     assert znp_probe.await_count == 0
@@ -987,6 +991,7 @@ async def test_hardware_already_setup(hass):
     ).add_to_hass(hass)
 
     data = {
+        "name": "Yellow",
         "radio_type": "efr32",
         "port": {
             "path": "/dev/ttyAMA1",
@@ -1019,7 +1024,7 @@ async def test_hardware_invalid_data(hass, data):
 def test_allow_overwrite_ezsp_ieee():
     """Test modifying the backup to allow bellows to override the IEEE address."""
     backup = zigpy.backups.NetworkBackup()
-    new_backup = config_flow._allow_overwrite_ezsp_ieee(backup)
+    new_backup = radio_manager._allow_overwrite_ezsp_ieee(backup)
 
     assert backup != new_backup
     assert new_backup.network_info.stack_specific["ezsp"][EZSP_OVERWRITE_EUI64] is True
@@ -1029,7 +1034,7 @@ def test_prevent_overwrite_ezsp_ieee():
     """Test modifying the backup to prevent bellows from overriding the IEEE address."""
     backup = zigpy.backups.NetworkBackup()
     backup.network_info.stack_specific["ezsp"] = {EZSP_OVERWRITE_EUI64: True}
-    new_backup = config_flow._prevent_overwrite_ezsp_ieee(backup)
+    new_backup = radio_manager._prevent_overwrite_ezsp_ieee(backup)
 
     assert backup != new_backup
     assert not new_backup.network_info.stack_specific.get("ezsp", {}).get(
@@ -1046,7 +1051,7 @@ def pick_radio(hass):
         port_select = f"{port}, s/n: {port.serial_number} - {port.manufacturer}"
 
         with patch(
-            "homeassistant.components.zha.config_flow.ZhaConfigFlowHandler._detect_radio_type",
+            "homeassistant.components.zha.radio_manager.ZhaRadioManager.detect_radio_type",
             mock_detect_radio_type(radio_type=radio_type),
         ):
             result = await hass.config_entries.flow.async_init(
@@ -1126,7 +1131,7 @@ def test_parse_uploaded_backup(process_mock):
     assert backup == parsed_backup
 
 
-@patch("homeassistant.components.zha.config_flow._allow_overwrite_ezsp_ieee")
+@patch("homeassistant.components.zha.radio_manager._allow_overwrite_ezsp_ieee")
 async def test_formation_strategy_restore_manual_backup_non_ezsp(
     allow_overwrite_ieee_mock, pick_radio, mock_app, hass
 ):
@@ -1158,7 +1163,7 @@ async def test_formation_strategy_restore_manual_backup_non_ezsp(
     assert result3["data"][CONF_RADIO_TYPE] == "znp"
 
 
-@patch("homeassistant.components.zha.config_flow._allow_overwrite_ezsp_ieee")
+@patch("homeassistant.components.zha.radio_manager._allow_overwrite_ezsp_ieee")
 async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp(
     allow_overwrite_ieee_mock, pick_radio, mock_app, backup, hass
 ):
@@ -1198,7 +1203,7 @@ async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp(
     assert result4["data"][CONF_RADIO_TYPE] == "ezsp"
 
 
-@patch("homeassistant.components.zha.config_flow._allow_overwrite_ezsp_ieee")
+@patch("homeassistant.components.zha.radio_manager._allow_overwrite_ezsp_ieee")
 async def test_formation_strategy_restore_manual_backup_ezsp(
     allow_overwrite_ieee_mock, pick_radio, mock_app, hass
 ):
@@ -1386,7 +1391,7 @@ async def test_formation_strategy_restore_automatic_backup_non_ezsp(
     assert result3["data"][CONF_RADIO_TYPE] == "znp"
 
 
-@patch("homeassistant.components.zha.config_flow._allow_overwrite_ezsp_ieee")
+@patch("homeassistant.components.zha.radio_manager._allow_overwrite_ezsp_ieee")
 async def test_ezsp_restore_without_settings_change_ieee(
     allow_overwrite_ieee_mock, pick_radio, mock_app, backup, hass
 ):
@@ -1630,6 +1635,7 @@ async def test_options_flow_defaults_socket(hass):
     assert result5["step_id"] == "choose_formation_strategy"
 
 
+@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
 @patch("homeassistant.components.zha.async_setup_entry", return_value=True)
 async def test_options_flow_restarts_running_zha_if_cancelled(async_setup_entry, hass):
     """Test options flow restarts a previously-running ZHA if it's cancelled."""
@@ -1682,6 +1688,7 @@ async def test_options_flow_restarts_running_zha_if_cancelled(async_setup_entry,
     async_setup_entry.assert_called_once_with(hass, entry)
 
 
+@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 async def test_options_flow_migration_reset_old_adapter(hass, mock_app):
     """Test options flow for migrating from an old radio."""

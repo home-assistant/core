@@ -240,7 +240,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         # Register the service description
         service_desc = {
-            CONF_NAME: f"Say an TTS message with {p_type}",
+            CONF_NAME: f"Say a TTS message with {p_type}",
             CONF_DESCRIPTION: f"Say something using text-to-speech on a media player with {p_type}.",
             CONF_FIELDS: services_dict[SERVICE_SAY][CONF_FIELDS],
         }
@@ -618,9 +618,9 @@ class SpeechManager:
                 if not tts_file.tags:
                     tts_file.add_tags()
                 if isinstance(tts_file.tags, ID3):
-                    tts_file["artist"] = ID3Text(encoding=3, text=artist)
-                    tts_file["album"] = ID3Text(encoding=3, text=album)
-                    tts_file["title"] = ID3Text(encoding=3, text=message)
+                    tts_file["artist"] = ID3Text(encoding=3, text=artist)  # type: ignore[no-untyped-call]
+                    tts_file["album"] = ID3Text(encoding=3, text=album)  # type: ignore[no-untyped-call]
+                    tts_file["title"] = ID3Text(encoding=3, text=message)  # type: ignore[no-untyped-call]
                 else:
                     tts_file["artist"] = artist
                     tts_file["album"] = album

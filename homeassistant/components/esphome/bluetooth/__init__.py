@@ -30,13 +30,15 @@ def _async_can_connect_factory(
     @hass_callback
     def _async_can_connect() -> bool:
         """Check if a given source can make another connection."""
+        can_connect = bool(entry_data.available and entry_data.ble_connections_free)
         _LOGGER.debug(
-            "Checking if %s can connect, available=%s, ble_connections_free=%s",
+            "%s: Checking can connect, available=%s, ble_connections_free=%s result=%s",
             source,
             entry_data.available,
             entry_data.ble_connections_free,
+            can_connect,
         )
-        return bool(entry_data.available and entry_data.ble_connections_free)
+        return can_connect
 
     return _async_can_connect
 
@@ -55,7 +57,7 @@ async def async_connect_scanner(
     version = entry_data.device_info.bluetooth_proxy_version
     connectable = version >= 2
     _LOGGER.debug(
-        "Connecting scanner for %s, version=%s, connectable=%s",
+        "%s: Connecting scanner version=%s, connectable=%s",
         source,
         version,
         connectable,
@@ -65,7 +67,9 @@ async def async_connect_scanner(
         source=source,
         can_connect=_async_can_connect_factory(entry_data, source),
     )
-    scanner = ESPHomeScanner(hass, source, new_info_callback, connector, connectable)
+    scanner = ESPHomeScanner(
+        hass, source, entry.title, new_info_callback, connector, connectable
+    )
     unload_callbacks = [
         async_register_scanner(hass, scanner, connectable),
         scanner.async_setup(),

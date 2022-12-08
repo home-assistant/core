@@ -124,7 +124,9 @@ async def test_hassio_discovery(hass):
                 "addon": "RTSPtoWebRTC",
                 "host": "fake-server",
                 "port": 8083,
-            }
+            },
+            name="RTSPtoWebRTC",
+            slug="rtsp-to-webrtc",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -161,7 +163,9 @@ async def test_hassio_single_config_entry(hass: HomeAssistant) -> None:
                 "addon": "RTSPtoWebRTC",
                 "host": "fake-server",
                 "port": 8083,
-            }
+            },
+            name="RTSPtoWebRTC",
+            slug="rtsp-to-webrtc",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -181,7 +185,9 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
                 "addon": "RTSPtoWebRTC",
                 "host": "fake-server",
                 "port": 8083,
-            }
+            },
+            name="RTSPtoWebRTC",
+            slug="rtsp-to-webrtc",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -198,7 +204,9 @@ async def test_hassio_discovery_server_failure(hass: HomeAssistant) -> None:
                 "addon": "RTSPtoWebRTC",
                 "host": "fake-server",
                 "port": 8083,
-            }
+            },
+            name="RTSPtoWebRTC",
+            slug="rtsp-to-webrtc",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )

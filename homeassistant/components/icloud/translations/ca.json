@@ -11,13 +11,6 @@
             "validate_verification_code": "No s'ha pogut verificar el codi de verificaci\u00f3, torna-ho a provar"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "password": "Contrasenya"
-                },
-                "description": "La contrasenya introdu\u00efda anteriorment per a {username} ja no funciona. Actualitza la contrasenya per continuar utilitzant aquesta integraci\u00f3.",
-                "title": "Reautenticaci\u00f3 de la integraci\u00f3"
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Contrasenya"

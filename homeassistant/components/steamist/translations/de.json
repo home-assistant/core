@@ -5,7 +5,7 @@
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
             "cannot_connect": "Verbindung fehlgeschlagen",
             "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden",
-            "not_steamist_device": "Kein Steamist-Ger\u00e4t"
+            "not_steamist_device": "Kein Steamist Ger\u00e4t"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
@@ -14,7 +14,7 @@
         "flow_title": "{name} ({ipaddress})",
         "step": {
             "discovery_confirm": {
-                "description": "M\u00f6chtest du {name} ( {ipaddress} ) einrichten?"
+                "description": "M\u00f6chtest du {name} ({ipaddress}) einrichten?"
             },
             "pick_device": {
                 "data": {

@@ -6,6 +6,7 @@ import broadlink.exceptions as blke
 from homeassistant.components.broadlink.const import DOMAIN
 from homeassistant.components.broadlink.device import get_domains
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.helpers.entity_registry import async_entries_for_device
 
 from . import get_device
@@ -266,7 +267,11 @@ async def test_device_setup_registry(hass):
     assert device_entry.sw_version == device.fwversion
 
     for entry in async_entries_for_device(entity_registry, device_entry.id):
-        assert entry.original_name.startswith(device.name)
+        assert (
+            hass.states.get(entry.entity_id)
+            .attributes[ATTR_FRIENDLY_NAME]
+            .startswith(device.name)
+        )
 
 
 async def test_device_unload_works(hass):
@@ -345,4 +350,8 @@ async def test_device_update_listener(hass):
     )
     assert device_entry.name == "New Name"
     for entry in async_entries_for_device(entity_registry, device_entry.id):
-        assert entry.original_name.startswith("New Name")
+        assert (
+            hass.states.get(entry.entity_id)
+            .attributes[ATTR_FRIENDLY_NAME]
+            .startswith("New Name")
+        )

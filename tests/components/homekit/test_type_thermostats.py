@@ -1045,7 +1045,7 @@ async def test_thermostat_restore(hass, hk_driver, events):
         "off",
     }
 
-    acc = Thermostat(hass, hk_driver, "Climate", "climate.all_info_set", 2, None)
+    acc = Thermostat(hass, hk_driver, "Climate", "climate.all_info_set", 3, None)
     assert acc.category == 9
     assert acc.get_temperature_range() == (60.0, 70.0)
     assert set(acc.char_target_heat_cool.properties["ValidValues"].keys()) == {
@@ -1859,7 +1859,7 @@ async def test_water_heater_restore(hass, hk_driver, events):
     }
 
     acc = WaterHeater(
-        hass, hk_driver, "WaterHeater", "water_heater.all_info_set", 2, None
+        hass, hk_driver, "WaterHeater", "water_heater.all_info_set", 3, None
     )
     assert acc.category == 9
     assert acc.get_temperature_range() == (60.0, 70.0)

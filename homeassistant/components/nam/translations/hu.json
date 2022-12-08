@@ -37,5 +37,18 @@
                 "description": "\u00c1ll\u00edtsa be a Nettigo Air Monitor integr\u00e1ci\u00f3j\u00e1t."
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "caqi_level": {
+                "state": {
+                    "high": "Magas",
+                    "low": "Alacsony",
+                    "medium": "K\u00f6zepes",
+                    "very high": "Nagyon magas",
+                    "very low": "Nagyon alacsony"
+                }
+            }
+        }
     }
 }

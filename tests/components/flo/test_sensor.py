@@ -3,12 +3,14 @@ from homeassistant.components.flo.const import DOMAIN as FLO_DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.setup import async_setup_component
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .common import TEST_PASSWORD, TEST_USER_ID
 
 
 async def test_sensors(hass, config_entry, aioclient_mock_fixture):
     """Test Flo by Moen sensors."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
     config_entry.add_to_hass(hass)
     assert await async_setup_component(
         hass, FLO_DOMAIN, {CONF_USERNAME: TEST_USER_ID, CONF_PASSWORD: TEST_PASSWORD}
@@ -49,7 +51,7 @@ async def test_sensors(hass, config_entry, aioclient_mock_fixture):
         == SensorStateClass.MEASUREMENT
     )
 
-    assert hass.states.get("sensor.smart_water_shutoff_water_temperature").state == "21"
+    assert hass.states.get("sensor.smart_water_shutoff_water_temperature").state == "70"
     assert (
         hass.states.get("sensor.smart_water_shutoff_water_temperature").attributes[
             ATTR_STATE_CLASS
@@ -58,7 +60,7 @@ async def test_sensors(hass, config_entry, aioclient_mock_fixture):
     )
 
     # and 3 entities for the detector
-    assert hass.states.get("sensor.kitchen_sink_temperature").state == "16"
+    assert hass.states.get("sensor.kitchen_sink_temperature").state == "61"
     assert (
         hass.states.get("sensor.kitchen_sink_temperature").attributes[ATTR_STATE_CLASS]
         == SensorStateClass.MEASUREMENT

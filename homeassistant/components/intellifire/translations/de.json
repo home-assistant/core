@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
-            "not_intellifire_device": "Kein IntelliFire-Ger\u00e4t.",
+            "not_intellifire_device": "Kein IntelliFire Ger\u00e4t.",
             "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
@@ -31,7 +31,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Die folgenden IntelliFire-Ger\u00e4te wurden gefunden. Bitte w\u00e4hle aus, welche du konfigurieren m\u00f6chtest.",
+                "description": "Die folgenden IntelliFire Ger\u00e4te wurden gefunden. Bitte w\u00e4hle aus, welche du konfigurieren m\u00f6chtest.",
                 "title": "Ger\u00e4teauswahl"
             }
         }

@@ -32,6 +32,7 @@
             "is_volatile_organic_compounds": "Jelenlegi {entity_name} ill\u00e9kony szerves vegy\u00fcletek koncentr\u00e1ci\u00f3s szintje",
             "is_voltage": "A jelenlegi {entity_name} fesz\u00fclts\u00e9g",
             "is_volume": "{entity_name} aktu\u00e1lis hangereje",
+            "is_water": "Aktu\u00e1lis {entity_name} v\u00edz",
             "is_weight": "{entity_name} aktu\u00e1lis s\u00falya"
         },
         "trigger_type": {
@@ -66,6 +67,7 @@
             "volatile_organic_compounds": "{entity_name} ill\u00e9kony szerves vegy\u00fcletek koncentr\u00e1ci\u00f3j\u00e1nak v\u00e1ltoz\u00e1sai",
             "voltage": "{entity_name} fesz\u00fclts\u00e9ge v\u00e1ltozik",
             "volume": "{entity_name} hanger\u0151 v\u00e1ltoz\u00e1s",
+            "water": "{entity_name} v\u00edz v\u00e1ltoz\u00e1sok",
             "weight": "{entity_name} s\u00falyv\u00e1ltoz\u00e1s"
         }
     },

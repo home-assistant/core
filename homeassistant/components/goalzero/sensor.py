@@ -91,7 +91,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="timeToEmptyFull",
         name="Time to empty/full",
-        device_class=TIME_MINUTES,
+        device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=TIME_MINUTES,
     ),
     SensorEntityDescription(

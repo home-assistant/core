@@ -17,16 +17,17 @@ from homeassistant.const import (
     DEGREE,
     ELECTRIC_CURRENT_MILLIAMPERE,
     ELECTRIC_POTENTIAL_VOLT,
+    ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
     FREQUENCY_HERTZ,
-    LENGTH_MILLIMETERS,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
     PRESSURE_HPA,
-    SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
     VOLUME_CUBIC_METERS,
+    UnitOfPrecipitationDepth,
+    UnitOfSpeed,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -141,7 +142,7 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     "IEC_ENERGY_COUNTER": SensorEntityDescription(
         key="IEC_ENERGY_COUNTER",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -165,12 +166,13 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     "RAIN_COUNTER": SensorEntityDescription(
         key="RAIN_COUNTER",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
     ),
     "WIND_SPEED": SensorEntityDescription(
         key="WIND_SPEED",
-        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
-        device_class=SensorDeviceClass.SPEED,
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
         icon="mdi:weather-windy",
     ),
     "WIND_DIRECTION": SensorEntityDescription(
@@ -251,6 +253,36 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM10,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "STATE": SensorEntityDescription(
+        key="STATE",
+    ),
+    "SMOKE_DETECTOR_ALARM_STATUS": SensorEntityDescription(
+        key="SMOKE_DETECTOR_ALARM_STATUS",
+    ),
+    "WIND_DIR": SensorEntityDescription(
+        key="WIND_DIR",
+    ),
+    "WIND_DIR_RANGE": SensorEntityDescription(
+        key="WIND_DIR_RANGE",
+    ),
+    "CONCENTRATION_STATUS": SensorEntityDescription(
+        key="CONCENTRATION_STATUS",
+    ),
+    "PASSAGE_COUNTER_VALUE": SensorEntityDescription(
+        key="PASSAGE_COUNTER_VALUE",
+    ),
+    "LEVEL": SensorEntityDescription(
+        key="LEVEL",
+    ),
+    "LEVEL_2": SensorEntityDescription(
+        key="LEVEL_2",
+    ),
+    "DOOR_STATE": SensorEntityDescription(
+        key="DOOR_STATE",
+    ),
+    "FILLING_LEVEL": SensorEntityDescription(
+        key="FILLING_LEVEL",
     ),
 }
 

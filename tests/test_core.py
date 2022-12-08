@@ -87,9 +87,9 @@ def test_async_add_hass_job_schedule_partial_callback():
     assert len(hass.add_job.mock_calls) == 0
 
 
-def test_async_add_hass_job_schedule_coroutinefunction(loop):
+def test_async_add_hass_job_schedule_coroutinefunction(event_loop):
     """Test that we schedule coroutines and add jobs to the job pool."""
-    hass = MagicMock(loop=MagicMock(wraps=loop))
+    hass = MagicMock(loop=MagicMock(wraps=event_loop))
 
     async def job():
         pass
@@ -100,9 +100,9 @@ def test_async_add_hass_job_schedule_coroutinefunction(loop):
     assert len(hass.add_job.mock_calls) == 0
 
 
-def test_async_add_hass_job_schedule_partial_coroutinefunction(loop):
+def test_async_add_hass_job_schedule_partial_coroutinefunction(event_loop):
     """Test that we schedule partial coros and add jobs to the job pool."""
-    hass = MagicMock(loop=MagicMock(wraps=loop))
+    hass = MagicMock(loop=MagicMock(wraps=event_loop))
 
     async def job():
         pass
@@ -128,9 +128,9 @@ def test_async_add_job_add_hass_threaded_job_to_pool():
     assert len(hass.loop.run_in_executor.mock_calls) == 1
 
 
-def test_async_create_task_schedule_coroutine(loop):
+def test_async_create_task_schedule_coroutine(event_loop):
     """Test that we schedule coroutines and add jobs to the job pool."""
-    hass = MagicMock(loop=MagicMock(wraps=loop))
+    hass = MagicMock(loop=MagicMock(wraps=event_loop))
 
     async def job():
         pass
@@ -925,7 +925,7 @@ async def test_serviceregistry_callback_service_raise_exception(hass):
     await hass.async_block_till_done()
 
 
-def test_config_defaults():
+async def test_config_defaults():
     """Test config defaults."""
     hass = Mock()
     config = ha.Config(hass)
@@ -939,6 +939,7 @@ def test_config_defaults():
     assert config.external_url is None
     assert config.config_source is ha.ConfigSource.DEFAULT
     assert config.skip_pip is False
+    assert config.skip_pip_packages == []
     assert config.components == set()
     assert config.api is None
     assert config.config_dir is None
@@ -948,23 +949,25 @@ def test_config_defaults():
     assert config.safe_mode is False
     assert config.legacy_templates is False
     assert config.currency == "EUR"
+    assert config.country is None
+    assert config.language == "en"
 
 
-def test_config_path_with_file():
+async def test_config_path_with_file():
     """Test get_config_path method."""
     config = ha.Config(None)
     config.config_dir = "/test/ha-config"
     assert config.path("test.conf") == "/test/ha-config/test.conf"
 
 
-def test_config_path_with_dir_and_file():
+async def test_config_path_with_dir_and_file():
     """Test get_config_path method."""
     config = ha.Config(None)
     config.config_dir = "/test/ha-config"
     assert config.path("dir", "test.conf") == "/test/ha-config/dir/test.conf"
 
 
-def test_config_as_dict():
+async def test_config_as_dict():
     """Test as dict."""
     config = ha.Config(None)
     config.config_dir = "/test/ha-config"
@@ -989,12 +992,14 @@ def test_config_as_dict():
         "external_url": None,
         "internal_url": None,
         "currency": "EUR",
+        "country": None,
+        "language": "en",
     }
 
     assert expected == config.as_dict()
 
 
-def test_config_is_allowed_path():
+async def test_config_is_allowed_path():
     """Test is_allowed_path method."""
     config = ha.Config(None)
     with TemporaryDirectory() as tmp_dir:
@@ -1026,7 +1031,7 @@ def test_config_is_allowed_path():
             config.is_allowed_path(None)
 
 
-def test_config_is_allowed_external_url():
+async def test_config_is_allowed_external_url():
     """Test is_allowed_external_url method."""
     config = ha.Config(None)
     config.allowlist_external_urls = [
@@ -1075,7 +1080,7 @@ async def test_bad_timezone_raises_value_error(hass):
         await hass.config.async_update(time_zone="not_a_timezone")
 
 
-async def test_start_taking_too_long(loop, caplog):
+async def test_start_taking_too_long(event_loop, caplog):
     """Test when async_start takes too long."""
     hass = ha.HomeAssistant()
     caplog.set_level(logging.WARNING)
@@ -1094,7 +1099,7 @@ async def test_start_taking_too_long(loop, caplog):
         assert hass.state == ha.CoreState.stopped
 
 
-async def test_track_task_functions(loop):
+async def test_track_task_functions(event_loop):
     """Test function to start/stop track task and initial state."""
     hass = ha.HomeAssistant()
     try:
@@ -1273,7 +1278,7 @@ async def test_additional_data_in_core_config(hass, hass_storage):
 
 
 async def test_incorrect_internal_external_url(hass, hass_storage, caplog):
-    """Test that we warn when detecting invalid internal/extenral url."""
+    """Test that we warn when detecting invalid internal/external url."""
     config = ha.Config(hass)
 
     hass_storage[ha.CORE_STORAGE_KEY] = {
@@ -1286,6 +1291,8 @@ async def test_incorrect_internal_external_url(hass, hass_storage, caplog):
     await config.async_load()
     assert "Invalid external_url set" not in caplog.text
     assert "Invalid internal_url set" not in caplog.text
+
+    config = ha.Config(hass)
 
     hass_storage[ha.CORE_STORAGE_KEY] = {
         "version": 1,

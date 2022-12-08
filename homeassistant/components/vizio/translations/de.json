@@ -7,7 +7,7 @@
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
-            "complete_pairing_failed": "Das Pairing konnte nicht abgeschlossen werden. Vergewissere dich, dass der eingegebene PIN korrekt ist und dass der Fernseher noch mit Strom versorgt wird und mit dem Netzwerk verbunden ist, bevor du es erneut versuchst.",
+            "complete_pairing_failed": "Das Pairing konnte nicht abgeschlossen werden. Vergewissere dich, dass die eingegebene PIN korrekt ist und dass der Fernseher noch mit Strom versorgt wird und mit dem Netzwerk verbunden ist, bevor du es erneut versuchst.",
             "existing_config_entry_found": "Ein bestehender VIZIO SmartCast-Ger\u00e4t Config-Eintrag mit der gleichen Seriennummer wurde bereits konfiguriert. Du musst den vorhandenen Eintrag l\u00f6schen, um diesen zu konfigurieren."
         },
         "step": {

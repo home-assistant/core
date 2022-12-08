@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Conta j\u00e1 configurada",
             "already_configured_account": "Conta j\u00e1 configurada",
             "already_configured_device": "O dispositivo j\u00e1 est\u00e1 configurado",
             "no_devices_found": "Nenhum dispositivo encontrado na rede",
@@ -26,21 +25,12 @@
                 "description": "Deseja configurar {model} ( {device_id} )?"
             },
             "local": {
-                "data": {
-                    "host": "Endere\u00e7o IP"
-                },
                 "description": "Siga [estas instru\u00e7\u00f5es]( {url} ) sobre como ativar a API local Awair. \n\n Clique em enviar quando terminar."
             },
             "local_pick": {
                 "data": {
                     "device": "Dispositivo",
                     "host": "Endere\u00e7o IP"
-                }
-            },
-            "reauth": {
-                "data": {
-                    "access_token": "Token de Acesso",
-                    "email": "Email"
                 }
             },
             "reauth_confirm": {
@@ -50,10 +40,6 @@
                 }
             },
             "user": {
-                "data": {
-                    "access_token": "Token de Acesso",
-                    "email": "Email"
-                },
                 "menu_options": {
                     "cloud": "Conecte-se pela nuvem",
                     "local": "Conecte-se localmente (preferencial)"

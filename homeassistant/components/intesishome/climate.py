@@ -27,7 +27,7 @@ from homeassistant.const import (
     CONF_DEVICE,
     CONF_PASSWORD,
     CONF_USERNAME,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
@@ -145,7 +145,7 @@ class IntesisAC(ClimateEntity):
     """Represents an Intesishome air conditioning device."""
 
     _attr_should_poll = False
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, ih_device_id, ih_device, controller):
         """Initialize the thermostat."""
@@ -172,7 +172,6 @@ class IntesisAC(ClimateEntity):
         self._hvane = None
         self._power = False
         self._fan_speed = None
-        self._attr_supported_features = 0
         self._power_consumption_heat = None
         self._power_consumption_cool = None
 

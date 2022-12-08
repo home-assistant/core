@@ -18,7 +18,7 @@ try:
     HAS_C_LOADER = True
 except ImportError:
     HAS_C_LOADER = False
-    from yaml import SafeLoader as FastestAvailableSafeLoader  # type: ignore[misc]
+    from yaml import SafeLoader as FastestAvailableSafeLoader  # type: ignore[assignment]
 
 from homeassistant.exceptions import HomeAssistantError
 

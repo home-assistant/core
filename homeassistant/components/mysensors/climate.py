@@ -11,15 +11,11 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    Platform,
-)
+from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .. import mysensors
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
@@ -76,9 +72,9 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateEntity):
     _attr_hvac_modes = OPERATION_LIST
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
-        features = 0
+        features = ClimateEntityFeature(0)
         set_req = self.gateway.const.SetReq
         if set_req.V_HVAC_SPEED in self._values:
             features = features | ClimateEntityFeature.FAN_MODE
@@ -94,7 +90,11 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateEntity):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        return TEMP_CELSIUS if self.hass.config.units.is_metric else TEMP_FAHRENHEIT
+        return (
+            UnitOfTemperature.CELSIUS
+            if self.hass.config.units is METRIC_SYSTEM
+            else UnitOfTemperature.FAHRENHEIT
+        )
 
     @property
     def current_temperature(self) -> float | None:

@@ -1,4 +1,19 @@
 {
+    "issues": {
+        "legacy_subscription": {
+            "fix_flow": {
+                "abort": {
+                    "operation_took_too_long": "Operacja trwa\u0142a zbyt d\u0142ugo. Spr\u00f3buj ponownie p\u00f3\u017aniej."
+                },
+                "step": {
+                    "confirm_change_plan": {
+                        "description": "Niedawno zaktualizowali\u015bmy nasz system subskrypcji. Aby nadal korzysta\u0107 z Home Assistant Cloud, musisz jednorazowo zatwierdzi\u0107 zmian\u0119 w systemie PayPal. \n\nZajmie to 1 minut\u0119 i nie zwi\u0119kszy ceny."
+                    }
+                }
+            },
+            "title": "Wykryto starsz\u0105 subskrypcj\u0119"
+        }
+    },
     "system_health": {
         "info": {
             "alexa_enabled": "Alexa w\u0142\u0105czona",

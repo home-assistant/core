@@ -30,8 +30,8 @@ class AttributeDescription:
     name: str
     icon: str | None = None
     unit: str | None = None
-    device_class: str | None = None
-    state_class: str | None = None
+    device_class: SensorDeviceClass | None = None
+    state_class: SensorStateClass | None = None
     default_enabled: bool = True
 
 

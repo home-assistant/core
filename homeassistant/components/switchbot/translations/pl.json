@@ -26,12 +26,8 @@
             },
             "user": {
                 "data": {
-                    "address": "Adres urz\u0105dzenia",
-                    "mac": "Adres MAC urz\u0105dzenia",
-                    "name": "Nazwa",
-                    "password": "Has\u0142o"
-                },
-                "title": "Konfiguracja urz\u0105dzenia Switchbot"
+                    "address": "Adres urz\u0105dzenia"
+                }
             }
         }
     },
@@ -39,10 +35,7 @@
         "step": {
             "init": {
                 "data": {
-                    "retry_count": "Liczba ponownych pr\u00f3b",
-                    "retry_timeout": "Limit czasu mi\u0119dzy kolejnymi pr\u00f3bami",
-                    "scan_timeout": "Jak d\u0142ugo skanowa\u0107 w poszukiwaniu danych reklamowych",
-                    "update_time": "Czas mi\u0119dzy aktualizacjami (sekundy)"
+                    "retry_count": "Liczba ponownych pr\u00f3b"
                 }
             }
         }

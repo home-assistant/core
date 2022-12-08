@@ -14,6 +14,7 @@
                 "data": {
                     "password": "Wachtwoord"
                 },
+                "description": "Het wachtwoord voor {username} is onjuist.",
                 "title": "Integratie herauthenticeren"
             },
             "user": {

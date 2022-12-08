@@ -10,7 +10,8 @@
             "already_in_progress": "Alur konfigurasi sedang berlangsung",
             "cannot_connect": "Gagal terhubung",
             "discovery_requires_supervisor": "Fitur penemuan membutuhkan supervisor.",
-            "not_zwave_device": "Perangkat yang ditemukan bukan perangkat Z-Wave."
+            "not_zwave_device": "Perangkat yang ditemukan bukan perangkat Z-Wave.",
+            "not_zwave_js_addon": "Add-on yang ditemukan bukanlah add-on Z-Wave JS resmi."
         },
         "error": {
             "addon_start_failed": "Gagal memulai add-on Z-Wave JS. Periksa konfigurasi.",

@@ -3,19 +3,15 @@
         "abort": {
             "already_configured": "El dispositiu ja est\u00e0 configurat",
             "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
-            "no_devices_found": "No s'han trobat dispositius a la xarxa",
-            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
+            "no_devices_found": "No s'han trobat dispositius a la xarxa"
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3"
         },
-        "flow_title": "{label} ({host}) {serial}",
+        "flow_title": "{label} ({group})",
         "step": {
-            "confirm": {
-                "description": "Vols configurar LIFX?"
-            },
             "discovery_confirm": {
-                "description": "Vols configurar {label} ({host}) {serial}?"
+                "description": "Vols configurar {label} ({group})?"
             },
             "pick_device": {
                 "data": {

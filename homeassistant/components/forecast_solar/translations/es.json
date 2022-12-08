@@ -15,6 +15,9 @@
         }
     },
     "options": {
+        "error": {
+            "invalid_api_key": "Clave API no v\u00e1lida"
+        },
         "step": {
             "init": {
                 "data": {
@@ -25,7 +28,7 @@
                     "inverter_size": "Tama\u00f1o del inversor (vatios)",
                     "modules power": "Potencia pico total en vatios de tus m\u00f3dulos solares"
                 },
-                "description": "Estos valores permiten modificar el resultado de Solar.Forecast. Por favor, consulta la documentaci\u00f3n si un campo no est\u00e1 claro."
+                "description": "Estos valores permiten modificar el resultado de Forecast.Solar. Por favor, consulta la documentaci\u00f3n si un campo no est\u00e1 claro."
             }
         }
     }

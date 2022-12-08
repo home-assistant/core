@@ -59,7 +59,9 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
                 if flags["printing"]
                 else "idle"
             ),
-            device_class="prusalink__printer_state",
+            device_class=SensorDeviceClass.ENUM,
+            options=["cancelling", "idle", "paused", "pausing", "printing"],
+            translation_key="printer_state",
         ),
         PrusaLinkSensorEntityDescription[PrinterInfo](
             key="printer.telemetry.temp-bed",

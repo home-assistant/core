@@ -1,4 +1,4 @@
-"""The scene tests for the myq platform."""
+"""Tests for Shelly diagnostics platform."""
 from aiohttp import ClientSession
 
 from homeassistant.components.diagnostics import REDACTED
@@ -70,6 +70,7 @@ async def test_rpc_config_entry_diagnostics(
                     "beta": {"version": "some_beta_version"},
                     "stable": {"version": "some_beta_version"},
                 }
-            }
+            },
+            "wifi": {"rssi": -63},
         },
     }

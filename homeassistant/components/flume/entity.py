@@ -10,7 +10,7 @@ from homeassistant.helpers.update_coordinator import (
 from .const import DOMAIN
 
 
-class FlumeEntity(CoordinatorEntity[DataUpdateCoordinator]):
+class FlumeEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
     """Base entity class."""
 
     _attr_attribution = "Data provided by Flume API"

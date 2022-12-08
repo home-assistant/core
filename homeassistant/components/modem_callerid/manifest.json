@@ -8,5 +8,6 @@
   "dependencies": ["usb"],
   "iot_class": "local_polling",
   "usb": [{ "vid": "0572", "pid": "1340" }],
-  "loggers": ["phone_modem"]
+  "loggers": ["phone_modem"],
+  "integration_type": "device"
 }

@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "already_in_progress": "Seadistamine on juba k\u00e4imas",
+            "no_devices_found": "V\u00f5rgust seadmeid ei leitud"
+        },
+        "flow_title": "{name}",
+        "progress": {
+            "wait_for_pairing_mode": "Seadistamise l\u00f5petamiseks l\u00fclita see seade sidumisre\u017eiimi. \n\n ### Sidumisre\u017eiimi sisenemine\n 1. Sunni SNOOZi mobiilirakendustest v\u00e4ljuma.\n 2. Vajuta ja hoia all seadme toitenuppu. Vabasta kui tuled hakkavad vilkuma (umbes 5 sekundit)."
+        },
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Kas seadistada {name}?"
+            },
+            "pairing_timeout": {
+                "description": "Seade ei sisenenud sidumisre\u017eiimi. Uuesti proovimiseks kl\u00f5psa nuppu Esita. \n\n ### Veaotsing\n 1. Veendu, et seade pole mobiilirakendusega \u00fchendatud.\n 2. \u00dchenda seade 5 sekundiks lahti, seej\u00e4rel \u00fchenda see uuesti."
+            },
+            "user": {
+                "data": {
+                    "address": "Seade"
+                },
+                "description": "Vali h\u00e4\u00e4lestatav seade"
+            }
+        }
+    }
+}

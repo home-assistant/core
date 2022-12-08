@@ -383,10 +383,6 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
 
     assert gateway_id
 
-    # For backwards compat
-    if gateway_id.endswith("-gateway"):
-        hass.config_entries.async_update_entry(entry, unique_id=entry.data["mac"])
-
     # Connect to gateway
     gateway = ConnectXiaomiGateway(hass, entry)
     try:

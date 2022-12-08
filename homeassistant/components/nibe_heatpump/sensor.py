@@ -16,12 +16,10 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_MILLIAMPERE,
     ELECTRIC_POTENTIAL_MILLIVOLT,
     ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_MEGA_WATT_HOUR,
-    ENERGY_WATT_HOUR,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
     TIME_HOURS,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -35,14 +33,14 @@ UNIT_DESCRIPTIONS = {
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     "°F": SensorEntityDescription(
         key="°F",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
     ),
     "A": SensorEntityDescription(
         key="A",
@@ -72,31 +70,46 @@ UNIT_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_MILLIVOLT,
     ),
+    "W": SensorEntityDescription(
+        key="W",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+    ),
+    "kW": SensorEntityDescription(
+        key="kW",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+    ),
     "Wh": SensorEntityDescription(
         key="Wh",
         entity_category=EntityCategory.DIAGNOSTIC,
-        device_class=SensorDeviceClass.POWER,
+        device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
     ),
     "kWh": SensorEntityDescription(
         key="kWh",
         entity_category=EntityCategory.DIAGNOSTIC,
-        device_class=SensorDeviceClass.POWER,
+        device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     ),
     "MWh": SensorEntityDescription(
         key="MWh",
         entity_category=EntityCategory.DIAGNOSTIC,
-        device_class=SensorDeviceClass.POWER,
+        device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=ENERGY_MEGA_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
     ),
     "h": SensorEntityDescription(
         key="h",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=TIME_HOURS,
     ),
 }
@@ -133,6 +146,7 @@ class Sensor(CoilEntity, SensorEntity):
             self.entity_description = entity_description
         else:
             self._attr_native_unit_of_measurement = coil.unit
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def _async_read_coil(self, coil: Coil):
         self._attr_native_value = coil.value

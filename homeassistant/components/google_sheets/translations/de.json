@@ -1,6 +1,6 @@
 {
     "application_credentials": {
-        "description": "Folge den [Anweisungen]({more_info_url}) f\u00fcr den [OAuth-Zustimmungsbildschirm]({oauth_consent_url}), um dem Home Assistant Zugriff auf deine Google Sheets zu geben. Du musst auch Anwendungsnachweise erstellen, die mit deinem Konto verkn\u00fcpft sind:\n1. Gehe zu [Anmeldeinformationen]({oauth_creds_url}) und klicke auf **Anmeldeinformationen erstellen**.\n1. W\u00e4hle aus der Dropdown-Liste **OAuth-Client-ID**.\n1. W\u00e4hle **Webanwendung** f\u00fcr den Anwendungstyp.\n\n"
+        "description": "Folge den [Anweisungen]({more_info_url}) f\u00fcr den [OAuth-Zustimmungsbildschirm]({oauth_consent_url}), um dem Home Assistant Zugriff auf deine Google Sheets zu geben. Du musst auch Anwendungsnachweise erstellen, die mit deinem Konto verkn\u00fcpft sind:\n1. Gehe zu [Anmeldeinformationen]({oauth_creds_url}) und klicke auf **Anmeldeinformationen erstellen**.\n1. W\u00e4hle aus der Dropdown-Liste **OAuth-Client-ID**.\n1. W\u00e4hle **Webanwendung** f\u00fcr den Anwendungstyp."
     },
     "config": {
         "abort": {

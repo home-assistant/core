@@ -58,5 +58,18 @@
             "single_push": "Pulsaci\u00f3n simple de {subtype}",
             "triple": "Pulsaci\u00f3n triple de {subtype}"
         }
+    },
+    "options": {
+        "abort": {
+            "ble_unsupported": "La compatibilidad con Bluetooth requiere la versi\u00f3n de firmware {ble_min_version} o m\u00e1s reciente."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "ble_scanner_mode": "Modo de esc\u00e1ner Bluetooth"
+                },
+                "description": "El escaneo de Bluetooth puede ser activo o pasivo. Con activo, Shelly solicita datos de dispositivos cercanos; con pasivo, Shelly recibe datos no solicitados de dispositivos cercanos."
+            }
+        }
     }
 }

@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "unknown": "Neo\u010dekivana gre\u0161ka"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    }
+}
