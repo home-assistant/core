@@ -33,32 +33,6 @@ async def test_setup_success(
     assert not hass.services.async_services().get(DOMAIN, {})
 
 
-@pytest.mark.parametrize(
-    "scopes",
-    [
-        [],
-        [
-            "https://www.googleapis.com/auth/assistant-sdk-prototype+plus+extra"
-        ],  # Required scope is a prefix
-        ["https://www.googleapis.com/auth/drive.readonly"],
-    ],
-    ids=["no_scope", "required_scope_prefix", "other_scope"],
-)
-async def test_missing_required_scopes_requires_reauth(
-    hass: HomeAssistant, setup_integration: ComponentSetup
-) -> None:
-    """Test that reauth is invoked when required scopes are not present."""
-    await setup_integration()
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].state is ConfigEntryState.SETUP_ERROR
-
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["step_id"] == "reauth_confirm"
-
-
 @pytest.mark.parametrize("expires_at", [time.time() - 3600], ids=["expired"])
 async def test_expired_token_refresh_success(
     hass: HomeAssistant,

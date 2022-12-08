@@ -5,7 +5,7 @@ import aiohttp
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_NAME, CONF_TOKEN, Platform
+from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import discovery
@@ -15,7 +15,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DEFAULT_ACCESS, DOMAIN
+from .const import DOMAIN
 from .helpers import async_send_text_commands
 
 SERVICE_SEND_TEXT_COMMAND = "send_text_command"
@@ -54,19 +54,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from err
     except aiohttp.ClientError as err:
         raise ConfigEntryNotReady from err
-
-    if not async_entry_has_scopes(hass, entry):
-        raise ConfigEntryAuthFailed("Required scopes are not present, reauth required")
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = session
 
     await async_setup_service(hass)
 
     return True
-
-
-def async_entry_has_scopes(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Verify that the config entry desired scope is present in the oauth token."""
-    return DEFAULT_ACCESS in entry.data.get(CONF_TOKEN, {}).get("scope", "").split(" ")
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
