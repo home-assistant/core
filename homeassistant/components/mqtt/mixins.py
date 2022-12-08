@@ -1,7 +1,7 @@
 """MQTT component mixins and helpers."""
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Callable, Coroutine
 from functools import partial
@@ -662,7 +662,7 @@ async def async_clear_discovery_topic_if_entity_removed(
         await async_remove_discovery_payload(hass, discovery_data)
 
 
-class MqttDiscoveryDeviceUpdate:
+class MqttDiscoveryDeviceUpdate(ABC):
     """Add support for auto discovery for platforms without an entity."""
 
     def __init__(

@@ -1,7 +1,7 @@
 """Base classes for HA Bluetooth scanners for bluetooth."""
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 import datetime
@@ -27,7 +27,7 @@ from .models import HaBluetoothConnector
 MONOTONIC_TIME: Final = monotonic_time_coarse
 
 
-class BaseHaScanner:
+class BaseHaScanner(ABC):
     """Base class for Ha Scanners."""
 
     __slots__ = ("hass", "source", "_connecting", "name", "scanning")
