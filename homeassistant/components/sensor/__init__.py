@@ -304,7 +304,7 @@ class SensorDeviceClass(StrEnum):
     SOUND_PRESSURE = "sound_pressure"
     """Sound pressure.
 
-    Unit of measurement: `dB`, `dB(A)`
+    Unit of measurement: `dB`, `dBA`
     """
 
     SPEED = "speed"
