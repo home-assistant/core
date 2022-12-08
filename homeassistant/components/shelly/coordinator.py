@@ -564,7 +564,8 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
 
     async def shutdown(self) -> None:
         """Shutdown the coordinator."""
-        await async_stop_scanner(self.device)
+        if self.device.connected:
+            await async_stop_scanner(self.device)
         await self.device.shutdown()
         await self._async_disconnected()
 

@@ -156,9 +156,7 @@ async def test_config_parameter_sensor(hass, lock_id_lock_as_id150, integration)
     assert entity_entry.disabled
 
 
-async def test_node_status_sensor(
-    hass, client, controller_node, lock_id_lock_as_id150, integration
-):
+async def test_node_status_sensor(hass, client, lock_id_lock_as_id150, integration):
     """Test node status sensor is created and gets updated on node state changes."""
     NODE_STATUS_ENTITY = "sensor.z_wave_module_for_id_lock_150_and_101_node_status"
     node = lock_id_lock_as_id150

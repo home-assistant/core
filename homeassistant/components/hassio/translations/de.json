@@ -30,11 +30,11 @@
         },
         "unsupported_apparmor": {
             "description": "Das System wird nicht unterst\u00fctzt, da AppArmor nicht ordnungsgem\u00e4\u00df funktioniert und Add-Ons ungesch\u00fctzt und unsicher ausgef\u00fchrt werden. Verwende den Link, um mehr zu erfahren und wie du dies beheben kannst.",
-            "title": "Nicht unterst\u00fctztes System - AppArmor-Probleme"
+            "title": "Nicht unterst\u00fctztes System - AppArmor Probleme"
         },
         "unsupported_cgroup_version": {
             "description": "Das System wird nicht unterst\u00fctzt, da die falsche Version von Docker CGroup verwendet wird. Verwende den Link, um die richtige Version zu erfahren und wie du dies beheben kannst.",
-            "title": "Nicht unterst\u00fctztes System \u2013 CGroup-Version"
+            "title": "Nicht unterst\u00fctztes System \u2013 CGroup Version"
         },
         "unsupported_connectivity_check": {
             "description": "Das System wird nicht unterst\u00fctzt, weil Home Assistant nicht feststellen kann, wann eine Internetverbindung verf\u00fcgbar ist. Verwende den Link, um mehr zu erfahren und wie du dies beheben kannst.",
@@ -49,7 +49,7 @@
             "title": "Nicht unterst\u00fctztes System \u2013 D-Bus-Probleme"
         },
         "unsupported_dns_server": {
-            "description": "Das System wird nicht unterst\u00fctzt, da der bereitgestellte DNS-Server nicht ordnungsgem\u00e4\u00df funktioniert und die Fallback-DNS-Option deaktiviert wurde. Verwende den Link, um mehr zu erfahren und wie du dies beheben kannst.",
+            "description": "Das System wird nicht unterst\u00fctzt, da der bereitgestellte DNS-Server nicht ordnungsgem\u00e4\u00df funktioniert und die Fallback DNS Option deaktiviert wurde. Verwende den Link, um mehr zu erfahren und wie du dies beheben kannst.",
             "title": "Nicht unterst\u00fctztes System - DNS-Server-Probleme"
         },
         "unsupported_docker_configuration": {
@@ -65,7 +65,7 @@
             "title": "Nicht unterst\u00fctztes System \u2013 Schutz deaktiviert"
         },
         "unsupported_lxc": {
-            "description": "Das System wird nicht unterst\u00fctzt, da es in einer virtuellen LXC-Maschine ausgef\u00fchrt wird. Verwende den Link, um mehr zu erfahren und wie du dies beheben kannst.",
+            "description": "Das System wird nicht unterst\u00fctzt, da es in einer virtuellen LXC Maschine ausgef\u00fchrt wird. Verwende den Link, um mehr zu erfahren und wie du dies beheben kannst.",
             "title": "Nicht unterst\u00fctztes System \u2013 LXC erkannt"
         },
         "unsupported_network_manager": {
@@ -98,10 +98,10 @@
         },
         "unsupported_systemd": {
             "description": "System wird nicht unterst\u00fctzt, weil Systemd fehlt, inaktiv oder falsch konfiguriert ist. Verwende den Link, um mehr zu erfahren und wie du dies beheben kannst.",
-            "title": "Nicht unterst\u00fctztes System - Systemd-Probleme"
+            "title": "Nicht unterst\u00fctztes System - Systemd Probleme"
         },
         "unsupported_systemd_journal": {
-            "description": "Das System wird nicht unterst\u00fctzt, da das Systemd-Journal und/oder der Gateway-Dienst fehlt, inaktiv oder falsch konfiguriert ist. Verwende den Link, um mehr zu erfahren und wie du dies beheben kannst.",
+            "description": "Das System wird nicht unterst\u00fctzt, da das Systemd Journal und/oder der Gateway-Dienst fehlt, inaktiv oder falsch konfiguriert ist. Verwende den Link, um mehr zu erfahren und wie du dies beheben kannst.",
             "title": "Nicht unterst\u00fctztes System \u2013 Systemd Journal-Probleme"
         },
         "unsupported_systemd_resolved": {

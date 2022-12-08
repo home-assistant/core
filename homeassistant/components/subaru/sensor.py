@@ -14,12 +14,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_POTENTIAL_VOLT,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
     PERCENTAGE,
     PRESSURE_HPA,
-    TEMP_CELSIUS,
     VOLUME_GALLONS,
     VOLUME_LITERS,
 )
@@ -115,20 +113,6 @@ API_GEN_2_SENSORS = [
         device_class=SensorDeviceClass.PRESSURE,
         name="Tire pressure RR",
         native_unit_of_measurement=PRESSURE_HPA,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key=sc.EXTERNAL_TEMP,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        name="External temp",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key=sc.BATTERY_VOLTAGE,
-        device_class=SensorDeviceClass.VOLTAGE,
-        name="12V battery voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 ]

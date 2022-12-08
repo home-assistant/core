@@ -17,7 +17,7 @@ def _validate_integration(config: Config, integration: Integration) -> None:
     config_flow_file = integration.path / "config_flow.py"
 
     if not config_flow_file.is_file():
-        if (integration.manifest or {}).get("config_flow"):
+        if integration.manifest.get("config_flow"):
             integration.add_error(
                 "config_flow",
                 "Config flows need to be defined in the file config_flow.py",
@@ -149,7 +149,7 @@ def _generate_integrations(
     primary_domains = {
         domain
         for domain, integration in integrations.items()
-        if integration.manifest and domain not in brand_integration_domains
+        if domain not in brand_integration_domains
     }
     # Add all brands to the set
     primary_domains |= set(brands)

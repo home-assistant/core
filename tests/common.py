@@ -160,7 +160,7 @@ def get_test_home_assistant():
 
 
 # pylint: disable=protected-access
-async def async_test_home_assistant(loop, load_registries=True):
+async def async_test_home_assistant(event_loop, load_registries=True):
     """Return a Home Assistant object pointing at test config dir."""
     hass = ha.HomeAssistant()
     store = auth_store.AuthStore(hass)
@@ -289,6 +289,7 @@ async def async_test_home_assistant(loop, load_registries=True):
     hass.config.units = METRIC_SYSTEM
     hass.config.media_dirs = {"local": get_test_config_dir("media")}
     hass.config.skip_pip = True
+    hass.config.skip_pip_packages = []
 
     hass.config_entries = config_entries.ConfigEntries(
         hass,
@@ -1111,6 +1112,11 @@ class MockEntity(entity.Entity):
     def supported_features(self):
         """Info about supported features."""
         return self._handle("supported_features")
+
+    @property
+    def translation_key(self):
+        """Return the translation key."""
+        return self._handle("translation_key")
 
     @property
     def unique_id(self):

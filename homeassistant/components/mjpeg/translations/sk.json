@@ -10,8 +10,11 @@
         "step": {
             "user": {
                 "data": {
+                    "mjpeg_url": "MJPEG URL",
                     "name": "N\u00e1zov",
-                    "password": "Heslo"
+                    "password": "Heslo",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno",
+                    "verify_ssl": "Overi\u0165 SSL certifik\u00e1t"
                 }
             }
         }
@@ -25,8 +28,11 @@
         "step": {
             "init": {
                 "data": {
+                    "mjpeg_url": "MJPEG URL",
                     "name": "N\u00e1zov",
-                    "password": "Heslo"
+                    "password": "Heslo",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno",
+                    "verify_ssl": "Overi\u0165 SSL certifik\u00e1t"
                 }
             }
         }

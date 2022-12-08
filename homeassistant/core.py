@@ -1816,6 +1816,9 @@ class Config:
         # If True, pip install is skipped for requirements on startup
         self.skip_pip: bool = False
 
+        # List of packages to skip when installing requirements on startup
+        self.skip_pip_packages: list[str] = []
+
         # List of loaded components
         self.components: set[str] = set()
 
@@ -2098,7 +2101,6 @@ class Config:
                             and "language" in owner_data["language"]
                         ):
                             with suppress(vol.InInvalid):
-                                # pylint: disable-next=protected-access
                                 data["language"] = cv.language(
                                     owner_data["language"]["language"]
                                 )

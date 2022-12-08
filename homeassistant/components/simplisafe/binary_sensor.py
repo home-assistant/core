@@ -78,7 +78,7 @@ class TriggeredBinarySensor(SimpliSafeEntity, BinarySensorEntity):
         simplisafe: SimpliSafe,
         system: SystemV3,
         sensor: SensorV3,
-        device_class: str,
+        device_class: BinarySensorDeviceClass,
     ) -> None:
         """Initialize."""
         super().__init__(simplisafe, system, device=sensor)

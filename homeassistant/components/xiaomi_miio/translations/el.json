@@ -51,6 +51,31 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "display_orientation": {
+                "state": {
+                    "forward": "\u0395\u03bc\u03c0\u03c1\u03cc\u03c2",
+                    "left": "\u0391\u03c1\u03b9\u03c3\u03c4\u03b5\u03c1\u03ac",
+                    "right": "\u0394\u03b5\u03be\u03b9\u03ac"
+                }
+            },
+            "led_brightness": {
+                "state": {
+                    "bright": "\u03a6\u03c9\u03c4\u03b5\u03b9\u03bd\u03cc",
+                    "dim": "\u0391\u03bc\u03c5\u03b4\u03c1\u03cc",
+                    "off": "\u0391\u03bd\u03b5\u03bd\u03b5\u03c1\u03b3\u03cc"
+                }
+            },
+            "ptc_level": {
+                "state": {
+                    "high": "\u03a5\u03c8\u03b7\u03bb\u03cc",
+                    "low": "\u03a7\u03b1\u03bc\u03b7\u03bb\u03cc",
+                    "medium": "\u039c\u03b5\u03c3\u03b1\u03af\u03bf"
+                }
+            }
+        }
+    },
     "options": {
         "error": {
             "cloud_credentials_incomplete": "\u03a4\u03b1 \u03b4\u03b9\u03b1\u03c0\u03b9\u03c3\u03c4\u03b5\u03c5\u03c4\u03ae\u03c1\u03b9\u03b1 cloud \u03b5\u03af\u03bd\u03b1\u03b9 \u03b5\u03bb\u03bb\u03b9\u03c0\u03ae, \u03c3\u03c5\u03bc\u03c0\u03bb\u03b7\u03c1\u03ce\u03c3\u03c4\u03b5 \u03c4\u03bf \u03cc\u03bd\u03bf\u03bc\u03b1 \u03c7\u03c1\u03ae\u03c3\u03c4\u03b7, \u03c4\u03bf\u03bd \u03ba\u03c9\u03b4\u03b9\u03ba\u03cc \u03c0\u03c1\u03cc\u03c3\u03b2\u03b1\u03c3\u03b7\u03c2 \u03ba\u03b1\u03b9 \u03c4\u03b7 \u03c7\u03ce\u03c1\u03b1"

@@ -1,4 +1,25 @@
 {
+    "entity": {
+        "select": {
+            "speed": {
+                "state": {
+                    "light_speed": "Valguse kiirus",
+                    "ludicrous_speed": "Meeletu kiirus",
+                    "ridiculous_speed": "Naeruv\u00e4\u00e4rne kiirus"
+                }
+            }
+        },
+        "sensor": {
+            "thermostat_mode": {
+                "state": {
+                    "away": "Eemal",
+                    "comfort": "Mugav",
+                    "eco": "\u00d6ko",
+                    "sleep": "Uneaeg"
+                }
+            }
+        }
+    },
     "issues": {
         "bad_psu": {
             "fix_flow": {

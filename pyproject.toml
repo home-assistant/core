@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2022.12.0.dev0"
+version     = "2023.1.0.dev0"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -74,7 +74,7 @@ include = ["homeassistant*"]
 
 [tool.black]
 target-version = ["py39", "py310"]
-exclude = 'generated'
+extend-exclude = "/generated/"
 
 [tool.isort]
 # https://github.com/PyCQA/isort/wiki/isort-Settings
@@ -227,3 +227,4 @@ norecursedirs = [
 ]
 log_format = "%(asctime)s.%(msecs)03d %(levelname)-8s %(threadName)s %(name)s:%(filename)s:%(lineno)s %(message)s"
 log_date_format = "%Y-%m-%d %H:%M:%S"
+asyncio_mode = "auto"

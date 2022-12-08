@@ -125,7 +125,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class HumidifierEntityDescription(ToggleEntityDescription):
     """A class that describes humidifier entities."""
 
-    device_class: HumidifierDeviceClass | str | None = None
+    device_class: HumidifierDeviceClass | None = None
 
 
 class HumidifierEntity(ToggleEntity):
@@ -133,7 +133,7 @@ class HumidifierEntity(ToggleEntity):
 
     entity_description: HumidifierEntityDescription
     _attr_available_modes: list[str] | None
-    _attr_device_class: HumidifierDeviceClass | str | None
+    _attr_device_class: HumidifierDeviceClass | None
     _attr_max_humidity: int = DEFAULT_MAX_HUMIDITY
     _attr_min_humidity: int = DEFAULT_MIN_HUMIDITY
     _attr_mode: str | None
@@ -154,7 +154,7 @@ class HumidifierEntity(ToggleEntity):
         return data
 
     @property
-    def device_class(self) -> HumidifierDeviceClass | str | None:
+    def device_class(self) -> HumidifierDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
             return self._attr_device_class

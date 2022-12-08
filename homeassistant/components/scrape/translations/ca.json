@@ -30,7 +30,7 @@
             },
             "user": {
                 "data": {
-                    "authentication": "Autenticaci\u00f3",
+                    "authentication": "Selecciona el m\u00e8tode d'autenticaci\u00f3",
                     "headers": "Cap\u00e7aleres",
                     "method": "M\u00e8tode",
                     "password": "Contrasenya",
@@ -57,9 +57,59 @@
     },
     "options": {
         "step": {
-            "init": {
+            "add_sensor": {
                 "data": {
-                    "authentication": "Autenticaci\u00f3",
+                    "attribute": "Atribut",
+                    "device_class": "Classe de dispositiu",
+                    "index": "\u00cdndex",
+                    "name": "Nom",
+                    "select": "Selecciona",
+                    "state_class": "Classe d'estat",
+                    "unit_of_measurement": "Unitat de mesura",
+                    "value_template": "Plantilla de valor"
+                },
+                "data_description": {
+                    "attribute": "Obt\u00e9 el valor d'un atribut de l'etiqueta seleccionada",
+                    "device_class": "Tipus/classe del sensor per configurar-ne la icona a la interf\u00edcie d'usuari",
+                    "index": "Defineix quins dels elements retornats pel selector CSS utilitzar",
+                    "select": "Defineix quina etiqueta s'ha de buscar. Consulta els selectors CSS de Beautifulsoup per m\u00e9s informaci\u00f3",
+                    "state_class": "'state_class' del sensor",
+                    "unit_of_measurement": "Tria la unitat de mesura de temperatura o crea la teva",
+                    "value_template": "Plantilla per obtenir l'estat del sensor"
+                }
+            },
+            "edit_sensor": {
+                "data": {
+                    "attribute": "Atribut",
+                    "device_class": "Classe de dispositiu",
+                    "index": "\u00cdndex",
+                    "name": "Nom",
+                    "select": "Selecciona",
+                    "state_class": "Classe d'estat",
+                    "unit_of_measurement": "Unitat de mesura",
+                    "value_template": "Plantilla de valor"
+                },
+                "data_description": {
+                    "attribute": "Obt\u00e9 el valor d'un atribut de l'etiqueta seleccionada",
+                    "device_class": "Tipus/classe del sensor per configurar-ne la icona a la interf\u00edcie d'usuari",
+                    "index": "Defineix quins dels elements retornats pel selector CSS utilitzar",
+                    "select": "Defineix quina etiqueta s'ha de buscar. Consulta els selectors CSS de Beautifulsoup per m\u00e9s informaci\u00f3",
+                    "state_class": "'state_class' del sensor",
+                    "unit_of_measurement": "Tria la unitat de mesura de temperatura o crea la teva",
+                    "value_template": "Plantilla per obtenir l'estat del sensor"
+                }
+            },
+            "init": {
+                "menu_options": {
+                    "add_sensor": "Afegeix sensor",
+                    "remove_sensor": "Elimina sensor",
+                    "resource": "Configura recurs",
+                    "select_edit_sensor": "Configura sensor"
+                }
+            },
+            "resource": {
+                "data": {
+                    "authentication": "Selecciona el m\u00e8tode d'autenticaci\u00f3",
                     "headers": "Cap\u00e7aleres",
                     "method": "M\u00e8tode",
                     "password": "Contrasenya",

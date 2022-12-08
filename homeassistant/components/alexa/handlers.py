@@ -47,8 +47,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
     STATE_ALARM_DISARMED,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.helpers import network
 from homeassistant.util import color as color_util, dt as dt_util
@@ -443,74 +442,6 @@ async def async_api_deactivate(
     )
 
 
-@HANDLERS.register(("Alexa.PercentageController", "SetPercentage"))
-async def async_api_set_percentage(
-    hass: ha.HomeAssistant,
-    config: AbstractConfig,
-    directive: AlexaDirective,
-    context: ha.Context,
-) -> AlexaResponse:
-    """Process a set percentage request."""
-    entity = directive.entity
-
-    if entity.domain == fan.DOMAIN:
-        percentage = int(directive.payload["percentage"])
-        service = fan.SERVICE_SET_PERCENTAGE
-        data = {
-            ATTR_ENTITY_ID: entity.entity_id,
-            fan.ATTR_PERCENTAGE: percentage,
-        }
-
-        await hass.services.async_call(
-            entity.domain, service, data, blocking=False, context=context
-        )
-    elif entity.domain == humidifier.DOMAIN:
-        percentage = int(directive.payload["percentage"])
-        service = humidifier.SERVICE_SET_HUMIDITY
-        data = {
-            ATTR_ENTITY_ID: entity.entity_id,
-            humidifier.ATTR_HUMIDITY: percentage,
-        }
-
-        await hass.services.async_call(
-            entity.domain, service, data, blocking=False, context=context
-        )
-    else:
-        raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
-
-    return directive.response()
-
-
-@HANDLERS.register(("Alexa.PercentageController", "AdjustPercentage"))
-async def async_api_adjust_percentage(
-    hass: ha.HomeAssistant,
-    config: AbstractConfig,
-    directive: AlexaDirective,
-    context: ha.Context,
-) -> AlexaResponse:
-    """Process an adjust percentage request."""
-    entity = directive.entity
-
-    if entity.domain != fan.DOMAIN:
-        raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
-
-    percentage_delta = int(directive.payload["percentageDelta"])
-    current = entity.attributes.get(fan.ATTR_PERCENTAGE) or 0
-    # set percentage
-    percentage = min(100, max(0, percentage_delta + current))
-    service = fan.SERVICE_SET_PERCENTAGE
-    data = {
-        ATTR_ENTITY_ID: entity.entity_id,
-        fan.ATTR_PERCENTAGE: percentage,
-    }
-
-    await hass.services.async_call(
-        entity.domain, service, data, blocking=False, context=context
-    )
-
-    return directive.response()
-
-
 @HANDLERS.register(("Alexa.LockController", "Lock"))
 async def async_api_lock(
     hass: ha.HomeAssistant,
@@ -826,11 +757,11 @@ async def async_api_previous(
 def temperature_from_object(hass, temp_obj, interval=False):
     """Get temperature from Temperature object in requested unit."""
     to_unit = hass.config.units.temperature_unit
-    from_unit = TEMP_CELSIUS
+    from_unit = UnitOfTemperature.CELSIUS
     temp = float(temp_obj["value"])
 
     if temp_obj["scale"] == "FAHRENHEIT":
-        from_unit = TEMP_FAHRENHEIT
+        from_unit = UnitOfTemperature.FAHRENHEIT
     elif temp_obj["scale"] == "KELVIN" and not interval:
         # convert to Celsius if absolute temperature
         temp -= 273.15

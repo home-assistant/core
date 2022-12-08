@@ -118,7 +118,8 @@ async def async_setup_hass(
     )
 
     hass.config.skip_pip = runtime_config.skip_pip
-    if runtime_config.skip_pip:
+    hass.config.skip_pip_packages = runtime_config.skip_pip_packages
+    if runtime_config.skip_pip or runtime_config.skip_pip_packages:
         _LOGGER.warning(
             "Skipping pip installation of required modules. This may cause issues"
         )
@@ -176,6 +177,7 @@ async def async_setup_hass(
         if old_logging:
             hass.data[DATA_LOGGING] = old_logging
         hass.config.skip_pip = old_config.skip_pip
+        hass.config.skip_pip_packages = old_config.skip_pip_packages
         hass.config.internal_url = old_config.internal_url
         hass.config.external_url = old_config.external_url
         hass.config.config_dir = old_config.config_dir

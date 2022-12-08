@@ -1,5 +1,9 @@
 {
     "issues": {
+        "country_not_configured": {
+            "description": "Ingen land er konfigurert, vennligst oppdater konfigurasjonen ved \u00e5 klikke p\u00e5 \"les mer\"-knappen nedenfor.",
+            "title": "Landet er ikke konfigurert"
+        },
         "historic_currency": {
             "description": "Valutaen {currency} er ikke lenger i bruk, vennligst konfigurer valutakonfigurasjonen p\u00e5 nytt.",
             "title": "Tollet er ugyldig eller ikke lenger autorisert."

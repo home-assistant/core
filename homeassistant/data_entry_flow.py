@@ -4,6 +4,7 @@ from __future__ import annotations
 import abc
 import asyncio
 from collections.abc import Iterable, Mapping
+import copy
 from dataclasses import dataclass
 import logging
 from types import MappingProxyType
@@ -442,6 +443,34 @@ class FlowHandler:
     def show_advanced_options(self) -> bool:
         """If we should show advanced options."""
         return self.context.get("show_advanced_options", False)
+
+    def add_suggested_values_to_schema(
+        self, data_schema: vol.Schema, suggested_values: Mapping[str, Any]
+    ) -> vol.Schema:
+        """Make a copy of the schema, populated with suggested values.
+
+        For each schema marker matching items in `suggested_values`,
+        the `suggested_value` will be set. The existing `suggested_value` will
+        be left untouched if there is no matching item.
+        """
+        schema = {}
+        for key, val in data_schema.schema.items():
+            if isinstance(key, vol.Marker):
+                # Exclude advanced field
+                if (
+                    key.description
+                    and key.description.get("advanced")
+                    and not self.show_advanced_options
+                ):
+                    continue
+
+            new_key = key
+            if key in suggested_values and isinstance(key, vol.Marker):
+                # Copy the marker to not modify the flow schema
+                new_key = copy.copy(key)
+                new_key.description = {"suggested_value": suggested_values[key]}
+            schema[new_key] = val
+        return vol.Schema(schema)
 
     @callback
     def async_show_form(

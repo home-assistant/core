@@ -37,5 +37,18 @@
                 "description": "Set up Nettigo Air Monitor integration."
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "caqi_level": {
+                "state": {
+                    "high": "High",
+                    "low": "Low",
+                    "medium": "Medium",
+                    "very high": "Very high",
+                    "very low": "Very low"
+                }
+            }
+        }
     }
 }

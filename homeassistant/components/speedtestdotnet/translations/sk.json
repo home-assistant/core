@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "single_instance_allowed": "U\u017e je nakonfigurovan\u00fd. Mo\u017en\u00e1 len jedna konfigur\u00e1cia."
+        },
         "step": {
             "user": {
                 "description": "Chcete za\u010da\u0165 nastavova\u0165?"
@@ -11,7 +14,8 @@
             "init": {
                 "data": {
                     "manual": "Zak\u00e1za\u0165 automatick\u00fa aktualiz\u00e1ciu",
-                    "scan_interval": "Frekvencia aktualiz\u00e1cie (min\u00faty)"
+                    "scan_interval": "Frekvencia aktualiz\u00e1cie (min\u00faty)",
+                    "server_name": "Vyberte testovac\u00ed server"
                 }
             }
         }

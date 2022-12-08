@@ -50,6 +50,30 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "pollutant_label": {
+                "state": {
+                    "co": "Karbon monoksida",
+                    "n2": "Nitrogen dioksida",
+                    "o3": "Ozon",
+                    "p1": "PM10",
+                    "p2": "PM2.5",
+                    "s2": "Sulfur dioksida"
+                }
+            },
+            "pollutant_level": {
+                "state": {
+                    "good": "Bagus",
+                    "hazardous": "Berbahaya",
+                    "moderate": "Sedang",
+                    "unhealthy": "Tidak Sehat",
+                    "unhealthy_sensitive": "Tidak sehat untuk kelompok sensitif",
+                    "very_unhealthy": "Sangat tidak sehat"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

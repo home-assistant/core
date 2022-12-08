@@ -38,8 +38,8 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     ATTR_PERSONS,
     ATTR_UNIT_OF_MEASUREMENT,
-    LENGTH_METERS,
     STATE_UNKNOWN,
+    UnitOfLength,
 )
 from homeassistant.core import (
     Context,
@@ -1364,14 +1364,16 @@ def distance(hass, *args):
         return hass.config.distance(*locations[0])
 
     return hass.config.units.length(
-        loc_util.distance(*locations[0] + locations[1]), LENGTH_METERS
+        loc_util.distance(*locations[0] + locations[1]), UnitOfLength.METERS
     )
 
 
-def is_state(hass: HomeAssistant, entity_id: str, state: State) -> bool:
+def is_state(hass: HomeAssistant, entity_id: str, state: str | list[str]) -> bool:
     """Test if a state is a specific value."""
     state_obj = _get_state(hass, entity_id)
-    return state_obj is not None and state_obj.state == state
+    return state_obj is not None and (
+        state_obj.state == state or isinstance(state, list) and state_obj.state in state
+    )
 
 
 def is_state_attr(hass: HomeAssistant, entity_id: str, name: str, value: Any) -> bool:

@@ -44,6 +44,16 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "brightness_mode": {
+                "state": {
+                    "auto": "\u81ea\u52d5",
+                    "manual": "\u624b\u52d5"
+                }
+            }
+        }
+    },
     "issues": {
         "manual_migration": {
             "description": "LaMetric \u6574\u5408\u5df2\u7d93\u9032\u884c\u66f4\u65b0\uff1a\u73fe\u5728\u53ef\u900f\u904e\u4f7f\u7528\u8005\u4ecb\u9762\u9032\u884c\u8a2d\u5b9a\u3001\u4e26\u4e14\u70ba\u672c\u5730\u7aef\u901a\u8a0a\u65b9\u5f0f\u3002\n\n\u4e0d\u5e78\u7684\u3001\u76ee\u524d\u6c92\u6709\u81ea\u52d5\u8f49\u79fb\u7684\u529f\u80fd\uff0c\u9700\u8981\u65bc Home Assistant \u91cd\u65b0\u8f38\u8a2d\u5b9a LaMetric\u3002\u8acb\u53c3\u95b1 Home Assistant LaMetric \u6574\u5408\u6587\u4ef6\u4ee5\u4e86\u89e3\u5982\u4f55\u9032\u884c\u8a2d\u5b9a\u3002\n\n\u7531 configuration.yaml \u6a94\u6848\u4e2d\u79fb\u9664 LaMetric YAML \u8a2d\u5b9a\u4e26\u91cd\u555f Home Assistant \u4ee5\u4fee\u6b63\u6b64\u554f\u984c\u3002",

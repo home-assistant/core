@@ -27,7 +27,6 @@ from homeassistant.const import (
     LIGHT_LUX,
     MASS_KILOGRAMS,
     PERCENTAGE,
-    POWER_VOLT_AMPERE,
     POWER_WATT,
     PRESSURE_HPA,
     SIGNAL_STRENGTH_DECIBELS,
@@ -38,6 +37,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TEMP_KELVIN,
+    UnitOfApparentPower,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -214,7 +214,7 @@ SENSOR_UNIT_MAP = {
     hc.CONCENTRATION_PARTS_PER_BILLION: CONCENTRATION_PARTS_PER_BILLION,
     hc.CONCENTRATION_PARTS_PER_MILLION: CONCENTRATION_PARTS_PER_MILLION,
     hc.ELECTRICAL_CURRENT_AMPERE: ELECTRIC_CURRENT_AMPERE,
-    hc.ELECTRICAL_VOLT_AMPERE: POWER_VOLT_AMPERE,
+    hc.ELECTRICAL_VOLT_AMPERE: UnitOfApparentPower.VOLT_AMPERE,
     hc.ENERGY_KILO_WATT_HOUR: ENERGY_KILO_WATT_HOUR,
     hc.FREQUENCY_HERTZ: FREQUENCY_HERTZ,
     hc.LENGTH_CENTIMETERS: LENGTH_CENTIMETERS,
@@ -294,7 +294,7 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
         self.async_write_ha_state()
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> SensorDeviceClass | None:
         """Return the device class of the sensor."""
         class_or_icon = SENSOR_DEVICE_CLASS_ICON_MAP.get(
             self._tasmota_entity.quantity, {}

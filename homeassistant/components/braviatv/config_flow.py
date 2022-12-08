@@ -245,22 +245,17 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return uuid, f"{NICKNAME_PREFIX} {uuid[:6]}"
 
 
-class BraviaTVOptionsFlowHandler(config_entries.OptionsFlow):
+class BraviaTVOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
     """Config flow options for Bravia TV."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize Bravia TV options flow."""
-        self.config_entry = config_entry
-        self.ignored_sources = config_entry.options.get(CONF_IGNORED_SOURCES)
-        self.source_list: list[str] = []
+    data_schema: vol.Schema
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the options."""
-        coordinator: BraviaTVCoordinator = self.hass.data[DOMAIN][
-            self.config_entry.entry_id
-        ]
+        coordinator: BraviaTVCoordinator
+        coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id]
 
         try:
             await coordinator.async_update_sources()
@@ -268,7 +263,13 @@ class BraviaTVOptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_abort(reason="failed_update")
 
         sources = coordinator.source_map.values()
-        self.source_list = [item["title"] for item in sources]
+        source_list = [item["title"] for item in sources]
+        self.data_schema = vol.Schema(
+            {
+                vol.Optional(CONF_IGNORED_SOURCES): cv.multi_select(source_list),
+            }
+        )
+
         return await self.async_step_user()
 
     async def async_step_user(
@@ -280,11 +281,7 @@ class BraviaTVOptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_IGNORED_SOURCES, default=self.ignored_sources
-                    ): cv.multi_select(self.source_list)
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                self.data_schema, self.options
             ),
         )

@@ -169,60 +169,47 @@ class AlexaCapability:
 
     def serialize_discovery(self):
         """Serialize according to the Discovery API."""
-        # pylint: disable=assignment-from-none
-        # Methods may be overridden and return a value.
         result = {"type": "AlexaInterface", "interface": self.name(), "version": "3"}
 
         if (instance := self.instance) is not None:
             result["instance"] = instance
 
-        properties_supported = self.properties_supported()
-        if properties_supported:
+        if properties_supported := self.properties_supported():
             result["properties"] = {
-                "supported": self.properties_supported(),
+                "supported": properties_supported,
                 "proactivelyReported": self.properties_proactively_reported(),
                 "retrievable": self.properties_retrievable(),
             }
 
-        proactively_reported = self.capability_proactively_reported()
-        if proactively_reported is not None:
+        if (proactively_reported := self.capability_proactively_reported()) is not None:
             result["proactivelyReported"] = proactively_reported
 
-        non_controllable = self.properties_non_controllable()
-        if non_controllable is not None:
+        if (non_controllable := self.properties_non_controllable()) is not None:
             result["properties"]["nonControllable"] = non_controllable
 
-        supports_deactivation = self.supports_deactivation()
-        if supports_deactivation is not None:
+        if (supports_deactivation := self.supports_deactivation()) is not None:
             result["supportsDeactivation"] = supports_deactivation
 
-        capability_resources = self.capability_resources()
-        if capability_resources:
+        if capability_resources := self.capability_resources():
             result["capabilityResources"] = capability_resources
 
-        configuration = self.configuration()
-        if configuration:
+        if configuration := self.configuration():
             result["configuration"] = configuration
 
         # The plural configurations object is different than the singular configuration object above.
-        configurations = self.configurations()
-        if configurations:
+        if configurations := self.configurations():
             result["configurations"] = configurations
 
-        semantics = self.semantics()
-        if semantics:
+        if semantics := self.semantics():
             result["semantics"] = semantics
 
-        supported_operations = self.supported_operations()
-        if supported_operations:
+        if supported_operations := self.supported_operations():
             result["supportedOperations"] = supported_operations
 
-        inputs = self.inputs()
-        if inputs:
+        if inputs := self.inputs():
             result["inputs"] = inputs
 
-        camera_stream_configurations = self.camera_stream_configurations()
-        if camera_stream_configurations:
+        if camera_stream_configurations := self.camera_stream_configurations():
             result["cameraStreamConfigurations"] = camera_stream_configurations
 
         return result
@@ -654,59 +641,6 @@ class AlexaColorTemperatureController(AlexaCapability):
                 self.entity.attributes["color_temp"]
             )
         return None
-
-
-class AlexaPercentageController(AlexaCapability):
-    """Implements Alexa.PercentageController.
-
-    https://developer.amazon.com/docs/device-apis/alexa-percentagecontroller.html
-    """
-
-    supported_locales = {
-        "de-DE",
-        "en-AU",
-        "en-CA",
-        "en-GB",
-        "en-IN",
-        "en-US",
-        "es-ES",
-        "es-US",
-        "fr-CA",
-        "fr-FR",
-        "hi-IN",
-        "it-IT",
-        "ja-JP",
-        "pt-BR",
-    }
-
-    def name(self):
-        """Return the Alexa API name of this interface."""
-        return "Alexa.PercentageController"
-
-    def properties_supported(self):
-        """Return what properties this entity supports."""
-        return [{"name": "percentage"}]
-
-    def properties_proactively_reported(self):
-        """Return True if properties asynchronously reported."""
-        return True
-
-    def properties_retrievable(self):
-        """Return True if properties can be retrieved."""
-        return True
-
-    def get_property(self, name):
-        """Read and return a property."""
-        if name != "percentage":
-            raise UnsupportedProperty(name)
-
-        if self.entity.domain == fan.DOMAIN:
-            return self.entity.attributes.get(fan.ATTR_PERCENTAGE) or 0
-
-        if self.entity.domain == cover.DOMAIN:
-            return self.entity.attributes.get(cover.ATTR_CURRENT_POSITION, 0)
-
-        return 0
 
 
 class AlexaSpeaker(AlexaCapability):

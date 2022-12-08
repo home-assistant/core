@@ -33,8 +33,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_TENTHS,
-    TEMP_CELSIUS,
     Platform,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -139,7 +139,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
     DEFAULT_MIN_TEMP = 7
 
     _attr_precision = PRECISION_TENTHS
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Initialize ZHA Thermostat instance."""

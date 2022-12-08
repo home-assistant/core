@@ -1,7 +1,7 @@
 """Base classes for HA Bluetooth scanners for bluetooth."""
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 import datetime
@@ -27,7 +27,7 @@ from .models import HaBluetoothConnector
 MONOTONIC_TIME: Final = monotonic_time_coarse
 
 
-class BaseHaScanner:
+class BaseHaScanner(ABC):
     """Base class for Ha Scanners."""
 
     __slots__ = ("hass", "source", "_connecting", "name", "scanning")
@@ -73,6 +73,7 @@ class BaseHaScanner:
                     "address": device_adv[0].address,
                     "rssi": device_adv[0].rssi,
                     "advertisement_data": device_adv[1],
+                    "details": device_adv[0].details,
                 }
                 for device_adv in self.discovered_devices_and_advertisement_data.values()
             ],
@@ -162,6 +163,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
         service_data: dict[str, bytes],
         manufacturer_data: dict[int, bytes],
         tx_power: int | None,
+        details: dict[Any, Any],
     ) -> None:
         """Call the registered callback."""
         now = MONOTONIC_TIME()
@@ -201,7 +203,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
         device = BLEDevice(  # type: ignore[no-untyped-call]
             address=address,
             name=local_name,
-            details=self._details,
+            details=self._details | details,
             rssi=rssi,  # deprecated, will be removed in newer bleak
         )
         self._discovered_device_advertisement_datas[address] = (

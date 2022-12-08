@@ -13,9 +13,12 @@
                 "data": {
                     "name": "N\u00e1zov",
                     "password": "Heslo",
-                    "url": "URL"
-                }
+                    "url": "URL",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
+                },
+                "title": "Zadajte inform\u00e1cie o svojom Growatte"
             }
         }
-    }
+    },
+    "title": "Server Growatt"
 }

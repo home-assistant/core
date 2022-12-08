@@ -9,10 +9,10 @@
                     "type": "Statistisk karakteristikk"
                 },
                 "data_description": {
-                    "round_digits": "Styrer antall desimaler i utdata n\u00e5r statistikkkarakteristikken er gjennomsnitt eller median."
+                    "round_digits": "Styrer antall desimaler i utdata n\u00e5r statistikkkarakteristikken er gjennomsnitt, median eller sum."
                 },
-                "description": "Lag en sensor som beregner en min, maks, middelverdi eller medianverdi fra en liste over inngangssensorer.",
-                "title": "Legg til min / maks / gjennomsnitt / median sensor"
+                "description": "Lag en sensor som beregner en min, maks, gjennomsnitt, median eller sum fra en liste over inngangssensorer.",
+                "title": "Kombiner tilstanden til flere sensorer"
             }
         }
     },
@@ -25,10 +25,10 @@
                     "type": "Statistisk karakteristikk"
                 },
                 "data_description": {
-                    "round_digits": "Styrer antall desimaler i utdata n\u00e5r statistikkkarakteristikken er gjennomsnitt eller median."
+                    "round_digits": "Styrer antall desimaler i utdata n\u00e5r statistikkkarakteristikken er gjennomsnitt, median eller sum."
                 }
             }
         }
     },
-    "title": "Min / maks / gjennomsnitt / median sensor"
+    "title": "Kombiner tilstanden til flere sensorer"
 }

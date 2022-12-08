@@ -11,7 +11,11 @@
                 "data": {
                     "host": "Hostite\u013e",
                     "password": "Heslo",
-                    "port": "Port"
+                    "port": "Port",
+                    "ssl": "Pou\u017e\u00edva SSL certifik\u00e1t",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno",
+                    "verify_ssl": "Overi\u0165 SSL certifik\u00e1t",
+                    "version": "Verzia API Glances (2 alebo 3)"
                 }
             }
         }

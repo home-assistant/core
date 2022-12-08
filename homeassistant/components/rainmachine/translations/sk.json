@@ -13,7 +13,15 @@
                     "ip_address": "N\u00e1zov hostite\u013ea alebo IP adresa",
                     "password": "Heslo",
                     "port": "Port"
-                }
+                },
+                "title": "Vypl\u0148te svoje \u00fadaje"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Konfigur\u00e1cia RainMachine"
             }
         }
     }

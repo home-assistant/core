@@ -66,7 +66,7 @@
         "step": {
             "init": {
                 "data": {
-                    "ble_scanner_mode": "Bluetooth-Scannermodus"
+                    "ble_scanner_mode": "Bluetooth Scannermodus"
                 },
                 "description": "Bluetooth-Scannen kann aktiv oder passiv sein. Bei aktiv fordert Shelly Daten von Ger\u00e4ten in der N\u00e4he an; Mit Passiv empf\u00e4ngt Shelly unaufgefordert Daten von Ger\u00e4ten in der N\u00e4he."
             }

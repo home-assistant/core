@@ -119,6 +119,7 @@ SUPPORTED_PLATFORMS: Final = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TEXT,
     Platform.WEATHER,
 ]
 
