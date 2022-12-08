@@ -1,5 +1,10 @@
 {
     "state": {
+        "tomorrowio__health_concern": {
+            "good": "Dobr\u00e9",
+            "hazardous": "Nebezpe\u010dn\u00e9",
+            "moderate": "Mierne"
+        },
         "tomorrowio__pollen_index": {
             "high": "Vysok\u00fd",
             "low": "N\u00edzky",

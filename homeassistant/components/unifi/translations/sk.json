@@ -41,12 +41,21 @@
             },
             "device_tracker": {
                 "data": {
+                    "ssid_filter": "Vyberte SSID na sledovanie bezdr\u00f4tov\u00fdch klientov",
                     "track_clients": "Sledovanie klientov siete",
                     "track_devices": "Sledovanie sie\u0165ov\u00fdch zariaden\u00ed (zariadenia Ubiquiti)",
                     "track_wired_clients": "Zahrn\u00fa\u0165 klientov pripojen\u00fdch k\u00e1blom"
                 },
                 "description": "Konfigur\u00e1cia sledovania zariadenia",
                 "title": "Mo\u017enosti siete UniFi 1/3"
+            },
+            "init": {
+                "data": {
+                    "few": "Pr\u00e1zdnych",
+                    "many": "Pr\u00e1zdnych",
+                    "one": "Pr\u00e1zdny",
+                    "other": "Pr\u00e1zdny"
+                }
             },
             "simple_options": {
                 "data": {

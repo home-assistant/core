@@ -69,5 +69,39 @@
             "single_press": "\"{subtype}\" premut"
         }
     },
+    "entity": {
+        "select": {
+            "ecobee_mode": {
+                "state": {
+                    "away": "A fora",
+                    "home": "A casa",
+                    "sleep": "Dormint"
+                }
+            }
+        },
+        "sensor": {
+            "thread_node_capabilities": {
+                "state": {
+                    "border_router_capable": "Pot funcionar com a encaminador (router) frontera",
+                    "full": "Dispositiu final complet",
+                    "minimal": "Dispositiu final redu\u00eft",
+                    "none": "Cap",
+                    "router_eligible": "Dispositiu final apte per ser encaminador (router)",
+                    "sleepy": "Dispositiu final dorment"
+                }
+            },
+            "thread_status": {
+                "state": {
+                    "border_router": "Encaminador (router) frontera",
+                    "child": "Fill",
+                    "detached": "Desconnectat",
+                    "disabled": "Desactivat",
+                    "joining": "Unint-se",
+                    "leader": "L\u00edder",
+                    "router": "Encaminador (router)"
+                }
+            }
+        }
+    },
     "title": "Controlador HomeKit"
 }

@@ -8,7 +8,8 @@
             "auth_app": {
                 "data": {
                     "app_id": "ID aplik\u00e1cie"
-                }
+                },
+                "title": "Prihlasovacie \u00fadaje aplik\u00e1cie"
             },
             "auth_captcha": {
                 "data": {

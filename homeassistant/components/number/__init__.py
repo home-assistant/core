@@ -93,6 +93,18 @@ class NumberDeviceClass(StrEnum):
     Unit of measurement: `A`
     """
 
+    DATA_RATE = "data_rate"
+    """Data rate.
+
+    Unit of measurement: UnitOfDataRate
+    """
+
+    DATA_SIZE = "data_size"
+    """Data size.
+
+    Unit of measurement: UnitOfInformation
+    """
+
     DISTANCE = "distance"
     """Generic distance.
 
@@ -129,6 +141,14 @@ class NumberDeviceClass(StrEnum):
     """Illuminance.
 
     Unit of measurement: `lx`, `lm`
+    """
+
+    IRRADIANCE = "irradiance"
+    """Irradiance.
+
+    Unit of measurement:
+    - SI / metric: `W/m²`
+    - USCS / imperial: `BTU/(h⋅ft²)`
     """
 
     MOISTURE = "moisture"
@@ -235,6 +255,12 @@ class NumberDeviceClass(StrEnum):
     """Signal strength.
 
     Unit of measurement: `dB`, `dBm`
+    """
+
+    SOUND_PRESSURE = "sound_pressure"
+    """Sound pressure.
+
+    Unit of measurement: `dB`, `dBA`
     """
 
     SPEED = "speed"

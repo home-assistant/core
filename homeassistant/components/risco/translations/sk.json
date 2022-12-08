@@ -22,6 +22,12 @@
                     "pin": "PIN k\u00f3d",
                     "port": "Port"
                 }
+            },
+            "user": {
+                "menu_options": {
+                    "cloud": "Risco Cloud (odpor\u00fa\u010dan\u00e9)",
+                    "local": "Miestny panel Risco (pokro\u010dil\u00fd)"
+                }
             }
         }
     },

@@ -11,6 +11,9 @@
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "step": {
+            "hassio_confirm": {
+                "title": "motionEye cez doplnok Home Assistant"
+            },
             "user": {
                 "data": {
                     "admin_password": "Spr\u00e1vca Heslo",

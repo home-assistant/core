@@ -7,7 +7,8 @@
             "new_moon": "Nov mesiac",
             "waning_crescent": "Ub\u00fadaj\u00faci polmesiac",
             "waning_gibbous": "Ub\u00fadaj\u00faci mesiac",
-            "waxing_crescent": "Dorastaj\u00faci polmesiac"
+            "waxing_crescent": "Dorastaj\u00faci polmesiac",
+            "waxing_gibbous": "Dorastaj\u00faci mesiac"
         }
     }
 }

@@ -5,6 +5,7 @@
             "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
             "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha",
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "discover_timeout": "Nie je mo\u017en\u00e9 zisti\u0165 bridge Hue",
             "invalid_host": "Neplatn\u00fd hostite\u013e",
             "no_bridges": "Neboli objaven\u00fd \u017eiaden Philips Hue bridge",
             "not_hue_bridge": "Nie je to most Hue Bridge",

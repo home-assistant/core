@@ -18,7 +18,8 @@
                 },
                 "data_description": {
                     "username": "Home Assistant odo\u0161le pr\u00edspevok na Slack pomocou zadan\u00e9ho pou\u017e\u00edvate\u013esk\u00e9ho mena."
-                }
+                },
+                "description": "Pozrite si dokument\u00e1ciu o z\u00edskan\u00ed k\u013e\u00fa\u010da Slack API."
             }
         }
     }
