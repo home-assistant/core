@@ -340,7 +340,6 @@ class IntentResponse:
         self.reprompt: dict[str, dict[str, Any]] = {}
         self.card: dict[str, dict[str, str]] = {}
         self.language = language
-        self.response_type = IntentResponseType.ACTION_DONE
         self.error_code: IntentResponseErrorCode | None = None
         self.target: IntentResponseTarget | None = None
 
