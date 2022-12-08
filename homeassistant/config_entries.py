@@ -245,7 +245,7 @@ class ConfigEntry:
         self.domain = domain
 
         # Title of the configuration
-        self.title = title
+        self.title = title or ""
 
         # Config data
         self.data = MappingProxyType(data)
