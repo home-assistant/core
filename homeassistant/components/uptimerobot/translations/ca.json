@@ -28,5 +28,18 @@
                 "description": "Has de proporcionar la clau API 'principal' d'UptimeRobot"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "monitor_status": {
+                "state": {
+                    "down": "Caigut",
+                    "not_checked_yet": "Encara no comprovat",
+                    "pause": "En pausa",
+                    "seems_down": "Sembla caigut",
+                    "up": "Funcionant"
+                }
+            }
+        }
     }
 }

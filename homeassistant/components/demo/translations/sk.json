@@ -3,6 +3,7 @@
         "sensor": {
             "thermostat_mode": {
                 "state": {
+                    "comfort": "Komfort",
                     "eco": "Eco"
                 }
             }

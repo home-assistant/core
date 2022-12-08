@@ -54,7 +54,8 @@
                     "4": "Z\u00f3na 4",
                     "5": "Z\u00f3na 5",
                     "6": "Z\u00f3na 6",
-                    "7": "Z\u00f3na 7"
+                    "7": "Z\u00f3na 7",
+                    "out": "OUT"
                 },
                 "title": "Konfigur\u00e1cia I/O"
             },
@@ -80,8 +81,11 @@
                 "data": {
                     "momentary": "Trvanie impulzu (ms)",
                     "name": "N\u00e1zov (volite\u013en\u00fd)",
-                    "pause": "Pauza medzi impulzmi (ms)"
-                }
+                    "pause": "Pauza medzi impulzmi (ms)",
+                    "repeat": "Po\u010det opakovan\u00ed (-1 = nekone\u010dno)"
+                },
+                "description": "mo\u017enosti {zone}: state {state}",
+                "title": "Konfigur\u00e1cia prep\u00ednate\u013en\u00e9ho v\u00fdstupu"
             }
         }
     }

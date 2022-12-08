@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "invalid_unique_id": "Nie je mo\u017en\u00e9 ur\u010di\u0165 platn\u00e9 jedine\u010dn\u00e9 ID zariadenia"
+            "invalid_unique_id": "Nie je mo\u017en\u00e9 ur\u010di\u0165 platn\u00e9 jedine\u010dn\u00e9 ID zariadenia",
+            "no_unique_id": "Zariadenie bez platn\u00e9ho jedine\u010dn\u00e9ho ID je u\u017e nakonfigurovan\u00e9. Konfigur\u00e1cia viacer\u00fdch in\u0161tanci\u00ed nie je mo\u017en\u00e1"
         },
         "error": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
