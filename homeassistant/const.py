@@ -477,9 +477,17 @@ ATTR_TEMPERATURE: Final = "temperature"
 # Persons attribute
 ATTR_PERSONS: Final = "persons"
 
+
 # #### UNITS OF MEASUREMENT ####
 # Apparent power units
+class UnitOfApparentPower(StrEnum):
+    """Apparent power units."""
+
+    VOLT_AMPERE = "VA"
+
+
 POWER_VOLT_AMPERE: Final = "VA"
+"""Deprecated: please use UnitOfApparentPower.VOLT_AMPERE."""
 
 
 # Power units
