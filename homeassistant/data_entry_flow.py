@@ -84,27 +84,27 @@ class AbortFlow(FlowError):
 class FlowResult(TypedDict, total=False):
     """Typed result dict."""
 
-    version: int
-    type: FlowResultType
+    context: dict[str, Any]
+    data_schema: vol.Schema | None
+    data: Mapping[str, Any]
+    description_placeholders: Mapping[str, str | None] | None
+    description: str | None
+    errors: dict[str, str] | None
+    extra: str
     flow_id: str
     handler: str
-    title: str
-    data: Mapping[str, Any]
-    step_id: str
-    data_schema: vol.Schema | None
-    extra: str
-    required: bool
-    errors: dict[str, str] | None
-    description: str | None
-    description_placeholders: Mapping[str, str | None] | None
-    progress_action: str
-    url: str
-    reason: str
-    context: dict[str, Any]
-    result: Any
     last_step: bool | None
-    options: Mapping[str, Any]
     menu_options: list[str] | dict[str, str]
+    options: Mapping[str, Any]
+    progress_action: str
+    reason: str
+    required: bool
+    result: Any
+    step_id: str
+    title: str | None
+    type: FlowResultType
+    url: str
+    version: int
 
 
 @callback
@@ -498,7 +498,7 @@ class FlowHandler:
     def async_create_entry(
         self,
         *,
-        title: str,
+        title: str | None = None,
         data: Mapping[str, Any],
         description: str | None = None,
         description_placeholders: Mapping[str, str] | None = None,

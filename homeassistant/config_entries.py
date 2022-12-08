@@ -223,7 +223,7 @@ class ConfigEntry:
         self,
         version: int,
         domain: str,
-        title: str,
+        title: str | None,
         data: Mapping[str, Any],
         source: str,
         pref_disable_new_entities: bool | None = None,
@@ -1623,7 +1623,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     def async_create_entry(
         self,
         *,
-        title: str,
+        title: str | None = None,
         data: Mapping[str, Any],
         description: str | None = None,
         description_placeholders: Mapping[str, str] | None = None,
