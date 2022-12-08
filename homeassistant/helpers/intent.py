@@ -223,7 +223,9 @@ class ServiceIntentHandler(IntentHandler):
         response.async_set_speech(self.speech.format(state.name))
         response.async_set_target(
             IntentResponseTarget(
-                name=state.name, target_type=IntentResponseTargetType.ENTITY
+                name=state.name,
+                target_type=IntentResponseTargetType.ENTITY,
+                target_id=state.entity_id,
             )
         )
         return response
@@ -321,6 +323,7 @@ class IntentResponseTarget:
 
     name: str
     target_type: IntentResponseTargetType
+    target_id: str | None = None
 
 
 class IntentResponse:

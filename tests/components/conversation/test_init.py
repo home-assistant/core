@@ -217,7 +217,13 @@ async def test_http_api(hass, init_components, hass_client):
         "speech": {"plain": {"extra_data": None, "speech": "Turned kitchen on"}},
         "language": hass.config.language,
         "response_type": "action_done",
-        "data": {"target": {"name": "kitchen", "target_type": "entity"}},
+        "data": {
+            "target": {
+                "name": "kitchen",
+                "target_type": "entity",
+                "target_id": "light.kitchen",
+            }
+        },
     }
 
     assert len(calls) == 1
