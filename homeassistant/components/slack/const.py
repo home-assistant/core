@@ -12,6 +12,7 @@ ATTR_USERNAME = "username"
 ATTR_USER_ID = "user_id"
 
 CONF_DEFAULT_CHANNEL = "default_channel"
+CONF_DURATION = "duration"
 
 DATA_CLIENT = "client"
 DEFAULT_NAME = "Slack"

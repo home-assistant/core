@@ -1,0 +1,20 @@
+set_dnd:
+  name: Set Do Not Disturb
+  description: Set Do Not Disturb for a period of time. The period starts immediately when called.
+  target:
+    device:
+      integration: slack
+    entity:
+      integration: slack
+  fields:
+    duration:
+      name: Duration
+      description: The number of minutes to pause notifications. Set this to 0 to stop pausing notifications.
+      required: true
+      example: 30
+      selector:
+        number:
+          min: 0
+          max: 300
+          mode: box
+          unit_of_measurement: minutes
