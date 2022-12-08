@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, VALID_SENSOR_TYPES
+from .const import DOMAIN, SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ def verify_ebusd_config(config):
     """Verify eBusd config."""
     circuit = config[CONF_CIRCUIT]
     for condition in config[CONF_MONITORED_CONDITIONS]:
-        if condition not in VALID_SENSOR_TYPES[circuit]:
+        if condition not in SENSOR_TYPES[circuit]:
             raise vol.Invalid(f"Condition '{condition}' not in '{circuit}'.")
     return config
 
@@ -73,7 +73,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         sensor_config = {
             CONF_MONITORED_CONDITIONS: monitored_conditions,
             "client_name": name,
-            "circuit": circuit,
+            "sensor_types": SENSOR_TYPES[circuit],
         }
         load_platform(hass, Platform.SENSOR, DOMAIN, sensor_config, config)
 
