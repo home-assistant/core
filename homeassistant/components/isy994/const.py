@@ -23,6 +23,7 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
     FREQUENCY_HERTZ,
+    IRRADIATION_WATTS_PER_SQUARE_METER,
     LENGTH_CENTIMETERS,
     LENGTH_FEET,
     LENGTH_INCHES,
@@ -75,7 +76,6 @@ from homeassistant.const import (
     VOLUME_GALLONS,
     VOLUME_LITERS,
     Platform,
-    UnitOfIrradiance,
     UnitOfVolumetricFlux,
 )
 
@@ -384,7 +384,7 @@ UOM_FRIENDLY_NAME = {
     "71": UV_INDEX,
     "72": ELECTRIC_POTENTIAL_VOLT,
     "73": POWER_WATT,
-    "74": UnitOfIrradiance.WATTS_PER_SQUARE_METER,
+    "74": IRRADIATION_WATTS_PER_SQUARE_METER,
     "75": "weekday",
     "76": DEGREE,
     "77": TIME_YEARS,
