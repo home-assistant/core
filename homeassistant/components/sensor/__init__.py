@@ -157,6 +157,12 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `A`
     """
 
+    DATA_RATE = "data_rate"
+    """Data rate.
+
+    Unit of measurement: UnitOfDataRate
+    """
+
     DATA_SIZE = "data_size"
     """Data size.
 
