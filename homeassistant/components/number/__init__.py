@@ -257,6 +257,12 @@ class NumberDeviceClass(StrEnum):
     Unit of measurement: `dB`, `dBm`
     """
 
+    SOUND_PRESSURE = "sound_pressure"
+    """Sound pressure.
+
+    Unit of measurement: `dB`, `dBA`
+    """
+
     SPEED = "speed"
     """Generic speed.
 
