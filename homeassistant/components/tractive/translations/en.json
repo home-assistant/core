@@ -17,5 +17,17 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "tracker_state": {
+                "state": {
+                    "not_reporting": "Not reporting",
+                    "operational": "Operational",
+                    "system_shutdown_user": "System shutdown user",
+                    "system_startup": "System startup"
+                }
+            }
+        }
     }
 }

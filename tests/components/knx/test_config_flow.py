@@ -1,5 +1,5 @@
 """Test the KNX config flow."""
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 from xknx.exceptions.exception import CommunicationError, InvalidSecureConfiguration
@@ -45,7 +45,7 @@ from homeassistant.data_entry_flow import FlowResult, FlowResultType
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture(name="knx_setup", autouse=True)
+@pytest.fixture(name="knx_setup")
 def fixture_knx_setup():
     """Mock KNX entry setup."""
     with patch("homeassistant.components.knx.async_setup", return_value=True), patch(
@@ -1063,14 +1063,15 @@ async def test_configure_secure_knxkeys_invalid_signature(hass: HomeAssistant):
 
 
 async def test_options_flow_connection_type(
-    hass: HomeAssistant, knx_setup, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, knx, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test options flow changing interface."""
-    mock_config_entry.add_to_hass(hass)
+    # run one option flow test with a set up integration (knx fixture)
+    # instead of mocking async_setup_entry (knx_setup fixture) to test
+    # usage of the already running XKNX instance for gateway scanner
     gateway = _gateway_descriptor("192.168.0.1", 3675)
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    hass.data[DOMAIN] = Mock()  # GatewayScanner uses running XKNX() in options flow
+    await knx.setup_integration({})
     menu_step = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
     with patch(
@@ -1114,7 +1115,6 @@ async def test_options_flow_connection_type(
             CONF_KNX_STATE_UPDATER: CONF_KNX_DEFAULT_STATE_UPDATER,
             CONF_KNX_ROUTE_BACK: False,
         }
-        knx_setup.assert_called_once()
 
 
 async def test_options_flow_secure_manual_to_keyfile(

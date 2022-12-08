@@ -164,6 +164,52 @@
                     "middle": "Medio",
                     "small": "Peque\u00f1o"
                 }
+            },
+            "vacuum_mode": {
+                "state": {
+                    "bow": "Arco",
+                    "chargego": "Volver a la base",
+                    "left_bow": "Arco a la izquierda",
+                    "left_spiral": "Espiral izquierda",
+                    "mop": "Fregar",
+                    "part": "Parte",
+                    "partial_bow": "Arco parcialmente",
+                    "pick_zone": "Elegir zona",
+                    "point": "Punto",
+                    "pose": "Pose",
+                    "random": "Aleatorio",
+                    "right_bow": "Arco a la derecha",
+                    "right_spiral": "Espiral derecha",
+                    "single": "\u00danico",
+                    "smart": "Inteligente",
+                    "spiral": "Espiral",
+                    "standby": "En espera",
+                    "wall_follow": "Seguir el muro",
+                    "zone": "Zona"
+                }
+            }
+        },
+        "sensor": {
+            "air_quality": {
+                "state": {
+                    "good": "Bueno",
+                    "great": "Excelente",
+                    "mild": "Moderado",
+                    "severe": "Severo"
+                }
+            },
+            "status": {
+                "state": {
+                    "boiling_temp": "Temperatura de ebullici\u00f3n",
+                    "cooling": "Refrigeraci\u00f3n",
+                    "heating": "Calefacci\u00f3n",
+                    "heating_temp": "Temperatura de calefacci\u00f3n",
+                    "reserve_1": "Reserva 1",
+                    "reserve_2": "Reserva 2",
+                    "reserve_3": "Reserva 3",
+                    "standby": "En espera",
+                    "warm": "Conservaci\u00f3n del calor"
+                }
             }
         }
     }

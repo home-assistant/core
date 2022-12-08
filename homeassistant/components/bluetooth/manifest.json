@@ -7,8 +7,8 @@
   "quality_scale": "internal",
   "requirements": [
     "bleak==0.19.2",
-    "bleak-retry-connector==2.9.0",
-    "bluetooth-adapters==0.11.0",
+    "bleak-retry-connector==2.10.1",
+    "bluetooth-adapters==0.12.0",
     "bluetooth-auto-recovery==0.5.4",
     "bluetooth-data-tools==0.3.0",
     "dbus-fast==1.75.0"

@@ -6,7 +6,8 @@
         },
         "error": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
-            "invalid_ip_address": "Neplatn\u00e1 adresa IPv4."
+            "invalid_ip_address": "Neplatn\u00e1 adresa IPv4.",
+            "invalid_signature": "Heslo na de\u0161ifrovanie s\u00faboru `.knxkeys` je nespr\u00e1vne."
         },
         "step": {
             "connection_type": {
@@ -19,6 +20,9 @@
                     "host": "Hostite\u013e",
                     "local_ip": "Lok\u00e1lna IP adresa Home Assistant-a",
                     "port": "Port"
+                },
+                "data_description": {
+                    "local_ip": "Ak chcete pou\u017ei\u0165 automatick\u00e9 zis\u0165ovanie, nechajte pole pr\u00e1zdne."
                 }
             },
             "routing": {
@@ -65,7 +69,8 @@
     "options": {
         "error": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
-            "invalid_ip_address": "Neplatn\u00e1 adresa IPv4."
+            "invalid_ip_address": "Neplatn\u00e1 adresa IPv4.",
+            "invalid_signature": "Heslo na de\u0161ifrovanie s\u00faboru `.knxkeys` je nespr\u00e1vne."
         },
         "step": {
             "communication_settings": {
@@ -83,6 +88,9 @@
                     "host": "Hostite\u013e",
                     "local_ip": "Lok\u00e1lna IP adresa Home Assistant-a",
                     "port": "Port"
+                },
+                "data_description": {
+                    "local_ip": "Ak chcete pou\u017ei\u0165 automatick\u00e9 zis\u0165ovanie, nechajte pole pr\u00e1zdne."
                 }
             },
             "options_init": {

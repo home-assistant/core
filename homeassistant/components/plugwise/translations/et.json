@@ -24,5 +24,26 @@
                 "title": "Loo \u00fchendus Smile-ga"
             }
         }
+    },
+    "entity": {
+        "select": {
+            "dhw_mode": {
+                "state": {
+                    "auto": "Automaatne",
+                    "boost": "Turbo",
+                    "comfort": "Mugav",
+                    "off": "V\u00e4ljas"
+                }
+            },
+            "regulation_mode": {
+                "state": {
+                    "bleeding_cold": "Jahutuseat soenemine",
+                    "bleeding_hot": "K\u00fcttest jahtumine",
+                    "cooling": "Jahutus",
+                    "heating": "K\u00fcte",
+                    "off": "V\u00e4ljas"
+                }
+            }
+        }
     }
 }

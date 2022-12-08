@@ -28,6 +28,7 @@
                     "password": "Heslo",
                     "username": "Email"
                 },
+                "description": "Zadajte svoje poverenia",
                 "title": "iCloud poverenia"
             },
             "verification_code": {

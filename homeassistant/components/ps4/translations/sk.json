@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "credential_error": "Chyba pri na\u010d\u00edtavan\u00ed poveren\u00ed.",
             "no_devices_found": "V sieti sa nena\u0161li \u017eiadne zariadenia",
             "port_987_bind_error": "Nepodarilo sa naviaza\u0165 na port 987. \u010eal\u0161ie inform\u00e1cie n\u00e1jdete v [dokument\u00e1cii](https://www.home-assistant.io/components/ps4/).",
             "port_997_bind_error": "Nepodarilo sa naviaza\u0165 na port 997. \u010eal\u0161ie inform\u00e1cie n\u00e1jdete v [dokument\u00e1cii](https://www.home-assistant.io/components/ps4/)."
@@ -17,12 +18,14 @@
                 "data": {
                     "code": "PIN k\u00f3d",
                     "ip_address": "IP adresa",
-                    "name": "N\u00e1zov"
+                    "name": "N\u00e1zov",
+                    "region": "Regi\u00f3n"
                 }
             },
             "mode": {
                 "data": {
-                    "ip_address": "IP adresa (Ak pou\u017e\u00edvate automatick\u00e9 zis\u0165ovanie, nechajte pr\u00e1zdne)."
+                    "ip_address": "IP adresa (Ak pou\u017e\u00edvate automatick\u00e9 zis\u0165ovanie, nechajte pr\u00e1zdne).",
+                    "mode": "Konfigura\u010dn\u00fd re\u017eim"
                 },
                 "data_description": {
                     "ip_address": "Ak vyberiete automatick\u00e9 zis\u0165ovanie, ponechajte pr\u00e1zdne."

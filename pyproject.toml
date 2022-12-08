@@ -74,7 +74,7 @@ include = ["homeassistant*"]
 
 [tool.black]
 target-version = ["py39", "py310"]
-exclude = 'generated'
+extend-exclude = "/generated/"
 
 [tool.isort]
 # https://github.com/PyCQA/isort/wiki/isort-Settings

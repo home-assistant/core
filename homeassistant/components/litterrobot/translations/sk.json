@@ -24,5 +24,36 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "status_code": {
+                "state": {
+                    "br": "Odstr\u00e1nen\u00fd kryt",
+                    "ccc": "Dokon\u010denie \u010distiaceho cyklu",
+                    "ccp": "Prebieha \u010distiaci cyklus",
+                    "df1": "Z\u00e1suvka takmer pln\u00e1 - zost\u00e1vaj\u00fa 2 cykly",
+                    "df2": "Z\u00e1suvka takmer pln\u00e1 - zost\u00e1va 1 cyklus",
+                    "dfs": "Pln\u00e1 z\u00e1suvka",
+                    "dhf": "Porucha polohy v\u00fdsypky + Home",
+                    "dpf": "Porucha polohy v\u00fdsypky",
+                    "ec": "Pr\u00e1zdny cyklus",
+                    "hpf": "Porucha polohy Home",
+                    "off": "Neakt\u00edvny",
+                    "offline": "Offline",
+                    "otf": "Porucha nadmern\u00e9ho kr\u00fatiaceho momentu",
+                    "p": "Pozastaven\u00fd",
+                    "pwrd": "Vyp\u00edna sa",
+                    "pwru": "Zap\u00edna sa",
+                    "rdy": "Pripraven\u00e9",
+                    "sdf": "Pln\u00e1 z\u00e1suvka pri spusten\u00ed"
+                }
+            }
+        }
+    },
+    "issues": {
+        "migrated_attributes": {
+            "title": "Atrib\u00faty Litter-Robot s\u00fa teraz ich vlastn\u00e9 snima\u010de"
+        }
     }
 }

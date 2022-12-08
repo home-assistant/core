@@ -24,5 +24,26 @@
                 "title": "\u9023\u7dda\u81f3 Smile"
             }
         }
+    },
+    "entity": {
+        "select": {
+            "dhw_mode": {
+                "state": {
+                    "auto": "\u81ea\u52d5",
+                    "boost": "\u5168\u901f\u6a21\u5f0f",
+                    "comfort": "\u8212\u9069\u6a21\u5f0f",
+                    "off": "\u95dc\u9589"
+                }
+            },
+            "regulation_mode": {
+                "state": {
+                    "bleeding_cold": "\u5f37\u51b7",
+                    "bleeding_hot": "\u5f37\u6696",
+                    "cooling": "\u51b7\u6c23",
+                    "heating": "\u6696\u6c23",
+                    "off": "\u95dc\u9589"
+                }
+            }
+        }
     }
 }

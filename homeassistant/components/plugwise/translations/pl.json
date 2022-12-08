@@ -24,5 +24,26 @@
                 "title": "Po\u0142\u0105czenie ze Smile"
             }
         }
+    },
+    "entity": {
+        "select": {
+            "dhw_mode": {
+                "state": {
+                    "auto": "auto",
+                    "boost": "dogrzewanie",
+                    "comfort": "komfortowo",
+                    "off": "wy\u0142\u0105czone"
+                }
+            },
+            "regulation_mode": {
+                "state": {
+                    "bleeding_cold": "strasznie zimno",
+                    "bleeding_hot": "strasznie ciep\u0142o",
+                    "cooling": "ch\u0142odzenie",
+                    "heating": "grzanie",
+                    "off": "wy\u0142\u0105czony"
+                }
+            }
+        }
     }
 }

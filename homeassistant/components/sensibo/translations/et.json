@@ -29,5 +29,22 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "sensitivity": {
+                "state": {
+                    "n": "Tavaline",
+                    "s": "Tundlik"
+                }
+            },
+            "smart_type": {
+                "state": {
+                    "feelslike": "Tundub nagu",
+                    "humidity": "Niiskus",
+                    "temperature": "Temperatuur"
+                }
+            }
+        }
     }
 }

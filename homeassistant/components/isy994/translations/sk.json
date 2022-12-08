@@ -7,6 +7,7 @@
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
             "invalid_auth": "Neplatn\u00e9 overenie",
             "invalid_host": "Z\u00e1znam hostite\u013ea nemal \u00fapln\u00fd form\u00e1t adresy URL, napr. http://192.168.10.100:80",
+            "reauth_successful": "Op\u00e4tovn\u00e9 overenie bolo \u00faspe\u0161n\u00e9",
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "flow_title": "{name} ({host})",
@@ -16,7 +17,8 @@
                     "password": "Heslo",
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
                 },
-                "description": "Poverenia pre {host} u\u017e nie s\u00fa platn\u00e9."
+                "description": "Poverenia pre {host} u\u017e nie s\u00fa platn\u00e9.",
+                "title": "Znova overte svoje ISY"
             },
             "user": {
                 "data": {

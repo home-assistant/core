@@ -62,6 +62,11 @@
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
                 }
             },
+            "init": {
+                "data": {
+                    "remove_x10": "Odstr\u00e1\u0148te zariadenie X10."
+                }
+            },
             "remove_override": {
                 "data": {
                     "address": "Vyberte adresu zariadenia, ktor\u00fa chcete odstr\u00e1ni\u0165"
@@ -70,7 +75,8 @@
             "remove_x10": {
                 "data": {
                     "address": "Vyberte adresu zariadenia, ktor\u00fa chcete odstr\u00e1ni\u0165"
-                }
+                },
+                "description": "Odstr\u00e1\u0148te zariadenie X10"
             }
         }
     }
