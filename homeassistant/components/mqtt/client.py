@@ -317,8 +317,8 @@ class MqttClientSetup:
         client_cert = get_file_path(CONF_CLIENT_CERT, config.get(CONF_CLIENT_CERT))
         tls_insecure = config.get(CONF_TLS_INSECURE)
         if transport == TRANSPORT_WEBSOCKETS:
-            ws_path = config.get(CONF_WS_PATH)
-            ws_headers = config.get(CONF_WS_HEADERS)
+            ws_path: str = config[CONF_WS_PATH]
+            ws_headers: dict[str, str] = config[CONF_WS_HEADERS]
             self._client.ws_set_options(ws_path, ws_headers)
         if certificate is not None:
             self._client.tls_set(
@@ -360,7 +360,7 @@ class MQTT:
         self.connected = False
         self._ha_started = asyncio.Event()
         self._last_subscribe = time.time()
-        self._mqttc: mqtt.Client = None
+        self._mqttc: mqtt.Client = None  # type: ignore[assignment]
         self._cleanup_on_unload: list[Callable[[], None]] = []
 
         self._paho_lock = asyncio.Lock()  # Prevents parallel calls to the MQTT client
@@ -526,12 +526,9 @@ class MQTT:
         """
 
         def _client_unsubscribe(topic: str) -> int:
-            result: int | None = None
-            mid: int | None = None
             result, mid = self._mqttc.unsubscribe(topic)
             _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
             _raise_on_error(result)
-            assert mid
             return mid
 
         if any(other.topic == topic for other in self.subscriptions):
@@ -563,8 +560,8 @@ class MQTT:
                 _process_client_subscriptions
             )
 
-        tasks = []
-        errors = []
+        tasks: list[Coroutine[Any, Any, None]] = []
+        errors: list[int] = []
         for result, mid in results:
             if result == 0:
                 tasks.append(self._wait_for_mid(mid))
@@ -777,7 +774,7 @@ class MQTT:
             )
 
 
-def _raise_on_errors(result_codes: Iterable[int | None]) -> None:
+def _raise_on_errors(result_codes: Iterable[int]) -> None:
     """Raise error if error result."""
     # pylint: disable-next=import-outside-toplevel
     import paho.mqtt.client as mqtt
@@ -790,7 +787,7 @@ def _raise_on_errors(result_codes: Iterable[int | None]) -> None:
         raise HomeAssistantError(f"Error talking to MQTT: {', '.join(messages)}")
 
 
-def _raise_on_error(result_code: int | None) -> None:
+def _raise_on_error(result_code: int) -> None:
     """Raise error if error result."""
     _raise_on_errors((result_code,))
 
