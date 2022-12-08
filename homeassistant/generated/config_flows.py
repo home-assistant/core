@@ -177,6 +177,7 @@ FLOWS = {
         "homekit_controller",
         "homematicip_cloud",
         "homewizard",
+        "honeygain",
         "honeywell",
         "huawei_lte",
         "hue",

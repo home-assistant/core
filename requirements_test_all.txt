@@ -1025,6 +1025,9 @@ pyCEC==0.5.2
 # homeassistant.components.control4
 pyControl4==0.0.6
 
+# homeassistant.components.honeygain
+pyHoneygain==0.3.5
+
 # homeassistant.components.met_eireann
 pyMetEireann==2021.8.0
 
