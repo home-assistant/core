@@ -142,3 +142,54 @@ async def test_dont_migrate_unique_ids(
     assert entity_not_changed.unique_id == new_unique_id
 
     assert entity_migrated != entity_not_changed
+
+
+@pytest.mark.parametrize(
+    "entitydata,unique_id",
+    [
+        (
+            {
+                "domain": WEATHER_DOMAIN,
+                "platform": ZAMG_DOMAIN,
+                "unique_id": TEST_STATION_ID,
+                "suggested_object_id": f"Zamg {TEST_STATION_NAME}",
+                "disabled_by": None,
+            },
+            TEST_STATION_ID,
+        ),
+    ],
+)
+async def test_unload_entry(
+    hass: HomeAssistant,
+    mock_zamg_coordinator: MagicMock,
+    entitydata: dict,
+    unique_id: str,
+) -> None:
+    """Test unload entity unique_ids."""
+    mock_config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
+    mock_config_entry.add_to_hass(hass)
+
+    entity_registry = er.async_get(hass)
+
+    entity_registry.async_get_or_create(
+        WEATHER_DOMAIN,
+        ZAMG_DOMAIN,
+        unique_id=TEST_STATION_ID,
+        suggested_object_id=f"Zamg {TEST_STATION_NAME}",
+        config_entry=mock_config_entry,
+    )
+
+    entity: er.RegistryEntry = entity_registry.async_get_or_create(
+        **entitydata,
+        config_entry=mock_config_entry,
+    )
+
+    assert entity.unique_id == unique_id
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.config_entries.async_get_entry(unique_id) is None
