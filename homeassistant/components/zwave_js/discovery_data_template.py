@@ -98,7 +98,6 @@ from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
     FREQUENCY_HERTZ,
     FREQUENCY_KILOHERTZ,
-    IRRADIATION_WATTS_PER_SQUARE_METER,
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
@@ -107,6 +106,7 @@ from homeassistant.const import (
     VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
     VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
     UnitOfEnergy,
+    UnitOfIrradiance,
     UnitOfLength,
     UnitOfMass,
     UnitOfPower,
@@ -209,7 +209,7 @@ MULTILEVEL_SENSOR_UNIT_MAP: dict[str, set[MultilevelSensorScaleType]] = {
     UnitOfPressure.MMHG: UNIT_SYSTOLIC,
     ELECTRIC_POTENTIAL_VOLT: SENSOR_UNIT_VOLT,
     UnitOfPower.WATT: SENSOR_UNIT_WATT,
-    IRRADIATION_WATTS_PER_SQUARE_METER: UNIT_WATT_PER_SQUARE_METER,
+    UnitOfIrradiance.WATTS_PER_SQUARE_METER: UNIT_WATT_PER_SQUARE_METER,
 }
 
 _LOGGER = logging.getLogger(__name__)
