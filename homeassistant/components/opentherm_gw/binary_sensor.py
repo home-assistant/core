@@ -2,7 +2,13 @@
 import logging
 from pprint import pformat
 
-from homeassistant.components.binary_sensor import ENTITY_ID_FORMAT, BinarySensorEntity
+import pyotgw.vars as gw_vars
+
+from homeassistant.components.binary_sensor import (
+    ENTITY_ID_FORMAT,
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
@@ -13,7 +19,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN
 from .const import (
-    BINARY_SENSOR_INFO,
     DATA_GATEWAYS,
     DATA_OPENTHERM_GW,
     DEPRECATED_BINARY_SENSOR_SOURCE_LOOKUP,
@@ -21,6 +26,168 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+BINARY_SENSOR_INFO: dict[str, list] = {
+    # [device_class, friendly_name format, [status source, ...]]
+    gw_vars.DATA_MASTER_CH_ENABLED: [
+        None,
+        "Thermostat Central Heating {}",
+        [gw_vars.BOILER, gw_vars.THERMOSTAT],
+    ],
+    gw_vars.DATA_MASTER_DHW_ENABLED: [
+        None,
+        "Thermostat Hot Water {}",
+        [gw_vars.BOILER, gw_vars.THERMOSTAT],
+    ],
+    gw_vars.DATA_MASTER_COOLING_ENABLED: [
+        None,
+        "Thermostat Cooling {}",
+        [gw_vars.BOILER, gw_vars.THERMOSTAT],
+    ],
+    gw_vars.DATA_MASTER_OTC_ENABLED: [
+        None,
+        "Thermostat Outside Temperature Correction {}",
+        [gw_vars.BOILER, gw_vars.THERMOSTAT],
+    ],
+    gw_vars.DATA_MASTER_CH2_ENABLED: [
+        None,
+        "Thermostat Central Heating 2 {}",
+        [gw_vars.BOILER, gw_vars.THERMOSTAT],
+    ],
+    gw_vars.DATA_SLAVE_FAULT_IND: [
+        BinarySensorDeviceClass.PROBLEM,
+        "Boiler Fault {}",
+        [gw_vars.BOILER, gw_vars.THERMOSTAT],
+    ],
+    gw_vars.DATA_SLAVE_CH_ACTIVE: [
+        BinarySensorDeviceClass.HEAT,
+        "Boiler Central Heating {}",
+        [gw_vars.BOILER, gw_vars.THERMOSTAT],
+    ],
+    gw_vars.DATA_SLAVE_DHW_ACTIVE: [
+        BinarySensorDeviceClass.HEAT,
+        "Boiler Hot Water {}",
+        [gw_vars.BOILER, gw_vars.THERMOSTAT],
+    ],
+    gw_vars.DATA_SLAVE_FLAME_ON: [
+        BinarySensorDeviceClass.HEAT,
+        "Boiler Flame {}",
+        [gw_vars.BOILER, gw_vars.THERMOSTAT],
+    ],
+    gw_vars.DATA_SLAVE_COOLING_ACTIVE: [
+        BinarySensorDeviceClass.COLD,
+        "Boiler Cooling {}",
+        [gw_vars.BOILER, gw_vars.THERMOSTAT],
+    ],
+    gw_vars.DATA_SLAVE_CH2_ACTIVE: [
+        BinarySensorDeviceClass.HEAT,
+        "Boiler Central Heating 2 {}",
+        [gw_vars.BOILER, gw_vars.THERMOSTAT],
+    ],
+    gw_vars.DATA_SLAVE_DIAG_IND: [
+        BinarySensorDeviceClass.PROBLEM,
+        "Boiler Diagnostics {}",
+        [gw_vars.BOILER, gw_vars.THERMOSTAT],
+    ],
+    gw_vars.DATA_SLAVE_DHW_PRESENT: [
+        None,
+        "Boiler Hot Water Present {}",
+        [gw_vars.BOILER, gw_vars.THERMOSTAT],
+    ],
+    gw_vars.DATA_SLAVE_CONTROL_TYPE: [
+        None,
+        "Boiler Control Type {}",
+        [gw_vars.BOILER, gw_vars.THERMOSTAT],
+    ],
+    gw_vars.DATA_SLAVE_COOLING_SUPPORTED: [
+        None,
+        "Boiler Cooling Support {}",
+        [gw_vars.BOILER, gw_vars.THERMOSTAT],
+    ],
+    gw_vars.DATA_SLAVE_DHW_CONFIG: [
+        None,
+        "Boiler Hot Water Configuration {}",
+        [gw_vars.BOILER, gw_vars.THERMOSTAT],
+    ],
+    gw_vars.DATA_SLAVE_MASTER_LOW_OFF_PUMP: [
+        None,
+        "Boiler Pump Commands Support {}",
+        [gw_vars.BOILER, gw_vars.THERMOSTAT],
+    ],
+    gw_vars.DATA_SLAVE_CH2_PRESENT: [
+        None,
+        "Boiler Central Heating 2 Present {}",
+        [gw_vars.BOILER, gw_vars.THERMOSTAT],
+    ],
+    gw_vars.DATA_SLAVE_SERVICE_REQ: [
+        BinarySensorDeviceClass.PROBLEM,
+        "Boiler Service Required {}",
+        [gw_vars.BOILER, gw_vars.THERMOSTAT],
+    ],
+    gw_vars.DATA_SLAVE_REMOTE_RESET: [
+        None,
+        "Boiler Remote Reset Support {}",
+        [gw_vars.BOILER, gw_vars.THERMOSTAT],
+    ],
+    gw_vars.DATA_SLAVE_LOW_WATER_PRESS: [
+        BinarySensorDeviceClass.PROBLEM,
+        "Boiler Low Water Pressure {}",
+        [gw_vars.BOILER, gw_vars.THERMOSTAT],
+    ],
+    gw_vars.DATA_SLAVE_GAS_FAULT: [
+        BinarySensorDeviceClass.PROBLEM,
+        "Boiler Gas Fault {}",
+        [gw_vars.BOILER, gw_vars.THERMOSTAT],
+    ],
+    gw_vars.DATA_SLAVE_AIR_PRESS_FAULT: [
+        BinarySensorDeviceClass.PROBLEM,
+        "Boiler Air Pressure Fault {}",
+        [gw_vars.BOILER, gw_vars.THERMOSTAT],
+    ],
+    gw_vars.DATA_SLAVE_WATER_OVERTEMP: [
+        BinarySensorDeviceClass.PROBLEM,
+        "Boiler Water Overtemperature {}",
+        [gw_vars.BOILER, gw_vars.THERMOSTAT],
+    ],
+    gw_vars.DATA_REMOTE_TRANSFER_DHW: [
+        None,
+        "Remote Hot Water Setpoint Transfer Support {}",
+        [gw_vars.BOILER, gw_vars.THERMOSTAT],
+    ],
+    gw_vars.DATA_REMOTE_TRANSFER_MAX_CH: [
+        None,
+        "Remote Maximum Central Heating Setpoint Write Support {}",
+        [gw_vars.BOILER, gw_vars.THERMOSTAT],
+    ],
+    gw_vars.DATA_REMOTE_RW_DHW: [
+        None,
+        "Remote Hot Water Setpoint Write Support {}",
+        [gw_vars.BOILER, gw_vars.THERMOSTAT],
+    ],
+    gw_vars.DATA_REMOTE_RW_MAX_CH: [
+        None,
+        "Remote Central Heating Setpoint Write Support {}",
+        [gw_vars.BOILER, gw_vars.THERMOSTAT],
+    ],
+    gw_vars.DATA_ROVRD_MAN_PRIO: [
+        None,
+        "Remote Override Manual Change Priority {}",
+        [gw_vars.BOILER, gw_vars.THERMOSTAT],
+    ],
+    gw_vars.DATA_ROVRD_AUTO_PRIO: [
+        None,
+        "Remote Override Program Change Priority {}",
+        [gw_vars.BOILER, gw_vars.THERMOSTAT],
+    ],
+    gw_vars.OTGW_GPIO_A_STATE: [None, "Gateway GPIO A {}", [gw_vars.OTGW]],
+    gw_vars.OTGW_GPIO_B_STATE: [None, "Gateway GPIO B {}", [gw_vars.OTGW]],
+    gw_vars.OTGW_IGNORE_TRANSITIONS: [
+        None,
+        "Gateway Ignore Transitions {}",
+        [gw_vars.OTGW],
+    ],
+    gw_vars.OTGW_OVRD_HB: [None, "Gateway Override High Byte {}", [gw_vars.OTGW]],
+}
 
 
 async def async_setup_entry(
