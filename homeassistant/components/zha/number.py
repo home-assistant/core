@@ -563,10 +563,18 @@ class StartUpColorTemperatureConfigurationEntity(
         self, value: float, method: Callable[[float, int], float]
     ) -> float:
         """Convert a value in the number's native unit to the configured unit."""
+
+        This is overridden because NumberEntity does not know about converting between
+        K and mireds, and the user can't choose the preferred color temp unit of a number.
+        """
         return color_temperature_mired_to_kelvin(value)
 
     def convert_to_native_value(self, value: float) -> float:
-        """Convert a value to the number's native unit."""
+        """Convert a value to the number's native unit.
+
+        This is overridden because NumberEntity does not know about converting between
+        K and mireds, and the user can't choose the preferred color temp unit of a number..
+        """
         return color_temperature_kelvin_to_mired(value)
 
 
