@@ -241,7 +241,7 @@ class MinMaxSensor(SensorEntity):
         self.max_entity_id: str | None = None
         self.last_entity_id: str | None = None
         self.count_sensors = len(self._entity_ids)
-        self._state_incorrect: list[str] = []
+        self._state_incorrect: set[str] = set()
 
     async def async_added_to_hass(self) -> None:
         """Handle added to Hass."""
@@ -319,7 +319,7 @@ class MinMaxSensor(SensorEntity):
             except ValueError:
                 calc_states[entity_id] = STATE_UNKNOWN
                 if entity_id not in self._state_incorrect:
-                    self._state_incorrect.append(entity_id)
+                    self._state_incorrect.add(entity_id)
                     _LOGGER.warning(
                         "Unable to store state for entity %s with state %s. Only numerical states are supported",
                         entity_id,
