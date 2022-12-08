@@ -1,5 +1,8 @@
 """Tests for HomematicIP Cloud locks."""
+from unittest.mock import patch
+
 from homematicip.base.enums import LockState, MotorState
+import pytest
 
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
 from homeassistant.components.lock import (
@@ -9,6 +12,7 @@ from homeassistant.components.lock import (
     LockEntityFeature,
 )
 from homeassistant.const import ATTR_SUPPORTED_FEATURES
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from .helper import async_manipulate_test_data, get_and_check_entity_basics
@@ -76,3 +80,48 @@ async def test_hmip_doorlockdrive(hass, default_mock_hap_factory):
     )
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_UNLOCKING
+
+
+async def test_hmip_doorlockdrive_handle_errors(hass, default_mock_hap_factory):
+    """Test HomematicipDoorLockDrive."""
+    entity_id = "lock.haustuer"
+    entity_name = "Haustuer"
+    device_model = "HmIP-DLD"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=[entity_name]
+    )
+    with patch(
+        "homematicip.aio.device.AsyncDoorLockDrive.set_lock_state",
+        return_value={
+            "errorCode": "INVALID_NUMBER_PARAMETER_VALUE",
+            "minValue": 0.0,
+            "maxValue": 1.01,
+        },
+    ):
+        get_and_check_entity_basics(
+            hass, mock_hap, entity_id, entity_name, device_model
+        )
+
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                "lock",
+                "open",
+                {"entity_id": entity_id},
+                blocking=True,
+            )
+
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                "lock",
+                "lock",
+                {"entity_id": entity_id},
+                blocking=True,
+            )
+
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                "lock",
+                "unlock",
+                {"entity_id": entity_id},
+                blocking=True,
+            )
