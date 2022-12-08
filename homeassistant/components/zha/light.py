@@ -890,7 +890,10 @@ class HueLight(Light):
 @STRICT_MATCH(
     channel_names=CHANNEL_ON_OFF,
     aux_channels={CHANNEL_COLOR, CHANNEL_LEVEL},
-    manufacturers={"Jasco", "Quotra-Vision", "eWeLight", "eWeLink"},
+    manufacturers={"Jasco", "Quotra-Vision", "eWeLight", "eWeLink",
+                   "_TZ3210_wdexaypg",   # Tuya in-wall AC dimmer module TS110E
+                   "_TZ3000_92chsky7",   # Tuya in-wall 0-10V dimmer module TS110F
+                  },
 )
 class ForceOnLight(Light):
     """Representation of a light which does not respect move_to_level_with_on_off."""
