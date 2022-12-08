@@ -1711,7 +1711,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2022.11.0
+pylitterbot==2022.12.0
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.17.1
@@ -2030,7 +2030,7 @@ python-kasa==0.5.0
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==1.0.6
+python-matter-server==1.0.7
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -2291,7 +2291,7 @@ simplehound==0.3
 simplepush==2.1.1
 
 # homeassistant.components.simplisafe
-simplisafe-python==2022.11.2
+simplisafe-python==2022.12.0
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.1.2

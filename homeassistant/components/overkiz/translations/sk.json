@@ -27,6 +27,14 @@
     },
     "entity": {
         "sensor": {
+            "discrete_rssi_level": {
+                "state": {
+                    "good": "Dobr\u00fd",
+                    "low": "N\u00edzky",
+                    "normal": "Norm\u00e1lny",
+                    "verylow": "Ve\u013emi n\u00edzky"
+                }
+            },
             "priority_lock_originator": {
                 "state": {
                     "external_gateway": "Extern\u00e1 br\u00e1na",

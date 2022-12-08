@@ -51,6 +51,10 @@
         }
     },
     "issues": {
+        "deprecate_smart_sensor": {
+            "description": "The unified \"Detected Object\" sensor for smart detections is now deprecated. It has been replaced with individual smart detection binary sensors for each smart detection type. Please update any templates or automations accordingly.",
+            "title": "Smart Detection Sensor Deprecated"
+        },
         "ea_setup_failed": {
             "description": "You are using v{version} of UniFi Protect which is an Early Access version. An unrecoverable error occurred while trying to load the integration. Please [downgrade to a stable version](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) of UniFi Protect to continue using the integration.\n\nError: {error}",
             "title": "Setup error using Early Access version"

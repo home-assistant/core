@@ -27,6 +27,7 @@
             },
             "basic_nightvision": {
                 "state": {
+                    "0": "Automaticky",
                     "1": "Neakt\u00edvny",
                     "2": "Akt\u00edvny"
                 }
@@ -72,9 +73,36 @@
                     "switch": "Prep\u00edna\u010d"
                 }
             },
+            "humidifier_level": {
+                "state": {
+                    "level_1": "\u00darove\u0148 1",
+                    "level_10": "\u00darove\u0148 10",
+                    "level_2": "\u00darove\u0148 2",
+                    "level_3": "\u00darove\u0148 3",
+                    "level_4": "\u00darove\u0148 4",
+                    "level_5": "\u00darove\u0148 5",
+                    "level_6": "\u00darove\u0148 6",
+                    "level_7": "\u00darove\u0148 7",
+                    "level_8": "\u00darove\u0148 8",
+                    "level_9": "\u00darove\u0148 9"
+                }
+            },
+            "humidifier_moodlighting": {
+                "state": {
+                    "1": "N\u00e1lada 1",
+                    "2": "N\u00e1lada 2",
+                    "3": "N\u00e1lada 3",
+                    "4": "N\u00e1lada 4",
+                    "5": "N\u00e1lada 5"
+                }
+            },
             "humidifier_spray_mode": {
                 "state": {
-                    "humidity": "Vlhkos\u0165"
+                    "auto": "Auto",
+                    "health": "Zdravie",
+                    "humidity": "Vlhkos\u0165",
+                    "sleep": "Sp\u00e1nok",
+                    "work": "\u010cinnos\u0165"
                 }
             },
             "ipc_work_mode": {

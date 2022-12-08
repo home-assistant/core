@@ -59,17 +59,23 @@
                 "data": {
                     "overwrite_coordinator_ieee": "Natrvalo nahra\u010fte r\u00e1diov\u00fa adresu IEEE"
                 },
+                "description": "Va\u0161a z\u00e1loha m\u00e1 in\u00fa adresu IEEE ako va\u0161e r\u00e1dio. Aby va\u0161a sie\u0165 fungovala spr\u00e1vne, mala by sa zmeni\u0165 aj adresa IEEE v\u00e1\u0161ho r\u00e1dia. \n\n Ide o trval\u00fa oper\u00e1ciu.",
                 "title": "Prep\u00edsa\u0165 adresu IEEE r\u00e1dia"
             },
             "upload_manual_backup": {
                 "data": {
                     "uploaded_backup_file": "Nahrajte s\u00fabor"
                 },
+                "description": "Obnovte nastavenia siete z nahran\u00e9ho z\u00e1lo\u017en\u00e9ho s\u00faboru JSON. M\u00f4\u017eete si ho stiahnu\u0165 z inej in\u0161tal\u00e1cie ZHA z **Nastavenia siete** alebo pou\u017ei\u0165 s\u00fabor Zigbee2MQTT `coordinator_backup.json`.",
                 "title": "Nahratie manu\u00e1lnej z\u00e1lohy"
             }
         }
     },
     "config_panel": {
+        "zha_alarm_options": {
+            "alarm_failed_tries": "Po\u010det po sebe nasleduj\u00facich ne\u00faspe\u0161n\u00fdch zadan\u00ed k\u00f3du na spustenie alarmu",
+            "alarm_master_code": "Hlavn\u00fd k\u00f3d pre poplachov\u00e9 ovl\u00e1dacie panely"
+        },
         "zha_options": {
             "always_prefer_xy_color_mode": "V\u017edy uprednost\u0148ujete farebn\u00fd re\u017eim XY",
             "consider_unavailable_battery": "Zariadenia nap\u00e1jan\u00e9 z bat\u00e9rie pova\u017eujte za nedostupn\u00e9 po (sekund\u00e1ch)",
@@ -168,6 +174,7 @@
                 "title": "Odpojte star\u00e9 r\u00e1dio"
             },
             "intent_migrate": {
+                "description": "Va\u0161e star\u00e9 r\u00e1dio bude obnoven\u00e9 na v\u00fdrobn\u00e9 nastavenia. Ak pou\u017e\u00edvate kombinovan\u00fd adapt\u00e9r Z-Wave a Zigbee, ako je HUSBZB-1, resetuje sa iba \u010das\u0165 Zigbee. \n\n Chcete pokra\u010dova\u0165?",
                 "title": "Prejdite na nov\u00e9 r\u00e1dio"
             },
             "manual_pick_radio_type": {
@@ -189,6 +196,7 @@
                 "data": {
                     "overwrite_coordinator_ieee": "Natrvalo nahra\u010fte r\u00e1diov\u00fa adresu IEEE"
                 },
+                "description": "Va\u0161a z\u00e1loha m\u00e1 in\u00fa adresu IEEE ako va\u0161e r\u00e1dio. Aby va\u0161a sie\u0165 fungovala spr\u00e1vne, mala by sa zmeni\u0165 aj adresa IEEE v\u00e1\u0161ho r\u00e1dia. \n\n Ide o trval\u00fa oper\u00e1ciu.",
                 "title": "Prep\u00edsa\u0165 adresu IEEE r\u00e1dia"
             },
             "prompt_migrate_or_reconfigure": {
@@ -203,6 +211,7 @@
                 "data": {
                     "uploaded_backup_file": "Nahrajte s\u00fabor"
                 },
+                "description": "Obnovte nastavenia siete z nahran\u00e9ho z\u00e1lo\u017en\u00e9ho s\u00faboru JSON. M\u00f4\u017eete si ho stiahnu\u0165 z inej in\u0161tal\u00e1cie ZHA z **Nastavenia siete** alebo pou\u017ei\u0165 s\u00fabor Zigbee2MQTT `coordinator_backup.json`.",
                 "title": "Nahratie manu\u00e1lnej z\u00e1lohy"
             }
         }
