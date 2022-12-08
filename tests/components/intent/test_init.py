@@ -43,7 +43,6 @@ async def test_http_handle_intent(hass, hass_client, hass_admin_user):
     data = await resp.json()
 
     assert data == {
-        "success": True,
         "card": {
             "simple": {"content": "You chose a Belgian.", "title": "Beer ordered"}
         },
@@ -55,7 +54,7 @@ async def test_http_handle_intent(hass, hass_client, hass_admin_user):
         },
         "language": hass.config.language,
         "response_type": "action_done",
-        "data": {},
+        "data": {"target": {}},
     }
 
 

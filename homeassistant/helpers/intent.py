@@ -312,6 +312,7 @@ class IntentResponseTargetType(str, Enum):
     AREA = "area"
     DEVICE = "device"
     ENTITY = "entity"
+    OTHER = "other"
 
 
 @dataclass
@@ -336,7 +337,6 @@ class IntentResponse:
         self.reprompt: dict[str, dict[str, Any]] = {}
         self.card: dict[str, dict[str, str]] = {}
         self.language = language
-        self.success = True
         self.response_type = IntentResponseType.ACTION_DONE
         self.error_code: IntentResponseErrorCode | None = None
         self.target: IntentResponseTarget | None = None
@@ -382,7 +382,6 @@ class IntentResponse:
     @callback
     def async_set_error(self, code: IntentResponseErrorCode, message: str) -> None:
         """Set response error."""
-        self.success = False
         self.response_type = IntentResponseType.ERROR
         self.error_code = code
 
@@ -398,7 +397,6 @@ class IntentResponse:
     def as_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of an intent response."""
         response_dict: dict[str, Any] = {
-            "success": self.success,
             "speech": self.speech,
             "card": self.card,
             "language": self.language,
@@ -410,17 +408,15 @@ class IntentResponse:
 
         response_data: dict[str, Any] = {}
 
-        if self.response_type == IntentResponseType.ACTION_DONE:
-            # Target is required for action
-            assert self.target is not None, "target is required"
-            response_data["target"] = dataclasses.asdict(self.target)
-        elif self.response_type == IntentResponseType.QUERY_ANSWER:
-            # Target is optional for query
-            if self.target is not None:
-                response_data["target"] = dataclasses.asdict(self.target)
-        elif self.response_type == IntentResponseType.ERROR:
+        if self.response_type == IntentResponseType.ERROR:
             assert self.error_code is not None, "error code is required"
             response_data["code"] = self.error_code.value
+        else:
+            # action done or query answer
+            if self.target is not None:
+                response_data["target"] = dataclasses.asdict(self.target)
+            else:
+                response_data["target"] = {}
 
         response_dict["data"] = response_data
 

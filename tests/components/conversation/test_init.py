@@ -131,7 +131,6 @@ async def test_http_processing_intent(hass, hass_client, hass_admin_user):
     data = await resp.json()
 
     assert data == {
-        "success": True,
         "response_type": "action_done",
         "card": {
             "simple": {"content": "You chose a Grolsch.", "title": "Beer ordered"}
@@ -143,7 +142,7 @@ async def test_http_processing_intent(hass, hass_client, hass_admin_user):
             }
         },
         "language": hass.config.language,
-        "data": {},
+        "data": {"target": {}},
     }
 
 
@@ -214,7 +213,6 @@ async def test_http_api(hass, init_components, hass_client):
     data = await resp.json()
 
     assert data == {
-        "success": True,
         "card": {},
         "speech": {"plain": {"extra_data": None, "speech": "Turned kitchen on"}},
         "language": hass.config.language,
@@ -239,7 +237,6 @@ async def test_http_api_no_match(hass, init_components, hass_client):
     data = await resp.json()
 
     assert data == {
-        "success": False,
         "card": {},
         "speech": {
             "plain": {
@@ -267,7 +264,6 @@ async def test_http_api_no_valid_targets(hass, init_components, hass_client):
     data = await resp.json()
 
     assert data == {
-        "success": False,
         "response_type": "error",
         "card": {},
         "speech": {
@@ -304,7 +300,6 @@ async def test_http_api_handle_failure(hass, init_components, hass_client):
     data = await resp.json()
 
     assert data == {
-        "success": False,
         "response_type": "error",
         "card": {},
         "speech": {
@@ -362,7 +357,6 @@ async def test_custom_agent(hass, hass_client, hass_admin_user):
     )
     assert resp.status == HTTPStatus.OK
     assert await resp.json() == {
-        "success": True,
         "response_type": "action_done",
         "card": {},
         "speech": {
@@ -372,7 +366,7 @@ async def test_custom_agent(hass, hass_client, hass_admin_user):
             }
         },
         "language": "test-language",
-        "data": {},
+        "data": {"target": {}},
     }
 
     assert len(calls) == 1
