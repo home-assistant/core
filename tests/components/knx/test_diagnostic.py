@@ -2,7 +2,6 @@
 from unittest.mock import patch
 
 from aiohttp import ClientSession
-from xknx import XKNX
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 
 from homeassistant.components.knx.const import (
@@ -15,9 +14,11 @@ from homeassistant.components.knx.const import (
     CONF_KNX_MCAST_GRP,
     CONF_KNX_MCAST_PORT,
     CONF_KNX_RATE_LIMIT,
+    CONF_KNX_ROUTING_BACKBONE_KEY,
     CONF_KNX_SECURE_DEVICE_AUTHENTICATION,
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
+    DEFAULT_ROUTING_IA,
     DOMAIN as KNX_DOMAIN,
 )
 from homeassistant.core import HomeAssistant
@@ -45,10 +46,10 @@ async def test_diagnostics(
         ) == {
             "config_entry_data": {
                 "connection_type": "automatic",
-                "individual_address": "15.15.250",
+                "individual_address": "0.0.240",
                 "multicast_group": "224.0.23.12",
                 "multicast_port": 3671,
-                "rate_limit": 20,
+                "rate_limit": 0,
                 "state_updater": True,
             },
             "configuration_error": None,
@@ -77,10 +78,10 @@ async def test_diagnostic_config_error(
         ) == {
             "config_entry_data": {
                 "connection_type": "automatic",
-                "individual_address": "15.15.250",
+                "individual_address": "0.0.240",
                 "multicast_group": "224.0.23.12",
                 "multicast_port": 3671,
-                "rate_limit": 20,
+                "rate_limit": 0,
                 "state_updater": True,
             },
             "configuration_error": "extra keys not allowed @ data['knx']['wrong_key']",
@@ -103,10 +104,11 @@ async def test_diagnostic_redact(
             CONF_KNX_STATE_UPDATER: CONF_KNX_DEFAULT_STATE_UPDATER,
             CONF_KNX_MCAST_PORT: DEFAULT_MCAST_PORT,
             CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-            CONF_KNX_INDIVIDUAL_ADDRESS: XKNX.DEFAULT_ADDRESS,
+            CONF_KNX_INDIVIDUAL_ADDRESS: DEFAULT_ROUTING_IA,
             CONF_KNX_KNXKEY_PASSWORD: "password",
             CONF_KNX_SECURE_USER_PASSWORD: "user_password",
             CONF_KNX_SECURE_DEVICE_AUTHENTICATION: "device_authentication",
+            CONF_KNX_ROUTING_BACKBONE_KEY: "bbaacc44bbaacc44bbaacc44bbaacc44",
         },
     )
     knx: KNXTestKit = KNXTestKit(hass, mock_config_entry)
@@ -120,14 +122,15 @@ async def test_diagnostic_redact(
         ) == {
             "config_entry_data": {
                 "connection_type": "automatic",
-                "individual_address": "15.15.250",
+                "individual_address": "0.0.240",
                 "multicast_group": "224.0.23.12",
                 "multicast_port": 3671,
-                "rate_limit": 20,
+                "rate_limit": 0,
                 "state_updater": True,
                 "knxkeys_password": "**REDACTED**",
                 "user_password": "**REDACTED**",
                 "device_authentication": "**REDACTED**",
+                "backbone_key": "**REDACTED**",
             },
             "configuration_error": None,
             "configuration_yaml": None,

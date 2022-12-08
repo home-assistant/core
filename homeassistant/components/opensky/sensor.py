@@ -8,7 +8,6 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONF_LATITUDE,
@@ -42,9 +41,6 @@ EVENT_OPENSKY_ENTRY = f"{DOMAIN}_entry"
 EVENT_OPENSKY_EXIT = f"{DOMAIN}_exit"
 SCAN_INTERVAL = timedelta(seconds=12)  # opensky public limit is 10 seconds
 
-OPENSKY_ATTRIBUTION = (
-    "Information provided by the OpenSky Network (https://opensky-network.org)"
-)
 OPENSKY_API_URL = "https://opensky-network.org/api/states/all"
 OPENSKY_API_FIELDS = [
     ATTR_ICAO24,
@@ -100,6 +96,10 @@ def setup_platform(
 
 class OpenSkySensor(SensorEntity):
     """Open Sky Network Sensor."""
+
+    _attr_attribution = (
+        "Information provided by the OpenSky Network (https://opensky-network.org)"
+    )
 
     def __init__(self, hass, name, latitude, longitude, radius, altitude):
         """Initialize the sensor."""
@@ -187,11 +187,6 @@ class OpenSkySensor(SensorEntity):
             self._handle_boundary(exits, EVENT_OPENSKY_EXIT, flight_metadata)
         self._state = len(currently_tracked)
         self._previously_tracked = currently_tracked
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {ATTR_ATTRIBUTION: OPENSKY_ATTRIBUTION}
 
     @property
     def native_unit_of_measurement(self):

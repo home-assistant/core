@@ -29,6 +29,16 @@ class DemoFixFlow(RepairsFlow):
         return self.async_show_form(step_id="confirm", data_schema=vol.Schema({}))
 
 
+class DemoColdTeaFixFlow(RepairsFlow):
+    """Handler for cold tea."""
+
+    async def async_step_init(
+        self, user_input: dict[str, str] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Handle the first step of a fix flow."""
+        return self.async_abort(reason="not_tea_time")
+
+
 async def async_create_fix_flow(
     hass: HomeAssistant,
     issue_id: str,
@@ -38,6 +48,10 @@ async def async_create_fix_flow(
     if issue_id == "bad_psu":
         # The bad_psu issue doesn't have its own flow
         return ConfirmRepairFlow()
+
+    if issue_id == "cold_tea":
+        # The cold_tea issue have it's own flow
+        return DemoColdTeaFixFlow()
 
     # Other issues have a custom flow
     return DemoFixFlow()

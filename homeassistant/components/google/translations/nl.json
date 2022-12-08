@@ -30,11 +30,6 @@
             }
         }
     },
-    "issues": {
-        "deprecated_yaml": {
-            "title": "De Google Calendar YAML-configuratie wordt verwijderd"
-        }
-    },
     "options": {
         "step": {
             "init": {

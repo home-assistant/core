@@ -2,10 +2,15 @@ add_torrent:
   name: Add torrent
   description: Add a new torrent to download (URL, magnet link or Base64 encoded).
   fields:
+    entry_id:
+      name: Transmission entry
+      description: Config entry id
+      selector:
+        config_entry:
+          integration: transmission
     name:
       name: Name
       description: Instance name as entered during entry config
-      required: true
       example: Transmission
       selector:
         text:
@@ -21,10 +26,15 @@ remove_torrent:
   name: Remove torrent
   description: Remove a torrent
   fields:
+    entry_id:
+      name: Transmission entry
+      description: Config entry id
+      selector:
+        config_entry:
+          integration: transmission
     name:
       name: Name
       description: Instance name as entered during entry config
-      required: true
       example: Transmission
       selector:
         text:
@@ -46,6 +56,12 @@ start_torrent:
   name: Start torrent
   description: Start a torrent
   fields:
+    entry_id:
+      name: Transmission entry
+      description: Config entry id
+      selector:
+        config_entry:
+          integration: transmission
     name:
       name: Name
       description: Instance name as entered during entry config
@@ -63,10 +79,15 @@ stop_torrent:
   name: Stop torrent
   description: Stop a torrent
   fields:
+    entry_id:
+      name: Transmission entry
+      description: Config entry id
+      selector:
+        config_entry:
+          integration: transmission
     name:
       name: Name
       description: Instance name as entered during entry config
-      required: true
       example: Transmission
       selector:
         text:

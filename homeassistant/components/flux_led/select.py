@@ -81,8 +81,7 @@ async def async_setup_entry(
     if FLUX_COLOR_MODE_RGBW in device.color_modes:
         entities.append(FluxWhiteChannelSelect(coordinator.device, entry))
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class FluxConfigAtStartSelect(FluxBaseEntity, SelectEntity):

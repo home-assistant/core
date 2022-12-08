@@ -20,6 +20,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="eacToday",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         precision=1,
     ),
     GrowattSensorEntityDescription(

@@ -270,5 +270,4 @@ def async_update_segments(
         current_ids.add(segment_id)
         new_entities.append(WLEDSegmentLight(coordinator, segment_id))
 
-    if new_entities:
-        async_add_entities(new_entities)
+    async_add_entities(new_entities)

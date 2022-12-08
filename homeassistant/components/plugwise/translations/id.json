@@ -8,22 +8,12 @@
             "cannot_connect": "Gagal terhubung",
             "invalid_auth": "Autentikasi tidak valid",
             "invalid_setup": "Tambahkan Adam Anda, alih-alih Anna. Baca dokumentasi integrasi Plugwise Home Assistant untuk informasi lebih lanjut",
-            "unknown": "Kesalahan yang tidak diharapkan"
+            "response_error": "Data XML tidak valid, atau indikasi kesalahan diterima",
+            "unknown": "Kesalahan yang tidak diharapkan",
+            "unsupported": "Perangkat dengan firmware yang tidak didukung"
         },
-        "flow_title": "{name}",
         "step": {
             "user": {
-                "data": {
-                    "flow_type": "Jenis koneksi",
-                    "host": "Alamat IP",
-                    "password": "ID Smile",
-                    "port": "Port",
-                    "username": "Nama Pengguna Smile"
-                },
-                "description": "Masukkan",
-                "title": "Hubungkan ke Smile"
-            },
-            "user_gateway": {
                 "data": {
                     "host": "Alamat IP",
                     "password": "ID Smile",
@@ -35,13 +25,24 @@
             }
         }
     },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval": "Interval Pindai (detik)"
-                },
-                "description": "Sesuaikan Opsi Plugwise"
+    "entity": {
+        "select": {
+            "dhw_mode": {
+                "state": {
+                    "auto": "Otomatis",
+                    "boost": "Kencang",
+                    "comfort": "Nyaman",
+                    "off": "Mati"
+                }
+            },
+            "regulation_mode": {
+                "state": {
+                    "bleeding_cold": "Dingin sekali",
+                    "bleeding_hot": "Panas sekali",
+                    "cooling": "Mendinginkan",
+                    "heating": "Memanaskan",
+                    "off": "Mati"
+                }
             }
         }
     }

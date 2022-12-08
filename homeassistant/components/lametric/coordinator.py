@@ -1,11 +1,12 @@
 """DataUpdateCoordinator for the LaMatric integration."""
 from __future__ import annotations
 
-from demetriek import Device, LaMetricDevice, LaMetricError
+from demetriek import Device, LaMetricAuthenticationError, LaMetricDevice, LaMetricError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -32,6 +33,8 @@ class LaMetricDataUpdateCoordinator(DataUpdateCoordinator[Device]):
         """Fetch device information of the LaMetric device."""
         try:
             return await self.lametric.device()
+        except LaMetricAuthenticationError as err:
+            raise ConfigEntryAuthFailed from err
         except LaMetricError as ex:
             raise UpdateFailed(
                 "Could not fetch device information from LaMetric device"

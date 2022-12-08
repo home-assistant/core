@@ -15,10 +15,9 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
-    PRECIPITATION_INCHES,
-    SPEED_KILOMETERS_PER_HOUR,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfPrecipitationDepth,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -57,7 +56,7 @@ SENSOR_DESCRIPTIONS = {
         name="Temperature",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     "Humidity": LaCrosseSensorEntityDescription(
         key="Humidity",
@@ -73,22 +72,23 @@ SENSOR_DESCRIPTIONS = {
         name="Heat index",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
     ),
     "WindSpeed": LaCrosseSensorEntityDescription(
         key="WindSpeed",
         name="Wind speed",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
-        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
-        device_class=SensorDeviceClass.SPEED,
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
     ),
     "Rain": LaCrosseSensorEntityDescription(
         key="Rain",
         name="Rain",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
-        native_unit_of_measurement=PRECIPITATION_INCHES,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
+        device_class=SensorDeviceClass.PRECIPITATION,
     ),
 }
 
@@ -105,7 +105,7 @@ async def async_setup_entry(
     sensors: list[Sensor] = coordinator.data
 
     sensor_list = []
-    for sensor in sensors:
+    for i, sensor in enumerate(sensors):
         for field in sensor.sensor_field_names:
             description = SENSOR_DESCRIPTIONS.get(field)
             if description is None:
@@ -125,6 +125,7 @@ async def async_setup_entry(
                     coordinator=coordinator,
                     description=description,
                     sensor=sensor,
+                    index=i,
                 )
             )
 
@@ -144,6 +145,7 @@ class LaCrosseViewSensor(
         description: LaCrosseSensorEntityDescription,
         coordinator: DataUpdateCoordinator[list[Sensor]],
         sensor: Sensor,
+        index: int,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
@@ -157,11 +159,11 @@ class LaCrosseViewSensor(
             "model": sensor.model,
             "via_device": (DOMAIN, sensor.location.id),
         }
-        self._sensor = sensor
+        self.index = index
 
     @property
     def native_value(self) -> float | str:
         """Return the sensor value."""
         return self.entity_description.value_fn(
-            self._sensor, self.entity_description.key
+            self.coordinator.data[self.index], self.entity_description.key
         )

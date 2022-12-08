@@ -21,5 +21,16 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "state": {
+                "state": {
+                    "test": "\u0422\u0435\u0441\u0442",
+                    "tpw": "TPW",
+                    "warmwasser": "DHW"
+                }
+            }
+        }
     }
 }

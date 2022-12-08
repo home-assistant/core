@@ -347,9 +347,9 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
         return self._static_info.supported_color_modes_compat(self._api_version)
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> LightEntityFeature:
         """Flag supported features."""
-        flags: int = LightEntityFeature.FLASH
+        flags = LightEntityFeature.FLASH
 
         # All color modes except UNKNOWN,ON_OFF support transition
         modes = self._native_supported_color_modes

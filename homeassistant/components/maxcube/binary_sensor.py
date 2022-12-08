@@ -28,8 +28,7 @@ def setup_platform(
             if device.is_windowshutter():
                 devices.append(MaxCubeShutter(handler, device))
 
-    if devices:
-        add_entities(devices)
+    add_entities(devices)
 
 
 class MaxCubeBinarySensorBase(BinarySensorEntity):

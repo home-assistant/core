@@ -9,9 +9,6 @@
             "bluetooth_confirm": {
                 "description": "Do you want to setup {name}?"
             },
-            "enable_bluetooth": {
-                "description": "Do you want to setup Bluetooth?"
-            },
             "multiple_adapters": {
                 "data": {
                     "adapter": "Adapter"
@@ -39,10 +36,8 @@
         "step": {
             "init": {
                 "data": {
-                    "adapter": "The Bluetooth Adapter to use for scanning",
                     "passive": "Passive scanning"
-                },
-                "description": "Passive listening requires BlueZ 5.63 or later with experimental features enabled."
+                }
             }
         }
     }

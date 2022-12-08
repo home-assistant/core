@@ -15,8 +15,6 @@ from homeassistant.helpers.frame import report
 
 from .unit_conversion import VolumeConverter
 
-# pylint: disable-next=protected-access
-UNIT_CONVERSION = VolumeConverter._UNIT_CONVERSION
 VALID_UNITS = VolumeConverter.VALID_UNITS
 
 
@@ -44,7 +42,7 @@ def convert(volume: float, from_unit: str, to_unit: str) -> float:
     """Convert a volume from one unit to another."""
     report(
         "uses volume utility. This is deprecated since 2022.10 and will "
-        "stop working in Home Assistant 2022.4, it should be updated to use "
+        "stop working in Home Assistant 2023.4, it should be updated to use "
         "unit_conversion.VolumeConverter instead",
         error_if_core=False,
     )

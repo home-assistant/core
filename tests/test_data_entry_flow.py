@@ -327,7 +327,7 @@ async def test_external_step(hass, manager):
         "refresh": True,
     }
 
-    # Frontend refreshses the flow
+    # Frontend refreshes the flow
     result = await manager.async_configure(result["flow_id"])
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "Hello"

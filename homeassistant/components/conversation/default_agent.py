@@ -111,7 +111,11 @@ class DefaultAgent(AbstractConversationAgent):
             async_register(self.hass, intent_type, sentences)
 
     async def async_process(
-        self, text: str, context: core.Context, conversation_id: str | None = None
+        self,
+        text: str,
+        context: core.Context,
+        conversation_id: str | None = None,
+        language: str | None = None,
     ) -> intent.IntentResponse | None:
         """Process a sentence."""
         intents = self.hass.data[DOMAIN]
@@ -128,6 +132,7 @@ class DefaultAgent(AbstractConversationAgent):
                     {key: {"value": value} for key, value in match.groupdict().items()},
                     text,
                     context,
+                    language,
                 )
 
         return None

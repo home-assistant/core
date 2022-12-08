@@ -38,10 +38,10 @@ from .const import (
 CONF_SUBTYPE = "subtype"
 
 DEVICES = {
-    "NACamera": INDOOR_CAMERA_TRIGGERS,
-    "NOC": OUTDOOR_CAMERA_TRIGGERS,
-    "NATherm1": CLIMATE_TRIGGERS,
-    "NRV": CLIMATE_TRIGGERS,
+    "Smart Indoor Camera": INDOOR_CAMERA_TRIGGERS,
+    "Smart Outdoor Camera": OUTDOOR_CAMERA_TRIGGERS,
+    "Smart Thermostat": CLIMATE_TRIGGERS,
+    "Smart Valve": CLIMATE_TRIGGERS,
 }
 
 SUBTYPES = {

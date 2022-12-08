@@ -169,13 +169,11 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         self.entity_description = description
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         if self.device.changeableValues.thermostatSetpointStatus:
-            support_flags = SUPPORT_FLAGS_LCC
-        else:
-            support_flags = SUPPORT_FLAGS_TCC
-        return support_flags
+            return SUPPORT_FLAGS_LCC
+        return SUPPORT_FLAGS_TCC
 
     @property
     def temperature_unit(self) -> str:

@@ -43,7 +43,7 @@ async def test_switch(hass, mock_bridge, mock_api, monkeypatch):
 
     # Test turning on
     with patch(
-        "homeassistant.components.switcher_kis.switch.SwitcherApi.control_device",
+        "homeassistant.components.switcher_kis.switch.SwitcherType1Api.control_device",
     ) as mock_control_device:
         await hass.services.async_call(
             SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -56,7 +56,7 @@ async def test_switch(hass, mock_bridge, mock_api, monkeypatch):
 
     # Test turning off
     with patch(
-        "homeassistant.components.switcher_kis.switch.SwitcherApi.control_device"
+        "homeassistant.components.switcher_kis.switch.SwitcherType1Api.control_device"
     ) as mock_control_device:
         await hass.services.async_call(
             SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -87,7 +87,7 @@ async def test_switch_control_fail(hass, mock_bridge, mock_api, monkeypatch, cap
 
     # Test exception during turn on
     with patch(
-        "homeassistant.components.switcher_kis.switch.SwitcherApi.control_device",
+        "homeassistant.components.switcher_kis.switch.SwitcherType1Api.control_device",
         side_effect=RuntimeError("fake error"),
     ) as mock_control_device:
         await hass.services.async_call(
@@ -111,7 +111,7 @@ async def test_switch_control_fail(hass, mock_bridge, mock_api, monkeypatch, cap
 
     # Test error response during turn on
     with patch(
-        "homeassistant.components.switcher_kis.switch.SwitcherApi.control_device",
+        "homeassistant.components.switcher_kis.switch.SwitcherType1Api.control_device",
         return_value=SwitcherBaseResponse(None),
     ) as mock_control_device:
         await hass.services.async_call(

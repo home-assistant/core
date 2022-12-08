@@ -17,8 +17,9 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
+from homeassistant.helpers import entity_registry as er
 
-from .common import setup_test_component
+from .common import get_next_aid, setup_test_component
 
 # Test thermostat devices
 
@@ -619,6 +620,27 @@ async def test_hvac_mode_vs_hvac_action(hass, utcnow):
     assert state.attributes["hvac_action"] == "heating"
 
 
+async def test_hvac_mode_vs_hvac_action_current_mode_wrong(hass, utcnow):
+    """Check that we cope with buggy HEATING_COOLING_CURRENT."""
+    helper = await setup_test_component(hass, create_thermostat_service)
+
+    await helper.async_update(
+        ServicesTypes.THERMOSTAT,
+        {
+            CharacteristicsTypes.TEMPERATURE_CURRENT: 22,
+            CharacteristicsTypes.TEMPERATURE_TARGET: 21,
+            CharacteristicsTypes.HEATING_COOLING_CURRENT: 1,
+            CharacteristicsTypes.HEATING_COOLING_TARGET: 0,
+            CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT: 50,
+            CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET: 45,
+        },
+    )
+
+    state = await helper.poll_and_get_state()
+    assert state.state == "off"
+    assert state.attributes["hvac_action"] == "idle"
+
+
 def create_heater_cooler_service(accessory):
     """Define thermostat characteristics."""
     service = accessory.add_service(ServicesTypes.HEATER_COOLER)
@@ -734,6 +756,42 @@ async def test_heater_cooler_change_thermostat_state(hass, utcnow):
         ServicesTypes.HEATER_COOLER,
         {
             CharacteristicsTypes.ACTIVE: ActivationStateValues.INACTIVE,
+        },
+    )
+
+
+async def test_can_turn_on_after_off(hass, utcnow):
+    """
+    Test that we always force device from inactive to active when setting mode.
+
+    This is a regression test for #81863.
+    """
+    helper = await setup_test_component(hass, create_heater_cooler_service)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.OFF},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.HEATER_COOLER,
+        {
+            CharacteristicsTypes.ACTIVE: ActivationStateValues.INACTIVE,
+        },
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.HEAT},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.HEATER_COOLER,
+        {
+            CharacteristicsTypes.ACTIVE: ActivationStateValues.ACTIVE,
+            CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: TargetHeaterCoolerStateValues.HEAT,
         },
     )
 
@@ -922,3 +980,19 @@ async def test_heater_cooler_turn_off(hass, utcnow):
     state = await helper.poll_and_get_state()
     assert state.state == "off"
     assert state.attributes["hvac_action"] == "off"
+
+
+async def test_migrate_unique_id(hass, utcnow):
+    """Test a we can migrate a switch unique id."""
+    entity_registry = er.async_get(hass)
+    aid = get_next_aid()
+    climate_entry = entity_registry.async_get_or_create(
+        "climate",
+        "homekit_controller",
+        f"homekit-00:00:00:00:00:00-{aid}-8",
+    )
+    await setup_test_component(hass, create_heater_cooler_service)
+    assert (
+        entity_registry.async_get(climate_entry.entity_id).unique_id
+        == f"00:00:00:00:00:00_{aid}_8"
+    )

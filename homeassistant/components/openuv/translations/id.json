@@ -1,12 +1,20 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Lokasi sudah dikonfigurasi"
+            "already_configured": "Lokasi sudah dikonfigurasi",
+            "reauth_successful": "Autentikasi ulang berhasil"
         },
         "error": {
             "invalid_api_key": "Kunci API tidak valid"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Kunci API"
+                },
+                "description": "Masukkan kembali kunci API untuk {latitude}, {longitude}.",
+                "title": "Autentikasi Ulang Integrasi"
+            },
             "user": {
                 "data": {
                     "api_key": "Kunci API",

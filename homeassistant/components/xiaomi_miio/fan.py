@@ -49,11 +49,13 @@ from .const import (
     FEATURE_FLAGS_AIRPURIFIER_2S,
     FEATURE_FLAGS_AIRPURIFIER_3C,
     FEATURE_FLAGS_AIRPURIFIER_4,
+    FEATURE_FLAGS_AIRPURIFIER_4_LITE,
     FEATURE_FLAGS_AIRPURIFIER_MIIO,
     FEATURE_FLAGS_AIRPURIFIER_MIOT,
     FEATURE_FLAGS_AIRPURIFIER_PRO,
     FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
     FEATURE_FLAGS_AIRPURIFIER_V3,
+    FEATURE_FLAGS_AIRPURIFIER_ZA1,
     FEATURE_FLAGS_FAN,
     FEATURE_FLAGS_FAN_1C,
     FEATURE_FLAGS_FAN_P5,
@@ -70,10 +72,13 @@ from .const import (
     MODEL_AIRPURIFIER_2S,
     MODEL_AIRPURIFIER_3C,
     MODEL_AIRPURIFIER_4,
+    MODEL_AIRPURIFIER_4_LITE_RMA1,
+    MODEL_AIRPURIFIER_4_LITE_RMB1,
     MODEL_AIRPURIFIER_4_PRO,
     MODEL_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V3,
+    MODEL_AIRPURIFIER_ZA1,
     MODEL_FAN_1C,
     MODEL_FAN_P5,
     MODEL_FAN_P9,
@@ -151,11 +156,13 @@ AVAILABLE_ATTRIBUTES_AIRFRESH = {
 }
 
 PRESET_MODES_AIRPURIFIER = ["Auto", "Silent", "Favorite", "Idle"]
+PRESET_MODES_AIRPURIFIER_4_LITE = ["Auto", "Silent", "Favorite"]
 PRESET_MODES_AIRPURIFIER_MIOT = ["Auto", "Silent", "Favorite", "Fan"]
 PRESET_MODES_AIRPURIFIER_PRO = ["Auto", "Silent", "Favorite"]
 PRESET_MODES_AIRPURIFIER_PRO_V7 = PRESET_MODES_AIRPURIFIER_PRO
 PRESET_MODES_AIRPURIFIER_2S = ["Auto", "Silent", "Favorite"]
 PRESET_MODES_AIRPURIFIER_3C = ["Auto", "Silent", "Favorite"]
+PRESET_MODES_AIRPURIFIER_ZA1 = ["Auto", "Silent", "Favorite"]
 PRESET_MODES_AIRPURIFIER_V3 = [
     "Auto",
     "Silent",
@@ -424,6 +431,15 @@ class XiaomiAirPurifier(XiaomiGenericAirPurifier):
                 FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
             )
             self._speed_count = 3
+        elif self._model in [
+            MODEL_AIRPURIFIER_4_LITE_RMA1,
+            MODEL_AIRPURIFIER_4_LITE_RMB1,
+        ]:
+            self._device_features = FEATURE_FLAGS_AIRPURIFIER_4_LITE
+            self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_MIOT
+            self._preset_modes = PRESET_MODES_AIRPURIFIER_4_LITE
+            self._attr_supported_features = FanEntityFeature.PRESET_MODE
+            self._speed_count = 1
         elif self._model == MODEL_AIRPURIFIER_PRO_V7:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_PRO_V7
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO_V7
@@ -434,6 +450,12 @@ class XiaomiAirPurifier(XiaomiGenericAirPurifier):
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_2S
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON
             self._preset_modes = PRESET_MODES_AIRPURIFIER_2S
+            self._attr_supported_features = FanEntityFeature.PRESET_MODE
+            self._speed_count = 1
+        elif self._model == MODEL_AIRPURIFIER_ZA1:
+            self._device_features = FEATURE_FLAGS_AIRPURIFIER_ZA1
+            self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_MIOT
+            self._preset_modes = PRESET_MODES_AIRPURIFIER_ZA1
             self._attr_supported_features = FanEntityFeature.PRESET_MODE
             self._speed_count = 1
         elif self._model in MODELS_PURIFIER_MIOT:

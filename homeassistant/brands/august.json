@@ -1,0 +1,5 @@
+{
+  "domain": "august",
+  "name": "August Home",
+  "integrations": ["august", "yalexs_ble"]
+}

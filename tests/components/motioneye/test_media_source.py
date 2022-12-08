@@ -251,6 +251,20 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
         "thumbnail": None,
         "children": [
             {
+                "title": "00-02-27.mp4",
+                "media_class": "video",
+                "media_content_type": "video/mp4",
+                "media_content_id": (
+                    "media-source://motioneye"
+                    f"/74565ad414754616000674c87bdc876c#{device.id}#movies#"
+                    "/2021-04-25/00-02-27.mp4"
+                ),
+                "can_play": True,
+                "can_expand": False,
+                "thumbnail": "http://movie",
+                "children_media_class": None,
+            },
+            {
                 "title": "00-26-22.mp4",
                 "media_class": "video",
                 "media_content_type": "video/mp4",
@@ -272,20 +286,6 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
                     "media-source://motioneye"
                     f"/74565ad414754616000674c87bdc876c#{device.id}#movies#"
                     "/2021-04-25/00-36-49.mp4"
-                ),
-                "can_play": True,
-                "can_expand": False,
-                "thumbnail": "http://movie",
-                "children_media_class": None,
-            },
-            {
-                "title": "00-02-27.mp4",
-                "media_class": "video",
-                "media_content_type": "video/mp4",
-                "media_content_id": (
-                    "media-source://motioneye"
-                    f"/74565ad414754616000674c87bdc876c#{device.id}#movies#"
-                    "/2021-04-25/00-02-27.mp4"
                 ),
                 "can_play": True,
                 "can_expand": False,

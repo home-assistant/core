@@ -4,7 +4,8 @@
             "already_configured": "Asukoht on juba m\u00e4\u00e4ratud"
         },
         "error": {
-            "cannot_connect": "\u00dchendamine nurjus"
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus"
         },
         "step": {
             "user": {
@@ -27,6 +28,7 @@
                     "mode": "Reisimise viis",
                     "time": "Aeg",
                     "time_type": "Aja t\u00fc\u00fcp",
+                    "traffic_mode": "S\u00f5iduvahend",
                     "transit_mode": "Liikumisviis",
                     "transit_routing_preference": "Teekonna eelistused",
                     "units": "\u00dchikud"

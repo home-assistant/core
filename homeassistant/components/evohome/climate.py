@@ -14,7 +14,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import PRECISION_TENTHS, TEMP_CELSIUS
+from homeassistant.const import PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -126,7 +126,7 @@ async def async_setup_platform(
 class EvoClimateEntity(EvoDevice, ClimateEntity):
     """Base for an evohome Climate device."""
 
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     @property
     def hvac_modes(self) -> list[str]:
@@ -321,9 +321,8 @@ class EvoController(EvoClimateEntity):
         self._attr_preset_modes = [
             TCS_PRESET_TO_HA[m] for m in modes if m in list(TCS_PRESET_TO_HA)
         ]
-        self._attr_supported_features = (
-            ClimateEntityFeature.PRESET_MODE if self._attr_preset_modes else 0
-        )
+        if self._attr_preset_modes:
+            self._attr_supported_features = ClimateEntityFeature.PRESET_MODE
 
     async def async_tcs_svc_request(self, service: str, data: dict[str, Any]) -> None:
         """Process a service request (system mode) for a controller.

@@ -24,11 +24,6 @@
                 }
             },
             "user": {
-                "data": {
-                    "password": "Senha",
-                    "pin": "C\u00f3digo PIN",
-                    "username": "Usu\u00e1rio"
-                },
                 "menu_options": {
                     "cloud": "Risco Cloud (recomendado)",
                     "local": "Painel de Risco Local (avan\u00e7ado)"

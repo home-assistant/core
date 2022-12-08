@@ -12,7 +12,7 @@
                     "tariffs": "Tarifes suportades"
                 },
                 "data_description": {
-                    "delta_values": "Activa-ho si els les lectures s\u00f3n valors delta (actual - anterior) en lloc de valors absoluts.",
+                    "delta_values": "Activa-ho si les lectures s\u00f3n valors delta des de l'\u00faltima lectura en lloc de valors absoluts.",
                     "net_consumption": "Activa-ho si \u00e9s un comptador net, \u00e9s a dir, pot augmentar i disminuir.",
                     "offset": "Despla\u00e7a el dia de restabliment mensual del comptador.",
                     "tariffs": "Llista de tarifes admeses, deixa-la en blanc si utilitzes una \u00fanica tarifa."

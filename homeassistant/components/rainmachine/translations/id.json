@@ -18,23 +18,11 @@
             }
         }
     },
-    "issues": {
-        "replaced_old_entity": {
-            "fix_flow": {
-                "step": {
-                    "confirm": {
-                        "description": "Perbarui semua otomasi atau skrip yang menggunakan entitas ini untuk menggunakan `{replacement_entity_id}`.",
-                        "title": "Entitas {old_entity_id} akan dihapus"
-                    }
-                }
-            },
-            "title": "Entitas {old_entity_id} akan dihapus"
-        }
-    },
     "options": {
         "step": {
             "init": {
                 "data": {
+                    "use_app_run_times": "Gunakan waktu berjalan zona dari aplikasi RainMachine",
                     "zone_run_time": "Waktu berjalan zona default (dalam detik)"
                 },
                 "title": "Konfigurasikan RainMachine"

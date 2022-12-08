@@ -9,7 +9,9 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry, MockModule, mock_integration
 
 
-async def test_hardware_info(hass: HomeAssistant, hass_ws_client) -> None:
+async def test_hardware_info(
+    hass: HomeAssistant, hass_ws_client, addon_store_info
+) -> None:
     """Test we can get the board info."""
     mock_integration(hass, MockModule("hassio"))
 
@@ -48,6 +50,7 @@ async def test_hardware_info(hass: HomeAssistant, hass_ws_client) -> None:
                     "model": "yellow",
                     "revision": None,
                 },
+                "config_entries": [config_entry.entry_id],
                 "dongle": None,
                 "name": "Home Assistant Yellow",
                 "url": None,
@@ -57,7 +60,9 @@ async def test_hardware_info(hass: HomeAssistant, hass_ws_client) -> None:
 
 
 @pytest.mark.parametrize("os_info", [None, {"board": None}, {"board": "other"}])
-async def test_hardware_info_fail(hass: HomeAssistant, hass_ws_client, os_info) -> None:
+async def test_hardware_info_fail(
+    hass: HomeAssistant, hass_ws_client, os_info, addon_store_info
+) -> None:
     """Test async_info raises if os_info is not as expected."""
     mock_integration(hass, MockModule("hassio"))
 

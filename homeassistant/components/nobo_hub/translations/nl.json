@@ -15,6 +15,12 @@
                     "ip_address": "IP-adres",
                     "serial": "Serienummer (12 cijfers)"
                 }
+            },
+            "user": {
+                "data": {
+                    "device": "Ontdekte hubs"
+                },
+                "description": "Selecteer een Nob\u00f8 Ecohub om te configureren."
             }
         }
     }

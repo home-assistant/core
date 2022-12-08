@@ -9,10 +9,10 @@
                     "type": "Statistiline tunnus"
                 },
                 "data_description": {
-                    "round_digits": "M\u00e4\u00e4rab k\u00fcmnendkohtade arvu v\u00e4ljundis kui statistika tunnus on keskmine v\u00f5i mediaan."
+                    "round_digits": "M\u00e4\u00e4rab k\u00fcmnendkohtade arvu v\u00e4ljundis kui statistika tunnus on keskmine, summa v\u00f5i mediaan."
                 },
-                "description": "Loo andur mis arvutab sisendandurite loendist minimaalse, maksimaalse, keskmise v\u00f5i mediaanv\u00e4\u00e4rtuse.",
-                "title": "Lisa min / max / keskmine / mediaanandur"
+                "description": "Loo andur mis arvutab sisendandurite loendist minimaalse, maksimaalse, keskmise, summa v\u00f5i mediaanv\u00e4\u00e4rtuse.",
+                "title": "\u00dchenda mitme anduri olek"
             }
         }
     },
@@ -30,5 +30,5 @@
             }
         }
     },
-    "title": "Min / max / keskmine / mediaanandur"
+    "title": "\u00dchenda mitme anduri olek"
 }

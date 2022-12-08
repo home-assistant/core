@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant import bootstrap, core, runner
 import homeassistant.config as config_util
-from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATONS
+from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -460,7 +460,7 @@ async def test_setup_hass(
     mock_ensure_config_exists,
     mock_process_ha_config_upgrade,
     caplog,
-    loop,
+    event_loop,
 ):
     """Test it works."""
     verbose = Mock()
@@ -511,7 +511,7 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
     mock_ensure_config_exists,
     mock_process_ha_config_upgrade,
     caplog,
-    loop,
+    event_loop,
 ):
     """Test it works."""
     verbose = Mock()
@@ -553,7 +553,7 @@ async def test_setup_hass_invalid_yaml(
     mock_mount_local_lib_path,
     mock_ensure_config_exists,
     mock_process_ha_config_upgrade,
-    loop,
+    event_loop,
 ):
     """Test it works."""
     with patch(
@@ -581,7 +581,7 @@ async def test_setup_hass_config_dir_nonexistent(
     mock_mount_local_lib_path,
     mock_ensure_config_exists,
     mock_process_ha_config_upgrade,
-    loop,
+    event_loop,
 ):
     """Test it works."""
     mock_ensure_config_exists.return_value = False
@@ -608,7 +608,7 @@ async def test_setup_hass_safe_mode(
     mock_mount_local_lib_path,
     mock_ensure_config_exists,
     mock_process_ha_config_upgrade,
-    loop,
+    event_loop,
 ):
     """Test it works."""
     with patch("homeassistant.components.browser.setup") as browser_setup, patch(
@@ -641,7 +641,7 @@ async def test_setup_hass_invalid_core_config(
     mock_mount_local_lib_path,
     mock_ensure_config_exists,
     mock_process_ha_config_upgrade,
-    loop,
+    event_loop,
 ):
     """Test it works."""
     with patch(
@@ -669,7 +669,7 @@ async def test_setup_safe_mode_if_no_frontend(
     mock_mount_local_lib_path,
     mock_ensure_config_exists,
     mock_process_ha_config_upgrade,
-    loop,
+    event_loop,
 ):
     """Test we setup safe mode if frontend didn't load."""
     verbose = Mock()
@@ -748,7 +748,7 @@ async def test_empty_integrations_list_is_only_sent_at_the_end_of_bootstrap(hass
         integrations.append(data)
 
     async_dispatcher_connect(
-        hass, SIGNAL_BOOTSTRAP_INTEGRATONS, _bootstrap_integrations
+        hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, _bootstrap_integrations
     )
     with patch.object(bootstrap, "SLOW_STARTUP_CHECK_INTERVAL", 0.05):
         await bootstrap._async_set_up_integrations(

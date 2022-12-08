@@ -167,7 +167,9 @@ async def test_coordinator_update_after_reboot(hass: HomeAssistant, fritz: Mock)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     assert fritz().update_devices.call_count == 2
+    assert fritz().update_templates.call_count == 1
     assert fritz().get_devices.call_count == 1
+    assert fritz().get_templates.call_count == 1
     assert fritz().login.call_count == 2
 
 
@@ -187,6 +189,7 @@ async def test_coordinator_update_after_password_change(
     assert not await hass.config_entries.async_setup(entry.entry_id)
     assert fritz().update_devices.call_count == 1
     assert fritz().get_devices.call_count == 0
+    assert fritz().get_templates.call_count == 0
     assert fritz().login.call_count == 2
 
 
