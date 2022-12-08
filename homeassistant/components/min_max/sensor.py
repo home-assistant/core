@@ -298,11 +298,11 @@ class MinMaxSensor(SensorEntity):
             for entity_id in self._entity_ids
             if (state := self.hass.states.get(entity_id))
         ]
-        for entity_id, new_state in states:
+        for entity_id, state in states:
             if (
-                new_state is None
-                or new_state.state is None
-                or new_state.state
+                state is None
+                or state.state is None
+                or state.state
                 in [
                     STATE_UNKNOWN,
                     STATE_UNAVAILABLE,
@@ -313,7 +313,7 @@ class MinMaxSensor(SensorEntity):
                     self._calc_values(calc_states)
                     return
             try:
-                calc_states[entity_id] = float(new_state.state)
+                calc_states[entity_id] = float(state.state)
                 if entity_id in self._state_incorrect:
                     self._state_incorrect.remove(entity_id)
             except ValueError:
@@ -323,7 +323,7 @@ class MinMaxSensor(SensorEntity):
                     _LOGGER.warning(
                         "Unable to store state for entity %s with state %s. Only numerical states are supported",
                         entity_id,
-                        new_state.state,
+                        state.state,
                     )
 
         if entity_state:
