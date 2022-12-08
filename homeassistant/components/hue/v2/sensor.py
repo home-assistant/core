@@ -17,7 +17,6 @@ from aiohue.v2.models.light_level import LightLevel
 from aiohue.v2.models.temperature import Temperature
 from aiohue.v2.models.zigbee_connectivity import ZigbeeConnectivity
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -156,7 +155,6 @@ class HueBatterySensor(HueSensorBase):
 class HueZigbeeConnectivitySensor(HueSensorBase):
     """Representation of a Hue ZigbeeConnectivity sensor."""
 
-    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
 

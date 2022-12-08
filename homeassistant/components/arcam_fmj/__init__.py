@@ -2,6 +2,7 @@
 import asyncio
 from contextlib import suppress
 import logging
+from typing import Any
 
 from arcam.fmj import ConnectionFailed
 from arcam.fmj.client import Client
@@ -31,7 +32,7 @@ CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
-async def _await_cancel(task):
+async def _await_cancel(task: asyncio.Task) -> None:
     task.cancel()
     with suppress(asyncio.CancelledError):
         await task
@@ -42,7 +43,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN_DATA_ENTRIES] = {}
     hass.data[DOMAIN_DATA_TASKS] = {}
 
-    async def _stop(_):
+    async def _stop(_: Any) -> None:
         asyncio.gather(
             *(_await_cancel(task) for task in hass.data[DOMAIN_DATA_TASKS].values())
         )
@@ -80,8 +81,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def _run_client(hass, client, interval):
-    def _listen(_):
+async def _run_client(hass: HomeAssistant, client: Client, interval: float) -> None:
+    def _listen(_: Any) -> None:
         async_dispatcher_send(hass, SIGNAL_CLIENT_DATA, client.host)
 
     while True:

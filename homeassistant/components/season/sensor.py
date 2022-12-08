@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -132,8 +133,10 @@ def get_season(
 class SeasonSensorEntity(SensorEntity):
     """Representation of the current season."""
 
-    _attr_device_class = "season__season"
+    _attr_device_class = SensorDeviceClass.ENUM
     _attr_has_entity_name = True
+    _attr_options = ["spring", "summer", "autumn", "winter"]
+    _attr_translation_key = "season"
 
     def __init__(self, entry: ConfigEntry, hemisphere: str) -> None:
         """Initialize the season."""

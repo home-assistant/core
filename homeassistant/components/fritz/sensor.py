@@ -66,6 +66,11 @@ def _retrieve_external_ip_state(status: FritzStatus, last_value: str) -> str:
     return status.external_ip  # type: ignore[no-any-return]
 
 
+def _retrieve_external_ipv6_state(status: FritzStatus, last_value: str) -> str:
+    """Return external ipv6 from device."""
+    return str(status.external_ipv6)
+
+
 def _retrieve_kb_s_sent_state(status: FritzStatus, last_value: str) -> float:
     """Return upload transmission rate."""
     return round(status.transmission_rate[0] / 1000, 1)  # type: ignore[no-any-return]
@@ -154,6 +159,13 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         name="External IP",
         icon="mdi:earth",
         value_fn=_retrieve_external_ip_state,
+    ),
+    FritzSensorEntityDescription(
+        key="external_ipv6",
+        name="External IPv6",
+        icon="mdi:earth",
+        value_fn=_retrieve_external_ipv6_state,
+        is_suitable=lambda info: info.ipv6_active,
     ),
     FritzSensorEntityDescription(
         key="device_uptime",

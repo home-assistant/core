@@ -22,6 +22,7 @@ from homeassistant.const import (
     FREQUENCY_MEGAHERTZ,
     PERCENTAGE,
     POWER_WATT,
+    REVOLUTIONS_PER_MINUTE,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
@@ -41,7 +42,6 @@ ATTR_TYPE: Final = "type"
 ATTR_USED: Final = "used"
 
 PIXELS: Final = "px"
-RPM: Final = "RPM"
 
 
 @dataclass
@@ -439,7 +439,7 @@ async def async_setup_entry(
                     name=f"{gpu['name']} Fan Speed",
                     entity_registry_enabled_default=False,
                     state_class=SensorStateClass.MEASUREMENT,
-                    native_unit_of_measurement=RPM,
+                    native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
                     icon="mdi:fan",
                     value=lambda data, k=gpu["key"]: getattr(
                         data.gpu, f"{k}_fan_speed"

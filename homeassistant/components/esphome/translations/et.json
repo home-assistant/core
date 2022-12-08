@@ -43,5 +43,11 @@
                 "description": "Sisesta oma [ESPHome]({esphome_url}) s\u00f5lme \u00fchenduse s\u00e4tted."
             }
         }
+    },
+    "issues": {
+        "ble_firmware_outdated": {
+            "description": "Bluetoothi t\u00f6\u00f6kindluse ja j\u00f5udluse parandamiseks soovitame tungivalt v\u00e4rskendada {name} versiooniga ESPHome 2022.11.0 v\u00f5i uuema versiooniga.",
+            "title": "Uuenda {nimi} ESPHome 2022.11.0 v\u00f5i uuema versiooniga"
+        }
     }
 }

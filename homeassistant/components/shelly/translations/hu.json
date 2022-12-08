@@ -58,5 +58,18 @@
             "single_push": "{subtype} egy lenyom\u00e1s",
             "triple": "{subtype} tripla kattint\u00e1s"
         }
+    },
+    "options": {
+        "abort": {
+            "ble_unsupported": "A Bluetooth-t\u00e1mogat\u00e1shoz legal\u00e1bb {ble_min_version} firmware verzi\u00f3 sz\u00fcks\u00e9ges."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "ble_scanner_mode": "Bluetooth szkenner m\u00f3d"
+                },
+                "description": "A Bluetooth-keres\u00e9s lehet akt\u00edv vagy passz\u00edv. Ha akt\u00edv, a Shelly adatokat k\u00e9r a k\u00f6zeli eszk\u00f6z\u00f6kr\u0151l; a passz\u00edv funkci\u00f3val a Shelly k\u00e9retlen adatokat is fogad a k\u00f6zeli eszk\u00f6z\u00f6kr\u0151l."
+            }
+        }
     }
 }

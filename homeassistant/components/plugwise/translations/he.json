@@ -8,7 +8,6 @@
             "invalid_auth": "\u05d0\u05d9\u05de\u05d5\u05ea \u05dc\u05d0 \u05d7\u05d5\u05e7\u05d9",
             "unknown": "\u05e9\u05d2\u05d9\u05d0\u05d4 \u05d1\u05dc\u05ea\u05d9 \u05e6\u05e4\u05d5\u05d9\u05d4"
         },
-        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
@@ -16,14 +15,6 @@
                     "port": "\u05e4\u05ea\u05d7\u05d4"
                 },
                 "description": "\u05de\u05d5\u05e6\u05e8:"
-            },
-            "user_gateway": {
-                "data": {
-                    "host": "\u05db\u05ea\u05d5\u05d1\u05ea IP",
-                    "password": "\u05de\u05d6\u05d4\u05d4 Smile",
-                    "port": "\u05e4\u05ea\u05d7\u05d4",
-                    "username": "\u05d7\u05d9\u05d9\u05da \u05e9\u05dd \u05de\u05e9\u05ea\u05de\u05e9"
-                }
             }
         }
     }

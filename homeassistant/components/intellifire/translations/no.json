@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
             "not_intellifire_device": "Ikke en IntelliFire-enhet.",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+            "reauth_successful": "Re-autentisering var vellykket"
         },
         "error": {
             "api_error": "Innlogging feilet",

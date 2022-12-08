@@ -93,7 +93,8 @@ class SuezSensor(SensorEntity):
             # _state holds the volume of consumed water during previous day
             self._state = self.client.state
             self._available = True
-            self._attributes["attribution"] = self.client.attributes["attribution"]
+            self._attr_attribution = self.client.attributes["attribution"]
+
             self._attributes["this_month_consumption"] = {}
             for item in self.client.attributes["thisMonthConsumption"]:
                 self._attributes["this_month_consumption"][

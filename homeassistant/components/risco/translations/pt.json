@@ -10,11 +10,6 @@
         },
         "step": {
             "user": {
-                "data": {
-                    "password": "Palavra-passe",
-                    "pin": "C\u00f3digo PIN",
-                    "username": "Nome de Utilizador"
-                },
                 "menu_options": {
                     "cloud": "Risco Cloud (recomendado)",
                     "local": "Painel de Risco Local (avan\u00e7ado)"

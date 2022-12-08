@@ -3,7 +3,11 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.sensor import SensorEntity, SensorStateClass
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, POWER_WATT
 from homeassistant.core import HomeAssistant
@@ -42,7 +46,7 @@ class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
         user_id: str,
         name: str,
         source_type: str,
-        device_class: str | None = None,
+        device_class: SensorDeviceClass | None = None,
         sensor_type: str = SENSOR_TYPE_RATE,
         unit_of_measurement: str = POWER_WATT,
         icon: str = "mdi:lightning-bolt",
@@ -72,7 +76,7 @@ class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
         return self._name
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> SensorDeviceClass | None:
         """Return the device class of the sensor."""
         return self._device_class
 

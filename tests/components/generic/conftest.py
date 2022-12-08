@@ -78,7 +78,6 @@ def mock_create_stream():
 @pytest.fixture
 async def user_flow(hass):
     """Initiate a user flow."""
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

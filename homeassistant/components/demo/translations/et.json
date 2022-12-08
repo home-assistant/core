@@ -1,4 +1,25 @@
 {
+    "entity": {
+        "select": {
+            "speed": {
+                "state": {
+                    "light_speed": "Valguse kiirus",
+                    "ludicrous_speed": "Meeletu kiirus",
+                    "ridiculous_speed": "Naeruv\u00e4\u00e4rne kiirus"
+                }
+            }
+        },
+        "sensor": {
+            "thermostat_mode": {
+                "state": {
+                    "away": "Eemal",
+                    "comfort": "Mugav",
+                    "eco": "\u00d6ko",
+                    "sleep": "Uneaeg"
+                }
+            }
+        }
+    },
     "issues": {
         "bad_psu": {
             "fix_flow": {
@@ -10,6 +31,14 @@
                 }
             },
             "title": "Toiteallikas ei ole stabiilne"
+        },
+        "cold_tea": {
+            "fix_flow": {
+                "abort": {
+                    "not_tea_time": "Teed ei saa praegu uuesti soojendada."
+                }
+            },
+            "title": "Tee on k\u00fclm"
         },
         "out_of_blinker_fluid": {
             "fix_flow": {

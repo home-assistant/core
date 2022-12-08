@@ -1,4 +1,9 @@
 {
+    "device_automation": {
+        "condition_type": {
+            "is_water": "N\u00faverandi {entity_name} vatn"
+        }
+    },
     "state": {
         "_": {
             "off": "Af",

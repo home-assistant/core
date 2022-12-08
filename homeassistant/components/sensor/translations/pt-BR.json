@@ -32,6 +32,7 @@
             "is_volatile_organic_compounds": "N\u00edvel atual de concentra\u00e7\u00e3o de compostos org\u00e2nicos vol\u00e1teis de {entity_name}",
             "is_voltage": "Tens\u00e3o atual de {entity_name}",
             "is_volume": "Volume atual de {entity_name}",
+            "is_water": "\u00c1gua atual {entity_name}",
             "is_weight": "Peso atual {entity_name}"
         },
         "trigger_type": {
@@ -66,6 +67,7 @@
             "volatile_organic_compounds": "Altera\u00e7\u00f5es na concentra\u00e7\u00e3o de compostos org\u00e2nicos vol\u00e1teis de {entity_name}",
             "voltage": "Mudan\u00e7as de voltagem de {entity_name}",
             "volume": "Altera\u00e7\u00f5es de volume de {entity_name}",
+            "water": "mudan\u00e7as de \u00e1gua {entity_name}",
             "weight": "Altera\u00e7\u00f5es de peso {entity_name}"
         }
     },

@@ -1,5 +1,5 @@
 """Class to hold remote accessories."""
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 import logging
 
 from pyhap.const import CATEGORY_TELEVISION
@@ -75,7 +75,7 @@ REMOTE_KEYS = {
 }
 
 
-class RemoteInputSelectAccessory(HomeAccessory):
+class RemoteInputSelectAccessory(HomeAccessory, ABC):
     """Generate a InputSelect accessory."""
 
     def __init__(
@@ -131,7 +131,7 @@ class RemoteInputSelectAccessory(HomeAccessory):
         )
         for index, source in enumerate(self.sources):
             serv_input = self.add_preload_service(
-                SERV_INPUT_SOURCE, [CHAR_IDENTIFIER, CHAR_NAME]
+                SERV_INPUT_SOURCE, [CHAR_IDENTIFIER, CHAR_NAME], unique_id=source
             )
             serv_tv.add_linked_service(serv_input)
             serv_input.configure_char(CHAR_CONFIGURED_NAME, value=source)

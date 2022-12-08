@@ -23,6 +23,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.unit_conversion import TemperatureConverter
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +68,7 @@ async def async_setup_platform(
         [
             MoldIndicator(
                 name,
-                hass.config.units.is_metric,
+                hass.config.units is METRIC_SYSTEM,
                 indoor_temp_sensor,
                 outdoor_temp_sensor,
                 indoor_humidity_sensor,

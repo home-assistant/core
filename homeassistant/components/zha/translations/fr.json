@@ -61,34 +61,11 @@
                 },
                 "title": "\u00c9craser l'adresse IEEE de la radio"
             },
-            "pick_radio": {
-                "data": {
-                    "radio_type": "Type de radio"
-                },
-                "description": "Choisissez un type de radio Zigbee",
-                "title": "Type de radio"
-            },
-            "port_config": {
-                "data": {
-                    "baudrate": "vitesse du port",
-                    "flow_control": "contr\u00f4le du flux de donn\u00e9es",
-                    "path": "Chemin du p\u00e9riph\u00e9rique s\u00e9rie"
-                },
-                "description": "Saisir les param\u00e8tres sp\u00e9cifiques au port",
-                "title": "R\u00e9glages"
-            },
             "upload_manual_backup": {
                 "data": {
                     "uploaded_backup_file": "T\u00e9l\u00e9verser un fichier"
                 },
                 "title": "T\u00e9l\u00e9verser une sauvegarde manuelle"
-            },
-            "user": {
-                "data": {
-                    "path": "Chemin du p\u00e9riph\u00e9rique s\u00e9rie"
-                },
-                "description": "S\u00e9lectionnez le port s\u00e9rie de la radio Zigbee",
-                "title": "ZHA"
             }
         }
     },

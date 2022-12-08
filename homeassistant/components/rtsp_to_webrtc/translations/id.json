@@ -23,5 +23,14 @@
                 "title": "Konfigurasikan RTSPtoWebrTC"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "stun_server": "Alamat server stun (host:port)"
+                }
+            }
+        }
     }
 }

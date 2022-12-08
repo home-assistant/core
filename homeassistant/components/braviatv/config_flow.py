@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PIN
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import instance_id
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.network import is_host_valid
@@ -24,11 +25,12 @@ from .const import (
     ATTR_CID,
     ATTR_MAC,
     ATTR_MODEL,
-    CLIENTID_PREFIX,
+    CONF_CLIENT_ID,
     CONF_IGNORED_SOURCES,
+    CONF_NICKNAME,
     CONF_USE_PSK,
     DOMAIN,
-    NICKNAME,
+    NICKNAME_PREFIX,
 )
 
 
@@ -42,6 +44,8 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.client: BraviaTV | None = None
         self.device_config: dict[str, Any] = {}
         self.entry: ConfigEntry | None = None
+        self.client_id: str = ""
+        self.nickname: str = ""
 
     @staticmethod
     @callback
@@ -68,8 +72,10 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if use_psk:
             await self.client.connect(psk=pin)
         else:
+            self.device_config[CONF_CLIENT_ID] = self.client_id
+            self.device_config[CONF_NICKNAME] = self.nickname
             await self.client.connect(
-                pin=pin, clientid=CLIENTID_PREFIX, nickname=NICKNAME
+                pin=pin, clientid=self.client_id, nickname=self.nickname
             )
         await self.client.set_wol_mode(True)
 
@@ -110,6 +116,7 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Authorize Bravia TV device."""
         errors: dict[str, str] = {}
+        self.client_id, self.nickname = await self.gen_instance_ids()
 
         if user_input is not None:
             self.device_config[CONF_PIN] = user_input[CONF_PIN]
@@ -126,7 +133,7 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self.client
 
         try:
-            await self.client.pair(CLIENTID_PREFIX, NICKNAME)
+            await self.client.pair(self.client_id, self.nickname)
         except BraviaTVError:
             return self.async_abort(reason="no_ip_control")
 
@@ -190,6 +197,7 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Dialog that informs the user that reauth is required."""
         self.create_client()
+        client_id, nickname = await self.gen_instance_ids()
 
         assert self.client is not None
         assert self.entry is not None
@@ -201,8 +209,10 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if use_psk:
                     await self.client.connect(psk=pin)
                 else:
+                    self.device_config[CONF_CLIENT_ID] = client_id
+                    self.device_config[CONF_NICKNAME] = nickname
                     await self.client.connect(
-                        pin=pin, clientid=CLIENTID_PREFIX, nickname=NICKNAME
+                        pin=pin, clientid=client_id, nickname=nickname
                     )
                 await self.client.set_wol_mode(True)
             except BraviaTVError:
@@ -215,7 +225,7 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="reauth_successful")
 
         try:
-            await self.client.pair(CLIENTID_PREFIX, NICKNAME)
+            await self.client.pair(client_id, nickname)
         except BraviaTVError:
             return self.async_abort(reason="reauth_unsuccessful")
 
@@ -229,27 +239,37 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
         )
 
+    async def gen_instance_ids(self) -> tuple[str, str]:
+        """Generate client_id and nickname."""
+        uuid = await instance_id.async_get(self.hass)
+        return uuid, f"{NICKNAME_PREFIX} {uuid[:6]}"
 
-class BraviaTVOptionsFlowHandler(config_entries.OptionsFlow):
+
+class BraviaTVOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
     """Config flow options for Bravia TV."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize Bravia TV options flow."""
-        self.config_entry = config_entry
-        self.ignored_sources = config_entry.options.get(CONF_IGNORED_SOURCES)
-        self.source_list: list[str] = []
+    data_schema: vol.Schema
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the options."""
-        coordinator: BraviaTVCoordinator = self.hass.data[DOMAIN][
-            self.config_entry.entry_id
-        ]
+        coordinator: BraviaTVCoordinator
+        coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id]
 
-        await coordinator.async_update_sources()
+        try:
+            await coordinator.async_update_sources()
+        except BraviaTVError:
+            return self.async_abort(reason="failed_update")
+
         sources = coordinator.source_map.values()
-        self.source_list = [item["title"] for item in sources]
+        source_list = [item["title"] for item in sources]
+        self.data_schema = vol.Schema(
+            {
+                vol.Optional(CONF_IGNORED_SOURCES): cv.multi_select(source_list),
+            }
+        )
+
         return await self.async_step_user()
 
     async def async_step_user(
@@ -261,11 +281,7 @@ class BraviaTVOptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_IGNORED_SOURCES, default=self.ignored_sources
-                    ): cv.multi_select(self.source_list)
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                self.data_schema, self.options
             ),
         )

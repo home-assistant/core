@@ -125,7 +125,13 @@ async def test_http_processing_intent(hass, hass_client, hass_admin_user):
         "card": {
             "simple": {"content": "You chose a Grolsch.", "title": "Beer ordered"}
         },
-        "speech": {"plain": {"extra_data": None, "speech": "I've ordered a Grolsch!"}},
+        "speech": {
+            "plain": {
+                "extra_data": None,
+                "speech": "I've ordered a Grolsch!",
+            }
+        },
+        "language": hass.config.language,
     }
 
 
@@ -248,10 +254,10 @@ async def test_custom_agent(hass, hass_client, hass_admin_user):
     class MyAgent(conversation.AbstractConversationAgent):
         """Test Agent."""
 
-        async def async_process(self, text, context, conversation_id):
+        async def async_process(self, text, context, conversation_id, language):
             """Process some text."""
-            calls.append((text, context, conversation_id))
-            response = intent.IntentResponse()
+            calls.append((text, context, conversation_id, language))
+            response = intent.IntentResponse(language=language)
             response.async_set_speech("Test response")
             return response
 
@@ -263,15 +269,26 @@ async def test_custom_agent(hass, hass_client, hass_admin_user):
 
     resp = await client.post(
         "/api/conversation/process",
-        json={"text": "Test Text", "conversation_id": "test-conv-id"},
+        json={
+            "text": "Test Text",
+            "conversation_id": "test-conv-id",
+            "language": "test-language",
+        },
     )
     assert resp.status == HTTPStatus.OK
     assert await resp.json() == {
         "card": {},
-        "speech": {"plain": {"extra_data": None, "speech": "Test response"}},
+        "speech": {
+            "plain": {
+                "extra_data": None,
+                "speech": "Test response",
+            }
+        },
+        "language": "test-language",
     }
 
     assert len(calls) == 1
     assert calls[0][0] == "Test Text"
     assert calls[0][1].user_id == hass_admin_user.id
     assert calls[0][2] == "test-conv-id"
+    assert calls[0][3] == "test-language"

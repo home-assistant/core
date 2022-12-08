@@ -17,5 +17,17 @@
                 "description": "Configureer een lokaal Elexa Guardian-apparaat."
             }
         }
+    },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "De {deprecated_service}-service wordt verwijderd"
+                    }
+                }
+            },
+            "title": "De {deprecated_service}-service wordt verwijderd"
+        }
     }
 }

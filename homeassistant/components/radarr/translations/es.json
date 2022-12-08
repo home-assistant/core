@@ -27,13 +27,9 @@
         }
     },
     "issues": {
-        "deprecated_yaml": {
-            "description": "Se va a eliminar la configuraci\u00f3n de Radarr mediante YAML. \n\nTu configuraci\u00f3n YAML existente se ha importado a la IU autom\u00e1ticamente. \n\nElimina la configuraci\u00f3n YAML de Radarr de tu archivo configuration.yaml y reinicia Home Assistant para solucionar este problema.",
-            "title": "Se va a eliminar la configuraci\u00f3n YAML de Radarr"
-        },
-        "removed_attributes": {
-            "description": "Se han realizado algunos cambios importantes al deshabilitar el sensor de conteo de pel\u00edculas por precauci\u00f3n. \n\nEste sensor puede causar problemas con bases de datos enormes. Si a\u00fan deseas utilizarlo, puedes hacerlo. \n\nLos nombres de las pel\u00edculas ya no se incluyen como atributos en el sensor de pel\u00edculas. \n\nPr\u00f3ximamente ha sido eliminado. Se est\u00e1 modernizando como deber\u00edan ser los elementos del calendario. El espacio en disco ahora se divide en diferentes sensores, uno para cada carpeta. \n\nEl estado y los comandos se han eliminado porque no parecen tener un valor real para las automatizaciones.",
-            "title": "Cambios en la integraci\u00f3n de Radarr"
+        "removed_yaml": {
+            "description": "Se ha eliminado la configuraci\u00f3n de Radarr usando YAML. \n\nHome Assistant no utiliza tu configuraci\u00f3n YAML existente. \n\nElimina la configuraci\u00f3n YAML de tu archivo configuration.yaml y reinicia Home Assistant para solucionar este problema.",
+            "title": "Se ha eliminado la configuraci\u00f3n YAML de Radarr"
         }
     },
     "options": {

@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
-            "reauth_successful": "Ponowna autoryzacja przebieg\u0142a pomy\u015blnie"
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
@@ -15,7 +15,7 @@
                     "password": "Has\u0142o"
                 },
                 "description": "Has\u0142o u\u017cytkownika {username} jest nieprawid\u0142owe.",
-                "title": "Ponownie autoryzuj integracje"
+                "title": "Ponownie uwierzytelnij integracj\u0119"
             },
             "user": {
                 "data": {

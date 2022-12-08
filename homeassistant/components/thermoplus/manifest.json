@@ -1,0 +1,6 @@
+{
+  "domain": "thermoplus",
+  "name": "ThermoPlus",
+  "integration_type": "virtual",
+  "supported_by": "thermobeacon"
+}

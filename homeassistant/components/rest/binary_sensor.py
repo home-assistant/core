@@ -100,24 +100,17 @@ class RestBinarySensor(RestEntity, TemplateEntity, BinarySensorEntity):
             fallback_name=DEFAULT_BINARY_SENSOR_NAME,
             unique_id=unique_id,
         )
-        self._state = False
         self._previous_data = None
         self._value_template = config.get(CONF_VALUE_TEMPLATE)
         if (value_template := self._value_template) is not None:
             value_template.hass = hass
-        self._is_on = None
 
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
-
-    @property
-    def is_on(self):
-        """Return true if the binary sensor is on."""
-        return self._is_on
 
     def _update_from_rest_data(self):
         """Update state from the rest data."""
         if self.rest.data is None:
-            self._is_on = False
+            self._attr_is_on = False
 
         response = self.rest.data
 
@@ -127,8 +120,11 @@ class RestBinarySensor(RestEntity, TemplateEntity, BinarySensorEntity):
             )
 
         try:
-            self._is_on = bool(int(response))
+            self._attr_is_on = bool(int(response))
         except ValueError:
-            self._is_on = {"true": True, "on": True, "open": True, "yes": True}.get(
-                response.lower(), False
-            )
+            self._attr_is_on = {
+                "true": True,
+                "on": True,
+                "open": True,
+                "yes": True,
+            }.get(response.lower(), False)

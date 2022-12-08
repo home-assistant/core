@@ -1,33 +1,19 @@
 """Tests for Shelly button platform."""
+from __future__ import annotations
+
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import async_get
+
+from . import init_integration
 
 
-async def test_block_button(hass: HomeAssistant, coap_wrapper):
+async def test_block_button(hass: HomeAssistant, mock_block_device):
     """Test block device reboot button."""
-    assert coap_wrapper
-
-    entity_registry = async_get(hass)
-    entity_registry.async_get_or_create(
-        BUTTON_DOMAIN,
-        DOMAIN,
-        "test_name_reboot",
-        suggested_object_id="test_name_reboot",
-        disabled_by=None,
-    )
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(coap_wrapper.entry, BUTTON_DOMAIN)
-    )
-    await hass.async_block_till_done()
+    await init_integration(hass, 1)
 
     # reboot button
-    state = hass.states.get("button.test_name_reboot")
-
-    assert state
-    assert state.state == STATE_UNKNOWN
+    assert hass.states.get("button.test_name_reboot").state == STATE_UNKNOWN
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
@@ -35,33 +21,15 @@ async def test_block_button(hass: HomeAssistant, coap_wrapper):
         {ATTR_ENTITY_ID: "button.test_name_reboot"},
         blocking=True,
     )
-    await hass.async_block_till_done()
-    assert coap_wrapper.device.trigger_reboot.call_count == 1
+    assert mock_block_device.trigger_reboot.call_count == 1
 
 
-async def test_rpc_button(hass: HomeAssistant, rpc_wrapper):
+async def test_rpc_button(hass: HomeAssistant, mock_rpc_device):
     """Test rpc device OTA button."""
-    assert rpc_wrapper
-
-    entity_registry = async_get(hass)
-    entity_registry.async_get_or_create(
-        BUTTON_DOMAIN,
-        DOMAIN,
-        "test_name_reboot",
-        suggested_object_id="test_name_reboot",
-        disabled_by=None,
-    )
-
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(rpc_wrapper.entry, BUTTON_DOMAIN)
-    )
-    await hass.async_block_till_done()
+    await init_integration(hass, 2)
 
     # reboot button
-    state = hass.states.get("button.test_name_reboot")
-
-    assert state
-    assert state.state == STATE_UNKNOWN
+    assert hass.states.get("button.test_name_reboot").state == STATE_UNKNOWN
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
@@ -69,5 +37,4 @@ async def test_rpc_button(hass: HomeAssistant, rpc_wrapper):
         {ATTR_ENTITY_ID: "button.test_name_reboot"},
         blocking=True,
     )
-    await hass.async_block_till_done()
-    assert rpc_wrapper.device.trigger_reboot.call_count == 1
+    assert mock_rpc_device.trigger_reboot.call_count == 1

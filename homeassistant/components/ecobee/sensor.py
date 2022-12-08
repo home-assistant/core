@@ -76,7 +76,6 @@ SENSOR_TYPES: tuple[EcobeeSensorEntityDescription, ...] = (
         key="airQuality",
         name="Air Quality Index",
         device_class=SensorDeviceClass.AQI,
-        native_unit_of_measurement=None,
         state_class=SensorStateClass.MEASUREMENT,
         runtime_key="actualAQScore",
     ),

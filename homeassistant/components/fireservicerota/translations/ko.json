@@ -11,11 +11,10 @@
             "invalid_auth": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
         },
         "step": {
-            "reauth": {
+            "reauth_confirm": {
                 "data": {
                     "password": "\ube44\ubc00\ubc88\ud638"
-                },
-                "description": "\uc778\uc99d \ud1a0\ud070\uc774 \ub354 \uc774\uc0c1 \uc720\ud6a8\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4. \ub2e4\uc2dc \uc0dd\uc131\ud558\ub824\uba74 \ub85c\uadf8\uc778\ud574\uc8fc\uc138\uc694."
+                }
             },
             "user": {
                 "data": {

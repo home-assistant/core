@@ -192,11 +192,11 @@ class Control4Light(Control4Entity, LightEntity):
         return None
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> LightEntityFeature:
         """Flag supported features."""
         if self._is_dimmer:
             return LightEntityFeature.TRANSITION
-        return 0
+        return LightEntityFeature(0)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""

@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final
 
-from homeassistant.components.sensor import SensorEntityDescription
+from homeassistant.components.sensor import SensorEntityDescription, SensorStateClass
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
@@ -196,18 +196,21 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         name="BMI",
         unit_type="BMI",
         icon="mdi:human",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     FitbitSensorEntityDescription(
         key="body/fat",
         name="Body Fat",
         unit_type=PERCENTAGE,
         icon="mdi:human",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     FitbitSensorEntityDescription(
         key="body/weight",
         name="Weight",
         unit_type="",
         icon="mdi:human",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     FitbitSensorEntityDescription(
         key="sleep/awakeningsCount",
@@ -220,6 +223,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         name="Sleep Efficiency",
         unit_type=PERCENTAGE,
         icon="mdi:sleep",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     FitbitSensorEntityDescription(
         key="sleep/minutesAfterWakeup",

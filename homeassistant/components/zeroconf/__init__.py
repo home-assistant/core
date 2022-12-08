@@ -22,11 +22,7 @@ from homeassistant import config_entries
 from homeassistant.components import network
 from homeassistant.components.network import MDNS_TARGET_IP, async_get_source_ip
 from homeassistant.components.network.models import Adapter
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
-    __version__,
-)
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, __version__
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow, instance_id
@@ -40,6 +36,7 @@ from homeassistant.loader import (
     async_get_zeroconf,
     bind_hass,
 )
+from homeassistant.setup import async_when_setup_or_start
 
 from .models import HaAsyncServiceBrowser, HaAsyncZeroconf, HaZeroconf
 from .usage import install_multiple_zeroconf_catcher
@@ -194,7 +191,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     discovery = ZeroconfDiscovery(hass, zeroconf, zeroconf_types, homekit_models, ipv6)
     await discovery.async_setup()
 
-    async def _async_zeroconf_hass_start(_event: Event) -> None:
+    async def _async_zeroconf_hass_start(hass: HomeAssistant, comp: str) -> None:
         """Expose Home Assistant on zeroconf when it starts.
 
         Wait till started or otherwise HTTP is not up and running.
@@ -206,7 +203,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await discovery.async_stop()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_zeroconf_hass_stop)
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_zeroconf_hass_start)
+    async_when_setup_or_start(hass, "frontend", _async_zeroconf_hass_start)
 
     return True
 
@@ -237,12 +234,20 @@ def _get_announced_addresses(
     return address_list
 
 
+def _filter_disallowed_characters(name: str) -> str:
+    """Filter disallowed characters from a string.
+
+    . is a reversed character for zeroconf.
+    """
+    return name.replace(".", " ")
+
+
 async def _async_register_hass_zc_service(
     hass: HomeAssistant, aio_zc: HaAsyncZeroconf, uuid: str
 ) -> None:
     # Get instance UUID
     valid_location_name = _truncate_location_name_to_valid(
-        hass.config.location_name or "Home"
+        _filter_disallowed_characters(hass.config.location_name or "Home")
     )
 
     params = {
@@ -547,12 +552,20 @@ def _first_non_link_local_address(
     """Return the first ipv6 or non-link local ipv4 address, preferring IPv4."""
     for address in addresses:
         ip_addr = ip_address(address)
-        if not ip_addr.is_link_local and ip_addr.version == 4:
+        if (
+            not ip_addr.is_link_local
+            and not ip_addr.is_unspecified
+            and ip_addr.version == 4
+        ):
             return str(ip_addr)
     # If we didn't find a good IPv4 address, check for IPv6 addresses.
     for address in addresses:
         ip_addr = ip_address(address)
-        if not ip_addr.is_link_local and ip_addr.version == 6:
+        if (
+            not ip_addr.is_link_local
+            and not ip_addr.is_unspecified
+            and ip_addr.version == 6
+        ):
             return str(ip_addr)
     return None
 

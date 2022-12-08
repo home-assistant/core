@@ -4,7 +4,8 @@
             "already_configured": "Slu\u017eba je ji\u017e nastavena"
         },
         "error": {
-            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_ip_address": "Neplatn\u00e1 adresa IPv4."
         },
         "step": {
             "manual_tunnel": {
@@ -12,15 +13,35 @@
                     "host": "Hostitel",
                     "port": "Port"
                 }
+            },
+            "routing": {
+                "data_description": {
+                    "individual_address": "Adresa KNX, kterou m\u00e1 pou\u017e\u00edvat Home Assistant, nap\u0159. `0.0.4`"
+                }
             }
         }
     },
     "options": {
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_ip_address": "Neplatn\u00e1 adresa IPv4."
+        },
         "step": {
-            "tunnel": {
+            "manual_tunnel": {
                 "data": {
                     "host": "Hostitel",
                     "port": "Port"
+                }
+            },
+            "options_init": {
+                "menu_options": {
+                    "communication_settings": "Nastaven\u00ed komunikace",
+                    "connection_type": "Konfigurace rozhran\u00ed KNX"
+                }
+            },
+            "routing": {
+                "data_description": {
+                    "individual_address": "Adresa KNX, kterou m\u00e1 pou\u017e\u00edvat Home Assistant, nap\u0159. `0.0.4`"
                 }
             }
         }

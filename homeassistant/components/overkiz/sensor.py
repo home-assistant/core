@@ -35,7 +35,7 @@ from homeassistant.helpers.typing import StateType
 from . import HomeAssistantOverkizData
 from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES, OVERKIZ_STATE_TO_TRANSLATION
 from .coordinator import OverkizDataUpdateCoordinator
-from .entity import OverkizDescriptiveEntity, OverkizDeviceClass, OverkizEntity
+from .entity import OverkizDescriptiveEntity, OverkizEntity
 
 
 @dataclass
@@ -60,7 +60,9 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         name="Battery",
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:battery",
-        device_class=OverkizDeviceClass.BATTERY,
+        device_class=SensorDeviceClass.ENUM,
+        options=["full", "normal", "low", "verylow"],
+        translation_key="battery",
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_RSSI_LEVEL,
@@ -314,16 +316,18 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
         key=OverkizState.IO_SENSOR_ROOM,
         name="Sensor room",
-        device_class=OverkizDeviceClass.SENSOR_ROOM,
+        device_class=SensorDeviceClass.ENUM,
+        options=["clean", "dirty"],
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:spray-bottle",
+        translation_key="sensor_room",
     ),
     OverkizSensorDescription(
         key=OverkizState.IO_PRIORITY_LOCK_ORIGINATOR,
         name="Priority lock originator",
-        device_class=OverkizDeviceClass.PRIORITY_LOCK_ORIGINATOR,
         icon="mdi:lock",
         entity_registry_enabled_default=False,
+        translation_key="priority_lock_originator",
         native_value=lambda value: OVERKIZ_STATE_TO_TRANSLATION.get(
             cast(str, value), cast(str, value)
         ),
@@ -340,15 +344,17 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         name="Discrete RSSI level",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
-        device_class=OverkizDeviceClass.DISCRETE_RSSI_LEVEL,
         icon="mdi:wifi",
+        device_class=SensorDeviceClass.ENUM,
+        options=["verylow", "low", "normal", "good"],
+        translation_key="discrete_rssi_level",
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_SENSOR_DEFECT,
         name="Sensor defect",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
-        device_class=OverkizDeviceClass.SENSOR_DEFECT,
+        translation_key="sensor_defect",
         native_value=lambda value: OVERKIZ_STATE_TO_TRANSLATION.get(
             cast(str, value), cast(str, value)
         ),
@@ -379,7 +385,9 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
         key=OverkizState.CORE_THREE_WAY_HANDLE_DIRECTION,
         name="Three way handle direction",
-        device_class=OverkizDeviceClass.THREE_WAY_HANDLE_DIRECTION,
+        device_class=SensorDeviceClass.ENUM,
+        options=["open", "tilt", "close"],
+        translation_key="three_way_handle_direction",
     ),
 ]
 

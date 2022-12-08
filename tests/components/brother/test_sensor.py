@@ -113,8 +113,6 @@ async def test_sensors(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.hl_l2340dw_drum_remaining_life")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:chart-donut"
-    assert state.attributes.get(ATTR_REMAINING_PAGES) == 11014
-    assert state.attributes.get(ATTR_COUNTER) == 986
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.state == "92"
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
@@ -123,11 +121,31 @@ async def test_sensors(hass: HomeAssistant) -> None:
     assert entry
     assert entry.unique_id == "0123456789_drum_remaining_life"
 
+    state = hass.states.get("sensor.hl_l2340dw_drum_remaining_pages")
+    assert state
+    assert state.attributes.get(ATTR_ICON) == "mdi:chart-donut"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PAGES
+    assert state.state == "11014"
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+
+    entry = registry.async_get("sensor.hl_l2340dw_drum_remaining_pages")
+    assert entry
+    assert entry.unique_id == "0123456789_drum_remaining_pages"
+
+    state = hass.states.get("sensor.hl_l2340dw_drum_counter")
+    assert state
+    assert state.attributes.get(ATTR_ICON) == "mdi:chart-donut"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PAGES
+    assert state.state == "986"
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+
+    entry = registry.async_get("sensor.hl_l2340dw_drum_counter")
+    assert entry
+    assert entry.unique_id == "0123456789_drum_counter"
+
     state = hass.states.get("sensor.hl_l2340dw_black_drum_remaining_life")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:chart-donut"
-    assert state.attributes.get(ATTR_REMAINING_PAGES) == 16389
-    assert state.attributes.get(ATTR_COUNTER) == 1611
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.state == "92"
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
@@ -136,11 +154,31 @@ async def test_sensors(hass: HomeAssistant) -> None:
     assert entry
     assert entry.unique_id == "0123456789_black_drum_remaining_life"
 
+    state = hass.states.get("sensor.hl_l2340dw_black_drum_remaining_pages")
+    assert state
+    assert state.attributes.get(ATTR_ICON) == "mdi:chart-donut"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PAGES
+    assert state.state == "16389"
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+
+    entry = registry.async_get("sensor.hl_l2340dw_black_drum_remaining_pages")
+    assert entry
+    assert entry.unique_id == "0123456789_black_drum_remaining_pages"
+
+    state = hass.states.get("sensor.hl_l2340dw_black_drum_counter")
+    assert state
+    assert state.attributes.get(ATTR_ICON) == "mdi:chart-donut"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PAGES
+    assert state.state == "1611"
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+
+    entry = registry.async_get("sensor.hl_l2340dw_black_drum_counter")
+    assert entry
+    assert entry.unique_id == "0123456789_black_drum_counter"
+
     state = hass.states.get("sensor.hl_l2340dw_cyan_drum_remaining_life")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:chart-donut"
-    assert state.attributes.get(ATTR_REMAINING_PAGES) == 16389
-    assert state.attributes.get(ATTR_COUNTER) == 1611
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.state == "92"
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
@@ -149,11 +187,31 @@ async def test_sensors(hass: HomeAssistant) -> None:
     assert entry
     assert entry.unique_id == "0123456789_cyan_drum_remaining_life"
 
+    state = hass.states.get("sensor.hl_l2340dw_cyan_drum_remaining_pages")
+    assert state
+    assert state.attributes.get(ATTR_ICON) == "mdi:chart-donut"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PAGES
+    assert state.state == "16389"
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+
+    entry = registry.async_get("sensor.hl_l2340dw_cyan_drum_remaining_pages")
+    assert entry
+    assert entry.unique_id == "0123456789_cyan_drum_remaining_pages"
+
+    state = hass.states.get("sensor.hl_l2340dw_cyan_drum_counter")
+    assert state
+    assert state.attributes.get(ATTR_ICON) == "mdi:chart-donut"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PAGES
+    assert state.state == "1611"
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+
+    entry = registry.async_get("sensor.hl_l2340dw_cyan_drum_counter")
+    assert entry
+    assert entry.unique_id == "0123456789_cyan_drum_counter"
+
     state = hass.states.get("sensor.hl_l2340dw_magenta_drum_remaining_life")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:chart-donut"
-    assert state.attributes.get(ATTR_REMAINING_PAGES) == 16389
-    assert state.attributes.get(ATTR_COUNTER) == 1611
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.state == "92"
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
@@ -162,11 +220,31 @@ async def test_sensors(hass: HomeAssistant) -> None:
     assert entry
     assert entry.unique_id == "0123456789_magenta_drum_remaining_life"
 
+    state = hass.states.get("sensor.hl_l2340dw_magenta_drum_remaining_pages")
+    assert state
+    assert state.attributes.get(ATTR_ICON) == "mdi:chart-donut"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PAGES
+    assert state.state == "16389"
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+
+    entry = registry.async_get("sensor.hl_l2340dw_magenta_drum_remaining_pages")
+    assert entry
+    assert entry.unique_id == "0123456789_magenta_drum_remaining_pages"
+
+    state = hass.states.get("sensor.hl_l2340dw_magenta_drum_counter")
+    assert state
+    assert state.attributes.get(ATTR_ICON) == "mdi:chart-donut"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PAGES
+    assert state.state == "1611"
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+
+    entry = registry.async_get("sensor.hl_l2340dw_magenta_drum_counter")
+    assert entry
+    assert entry.unique_id == "0123456789_magenta_drum_counter"
+
     state = hass.states.get("sensor.hl_l2340dw_yellow_drum_remaining_life")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:chart-donut"
-    assert state.attributes.get(ATTR_REMAINING_PAGES) == 16389
-    assert state.attributes.get(ATTR_COUNTER) == 1611
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.state == "92"
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
@@ -174,6 +252,28 @@ async def test_sensors(hass: HomeAssistant) -> None:
     entry = registry.async_get("sensor.hl_l2340dw_yellow_drum_remaining_life")
     assert entry
     assert entry.unique_id == "0123456789_yellow_drum_remaining_life"
+
+    state = hass.states.get("sensor.hl_l2340dw_yellow_drum_remaining_pages")
+    assert state
+    assert state.attributes.get(ATTR_ICON) == "mdi:chart-donut"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PAGES
+    assert state.state == "16389"
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+
+    entry = registry.async_get("sensor.hl_l2340dw_yellow_drum_remaining_pages")
+    assert entry
+    assert entry.unique_id == "0123456789_yellow_drum_remaining_pages"
+
+    state = hass.states.get("sensor.hl_l2340dw_yellow_drum_counter")
+    assert state
+    assert state.attributes.get(ATTR_ICON) == "mdi:chart-donut"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PAGES
+    assert state.state == "1611"
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+
+    entry = registry.async_get("sensor.hl_l2340dw_yellow_drum_counter")
+    assert entry
+    assert entry.unique_id == "0123456789_yellow_drum_counter"
 
     state = hass.states.get("sensor.hl_l2340dw_fuser_remaining_life")
     assert state

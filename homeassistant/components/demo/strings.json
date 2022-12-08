@@ -23,6 +23,15 @@
         }
       }
     },
+    "cold_tea": {
+      "title": "The tea is cold",
+      "fix_flow": {
+        "step": {},
+        "abort": {
+          "not_tea_time": "Can not re-heat the tea at this time"
+        }
+      }
+    },
     "transmogrifier_deprecated": {
       "title": "The transmogrifier component is deprecated",
       "description": "The transmogrifier component is now deprecated due to the lack of local control available in the new API"
@@ -49,6 +58,27 @@
           "string": "String value",
           "select": "Select an option",
           "multi": "Multiselect"
+        }
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "speed": {
+        "state": {
+          "light_speed": "Light Speed",
+          "ludicrous_speed": "Ludicrous Speed",
+          "ridiculous_speed": "Ridiculous Speed"
+        }
+      }
+    },
+    "sensor": {
+      "thermostat_mode": {
+        "state": {
+          "away": "Away",
+          "comfort": "Comfort",
+          "eco": "Eco",
+          "sleep": "Sleep"
         }
       }
     }

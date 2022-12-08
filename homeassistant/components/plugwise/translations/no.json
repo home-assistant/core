@@ -7,14 +7,14 @@
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
-            "invalid_setup": "Legg til din Adam i stedet for din Anna, se integrasjonsdokumentasjonen for Home Assistant Plugwise for mer informasjon",
-            "unknown": "Uventet feil"
+            "invalid_setup": "Legg til din Adam i stedet for din Anna, se dokumentasjonen",
+            "response_error": "Ugyldige XML-data, eller feilindikasjon mottatt",
+            "unknown": "Uventet feil",
+            "unsupported": "Enhet med fastvare som ikke st\u00f8ttes"
         },
-        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Tilkoblingstype",
                     "host": "IP adresse",
                     "password": "Smile ID",
                     "port": "Port",
@@ -22,26 +22,6 @@
                 },
                 "description": "Vennligst skriv inn",
                 "title": "Koble til Smile"
-            },
-            "user_gateway": {
-                "data": {
-                    "host": "IP adresse",
-                    "password": "Smile ID",
-                    "port": "Port",
-                    "username": "Smile brukernavn"
-                },
-                "description": "Vennligst skriv inn",
-                "title": "Koble til Smile"
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval": "Skanneintervall (sekunder)"
-                },
-                "description": "Juster Plugwise-alternativer"
             }
         }
     }

@@ -16,5 +16,10 @@
                 "description": "Wil je Tasmota instellen?"
             }
         }
+    },
+    "issues": {
+        "topic_no_prefix": {
+            "title": "Het Tasmota-apparaat {name} heeft een ongeldig MQTT-topic"
+        }
     }
 }
