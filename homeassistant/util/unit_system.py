@@ -250,8 +250,12 @@ METRIC_SYSTEM = UnitSystem(
     _CONF_UNIT_SYSTEM_METRIC,
     accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
     conversions={
-        # Convert non-metric atmospheric pressures
-        ("atmospheric_pressure", UnitOfPressure.INHG): UnitOfPressure.HPA,
+        # Force atmospheric pressures to hPa
+        **{
+            ("atmospheric_pressure", unit): UnitOfPressure.HPA
+            for unit in UnitOfPressure
+            if unit != UnitOfPressure.HPA
+        },
         # Convert non-metric distances
         ("distance", UnitOfLength.FEET): UnitOfLength.METERS,
         ("distance", UnitOfLength.INCHES): UnitOfLength.MILLIMETERS,
@@ -284,9 +288,12 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
     _CONF_UNIT_SYSTEM_US_CUSTOMARY,
     accumulated_precipitation=UnitOfPrecipitationDepth.INCHES,
     conversions={
-        # Convert non-USCS atmospheric pressures
-        ("atmospheric_pressure", UnitOfPressure.HPA): UnitOfPressure.INHG,
-        ("atmospheric_pressure", UnitOfPressure.MBAR): UnitOfPressure.INHG,
+        # Force atmospheric pressures to inHg
+        **{
+            ("atmospheric_pressure", unit): UnitOfPressure.INHG
+            for unit in UnitOfPressure
+            if unit != UnitOfPressure.INHG
+        },
         # Convert non-USCS distances
         ("distance", UnitOfLength.CENTIMETERS): UnitOfLength.INCHES,
         ("distance", UnitOfLength.KILOMETERS): UnitOfLength.MILES,
