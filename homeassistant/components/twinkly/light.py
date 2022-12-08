@@ -40,6 +40,7 @@ from .const import (
     DOMAIN,
     HIDDEN_DEV_VALUES,
     MIN_EFFECT_VERSION,
+    TWINKLY_RETURN_CODE_OK,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -301,9 +302,13 @@ class TwinklyLight(LightEntity):
                     self._attributes[key] = value
 
             if LightEntityFeature.EFFECT & self.supported_features:
-                await self.async_update_movies()
-                await self.async_update_current_movie()
-                await self.async_update_current_color()
+                await asyncio.gather(
+                    *[
+                        self.async_update_movies(),
+                        self.async_update_current_movie(),
+                        self.async_update_current_color(),
+                    ]
+                )
                 if len(self._movies) == 0:
                     self._client.default_mode = "effect"
 
@@ -339,7 +344,7 @@ class TwinklyLight(LightEntity):
         """Update the current active color."""
         current_color = await self._client.get_current_colour()
         _LOGGER.debug("Current color: %s", current_color)
-        if int(current_color.get("code")) == 1000:
+        if str(current_color.get("code")) == str(TWINKLY_RETURN_CODE_OK):
             if self._attr_color_mode == ColorMode.RGBW:
                 self._attr_rgbw_color = (
                     current_color["red"],
