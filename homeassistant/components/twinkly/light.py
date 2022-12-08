@@ -79,11 +79,11 @@ class TwinklyLight(LightEntity):
         if device_info.get(DEV_LED_PROFILE) == DEV_PROFILE_RGBW:
             self._attr_supported_color_modes = {ColorMode.RGBW}
             self._attr_color_mode = ColorMode.RGBW
-            self._attr_rgbw_color = (255, 255, 255, 0)
+            self._attr_rgbw_color = None
         elif device_info.get(DEV_LED_PROFILE) == DEV_PROFILE_RGB:
             self._attr_supported_color_modes = {ColorMode.RGB}
             self._attr_color_mode = ColorMode.RGB
-            self._attr_rgb_color = (255, 255, 255)
+            self._attr_rgb_color = None
         else:
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
             self._attr_color_mode = ColorMode.BRIGHTNESS
@@ -261,8 +261,8 @@ class TwinklyLight(LightEntity):
             if movie_id.lower() == ATTR_EFFECT:
                 effect_id = kwargs[ATTR_EFFECT].split(" ")[1]
                 await self.async_set_effect(int(effect_id) - 1)
+                await self._client.set_mode(MODE_EFFECT)
                 self._client.default_mode = MODE_EFFECT
-                _LOGGER.debug("Setting effect mode %s", effect_id)
             elif (
                 self._client.default_mode != MODE_MOVIE
                 or self._client.default_mode == MODE_MOVIE
@@ -272,9 +272,11 @@ class TwinklyLight(LightEntity):
                 )
             ):
 
-                _LOGGER.debug("Setting move mode %s", movie_id)
                 await self.async_set_movie(int(movie_id))
+                await self._client.set_mode(MODE_MOVIE)
                 self._client.default_mode = MODE_MOVIE
+            self._attr_rgb_color = None
+            self._attr_rgbw_color = None
 
         if not self._is_on:
             await self._client.turn_on()

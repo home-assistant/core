@@ -298,6 +298,119 @@ async def test_turn_on_with_effect_missing_effects(hass: HomeAssistant):
     assert client.mode == "movie"
 
 
+async def test_turn_on_switch_effects(hass: HomeAssistant):
+    """Test support of the light.turn_on service with switching effects."""
+    client = ClientMock()
+    client.state = False
+    client.device_info["led_profile"] = "RGB"
+    client.brightness = {"mode": "enabled", "value": 255}
+    entity, _, _, _ = await _create_entries(hass, client)
+
+    assert hass.states.get(entity.entity_id).state == "off"
+
+    # Turn on with color first
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        service_data={"entity_id": entity.entity_id, "rgb_color": (128, 64, 32)},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity.entity_id)
+
+    assert state.state == "on"
+    assert not client.current_movie
+    assert client.default_mode == "color"
+    assert client.mode == "color"
+
+    # Switch to an effect
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        service_data={"entity_id": entity.entity_id, "effect": "Effect 1"},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity.entity_id)
+
+    assert not client.current_movie
+    assert client.default_mode == "effect"
+    assert client.mode == "effect"
+    assert state.state == "on"
+    assert state.attributes["effect"] == "Effect 1"
+
+    # Switch to a movie
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        service_data={"entity_id": entity.entity_id, "effect": "1 Rainbow"},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity.entity_id)
+
+    assert client.current_movie["id"] == 1
+    assert client.default_mode == "movie"
+    assert client.mode == "movie"
+    assert state.state == "on"
+    assert state.attributes["effect"] == "1 Rainbow"
+
+    # Switch back to effect
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        service_data={"entity_id": entity.entity_id, "effect": "Effect 2"},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity.entity_id)
+
+    assert client.default_mode == "effect"
+    assert client.mode == "effect"
+    assert state.state == "on"
+    assert state.attributes["effect"] == "Effect 2"
+
+    # Turn off
+    await hass.services.async_call(
+        "light", "turn_off", service_data={"entity_id": entity.entity_id}, blocking=True
+    )
+
+    # Switch back to movie
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        service_data={"entity_id": entity.entity_id, "effect": "1 Rainbow"},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity.entity_id)
+
+    assert client.default_mode == "movie"
+    assert client.mode == "movie"
+    assert state.state == "on"
+    assert state.attributes["effect"] == "1 Rainbow"
+
+    # Turn off again
+    await hass.services.async_call(
+        "light", "turn_off", service_data={"entity_id": entity.entity_id}, blocking=True
+    )
+
+    # Switch back to color
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        service_data={"entity_id": entity.entity_id, "rgb_color": (128, 64, 32)},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity.entity_id)
+
+    assert client.default_mode == "color"
+    assert client.mode == "color"
+    assert state.state == "on"
+    assert "effect" not in state.attributes
+
+
 async def test_turn_off(hass: HomeAssistant):
     """Test support of the light.turn_off service."""
     entity, _, _, _ = await _create_entries(hass)

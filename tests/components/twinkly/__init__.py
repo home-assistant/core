@@ -105,7 +105,9 @@ class ClientMock:
 
     async def set_current_movie(self, movie_id: int) -> dict:
         """Set current movie."""
-        self.current_movie = {"id": movie_id}
+        for movie in self.movies:
+            if movie["id"] == movie_id:
+                self.current_movie = {"id": movie_id, "name": movie["name"]}
 
     async def set_mode(self, mode: str) -> None:
         """Set mode."""
@@ -134,4 +136,4 @@ class ClientMock:
     async def set_current_predefined_effect(self, effect_id: int) -> None:
         """Set current effect."""
         self.current_effect = {"effect_id": effect_id}
-        return self.get_current_predefined_effect()
+        return await self.get_current_predefined_effect()
