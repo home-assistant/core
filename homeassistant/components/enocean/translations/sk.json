@@ -6,6 +6,20 @@
         },
         "error": {
             "invalid_dongle_path": "Pre t\u00fato cestu nebol n\u00e1jden\u00fd \u017eiadny platn\u00fd k\u013e\u00fa\u010d"
+        },
+        "step": {
+            "detect": {
+                "data": {
+                    "path": "Cesta k hardwarov\u00e9mu USB k\u013e\u00fa\u010du"
+                },
+                "title": "Vyberte cestu k v\u00e1\u0161mu ENOcean dongle"
+            },
+            "manual": {
+                "data": {
+                    "path": "Cesta k hardwarov\u00e9mu USB k\u013e\u00fa\u010du"
+                },
+                "title": "Zadajte cestu k v\u00e1\u0161mu hardwarov\u00e9mu k\u013e\u00fa\u010du ENOcean"
+            }
         }
     }
 }

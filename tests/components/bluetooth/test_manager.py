@@ -8,7 +8,6 @@ from bluetooth_adapters import AdvertisementHistory
 import pytest
 
 from homeassistant.components import bluetooth
-from homeassistant.components.bluetooth import BaseHaScanner
 from homeassistant.components.bluetooth.manager import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
 )
@@ -16,6 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import (
+    FakeScanner,
     generate_advertisement_data,
     inject_advertisement_with_source,
     inject_advertisement_with_time_and_source,
@@ -26,7 +26,7 @@ from . import (
 @pytest.fixture
 def register_hci0_scanner(hass: HomeAssistant) -> None:
     """Register an hci0 scanner."""
-    hci0_scanner = BaseHaScanner(hass, "hci0", "hci0")
+    hci0_scanner = FakeScanner(hass, "hci0", "hci0")
     cancel = bluetooth.async_register_scanner(hass, hci0_scanner, True)
     yield
     cancel()
@@ -35,7 +35,7 @@ def register_hci0_scanner(hass: HomeAssistant) -> None:
 @pytest.fixture
 def register_hci1_scanner(hass: HomeAssistant) -> None:
     """Register an hci1 scanner."""
-    hci1_scanner = BaseHaScanner(hass, "hci1", "hci1")
+    hci1_scanner = FakeScanner(hass, "hci1", "hci1")
     cancel = bluetooth.async_register_scanner(hass, hci1_scanner, True)
     yield
     cancel()
@@ -418,7 +418,7 @@ async def test_switching_adapters_when_one_goes_away(
 ):
     """Test switching adapters when one goes away."""
     cancel_hci2 = bluetooth.async_register_scanner(
-        hass, BaseHaScanner(hass, "hci2", "hci2"), True
+        hass, FakeScanner(hass, "hci2", "hci2"), True
     )
 
     address = "44:44:33:11:23:45"
@@ -468,7 +468,7 @@ async def test_switching_adapters_when_one_stop_scanning(
     hass, enable_bluetooth, register_hci0_scanner
 ):
     """Test switching adapters when stops scanning."""
-    hci2_scanner = BaseHaScanner(hass, "hci2", "hci2")
+    hci2_scanner = FakeScanner(hass, "hci2", "hci2")
     cancel_hci2 = bluetooth.async_register_scanner(hass, hci2_scanner, True)
 
     address = "44:44:33:11:23:45"

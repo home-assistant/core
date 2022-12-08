@@ -7,7 +7,8 @@
         },
         "step": {
             "user": {
-                "description": "Naozaj chcete nastavi\u0165 IFTTT?"
+                "description": "Naozaj chcete nastavi\u0165 IFTTT?",
+                "title": "Nastavte IFTTT Webhook Applet"
             }
         }
     }

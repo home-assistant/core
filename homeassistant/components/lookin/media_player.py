@@ -79,7 +79,7 @@ class LookinMedia(LookinPowerPushRemoteEntity, MediaPlayerEntity):
         uuid: str,
         device: Remote,
         lookin_data: LookinData,
-        device_class: str,
+        device_class: MediaPlayerDeviceClass,
     ) -> None:
         """Init the lookin media player."""
         self._attr_device_class = device_class

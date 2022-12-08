@@ -36,7 +36,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import as_utc, parse_datetime
 
-from .const import DEVICE_CLASS_CHARGE_STATE, DEVICE_CLASS_PLUG_STATE, DOMAIN
+from .const import DOMAIN
 from .renault_coordinator import T
 from .renault_entities import RenaultDataEntity, RenaultDataEntityDescription
 from .renault_hub import RenaultHub
@@ -171,10 +171,21 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         key="charge_state",
         coordinator="battery",
         data_key="chargingStatus",
-        device_class=DEVICE_CLASS_CHARGE_STATE,
+        translation_key="charge_state",
+        device_class=SensorDeviceClass.ENUM,
         entity_class=RenaultSensor[KamereonVehicleBatteryStatusData],
         icon_lambda=_get_charge_state_icon,
         name="Charge state",
+        options=[
+            "not_in_charge",
+            "waiting_for_a_planned_charge",
+            "charge_ended",
+            "waiting_for_current_charge",
+            "energy_flap_opened",
+            "charge_in_progress",
+            "charge_error",
+            "unavailable",
+        ],
         value_lambda=_get_charge_state_formatted,
     ),
     RenaultSensorEntityDescription(
@@ -219,10 +230,12 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         key="plug_state",
         coordinator="battery",
         data_key="plugStatus",
-        device_class=DEVICE_CLASS_PLUG_STATE,
+        translation_key="plug_state",
+        device_class=SensorDeviceClass.ENUM,
         entity_class=RenaultSensor[KamereonVehicleBatteryStatusData],
         icon_lambda=_get_plug_state_icon,
         name="Plug state",
+        options=["unplugged", "plugged", "plug_error", "plug_unknown"],
         value_lambda=_get_plug_state_formatted,
     ),
     RenaultSensorEntityDescription(

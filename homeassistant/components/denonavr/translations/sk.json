@@ -17,7 +17,9 @@
             "select": {
                 "data": {
                     "select_host": "IP adresa prij\u00edma\u010da"
-                }
+                },
+                "description": "Ak chcete pripoji\u0165 \u010fal\u0161ie prij\u00edma\u010de, spustite nastavenie znova",
+                "title": "Vyberte prij\u00edma\u010d, ktor\u00fd chcete pripoji\u0165"
             },
             "user": {
                 "data": {
@@ -34,6 +36,7 @@
             "init": {
                 "data": {
                     "show_all_sources": "Zobrazi\u0165 v\u0161etky zdroje",
+                    "update_audyssey": "Aktualizujte nastavenia Audyssey",
                     "zone2": "Nastavte z\u00f3nu 2",
                     "zone3": "Nastavte z\u00f3nu 3"
                 },

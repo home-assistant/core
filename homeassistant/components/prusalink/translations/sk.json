@@ -14,5 +14,14 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "printer_state": {
+                "state": {
+                    "cancelling": "Prebieha ru\u0161enie"
+                }
+            }
+        }
     }
 }

@@ -21,13 +21,12 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     DEGREE,
-    LENGTH_CENTIMETERS,
-    LENGTH_MILLIMETERS,
     PERCENTAGE,
-    PRESSURE_HPA,
-    SPEED_METERS_PER_SECOND,
-    TEMP_CELSIUS,
-    TIME_SECONDS,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -67,7 +66,7 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
     ZamgSensorEntityDescription(
         key="pressure",
         name="Pressure",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         para_name="P",
@@ -76,7 +75,7 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
     ZamgSensorEntityDescription(
         key="pressure_sealevel",
         name="Pressure at Sea Level",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         para_name="PRED",
@@ -94,7 +93,8 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
     ZamgSensorEntityDescription(
         key="wind_speed",
         name="Wind Speed",
-        native_unit_of_measurement=SPEED_METERS_PER_SECOND,
+        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+        device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
         para_name="FFAM",
         dtype=float,
@@ -110,7 +110,8 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
     ZamgSensorEntityDescription(
         key="wind_max_speed",
         name="Top Wind Speed",
-        native_unit_of_measurement=SPEED_METERS_PER_SECOND,
+        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+        device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
         para_name="FFX",
         dtype=float,
@@ -126,7 +127,7 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
     ZamgSensorEntityDescription(
         key="sun_last_10min",
         name="Sun Last 10 Minutes",
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
         para_name="SO",
         dtype=int,
@@ -134,7 +135,7 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
     ZamgSensorEntityDescription(
         key="temperature",
         name="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         para_name="TL",
@@ -143,7 +144,7 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
     ZamgSensorEntityDescription(
         key="temperature_average",
         name="Temperature Average",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         para_name="TLAM",
@@ -152,7 +153,8 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
     ZamgSensorEntityDescription(
         key="precipitation",
         name="Precipitation",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.MEASUREMENT,
         para_name="RR",
         dtype=float,
@@ -160,7 +162,8 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
     ZamgSensorEntityDescription(
         key="snow",
         name="Snow",
-        native_unit_of_measurement=LENGTH_CENTIMETERS,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.CENTIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.MEASUREMENT,
         para_name="SCHNEE",
         dtype=float,
@@ -168,7 +171,7 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
     ZamgSensorEntityDescription(
         key="dewpoint",
         name="Dew Point",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         para_name="TP",
@@ -177,7 +180,7 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
     ZamgSensorEntityDescription(
         key="dewpoint_average",
         name="Dew Point Average",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         para_name="TPAM",

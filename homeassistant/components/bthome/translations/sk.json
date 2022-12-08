@@ -14,6 +14,11 @@
             "bluetooth_confirm": {
                 "description": "Chcete nastavi\u0165 {name}?"
             },
+            "get_encryption_key": {
+                "data": {
+                    "bindkey": "Bindkey"
+                }
+            },
             "user": {
                 "data": {
                     "address": "Zaradenie"

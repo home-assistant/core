@@ -15,14 +15,21 @@
                 "title": "Vyberte met\u00f3du overenia"
             },
             "reauth_confirm": {
+                "description": "Integr\u00e1cia Netatmo potrebuje znova overi\u0165 v\u00e1\u0161 \u00fa\u010det",
                 "title": "Znova overi\u0165 integr\u00e1ciu"
             }
         }
     },
     "device_automation": {
+        "trigger_subtype": {
+            "away": "pre\u010d",
+            "hg": "mrazuvzdorn\u00fd",
+            "schedule": "pl\u00e1n"
+        },
         "trigger_type": {
             "alarm_started": "{entity_name} rozpoznala alarm",
             "animal": "{entity_name} rozpoznala zviera",
+            "cancel_set_point": "{entity_name} obnovila svoj pl\u00e1n",
             "human": "{entity_name} rozpoznala \u010dloveka",
             "movement": "{entity_name} rozpoznala pohyb",
             "outdoor": "{n\u00e1zov_objektu} zistila vonkaj\u0161iu udalos\u0165",
@@ -31,7 +38,8 @@
             "set_point": "Cie\u013eov\u00e1 teplota {entity_name} nastaven\u00e1 manu\u00e1lne",
             "therm_mode": "{entity_name} prepnut\u00e9 na \u201e{subtype}\u201c",
             "turned_off": "{entity_name} vypnut\u00e1",
-            "turned_on": "{entity_name} zapnut\u00e1"
+            "turned_on": "{entity_name} zapnut\u00e1",
+            "vehicle": "{entity_name} rozpoznal vozidlo"
         }
     },
     "options": {

@@ -76,6 +76,10 @@ class TestOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandler):
         """Return the ZHA name."""
         return "Test Multi-PAN"
 
+    def _hardware_name(self) -> str:
+        """Return the name of the hardware."""
+        return "Test"
+
 
 @pytest.fixture(autouse=True)
 def config_flow_handler(

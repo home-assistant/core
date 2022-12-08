@@ -56,6 +56,7 @@ async def async_handle(
     slots: _SlotsType | None = None,
     text_input: str | None = None,
     context: Context | None = None,
+    language: str | None = None,
 ) -> IntentResponse:
     """Handle an intent."""
     handler: IntentHandler = hass.data.get(DATA_KEY, {}).get(intent_type)
@@ -66,7 +67,12 @@ async def async_handle(
     if context is None:
         context = Context()
 
-    intent = Intent(hass, platform, intent_type, slots or {}, text_input, context)
+    if language is None:
+        language = hass.config.language
+
+    intent = Intent(
+        hass, platform, intent_type, slots or {}, text_input, context, language
+    )
 
     try:
         _LOGGER.info("Triggering intent handler %s", handler)
@@ -218,7 +224,15 @@ class ServiceIntentHandler(IntentHandler):
 class Intent:
     """Hold the intent."""
 
-    __slots__ = ["hass", "platform", "intent_type", "slots", "text_input", "context"]
+    __slots__ = [
+        "hass",
+        "platform",
+        "intent_type",
+        "slots",
+        "text_input",
+        "context",
+        "language",
+    ]
 
     def __init__(
         self,
@@ -228,6 +242,7 @@ class Intent:
         slots: _SlotsType,
         text_input: str | None,
         context: Context,
+        language: str,
     ) -> None:
         """Initialize an intent."""
         self.hass = hass
@@ -236,36 +251,52 @@ class Intent:
         self.slots = slots
         self.text_input = text_input
         self.context = context
+        self.language = language
 
     @callback
     def create_response(self) -> IntentResponse:
         """Create a response."""
-        return IntentResponse(self)
+        return IntentResponse(self, language=self.language)
 
 
 class IntentResponse:
     """Response to an intent."""
 
-    def __init__(self, intent: Intent | None = None) -> None:
+    def __init__(
+        self, intent: Intent | None = None, language: str | None = None
+    ) -> None:
         """Initialize an IntentResponse."""
         self.intent = intent
         self.speech: dict[str, dict[str, Any]] = {}
         self.reprompt: dict[str, dict[str, Any]] = {}
         self.card: dict[str, dict[str, str]] = {}
+        self.language = language
 
     @callback
     def async_set_speech(
-        self, speech: str, speech_type: str = "plain", extra_data: Any | None = None
+        self,
+        speech: str,
+        speech_type: str = "plain",
+        extra_data: Any | None = None,
     ) -> None:
         """Set speech response."""
-        self.speech[speech_type] = {"speech": speech, "extra_data": extra_data}
+        self.speech[speech_type] = {
+            "speech": speech,
+            "extra_data": extra_data,
+        }
 
     @callback
     def async_set_reprompt(
-        self, speech: str, speech_type: str = "plain", extra_data: Any | None = None
+        self,
+        speech: str,
+        speech_type: str = "plain",
+        extra_data: Any | None = None,
     ) -> None:
         """Set reprompt response."""
-        self.reprompt[speech_type] = {"reprompt": speech, "extra_data": extra_data}
+        self.reprompt[speech_type] = {
+            "reprompt": speech,
+            "extra_data": extra_data,
+        }
 
     @callback
     def async_set_card(
@@ -275,10 +306,15 @@ class IntentResponse:
         self.card[card_type] = {"title": title, "content": content}
 
     @callback
-    def as_dict(self) -> dict[str, dict[str, dict[str, Any]]]:
+    def as_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of an intent response."""
-        return (
-            {"speech": self.speech, "reprompt": self.reprompt, "card": self.card}
-            if self.reprompt
-            else {"speech": self.speech, "card": self.card}
-        )
+        response_dict: dict[str, Any] = {
+            "speech": self.speech,
+            "card": self.card,
+            "language": self.language,
+        }
+
+        if self.reprompt:
+            response_dict["reprompt"] = self.reprompt
+
+        return response_dict

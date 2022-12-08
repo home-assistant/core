@@ -24,7 +24,6 @@ from homeassistant.const import (
     FREQUENCY_HERTZ,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_VOLT_AMPERE,
     POWER_WATT,
     PRESSURE_HPA,
     TEMP_CELSIUS,
@@ -38,6 +37,7 @@ from homeassistant.const import (
     VOLUME_GALLONS,
     VOLUME_LITERS,
     Platform,
+    UnitOfApparentPower,
     UnitOfMass,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -315,7 +315,7 @@ class ElectricalMeasurementApparentPower(
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.APPARENT_POWER
     _attr_should_poll = False  # Poll indirectly by ElectricalMeasurementSensor
     _attr_name: str = "Apparent power"
-    _unit = POWER_VOLT_AMPERE
+    _unit = UnitOfApparentPower.VOLT_AMPERE
     _div_mul_prefix = "ac_power"
 
 

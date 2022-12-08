@@ -5,8 +5,10 @@
                 "data": {
                     "entity_ids": "Vstupn\u00e9 entity",
                     "name": "N\u00e1zov",
-                    "round_digits": "Presnos\u0165"
+                    "round_digits": "Presnos\u0165",
+                    "type": "\u0160tatistika"
                 },
+                "description": "Vytvorte sn\u00edma\u010d, ktor\u00fd vypo\u010d\u00edta minim\u00e1lnu, maxim\u00e1lnu, stredn\u00fa, stredn\u00fa alebo s\u00fa\u010det zo zoznamu vstupn\u00fdch sn\u00edma\u010dov.",
                 "title": "Skombinujte stav nieko\u013ek\u00fdch sn\u00edma\u010dov"
             }
         }
@@ -16,7 +18,8 @@
             "init": {
                 "data": {
                     "entity_ids": "Vstupn\u00e9 entity",
-                    "round_digits": "Presnos\u0165"
+                    "round_digits": "Presnos\u0165",
+                    "type": "\u0160tatistika"
                 }
             }
         }

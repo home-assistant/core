@@ -10,11 +10,15 @@
             "invalid_auth": "Neplatn\u00e9 overenie"
         },
         "step": {
+            "auth": {
+                "title": "Overenie pomocou TelldusLive"
+            },
             "user": {
                 "data": {
                     "host": "Hostite\u013e"
                 },
-                "description": "Pr\u00e1zdne"
+                "description": "Pr\u00e1zdne",
+                "title": "Vyberte koncov\u00fd bod."
             }
         }
     }

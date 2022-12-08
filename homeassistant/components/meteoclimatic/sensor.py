@@ -95,7 +95,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="wind_bearing",
         name="Wind Bearing",
         native_unit_of_measurement=DEGREE,
-        device_class="mdi:weather-windy",
+        icon="mdi:weather-windy",
     ),
     SensorEntityDescription(
         key="rain",
