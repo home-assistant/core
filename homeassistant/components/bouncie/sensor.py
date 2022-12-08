@@ -17,6 +17,48 @@ from . import BouncieDataUpdateCoordinator, const
 ATTRIBUTION = "Data provided by Bouncie"
 PARALLEL_UPDATES = 1
 
+SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="car-info",
+        icon="mdi:car",
+        name="Car Info",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="car-odometer",
+        icon="mdi:counter",
+        name="Car Odometer",
+        device_class=SensorDeviceClass.DISTANCE,
+    ),
+    SensorEntityDescription(
+        key="car-address",
+        icon="mdi:map-marker",
+        name="Car Address",
+    ),
+    SensorEntityDescription(
+        key="car-fuel",
+        icon="mdi:gas-station",
+        name="Car Fuel",
+        device_class=SensorDeviceClass.BATTERY,
+    ),
+    SensorEntityDescription(
+        key="car-speed",
+        icon="mdi:speedometer",
+        name="Car Speed",
+        device_class=SensorDeviceClass.SPEED,
+    ),
+    SensorEntityDescription(
+        key="car-mil",
+        icon="mdi:engine",
+        name="Car MIL",
+    ),
+    SensorEntityDescription(
+        key="car-battery",
+        icon="mdi:car-battery",
+        name="Car Battery",
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -25,66 +67,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up Bouncie sensor entities based on a config entry."""
     coordinator = hass.data[const.DOMAIN][config_entry.entry_id]
-    vehicles = coordinator.data["vehicles"]
-    sensor_types: list[SensorEntityDescription] = []
-    for vehicle in vehicles:
-        sensor_types.append(
-            SensorEntityDescription(
-                key=f"car-info-{vehicle[const.VEHICLE_VIN_KEY]}",
-                icon="mdi:car",
-                name=f"{vehicle[const.VEHICLE_NICKNAME_KEY]}",
-                state_class=SensorStateClass.MEASUREMENT,
-            )
+    for vehicle_info in coordinator.data["vehicles"]:
+        async_add_entities(
+            BouncieSensor(coordinator, description, vehicle_info)
+            for description in SENSORS
         )
-        sensor_types.append(
-            SensorEntityDescription(
-                key=f"car-odometer-{vehicle[const.VEHICLE_VIN_KEY]}",
-                icon="mdi:counter",
-                name=f"{vehicle[const.VEHICLE_NICKNAME_KEY]} Odometer",
-                device_class=SensorDeviceClass.DISTANCE,
-            )
-        )
-        sensor_types.append(
-            SensorEntityDescription(
-                key=f"car-address-{vehicle[const.VEHICLE_VIN_KEY]}",
-                icon="mdi:map-marker",
-                name=f"{vehicle[const.VEHICLE_NICKNAME_KEY]} Address",
-            )
-        )
-        sensor_types.append(
-            SensorEntityDescription(
-                key=f"car-fuel-{vehicle[const.VEHICLE_VIN_KEY]}",
-                icon="mdi:gas-station",
-                name=f"{vehicle[const.VEHICLE_NICKNAME_KEY]} Fuel",
-                device_class=SensorDeviceClass.BATTERY,
-            )
-        )
-        sensor_types.append(
-            SensorEntityDescription(
-                key=f"car-speed-{vehicle[const.VEHICLE_VIN_KEY]}",
-                icon="mdi:speedometer",
-                name=f"{vehicle[const.VEHICLE_NICKNAME_KEY]} Speed",
-                device_class=SensorDeviceClass.SPEED,
-            )
-        )
-        sensor_types.append(
-            SensorEntityDescription(
-                key=f"car-mil-{vehicle[const.VEHICLE_VIN_KEY]}",
-                icon="mdi:engine",
-                name=f"{vehicle[const.VEHICLE_NICKNAME_KEY]} MIL",
-            )
-        )
-        sensor_types.append(
-            SensorEntityDescription(
-                key=f"car-battery-{vehicle[const.VEHICLE_VIN_KEY]}",
-                icon="mdi:car-battery",
-                name=f"{vehicle[const.VEHICLE_NICKNAME_KEY]} Battery",
-            )
-        )
-
-    async_add_entities(
-        BouncieSensor(coordinator, description) for description in sensor_types
-    )
 
 
 class BouncieSensor(CoordinatorEntity[BouncieDataUpdateCoordinator], SensorEntity):
@@ -96,18 +83,18 @@ class BouncieSensor(CoordinatorEntity[BouncieDataUpdateCoordinator], SensorEntit
         self,
         coordinator: BouncieDataUpdateCoordinator,
         description: SensorEntityDescription,
+        vehicle_info: dict,
     ) -> None:
         """Init the BouncieSensor."""
         super().__init__(coordinator)
         self.entity_description = description
         self._state = None
         self._attrs: dict[str, str] = {}
-        self._attr_unique_id = f"{coordinator._client_id}-{description.key.lower()}"
-        self._vehicle_info = next(
-            v
-            for v in self.coordinator.data["vehicles"]
-            if v["vin"] == self.entity_description.key.split("-")[-1]
+        self._vehicle_info = vehicle_info
+        self._attr_unique_id = (
+            f'{self._vehicle_info["vin"]}-{self.entity_description.key}'
         )
+        self._attr_has_entity_name = True
 
     def _update_car_info_state(self):
         self._state = (
@@ -166,30 +153,30 @@ class BouncieSensor(CoordinatorEntity[BouncieDataUpdateCoordinator], SensorEntit
     @property
     def native_value(self) -> str | None:
         """Return state value."""
-        if self.entity_description.key.startswith("car-info-"):
+        if self.entity_description.key.startswith("car-info"):
             self._update_car_info_state()
-        elif self.entity_description.key.startswith("car-odometer-"):
+        elif self.entity_description.key.startswith("car-odometer"):
             self._update_car_odometer_state()
-        elif self.entity_description.key.startswith("car-address-"):
+        elif self.entity_description.key.startswith("car-address"):
             self._update_car_address_state()
-        elif self.entity_description.key.startswith("car-fuel-"):
+        elif self.entity_description.key.startswith("car-fuel"):
             self._update_car_fuel_level_state()
-        elif self.entity_description.key.startswith("car-speed-"):
+        elif self.entity_description.key.startswith("car-speed"):
             self._update_car_speed_state()
-        elif self.entity_description.key.startswith("car-mil-"):
+        elif self.entity_description.key.startswith("car-mil"):
             self._update_car_mil_state()
-        elif self.entity_description.key.startswith("car-battery-"):
+        elif self.entity_description.key.startswith("car-battery"):
             self._update_car_battery_state()
         return self._state
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return state attributes."""
-        if self.entity_description.key.startswith("car-info-"):
+        if self.entity_description.key.startswith("car-info"):
             self._update_car_info_attributes()
-        elif self.entity_description.key.startswith("car-mil-"):
+        elif self.entity_description.key.startswith("car-mil"):
             self._update_car_mil_attributes()
-        elif self.entity_description.key.startswith("car-battery-"):
+        elif self.entity_description.key.startswith("car-battery"):
             self._update_car_battery_attributes()
         else:
             self._update_car_stats_attributes()
