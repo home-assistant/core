@@ -216,10 +216,15 @@ async def _async_converse(
         )
     except intent.IntentHandleError as err:
         intent_result = intent.IntentResponse(language=language)
-        intent_result.async_set_speech(str(err))
+        intent_result.async_set_error(
+            intent.IntentResponseErrorReason.FAILED_TO_HANDLE, str(err)
+        )
 
     if intent_result is None:
         intent_result = intent.IntentResponse(language=language)
-        intent_result.async_set_speech("Sorry, I didn't understand that")
+        intent_result.async_set_error(
+            intent.IntentResponseErrorReason.NO_INTENT_MATCH,
+            "Sorry, I didn't understand that",
+        )
 
     return intent_result

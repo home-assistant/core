@@ -53,6 +53,8 @@ async def test_http_handle_intent(hass, hass_client, hass_admin_user):
             }
         },
         "language": hass.config.language,
+        "state": "success",
+        "response_type": "action_confirmation",
     }
 
 

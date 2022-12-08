@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
+from enum import Enum
 import logging
 import re
 from typing import Any, TypeVar
@@ -221,6 +222,16 @@ class ServiceIntentHandler(IntentHandler):
         return response
 
 
+class IntentCategory(Enum):
+    """Category of an intent."""
+
+    ACTION = "action"
+    """Trigger an action like turning an entity on or off"""
+
+    QUERY = "query"
+    """Get information about the state of an entity"""
+
+
 class Intent:
     """Hold the intent."""
 
@@ -232,6 +243,7 @@ class Intent:
         "text_input",
         "context",
         "language",
+        "category",
     ]
 
     def __init__(
@@ -243,6 +255,7 @@ class Intent:
         text_input: str | None,
         context: Context,
         language: str,
+        category: IntentCategory | None = None,
     ) -> None:
         """Initialize an intent."""
         self.hass = hass
@@ -252,11 +265,45 @@ class Intent:
         self.text_input = text_input
         self.context = context
         self.language = language
+        self.category = category
 
     @callback
     def create_response(self) -> IntentResponse:
         """Create a response."""
         return IntentResponse(self, language=self.language)
+
+
+class IntentResponseState(Enum):
+    """State of the intent response."""
+
+    SUCCESS = "success"
+    FAILURE = "failure"
+
+
+class IntentResponseType(Enum):
+    """Type of the intent response."""
+
+    ACTION_CONFIRMATION = "action_confirmation"
+    """speech is a summary of action taken"""
+
+    QUERY_ANSWER = "query_answer"
+    """speech is an answer to a question"""
+
+    ERROR_MESSAGE = "error_message"
+    """speech is an error message"""
+
+
+class IntentResponseErrorReason(Enum):
+    """Reason for an intent response error."""
+
+    NO_INTENT_MATCH = "no_intent_match"
+    """Text could not be matched to an intent"""
+
+    NO_VALID_TARGETS = "no_valid_targets"
+    """Intent was matched, but no valid areas/devices/entities were targeted"""
+
+    FAILED_TO_HANDLE = "failed_to_handle"
+    """Unexpected error occurred while handling intent"""
 
 
 class IntentResponse:
@@ -271,12 +318,21 @@ class IntentResponse:
         self.reprompt: dict[str, dict[str, Any]] = {}
         self.card: dict[str, dict[str, str]] = {}
         self.language = language
+        self.state = IntentResponseState.SUCCESS
+        self.response_type = IntentResponseType.ACTION_CONFIRMATION
+        self.error_reason: IntentResponseErrorReason | None = None
+
+        if self.intent is not None:
+            if self.intent.category == IntentCategory.QUERY:
+                # speech will be the answer to the query
+                self.response_type = IntentResponseType.QUERY_ANSWER
 
     @callback
     def async_set_speech(
         self,
         speech: str,
         speech_type: str = "plain",
+        response_type: IntentResponseType | None = None,
         extra_data: Any | None = None,
     ) -> None:
         """Set speech response."""
@@ -284,6 +340,9 @@ class IntentResponse:
             "speech": speech,
             "extra_data": extra_data,
         }
+
+        if response_type is not None:
+            self.response_type = response_type
 
     @callback
     def async_set_reprompt(
@@ -306,15 +365,28 @@ class IntentResponse:
         self.card[card_type] = {"title": title, "content": content}
 
     @callback
+    def async_set_error(self, reason: IntentResponseErrorReason, message: str) -> None:
+        """Set response error."""
+        self.state = IntentResponseState.FAILURE
+        self.response_type = IntentResponseType.ERROR_MESSAGE
+        self.error_reason = reason
+        self.async_set_speech(message)
+
+    @callback
     def as_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of an intent response."""
         response_dict: dict[str, Any] = {
             "speech": self.speech,
             "card": self.card,
             "language": self.language,
+            "state": self.state.value,
+            "response_type": self.response_type.value,
         }
 
         if self.reprompt:
             response_dict["reprompt"] = self.reprompt
+
+        if self.error_reason is not None:
+            response_dict["error_reason"] = self.error_reason.value
 
         return response_dict

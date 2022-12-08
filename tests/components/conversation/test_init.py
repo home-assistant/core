@@ -132,6 +132,8 @@ async def test_http_processing_intent(hass, hass_client, hass_admin_user):
             }
         },
         "language": hass.config.language,
+        "state": "success",
+        "response_type": "action_confirmation",
     }
 
 
@@ -285,6 +287,8 @@ async def test_custom_agent(hass, hass_client, hass_admin_user):
             }
         },
         "language": "test-language",
+        "state": "success",
+        "response_type": "action_confirmation",
     }
 
     assert len(calls) == 1
