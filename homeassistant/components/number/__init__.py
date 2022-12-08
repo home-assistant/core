@@ -240,7 +240,7 @@ class NumberDeviceClass(StrEnum):
     SOUND_PRESSURE = "sound_pressure"
     """Sound pressure.
 
-    Unit of measurement: `dB`, `dBa`
+    Unit of measurement: `dB`, `dB(A)`
     """
 
     SPEED = "speed"
