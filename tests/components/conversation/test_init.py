@@ -12,6 +12,14 @@ from homeassistant.setup import async_setup_component
 from tests.common import async_mock_intent, async_mock_service
 
 
+@pytest.fixture
+async def init_components(hass):
+    """Initialize relevant components with empty configs."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "conversation", {})
+    assert await async_setup_component(hass, "intent", {})
+
+
 async def test_calling_intent(hass):
     """Test calling an intent from a conversation."""
     intents = async_mock_intent(hass, "OrderBeer")
@@ -123,6 +131,8 @@ async def test_http_processing_intent(hass, hass_client, hass_admin_user):
     data = await resp.json()
 
     assert data == {
+        "success": True,
+        "response_type": "action_done",
         "card": {
             "simple": {"content": "You chose a Grolsch.", "title": "Beer ordered"}
         },
@@ -133,20 +143,13 @@ async def test_http_processing_intent(hass, hass_client, hass_admin_user):
             }
         },
         "language": hass.config.language,
-        "state": "success",
-        "response_type": "action_confirmation",
+        "data": {},
     }
 
 
 @pytest.mark.parametrize("sentence", ("turn on kitchen", "turn kitchen on"))
-async def test_turn_on_intent(hass, sentence):
+async def test_turn_on_intent(hass, init_components, sentence):
     """Test calling the turn on intent."""
-    result = await async_setup_component(hass, "homeassistant", {})
-    assert result
-
-    result = await async_setup_component(hass, "conversation", {})
-    assert result
-
     hass.states.async_set("light.kitchen", "off")
     calls = async_mock_service(hass, HASS_DOMAIN, "turn_on")
 
@@ -163,14 +166,8 @@ async def test_turn_on_intent(hass, sentence):
 
 
 @pytest.mark.parametrize("sentence", ("turn off kitchen", "turn kitchen off"))
-async def test_turn_off_intent(hass, sentence):
+async def test_turn_off_intent(hass, init_components, sentence):
     """Test calling the turn on intent."""
-    result = await async_setup_component(hass, "homeassistant", {})
-    assert result
-
-    result = await async_setup_component(hass, "conversation", {})
-    assert result
-
     hass.states.async_set("light.kitchen", "on")
     calls = async_mock_service(hass, HASS_DOMAIN, "turn_off")
 
@@ -187,14 +184,8 @@ async def test_turn_off_intent(hass, sentence):
 
 
 @pytest.mark.parametrize("sentence", ("toggle kitchen", "kitchen toggle"))
-async def test_toggle_intent(hass, sentence):
+async def test_toggle_intent(hass, init_components, sentence):
     """Test calling the turn on intent."""
-    result = await async_setup_component(hass, "homeassistant", {})
-    assert result
-
-    result = await async_setup_component(hass, "conversation", {})
-    assert result
-
     hass.states.async_set("light.kitchen", "on")
     calls = async_mock_service(hass, HASS_DOMAIN, "toggle")
 
@@ -210,12 +201,8 @@ async def test_toggle_intent(hass, sentence):
     assert call.data == {"entity_id": "light.kitchen"}
 
 
-async def test_http_api(hass, hass_client):
+async def test_http_api(hass, init_components, hass_client):
     """Test the HTTP conversation API."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
-    assert await async_setup_component(hass, "intent", {})
-
     client = await hass_client()
     hass.states.async_set("light.kitchen", "off")
     calls = async_mock_service(hass, HASS_DOMAIN, "turn_on")
@@ -224,6 +211,16 @@ async def test_http_api(hass, hass_client):
         "/api/conversation/process", json={"text": "Turn the kitchen on"}
     )
     assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data == {
+        "success": True,
+        "card": {},
+        "speech": {"plain": {"extra_data": None, "speech": "Turned kitchen on"}},
+        "language": hass.config.language,
+        "response_type": "action_done",
+        "data": {"target": {"name": "kitchen", "target_type": "entity"}},
+    }
 
     assert len(calls) == 1
     call = calls[0]
@@ -232,12 +229,8 @@ async def test_http_api(hass, hass_client):
     assert call.data == {"entity_id": "light.kitchen"}
 
 
-async def test_http_api_no_match(hass, hass_client):
+async def test_http_api_no_match(hass, init_components, hass_client):
     """Test the HTTP conversation API with an intent match failure."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
-    assert await async_setup_component(hass, "intent", {})
-
     client = await hass_client()
 
     # Sentence should not match any intents
@@ -246,26 +239,20 @@ async def test_http_api_no_match(hass, hass_client):
     data = await resp.json()
 
     assert data == {
+        "success": False,
         "card": {},
-        "speech": {
-            "plain": {
-                "extra_data": None,
-                "speech": "Sorry, I didn't understand that",
-            }
-        },
+        "speech": {},
         "language": hass.config.language,
-        "state": "failure",
-        "response_type": "error_message",
-        "error_reason": "no_intent_match",
+        "response_type": "error",
+        "data": {
+            "code": "no_intent_match",
+            "message": "Sorry, I didn't understand that",
+        },
     }
 
 
-async def test_http_api_no_valid_targets(hass, hass_client):
+async def test_http_api_no_valid_targets(hass, init_components, hass_client):
     """Test the HTTP conversation API with no valid targets."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
-    assert await async_setup_component(hass, "intent", {})
-
     client = await hass_client()
 
     # No kitchen light
@@ -276,26 +263,20 @@ async def test_http_api_no_valid_targets(hass, hass_client):
     data = await resp.json()
 
     assert data == {
+        "success": False,
+        "response_type": "error",
         "card": {},
-        "speech": {
-            "plain": {
-                "extra_data": None,
-                "speech": "Unable to find an entity called kitchen",
-            }
-        },
+        "speech": {},
         "language": hass.config.language,
-        "state": "failure",
-        "response_type": "error_message",
-        "error_reason": "no_valid_targets",
+        "data": {
+            "code": "no_valid_targets",
+            "message": "Unable to find an entity called kitchen",
+        },
     }
 
 
-async def test_http_api_handle_failure(hass, hass_client):
+async def test_http_api_handle_failure(hass, init_components, hass_client):
     """Test the HTTP conversation API with an error during handling."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
-    assert await async_setup_component(hass, "intent", {})
-
     client = await hass_client()
 
     hass.states.async_set("light.kitchen", "off")
@@ -315,28 +296,20 @@ async def test_http_api_handle_failure(hass, hass_client):
     data = await resp.json()
 
     assert data == {
+        "success": False,
+        "response_type": "error",
         "card": {},
-        "speech": {
-            "plain": {
-                "extra_data": None,
-                "speech": "Unexpected error turning on the kitchen light",
-            }
-        },
+        "speech": {},
         "language": hass.config.language,
-        "state": "failure",
-        "response_type": "error_message",
-        "error_reason": "failed_to_handle",
+        "data": {
+            "code": "failed_to_handle",
+            "message": "Unexpected error turning on the kitchen light",
+        },
     }
 
 
-async def test_http_api_wrong_data(hass, hass_client):
+async def test_http_api_wrong_data(hass, init_components, hass_client):
     """Test the HTTP conversation API."""
-    result = await async_setup_component(hass, "homeassistant", {})
-    assert result
-
-    result = await async_setup_component(hass, "conversation", {})
-    assert result
-
     client = await hass_client()
 
     resp = await client.post("/api/conversation/process", json={"text": 123})
@@ -377,6 +350,8 @@ async def test_custom_agent(hass, hass_client, hass_admin_user):
     )
     assert resp.status == HTTPStatus.OK
     assert await resp.json() == {
+        "success": True,
+        "response_type": "action_done",
         "card": {},
         "speech": {
             "plain": {
@@ -385,8 +360,7 @@ async def test_custom_agent(hass, hass_client, hass_admin_user):
             }
         },
         "language": "test-language",
-        "state": "success",
-        "response_type": "action_confirmation",
+        "data": {},
     }
 
     assert len(calls) == 1
