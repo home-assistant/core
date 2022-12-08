@@ -326,27 +326,7 @@ class MinMaxSensor(SensorEntity):
                         state.state,
                     )
 
-        if entity_state:
-            try:
-                self.last = float(entity_state.state)
-                self.last_entity_id = entity
-            except ValueError:
-                pass
-
-            if self._unit_of_measurement is None:
-                self._unit_of_measurement = entity_state.attributes.get(
-                    ATTR_UNIT_OF_MEASUREMENT
-                )
-
-            if self._unit_of_measurement != entity_state.attributes.get(
-                ATTR_UNIT_OF_MEASUREMENT
-            ):
-                if self._unit_of_measurement_mismatch is False:
-                    _LOGGER.warning(
-                        "Units of measurement do not match for entity %s",
-                        self.entity_id,
-                    )
-                self._unit_of_measurement_mismatch = True
+        self.update_attributes(entity_state, entity)
 
         if not update_state:
             self._calc_values(calc_states)
@@ -369,3 +349,24 @@ class MinMaxSensor(SensorEntity):
         self.median = calc_median(sensor_values, self._round_digits)
         self.range = calc_range(sensor_values, self._round_digits)
         self.sum = calc_sum(sensor_values, self._round_digits)
+
+    def update_attributes(self, state: State | None, entity: str) -> None:
+        """Update attributes."""
+        if state is None:
+            return
+        try:
+            self.last = float(state.state)
+            self.last_entity_id = entity
+        except ValueError:
+            pass
+
+        if self._unit_of_measurement is None:
+            self._unit_of_measurement = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
+        if self._unit_of_measurement != state.attributes.get(ATTR_UNIT_OF_MEASUREMENT):
+            if self._unit_of_measurement_mismatch is False:
+                _LOGGER.warning(
+                    "Units of measurement do not match for entity %s",
+                    self.entity_id,
+                )
+            self._unit_of_measurement_mismatch = True
