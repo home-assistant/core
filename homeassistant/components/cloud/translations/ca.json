@@ -1,6 +1,16 @@
 {
     "issues": {
         "legacy_subscription": {
+            "fix_flow": {
+                "abort": {
+                    "operation_took_too_long": "L'operaci\u00f3 ha trigat massa. Torna-ho a intentar m\u00e9s tard."
+                },
+                "step": {
+                    "confirm_change_plan": {
+                        "description": "Hem actualitzat el nostre sistema de subscripci\u00f3 recentment. Per continuar utilitzant Home Assistant Cloud, has d'aprovar un \u00fanic canvi a PayPal. \n\nNecessitar\u00e0s 1 minut. Aix\u00f2 NO augmentar\u00e0 el preu."
+                    }
+                }
+            },
             "title": "S'ha detectat una subscripci\u00f3 heretada"
         }
     },

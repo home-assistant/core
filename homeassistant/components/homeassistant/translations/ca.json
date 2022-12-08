@@ -9,6 +9,7 @@
             "title": "El valor de moneda configurat ja no s'utilitza"
         },
         "python_version": {
+            "description": "La versi\u00f3 actual de Python {current_python_version} est\u00e0 obsoleta per funcionar amb Home Assistant i s'eliminar\u00e0 a Home Assistant {breaks_in_ha_version}. Si us plau, actualitza Python a la versi\u00f3 {required_python_version} per evitar que la teva inst\u00e0ncia de Home Assistant s'espatlli.",
             "title": "S'est\u00e0 eliminant la compatibilitat amb Python {current_python_version}"
         }
     },

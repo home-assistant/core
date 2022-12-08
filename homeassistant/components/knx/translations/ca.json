@@ -12,7 +12,8 @@
             "invalid_ip_address": "Adre\u00e7a IPv4 inv\u00e0lida.",
             "invalid_signature": "La contrasenya per desxifrar el fitxer `.knxkeys` \u00e9s incorrecta.",
             "no_router_discovered": "No s'ha descobert cap encaminador ('router') KNXnet/IP a la xarxa.",
-            "no_tunnel_discovered": "No s'ha trobat cap servidor de tunelitzaci\u00f3 KNX a la xarxa."
+            "no_tunnel_discovered": "No s'ha trobat cap servidor de tunelitzaci\u00f3 KNX a la xarxa.",
+            "unsupported_tunnel_type": "El tipus de t\u00fanel seleccionat no \u00e9s compatible amb la passarel\u00b7la."
         },
         "step": {
             "connection_type": {
@@ -111,7 +112,8 @@
             "invalid_ip_address": "Adre\u00e7a IPv4 inv\u00e0lida.",
             "invalid_signature": "La contrasenya per desxifrar el fitxer `.knxkeys` \u00e9s incorrecta.",
             "no_router_discovered": "No s'ha descobert cap encaminador ('router') KNXnet/IP a la xarxa.",
-            "no_tunnel_discovered": "No s'ha trobat cap servidor de tunelitzaci\u00f3 KNX a la xarxa."
+            "no_tunnel_discovered": "No s'ha trobat cap servidor de tunelitzaci\u00f3 KNX a la xarxa.",
+            "unsupported_tunnel_type": "El tipus de t\u00fanel seleccionat no \u00e9s compatible amb la passarel\u00b7la."
         },
         "step": {
             "communication_settings": {

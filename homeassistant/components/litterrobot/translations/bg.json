@@ -21,5 +21,14 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "status_code": {
+                "state": {
+                    "off": "\u0418\u0437\u043a\u043b."
+                }
+            }
+        }
     }
 }

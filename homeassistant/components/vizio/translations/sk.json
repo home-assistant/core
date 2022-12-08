@@ -2,10 +2,12 @@
     "config": {
         "abort": {
             "already_configured_device": "Zariadenie u\u017e je nakonfigurovan\u00e9",
-            "cannot_connect": "Nepodarilo sa pripoji\u0165"
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "updated_entry": "T\u00e1to polo\u017eka u\u017e bola nastaven\u00e1, ale n\u00e1zov, aplik\u00e1cie a/alebo mo\u017enosti definovan\u00e9 v konfigur\u00e1cii sa nezhoduj\u00fa s predt\u00fdm importovanou konfigur\u00e1ciou, tak\u017ee polo\u017eka konfigur\u00e1cie bola zodpovedaj\u00facim sp\u00f4sobom aktualizovan\u00e1."
         },
         "error": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "complete_pairing_failed": "Nie je mo\u017en\u00e9 dokon\u010di\u0165 p\u00e1rovanie. Pred op\u00e4tovn\u00fdm odoslan\u00edm skontrolujte, \u010di je zadan\u00fd k\u00f3d PIN spr\u00e1vny a \u010di je telev\u00edzor st\u00e1le nap\u00e1jan\u00fd a pripojen\u00fd k sieti.",
             "existing_config_entry_found": "Existuj\u00faci konfigura\u010dn\u00fd z\u00e1znam Zariadenie VIZIO SmartCast s rovnak\u00fdm s\u00e9riov\u00fdm \u010d\u00edslom u\u017e bol nakonfigurovan\u00fd. Ak chcete nakonfigurova\u0165 t\u00fato polo\u017eku, mus\u00edte odstr\u00e1ni\u0165 existuj\u00facu polo\u017eku."
         },
         "step": {

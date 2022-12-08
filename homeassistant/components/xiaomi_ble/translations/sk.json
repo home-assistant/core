@@ -15,6 +15,9 @@
             "bluetooth_confirm": {
                 "description": "Chcete nastavi\u0165 {name}?"
             },
+            "confirm_slow": {
+                "description": "V poslednej min\u00fate sa z tohto zariadenia nevysielalo, tak\u017ee si nie sme ist\u00ed, \u010di toto zariadenie pou\u017e\u00edva \u0161ifrovanie alebo nie. M\u00f4\u017ee to by\u0165 sp\u00f4soben\u00e9 t\u00fdm, \u017ee zariadenie pou\u017e\u00edva pomal\u00fd interval vysielania. Napriek tomu potvr\u010fte, \u017ee chcete toto zariadenie prida\u0165, potom pri \u010fal\u0161om prijat\u00ed vysielania budete vyzvan\u00ed, aby ste zadali jeho k\u013e\u00fa\u010d v\u00e4zby, ak je to potrebn\u00e9."
+            },
             "get_encryption_key_4_5": {
                 "data": {
                     "bindkey": "Bindkey"

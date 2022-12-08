@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "\u00da\u010det je u\u017e nakonfigurovan\u00fd",
+            "external_error": "V\u00fdnimka nastala z in\u00e9ho toku.",
             "external_setup": "Logi Circle \u00faspe\u0161ne nakonfigurovan\u00fd in\u00fdm sp\u00f4sobom.",
             "missing_configuration": "Komponent nie je nakonfigurovan\u00fd. Postupujte pod\u013ea dokument\u00e1cie."
         },
@@ -18,6 +19,7 @@
                 "data": {
                     "flow_impl": "Poskytovate\u013e"
                 },
+                "description": "Vyberte si, prostredn\u00edctvom ktor\u00e9ho poskytovate\u013ea autentifik\u00e1cie sa chcete autentifikova\u0165 pomocou Logi Circle.",
                 "title": "Poskytovate\u013e overovania"
             }
         }
