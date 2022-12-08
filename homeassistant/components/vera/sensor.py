@@ -65,7 +65,7 @@ class VeraSensor(VeraDevice[veraApi.VeraSensor], SensorEntity):
         return self.current_value
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> SensorDeviceClass | None:
         """Return the class of this entity."""
         if self.vera_device.category == veraApi.CATEGORY_TEMPERATURE_SENSOR:
             return SensorDeviceClass.TEMPERATURE

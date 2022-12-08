@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from contextlib import suppress
 from typing import Any, cast
 
-from homeassistant.components.device_tracker import SourceType
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_BATTERY_CHARGING
 from homeassistant.core import HomeAssistant, callback
@@ -86,8 +86,7 @@ async def async_setup_entry(
                 and not new_members_only
             ):
                 new_entities.append(Life360DeviceTracker(coordinator, member_id))
-        if new_entities:
-            async_add_entities(new_entities)
+        async_add_entities(new_entities)
 
     process_data(new_members_only=False)
     entry.async_on_unload(coordinator.async_add_listener(process_data))
@@ -113,6 +112,17 @@ class Life360DeviceTracker(
 
         self._attr_name = self._data.name
         self._attr_entity_picture = self._data.entity_picture
+
+        # Server sends a pair of address values on alternate updates. Keep the pair of
+        # values so they can be combined into the one address attribute.
+        # The pair will either be two different address values, or one address and a
+        # copy of the Place value (if the Member is in a Place.) In the latter case we
+        # won't duplicate the Place name, but rather just use one the address value. Use
+        # the value of None to hold one of the "slots" in the list so we'll know not to
+        # expect another address value.
+        if (address := self._data.address) == self._data.place:
+            address = None
+        self._addresses = [address]
 
     @property
     def _options(self) -> Mapping[str, Any]:
@@ -159,6 +169,30 @@ class Life360DeviceTracker(
                 # Overwrite new location related data with previous values.
                 for attr in _LOC_ATTRS:
                     setattr(self._data, attr, getattr(self._prev_data, attr))
+
+            else:
+                # Process address field.
+                # Check if we got the name of a Place, which we won't use.
+                if (address := self._data.address) == self._data.place:
+                    address = None
+                if last_seen != prev_seen:
+                    # We have new location data, so we might have a new pair of address
+                    # values.
+                    if address not in self._addresses:
+                        # We do.
+                        # Replace the old values with the first value of the new pair.
+                        self._addresses = [address]
+                elif self._data.address != self._prev_data.address:
+                    # Location data didn't change in general, but the address field did.
+                    # There are three possibilities:
+                    # 1. The new value is one of the pair we've already seen before.
+                    # 2. The new value is the second of the pair we haven't seen yet.
+                    # 3. The new value is the first of a new pair of values.
+                    if address not in self._addresses:
+                        if len(self._addresses) < 2:
+                            self._addresses.append(address)
+                        else:
+                            self._addresses = [address]
 
             self._prev_data = self._data
 
@@ -250,8 +284,26 @@ class Life360DeviceTracker(
                 ATTR_SPEED: None,
                 ATTR_WIFI_ON: None,
             }
+
+        # Generate address attribute from pair of address values.
+        # There may be two, one or no values. If there are two, sort the strings since
+        # one value is typically a numbered street address and the other is a street,
+        # town or state name, and it's helpful to start with the more detailed address
+        # value. Also, sorting helps to generate the same result if we get a location
+        # update, and the same pair is sent afterwards, but where the value that comes
+        # first is swapped vs the order they came in before the update.
+        address1: str | None = None
+        address2: str | None = None
+        with suppress(IndexError):
+            address1 = self._addresses[0]
+            address2 = self._addresses[1]
+        if address1 and address2:
+            address: str | None = " / ".join(sorted([address1, address2]))
+        else:
+            address = address1 or address2
+
         return {
-            ATTR_ADDRESS: self._data.address,
+            ATTR_ADDRESS: address,
             ATTR_AT_LOC_SINCE: self._data.at_loc_since,
             ATTR_BATTERY_CHARGING: self._data.battery_charging,
             ATTR_DRIVING: self.driving,

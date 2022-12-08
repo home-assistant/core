@@ -2,7 +2,7 @@
 import json
 from unittest.mock import AsyncMock, Mock, patch
 
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,

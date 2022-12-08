@@ -17,7 +17,7 @@
                     "host": "Host"
                 },
                 "description": "Seleziona un dispositivo da configurare",
-                "title": "Dispositivi DLNA DMA rilevati"
+                "title": "Rilevati dispositivi DLNA DMA"
             }
         }
     }

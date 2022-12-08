@@ -54,7 +54,7 @@ class HassAqualinkSensor(AqualinkEntity, SensorEntity):
             return float(self.dev.state)
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> SensorDeviceClass | None:
         """Return the class of the sensor."""
         if self.dev.name.endswith("_temp"):
             return SensorDeviceClass.TEMPERATURE

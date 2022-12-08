@@ -8,7 +8,11 @@ from pysuez import SuezClient
 from pysuez.client import PySuezError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, VOLUME_LITERS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -63,6 +67,7 @@ class SuezSensor(SensorEntity):
     _attr_name = NAME
     _attr_icon = ICON
     _attr_native_unit_of_measurement = VOLUME_LITERS
+    _attr_device_class = SensorDeviceClass.VOLUME
 
     def __init__(self, client):
         """Initialize the data object."""
@@ -88,7 +93,8 @@ class SuezSensor(SensorEntity):
             # _state holds the volume of consumed water during previous day
             self._state = self.client.state
             self._available = True
-            self._attributes["attribution"] = self.client.attributes["attribution"]
+            self._attr_attribution = self.client.attributes["attribution"]
+
             self._attributes["this_month_consumption"] = {}
             for item in self.client.attributes["thisMonthConsumption"]:
                 self._attributes["this_month_consumption"][

@@ -9,7 +9,7 @@ from homeassistant import config as hass_config
 import homeassistant.components.input_number as input_number
 import homeassistant.components.input_select as input_select
 import homeassistant.components.media_player as media_player
-from homeassistant.components.media_player.const import MediaPlayerEntityFeature
+from homeassistant.components.media_player import MediaPlayerEntityFeature
 import homeassistant.components.switch as switch
 import homeassistant.components.universal.media_player as universal
 from homeassistant.const import (

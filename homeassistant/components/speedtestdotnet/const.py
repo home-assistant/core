@@ -14,8 +14,6 @@ from homeassistant.const import (
 
 DOMAIN: Final = "speedtestdotnet"
 
-SPEED_TEST_SERVICE: Final = "speedtest"
-
 
 @dataclass
 class SpeedtestSensorEntityDescription(SensorEntityDescription):

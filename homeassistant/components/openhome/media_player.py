@@ -124,7 +124,7 @@ class OpenhomeDevice(MediaPlayerEntity):
         self._source_index = {}
         self._source = {}
         self._name = None
-        self._state = MediaPlayerState.PLAYING
+        self._attr_state = MediaPlayerState.PLAYING
         self._available = True
 
     @property
@@ -178,16 +178,16 @@ class OpenhomeDevice(MediaPlayerEntity):
                 )
 
             if self._in_standby:
-                self._state = MediaPlayerState.OFF
+                self._attr_state = MediaPlayerState.OFF
             elif self._transport_state == "Paused":
-                self._state = MediaPlayerState.PAUSED
+                self._attr_state = MediaPlayerState.PAUSED
             elif self._transport_state in ("Playing", "Buffering"):
-                self._state = MediaPlayerState.PLAYING
+                self._attr_state = MediaPlayerState.PLAYING
             elif self._transport_state == "Stopped":
-                self._state = MediaPlayerState.IDLE
+                self._attr_state = MediaPlayerState.IDLE
             else:
                 # Device is playing an external source with no transport controls
-                self._state = MediaPlayerState.PLAYING
+                self._attr_state = MediaPlayerState.PLAYING
 
             self._available = True
         except (asyncio.TimeoutError, aiohttp.ClientError, UpnpError):
@@ -278,11 +278,6 @@ class OpenhomeDevice(MediaPlayerEntity):
     def unique_id(self):
         """Return a unique ID."""
         return self._device.uuid()
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
 
     @property
     def source_list(self):

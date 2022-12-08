@@ -1,9 +1,14 @@
 """Config Flow for Advantage Air integration."""
+from __future__ import annotations
+
+from typing import Any
+
 from advantage_air import ApiError, advantage_air
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import ADVANTAGE_AIR_RETRY, DOMAIN
@@ -25,7 +30,9 @@ class AdvantageAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     DOMAIN = DOMAIN
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Get configuration from the user."""
         errors = {}
         if user_input:

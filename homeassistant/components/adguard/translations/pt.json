@@ -8,7 +8,8 @@
         },
         "step": {
             "hassio_confirm": {
-                "title": "AdGuard Home via Supervisor add-on"
+                "description": "Deseja configurar o Home Assistant para se ligar ao AdGuard Home fornecido pelo add-on: {addon}?",
+                "title": "AdGuard Home via add-on Supervisor"
             },
             "user": {
                 "data": {

@@ -6,6 +6,7 @@
             "is_carbon_dioxide": "El nivel de la concentraci\u00f3n de di\u00f3xido de carbono actual de {entity_name}",
             "is_carbon_monoxide": "El nivel de la concentraci\u00f3n de mon\u00f3xido de carbono actual de {entity_name}",
             "is_current": "La intensidad de corriente actual de {entity_name}",
+            "is_distance": "Distancia actual de {entity_name}",
             "is_energy": "La energ\u00eda actual de {entity_name}",
             "is_frequency": "La frecuencia actual de {entity_name}",
             "is_gas": "El gas actual de {entity_name}",
@@ -24,11 +25,15 @@
             "is_pressure": "La presi\u00f3n actual de {entity_name}",
             "is_reactive_power": "La potencia reactiva actual de {entity_name}",
             "is_signal_strength": "La intensidad de la se\u00f1al actual de {entity_name}",
+            "is_speed": "Velocidad actual de {entity_name}",
             "is_sulphur_dioxide": "El nivel de la concentraci\u00f3n de di\u00f3xido de azufre actual de {entity_name}",
             "is_temperature": "La temperatura actual de {entity_name}",
             "is_value": "El valor actual de {entity_name}",
             "is_volatile_organic_compounds": "El nivel de la concentraci\u00f3n de compuestos org\u00e1nicos vol\u00e1tiles actual de {entity_name}",
-            "is_voltage": "El voltaje actual de {entity_name}"
+            "is_voltage": "El voltaje actual de {entity_name}",
+            "is_volume": "Volumen actual de {entity_name}",
+            "is_water": "Agua actual de {entity_name}",
+            "is_weight": "El peso actual de {entity_name}"
         },
         "trigger_type": {
             "apparent_power": "La potencia aparente de {entity_name} cambia",
@@ -36,6 +41,7 @@
             "carbon_dioxide": "La concentraci\u00f3n de di\u00f3xido de carbono de {entity_name} cambia",
             "carbon_monoxide": "La concentraci\u00f3n de mon\u00f3xido de carbono de {entity_name} cambia",
             "current": "La intensidad de corriente de {entity_name} cambia",
+            "distance": "La distancia de {entity_name} cambia",
             "energy": "La energ\u00eda de {entity_name} cambia",
             "frequency": "La frecuencia de {entity_name} cambia",
             "gas": "El gas de {entity_name} cambia",
@@ -54,11 +60,15 @@
             "pressure": "La presi\u00f3n de {entity_name} cambia",
             "reactive_power": "La potencia reactiva de {entity_name} cambia",
             "signal_strength": "La intensidad de se\u00f1al de {entity_name} cambia",
+            "speed": "La velocidad de {entity_name} cambia",
             "sulphur_dioxide": "La concentraci\u00f3n de di\u00f3xido de azufre de {entity_name} cambia",
             "temperature": "La temperatura de {entity_name} cambia",
             "value": "El valor de {entity_name} cambia",
             "volatile_organic_compounds": "La concentraci\u00f3n de compuestos org\u00e1nicos vol\u00e1tiles de {entity_name} cambia",
-            "voltage": "El voltaje de {entity_name} cambia"
+            "voltage": "El voltaje de {entity_name} cambia",
+            "volume": "El volumen de {entity_name} cambia",
+            "water": "El agua de {entity_name} cambia",
+            "weight": "El peso de {entity_name} cambia"
         }
     },
     "state": {

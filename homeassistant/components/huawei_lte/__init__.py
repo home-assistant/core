@@ -15,6 +15,7 @@ from huawei_lte_api.Client import Client
 from huawei_lte_api.Connection import Connection
 from huawei_lte_api.enums.device import ControlModeEnum
 from huawei_lte_api.exceptions import (
+    LoginErrorInvalidCredentialsException,
     ResponseErrorException,
     ResponseErrorLoginRequiredException,
     ResponseErrorNotSupportedException,
@@ -38,7 +39,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -182,7 +183,7 @@ class Router:
         if not self.subscriptions.get(key):
             return
         if key in self.inflight_gets:
-            _LOGGER.debug("Skipping already inflight get for %s", key)
+            _LOGGER.debug("Skipping already in-flight get for %s", key)
             return
         self.inflight_gets.add(key)
         _LOGGER.debug("Getting %s for subscribers %s", key, self.subscriptions[key])
@@ -339,6 +340,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         connection = await hass.async_add_executor_job(get_connection)
+    except LoginErrorInvalidCredentialsException as ex:
+        raise ConfigEntryAuthFailed from ex
     except Timeout as ex:
         raise ConfigEntryNotReady from ex
 
@@ -486,10 +489,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Huawei LTE component."""
-
-    # dicttoxml (used by huawei-lte-api) has uselessly verbose INFO level.
-    # https://github.com/quandyfactory/dicttoxml/issues/60
-    logging.getLogger("dicttoxml").setLevel(logging.WARNING)
 
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = HuaweiLteData(hass_config=config, routers={})

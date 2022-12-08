@@ -9,9 +9,6 @@
             "bluetooth_confirm": {
                 "description": "Vuoi configurare {name}?"
             },
-            "enable_bluetooth": {
-                "description": "Vuoi configurare il Bluetooth?"
-            },
             "multiple_adapters": {
                 "data": {
                     "adapter": "Adattatore"
@@ -29,14 +26,18 @@
             }
         }
     },
+    "issues": {
+        "haos_outdated": {
+            "description": "Per migliorare l'affidabilit\u00e0 e le prestazioni del Bluetooth, si consiglia vivamente di aggiornare alla versione 9.0 o successiva del sistema operativo Home Assistant.",
+            "title": "Aggiorna al Home Assistant OS 9.0 o successivo"
+        }
+    },
     "options": {
         "step": {
             "init": {
                 "data": {
-                    "adapter": "L'adattatore Bluetooth da utilizzare per la scansione",
                     "passive": "Scansione passiva"
-                },
-                "description": "L'ascolto passivo richiede BlueZ 5.63 o successivo con funzionalit\u00e0 sperimentali abilitate."
+                }
             }
         }
     }

@@ -316,6 +316,7 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         icon="mdi:water",
         entity_registry_enabled_default=False,
         cls=ToonWaterMeterDeviceSensor,
+        device_class=SensorDeviceClass.WATER,
     ),
     ToonSensorEntityDescription(
         key="water_daily_usage",
@@ -326,6 +327,7 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         icon="mdi:water",
         entity_registry_enabled_default=False,
         cls=ToonWaterMeterDeviceSensor,
+        device_class=SensorDeviceClass.WATER,
     ),
     ToonSensorEntityDescription(
         key="water_meter_reading",
@@ -337,6 +339,7 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         cls=ToonWaterMeterDeviceSensor,
+        device_class=SensorDeviceClass.WATER,
     ),
     ToonSensorEntityDescription(
         key="water_value",

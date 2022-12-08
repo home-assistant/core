@@ -7,21 +7,21 @@
             "user": {
                 "data": {
                     "hostname": "Der Hostname, f\u00fcr den die DNS-Abfrage durchgef\u00fchrt werden soll",
-                    "resolver": "Resolver f\u00fcr IPV4-Lookup",
-                    "resolver_ipv6": "Resolver f\u00fcr IPV6-Lookup"
+                    "resolver": "Aufl\u00f6ser f\u00fcr IPv4-Suche",
+                    "resolver_ipv6": "Aufl\u00f6ser f\u00fcr IPv6-Suche"
                 }
             }
         }
     },
     "options": {
         "error": {
-            "invalid_resolver": "Ung\u00fcltige IP-Adresse f\u00fcr Resolver"
+            "invalid_resolver": "Ung\u00fcltige IP-Adresse f\u00fcr Aufl\u00f6ser"
         },
         "step": {
             "init": {
                 "data": {
-                    "resolver": "Resolver f\u00fcr IPV4-Lookup",
-                    "resolver_ipv6": "Resolver f\u00fcr IPV6-Lookup"
+                    "resolver": "Aufl\u00f6ser f\u00fcr IPv4-Suche",
+                    "resolver_ipv6": "Aufl\u00f6ser f\u00fcr IPv6-Suche"
                 }
             }
         }

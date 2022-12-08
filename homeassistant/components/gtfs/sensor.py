@@ -16,7 +16,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, CONF_OFFSET, STATE_UNKNOWN
+from homeassistant.const import CONF_NAME, CONF_OFFSET, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -648,6 +648,11 @@ class GTFSDepartureSensor(SensorEntity):
             # Assign attributes, icon and name
             self.update_attributes()
 
+            if self._agency:
+                self._attr_attribution = self._agency.agency_name
+            else:
+                self._attr_attribution = None
+
             if self._route:
                 self._icon = ICONS.get(self._route.route_type, ICON)
             else:
@@ -701,11 +706,6 @@ class GTFSDepartureSensor(SensorEntity):
             )
         elif ATTR_INFO in self._attributes:
             del self._attributes[ATTR_INFO]
-
-        if self._agency:
-            self._attributes[ATTR_ATTRIBUTION] = self._agency.agency_name
-        elif ATTR_ATTRIBUTION in self._attributes:
-            del self._attributes[ATTR_ATTRIBUTION]
 
         # Add extra metadata
         key = "agency_id"

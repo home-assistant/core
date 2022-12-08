@@ -98,7 +98,7 @@ SWITCH_DESCRIPTIONS: list[OverkizSwitchDescription] = [
     ),
     OverkizSwitchDescription(
         key=UIWidget.MY_FOX_SECURITY_CAMERA,
-        name="Camera Shutter",
+        name="Camera shutter",
         turn_on=OverkizCommand.OPEN,
         turn_off=OverkizCommand.CLOSE,
         icon="mdi:camera-lock",

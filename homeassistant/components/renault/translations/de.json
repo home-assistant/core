@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Konto wurde bereits konfiguriert",
-            "kamereon_no_account": "Kamereon-Konto kann nicht gefunden werden.",
+            "kamereon_no_account": "Kamereon Konto kann nicht gefunden werden.",
             "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
@@ -11,9 +11,9 @@
         "step": {
             "kamereon": {
                 "data": {
-                    "kamereon_account_id": "Kamereon-Kontonummer"
+                    "kamereon_account_id": "Kamereon Kontonummer"
                 },
-                "title": "Kamereon-Kontonummer ausw\u00e4hlen"
+                "title": "Kamereon Kontonummer ausw\u00e4hlen"
             },
             "reauth_confirm": {
                 "data": {

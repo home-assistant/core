@@ -4,6 +4,7 @@
             "already_configured": "El dispositivo ya est\u00e1 configurado",
             "auth_failed": "No se pudo recuperar la clave API de la aplicaci\u00f3n",
             "cannot_connect": "No se pudo conectar",
+            "reauth_successful": "La autenticaci\u00f3n se volvi\u00f3 a realizar correctamente",
             "unknown": "Error inesperado"
         },
         "error": {
@@ -15,6 +16,11 @@
             "get_api_key": "Abre la interfaz de usuario de OctoPrint y haz clic en 'Permitir' en la solicitud de acceso para 'Home Assistant'."
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "username": "Nombre de usuario"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Host",

@@ -1,6 +1,10 @@
 """Constants for the Z-Wave JS integration."""
 import logging
 
+from homeassistant.const import APPLICATION_NAME, __version__ as HA_VERSION
+
+USER_AGENT = {APPLICATION_NAME: HA_VERSION}
+
 CONF_ADDON_DEVICE = "device"
 CONF_ADDON_EMULATE_HARDWARE = "emulate_hardware"
 CONF_ADDON_LOG_LEVEL = "log_level"

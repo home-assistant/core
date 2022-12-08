@@ -128,7 +128,7 @@ def mock_entry(
     """Mock ProtectApiClient for testing."""
 
     with _patch_discovery(no_device=True), patch(
-        "homeassistant.components.unifiprotect.ProtectApiClient"
+        "homeassistant.components.unifiprotect.utils.ProtectApiClient"
     ) as mock_api:
         ufp_config_entry.add_to_hass(hass)
 

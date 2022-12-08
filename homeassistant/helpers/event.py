@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 import functools as ft
 import logging
+from random import randint
 import time
 from typing import Any, Union, cast
 
@@ -59,6 +60,9 @@ _DOMAINS_LISTENER = "domains"
 _ENTITIES_LISTENER = "entities"
 
 _LOGGER = logging.getLogger(__name__)
+
+RANDOM_MICROSECOND_MIN = 50000
+RANDOM_MICROSECOND_MAX = 500000
 
 _P = ParamSpec("_P")
 
@@ -141,7 +145,9 @@ def threaded_listener_factory(
 def async_track_state_change(
     hass: HomeAssistant,
     entity_ids: str | Iterable[str],
-    action: Callable[[str, State | None, State], Coroutine[Any, Any, None] | None],
+    action: Callable[
+        [str, State | None, State | None], Coroutine[Any, Any, None] | None
+    ],
     from_state: None | str | Iterable[str] = None,
     to_state: None | str | Iterable[str] = None,
 ) -> CALLBACK_TYPE:
@@ -804,7 +810,7 @@ def async_track_template(
 track_template = threaded_listener_factory(async_track_template)
 
 
-class _TrackTemplateResultInfo:
+class TrackTemplateResultInfo:
     """Handle removal / refresh of tracker."""
 
     def __init__(
@@ -1143,7 +1149,7 @@ def async_track_template_result(
     raise_on_template_error: bool = False,
     strict: bool = False,
     has_super_template: bool = False,
-) -> _TrackTemplateResultInfo:
+) -> TrackTemplateResultInfo:
     """Add a listener that fires when the result of a template changes.
 
     The action will fire with the initial result from the template, and
@@ -1182,9 +1188,7 @@ def async_track_template_result(
     Info object used to unregister the listener, and refresh the template.
 
     """
-    tracker = _TrackTemplateResultInfo(
-        hass, track_templates, action, has_super_template
-    )
+    tracker = TrackTemplateResultInfo(hass, track_templates, action, has_super_template)
     tracker.async_setup(raise_on_template_error, strict=strict)
     return tracker
 
@@ -1506,13 +1510,17 @@ def async_track_utc_time_change(
     matching_seconds = dt_util.parse_time_expression(second, 0, 59)
     matching_minutes = dt_util.parse_time_expression(minute, 0, 59)
     matching_hours = dt_util.parse_time_expression(hour, 0, 23)
+    # Avoid aligning all time trackers to the same second
+    # since it can create a thundering herd problem
+    # https://github.com/home-assistant/core/issues/82231
+    microsecond = randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX)
 
     def calculate_next(now: datetime) -> datetime:
         """Calculate and set the next time the trigger should fire."""
         localized_now = dt_util.as_local(now) if local else now
         return dt_util.find_next_time_expression_time(
             localized_now, matching_seconds, matching_minutes, matching_hours
-        )
+        ).replace(microsecond=microsecond)
 
     time_listener: CALLBACK_TYPE | None = None
 

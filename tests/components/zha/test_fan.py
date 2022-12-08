@@ -39,13 +39,12 @@ from .common import (
     async_enable_traffic,
     async_find_group_entity_id,
     async_test_rejoin,
+    async_wait_for_updates,
     find_entity_id,
     get_zha_gateway,
     send_attributes_report,
 )
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
-
-from tests.components.zha.common import async_wait_for_updates
 
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
 IEEE_GROUPABLE_DEVICE2 = "02:2d:6f:00:0a:90:69:e8"

@@ -29,8 +29,8 @@ async def test_form(hass: HomeAssistant) -> None:
                 "username": "test-username",
                 "password": "test-password",
                 "region": "na",
+                "unit_system": "metric",
                 "mutable": True,
-                "scandinavian_miles": False,
             },
         )
         await hass.async_block_till_done()
@@ -41,8 +41,8 @@ async def test_form(hass: HomeAssistant) -> None:
         "username": "test-username",
         "password": "test-password",
         "region": "na",
+        "unit_system": "metric",
         "mutable": True,
-        "scandinavian_miles": False,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -65,8 +65,8 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
                 "username": "test-username",
                 "password": "test-password",
                 "region": "na",
+                "unit_system": "metric",
                 "mutable": True,
-                "scandinavian_miles": False,
             },
         )
 
@@ -95,8 +95,8 @@ async def test_flow_already_configured(hass: HomeAssistant) -> None:
                 "username": "test-username",
                 "password": "test-password",
                 "region": "na",
+                "unit_system": "metric",
                 "mutable": True,
-                "scandinavian_miles": False,
             },
         )
         await hass.async_block_till_done()
@@ -121,8 +121,8 @@ async def test_form_other_exception(hass: HomeAssistant) -> None:
                 "username": "test-username",
                 "password": "test-password",
                 "region": "na",
+                "unit_system": "metric",
                 "mutable": True,
-                "scandinavian_miles": False,
             },
         )
 
@@ -151,8 +151,8 @@ async def test_import(hass: HomeAssistant) -> None:
                 "username": "test-username",
                 "password": "test-password",
                 "region": "na",
+                "unit_system": "metric",
                 "mutable": True,
-                "scandinavian_miles": False,
             },
         )
         await hass.async_block_till_done()
@@ -163,8 +163,8 @@ async def test_import(hass: HomeAssistant) -> None:
         "username": "test-username",
         "password": "test-password",
         "region": "na",
+        "unit_system": "metric",
         "mutable": True,
-        "scandinavian_miles": False,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -179,8 +179,8 @@ async def test_reauth(hass: HomeAssistant) -> None:
             "username": "test-username",
             "password": "test-password",
             "region": "na",
+            "unit_system": "metric",
             "mutable": True,
-            "scandinavian_miles": False,
         },
     )
     first_entry.add_to_hass(hass)
@@ -212,8 +212,8 @@ async def test_reauth(hass: HomeAssistant) -> None:
                 "username": "test-username",
                 "password": "test-new-password",
                 "region": "na",
+                "unit_system": "metric",
                 "mutable": True,
-                "scandinavian_miles": False,
             },
         )
         await hass.async_block_till_done()

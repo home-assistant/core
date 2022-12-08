@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Kontoen er allerede konfigurert",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+            "reauth_successful": "Re-autentisering var vellykket"
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
@@ -17,7 +17,7 @@
                     "api_key": "API-n\u00f8kkel"
                 },
                 "data_description": {
-                    "api_key": "F\u00f8lg dokumentasjonen for \u00e5 f\u00e5 en ny api-n\u00f8kkel."
+                    "api_key": "F\u00f8lg dokumentasjonen for \u00e5 f\u00e5 api-n\u00f8kkelen din"
                 }
             },
             "user": {
@@ -25,7 +25,7 @@
                     "api_key": "API-n\u00f8kkel"
                 },
                 "data_description": {
-                    "api_key": "F\u00f8lg dokumentasjonen for \u00e5 f\u00e5 api-n\u00f8kkelen din."
+                    "api_key": "F\u00f8lg dokumentasjonen for \u00e5 f\u00e5 api-n\u00f8kkelen din"
                 }
             }
         }

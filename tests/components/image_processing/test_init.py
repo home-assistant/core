@@ -9,12 +9,13 @@ from homeassistant.const import ATTR_ENTITY_PICTURE
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
+from . import common
+
 from tests.common import assert_setup_component, async_capture_events
-from tests.components.image_processing import common
 
 
 @pytest.fixture
-def aiohttp_unused_port(loop, aiohttp_unused_port, socket_enabled):
+def aiohttp_unused_port(event_loop, aiohttp_unused_port, socket_enabled):
     """Return aiohttp_unused_port and allow opening sockets."""
     return aiohttp_unused_port
 

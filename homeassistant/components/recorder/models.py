@@ -1,9 +1,9 @@
 """Models for Recorder."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
-from typing import Any, TypedDict, overload
+from typing import Any, Literal, TypedDict, overload
 
 from sqlalchemy.engine.row import Row
 
@@ -64,7 +64,6 @@ class StatisticMetaData(TypedDict):
     has_sum: bool
     name: str | None
     source: str
-    state_unit_of_measurement: str | None
     statistic_id: str
     unit_of_measurement: str | None
 
@@ -150,7 +149,7 @@ class LazyState(State):
         self.attr_cache = attr_cache
 
     @property  # type: ignore[override]
-    def attributes(self) -> dict[str, Any]:  # type: ignore[override]
+    def attributes(self) -> dict[str, Any]:
         """State attributes."""
         if self._attributes is None:
             self._attributes = decode_attributes_from_row(self._row, self.attr_cache)
@@ -161,8 +160,8 @@ class LazyState(State):
         """Set attributes."""
         self._attributes = value
 
-    @property  # type: ignore[override]
-    def context(self) -> Context:  # type: ignore[override]
+    @property
+    def context(self) -> Context:
         """State context."""
         if self._context is None:
             self._context = Context(id=None)
@@ -173,8 +172,8 @@ class LazyState(State):
         """Set context."""
         self._context = value
 
-    @property  # type: ignore[override]
-    def last_changed(self) -> datetime:  # type: ignore[override]
+    @property
+    def last_changed(self) -> datetime:
         """Last changed datetime."""
         if self._last_changed is None:
             if (last_changed := self._row.last_changed) is not None:
@@ -188,8 +187,8 @@ class LazyState(State):
         """Set last changed datetime."""
         self._last_changed = value
 
-    @property  # type: ignore[override]
-    def last_updated(self) -> datetime:  # type: ignore[override]
+    @property
+    def last_updated(self) -> datetime:
         """Last updated datetime."""
         if self._last_updated is None:
             self._last_updated = process_timestamp(self._row.last_updated)
@@ -285,3 +284,32 @@ def row_to_compressed_state(
                 row_changed_changed
             )
     return comp_state
+
+
+class CalendarStatisticPeriod(TypedDict, total=False):
+    """Statistic period definition."""
+
+    period: Literal["hour", "day", "week", "month", "year"]
+    offset: int
+
+
+class FixedStatisticPeriod(TypedDict, total=False):
+    """Statistic period definition."""
+
+    end_time: datetime
+    start_time: datetime
+
+
+class RollingWindowStatisticPeriod(TypedDict, total=False):
+    """Statistic period definition."""
+
+    duration: timedelta
+    offset: timedelta
+
+
+class StatisticPeriod(TypedDict, total=False):
+    """Statistic period definition."""
+
+    calendar: CalendarStatisticPeriod
+    fixed_period: FixedStatisticPeriod
+    rolling_window: RollingWindowStatisticPeriod

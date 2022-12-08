@@ -1,4 +1,14 @@
 {
+    "issues": {
+        "cold_tea": {
+            "fix_flow": {
+                "abort": {
+                    "not_tea_time": "V tuto chv\u00edli nelze \u010daj znovu oh\u0159\u00e1t"
+                }
+            },
+            "title": "\u010caj je studen\u00fd"
+        }
+    },
     "options": {
         "step": {
             "options_1": {

@@ -3,12 +3,9 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
 
-from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN as ALARM_DOMAIN,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.components.risco import CannotConnectError, UnauthorizedError
 from homeassistant.components.risco.const import DOMAIN
@@ -72,7 +69,9 @@ FULL_CUSTOM_MAPPING = {
 }
 
 EXPECTED_FEATURES = (
-    SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_NIGHT
+    AlarmControlPanelEntityFeature.ARM_AWAY
+    | AlarmControlPanelEntityFeature.ARM_HOME
+    | AlarmControlPanelEntityFeature.ARM_NIGHT
 )
 
 
@@ -294,7 +293,8 @@ async def test_cloud_sets_full_custom_mapping(
     registry = er.async_get(hass)
     entity = registry.async_get(FIRST_CLOUD_ENTITY_ID)
     assert (
-        entity.supported_features == EXPECTED_FEATURES | SUPPORT_ALARM_ARM_CUSTOM_BYPASS
+        entity.supported_features
+        == EXPECTED_FEATURES | AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
     )
 
     await _test_cloud_service_call(
@@ -669,7 +669,8 @@ async def test_local_sets_full_custom_mapping(
     registry = er.async_get(hass)
     entity = registry.async_get(FIRST_LOCAL_ENTITY_ID)
     assert (
-        entity.supported_features == EXPECTED_FEATURES | SUPPORT_ALARM_ARM_CUSTOM_BYPASS
+        entity.supported_features
+        == EXPECTED_FEATURES | AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
     )
 
     await _test_local_service_call(

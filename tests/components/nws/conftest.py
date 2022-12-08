@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from tests.components.nws.const import DEFAULT_FORECAST, DEFAULT_OBSERVATION
+from .const import DEFAULT_FORECAST, DEFAULT_OBSERVATION
 
 
 @pytest.fixture()

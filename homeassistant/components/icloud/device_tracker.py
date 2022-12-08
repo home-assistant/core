@@ -3,14 +3,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.device_tracker import AsyncSeeCallback, SourceType
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .account import IcloudAccount, IcloudDevice
 from .const import (
@@ -19,15 +17,6 @@ from .const import (
     DEVICE_LOCATION_LONGITUDE,
     DOMAIN,
 )
-
-
-async def async_setup_scanner(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_see: AsyncSeeCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> bool:
-    """Old way of setting up the iCloud tracker."""
 
 
 async def async_setup_entry(
@@ -61,8 +50,7 @@ def add_entities(account: IcloudAccount, async_add_entities, tracked):
         new_tracked.append(IcloudTrackerEntity(account, device))
         tracked.add(dev_id)
 
-    if new_tracked:
-        async_add_entities(new_tracked, True)
+    async_add_entities(new_tracked, True)
 
 
 class IcloudTrackerEntity(TrackerEntity):

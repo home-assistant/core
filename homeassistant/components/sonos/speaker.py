@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable, Collection, Coroutine
 import contextlib
 import datetime
 from functools import partial
@@ -489,7 +489,10 @@ class SonosSpeaker:
             return
 
         if crossfade := event.variables.get("current_crossfade_mode"):
-            self.cross_fade = bool(int(crossfade))
+            crossfade = bool(int(crossfade))
+            if self.cross_fade != crossfade:
+                self.cross_fade = crossfade
+                self.async_write_entity_states()
 
         # Missing transport_state indicates a transient error
         if (new_status := event.variables.get("transport_state")) is None:
@@ -946,7 +949,7 @@ class SonosSpeaker:
     ) -> None:
         """Snapshot all the speakers and optionally their groups."""
 
-        def _snapshot_all(speakers: list[SonosSpeaker]) -> None:
+        def _snapshot_all(speakers: Collection[SonosSpeaker]) -> None:
             """Sync helper."""
             for speaker in speakers:
                 speaker.snapshot(with_group)
@@ -1032,7 +1035,7 @@ class SonosSpeaker:
 
             return groups
 
-        def _restore_players(speakers: list[SonosSpeaker]) -> None:
+        def _restore_players(speakers: Collection[SonosSpeaker]) -> None:
             """Restore state of all players."""
             for speaker in (s for s in speakers if not s.is_coordinator):
                 speaker.restore()

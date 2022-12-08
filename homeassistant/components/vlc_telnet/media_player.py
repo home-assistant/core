@@ -260,7 +260,12 @@ class VlcDevice(MediaPlayerEntity):
     @catch_vlc_errors
     async def async_media_play(self) -> None:
         """Send play command."""
-        await self._vlc.play()
+        status = await self._vlc.status()
+        if status.state == "paused":
+            # If already paused, play by toggling pause.
+            await self._vlc.pause()
+        else:
+            await self._vlc.play()
         self._attr_state = MediaPlayerState.PLAYING
 
     @catch_vlc_errors
@@ -268,8 +273,7 @@ class VlcDevice(MediaPlayerEntity):
         """Send pause command."""
         status = await self._vlc.status()
         if status.state != "paused":
-            # Make sure we're not already paused since VLCTelnet.pause() toggles
-            # pause.
+            # Make sure we're not already paused as pausing again will unpause.
             await self._vlc.pause()
 
         self._attr_state = MediaPlayerState.PAUSED

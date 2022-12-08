@@ -3,8 +3,9 @@
 from homeassistant.const import STATE_ON
 from homeassistant.helpers import entity_registry as er
 
+from . import TEST_SYSTEM_URL, add_mock_config
+
 from tests.common import load_fixture
-from tests.components.advantage_air import TEST_SYSTEM_URL, add_mock_config
 
 
 async def test_update_platform(hass, aioclient_mock):

@@ -5,7 +5,7 @@ import functools
 
 import voluptuous as vol
 from zwave_js_server.const import CommandClass
-from zwave_js_server.model.value import Value, get_value_id
+from zwave_js_server.model.value import Value, get_value_id_str
 
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_PLATFORM, MATCH_ALL
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
@@ -164,7 +164,9 @@ async def async_attach_trigger(
         device_identifier = get_device_id(driver, node)
         device = dev_reg.async_get_device({device_identifier})
         assert device
-        value_id = get_value_id(node, command_class, property_, endpoint, property_key)
+        value_id = get_value_id_str(
+            node, command_class, property_, endpoint, property_key
+        )
         value = node.values[value_id]
         # We need to store the current value and device for the callback
         unsubs.append(

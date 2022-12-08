@@ -4,7 +4,8 @@
             "already_configured": "Plasseringen er allerede konfigurert"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes"
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning"
         },
         "step": {
             "user": {
@@ -27,6 +28,7 @@
                     "mode": "Reisemodus",
                     "time": "Tid",
                     "time_type": "Tidstype",
+                    "traffic_mode": "Trafikkmodus",
                     "transit_mode": "Transittmodus",
                     "transit_routing_preference": "Ruteinnstillinger for kollektivtransport",
                     "units": "Enheter"

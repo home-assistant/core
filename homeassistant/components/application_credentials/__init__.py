@@ -15,6 +15,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
@@ -127,9 +128,7 @@ class ApplicationCredentialsStorageCollection(collection.StorageCollection):
         for item in self.async_items():
             if item[CONF_DOMAIN] != domain:
                 continue
-            auth_domain = (
-                item[CONF_AUTH_DOMAIN] if CONF_AUTH_DOMAIN in item else item[CONF_ID]
-            )
+            auth_domain = item.get(CONF_AUTH_DOMAIN, item[CONF_ID])
             credentials[auth_domain] = ClientCredential(
                 client_id=item[CONF_CLIENT_ID],
                 client_secret=item[CONF_CLIENT_SECRET],
@@ -156,6 +155,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     ).async_setup(hass)
 
     websocket_api.async_register_command(hass, handle_integration_list)
+    websocket_api.async_register_command(hass, handle_config_entry)
 
     config_entry_oauth2_flow.async_add_implementation_provider(
         hass, DOMAIN, _async_provide_implementation
@@ -234,6 +234,27 @@ async def _async_provide_implementation(
     ]
 
 
+async def _async_config_entry_app_credentials(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+) -> str | None:
+    """Return the item id of an application credential for an existing ConfigEntry."""
+    if not await _get_platform(hass, config_entry.domain) or not (
+        auth_domain := config_entry.data.get("auth_implementation")
+    ):
+        return None
+
+    storage_collection = hass.data[DOMAIN][DATA_STORAGE]
+    for item in storage_collection.async_items():
+        item_id = item[CONF_ID]
+        if (
+            item[CONF_DOMAIN] == config_entry.domain
+            and item.get(CONF_AUTH_DOMAIN, item_id) == auth_domain
+        ):
+            return item_id
+    return None
+
+
 class ApplicationCredentialsProtocol(Protocol):
     """Define the format that application_credentials platforms may have.
 
@@ -310,4 +331,32 @@ async def handle_integration_list(
             domain: await _async_integration_config(hass, domain) for domain in domains
         },
     }
+    connection.send_result(msg["id"], result)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "application_credentials/config_entry",
+        vol.Required("config_entry_id"): str,
+    }
+)
+@websocket_api.async_response
+async def handle_config_entry(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Return application credentials information for a config entry."""
+    entry_id = msg["config_entry_id"]
+    config_entry = hass.config_entries.async_get_entry(entry_id)
+    if not config_entry:
+        connection.send_error(
+            msg["id"],
+            "invalid_config_entry_id",
+            f"Config entry not found: {entry_id}",
+        )
+        return
+    result = {}
+    if application_credentials_id := await _async_config_entry_app_credentials(
+        hass, config_entry
+    ):
+        result["application_credentials_id"] = application_credentials_id
     connection.send_result(msg["id"], result)

@@ -18,6 +18,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
 )
+from homeassistant.generated.mqtt import MQTT
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
@@ -47,6 +48,8 @@ DEFAULT_CONFIG_DEVICE_INFO_MAC = {
 }
 
 _SENTINEL = object()
+
+DISCOVERY_COUNT = len(MQTT)
 
 
 async def help_test_availability_when_connection_lost(
@@ -1083,7 +1086,7 @@ async def help_test_entity_id_update_subscriptions(
 
     state = hass.states.get(f"{domain}.test")
     assert state is not None
-    assert mqtt_mock.async_subscribe.call_count == len(topics) + 3
+    assert mqtt_mock.async_subscribe.call_count == len(topics) + 2 + DISCOVERY_COUNT
     for topic in topics:
         mqtt_mock.async_subscribe.assert_any_call(topic, ANY, ANY, ANY)
     mqtt_mock.async_subscribe.reset_mock()
@@ -1391,7 +1394,7 @@ async def help_test_entity_debug_info_remove(
     debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"]) == 0
     assert len(debug_info_data["triggers"]) == 0
-    assert entity_id not in hass.data[debug_info.DATA_MQTT_DEBUG_INFO]["entities"]
+    assert entity_id not in hass.data["mqtt"].debug_info_entities
 
 
 async def help_test_entity_debug_info_update_entity_id(
@@ -1449,9 +1452,7 @@ async def help_test_entity_debug_info_update_entity_id(
         "subscriptions"
     ]
     assert len(debug_info_data["triggers"]) == 0
-    assert (
-        f"{domain}.test" not in hass.data[debug_info.DATA_MQTT_DEBUG_INFO]["entities"]
-    )
+    assert f"{domain}.test" not in hass.data["mqtt"].debug_info_entities
 
 
 async def help_test_entity_disabled_by_default(
@@ -1704,103 +1705,16 @@ async def help_test_reloadable(
     old_config_2 = copy.deepcopy(config)
     old_config_2["name"] = "test_old_2"
 
-    # Test deprecated YAML configuration under the platform key
-    # Scheduled to be removed in HA core 2022.12
-    old_config_3 = copy.deepcopy(config)
-    old_config_3["name"] = "test_old_3"
-    old_config_3["platform"] = mqtt.DOMAIN
-    old_config_4 = copy.deepcopy(config)
-    old_config_4["name"] = "test_old_4"
-    old_config_4["platform"] = mqtt.DOMAIN
-
     old_config = {
         mqtt.DOMAIN: {domain: [old_config_1, old_config_2]},
-        domain: [old_config_3, old_config_4],
     }
 
-    assert await async_setup_component(hass, domain, old_config)
     assert await async_setup_component(hass, mqtt.DOMAIN, old_config)
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
     assert hass.states.get(f"{domain}.test_old_1")
     assert hass.states.get(f"{domain}.test_old_2")
-    assert hass.states.get(f"{domain}.test_old_3")
-    assert hass.states.get(f"{domain}.test_old_4")
-    assert len(hass.states.async_all(domain)) == 4
-
-    # Create temporary fixture for configuration.yaml based on the supplied config and
-    # test a reload with this new config
-    new_config_1 = copy.deepcopy(config)
-    new_config_1["name"] = "test_new_1"
-    new_config_2 = copy.deepcopy(config)
-    new_config_2["name"] = "test_new_2"
-    new_config_extra = copy.deepcopy(config)
-    new_config_extra["name"] = "test_new_5"
-
-    # Test deprecated YAML configuration under the platform key
-    # Scheduled to be removed in HA core 2022.12
-    new_config_3 = copy.deepcopy(config)
-    new_config_3["name"] = "test_new_3"
-    new_config_3["platform"] = mqtt.DOMAIN
-    new_config_4 = copy.deepcopy(config)
-    new_config_4["name"] = "test_new_4"
-    new_config_4["platform"] = mqtt.DOMAIN
-    new_config_extra_legacy = copy.deepcopy(config)
-    new_config_extra_legacy["name"] = "test_new_6"
-    new_config_extra_legacy["platform"] = mqtt.DOMAIN
-
-    new_config = {
-        mqtt.DOMAIN: {domain: [new_config_1, new_config_2, new_config_extra]},
-        domain: [new_config_3, new_config_4, new_config_extra_legacy],
-    }
-
-    await help_test_reload_with_config(hass, caplog, tmp_path, new_config)
-
-    assert len(hass.states.async_all(domain)) == 6
-
-    assert hass.states.get(f"{domain}.test_new_1")
-    assert hass.states.get(f"{domain}.test_new_2")
-    assert hass.states.get(f"{domain}.test_new_3")
-    assert hass.states.get(f"{domain}.test_new_4")
-    assert hass.states.get(f"{domain}.test_new_5")
-    assert hass.states.get(f"{domain}.test_new_6")
-
-
-# Test deprecated YAML configuration under the platform key
-# Scheduled to be removed in HA core 2022.12
-async def help_test_reloadable_late(hass, caplog, tmp_path, domain, config):
-    """Test reloading an MQTT platform when config entry is setup is late."""
-    # Create and test an old config of 2 entities based on the config supplied
-    # using the deprecated platform schema
-    old_config_1 = copy.deepcopy(config)
-    old_config_1["name"] = "test_old_1"
-    old_config_2 = copy.deepcopy(config)
-    old_config_2["name"] = "test_old_2"
-
-    old_yaml_config_file = tmp_path / "configuration.yaml"
-    old_yaml_config = yaml.dump({domain: [old_config_1, old_config_2]})
-    old_yaml_config_file.write_text(old_yaml_config)
-    assert old_yaml_config_file.read_text() == old_yaml_config
-
-    assert await async_setup_component(
-        hass, domain, {domain: [old_config_1, old_config_2]}
-    )
-    await hass.async_block_till_done()
-
-    # No MQTT config entry, there should be a warning and no entities
-    assert (
-        "MQTT integration is not setup, skipping setup of manually "
-        f"configured MQTT {domain}"
-    ) in caplog.text
-    assert len(hass.states.async_all(domain)) == 0
-
-    # User sets up a config entry, should succeed and entities will setup
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
-    entry.add_to_hass(hass)
-    with patch.object(hass_config, "YAML_CONFIG_FILE", old_yaml_config_file):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
     assert len(hass.states.async_all(domain)) == 2
 
     # Create temporary fixture for configuration.yaml based on the supplied config and
@@ -1809,14 +1723,14 @@ async def help_test_reloadable_late(hass, caplog, tmp_path, domain, config):
     new_config_1["name"] = "test_new_1"
     new_config_2 = copy.deepcopy(config)
     new_config_2["name"] = "test_new_2"
-    new_config_3 = copy.deepcopy(config)
-    new_config_3["name"] = "test_new_3"
+    new_config_extra = copy.deepcopy(config)
+    new_config_extra["name"] = "test_new_3"
 
     new_config = {
-        domain: [new_config_1, new_config_2, new_config_3],
+        mqtt.DOMAIN: {domain: [new_config_1, new_config_2, new_config_extra]},
     }
+
     await help_test_reload_with_config(hass, caplog, tmp_path, new_config)
-    await hass.async_block_till_done()
 
     assert len(hass.states.async_all(domain)) == 3
 

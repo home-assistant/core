@@ -91,6 +91,11 @@
             "zwave_js.value_updated.value": "Waardeverandering op een Z-Wave JS-waarde"
         }
     },
+    "issues": {
+        "invalid_server_version": {
+            "title": "Nieuwere versie van Z-Wave JS-server vereist"
+        }
+    },
     "options": {
         "abort": {
             "addon_get_discovery_info_failed": "Ophalen van ontdekkingsinformatie voor Z-Wave JS-add-on is mislukt.",

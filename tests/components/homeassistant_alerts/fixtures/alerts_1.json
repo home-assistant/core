@@ -31,6 +31,26 @@
     "alert_url": "https://alerts.home-assistant.io/#dark_sky.markdown"
   },
   {
+    "title": "Supervisor November beta issue impacting users on Home Assistant beta/dev channels",
+    "created": "2022-11-16T06:00:00.000Z",
+    "integrations": [
+      {
+        "package": "hassio"
+      }
+    ],
+    "homeassistant": {
+      "package": "homeassistant",
+      "affected_from_version": "0.41"
+    },
+    "supervisor": {
+      "package": "supervisor",
+      "affected_from_version": "2022.11.0",
+      "resolved_in_version": "2022.11.1"
+    },
+    "filename": "hassio.markdown",
+    "alert_url": "https://alerts.home-assistant.io/#hassio.markdown"
+  },
+  {
     "title": "Hikvision Security Vulnerability",
     "created": "2021-09-20T22:08:00.000Z",
     "integrations": [

@@ -7,7 +7,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS
+from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -15,7 +15,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     ALLOWED_WATERING_TIME,
-    ATTRIBUTION,
     CONF_WATERING_TIME,
     DATA_RAINCLOUD,
     DEFAULT_WATERING_TIME,
@@ -97,7 +96,6 @@ class RainCloudSwitch(RainCloudEntity, SwitchEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             "default_manual_timer": self._default_watering_timer,
             "identifier": self.data.serial,
         }

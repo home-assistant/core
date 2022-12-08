@@ -10,7 +10,8 @@
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
             "cannot_connect": "Tilkobling mislyktes",
             "discovery_requires_supervisor": "Oppdagelsen krever veilederen.",
-            "not_zwave_device": "Oppdaget enhet er ikke en Z-Wave-enhet."
+            "not_zwave_device": "Oppdaget enhet er ikke en Z-Wave-enhet.",
+            "not_zwave_js_addon": "Oppdaget tillegg er ikke det offisielle Z-Wave JS tillegget."
         },
         "error": {
             "addon_start_failed": "Kunne ikke starte Z-Wave JS-tillegg. Sjekk konfigurasjonen.",
@@ -89,6 +90,12 @@
             "state.node_status": "Nodestatus endret",
             "zwave_js.value_updated.config_parameter": "Verdiendring p\u00e5 konfigurasjonsparameteren {subtype}",
             "zwave_js.value_updated.value": "Verdiendring p\u00e5 en Z-Wave JS-verdi"
+        }
+    },
+    "issues": {
+        "invalid_server_version": {
+            "description": "Versjonen av Z-Wave JS Server du kj\u00f8rer er for gammel for denne versjonen av Home Assistant. Oppdater Z-Wave JS Server til den nyeste versjonen for \u00e5 fikse dette problemet.",
+            "title": "Nyere versjon av Z-Wave JS Server er n\u00f8dvendig"
         }
     },
     "options": {

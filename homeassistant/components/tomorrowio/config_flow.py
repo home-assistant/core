@@ -17,7 +17,6 @@ from homeassistant import config_entries, core
 from homeassistant.components.zone import async_active_zone
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_API_VERSION,
     CONF_FRIENDLY_NAME,
     CONF_LATITUDE,
     CONF_LOCATION,
@@ -30,14 +29,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
 from .const import (
-    AUTO_MIGRATION_MESSAGE,
-    CC_DOMAIN,
     CONF_TIMESTEP,
     DEFAULT_NAME,
     DEFAULT_TIMESTEP,
     DOMAIN,
-    INTEGRATION_NAME,
-    MANUAL_MIGRATION_MESSAGE,
     TMRW_ATTR_TEMPERATURE,
 )
 
@@ -61,10 +56,6 @@ def _get_config_schema(
     api_key_schema = {
         vol.Required(CONF_API_KEY, default=input_dict.get(CONF_API_KEY)): str,
     }
-
-    # For imports we just need to ask for the API key
-    if source == config_entries.SOURCE_IMPORT:
-        return vol.Schema(api_key_schema, extra=vol.REMOVE_EXTRA)
 
     default_location = (
         input_dict[CONF_LOCATION]
@@ -125,11 +116,6 @@ class TomorrowioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize config flow."""
-        self._showed_import_message = 0
-        self._import_config: dict[str, Any] | None = None
-
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -144,18 +130,6 @@ class TomorrowioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            # Grab the API key and add it to the rest of the config before continuing
-            if self._import_config:
-                self._import_config[CONF_API_KEY] = user_input[CONF_API_KEY]
-                self._import_config[CONF_LOCATION] = {
-                    CONF_LATITUDE: self._import_config.pop(
-                        CONF_LATITUDE, self.hass.config.latitude
-                    ),
-                    CONF_LONGITUDE: self._import_config.pop(
-                        CONF_LONGITUDE, self.hass.config.longitude
-                    ),
-                }
-                user_input = self._import_config.copy()
             await self.async_set_unique_id(
                 unique_id=_get_unique_id(self.hass, user_input)
             )
@@ -189,15 +163,6 @@ class TomorrowioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 options: Mapping[str, Any] = {CONF_TIMESTEP: DEFAULT_TIMESTEP}
-                # Store the old config entry ID and retrieve options to recreate the entry
-                if self.source == config_entries.SOURCE_IMPORT:
-                    old_config_entry_id = self.context["old_config_entry_id"]
-                    old_config_entry = self.hass.config_entries.async_get_entry(
-                        old_config_entry_id
-                    )
-                    assert old_config_entry
-                    options = dict(old_config_entry.options)
-                    user_input["old_config_entry_id"] = old_config_entry_id
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
                     data=user_input,
@@ -209,24 +174,3 @@ class TomorrowioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=_get_config_schema(self.hass, self.source, user_input),
             errors=errors,
         )
-
-    async def async_step_import(self, import_config: dict) -> FlowResult:
-        """Import from config."""
-        # Store import config for later
-        self._import_config = dict(import_config)
-        if self._import_config.pop(CONF_API_VERSION, 3) == 3:
-            # Clear API key from import config
-            self._import_config[CONF_API_KEY] = ""
-            self.hass.components.persistent_notification.async_create(
-                MANUAL_MIGRATION_MESSAGE,
-                INTEGRATION_NAME,
-                f"{CC_DOMAIN}_to_{DOMAIN}_new_api_key_needed",
-            )
-            return await self.async_step_user()
-
-        self.hass.components.persistent_notification.async_create(
-            AUTO_MIGRATION_MESSAGE,
-            INTEGRATION_NAME,
-            f"{CC_DOMAIN}_to_{DOMAIN}",
-        )
-        return await self.async_step_user(self._import_config)

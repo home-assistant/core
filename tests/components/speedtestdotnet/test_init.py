@@ -1,11 +1,8 @@
 """Tests for SpeedTest integration."""
 
-from collections.abc import Awaitable
 from datetime import timedelta
-from typing import Callable
 from unittest.mock import MagicMock
 
-from aiohttp import ClientWebSocketResponse
 import speedtest
 
 from homeassistant.components.speedtestdotnet.const import (
@@ -13,7 +10,6 @@ from homeassistant.components.speedtestdotnet.const import (
     CONF_SERVER_ID,
     CONF_SERVER_NAME,
     DOMAIN,
-    SPEED_TEST_SERVICE,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_SCAN_INTERVAL, STATE_UNAVAILABLE
@@ -21,7 +17,6 @@ from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.repairs import get_repairs
 
 
 async def test_successful_config_entry(hass: HomeAssistant) -> None:
@@ -43,7 +38,6 @@ async def test_successful_config_entry(hass: HomeAssistant) -> None:
 
     assert entry.state == ConfigEntryState.LOADED
     assert hass.data[DOMAIN]
-    assert hass.services.has_service(DOMAIN, SPEED_TEST_SERVICE)
 
 
 async def test_setup_failed(hass: HomeAssistant, mock_api: MagicMock) -> None:
@@ -125,28 +119,3 @@ async def test_get_best_server_error(hass: HomeAssistant, mock_api: MagicMock) -
     state = hass.states.get("sensor.speedtest_ping")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
-
-
-async def test_deprecated_service_alert(
-    hass: HomeAssistant,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
-) -> None:
-    """Test that an issue is raised if deprecated services is called."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-    )
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    await hass.services.async_call(
-        DOMAIN,
-        "speedtest",
-        {},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-    issues = await get_repairs(hass, hass_ws_client)
-    assert len(issues) == 1
-    assert issues[0]["issue_id"] == "deprecated_service"

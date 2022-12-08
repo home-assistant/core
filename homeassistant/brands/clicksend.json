@@ -1,0 +1,5 @@
+{
+  "domain": "clicksend",
+  "name": "ClickSend",
+  "integrations": ["clicksend", "clicksend_tts"]
+}

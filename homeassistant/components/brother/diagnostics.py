@@ -1,6 +1,8 @@
 """Diagnostics support for Brother."""
 from __future__ import annotations
 
+from dataclasses import asdict
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -18,7 +20,7 @@ async def async_get_config_entry_diagnostics(
 
     diagnostics_data = {
         "info": dict(config_entry.data),
-        "data": coordinator.data,
+        "data": asdict(coordinator.data),
     }
 
     return diagnostics_data

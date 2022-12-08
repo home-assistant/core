@@ -17,5 +17,17 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "tracker_state": {
+                "state": {
+                    "not_reporting": "Keine Meldung",
+                    "operational": "Betriebsbereit",
+                    "system_shutdown_user": "Benutzer zum Herunterfahren des Systems",
+                    "system_startup": "Systemstart"
+                }
+            }
+        }
     }
 }

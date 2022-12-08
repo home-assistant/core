@@ -312,3 +312,66 @@ async def test_reauth_abort(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result.get("type") == "abort"
     assert result.get("reason") == "open_spreadsheet_failure"
+
+
+async def test_already_configured(
+    hass: HomeAssistant,
+    hass_client_no_auth,
+    aioclient_mock,
+    current_request_with_host,
+    setup_credentials,
+    mock_client,
+) -> None:
+    """Test case where config flow discovers unique id was already configured."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=SHEET_ID,
+        data={
+            "token": {
+                "access_token": "mock-access-token",
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        "google_sheets", context={"source": config_entries.SOURCE_USER}
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    assert result["url"] == (
+        f"{oauth2client.GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}&scope=https://www.googleapis.com/auth/drive.file"
+        "&access_type=offline&prompt=consent"
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    # Prepare fake client library response when creating the sheet
+    mock_create = Mock()
+    mock_create.return_value.id = SHEET_ID
+    mock_client.return_value.create = mock_create
+
+    aioclient_mock.post(
+        oauth2client.GOOGLE_TOKEN_URI,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result.get("type") == "abort"
+    assert result.get("reason") == "already_configured"

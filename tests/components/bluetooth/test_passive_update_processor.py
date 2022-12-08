@@ -34,13 +34,13 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from . import patch_all_discovered_devices
-
-from tests.common import MockEntityPlatform, async_fire_time_changed
-from tests.components.bluetooth import (
+from . import (
     inject_bluetooth_service_info,
     inject_bluetooth_service_info_bleak,
+    patch_all_discovered_devices,
 )
+
+from tests.common import MockEntityPlatform, async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -201,8 +201,8 @@ async def test_unavailable_after_no_data(
 ):
     """Test that the coordinator is unavailable after no data for a while."""
     with patch(
-        "bleak.BleakScanner.discovered_devices",  # Must patch before we setup
-        [MagicMock(address="44:44:33:11:23:45")],
+        "bleak.BleakScanner.discovered_devices_and_advertisement_data",  # Must patch before we setup
+        {"44:44:33:11:23:45": (MagicMock(address="44:44:33:11:23:45"), MagicMock())},
     ):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()

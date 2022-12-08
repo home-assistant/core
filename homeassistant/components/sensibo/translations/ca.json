@@ -17,7 +17,7 @@
                     "api_key": "Clau API"
                 },
                 "data_description": {
-                    "api_key": "Consulta la documentaci\u00f3 per obtenir una nova clau API."
+                    "api_key": "Consulta la documentaci\u00f3 per obtenir la teva clau API"
                 }
             },
             "user": {
@@ -25,7 +25,24 @@
                     "api_key": "Clau API"
                 },
                 "data_description": {
-                    "api_key": "Consulta la documentaci\u00f3 per obtenir la teva clau API."
+                    "api_key": "Consulta la documentaci\u00f3 per obtenir la teva clau API"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "sensitivity": {
+                "state": {
+                    "n": "Normal",
+                    "s": "Sensible"
+                }
+            },
+            "smart_type": {
+                "state": {
+                    "feelslike": "Sensaci\u00f3 de",
+                    "humidity": "Humitat",
+                    "temperature": "Temperatura"
                 }
             }
         }

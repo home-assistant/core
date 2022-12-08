@@ -20,8 +20,8 @@
             "cool": "Jahuta",
             "dry": "Kuivata",
             "fan_only": "Ventileeri",
-            "heat": "Soojenda",
-            "heat_cool": "K\u00fcta/jahuta",
+            "heat": "K\u00fcta",
+            "heat_cool": "K\u00fcta",
             "off": "V\u00e4ljas"
         }
     },

@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado"
         },
-        "flow_title": "",
+        "flow_title": "{model} {id} ({ipaddr})",
         "step": {
             "user": {
                 "data": {

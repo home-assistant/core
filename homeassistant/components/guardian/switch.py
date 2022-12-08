@@ -146,6 +146,9 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
+        if not self._attr_is_on:
+            return
+
         try:
             async with self._client:
                 await self.entity_description.off_action(self._client)
@@ -159,6 +162,9 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
+        if self._attr_is_on:
+            return
+
         try:
             async with self._client:
                 await self.entity_description.on_action(self._client)

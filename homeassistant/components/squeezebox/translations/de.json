@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
-            "no_server_found": "Kein LMS-Server gefunden."
+            "no_server_found": "Kein LMS Server gefunden."
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",

@@ -44,12 +44,10 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_oauth2_flow, entity_registry as er
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    AUTH_CALLBACK_PATH,
     AbstractOAuth2Implementation,
     OAuth2Session,
 )
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.network import get_url
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt
 
@@ -1083,12 +1081,6 @@ def get_platform_attributes(platform: str) -> tuple[WithingsAttribute, ...]:
 
 class WithingsLocalOAuth2Implementation(AuthImplementation):
     """Oauth2 implementation that only uses the external url."""
-
-    @property
-    def redirect_uri(self) -> str:
-        """Return the redirect uri."""
-        url = get_url(self.hass, allow_internal=False, prefer_cloud=True)
-        return f"{url}{AUTH_CALLBACK_PATH}"
 
     async def _token_request(self, data: dict) -> dict:
         """Make a token request and adapt Withings API reply."""

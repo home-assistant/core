@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import pathlib
 import re
+from typing import Any
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -12,10 +13,10 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.util.yaml import load_yaml
 
-from .model import Integration
+from .model import Config, Integration
 
 
-def exists(value):
+def exists(value: Any) -> Any:
     """Check if value exists."""
     if value is None:
         raise vol.Invalid("Value cannot be None")
@@ -63,7 +64,7 @@ def grep_dir(path: pathlib.Path, glob_pattern: str, search_pattern: str) -> bool
     return False
 
 
-def validate_services(integration: Integration):
+def validate_services(integration: Integration) -> None:
     """Validate services."""
     try:
         data = load_yaml(str(integration.path / "services.yaml"))
@@ -92,11 +93,8 @@ def validate_services(integration: Integration):
         )
 
 
-def validate(integrations: dict[str, Integration], config):
+def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Handle dependencies for integrations."""
     # check services.yaml is cool
     for integration in integrations.values():
-        if not integration.manifest:
-            continue
-
         validate_services(integration)

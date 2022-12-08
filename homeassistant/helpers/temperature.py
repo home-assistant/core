@@ -5,7 +5,7 @@ from numbers import Number
 
 from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS
 from homeassistant.core import HomeAssistant
-from homeassistant.util.temperature import convert as convert_temperature
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 
 def display_temp(
@@ -24,7 +24,9 @@ def display_temp(
         raise TypeError(f"Temperature is not a number: {temperature}")
 
     if temperature_unit != ha_unit:
-        temperature = convert_temperature(temperature, temperature_unit, ha_unit)
+        temperature = TemperatureConverter.convert(
+            temperature, temperature_unit, ha_unit
+        )
 
     # Round in the units appropriate
     if precision == PRECISION_HALVES:

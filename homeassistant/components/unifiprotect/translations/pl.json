@@ -41,16 +41,47 @@
             }
         }
     },
-    "options": {
-        "error": {
-            "invalid_mac_list": "Musi to by\u0107 lista adres\u00f3w MAC oddzielonych przecinkami"
+    "entity": {
+        "sensor": {
+            "license_plate": {
+                "state": {
+                    "none": "brak"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecate_smart_sensor": {
+            "description": "Ujednolicony sensor \u201eWykryty obiekt\u201d do inteligentnego wykrywania jest teraz przestarza\u0142y. Zosta\u0142 on zast\u0105piony indywidualnymi sensorami binarnymi dla ka\u017cdego typu inteligentnej detekcji. Zaktualizuj odpowiednio wszystkie szablony lub automatyzacje.",
+            "title": "Przestarza\u0142y inteligentny sensor wykrywania"
         },
+        "ea_setup_failed": {
+            "description": "U\u017cywasz wersji {version} UniFi Protect, kt\u00f3ra jest wersj\u0105 Early Access. Wyst\u0105pi\u0142 nienaprawialny b\u0142\u0105d podczas pr\u00f3by za\u0142adowania integracji. Aby kontynuowa\u0107 korzystanie z integracji, [zmie\u0144 wersj\u0119 na stabiln\u0105](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) UniFi Protect. \n\nB\u0142\u0105d: {error}",
+            "title": "B\u0142\u0105d konfiguracji w wersji Early Access"
+        },
+        "ea_warning": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Czy na pewno chcesz uruchomi\u0107 nieobs\u0142ugiwane wersje UniFi Protect? Mo\u017ce to popsu\u0107 integracj\u0119 Home Assistant.",
+                        "title": "Wersja {version} jest wersj\u0105 Early Access"
+                    },
+                    "start": {
+                        "description": "U\u017cywasz wersji {version} UniFi Protect, kt\u00f3ra jest wersj\u0105 Early Access. [Wersje Early Access nie s\u0105 obs\u0142ugiwane przez Home Assistant](https://www.home-assistant.io/integrations/unifiprotect#about-unifi-early-access) i zaleca si\u0119 jak najszybszy powr\u00f3t do stabilnej wersji.\n\nPrzesy\u0142aj\u0105c ten formularz, [obni\u017cy\u0142e\u015b wersj\u0119 UniFi Protect](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) albo zgadzasz si\u0119 na uruchomienie nieobs\u0142ugiwanej wersji UniFi Protect.",
+                        "title": "Wersja {version} jest wersj\u0105 Early Access"
+                    }
+                }
+            },
+            "title": "UniFi Protect v{version} to wersja Early Access"
+        }
+    },
+    "options": {
         "step": {
             "init": {
                 "data": {
                     "all_updates": "Metryki w czasie rzeczywistym (UWAGA: Znacznie zwi\u0119ksza u\u017cycie CPU)",
+                    "allow_ea": "Zezw\u00f3l na wersje UniFi Protect Early Access (OSTRZE\u017bENIE: Twoja integracja zostanie oznaczona jako nieobs\u0142ugiwana)",
                     "disable_rtsp": "Wy\u0142\u0105cz strumie\u0144 RTSP",
-                    "ignored_devices": "Oddzielona przecinkami lista adres\u00f3w MAC urz\u0105dze\u0144 do zignorowania",
                     "max_media": "Maksymalna liczba zdarze\u0144 do za\u0142adowania dla przegl\u0105darki medi\u00f3w (zwi\u0119ksza u\u017cycie pami\u0119ci RAM)",
                     "override_connection_host": "Zast\u0105p host po\u0142\u0105czenia"
                 },
