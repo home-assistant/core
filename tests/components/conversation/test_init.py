@@ -241,12 +241,16 @@ async def test_http_api_no_match(hass, init_components, hass_client):
     assert data == {
         "success": False,
         "card": {},
-        "speech": {},
+        "speech": {
+            "plain": {
+                "extra_data": None,
+                "speech": "Sorry, I didn't understand that",
+            },
+        },
         "language": hass.config.language,
         "response_type": "error",
         "data": {
             "code": "no_intent_match",
-            "message": "Sorry, I didn't understand that",
         },
     }
 
@@ -266,11 +270,15 @@ async def test_http_api_no_valid_targets(hass, init_components, hass_client):
         "success": False,
         "response_type": "error",
         "card": {},
-        "speech": {},
+        "speech": {
+            "plain": {
+                "extra_data": None,
+                "speech": "Unable to find an entity called kitchen",
+            },
+        },
         "language": hass.config.language,
         "data": {
             "code": "no_valid_targets",
-            "message": "Unable to find an entity called kitchen",
         },
     }
 
@@ -299,11 +307,15 @@ async def test_http_api_handle_failure(hass, init_components, hass_client):
         "success": False,
         "response_type": "error",
         "card": {},
-        "speech": {},
+        "speech": {
+            "plain": {
+                "extra_data": None,
+                "speech": "Unexpected error turning on the kitchen light",
+            }
+        },
         "language": hass.config.language,
         "data": {
             "code": "failed_to_handle",
-            "message": "Unexpected error turning on the kitchen light",
         },
     }
 

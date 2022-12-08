@@ -322,14 +322,6 @@ class IntentResponseTarget:
     target_type: IntentResponseTargetType
 
 
-@dataclass
-class IntentResponseError:
-    """Details of an intent response error."""
-
-    code: IntentResponseErrorCode
-    message: str
-
-
 class IntentResponse:
     """Response to an intent."""
 
@@ -346,7 +338,7 @@ class IntentResponse:
         self.language = language
         self.success = True
         self.response_type = IntentResponseType.ACTION_DONE
-        self.error: IntentResponseError | None = None
+        self.error_code: IntentResponseErrorCode | None = None
         self.target: IntentResponseTarget | None = None
 
         if self.intent is not None:
@@ -388,11 +380,14 @@ class IntentResponse:
         self.card[card_type] = {"title": title, "content": content}
 
     @callback
-    def async_set_error(self, error: IntentResponseError) -> None:
+    def async_set_error(self, code: IntentResponseErrorCode, message: str) -> None:
         """Set response error."""
         self.success = False
         self.response_type = IntentResponseType.ERROR
-        self.error = error
+        self.error_code = code
+
+        # Speak error message
+        self.async_set_speech(message)
 
     @callback
     def async_set_target(self, target: IntentResponseTarget) -> None:
@@ -413,13 +408,19 @@ class IntentResponse:
         if self.reprompt:
             response_dict["reprompt"] = self.reprompt
 
-        if self.response_type == IntentResponseType.ERROR:
-            response_data = dataclasses.asdict(self.error)
-        else:
-            # action done or query answer
-            response_data = {}
+        response_data: dict[str, Any] = {}
+
+        if self.response_type == IntentResponseType.ACTION_DONE:
+            # Target is required for action
+            assert self.target is not None, "target is required"
+            response_data["target"] = dataclasses.asdict(self.target)
+        elif self.response_type == IntentResponseType.QUERY_ANSWER:
+            # Target is optional for query
             if self.target is not None:
                 response_data["target"] = dataclasses.asdict(self.target)
+        elif self.response_type == IntentResponseType.ERROR:
+            assert self.error_code is not None, "error code is required"
+            response_data["code"] = self.error_code.value
 
         response_dict["data"] = response_data
 

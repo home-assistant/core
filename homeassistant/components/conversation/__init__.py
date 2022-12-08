@@ -221,29 +221,23 @@ async def _async_converse(
         # Match was successful, but target(s) were invalid
         intent_result = intent.IntentResponse(language=language)
         intent_result.async_set_error(
-            intent.IntentResponseError(
-                code=intent.IntentResponseErrorCode.NO_VALID_TARGETS,
-                message=str(err),
-            )
+            intent.IntentResponseErrorCode.NO_VALID_TARGETS,
+            str(err),
         )
     except intent.IntentUnexpectedError as err:
         # Match was successful, but an error occurred while handling intent
         intent_result = intent.IntentResponse(language=language)
         intent_result.async_set_error(
-            intent.IntentResponseError(
-                code=intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
-                message=str(err),
-            )
+            intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
+            str(err),
         )
 
     if intent_result is None:
         # Match was not successful
         intent_result = intent.IntentResponse(language=language)
         intent_result.async_set_error(
-            intent.IntentResponseError(
-                code=intent.IntentResponseErrorCode.NO_INTENT_MATCH,
-                message="Sorry, I didn't understand that",
-            )
+            intent.IntentResponseErrorCode.NO_INTENT_MATCH,
+            "Sorry, I didn't understand that",
         )
 
     return intent_result
