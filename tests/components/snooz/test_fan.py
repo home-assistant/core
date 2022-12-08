@@ -13,8 +13,8 @@ from homeassistant.components import fan
 from homeassistant.components.snooz.const import (
     ATTR_DURATION,
     DOMAIN,
-    SERVICE_FADE_OFF,
-    SERVICE_FADE_ON,
+    SERVICE_TRANSITION_OFF,
+    SERVICE_TRANSITION_ON,
 )
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -46,11 +46,11 @@ async def test_turn_on(hass: HomeAssistant, snooz_fan_entity_id: str):
     assert ATTR_ASSUMED_STATE not in state.attributes
 
 
-async def test_fade_on(hass: HomeAssistant, snooz_fan_entity_id: str):
-    """Test fading on the device."""
+async def test_transition_on(hass: HomeAssistant, snooz_fan_entity_id: str):
+    """Test transitioning on the device."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_FADE_ON,
+        SERVICE_TRANSITION_ON,
         {ATTR_ENTITY_ID: [snooz_fan_entity_id], ATTR_DURATION: 1},
         blocking=True,
     )
@@ -134,11 +134,11 @@ async def test_turn_off(hass: HomeAssistant, snooz_fan_entity_id: str):
     assert ATTR_ASSUMED_STATE not in state.attributes
 
 
-async def test_fade_off(hass: HomeAssistant, snooz_fan_entity_id: str):
-    """Test fading off the device."""
+async def test_transition_off(hass: HomeAssistant, snooz_fan_entity_id: str):
+    """Test transitioning off the device."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_FADE_OFF,
+        SERVICE_TRANSITION_OFF,
         {ATTR_ENTITY_ID: [snooz_fan_entity_id], ATTR_DURATION: 1},
         blocking=True,
     )

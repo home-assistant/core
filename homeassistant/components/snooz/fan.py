@@ -27,10 +27,10 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from .const import (
     ATTR_DURATION,
     ATTR_VOLUME,
-    DEFAULT_FADE_DURATION,
+    DEFAULT_TRANSITION_DURATION,
     DOMAIN,
-    SERVICE_FADE_OFF,
-    SERVICE_FADE_ON,
+    SERVICE_TRANSITION_OFF,
+    SERVICE_TRANSITION_ON,
 )
 from .models import SnoozConfigurationData
 
@@ -42,25 +42,25 @@ async def async_setup_entry(
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
-        SERVICE_FADE_ON,
+        SERVICE_TRANSITION_ON,
         {
             vol.Optional(ATTR_VOLUME): vol.All(
                 vol.Coerce(int), vol.Range(min=0, max=100)
             ),
-            vol.Optional(ATTR_DURATION, default=DEFAULT_FADE_DURATION): vol.All(
+            vol.Optional(ATTR_DURATION, default=DEFAULT_TRANSITION_DURATION): vol.All(
                 vol.Coerce(int), vol.Range(min=1, max=300)
             ),
         },
-        "async_fade_on",
+        "async_transition_on",
     )
     platform.async_register_entity_service(
-        SERVICE_FADE_OFF,
+        SERVICE_TRANSITION_OFF,
         {
-            vol.Optional(ATTR_DURATION, default=DEFAULT_FADE_DURATION): vol.All(
+            vol.Optional(ATTR_DURATION, default=DEFAULT_TRANSITION_DURATION): vol.All(
                 vol.Coerce(int), vol.Range(min=1, max=300)
             ),
         },
-        "async_fade_off",
+        "async_transition_off",
     )
 
     data: SnoozConfigurationData = hass.data[DOMAIN][entry.entry_id]
@@ -141,14 +141,14 @@ class SnoozFan(FanEntity, RestoreEntity):
             set_volume(percentage) if percentage > 0 else turn_off()
         )
 
-    async def async_fade_on(self, duration: int, **kwargs: Any) -> None:
-        """Fade on the device."""
+    async def async_transition_on(self, duration: int, **kwargs: Any) -> None:
+        """Transition on the device."""
         await self._async_execute_command(
             turn_on(volume=kwargs.get("volume"), duration=timedelta(seconds=duration))
         )
 
-    async def async_fade_off(self, duration: int, **kwargs: Any) -> None:
-        """Fade off the device."""
+    async def async_transition_off(self, duration: int, **kwargs: Any) -> None:
+        """Transition off the device."""
         await self._async_execute_command(
             turn_off(duration=timedelta(seconds=duration))
         )

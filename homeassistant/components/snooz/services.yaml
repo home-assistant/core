@@ -1,13 +1,13 @@
-fade_on:
-  name: Fade on
-  description: Fade to a target volume level over time.
+transition_on:
+  name: Transition on
+  description: Transition to a target volume level over time.
   target:
     entity:
       integration: snooz
       domain: fan
   fields:
     duration:
-      name: Fade duration
+      name: Transition duration
       description: Time it takes to reach the target volume level.
       selector:
         number:
@@ -24,16 +24,16 @@ fade_on:
           max: 100
           unit_of_measurement: "%"
 
-fade_off:
-  name: Fade off
-  description: Fade volume off over time.
+transition_off:
+  name: Transition off
+  description: Transition volume off over time.
   target:
     entity:
       integration: snooz
       domain: fan
   fields:
     duration:
-      name: Fade duration
+      name: Transition duration
       description: Time it takes to turn off.
       selector:
         number:

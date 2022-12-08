@@ -4,8 +4,11 @@ from homeassistant.const import Platform
 
 DOMAIN = "snooz"
 PLATFORMS: list[Platform] = [Platform.FAN]
-SERVICE_FADE_ON = "fade_on"
-SERVICE_FADE_OFF = "fade_off"
+
+SERVICE_TRANSITION_ON = "transition_on"
+SERVICE_TRANSITION_OFF = "transition_off"
+
 ATTR_VOLUME = "volume"
 ATTR_DURATION = "duration"
-DEFAULT_FADE_DURATION = 30
+
+DEFAULT_TRANSITION_DURATION = 20
