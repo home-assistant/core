@@ -172,7 +172,7 @@ class TwinklyLight(LightEntity):
         effect_list = []
         _LOGGER.debug("Config: %s", self._conf)
         for i in range(self._effets_number):
-            effect_list.append(f"Effect {i + 1}")
+            effect_list.append(f"{ATTR_EFFECT.capitalize()} {i + 1}")
         for movie in self._movies:
             effect_list.append(f"{movie['id']} {movie['name']}")
         return effect_list
@@ -258,13 +258,23 @@ class TwinklyLight(LightEntity):
             and LightEntityFeature.EFFECT & self.supported_features
         ):
             movie_id = kwargs[ATTR_EFFECT].split(" ")[0]
-            if movie_id == "Effect":
+            if movie_id.lower() == ATTR_EFFECT:
                 effect_id = kwargs[ATTR_EFFECT].split(" ")[1]
                 await self.async_set_effect(int(effect_id) - 1)
-            elif "id" not in self._current_movie or int(movie_id) != int(
-                self._current_movie["id"]
+                self._client.default_mode = MODE_EFFECT
+                _LOGGER.debug("Setting effect mode %s", effect_id)
+            elif (
+                self._client.default_mode != MODE_MOVIE
+                or self._client.default_mode == MODE_MOVIE
+                and (
+                    "id" not in self._current_movie
+                    or int(movie_id) != int(self._current_movie["id"])
+                )
             ):
+
+                _LOGGER.debug("Setting move mode %s", movie_id)
                 await self.async_set_movie(int(movie_id))
+                self._client.default_mode = MODE_MOVIE
 
         if not self._is_on:
             await self._client.turn_on()
