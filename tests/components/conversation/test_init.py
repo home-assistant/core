@@ -142,7 +142,7 @@ async def test_http_processing_intent(hass, hass_client, hass_admin_user):
             }
         },
         "language": hass.config.language,
-        "data": {"target": {}},
+        "data": {"target": None},
     }
 
 
@@ -220,8 +220,8 @@ async def test_http_api(hass, init_components, hass_client):
         "data": {
             "target": {
                 "name": "kitchen",
-                "target_type": "entity",
-                "target_id": "light.kitchen",
+                "type": "entity",
+                "id": "light.kitchen",
             }
         },
     }
@@ -372,7 +372,7 @@ async def test_custom_agent(hass, hass_client, hass_admin_user):
             }
         },
         "language": "test-language",
-        "data": {"target": {}},
+        "data": {"target": None},
     }
 
     assert len(calls) == 1

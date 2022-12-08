@@ -224,8 +224,8 @@ class ServiceIntentHandler(IntentHandler):
         response.async_set_target(
             IntentResponseTarget(
                 name=state.name,
-                target_type=IntentResponseTargetType.ENTITY,
-                target_id=state.entity_id,
+                type=IntentResponseTargetType.ENTITY,
+                id=state.entity_id,
             )
         )
         return response
@@ -322,8 +322,8 @@ class IntentResponseTarget:
     """Main target of the intent response."""
 
     name: str
-    target_type: IntentResponseTargetType
-    target_id: str | None = None
+    type: IntentResponseTargetType
+    id: str | None = None
 
 
 class IntentResponse:
@@ -344,10 +344,11 @@ class IntentResponse:
         self.error_code: IntentResponseErrorCode | None = None
         self.target: IntentResponseTarget | None = None
 
-        if self.intent is not None:
-            if self.intent.category == IntentCategory.QUERY:
-                # speech will be the answer to the query
-                self.response_type = IntentResponseType.QUERY_ANSWER
+        if (self.intent is not None) and (self.intent.category == IntentCategory.QUERY):
+            # speech will be the answer to the query
+            self.response_type = IntentResponseType.QUERY_ANSWER
+        else:
+            self.response_type = IntentResponseType.ACTION_DONE
 
     @callback
     def async_set_speech(
@@ -416,10 +417,9 @@ class IntentResponse:
             response_data["code"] = self.error_code.value
         else:
             # action done or query answer
-            if self.target is not None:
-                response_data["target"] = dataclasses.asdict(self.target)
-            else:
-                response_data["target"] = {}
+            response_data["target"] = (
+                dataclasses.asdict(self.target) if self.target is not None else None
+            )
 
         response_dict["data"] = response_data
 
