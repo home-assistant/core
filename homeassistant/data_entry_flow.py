@@ -101,7 +101,7 @@ class FlowResult(TypedDict, total=False):
     required: bool
     result: Any
     step_id: str
-    title: str | None
+    title: str
     type: FlowResultType
     url: str
     version: int
@@ -504,17 +504,19 @@ class FlowHandler:
         description_placeholders: Mapping[str, str] | None = None,
     ) -> FlowResult:
         """Finish config flow and create a config entry."""
-        return FlowResult(
+        flow_result = FlowResult(
             version=self.VERSION,
             type=FlowResultType.CREATE_ENTRY,
             flow_id=self.flow_id,
             handler=self.handler,
-            title=title,
             data=data,
             description=description,
             description_placeholders=description_placeholders,
             context=self.context,
         )
+        if title is not None:
+            flow_result["title"] = title
+        return flow_result
 
     @callback
     def async_abort(

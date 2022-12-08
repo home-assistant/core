@@ -223,7 +223,7 @@ class ConfigEntry:
         self,
         version: int,
         domain: str,
-        title: str | None,
+        title: str,
         data: Mapping[str, Any],
         source: str,
         pref_disable_new_entities: bool | None = None,
@@ -245,7 +245,7 @@ class ConfigEntry:
         self.domain = domain
 
         # Title of the configuration
-        self.title = title or ""
+        self.title = title
 
         # Config data
         self.data = MappingProxyType(data)
@@ -1620,10 +1620,10 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         return await self._async_step_discovery_without_unique_id()
 
     @callback
-    def async_create_entry(
+    def async_create_entry(  # type: ignore[override]
         self,
         *,
-        title: str | None = None,
+        title: str,
         data: Mapping[str, Any],
         description: str | None = None,
         description_placeholders: Mapping[str, str] | None = None,
