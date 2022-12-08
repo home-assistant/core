@@ -42,6 +42,62 @@
                     "pedestrian": "Fu\u00dfg\u00e4nger"
                 }
             }
+        },
+        "sensor": {
+            "battery": {
+                "state": {
+                    "full": "Voll",
+                    "low": "Niedrig",
+                    "normal": "Normal",
+                    "verylow": "Sehr niedrig"
+                }
+            },
+            "discrete_rssi_level": {
+                "state": {
+                    "good": "Gut",
+                    "low": "Niedrig",
+                    "normal": "Normal",
+                    "verylow": "Sehr niedrig"
+                }
+            },
+            "priority_lock_originator": {
+                "state": {
+                    "external_gateway": "Externes Gateway",
+                    "local_user": "Lokaler Benutzer",
+                    "lsc": "LSC",
+                    "myself": "Mich",
+                    "rain": "Regen",
+                    "saac": "SAAC",
+                    "security": "Sicherheit",
+                    "sfc": "SFC",
+                    "temperature": "Temperatur",
+                    "timer": "Timer",
+                    "ups": "USV",
+                    "user": "Benutzer",
+                    "wind": "Wind"
+                }
+            },
+            "sensor_defect": {
+                "state": {
+                    "dead": "Nicht Erreichbar",
+                    "low_battery": "Niedriger Batteriestatus",
+                    "maintenance_required": "Wartung erforderlich",
+                    "no_defect": "Kein Fehler"
+                }
+            },
+            "sensor_room": {
+                "state": {
+                    "clean": "Sauber",
+                    "dirty": "Schmutzig"
+                }
+            },
+            "three_way_handle_direction": {
+                "state": {
+                    "closed": "Geschlossen",
+                    "open": "Offen",
+                    "tilt": "Kippen"
+                }
+            }
         }
     }
 }

@@ -8,6 +8,7 @@
         "error": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
             "invalid_auth": "Neplatn\u00e9 overenie",
+            "missing_data": "Ch\u00fdbaj\u00face \u00fadaje: sk\u00faste to znova nesk\u00f4r alebo pou\u017eite in\u00fa konfigur\u00e1ciu",
             "otp_failed": "Dvojstup\u0148ov\u00e9 overenie zlyhalo, sk\u00faste to znova s nov\u00fdm pr\u00edstupov\u00fdm k\u00f3dom",
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
@@ -53,6 +54,7 @@
             "init": {
                 "data": {
                     "scan_interval": "Min\u00faty medzi skenovaniami",
+                    "snap_profile_type": "\u00darove\u0148 kvality sn\u00edmok kamery (0:vysok\u00e1 1:stredn\u00e1 2:n\u00edzka)",
                     "timeout": "\u010casov\u00fd limit (v sekund\u00e1ch)"
                 }
             }

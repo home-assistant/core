@@ -54,9 +54,23 @@
                     "4": "Z\u00f3na 4",
                     "5": "Z\u00f3na 5",
                     "6": "Z\u00f3na 6",
-                    "7": "Z\u00f3na 7"
+                    "7": "Z\u00f3na 7",
+                    "out": "OUT"
                 },
                 "title": "Konfigur\u00e1cia I/O"
+            },
+            "options_io_ext": {
+                "data": {
+                    "10": "Z\u00f3na 10",
+                    "11": "Z\u00f3na 11",
+                    "12": "Z\u00f3na 12",
+                    "8": "Z\u00f3na 8",
+                    "9": "Z\u00f3na 9",
+                    "alarm1": "ALARM1",
+                    "alarm2_out2": "OUT2/ALARM2",
+                    "out1": "OUT1"
+                },
+                "title": "Nakonfigurujte roz\u0161\u00edren\u00e9 I/O"
             },
             "options_misc": {
                 "data": {
@@ -67,8 +81,11 @@
                 "data": {
                     "momentary": "Trvanie impulzu (ms)",
                     "name": "N\u00e1zov (volite\u013en\u00fd)",
-                    "pause": "Pauza medzi impulzmi (ms)"
-                }
+                    "pause": "Pauza medzi impulzmi (ms)",
+                    "repeat": "Po\u010det opakovan\u00ed (-1 = nekone\u010dno)"
+                },
+                "description": "mo\u017enosti {zone}: state {state}",
+                "title": "Konfigur\u00e1cia prep\u00ednate\u013en\u00e9ho v\u00fdstupu"
             }
         }
     }

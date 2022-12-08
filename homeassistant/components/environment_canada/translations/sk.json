@@ -13,7 +13,8 @@
                     "latitude": "Zemepisn\u00e1 \u0161\u00edrka",
                     "longitude": "Zemepisn\u00e1 d\u013a\u017eka",
                     "station": "ID meteorologickej stanice"
-                }
+                },
+                "title": "Environment Canada: poloha a jazyk po\u010dasia"
             }
         }
     }

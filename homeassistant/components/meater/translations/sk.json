@@ -9,7 +9,8 @@
             "reauth_confirm": {
                 "data": {
                     "password": "Heslo"
-                }
+                },
+                "description": "Potvr\u010fte heslo pre \u00fa\u010det Meater Cloud {username}."
             },
             "user": {
                 "data": {

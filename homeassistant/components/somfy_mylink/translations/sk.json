@@ -23,6 +23,14 @@
     "options": {
         "abort": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165"
+        },
+        "step": {
+            "init": {
+                "title": "Nakonfigurujte mo\u017enosti MyLink"
+            },
+            "target_config": {
+                "description": "Nakonfigurujte mo\u017enosti pre `{target_name}`"
+            }
         }
     }
 }

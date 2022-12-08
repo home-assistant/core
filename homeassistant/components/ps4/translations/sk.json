@@ -24,7 +24,8 @@
             },
             "mode": {
                 "data": {
-                    "ip_address": "IP adresa (Ak pou\u017e\u00edvate automatick\u00e9 zis\u0165ovanie, nechajte pr\u00e1zdne)."
+                    "ip_address": "IP adresa (Ak pou\u017e\u00edvate automatick\u00e9 zis\u0165ovanie, nechajte pr\u00e1zdne).",
+                    "mode": "Konfigura\u010dn\u00fd re\u017eim"
                 },
                 "data_description": {
                     "ip_address": "Ak vyberiete automatick\u00e9 zis\u0165ovanie, ponechajte pr\u00e1zdne."

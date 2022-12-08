@@ -9,6 +9,7 @@
         },
         "step": {
             "reauth_confirm": {
+                "description": "Integr\u00e1cia SmartTub vy\u017eaduje op\u00e4tovn\u00e9 overenie v\u00e1\u0161ho \u00fa\u010dtu",
                 "title": "Znova overi\u0165 integr\u00e1ciu"
             },
             "user": {

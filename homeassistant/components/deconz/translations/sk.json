@@ -2,7 +2,9 @@
     "config": {
         "abort": {
             "already_configured": "Bridge je u\u017e nakonfigurovan\u00fd",
-            "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha"
+            "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha",
+            "no_hardware_available": "\u017diadny r\u00e1diov\u00fd hardv\u00e9r pripojen\u00fd k deCONZ",
+            "updated_instance": "Aktualizovan\u00e1 in\u0161tancia deCONZ s novou adresou hostite\u013ea"
         },
         "error": {
             "linking_not_possible": "Nepodarilo sa prepoji\u0165 s br\u00e1nou",
@@ -53,6 +55,7 @@
             "side_4": "Strana 4",
             "side_5": "Strana 5",
             "side_6": "Strana 6",
+            "top_buttons": "Horn\u00e9 tla\u010didl\u00e1",
             "turn_off": "Vypn\u00fa\u0165",
             "turn_on": "Zapn\u00fa\u0165"
         },
