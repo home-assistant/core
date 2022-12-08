@@ -24,9 +24,8 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_API_KEY,
     CONF_NAME,
-    IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT,
-    IRRADIATION_WATTS_PER_SQUARE_METER,
     PERCENTAGE,
+    UnitOfIrradiance,
     UnitOfLength,
     UnitOfPressure,
     UnitOfSpeed,
@@ -122,9 +121,10 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_SOLAR_GHI,
         name="Global Horizontal Irradiance",
-        unit_imperial=IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT,
-        unit_metric=IRRADIATION_WATTS_PER_SQUARE_METER,
+        unit_imperial=UnitOfIrradiance.BTUS_PER_HOUR_SQUARE_FOOT,
+        unit_metric=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
         imperial_conversion=(1 / 3.15459),
+        device_class=SensorDeviceClass.IRRADIANCE,
     ),
     # Data comes in as km, convert to miles for imperial
     TomorrowioSensorEntityDescription(
