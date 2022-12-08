@@ -294,7 +294,7 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
         self.async_write_ha_state()
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> SensorDeviceClass | None:
         """Return the device class of the sensor."""
         class_or_icon = SENSOR_DEVICE_CLASS_ICON_MAP.get(
             self._tasmota_entity.quantity, {}
