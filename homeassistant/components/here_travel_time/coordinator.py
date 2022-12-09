@@ -7,7 +7,12 @@ import logging
 import here_routing
 from here_routing import HERERoutingApi, Return, RoutingMode, Spans, TransportMode
 import here_transit
-from here_transit import HERETransitApi
+from here_transit import (
+    HERETransitApi,
+    HERETransitConnectionError,
+    HERETransitDepartureArrivalTooCloseError,
+    HERETransitNoRouteFoundError,
+)
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ATTRIBUTION, UnitOfLength
@@ -154,23 +159,28 @@ class HERETransitDataUpdateCoordinator(DataUpdateCoordinator):
             arrival,
             departure,
         )
+        try:
+            response = await self._api.route(
+                origin=here_transit.Place(latitude=origin[0], longitude=origin[1]),
+                destination=here_transit.Place(
+                    latitude=destination[0], longitude=destination[1]
+                ),
+                arrival_time=arrival,
+                departure_time=departure,
+                return_values=[
+                    here_transit.Return.POLYLINE,
+                    here_transit.Return.TRAVEL_SUMMARY,
+                ],
+            )
 
-        response = await self._api.route(
-            origin=here_transit.Place(latitude=origin[0], longitude=origin[1]),
-            destination=here_transit.Place(
-                latitude=destination[0], longitude=destination[1]
-            ),
-            arrival_time=arrival,
-            departure_time=departure,
-            return_values=[
-                here_transit.Return.POLYLINE,
-                here_transit.Return.TRAVEL_SUMMARY,
-            ],
-        )
+            _LOGGER.debug("Raw response is: %s", response)
 
-        _LOGGER.debug("Raw response is: %s", response)
-
-        return self._parse_transit_response(response)
+            return self._parse_transit_response(response)
+        except HERETransitDepartureArrivalTooCloseError:
+            _LOGGER.debug("Ignoring HERETransitDepartureArrivalTooCloseError")
+            return None
+        except (HERETransitConnectionError, HERETransitNoRouteFoundError) as error:
+            raise UpdateFailed from error
 
     def _parse_transit_response(self, response) -> HERETravelTimeData:
         """Parse the transit response dict to a HERETravelTimeData."""
