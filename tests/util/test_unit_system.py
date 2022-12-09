@@ -410,7 +410,7 @@ def test_get_unit_system_invalid(key: str) -> None:
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_METERS, None),
         (SensorDeviceClass.GAS, "very_much", None),
         # Test pressure conversion
-        (SensorDeviceClass.PRESSURE, UnitOfPressure.PSI, UnitOfPressure.BAR),
+        (SensorDeviceClass.PRESSURE, UnitOfPressure.PSI, UnitOfPressure.KPA),
         (SensorDeviceClass.PRESSURE, UnitOfPressure.BAR, None),
         (SensorDeviceClass.PRESSURE, "very_much", None),
         # Test speed conversion
