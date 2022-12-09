@@ -132,3 +132,70 @@ async def test_options(hass: HomeAssistant, platform: str) -> None:
     # Check the state of the entity has changed as expected
     state = hass.states.get(f"{platform}.my_min_max")
     assert state.state == "21.1"
+
+
+async def test_config_flow_preview(hass: HomeAssistant, hass_ws_client) -> None:
+    """Test the config flow preview."""
+    client = await hass_ws_client(hass)
+
+    input_sensors = ["sensor.input_one", "sensor.input_two"]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] is None
+    assert result["preview"] == "min_max_preview"
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "min_max/preview",
+            "flow_id": "blah",
+            "flow_type": "config_flow",
+            "user_input": {
+                "name": "My min_max",
+                "entity_ids": input_sensors,
+                "type": "max",
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "attributes": {
+            "friendly_name": "My min_max",
+            "icon": "mdi:calculator",
+            "max_entity_id": None,
+            "state_class": "measurement",
+        },
+        "state": "unknown",
+    }
+
+    hass.states.async_set("sensor.input_one", "10")
+    hass.states.async_set("sensor.input_two", "20")
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "min_max/preview",
+            "flow_id": "blah",
+            "flow_type": "config_flow",
+            "user_input": {
+                "name": "My min_max",
+                "entity_ids": input_sensors,
+                "type": "max",
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "attributes": {
+            "friendly_name": "My min_max",
+            "icon": "mdi:calculator",
+            "max_entity_id": "sensor.input_two",
+            "state_class": "measurement",
+        },
+        "state": "20.0",
+    }

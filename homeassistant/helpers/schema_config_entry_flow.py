@@ -78,6 +78,9 @@ class SchemaFlowFormStep(SchemaFlowStep):
     have priority over the suggested values.
     """
 
+    preview: str | None = None
+    """Optional preview component."""
+
 
 @dataclass(slots=True)
 class SchemaFlowMenuStep(SchemaFlowStep):
@@ -237,6 +240,7 @@ class SchemaCommonFlowHandler:
             data_schema=data_schema,
             errors=errors,
             last_step=last_step,
+            preview=form_step.preview,
         )
 
     async def _async_menu_step(

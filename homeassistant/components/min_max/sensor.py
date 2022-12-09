@@ -1,6 +1,7 @@
 """Support for displaying minimal, maximal, mean or median values."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import datetime
 import logging
 import statistics
@@ -245,6 +246,19 @@ class MinMaxSensor(SensorEntity):
         self.last_entity_id: str | None = None
         self.count_sensors = len(self._entity_ids)
         self.states: dict[str, Any] = {}
+
+    @callback
+    def async_preview(self) -> tuple[str, Mapping[str, Any]]:
+        """Render a preview."""
+        # Replay current state of source entities
+        for entity_id in self._entity_ids:
+            state = self.hass.states.get(entity_id)
+            state_event = Event("", {"entity_id": entity_id, "new_state": state})
+            self._async_min_max_sensor_state_listener(state_event, update_state=False)
+
+        self._calc_values()
+
+        return self._async_generate_attributes()
 
     async def async_added_to_hass(self) -> None:
         """Handle added to Hass."""
