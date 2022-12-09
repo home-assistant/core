@@ -46,7 +46,7 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        current_temperature = self.device.states[OverkizState.CORE_DHW_TEMPERATURE]
+        current_temperature = self.device.states.get(OverkizState.CORE_DHW_TEMPERATURE)
         if current_temperature:
             return current_temperature.value_as_float
         return None
@@ -54,9 +54,9 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        target_temperature = self.device.states[
+        target_temperature = self.device.states.get(
             OverkizState.MODBUS_CONTROL_DHW_SETTING_TEMPERATURE
-        ]
+        )
         if target_temperature:
             return target_temperature.value_as_float
         return None
@@ -72,11 +72,11 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
     @property
     def current_operation(self) -> str | None:
         """Return current operation ie. eco, electric, performance, ..."""
-        modbus_control = self.device.states[OverkizState.MODBUS_CONTROL_DHW]
+        modbus_control = self.device.states.get(OverkizState.MODBUS_CONTROL_DHW)
         if modbus_control and modbus_control.value_as_str == OverkizCommandParam.STOP:
             return STATE_OFF
 
-        current_mode = self.device.states[OverkizState.MODBUS_DHW_MODE]
+        current_mode = self.device.states.get(OverkizState.MODBUS_DHW_MODE)
         if current_mode and current_mode.value_as_str in OVERKIZ_TO_OPERATION_MODE:
             return OVERKIZ_TO_OPERATION_MODE[current_mode.value_as_str]
 
