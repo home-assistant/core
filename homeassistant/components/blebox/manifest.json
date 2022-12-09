@@ -7,5 +7,5 @@
   "codeowners": ["@bbx-a", "@riokuu"],
   "iot_class": "local_polling",
   "loggers": ["blebox_uniapi"],
-  "zeroconf": ["_bbxsrv._tcp.local"]
+  "zeroconf": ["_bbxsrv._tcp.local."]
 }

@@ -152,7 +152,7 @@ ZEROCONF = {
             },
         },
     ],
-    "_bbxsrv._tcp.local": [
+    "_bbxsrv._tcp.local.": [
         {
             "domain": "blebox",
         },
