@@ -6,7 +6,9 @@ import blebox_uniapi
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components import zeroconf
 from homeassistant.components.blebox import config_flow
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
 from .conftest import mock_config, mock_only_feature, setup_product_mock
@@ -190,3 +192,113 @@ async def test_async_remove_entry(hass, valid_feature_mock):
 
     assert hass.config_entries.async_entries() == []
     assert config.state is config_entries.ConfigEntryState.NOT_LOADED
+
+
+async def test_flow_with_zeroconf(hass):
+    """Test setup from zeroconf discovery."""
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="172.100.123.4",
+            addresses=["172.100.123.4"],
+            port=80,
+            hostname="bbx-bbtest123456.local.",
+            type="_bbxsrv._tcp.local.",
+            name="bbx-bbtest123456._bbxsrv._tcp.local.",
+            properties={"_raw": {}},
+        ),
+    )
+
+    assert result["type"] == FlowResultType.FORM
+
+    with patch("homeassistant.components.blebox.async_setup_entry", return_value=True):
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["data"] == {"host": "172.100.123.4", "port": 80}
+
+
+async def test_flow_with_zeroconf_when_already_in_progress(hass):
+    """Test behaviour if flow for device exists."""
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="172.100.123.4",
+            addresses=["172.100.123.4"],
+            port=80,
+            hostname="bbx-bbtest123456.local.",
+            type="_bbxsrv._tcp.local.",
+            name="bbx-bbtest123456._bbxsrv._tcp.local.",
+            properties={"_raw": {}},
+        ),
+    )
+
+    assert result["type"] == FlowResultType.FORM
+
+    print("result", result)
+
+    result2 = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="172.100.123.4",
+            addresses=["172.100.123.4"],
+            port=80,
+            hostname="bbx-bbtest123456.local.",
+            type="_bbxsrv._tcp.local.",
+            name="bbx-bbtest123456._bbxsrv._tcp.local.",
+            properties={"_raw": {}},
+        ),
+    )
+
+    assert result2["type"] == FlowResultType.ABORT
+
+
+async def test_flow_with_zeroconf_when_device_unsupported(hass):
+    """Test behaviour when device is not supported."""
+    with patch(
+        "blebox_uniapi.box.Box.async_from_host",
+        side_effect=blebox_uniapi.error.UnsupportedBoxVersion,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=zeroconf.ZeroconfServiceInfo(
+                host="172.100.123.4",
+                addresses=["172.100.123.4"],
+                port=80,
+                hostname="bbx-bbtest123456.local.",
+                type="_bbxsrv._tcp.local.",
+                name="bbx-bbtest123456._bbxsrv._tcp.local.",
+                properties={"_raw": {}},
+            ),
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "unsupported_device_version"
+
+
+async def test_flow_with_zeroconf_when_device_response_unsupported(hass):
+    """Test behaviour when device returned unsupported response."""
+
+    with patch(
+        "blebox_uniapi.box.Box.async_from_host",
+        side_effect=blebox_uniapi.error.UnsupportedBoxResponse,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=zeroconf.ZeroconfServiceInfo(
+                host="172.100.123.4",
+                addresses=["172.100.123.4"],
+                port=80,
+                hostname="bbx-bbtest123456.local.",
+                type="_bbxsrv._tcp.local.",
+                name="bbx-bbtest123456._bbxsrv._tcp.local.",
+                properties={"_raw": {}},
+            ),
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "unsupported_device_response"
