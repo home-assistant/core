@@ -28,7 +28,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
-    VOLUME_CUBIC_METERS,
+    UnitOfVolume,
 )
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
@@ -55,7 +55,7 @@ from .const import (
     LOGGER,
 )
 
-UNIT_CONVERSION = {"m3": VOLUME_CUBIC_METERS}
+UNIT_CONVERSION = {"m3": UnitOfVolume.CUBIC_METERS}
 
 
 @dataclass
