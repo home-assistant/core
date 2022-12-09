@@ -401,7 +401,7 @@ class SchemaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
         """Finish config flow and create a config entry."""
         if self._async_options_flow_finished:
             self._async_options_flow_finished(self.hass, data)
-        return super().async_create_entry(title="", data=data, **kwargs)
+        return super().async_create_entry(data=data, **kwargs)
 
 
 @callback
