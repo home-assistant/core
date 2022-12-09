@@ -1620,7 +1620,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         return await self._async_step_discovery_without_unique_id()
 
     @callback
-    def async_create_entry(
+    def async_create_entry(  # type: ignore[override]
         self,
         *,
         title: str,
