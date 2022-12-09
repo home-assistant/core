@@ -92,7 +92,7 @@ async def test_setup_success(
 
     assert not hass.data.get(DOMAIN)
     assert entries[0].state is ConfigEntryState.NOT_LOADED
-    assert not len(hass.services.async_services().get(DOMAIN, {}))
+    assert not hass.services.async_services().get(DOMAIN, {})
 
 
 @pytest.mark.parametrize("expires_at", [time.time() - 3600], ids=["expired"])
