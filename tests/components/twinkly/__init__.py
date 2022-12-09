@@ -37,6 +37,7 @@ class ClientMock:
             "device_name": self.id,  # we make sure that entity id is different for each test
             "product_code": TEST_MODEL,
         }
+        self.mock_twinkly_error = False
 
     @property
     def host(self) -> str:
@@ -86,8 +87,9 @@ class ClientMock:
 
     async def set_static_colour(self, colour) -> None:
         """Set static color."""
-        self.color = colour
-        self.default_mode = "color"
+        if not self.mock_twinkly_error:
+            self.color = colour
+            self.default_mode = "color"
 
     async def set_cycle_colours(self, colour) -> None:
         """Set static color."""
@@ -123,8 +125,11 @@ class ClientMock:
 
     async def get_current_colour(self) -> dict:
         """Get current color."""
+        return_code = 1000
+        if self.mock_twinkly_error:
+            return_code = 500
         return {
-            "code": 1000,
+            "code": return_code,
             "red": int(self.color[0]),
             "green": int(self.color[1]),
             "blue": int(self.color[1]),

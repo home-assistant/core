@@ -306,6 +306,46 @@ async def test_turn_on_without_movies(hass: HomeAssistant):
     assert client.default_mode == "effect"
 
 
+async def test_failed_twinkly_reponse(hass: HomeAssistant):
+    """Test support of the light.turn_on service without any service data and no movies defined."""
+    client = ClientMock()
+    client.state = False
+    client.device_info["led_profile"] = "RGB"
+    client.brightness = {"mode": "enabled", "value": 255}
+    entity, _, _, _ = await _create_entries(hass, client)
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        service_data={"entity_id": entity.entity_id, "rgb_color": (128, 64, 32)},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity.entity_id)
+
+    assert state.state == "on"
+    assert client.default_mode == "color"
+    assert client.mode == "color"
+    assert client.color == (128, 64, 32)
+
+    client.mock_twinkly_error = True
+
+    # Verify that the following call does NOT change the color
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        service_data={"entity_id": entity.entity_id, "rgb_color": (32, 64, 128)},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity.entity_id)
+
+    assert state.state == "on"
+    assert client.default_mode == "color"
+    assert client.mode == "color"
+    assert client.color == (128, 64, 32)
+
+
 async def test_turn_off(hass: HomeAssistant):
     """Test support of the light.turn_off service."""
     entity, _, _, _ = await _create_entries(hass)
