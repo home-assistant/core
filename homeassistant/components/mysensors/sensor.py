@@ -15,7 +15,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONDUCTIVITY,
     DEGREE,
-    ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_MILLIVOLT,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
@@ -30,6 +29,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
     Platform,
     UnitOfApparentPower,
+    UnitOfElectricCurrent,
     UnitOfSoundPressure,
 )
 from homeassistant.core import HomeAssistant
@@ -160,7 +160,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "V_CURRENT": SensorEntityDescription(
         key="V_CURRENT",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
