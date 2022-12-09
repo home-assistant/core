@@ -52,7 +52,7 @@ async def test_sensors(hass: HomeAssistant, patcher, connections) -> None:
 
     assert hass.states.get("sensor.my_generator_engine_speed").state == "0"
 
-    assert hass.states.get("sensor.my_generator_engine_oil_pressure").state == "0.0"
+    assert hass.states.get("sensor.my_generator_engine_oil_pressure").state == "0"
 
     assert (
         hass.states.get("sensor.my_generator_engine_coolant_temperature").state == "0"

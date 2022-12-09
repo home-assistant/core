@@ -76,9 +76,9 @@ async def test_sensors(hass):
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:car-tire-alert"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPressure.BAR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPressure.KPA
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
-    assert state.state == "2.4"
+    assert state.state == "241"
     entry = entity_registry.async_get("sensor.my_mazda3_front_left_tire_pressure")
     assert entry
     assert entry.unique_id == "JM000000000000000_front_left_tire_pressure"
@@ -92,9 +92,9 @@ async def test_sensors(hass):
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:car-tire-alert"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPressure.BAR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPressure.KPA
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
-    assert state.state == "2.4"
+    assert state.state == "241"
     entry = entity_registry.async_get("sensor.my_mazda3_front_right_tire_pressure")
     assert entry
     assert entry.unique_id == "JM000000000000000_front_right_tire_pressure"
@@ -107,9 +107,9 @@ async def test_sensors(hass):
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:car-tire-alert"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPressure.BAR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPressure.KPA
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
-    assert state.state == "2.3"
+    assert state.state == "228"
     entry = entity_registry.async_get("sensor.my_mazda3_rear_left_tire_pressure")
     assert entry
     assert entry.unique_id == "JM000000000000000_rear_left_tire_pressure"
@@ -122,9 +122,9 @@ async def test_sensors(hass):
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:car-tire-alert"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPressure.BAR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPressure.KPA
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
-    assert state.state == "2.3"
+    assert state.state == "228"
     entry = entity_registry.async_get("sensor.my_mazda3_rear_right_tire_pressure")
     assert entry
     assert entry.unique_id == "JM000000000000000_rear_right_tire_pressure"
