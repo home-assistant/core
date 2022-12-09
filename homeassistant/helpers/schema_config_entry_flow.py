@@ -274,6 +274,8 @@ class SchemaConfigFlowHandler(config_entries.ConfigFlow, ABC):
             if cls.options_flow is None:
                 raise UnknownHandler
 
+            cls.async_setup_preview()
+
             return SchemaOptionsFlowHandler(
                 config_entry, cls.options_flow, cls.async_options_flow_finished
             )
@@ -288,6 +290,12 @@ class SchemaConfigFlowHandler(config_entries.ConfigFlow, ABC):
     def __init__(self) -> None:
         """Initialize config flow."""
         self._common_handler = SchemaCommonFlowHandler(self, self.config_flow, None)
+        self.async_setup_preview()
+
+    @callback
+    @staticmethod
+    def async_setup_preview() -> None:
+        """Set up preview."""
 
     @classmethod
     @callback

@@ -199,3 +199,59 @@ async def test_config_flow_preview(hass: HomeAssistant, hass_ws_client) -> None:
         },
         "state": "20.0",
     }
+
+
+async def test_option_flow_preview(hass: HomeAssistant, hass_ws_client) -> None:
+    """Test the option flow preview."""
+    client = await hass_ws_client(hass)
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "entity_ids": ["sensor.input_one", "sensor.input_two"],
+            "name": "My min_max",
+            "round_digits": 0,
+            "type": "min",
+        },
+        title="My min_max",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    input_sensors = ["sensor.input_one", "sensor.input_two"]
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] is None
+    assert result["preview"] == "min_max_preview"
+
+    hass.states.async_set("sensor.input_one", "10")
+    hass.states.async_set("sensor.input_two", "20")
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "min_max/preview",
+            "flow_id": "blah",
+            "flow_type": "config_flow",
+            "user_input": {
+                "name": "My min_max",
+                "entity_ids": input_sensors,
+                "type": "min",
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "attributes": {
+            "friendly_name": "My min_max",
+            "icon": "mdi:calculator",
+            "min_entity_id": "sensor.input_one",
+            "state_class": "measurement",
+        },
+        "state": "10.0",
+    }

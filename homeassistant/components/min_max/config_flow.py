@@ -74,15 +74,16 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
 
-    def __init__(self) -> None:
-        """Initialize config flow."""
-        super().__init__()
-        hass = async_get_hass()
-        websocket_api.async_register_command(hass, ws_preview_min_max)
-
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return cast(str, options["name"]) if "name" in options else ""
+
+    @callback
+    @staticmethod
+    def async_setup_preview() -> None:
+        """Set up preview WS API."""
+        hass = async_get_hass()
+        websocket_api.async_register_command(hass, ws_preview_min_max)
 
 
 @callback
