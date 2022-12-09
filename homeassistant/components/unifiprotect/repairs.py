@@ -79,7 +79,7 @@ async def _deprecate_smart_sensor(
             DOMAIN,
             "deprecate_smart_sensor",
             is_fixable=False,
-            breaks_in_ha_version="2023.2.0",
+            breaks_in_ha_version="2023.3.0",
             severity=IssueSeverity.WARNING,
             translation_key="deprecate_smart_sensor",
         )
