@@ -1,10 +1,26 @@
 {
     "config": {
+        "abort": {
+            "address_already_configured": "BleBox-laite on jo määritetty osoitteessa {address}.",
+            "already_configured": "Laite on jo määritetty"
+        },
+        "error": {
+            "cannot_connect": "Ei voida yhdistää",
+            "unknown": "Odottamaton virhe",
+            "unsupported_version": "BleBox-laitteessa on vanhentunut laiteohjelmisto. Päivitä se ensin."
+        },
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {
+                    "host": "IP-osoite / verkkotunnuksen nimi / mDNS-osoite",
                     "port": "Portti"
-                }
+                },
+                "description": "Määritä BleBox integroitumaan Home Assistant.",
+                "title": "Määritä BleBox-laitteesi"
+            },
+            "confirm_discovery": {
+                "description": "Haluatko määrittää {name} {host}:{port}?."
             }
         }
     }

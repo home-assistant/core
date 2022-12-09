@@ -1,23 +1,26 @@
 {
     "config": {
         "abort": {
-            "address_already_configured": "BleBox seade {address} on juba m\u00e4\u00e4ratud",
-            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+            "address_already_configured": "BleBoxi seade on aadressil {address} juba konfigureeritud.",
+            "already_configured": "Seade on juba konfigureeritud"
         },
         "error": {
-            "cannot_connect": "\u00dchendamine nurjus",
-            "unknown": "Tundmatu viga",
-            "unsupported_version": "BleBoxi seadmel on vananenud p\u00fcsivara. Esmalt v\u00e4rskenda seda."
+            "cannot_connect": "Ühendus ebaõnnestus",
+            "unknown": "Ootamatu viga",
+            "unsupported_version": "BleBoxi seadmel on aegunud püsivara. Palun uuenda see esmalt."
         },
         "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {
-                    "host": "IP aadress",
-                    "port": ""
+                    "host": "IP-aadress / domeeninimi / mDNS-aadress",
+                    "port": "Port"
                 },
-                "description": "Seadista oma BleBox sidumine Home Assistant-iga.",
-                "title": "Seadista BleBox seade"
+                "description": "Seadistage oma BleBox Home Assistant integreerimiseks.",
+                "title": "Seadistage oma BleBoxi seade"
+            },
+            "confirm_discovery": {
+                "description": "Kas soovite seadistada {name} {host}:{port}?."
             }
         }
     }

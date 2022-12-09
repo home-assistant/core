@@ -1,23 +1,26 @@
 {
     "config": {
         "abort": {
-            "address_already_configured": "Un p\u00e9riph\u00e9rique BleBox est d\u00e9j\u00e0 configur\u00e9 \u00e0 {address}.",
-            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+            "address_already_configured": "Un appareil BleBox est déjà configuré à {address}.",
+            "already_configured": "L'appareil est déjà configuré"
         },
         "error": {
-            "cannot_connect": "\u00c9chec de connexion",
+            "cannot_connect": "Échec de connexion",
             "unknown": "Erreur inattendue",
-            "unsupported_version": "L'appareil BleBox a un micrologiciel obsol\u00e8te. Veuillez d'abord le mettre \u00e0 jour."
+            "unsupported_version": "L'appareil BleBox a un firmware obsolète. Veuillez d'abord le mettre à jour."
         },
         "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {
-                    "host": "Adresse IP",
+                    "host": "Adresse IP / nom de domaine / adresse mDNS",
                     "port": "Port"
                 },
-                "description": "Configurez votre BleBox pour l'int\u00e9grer \u00e0 Home Assistant.",
+                "description": "Configurez votre BleBox pour l'intégrer à Home Assistant.",
                 "title": "Configurer votre appareil BleBox"
+            },
+            "confirm_discovery": {
+                "description": "Souhaitez-vous configurer {name} {host} :{port} ?."
             }
         }
     }

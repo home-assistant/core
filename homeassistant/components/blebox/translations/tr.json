@@ -1,23 +1,26 @@
 {
     "config": {
         "abort": {
-            "address_already_configured": "Bir BleBox cihaz\u0131 zaten {address} yap\u0131land\u0131r\u0131lm\u0131\u015ft\u0131r.",
-            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+            "address_already_configured": "{address} adresinde bir BleBox cihazı zaten yapılandırılmış.",
+            "already_configured": "Cihaz zaten yapılandırılmış"
         },
         "error": {
-            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "cannot_connect": "Bağlanma hatası",
             "unknown": "Beklenmeyen hata",
-            "unsupported_version": "BleBox cihaz\u0131n\u0131n g\u00fcncel olmayan bellenimi var. L\u00fctfen \u00f6nce y\u00fckseltin."
+            "unsupported_version": "BleBox cihazının güncel olmayan bellenimi var. Lütfen önce yükseltin."
         },
         "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {
-                    "host": "IP Adresi",
-                    "port": "Port"
+                    "host": "IP adresi / alan adı / mDNS adresi",
+                    "port": "Liman"
                 },
-                "description": "BleBox'\u0131n\u0131z\u0131 Home Assistant ile entegre olacak \u015fekilde ayarlay\u0131n.",
-                "title": "BleBox cihaz\u0131n\u0131z\u0131 kurun"
+                "description": "BleBox'ınızı Home Assistant ile entegre olacak şekilde ayarlayın.",
+                "title": "BleBox cihazınızı kurun"
+            },
+            "confirm_discovery": {
+                "description": "{name} {host}:{port}'u yapılandırmak ister misiniz?."
             }
         }
     }

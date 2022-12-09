@@ -1,23 +1,26 @@
 {
     "config": {
         "abort": {
-            "address_already_configured": "Zariadenie BleBox je u\u017e nakonfigurovan\u00e9 na {address}.",
-            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+            "address_already_configured": "Zariadenie BleBox je už nakonfigurované na adrese {address}.",
+            "already_configured": "Zariadenie je už nakonfigurované"
         },
         "error": {
-            "cannot_connect": "Nepodarilo sa pripoji\u0165",
-            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba",
-            "unsupported_version": "Zariadenie BleBox m\u00e1 zastaran\u00fd firmv\u00e9r. Najprv ho aktualizujte."
+            "cannot_connect": "Nepodarilo sa pripojiť",
+            "unknown": "Neočakávaná chyba",
+            "unsupported_version": "Zariadenie BleBox má zastaraný firmvér. Najprv ho inovujte."
         },
         "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {
-                    "host": "IP adresa",
+                    "host": "IP adresa / názov domény / adresa mDNS",
                     "port": "Port"
                 },
-                "description": "Nastavte BleBox k integr\u00e1cii s Home Assistant.",
-                "title": "Nastavenie zariadenia BleBox"
+                "description": "Nastavte svoj BleBox na integráciu s domácim asistentom.",
+                "title": "Nastavte svoje zariadenie BleBox"
+            },
+            "confirm_discovery": {
+                "description": "Chcete nakonfigurovať {name} {host}:{port}?."
             }
         }
     }

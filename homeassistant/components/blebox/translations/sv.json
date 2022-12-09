@@ -1,23 +1,26 @@
 {
     "config": {
         "abort": {
-            "address_already_configured": "En BleBox-enhet \u00e4r redan konfigurerad p\u00e5 {address} .",
-            "already_configured": "Enheten \u00e4r redan konfigurerad"
+            "address_already_configured": "En BleBox-enhet är redan konfigurerad på {address}.",
+            "already_configured": "Enheten är redan konfigurerad"
         },
         "error": {
-            "cannot_connect": "Det gick inte att ansluta.",
-            "unknown": "Ov\u00e4ntat fel",
-            "unsupported_version": "BleBox-enheten har f\u00f6r\u00e5ldrad firmware. Uppgradera den f\u00f6rst."
+            "cannot_connect": "Det gick inte att ansluta",
+            "unknown": "Oväntat fel",
+            "unsupported_version": "BleBox-enheten har föråldrad firmware. Uppgradera den först."
         },
         "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {
-                    "host": "IP-adress",
-                    "port": "Port"
+                    "host": "IP-adress / domännamn / mDNS-adress",
+                    "port": "Hamn"
                 },
-                "description": "St\u00e4ll in din BleBox f\u00f6r att integrera med Home Assistant.",
+                "description": "Ställ in din BleBox för att integrera med Home Assistant.",
                 "title": "Konfigurera din BleBox-enhet"
+            },
+            "confirm_discovery": {
+                "description": "Vill du konfigurera {name} {host}:{port}?."
             }
         }
     }

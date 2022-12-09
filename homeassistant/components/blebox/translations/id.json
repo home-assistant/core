@@ -6,18 +6,21 @@
         },
         "error": {
             "cannot_connect": "Gagal terhubung",
-            "unknown": "Kesalahan yang tidak diharapkan",
-            "unsupported_version": "Firmware Perangkat BleBox sudah usang. Tingkatkan terlebih dulu."
+            "unknown": "Kesalahan yang tidak diduga",
+            "unsupported_version": "Perangkat BleBox memiliki firmware yang kedaluwarsa. Silahkan diupgrade dulu."
         },
         "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {
-                    "host": "Alamat IP",
-                    "port": "Port"
+                    "host": "Alamat IP / nama domain / alamat mDNS",
+                    "port": "Pelabuhan"
                 },
                 "description": "Siapkan BleBox Anda untuk diintegrasikan dengan Home Assistant.",
                 "title": "Siapkan perangkat BleBox Anda"
+            },
+            "confirm_discovery": {
+                "description": "Apakah Anda ingin mengonfigurasi {name} {host}:{port}?."
             }
         }
     }

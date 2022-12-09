@@ -1,23 +1,26 @@
 {
     "config": {
         "abort": {
-            "address_already_configured": "Ee BleBox Apparat ass scho konfigur\u00e9iert op {adress}.",
-            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+            "address_already_configured": "E BleBox Apparat ass scho bei {address} konfiguréiert.",
+            "already_configured": "Den Apparat ass scho konfiguréiert"
         },
         "error": {
-            "cannot_connect": "Feeler beim verbannen",
+            "cannot_connect": "Konnt net konnektéieren",
             "unknown": "Onerwaarte Feeler",
-            "unsupported_version": "BleBox Apparat huet eng aal Firmware. Maach fir d'\u00e9ischt d'Mise \u00e0 jour."
+            "unsupported_version": "BleBox-Apparat huet verännert Firmware. Upgrade et als éischt."
         },
-        "flow_title": "BleBox Apparat: {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {
-                    "host": "IP Adresse",
+                    "host": "IP Adress / Domain Numm / mDNS Adress",
                     "port": "Port"
                 },
-                "description": "BleBox ariichten fir d'Integratioun mam Home Assistant.",
-                "title": "BleBox Apparat ariichten"
+                "description": "Setzt Är BleBox op fir mam Home Assistant z'integréieren.",
+                "title": "Setzt Äre BleBox Apparat op"
+            },
+            "confirm_discovery": {
+                "description": "Wëllt Dir {name} {host}:{port} konfiguréieren?."
             }
         }
     }

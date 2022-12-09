@@ -1,23 +1,26 @@
 {
     "config": {
         "abort": {
-            "address_already_configured": "Ein BleBox Ger\u00e4t ist bereits unter {address} konfiguriert.",
-            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+            "address_already_configured": "Ein BleBox-Gerät ist bereits unter {address} konfiguriert.",
+            "already_configured": "Gerät ist bereits konfiguriert"
         },
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen",
+            "cannot_connect": "Verbindung nicht möglich",
             "unknown": "Unerwarteter Fehler",
-            "unsupported_version": "Das BleBox Ger\u00e4t hat eine veraltete Firmware. Bitte aktualisiere es zuerst."
+            "unsupported_version": "BleBox-Gerät hat veraltete Firmware. Bitte aktualisieren Sie es zuerst."
         },
         "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {
-                    "host": "IP-Adresse",
-                    "port": "Port"
+                    "host": "IP-Adresse / Domänenname / mDNS-Adresse",
+                    "port": "Hafen"
                 },
-                "description": "Richte deine BleBox f\u00fcr die Integration mit dem Home Assistant ein.",
-                "title": "Richte dein BleBox Ger\u00e4t ein"
+                "description": "Richten Sie Ihre BleBox für die Integration mit Home Assistant ein.",
+                "title": "Richten Sie Ihr BleBox-Gerät ein"
+            },
+            "confirm_discovery": {
+                "description": "Möchten Sie {name} {host}:{port} konfigurieren?."
             }
         }
     }

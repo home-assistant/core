@@ -1,19 +1,26 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u05ea\u05e6\u05d5\u05e8\u05ea \u05d4\u05d4\u05ea\u05e7\u05df \u05db\u05d1\u05e8 \u05e0\u05e7\u05d1\u05e2\u05d4"
+            "address_already_configured": "מכשיר BleBox כבר מוגדר ב-{address}.",
+            "already_configured": "המכשיר כבר מוגדר"
         },
         "error": {
-            "cannot_connect": "\u05d4\u05d4\u05ea\u05d7\u05d1\u05e8\u05d5\u05ea \u05e0\u05db\u05e9\u05dc\u05d4",
-            "unknown": "\u05e9\u05d2\u05d9\u05d0\u05d4 \u05d1\u05dc\u05ea\u05d9 \u05e6\u05e4\u05d5\u05d9\u05d4"
+            "cannot_connect": "ההתחברות נכשלה",
+            "unknown": "שגיאה לא צפויה",
+            "unsupported_version": "למכשיר BleBox יש קושחה מיושנת. אנא שדרג אותו תחילה."
         },
         "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {
-                    "host": "\u05db\u05ea\u05d5\u05d1\u05ea IP",
-                    "port": "\u05e4\u05d5\u05e8\u05d8"
-                }
+                    "host": "כתובת IP / שם דומיין / כתובת mDNS",
+                    "port": "נמל"
+                },
+                "description": "הגדר את ה-BleBox שלך לשילוב עם Home Assistant.",
+                "title": "הגדר את מכשיר ה-BleBox שלך"
+            },
+            "confirm_discovery": {
+                "description": "האם תרצה להגדיר את {name} {host}:{port}?."
             }
         }
     }
