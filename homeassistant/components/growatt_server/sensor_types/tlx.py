@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
     POWER_WATT,
     TEMP_CELSIUS,
+    UnitOfElectricCurrent,
 )
 
 from .sensor_entity_description import GrowattSensorEntityDescription
@@ -62,7 +62,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="tlx_amperage_input_1",
         name="Input 1 Amperage",
         api_key="ipv1",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         precision=1,
     ),
@@ -104,7 +104,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="tlx_amperage_input_2",
         name="Input 2 Amperage",
         api_key="ipv2",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         precision=1,
     ),
