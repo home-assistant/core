@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, UnitOfDataRate
+from homeassistant.const import PERCENTAGE, UnitOfDataRate, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -76,7 +76,7 @@ async def async_setup_entry(
             SensorEntityDescription(
                 key=sensor_name,
                 name=f"Freebox {sensor_name}",
-                native_unit_of_measurement=TEMP_CELSIUS,
+                native_unit_of_measurement=UnitOfTemperature.CELSIUS,
                 device_class=SensorDeviceClass.TEMPERATURE,
             ),
         )
