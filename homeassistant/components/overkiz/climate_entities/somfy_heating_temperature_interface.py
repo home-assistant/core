@@ -152,7 +152,7 @@ class SomfyHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
             ),
         )
 
-        if action := OverkizCommandParam(current_operation):
+        if action := OVERKIZ_TO_HVAC_ACTION[OverkizCommandParam(current_operation)]:
             return action
 
         if current_operation is not None:
@@ -188,7 +188,7 @@ class SomfyHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
+        temperature = kwargs[ATTR_TEMPERATURE]
 
         mode = self.executor.select_state(
             OverkizState.OVP_HEATING_TEMPERATURE_INTERFACE_SETPOINT_MODE
