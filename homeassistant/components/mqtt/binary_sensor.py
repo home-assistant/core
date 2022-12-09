@@ -124,8 +124,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
     async def mqtt_async_added_to_hass(self) -> None:
         """Restore state for entities with expire_after set."""
         if (
-            self._expire_after is not None
-            and self._expire_after > 0
+            self._expire_after
             and (last_state := await self.async_get_last_state()) is not None
             and last_state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE]
             # We might have set up a trigger already after subscribing from
