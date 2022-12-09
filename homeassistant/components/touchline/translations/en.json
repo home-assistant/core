@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_input": "Invalid hostname or IP address"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP Address"
+                },
+                "description": "Provide the IP address of the device",
+                "title": "Identify the device"
+            }
+        }
+    }
+}
