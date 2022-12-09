@@ -98,4 +98,6 @@ class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return None, "invalid_auth"
         except exceptions.SkybellException:
             return None, "cannot_connect"
+        except Exception:  # pylint: disable=broad-except
+            return None, "unknown"
         return skybell.user_id, None
