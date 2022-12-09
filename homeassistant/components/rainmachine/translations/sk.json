@@ -21,6 +21,9 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "use_app_run_times": "Pou\u017eite \u010dasy chodu z\u00f3ny z aplik\u00e1cie RainMachine"
+                },
                 "title": "Konfigur\u00e1cia RainMachine"
             }
         }

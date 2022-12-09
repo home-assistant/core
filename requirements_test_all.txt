@@ -433,7 +433,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.75.0
+dbus-fast==1.79.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.4
@@ -661,7 +661,7 @@ hole==0.7.0
 holidays==0.17.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20221207.0
+home-assistant-frontend==20221208.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -688,7 +688,7 @@ iaqualink==0.5.0
 ibeacon_ble==1.0.1
 
 # homeassistant.components.local_calendar
-ical==4.2.1
+ical==4.2.2
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -709,7 +709,7 @@ inkbird-ble==0.5.5
 insteon-frontend-home-assistant==0.2.0
 
 # homeassistant.components.intellifire
-intellifire4py==2.2.1
+intellifire4py==2.2.2
 
 # homeassistant.components.iotawatt
 iotawattpy==0.1.0

@@ -18,6 +18,7 @@
             "lsc": "LSC",
             "rain": "D\u00e1\u017e\u010f",
             "saac": "SAAC",
+            "security": "Bezpe\u010dnos\u0165",
             "sfc": "SFC",
             "temperature": "Teplota",
             "timer": "\u010casova\u010d",
@@ -26,6 +27,7 @@
             "wind": "Vietor"
         },
         "overkiz__sensor_defect": {
+            "dead": "Nedostupn\u00e9",
             "low_battery": "Slab\u00e1 bat\u00e9ria",
             "maintenance_required": "Vy\u017eaduje sa \u00fadr\u017eba",
             "no_defect": "Bez defektu"

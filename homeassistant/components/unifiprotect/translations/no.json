@@ -41,6 +41,15 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "license_plate": {
+                "state": {
+                    "none": "Klar"
+                }
+            }
+        }
+    },
     "issues": {
         "deprecate_smart_sensor": {
             "description": "Den enhetlige \u00abDetected Object\u00bb-sensoren for smarte deteksjoner er n\u00e5 avviklet. Den er erstattet med individuelle smartdeteksjonsbin\u00e6re sensorer for hver smartdeteksjonstype. Oppdater eventuelle maler eller automatiseringer tilsvarende.",

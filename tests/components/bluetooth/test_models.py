@@ -101,6 +101,11 @@ async def test_wrapped_bleak_client_set_disconnected_callback_after_connected(
 
     class FakeScanner(BaseHaScanner):
         @property
+        def discovered_devices(self) -> list[BLEDevice]:
+            """Return a list of discovered devices."""
+            return []
+
+        @property
         def discovered_devices_and_advertisement_data(
             self,
         ) -> dict[str, tuple[BLEDevice, AdvertisementData]]:
@@ -189,6 +194,11 @@ async def test_ble_device_with_proxy_clear_cache(hass, enable_bluetooth, one_ada
     )
 
     class FakeScanner(BaseHaScanner):
+        @property
+        def discovered_devices(self) -> list[BLEDevice]:
+            """Return a list of discovered devices."""
+            return []
+
         @property
         def discovered_devices_and_advertisement_data(
             self,
@@ -290,6 +300,11 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
     )
 
     class FakeScanner(BaseHaScanner):
+        @property
+        def discovered_devices(self) -> list[BLEDevice]:
+            """Return a list of discovered devices."""
+            return []
+
         @property
         def discovered_devices_and_advertisement_data(
             self,
@@ -396,6 +411,11 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
     )
 
     class FakeScanner(BaseHaScanner):
+        @property
+        def discovered_devices(self) -> list[BLEDevice]:
+            """Return a list of discovered devices."""
+            return []
+
         @property
         def discovered_devices_and_advertisement_data(
             self,

@@ -26,5 +26,63 @@
                 "description": "Overkiz-plattformen brukes av forskjellige leverand\u00f8rer som Somfy (Connexoon / TaHoma), Hitachi (Hi Kumo), Rexel (Energeasy Connect) og Atlantic (Cozytouch). Skriv inn applikasjonslegitimasjonen din og velg hub."
             }
         }
+    },
+    "entity": {
+        "select": {
+            "memorized_simple_volume": {
+                "state": {
+                    "highest": "H\u00f8yest",
+                    "standard": "Standard"
+                }
+            },
+            "open_closed_pedestrian": {
+                "state": {
+                    "closed": "Lukket",
+                    "open": "\u00c5pen",
+                    "pedestrian": "Fotgjenger"
+                }
+            }
+        },
+        "sensor": {
+            "battery": {
+                "state": {
+                    "full": "Full"
+                }
+            },
+            "priority_lock_originator": {
+                "state": {
+                    "rain": "Regn",
+                    "saac": "SAAC",
+                    "security": "Sikkerhet",
+                    "sfc": "SFC",
+                    "temperature": "Temperatur",
+                    "timer": "Timer",
+                    "ups": "UPS",
+                    "user": "Bruker",
+                    "wind": "Vind"
+                }
+            },
+            "sensor_defect": {
+                "state": {
+                    "dead": "D\u00f8d",
+                    "low_battery": "Lavt batteriniv\u00e5",
+                    "maintenance_required": "Vedlikehold kreves",
+                    "no_defect": "Ingen feil"
+                }
+            },
+            "sensor_room": {
+                "state": {
+                    "clean": "Ren",
+                    "dirty": "Skitten"
+                }
+            },
+            "three_way_handle_direction": {
+                "state": {
+                    "closed": "Lukket",
+                    "open": "\u00c5pen",
+                    "tilt": "Tilt"
+                }
+            }
+        }
     }
 }

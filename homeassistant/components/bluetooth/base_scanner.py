@@ -1,14 +1,13 @@
 """Base classes for HA Bluetooth scanners for bluetooth."""
 from __future__ import annotations
 
-from abc import abstractmethod
-from collections.abc import AsyncIterator, Callable, Generator
-from contextlib import asynccontextmanager, contextmanager
+from abc import ABC, abstractmethod
+from collections.abc import Callable, Generator
+from contextlib import contextmanager
 import datetime
 from datetime import timedelta
 from typing import Any, Final
 
-import bleak
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 from bleak_retry_connector import NO_RSSI_VALUE
@@ -28,7 +27,7 @@ from .models import HaBluetoothConnector
 MONOTONIC_TIME: Final = monotonic_time_coarse
 
 
-class BaseHaScanner:
+class BaseHaScanner(ABC):
     """Base class for Ha Scanners."""
 
     __slots__ = ("hass", "source", "_connecting", "name", "scanning")
@@ -41,20 +40,9 @@ class BaseHaScanner:
         self.name = adapter_human_name(adapter, source) if adapter != source else source
         self.scanning = True
 
-    @asynccontextmanager
-    async def connecting(self, client: bleak.BleakClient) -> AsyncIterator[None]:
-        """Context manager to track connecting and resolving services.
-
-        This is a context manager around the entire connection process.
-        """
-        yield
-
     @contextmanager
-    def establishing(self) -> Generator[None, None, None]:
-        """Context manager to track connecting state.
-
-        This is a context manager only around the establishing of the connection.
-        """
+    def connecting(self) -> Generator[None, None, None]:
+        """Context manager to track connecting state."""
         self._connecting += 1
         self.scanning = not self._connecting
         try:
@@ -238,19 +226,3 @@ class BaseHaRemoteScanner(BaseHaScanner):
                 time=now,
             )
         )
-
-    async def async_diagnostics(self) -> dict[str, Any]:
-        """Return diagnostic information about the scanner."""
-        return await super().async_diagnostics() | {
-            "type": self.__class__.__name__,
-            "discovered_devices_and_advertisement_data": [
-                {
-                    "name": device_adv[0].name,
-                    "address": device_adv[0].address,
-                    "rssi": device_adv[0].rssi,
-                    "advertisement_data": device_adv[1],
-                    "details": device_adv[0].details,
-                }
-                for device_adv in self.discovered_devices_and_advertisement_data.values()
-            ],
-        }
