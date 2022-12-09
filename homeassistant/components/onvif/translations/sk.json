@@ -18,7 +18,8 @@
                     "password": "Heslo",
                     "port": "Port",
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
-                }
+                },
+                "title": "Nakonfigurujte zariadenie ONVIF"
             },
             "configure_profile": {
                 "data": {
@@ -47,6 +48,7 @@
             "onvif_devices": {
                 "data": {
                     "extra_arguments": "\u010eal\u0161ie argumenty FFMPEG",
+                    "rtsp_transport": "RTSP transportn\u00fd mechanizmus",
                     "use_wallclock_as_timestamps": "Pou\u017eite n\u00e1stenn\u00e9 hodiny ako \u010dasov\u00e9 pe\u010diatky"
                 },
                 "title": "Mo\u017enosti zariadenia ONVIF"

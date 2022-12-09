@@ -3,7 +3,10 @@
         "tomorrowio__health_concern": {
             "good": "Dobr\u00e9",
             "hazardous": "Nebezpe\u010dn\u00e9",
-            "moderate": "Mierne"
+            "moderate": "Mierne",
+            "unhealthy": "Nezdrav\u00e9",
+            "unhealthy_for_sensitive_groups": "Nezdrav\u00e9 pre citliv\u00e9 skupiny",
+            "very_unhealthy": "Ve\u013emi nezdrav\u00e9"
         },
         "tomorrowio__pollen_index": {
             "high": "Vysok\u00fd",

@@ -23,12 +23,14 @@
                 "title": "Vyberte Hue bridge"
             },
             "link": {
-                "description": "Pre registr\u00e1ciu Philips Hue s Home Assistant stla\u010dte tla\u010didlo na Philips Hue bridge.\n\n![Location of button on bridge](/static/images/config_philips_hue.jpg)"
+                "description": "Pre registr\u00e1ciu Philips Hue s Home Assistant stla\u010dte tla\u010didlo na Philips Hue bridge.\n\n![Location of button on bridge](/static/images/config_philips_hue.jpg)",
+                "title": "Link Hub"
             },
             "manual": {
                 "data": {
                     "host": "Hostite\u013e"
-                }
+                },
+                "title": "Manu\u00e1lna konfigur\u00e1cia bridge Hue"
             }
         }
     },
@@ -68,7 +70,9 @@
             "init": {
                 "data": {
                     "allow_hue_groups": "Povoli\u0165 skupiny Hue",
-                    "allow_hue_scenes": "Povoli\u0165 sc\u00e9ny Hue"
+                    "allow_hue_scenes": "Povoli\u0165 sc\u00e9ny Hue",
+                    "allow_unreachable": "Umo\u017enite nedostupn\u00fdm \u017eiarovk\u00e1m spr\u00e1vne hl\u00e1si\u0165 svoj stav",
+                    "ignore_availability": "Ignorova\u0165 stav pripojenia pre dan\u00e9 zariadenia"
                 }
             }
         }

@@ -10,7 +10,8 @@
                 "data": {
                     "password": "Heslo",
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
-                }
+                },
+                "description": "Zariadenie IoTawatt vy\u017eaduje autentifik\u00e1ciu. Zadajte pou\u017e\u00edvate\u013esk\u00e9 meno a heslo a kliknite na tla\u010didlo Odosla\u0165."
             },
             "user": {
                 "data": {

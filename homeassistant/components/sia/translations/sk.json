@@ -41,7 +41,8 @@
                     "ignore_timestamps": "Ignorovanie kontroly \u010dasovej zna\u010dky udalost\u00ed SIA",
                     "zones": "Po\u010det z\u00f3n pre \u00fa\u010det"
                 },
-                "description": "Nastavte mo\u017enosti pre \u00fa\u010det: {account}"
+                "description": "Nastavte mo\u017enosti pre \u00fa\u010det: {account}",
+                "title": "Mo\u017enosti nastavenia SIA."
             }
         }
     }

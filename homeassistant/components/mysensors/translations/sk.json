@@ -34,6 +34,8 @@
         "step": {
             "gw_mqtt": {
                 "data": {
+                    "topic_in_prefix": "prefix pre vstupn\u00e9 t\u00e9my (topic_in_prefix)",
+                    "topic_out_prefix": "prefix pre v\u00fdstupn\u00e9 t\u00e9my (topic_out_prefix)",
                     "version": "Verzia MySensors"
                 },
                 "description": "Nastavenie br\u00e1ny MQTT"
@@ -43,7 +45,8 @@
                     "baud_rate": "prenosov\u00e1 r\u00fdchlos\u0165",
                     "device": "S\u00e9riov\u00fd port",
                     "version": "Verzia MySensors"
-                }
+                },
+                "description": "Nastavenie s\u00e9riovej br\u00e1ny"
             },
             "gw_tcp": {
                 "data": {

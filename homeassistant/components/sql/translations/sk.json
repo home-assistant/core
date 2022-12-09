@@ -14,7 +14,8 @@
                     "db_url": "URL datab\u00e1zy",
                     "name": "N\u00e1zov",
                     "query": "V\u00fdber po\u017eiadavky",
-                    "unit_of_measurement": "Mern\u00e1 jednotka"
+                    "unit_of_measurement": "Mern\u00e1 jednotka",
+                    "value_template": "\u0160abl\u00f3na hodnoty"
                 },
                 "data_description": {
                     "db_url": "Adresa URL datab\u00e1zy, nechajte pr\u00e1zdnu, ak chcete pou\u017ei\u0165 predvolen\u00fa datab\u00e1zu HA",
@@ -36,7 +37,8 @@
                     "db_url": "URL datab\u00e1zy",
                     "name": "N\u00e1zov",
                     "query": "V\u00fdber po\u017eiadavky",
-                    "unit_of_measurement": "Mern\u00e1 jednotka"
+                    "unit_of_measurement": "Mern\u00e1 jednotka",
+                    "value_template": "\u0160abl\u00f3na hodnoty"
                 },
                 "data_description": {
                     "db_url": "Adresa URL datab\u00e1zy, nechajte pr\u00e1zdnu, ak chcete pou\u017ei\u0165 predvolen\u00fa datab\u00e1zu HA",

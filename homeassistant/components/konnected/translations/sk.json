@@ -80,6 +80,7 @@
             "options_switch": {
                 "data": {
                     "momentary": "Trvanie impulzu (ms)",
+                    "more_states": "Nakonfigurujte \u010fal\u0161ie stavy pre t\u00fato z\u00f3nu",
                     "name": "N\u00e1zov (volite\u013en\u00fd)",
                     "pause": "Pauza medzi impulzmi (ms)",
                     "repeat": "Po\u010det opakovan\u00ed (-1 = nekone\u010dno)"

@@ -1,4 +1,7 @@
 {
+    "application_credentials": {
+        "description": "Pod\u013ea [pokynov]({more_info_url}) nakonfigurujte Cloud Console: \n\n1. Prejdite na [obrazovka s\u00fahlasu OAuth]({oauth_consent_url}) a nakonfigurujte\n1. Prejdite na [Poverenia]({oauth_creds_url}) a kliknite na **Vytvori\u0165 poverenia**.\n1. Z rozba\u013eovacieho zoznamu vyberte **ID klienta OAuth**.\n1. Ako typ aplik\u00e1cie vyberte **Web Application**.\n1. Pridajte `{redirect_url}` pod *URI autorizovan\u00e9ho presmerovania*."
+    },
     "config": {
         "abort": {
             "already_configured": "\u00da\u010det je u\u017e nakonfigurovan\u00fd",
@@ -25,6 +28,18 @@
                     "cloud_project_id": "ID projektu Google Cloud"
                 },
                 "title": "Hniezdo: Zadajte ID projektu Cloud"
+            },
+            "create_cloud_project": {
+                "title": "Nest: Vytvorte a nakonfigurujte cloudov\u00fd projekt"
+            },
+            "device_project": {
+                "data": {
+                    "project_id": "ID projektu pr\u00edstupu k zariadeniu"
+                },
+                "title": "Nest: Vytvorte projekt pr\u00edstupu k zariadeniu"
+            },
+            "device_project_upgrade": {
+                "title": "Nest: Aktualizujte projekt pr\u00edstupu k zariadeniu"
             },
             "init": {
                 "data": {
@@ -66,7 +81,11 @@
     },
     "issues": {
         "deprecated_yaml": {
+            "description": "Konfigur\u00e1cia Nest v configuration.yaml sa odstra\u0148uje z Home Assistant 2022.10. \n\n Va\u0161e existuj\u00face poverenia aplik\u00e1cie OAuth a nastavenia pr\u00edstupu sa importovali do pou\u017e\u00edvate\u013esk\u00e9ho rozhrania automaticky. Ak chcete tento probl\u00e9m vyrie\u0161i\u0165, odstr\u00e1\u0148te konfigur\u00e1ciu YAML zo s\u00faboru configuration.yaml a re\u0161tartujte aplik\u00e1ciu Home Assistant.",
             "title": "Konfigur\u00e1cia Nest YAML sa odstra\u0148uje"
+        },
+        "removed_app_auth": {
+            "title": "Overovacie poverenia Nest sa musia aktualizova\u0165"
         }
     }
 }
