@@ -266,7 +266,8 @@ METRIC_SYSTEM = UnitSystem(
         # Convert non-metric precipitation
         ("precipitation", UnitOfLength.INCHES): UnitOfLength.MILLIMETERS,
         # Convert non-metric pressure
-        ("pressure", UnitOfPressure.PSI): UnitOfPressure.BAR,
+        ("pressure", UnitOfPressure.PSI): UnitOfPressure.KPA,
+        ("pressure", UnitOfPressure.INHG): UnitOfPressure.HPA,
         # Convert non-metric speeds except knots to km/h
         ("speed", UnitOfSpeed.FEET_PER_SECOND): UnitOfSpeed.KILOMETERS_PER_HOUR,
         ("speed", UnitOfSpeed.MILES_PER_HOUR): UnitOfSpeed.KILOMETERS_PER_HOUR,
