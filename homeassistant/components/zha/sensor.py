@@ -478,8 +478,8 @@ class SmartEnergySummation(SmartEnergyMetering, id_suffix="summation_delivered")
         0x05: f"IMP {UnitOfVolume.GALLONS}",
         0x06: "BTU",
         0x07: UnitOfVolume.LITERS,
-        0x08: "kPa",  # gauge
-        0x09: "kPa",  # absolute
+        0x08: UnitOfPressure.KPA,  # gauge
+        0x09: UnitOfPressure.KPA,  # absolute
         0x0A: f"1000 {UnitOfVolume.CUBIC_FEET}",
         0x0B: "unitless",
         0x0C: "MJ",
