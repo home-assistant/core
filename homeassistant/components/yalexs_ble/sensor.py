@@ -61,6 +61,7 @@ class YaleXSBLESensor(YALEXSBLEEntity, SensorEntity):
         data: YaleXSBLEData,
     ) -> None:
         """Initialize the sensor."""
+        self.entity_description = description
         super().__init__(data)
         self._attr_unique_id = f"{data.lock.address}{description.key}"
 
