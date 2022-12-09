@@ -20,10 +20,10 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
     PERCENTAGE,
-    SOUND_PRESSURE_DB,
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfSoundPressure,
     UnitOfSpeed,
     UnitOfTemperature,
 )
@@ -129,8 +129,8 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         name="Noise",
         netatmo_name="noise",
         entity_registry_enabled_default=True,
-        native_unit_of_measurement=SOUND_PRESSURE_DB,
-        icon="mdi:volume-high",
+        native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
+        device_class=SensorDeviceClass.SOUND_PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     NetatmoSensorEntityDescription(
