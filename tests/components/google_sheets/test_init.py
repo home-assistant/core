@@ -99,7 +99,6 @@ async def test_setup_success(
 async def test_expired_token_refresh_success(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
-    scopes: list[str],
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test expired token is refreshed."""
@@ -142,7 +141,6 @@ async def test_expired_token_refresh_success(
 async def test_expired_token_refresh_failure(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
-    scopes: list[str],
     aioclient_mock: AiohttpClientMocker,
     status: http.HTTPStatus,
     expected_state: ConfigEntryState,
