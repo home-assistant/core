@@ -450,7 +450,7 @@ bluemaestro-ble==0.2.0
 bluetooth-adapters==0.12.0
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==0.5.4
+bluetooth-auto-recovery==0.5.5
 
 # homeassistant.components.bluetooth
 # homeassistant.components.led_ble
