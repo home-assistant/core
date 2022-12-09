@@ -340,6 +340,8 @@ class MqttClientSetup:
 class MQTT:
     """Home Assistant MQTT client."""
 
+    _mqttc: mqtt.Client
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -349,7 +351,8 @@ class MQTT:
         """Initialize Home Assistant MQTT client."""
         # We don't import on the top because some integrations
         # should be able to optionally rely on MQTT.
-        import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel,unused-import
+        import paho.mqtt.client as mqtt  # noqa: F401
 
         self._mqtt_data = get_mqtt_data(hass)
 
@@ -360,7 +363,6 @@ class MQTT:
         self.connected = False
         self._ha_started = asyncio.Event()
         self._last_subscribe = time.time()
-        self._mqttc: mqtt.Client = None  # type: ignore[assignment]
         self._cleanup_on_unload: list[Callable[[], None]] = []
 
         self._paho_lock = asyncio.Lock()  # Prevents parallel calls to the MQTT client
