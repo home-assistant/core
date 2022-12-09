@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+import logging
 from typing import Any
 
 import voluptuous as vol
@@ -15,6 +16,8 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
+
+_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=3)
 
@@ -35,9 +38,11 @@ async def async_setup_entry(
     """Set up the ecobee thermostat ventilator entity."""
     data = hass.data[DOMAIN]
     entities = []
+    _LOGGER.debug("Adding ventilators (if present)")
     for index in range(len(data.ecobee.thermostats)):
         thermostat = data.ecobee.get_thermostat(index)
         if thermostat["settings"]["ventilatorType"] != "none":
+            _LOGGER.debug("Adding 1 ventilator")
             entities.append(EcobeeVentilator(data, index))
 
     async_add_entities(entities, True)
@@ -77,7 +82,8 @@ class EcobeeVentilator(FanEntity):
         self.data = data
         self.thermostat_index = thermostat_index
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
-        self._name = "Ventilator"
+        ecobee_name = self.thermostat["name"]
+        self._name = f"{ecobee_name} Ventilator"
 
         self.update_without_throttle = False
 
