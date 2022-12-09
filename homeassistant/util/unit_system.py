@@ -306,7 +306,13 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         # Convert non-USCS precipitation
         ("precipitation", UnitOfLength.MILLIMETERS): UnitOfLength.INCHES,
         # Convert non-USCS pressure
+        ("pressure", UnitOfPressure.MBAR): UnitOfPressure.PSI,
+        ("pressure", UnitOfPressure.CBAR): UnitOfPressure.PSI,
         ("pressure", UnitOfPressure.BAR): UnitOfPressure.PSI,
+        ("pressure", UnitOfPressure.PA): UnitOfPressure.PSI,
+        ("pressure", UnitOfPressure.HPA): UnitOfPressure.PSI,
+        ("pressure", UnitOfPressure.KPA): UnitOfPressure.PSI,
+        ("pressure", UnitOfPressure.MMHG): UnitOfPressure.INHG,
         # Convert non-USCS speeds except knots to mph
         ("speed", UnitOfSpeed.METERS_PER_SECOND): UnitOfSpeed.MILES_PER_HOUR,
         ("speed", UnitOfSpeed.KILOMETERS_PER_HOUR): UnitOfSpeed.MILES_PER_HOUR,
