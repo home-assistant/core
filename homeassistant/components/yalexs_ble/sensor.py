@@ -1,6 +1,9 @@
 """Support for yalexs ble sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
+
 from yalexs_ble import ConnectionInfo, LockInfo, LockState
 
 from homeassistant import config_entries
@@ -10,7 +13,11 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+from homeassistant.const import (
+    ELECTRIC_POTENTIAL_VOLT,
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -19,8 +26,23 @@ from .const import DOMAIN
 from .entity import YALEXSBLEEntity
 from .models import YaleXSBLEData
 
-SENSORS = (
-    SensorEntityDescription(
+
+@dataclass
+class YaleXSBLERequiredKeysMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[[LockState, LockInfo, ConnectionInfo], int | float | None]
+
+
+@dataclass
+class YaleXSBLESensorEntityDescription(
+    SensorEntityDescription, YaleXSBLERequiredKeysMixin
+):
+    """Describes Yale Access Bluetooth sensor entity."""
+
+
+SENSORS: tuple[YaleXSBLESensorEntityDescription, ...] = (
+    YaleXSBLESensorEntityDescription(
         key="",  # No key for the original RSSI sensor unique id
         name="Signal strength",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -29,15 +51,31 @@ SENSORS = (
         has_entity_name=True,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         entity_registry_enabled_default=False,
+        value_fn=lambda state, info, connection: connection.rssi,
     ),
-    SensorEntityDescription(
-        key="battery",
+    YaleXSBLESensorEntityDescription(
+        key="battery_level",
         name="Battery level",
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         has_entity_name=True,
         native_unit_of_measurement=PERCENTAGE,
+        value_fn=lambda state, info, connection: state.battery.percentage
+        if state.battery
+        else None,
+    ),
+    YaleXSBLESensorEntityDescription(
+        key="battery_voltage",
+        name="Battery Voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        has_entity_name=True,
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        value_fn=lambda state, info, connection: state.battery.voltage
+        if state.battery
+        else None,
     ),
 )
 
@@ -55,9 +93,11 @@ async def async_setup_entry(
 class YaleXSBLESensor(YALEXSBLEEntity, SensorEntity):
     """Yale XS Bluetooth sensor."""
 
+    entity_description: YaleXSBLESensorEntityDescription
+
     def __init__(
         self,
-        description: SensorEntityDescription,
+        description: YaleXSBLESensorEntityDescription,
         data: YaleXSBLEData,
     ) -> None:
         """Initialize the sensor."""
@@ -70,9 +110,7 @@ class YaleXSBLESensor(YALEXSBLEEntity, SensorEntity):
         self, new_state: LockState, lock_info: LockInfo, connection_info: ConnectionInfo
     ) -> None:
         """Update the state."""
-        if self.entity_description.key == "battery":
-            battery = new_state.battery
-            self._attr_native_value = battery.percentage if battery else None
-        else:
-            self._attr_native_value = connection_info.rssi
+        self._attr_native_value = self.entity_description.value_fn(
+            new_state, lock_info, connection_info
+        )
         super()._async_update_state(new_state, lock_info, connection_info)
