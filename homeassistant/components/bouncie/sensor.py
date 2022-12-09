@@ -9,6 +9,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -95,6 +96,13 @@ class BouncieSensor(CoordinatorEntity[BouncieDataUpdateCoordinator], SensorEntit
             f'{self._vehicle_info["vin"]}-{self.entity_description.key}'
         )
         self._attr_has_entity_name = True
+        self._attr_device_info = DeviceInfo(
+            identifiers={(const.DOMAIN, self._vehicle_info["vin"])},
+            manufacturer=self._vehicle_info[const.VEHICLE_MODEL_KEY]["make"],
+            model=self._vehicle_info[const.VEHICLE_MODEL_KEY]["name"],
+            name=self._vehicle_info["nickName"],
+            hw_version=self._vehicle_info[const.VEHICLE_MODEL_KEY]["year"],
+        )
 
     def _update_car_info_state(self):
         self._state = (
@@ -102,16 +110,6 @@ class BouncieSensor(CoordinatorEntity[BouncieDataUpdateCoordinator], SensorEntit
         )
 
     def _update_car_info_attributes(self):
-        self._attrs[const.ATTR_VEHICLE_MODEL_MAKE_KEY] = self._vehicle_info[
-            const.VEHICLE_MODEL_KEY
-        ]["make"]
-        self._attrs[const.ATTR_VEHICLE_MODEL_NAME_KEY] = self._vehicle_info[
-            const.VEHICLE_MODEL_KEY
-        ]["name"]
-        self._attrs[const.ATTR_VEHICLE_MODEL_YEAR_KEY] = self._vehicle_info[
-            const.VEHICLE_MODEL_KEY
-        ]["year"]
-        self._attrs[const.ATTR_VEHICLE_NICKNAME_KEY] = self._vehicle_info["nickName"]
         self._attrs[const.ATTR_VEHICLE_STANDARD_ENGINE_KEY] = self._vehicle_info[
             "standardEngine"
         ]
