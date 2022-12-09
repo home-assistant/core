@@ -23,7 +23,8 @@ class ClientMock:
         self.brightness = {"mode": "enabled", "value": 10}
         self.color = (255, 255, 255)
         self.movies = {
-            "movies": [{"id": 1, "name": "Rainbow"}, {"id": 2, "name": "Flare"}]
+            "code": 1000,
+            "movies": [{"id": 1, "name": "Rainbow"}, {"id": 2, "name": "Flare"}],
         }
         self.current_movie = {}
         self.default_mode = "movie"
@@ -106,7 +107,7 @@ class ClientMock:
 
     async def set_current_movie(self, movie_id: int) -> dict:
         """Set current movie."""
-        self.current_movie = {"id": movie_id}
+        self.current_movie = {"code": 1000, "id": movie_id}
 
     async def set_mode(self, mode: str) -> None:
         """Set mode."""
@@ -118,7 +119,7 @@ class ClientMock:
 
     async def get_firmware_version(self) -> dict:
         """Get firmware version."""
-        return {"version": self.version}
+        return {"code": 1000, "version": self.version}
 
     async def get_current_colour(self) -> dict:
         """Get current color."""

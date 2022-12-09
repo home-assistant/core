@@ -24,6 +24,7 @@ from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.color import color_rgb_to_rgbw
 
 from .const import (
     ATTR_VERSION,
@@ -40,8 +41,10 @@ from .const import (
     DOMAIN,
     HIDDEN_DEV_VALUES,
     MIN_EFFECT_VERSION,
+    TWINKLY_RETURN_CODE,
     TWINKLY_RETURN_CODE_OK,
 )
+from .exceptions import TwinklyError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -328,33 +331,55 @@ class TwinklyLight(LightEntity):
 
     async def async_update_movies(self) -> None:
         """Update the list of movies (effects)."""
-        movies = await self._client.get_saved_movies()
-        _LOGGER.debug("Movies: %s", movies)
-        if movies and "movies" in movies:
-            self._movies = movies["movies"]
+        try:
+            movies = self._valid_twinkly_response(
+                await self._client.get_saved_movies(), check_for="movies"
+            )
+        except TwinklyError as error:
+            _LOGGER.warning(error)
+            return
+        self._movies = movies["movies"]
 
     async def async_update_current_movie(self) -> None:
         """Update the current active movie."""
-        current_movie = await self._client.get_current_movie()
-        _LOGGER.debug("Current movie: %s", current_movie)
-        if current_movie and "id" in current_movie:
-            self._current_movie = current_movie
+        try:
+            self._current_movie = self._valid_twinkly_response(
+                await self._client.get_current_movie()
+            )
+        except TwinklyError as error:
+            _LOGGER.warning(error)
 
     async def async_update_current_color(self) -> None:
         """Update the current active color."""
-        current_color = await self._client.get_current_colour()
-        _LOGGER.debug("Current color: %s", current_color)
-        if str(current_color.get("code")) == str(TWINKLY_RETURN_CODE_OK):
-            if self._attr_color_mode == ColorMode.RGBW:
-                self._attr_rgbw_color = (
-                    current_color["red"],
-                    current_color["green"],
-                    current_color["blue"],
-                    0,
-                )
-            elif self._attr_color_mode == ColorMode.RGB:
-                self._attr_rgb_color = (
-                    current_color["red"],
-                    current_color["green"],
-                    current_color["blue"],
-                )
+        try:
+            current_color = self._valid_twinkly_response(
+                await self._client.get_current_colour()
+            )
+        except TwinklyError as error:
+            _LOGGER.warning(error)
+            return
+        if self._attr_color_mode == ColorMode.RGBW:
+            self._attr_rgbw_color = color_rgb_to_rgbw(
+                current_color["red"],
+                current_color["green"],
+                current_color["blue"],
+            )
+        elif self._attr_color_mode == ColorMode.RGB:
+            self._attr_rgb_color = (
+                current_color["red"],
+                current_color["green"],
+                current_color["blue"],
+            )
+
+    def _valid_twinkly_response(
+        self, response: dict[Any, Any], check_for: str | None = None
+    ) -> dict[Any, Any]:
+        """Validate twinkly-responses from the API."""
+        if (
+            response
+            and response.get(TWINKLY_RETURN_CODE) == TWINKLY_RETURN_CODE_OK
+            and (not check_for or check_for in response)
+        ):
+            _LOGGER.debug("Twinkly response: %s", response)
+            return response
+        raise TwinklyError(f"Invalid response from Twinkly: {response}")

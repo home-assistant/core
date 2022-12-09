@@ -32,4 +32,5 @@ HIDDEN_DEV_VALUES = (
 # Minimum version required to support effects
 MIN_EFFECT_VERSION = "2.7.1"
 
-TWINKLY_RETURN_CODE_OK = "1000"
+TWINKLY_RETURN_CODE = "code"
+TWINKLY_RETURN_CODE_OK = 1000
