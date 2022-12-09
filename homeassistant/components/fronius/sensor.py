@@ -11,7 +11,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
     FREQUENCY_HERTZ,
@@ -20,6 +19,7 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
     UnitOfApparentPower,
+    UnitOfElectricCurrent,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
@@ -109,14 +109,14 @@ INVERTER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="current_ac",
         name="Current AC",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="current_dc",
         name="Current DC",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:current-dc",
@@ -124,7 +124,7 @@ INVERTER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="current_dc_2",
         name="Current DC 2",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:current-dc",
@@ -215,7 +215,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="current_ac_phase_1",
         name="Current AC phase 1",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -223,7 +223,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="current_ac_phase_2",
         name="Current AC phase 2",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -231,7 +231,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="current_ac_phase_3",
         name="Current AC phase 3",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -603,7 +603,7 @@ STORAGE_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="current_dc",
         name="Current DC",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:current-dc",
