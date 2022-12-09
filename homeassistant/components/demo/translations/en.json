@@ -2,7 +2,7 @@
     "entity": {
         "climate": {
             "ubercool": {
-                "attribute": {
+                "state_attributes": {
                     "fan_mode": {
                         "state": {
                             "auto_high": "Auto High",
@@ -39,6 +39,15 @@
                     "comfort": "Comfort",
                     "eco": "Eco",
                     "sleep": "Sleep"
+                }
+            }
+        },
+        "vacuum": {
+            "model_s": {
+                "state_attributes": {
+                    "cleaned_area": {
+                        "name": "Cleaned Area"
+                    }
                 }
             }
         }
