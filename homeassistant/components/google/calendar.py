@@ -208,6 +208,7 @@ async def async_setup_entry(
             # Prefer calendar sync down of resources when possible. However, sync does not work
             # for search. Also free-busy calendars denormalize recurring events as individual
             # events which is not efficient for sync
+            support_write = calendar_item.access_role.is_writer
             if (
                 search := data.get(CONF_SEARCH)
                 or calendar_item.access_role == AccessRole.FREE_BUSY_READER
@@ -219,6 +220,7 @@ async def async_setup_entry(
                     calendar_id,
                     search,
                 )
+                support_write = False
             else:
                 request_template = SyncEventsRequest(
                     calendar_id=calendar_id,
@@ -242,7 +244,7 @@ async def async_setup_entry(
                     generate_entity_id(ENTITY_ID_FORMAT, entity_name, hass=hass),
                     unique_id,
                     entity_enabled,
-                    calendar_item.access_role.is_writer,
+                    support_write,
                 )
             )
 
