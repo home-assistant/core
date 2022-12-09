@@ -8,6 +8,7 @@
             "user": {
                 "data": {
                     "access_id": "Tuya IoT Access ID",
+                    "access_secret": "Tuya IoT Access Secret",
                     "country_code": "Krajina",
                     "password": "Heslo",
                     "username": "\u00da\u010det"
@@ -70,6 +71,7 @@
             },
             "fingerbot_mode": {
                 "state": {
+                    "click": "Stla\u010di\u0165",
                     "switch": "Prep\u00edna\u010d"
                 }
             },
@@ -120,7 +122,9 @@
             },
             "light_mode": {
                 "state": {
-                    "none": "Neakt\u00edvny"
+                    "none": "Neakt\u00edvny",
+                    "pos": "Zobrazuje umiestnenie prep\u00edna\u010da",
+                    "relay": "Ozna\u010duje stav zapnutia/vypnutia"
                 }
             },
             "motion_sensitivity": {
@@ -144,6 +148,11 @@
                     "on": "Akt\u00edvny",
                     "power_off": "Neakt\u00edvny",
                     "power_on": "Akt\u00edvny"
+                }
+            },
+            "vacuum_cistern": {
+                "state": {
+                    "closed": "Zatvoren\u00fd"
                 }
             },
             "vacuum_mode": {

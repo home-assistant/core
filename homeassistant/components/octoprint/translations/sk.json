@@ -12,6 +12,9 @@
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "flow_title": "Tla\u010diare\u0148 OctoPrint: {host}",
+        "progress": {
+            "get_api_key": "Otvorte pou\u017e\u00edvate\u013esk\u00e9 rozhranie OctoPrint a kliknite na tla\u010didlo \"Povoli\u0165\" v \u017eiadosti o pr\u00edstup pre \"Home Assistant\"."
+        },
         "step": {
             "reauth_confirm": {
                 "data": {

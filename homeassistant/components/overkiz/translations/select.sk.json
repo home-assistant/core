@@ -1,6 +1,8 @@
 {
     "state": {
         "overkiz__open_closed_pedestrian": {
+            "closed": "Zatvoren\u00fd",
+            "open": "Otvoren\u00fd",
             "pedestrian": "Chodec"
         }
     }

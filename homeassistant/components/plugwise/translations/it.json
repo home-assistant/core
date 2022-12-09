@@ -24,5 +24,26 @@
                 "title": "Connettiti allo Smile"
             }
         }
+    },
+    "entity": {
+        "select": {
+            "dhw_mode": {
+                "state": {
+                    "auto": "Automatico",
+                    "boost": "Velocizza",
+                    "comfort": "Comfort",
+                    "off": "Spento"
+                }
+            },
+            "regulation_mode": {
+                "state": {
+                    "bleeding_cold": "Freddissimo",
+                    "bleeding_hot": "Caldissimo",
+                    "cooling": "Raffreddamento",
+                    "heating": "Riscaldamento",
+                    "off": "Spento"
+                }
+            }
+        }
     }
 }
