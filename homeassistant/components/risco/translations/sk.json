@@ -55,7 +55,9 @@
                     "B": "Skupina B",
                     "C": "Skupina C",
                     "D": "Skupina D"
-                }
+                },
+                "description": "Vyberte, ak\u00fd \u0161t\u00e1t bude v\u00e1\u0161 alarm Home Assistant hl\u00e1si\u0165 pre ka\u017ed\u00fd \u0161t\u00e1t hl\u00e1sen\u00fd spolo\u010dnos\u0165ou Risco",
+                "title": "Mapujte \u0161t\u00e1ty Risco na \u0161t\u00e1ty Home Assistant"
             }
         }
     }

@@ -32,7 +32,7 @@
             }
         }
     },
-    "entity":{
+    "entity": {
         "select": {
             "charge_mode": {
                 "state": {
@@ -43,24 +43,24 @@
             }
         },
         "sensor": {
-            "plug_state": {
-                "state": {
-                    "unplugged": "Unplugged",
-                    "plugged": "Plugged in",
-                    "plug_error": "Plug error",
-                    "plug_unknown": "Plug unknown"
-                }
-            },
             "charge_state": {
                 "state": {
-                    "not_in_charge": "Not charging",
-                    "waiting_for_a_planned_charge": "Waiting for planned charge",
                     "charge_ended": "Charge ended",
-                    "waiting_for_current_charge": "Waiting for current charge",
-                    "energy_flap_opened": "Energy flap opened",
-                    "charge_in_progress": "Charging",
                     "charge_error": "Not charging or plugged in",
-                    "unavailable": "Unavailable"
+                    "charge_in_progress": "Charging",
+                    "energy_flap_opened": "Energy flap opened",
+                    "not_in_charge": "Not charging",
+                    "unavailable": "Unavailable",
+                    "waiting_for_a_planned_charge": "Waiting for planned charge",
+                    "waiting_for_current_charge": "Waiting for current charge"
+                }
+            },
+            "plug_state": {
+                "state": {
+                    "plug_error": "Plug error",
+                    "plug_unknown": "Plug unknown",
+                    "plugged": "Plugged in",
+                    "unplugged": "Unplugged"
                 }
             }
         }

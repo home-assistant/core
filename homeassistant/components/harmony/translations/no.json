@@ -22,6 +22,15 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "activities": {
+                "state": {
+                    "power_off": "Sl\u00e5 av"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {
