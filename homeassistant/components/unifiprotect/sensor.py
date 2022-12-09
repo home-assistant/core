@@ -784,7 +784,7 @@ class ProtectEventSensor(EventEntityMixin, SensorEntity):
                 ):
                     self._attr_native_value = self._event.metadata.license_plate.name
                 else:
-                    self._attr_native_value = OBJECT_TYPE_NONE
+                    self._attr_native_value = OBJECT_TYPE_NONE  # pragma: no cover
             else:
                 self._attr_native_value = self._event.smart_detect_types[0].value
         else:
