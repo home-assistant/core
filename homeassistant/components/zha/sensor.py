@@ -428,7 +428,7 @@ class SmartEnergyMetering(Sensor):
         0x03: f"100 {VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR}",
         0x04: f"US {UnitOfVolume.GALLONS}/{UnitOfTime.HOURS}",
         0x05: f"IMP {UnitOfVolume.GALLONS}/{UnitOfTime.HOURS}",
-        0x06: f"BTU/{UnitOfTime.HOURS}",
+        0x06: UnitOfPower.BTU_PER_HOUR,
         0x07: f"l/{UnitOfTime.HOURS}",
         0x08: UnitOfPressure.KPA,  # gauge
         0x09: UnitOfPressure.KPA,  # absolute
