@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
     POWER_WATT,
     TEMP_CELSIUS,
+    UnitOfElectricCurrent,
 )
 
 from .sensor_entity_description import GrowattSensorEntityDescription
@@ -43,7 +43,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="inverter_amperage_input_1",
         name="Input 1 Amperage",
         api_key="ipv1",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         precision=1,
     ),
@@ -67,7 +67,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="inverter_amperage_input_2",
         name="Input 2 Amperage",
         api_key="ipv2",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         precision=1,
     ),
@@ -91,7 +91,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="inverter_amperage_input_3",
         name="Input 3 Amperage",
         api_key="ipv3",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         precision=1,
     ),
@@ -123,7 +123,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="inverter_inverter_reactive_amperage",
         name="Reactive amperage",
         api_key="iacr",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         precision=1,
     ),

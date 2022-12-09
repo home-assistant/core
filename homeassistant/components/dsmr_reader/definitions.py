@@ -12,11 +12,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CURRENCY_EURO,
-    ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     POWER_KILO_WATT,
     VOLUME_CUBIC_METERS,
+    UnitOfElectricCurrent,
 )
 from homeassistant.util import dt as dt_util
 
@@ -173,7 +173,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         name="Phase power current L1",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
@@ -181,7 +181,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         name="Phase power current L2",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
@@ -189,7 +189,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         name="Phase power current L3",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
