@@ -349,11 +349,6 @@ class MQTT:
         conf: ConfigType,
     ) -> None:
         """Initialize Home Assistant MQTT client."""
-        # We don't import on the top because some integrations
-        # should be able to optionally rely on MQTT.
-        # pylint: disable-next=import-outside-toplevel,unused-import
-        import paho.mqtt.client as mqtt  # noqa: F401
-
         self._mqtt_data = get_mqtt_data(hass)
 
         self.hass = hass
