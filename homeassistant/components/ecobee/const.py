@@ -47,6 +47,7 @@ PLATFORMS = [
     Platform.HUMIDIFIER,
     Platform.SENSOR,
     Platform.WEATHER,
+    Platform.FAN,
 ]
 
 MANUFACTURER = "ecobee"

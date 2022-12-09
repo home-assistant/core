@@ -196,3 +196,62 @@ set_occupancy_modes:
       description: Enable Follow Me mode.
       selector:
         boolean:
+
+set_ventilator_min_on_time_home:
+  name: Set ventilator minimum on time when home
+  description: Set the minimum ventilator on time when home.
+  target:
+    entity:
+      integration: ecobee
+      domain: fan
+  fields:
+    ventilator_min_on_time_home:
+      name: Ventilator minimum on time when home
+      description: New value of ventilator minimum on time for home mode.
+      required: true
+      example: 20
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 60
+          unit_of_measurement: minutes
+
+set_ventilator_min_on_time_away:
+  name: Set ventilator minimum on time when away
+  description: Set the minimum ventilator on time when away.
+  target:
+    entity:
+      integration: ecobee
+      domain: fan
+  fields:
+    ventilator_min_on_time_away:
+      name: Ventilator minimum on time when away
+      description: New value of ventilator minimum on time for away mode.
+      required: true
+      example: 20
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 60
+          unit_of_measurement: minutes
+
+set_ventilator_timer:
+  name: set ventilator timer
+  description: >-
+    Turn on or off ventilator timer.
+    If turned on, ventilator will start running and stop after 20 minutes.
+    If turned off, ventilator will stop.
+  target:
+    entity:
+      integration: ecobee
+      domain: fan
+  fields:
+    is_ventilator_timer_on:
+      name: Fan minimum on time
+      description: New value of fan min on time.
+      required: true
+      example: "true"
+      selector:
+        boolean:
