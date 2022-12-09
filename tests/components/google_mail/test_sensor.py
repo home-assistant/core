@@ -5,6 +5,7 @@ from unittest.mock import patch
 from google.auth.exceptions import RefreshError
 from httplib2 import Response
 import pytest
+from voluptuous.error import Invalid
 
 from homeassistant import config_entries
 from homeassistant.components.google_mail.const import DOMAIN
@@ -111,10 +112,80 @@ async def test_set_vacation(
     assert len(mock_client.mock_calls) == 5
 
 
-async def test_set_vacation_reauth_trigger(
+async def test_email(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+) -> None:
+    """Test service call draft email."""
+    await setup_integration()
+
+    with patch("homeassistant.components.google_mail.sensor.build") as mock_client:
+        await hass.services.async_call(
+            DOMAIN,
+            "email",
+            {
+                "entity_id": SENSOR,
+                "title": "Test",
+                "message": "test email",
+                "to": "text@example.com",
+            },
+            blocking=True,
+        )
+    assert len(mock_client.mock_calls) == 5
+
+    with patch("homeassistant.components.google_mail.sensor.build") as mock_client:
+        await hass.services.async_call(
+            DOMAIN,
+            "email",
+            {
+                "entity_id": SENSOR,
+                "title": "Test",
+                "message": "test email",
+                "to": "text@example.com",
+                "send": False,
+            },
+            blocking=True,
+        )
+    assert len(mock_client.mock_calls) == 5
+
+
+async def test_email_voluptuous_error(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+) -> None:
+    """Test voluptuous error thrown when drafting email."""
+    await setup_integration()
+
+    with pytest.raises(Invalid) as ex:
+        await hass.services.async_call(
+            DOMAIN,
+            "email",
+            {
+                "entity_id": SENSOR,
+                "title": "Test",
+                "message": "test email",
+            },
+            blocking=True,
+        )
+    assert ex.match("recipient address required")
+
+    with pytest.raises(Invalid) as ex:
+        await hass.services.async_call(
+            DOMAIN,
+            "email",
+            {
+                "entity_id": SENSOR,
+                "title": "Test",
+            },
+            blocking=True,
+        )
+    assert ex.getrepr("required key not provided")
+
+
+async def test_reauth_trigger(
     hass: HomeAssistant, setup_integration: ComponentSetup
 ) -> None:
-    """Test reauth is triggered after a refresh error during setting vacation."""
+    """Test reauth is triggered after a refresh error during service call."""
     await setup_integration()
 
     with patch(

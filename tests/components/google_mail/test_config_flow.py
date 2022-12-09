@@ -9,7 +9,7 @@ from homeassistant.components.google_mail.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .conftest import CLIENT_ID, TITLE
+from .conftest import CLIENT_ID, SCOPES, TITLE
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -35,7 +35,7 @@ async def test_full_flow(
     assert result["url"] == (
         f"{oauth2client.GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}&scope=https://mail.google.com/+https://www.googleapis.com/auth/gmail.settings.basic"
+        f"&state={state}&scope={'+'.join(SCOPES)}"
         "&access_type=offline&prompt=consent"
     )
 
@@ -98,7 +98,7 @@ async def test_reauth(
     assert result["url"] == (
         f"{oauth2client.GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}&scope=https://mail.google.com/+https://www.googleapis.com/auth/gmail.settings.basic"
+        f"&state={state}&scope={'+'.join(SCOPES)}"
         "&access_type=offline&prompt=consent"
     )
     client = await hass_client_no_auth()
@@ -158,7 +158,7 @@ async def test_already_configured(
     assert result["url"] == (
         f"{oauth2client.GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}&scope=https://mail.google.com/+https://www.googleapis.com/auth/gmail.settings.basic"
+        f"&state={state}&scope={'+'.join(SCOPES)}"
         "&access_type=offline&prompt=consent"
     )
 

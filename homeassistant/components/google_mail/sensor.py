@@ -1,7 +1,9 @@
 """Support for Google Mail Sensors."""
 from __future__ import annotations
 
+import base64
 from datetime import datetime, timedelta, timezone
+from email.message import EmailMessage
 from typing import Any
 
 from google.auth.exceptions import RefreshError
@@ -25,21 +27,38 @@ from homeassistant.helpers.service import async_extract_config_entry_ids
 from .const import (
     ATTR_ENABLED,
     ATTR_END,
+    ATTR_FROM,
     ATTR_MESSAGE,
     ATTR_PLAIN_TEXT,
     ATTR_RESTRICT_CONTACTS,
     ATTR_RESTRICT_DOMAIN,
+    ATTR_SEND,
     ATTR_START,
     ATTR_TITLE,
+    ATTR_TO,
     DOMAIN,
 )
 from .entity import GoogleMailEntity
 
 SCAN_INTERVAL = timedelta(minutes=15)
 
+SERVICE_EMAIL = "email"
 SERVICE_SET_VACATION = "set_vacation"
 
-SERVICE_SCHEMA = vol.All(
+SERVICE_EMAIL_SCHEMA = vol.All(
+    cv.make_entity_service_schema(
+        {
+            # To address required if sending
+            vol.Optional(ATTR_TITLE): cv.string,
+            vol.Required(ATTR_MESSAGE): cv.string,
+            vol.Optional(ATTR_TO): cv.string,
+            vol.Optional(ATTR_FROM): cv.string,
+            vol.Required(ATTR_SEND, default=True): cv.boolean,
+        },
+    )
+)
+
+SERVICE_VACATION_SCHEMA = vol.All(
     cv.make_entity_service_schema(
         {
             vol.Required(ATTR_ENABLED, default=True): cv.boolean,
@@ -96,25 +115,59 @@ async def async_setup_service(hass: HomeAssistant) -> None:
         else:
             settings["responseBodyHtml"] = call.data[ATTR_MESSAGE]
         _settings = service.users().settings()  # pylint: disable=no-member
-        try:
-            _settings.updateVacation(userId="me", body=settings).execute()
-        except RefreshError as ex:
-            entry.async_start_reauth(hass)
-            raise ex
+        _settings.updateVacation(userId="me", body=settings).execute()
 
-    async def set_vacation(call: ServiceCall) -> None:
-        """Set vacation responder settings for Google Mail."""
+    def _draft_email(call: ServiceCall, entry: ConfigEntry) -> None:
+        """Draft am email."""
+        credentials = Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN])
+        service = build("gmail", "v1", credentials=credentials)
+
+        message = EmailMessage()
+        message.set_content(call.data[ATTR_MESSAGE])
+        if to_addr := call.data.get(ATTR_TO):
+            message[ATTR_TO] = to_addr
+        message[ATTR_FROM] = call.data.get(ATTR_FROM, entry.unique_id)
+        message["Subject"] = call.data.get(ATTR_TITLE)
+
+        encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+
+        msg = {ATTR_MESSAGE: {"raw": encoded_message}}
+        users = service.users()  # pylint: disable=no-member
+        if call.data[ATTR_SEND]:
+            if not call.data.get(ATTR_TO):
+                raise vol.Invalid("recipient address required")
+            users.messages().send(userId="me", body=msg).execute()
+        else:
+            users.drafts().create(userId="me", body=msg).execute()
+
+    async def gmail_service(call: ServiceCall) -> None:
+        """Call Google Mail service."""
         for entry in await extract_gmail_config_entries(call):
             if not (session := hass.data[DOMAIN].get(entry.entry_id)):
                 raise ValueError(f"Config entry not loaded: {entry.entry_id}")
             await session.async_ensure_token_valid()
-            await hass.async_add_executor_job(_set_vacation, call, entry)
+            if call.service == SERVICE_SET_VACATION:
+                func = _set_vacation
+            if call.service == SERVICE_EMAIL:
+                func = _draft_email
+            try:
+                await hass.async_add_executor_job(func, call, entry)
+            except RefreshError as ex:
+                entry.async_start_reauth(hass)
+                raise ex
 
     hass.services.async_register(
         domain=DOMAIN,
         service=SERVICE_SET_VACATION,
-        schema=SERVICE_SCHEMA,
-        service_func=set_vacation,
+        schema=SERVICE_VACATION_SCHEMA,
+        service_func=gmail_service,
+    )
+
+    hass.services.async_register(
+        domain=DOMAIN,
+        service=SERVICE_EMAIL,
+        schema=SERVICE_EMAIL_SCHEMA,
+        service_func=gmail_service,
     )
 
 

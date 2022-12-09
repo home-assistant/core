@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from httplib2 import Response
 import oauth2client
-import pytest
+from pytest import fixture
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -22,19 +22,21 @@ ComponentSetup = Callable[[], Awaitable[None]]
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
+SCOPES = [
+    "https://www.googleapis.com/auth/gmail.readonly",
+    "https://www.googleapis.com/auth/gmail.compose",
+    "https://www.googleapis.com/auth/gmail.settings.basic",
+]
 TITLE = "example@gmail.com"
 
 
-@pytest.fixture(name="scopes")
+@fixture(name="scopes")
 def mock_scopes() -> list[str]:
     """Fixture to set the scopes present in the OAuth token."""
-    return [
-        "https://mail.google.com/",
-        "https://www.googleapis.com/auth/gmail.settings.basic",
-    ]
+    return SCOPES
 
 
-@pytest.fixture(autouse=True)
+@fixture(autouse=True)
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Fixture to setup credentials."""
     assert await async_setup_component(hass, "application_credentials", {})
@@ -46,13 +48,13 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     )
 
 
-@pytest.fixture(name="expires_at")
+@fixture(name="expires_at")
 def mock_expires_at() -> int:
     """Fixture to set the oauth token expiration time."""
     return time.time() + 3600
 
 
-@pytest.fixture(name="config_entry")
+@fixture(name="config_entry")
 def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
     """Create Google Mail entry in Home Assistant."""
     return MockConfigEntry(
@@ -71,7 +73,7 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
     )
 
 
-@pytest.fixture(autouse=True)
+@fixture(autouse=True)
 def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
     """Mock Google Mail connection."""
     aioclient_mock.post(
@@ -85,7 +87,7 @@ def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
     )
 
 
-@pytest.fixture(name="setup_integration")
+@fixture(name="setup_integration")
 async def mock_setup_integration(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> Generator[ComponentSetup, None, None]:
