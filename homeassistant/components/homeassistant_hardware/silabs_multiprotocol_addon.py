@@ -270,7 +270,7 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
                 description_placeholders={"hardware_name": self._hardware_name()},
             )
         if not user_input[CONF_ENABLE_MULTI_PAN]:
-            return self.async_create_entry(title="", data={})
+            return self.async_create_entry(data={})
 
         return await self.async_step_install_addon()
 
@@ -337,7 +337,7 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
                 _LOGGER.exception("Unexpected exception during ZHA migration")
                 raise AbortFlow("zha_migration_failed") from err
 
-        return self.async_create_entry(title="", data={})
+        return self.async_create_entry(data={})
 
     async def async_step_addon_installed(
         self, user_input: dict[str, Any] | None = None
@@ -356,7 +356,7 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
         """Link to a guide for reverting to Zigbee firmware."""
         if user_input is None:
             return self.async_show_form(step_id="show_revert_guide")
-        return self.async_create_entry(title="", data={})
+        return self.async_create_entry(data={})
 
     async def async_step_addon_installed_other_device(
         self, user_input: dict[str, Any] | None = None
@@ -364,4 +364,4 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
         """Show dialog explaining the addon is in use by another device."""
         if user_input is None:
             return self.async_show_form(step_id="addon_installed_other_device")
-        return self.async_create_entry(title="", data={})
+        return self.async_create_entry(data={})
