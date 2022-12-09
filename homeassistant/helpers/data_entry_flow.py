@@ -26,7 +26,7 @@ class _BaseFlowManagerView(HomeAssistantView):
         self, result: data_entry_flow.FlowResult
     ) -> data_entry_flow.FlowResult:
         """Convert result to JSON."""
-        if result["type"] not in (
+        if result["type"] in (
             data_entry_flow.FlowResultType.CREATE_ENTRY,
             data_entry_flow.FlowResultType.FINISH_FLOW,
         ):
