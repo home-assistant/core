@@ -51,7 +51,7 @@ async def _deprecate_smart_sensor(
     protect: ProtectApiClient,
     *args: Any,
     **kwargs: Any,
-):
+) -> None:
     entity_registry = er.async_get(hass)
     automations: dict[str, list[str]] = {}
     scripts: dict[str, list[str]] = {}
@@ -70,7 +70,7 @@ async def _deprecate_smart_sensor(
 
     if automations or scripts:
         _LOGGER.debug(
-            "Found usage of Detected Object sensor.\nPotientally used automations: %s\nPotientally used scripts: %s",
+            "Found usage of Detected Object sensor\nPotientally used automations: %s\nPotientally used scripts: %s",
             automations,
             scripts,
         )
@@ -84,7 +84,7 @@ async def _deprecate_smart_sensor(
             translation_key="deprecate_smart_sensor",
         )
     else:
-        _LOGGER.debug("No found usages of Detected Object sensor.")
+        _LOGGER.debug("No found usages of Detected Object sensor")
         ir.async_delete_issue(hass, DOMAIN, "deprecate_smart_sensor")
 
 
