@@ -773,12 +773,18 @@ class ProtectEventSensor(EventEntityMixin, SensorEntity):
         # do not call ProtectDeviceSensor method since we want event to get value here
         EventEntityMixin._async_update_device_from_protect(self, device)
         is_on = self.entity_description.get_is_on(device)
-        if is_on:
+        if is_on and self._event is not None:
             if (
                 self.entity_description.ufp_smart_type
                 == SmartDetectObjectType.LICENSE_PLATE
             ):
-                self._attr_native_value = self._event.metadata.license_plate.name
+                if (
+                    self._event.metadata is not None
+                    and self._event.metadata.license_plate is not None
+                ):
+                    self._attr_native_value = self._event.metadata.license_plate.name
+                else:
+                    self._attr_native_value = OBJECT_TYPE_NONE
             else:
                 self._attr_native_value = self._event.smart_detect_types[0].value
         else:
