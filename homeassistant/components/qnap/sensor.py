@@ -24,9 +24,9 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     DATA_GIBIBYTES,
-    DATA_RATE_MEBIBYTES_PER_SECOND,
     PERCENTAGE,
     TEMP_CELSIUS,
+    UnitOfDataRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
@@ -121,13 +121,15 @@ _NETWORK_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="network_tx",
         name="Network Up",
-        native_unit_of_measurement=DATA_RATE_MEBIBYTES_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.MEBIBYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:upload",
     ),
     SensorEntityDescription(
         key="network_rx",
         name="Network Down",
-        native_unit_of_measurement=DATA_RATE_MEBIBYTES_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.MEBIBYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:download",
     ),
 )

@@ -5,12 +5,12 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Final
 
-from homeassistant.components.sensor import SensorEntityDescription, SensorStateClass
-from homeassistant.const import (
-    DATA_RATE_MEGABITS_PER_SECOND,
-    TIME_MILLISECONDS,
-    Platform,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntityDescription,
+    SensorStateClass,
 )
+from homeassistant.const import TIME_MILLISECONDS, Platform, UnitOfDataRate
 
 DOMAIN: Final = "speedtestdotnet"
 
@@ -32,14 +32,16 @@ SENSOR_TYPES: Final[tuple[SpeedtestSensorEntityDescription, ...]] = (
     SpeedtestSensorEntityDescription(
         key="download",
         name="Download",
-        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda value: round(value / 10**6, 2),
     ),
     SpeedtestSensorEntityDescription(
         key="upload",
         name="Upload",
-        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda value: round(value / 10**6, 2),
     ),
