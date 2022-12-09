@@ -20,7 +20,8 @@
                 },
                 "data_description": {
                     "attribute": "Z\u00edskajte hodnotu atrib\u00fatu na vybranom tagu",
-                    "unit_of_measurement": "Vyberte si meranie teploty alebo si vytvorte vlastn\u00e9"
+                    "unit_of_measurement": "Vyberte si meranie teploty alebo si vytvorte vlastn\u00e9",
+                    "value_template": "Definuje \u0161abl\u00f3nu na z\u00edskanie stavu senzora"
                 }
             },
             "user": {
@@ -45,6 +46,7 @@
     },
     "issues": {
         "moved_yaml": {
+            "description": "Konfigur\u00e1cia Scrape pomocou YAML bola presunut\u00e1 do integra\u010dn\u00e9ho k\u013e\u00fa\u010da. \n\n Va\u0161a existuj\u00faca konfigur\u00e1cia YAML bude fungova\u0165 pre \u010fal\u0161ie 2 verzie. \n\n Migrujte svoju konfigur\u00e1ciu YAML na integra\u010dn\u00fd k\u013e\u00fa\u010d pod\u013ea dokument\u00e1cie.",
             "title": "Konfigur\u00e1cia Scrape YAML bola presunut\u00e1"
         }
     },
@@ -63,7 +65,8 @@
                 },
                 "data_description": {
                     "attribute": "Z\u00edskajte hodnotu atrib\u00fatu na vybranom tagu",
-                    "unit_of_measurement": "Vyberte si meranie teploty alebo si vytvorte vlastn\u00e9"
+                    "unit_of_measurement": "Vyberte si meranie teploty alebo si vytvorte vlastn\u00e9",
+                    "value_template": "Definuje \u0161abl\u00f3nu na z\u00edskanie stavu senzora"
                 }
             },
             "edit_sensor": {
@@ -79,7 +82,8 @@
                 },
                 "data_description": {
                     "attribute": "Z\u00edskajte hodnotu atrib\u00fatu na vybranom tagu",
-                    "unit_of_measurement": "Vyberte si meranie teploty alebo si vytvorte vlastn\u00e9"
+                    "unit_of_measurement": "Vyberte si meranie teploty alebo si vytvorte vlastn\u00e9",
+                    "value_template": "Definuje \u0161abl\u00f3nu na z\u00edskanie stavu senzora"
                 }
             },
             "init": {

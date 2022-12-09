@@ -19,7 +19,8 @@
                 "data": {
                     "password": "Heslo",
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
-                }
+                },
+                "title": "Pripojenie WOLF SmartSet"
             }
         }
     },
@@ -36,6 +37,7 @@
                     "auto_on_cool": "AutoOnCool",
                     "automatik_aus": "Automatick\u00e9 VYP",
                     "automatik_ein": "Automatick\u00e9 ZAP",
+                    "bereit_keine_ladung": "Pripraven\u00e9, nena\u010d\u00edtava sa",
                     "betrieb_ohne_brenner": "Pr\u00e1ca bez hor\u00e1ka",
                     "cooling": "Chladenie",
                     "deaktiviert": "Neakt\u00edvne",
@@ -62,12 +64,17 @@
                     "kombigerat": "Kombinovan\u00fd kotol",
                     "kombigerat_mit_solareinbindung": "Kombinovan\u00fd kotol so sol\u00e1rnou integr\u00e1ciou",
                     "mindest_kombizeit": "Minim\u00e1lny kombinovan\u00fd \u010das",
+                    "nachlauf_heizkreispumpe": "Zapnutie \u010derpadla vykurovacieho okruhu",
                     "nur_heizgerat": "Iba kotol",
                     "parallelbetrieb": "Paraleln\u00fd re\u017eim",
                     "partymodus": "P\u00e1rty re\u017eim",
+                    "perm_cooling": "Trval\u00e9 chladenie",
                     "permanent": "Trval\u00fd",
                     "permanentbetrieb": "Trval\u00fd re\u017eim",
                     "reduzierter_betrieb": "Obmedzen\u00fd re\u017eim",
+                    "schornsteinfeger": "Emisn\u00e1 sk\u00fa\u0161ka",
+                    "smart_grid": "SmartGrid",
+                    "smart_home": "SmartHome",
                     "solarbetrieb": "Sol\u00e1rny re\u017eim",
                     "sparbetrieb": "\u00dasporn\u00fd re\u017eim",
                     "sparen": "\u00dasporn\u00fd",
@@ -75,6 +82,7 @@
                     "standby": "Pohotovostn\u00fd re\u017eim",
                     "start": "\u0160tart",
                     "storung": "Porucha",
+                    "test": "Test",
                     "urlaubsmodus": "Dovolenkov\u00fd re\u017eim",
                     "ventilprufung": "Test ventilu",
                     "warmwasser": "T\u00daV",

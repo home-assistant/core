@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
+import dataclasses
+from dataclasses import dataclass
+from enum import Enum
 import logging
 import re
 from typing import Any, TypeVar
@@ -218,7 +221,24 @@ class ServiceIntentHandler(IntentHandler):
 
         response = intent_obj.create_response()
         response.async_set_speech(self.speech.format(state.name))
+        response.async_set_target(
+            IntentResponseTarget(
+                name=state.name,
+                type=IntentResponseTargetType.ENTITY,
+                id=state.entity_id,
+            )
+        )
         return response
+
+
+class IntentCategory(Enum):
+    """Category of an intent."""
+
+    ACTION = "action"
+    """Trigger an action like turning an entity on or off"""
+
+    QUERY = "query"
+    """Get information about the state of an entity"""
 
 
 class Intent:
@@ -232,6 +252,7 @@ class Intent:
         "text_input",
         "context",
         "language",
+        "category",
     ]
 
     def __init__(
@@ -243,6 +264,7 @@ class Intent:
         text_input: str | None,
         context: Context,
         language: str,
+        category: IntentCategory | None = None,
     ) -> None:
         """Initialize an intent."""
         self.hass = hass
@@ -252,6 +274,7 @@ class Intent:
         self.text_input = text_input
         self.context = context
         self.language = language
+        self.category = category
 
     @callback
     def create_response(self) -> IntentResponse:
@@ -259,11 +282,57 @@ class Intent:
         return IntentResponse(self, language=self.language)
 
 
+class IntentResponseType(Enum):
+    """Type of the intent response."""
+
+    ACTION_DONE = "action_done"
+    """Intent caused an action to occur"""
+
+    QUERY_ANSWER = "query_answer"
+    """Response is an answer to a query"""
+
+    ERROR = "error"
+    """Response is an error"""
+
+
+class IntentResponseErrorCode(str, Enum):
+    """Reason for an intent response error."""
+
+    NO_INTENT_MATCH = "no_intent_match"
+    """Text could not be matched to an intent"""
+
+    NO_VALID_TARGETS = "no_valid_targets"
+    """Intent was matched, but no valid areas/devices/entities were targeted"""
+
+    FAILED_TO_HANDLE = "failed_to_handle"
+    """Unexpected error occurred while handling intent"""
+
+
+class IntentResponseTargetType(str, Enum):
+    """Type of target for an intent response."""
+
+    AREA = "area"
+    DEVICE = "device"
+    ENTITY = "entity"
+    OTHER = "other"
+
+
+@dataclass
+class IntentResponseTarget:
+    """Main target of the intent response."""
+
+    name: str
+    type: IntentResponseTargetType
+    id: str | None = None
+
+
 class IntentResponse:
     """Response to an intent."""
 
     def __init__(
-        self, intent: Intent | None = None, language: str | None = None
+        self,
+        intent: Intent | None = None,
+        language: str | None = None,
     ) -> None:
         """Initialize an IntentResponse."""
         self.intent = intent
@@ -271,6 +340,14 @@ class IntentResponse:
         self.reprompt: dict[str, dict[str, Any]] = {}
         self.card: dict[str, dict[str, str]] = {}
         self.language = language
+        self.error_code: IntentResponseErrorCode | None = None
+        self.target: IntentResponseTarget | None = None
+
+        if (self.intent is not None) and (self.intent.category == IntentCategory.QUERY):
+            # speech will be the answer to the query
+            self.response_type = IntentResponseType.QUERY_ANSWER
+        else:
+            self.response_type = IntentResponseType.ACTION_DONE
 
     @callback
     def async_set_speech(
@@ -306,15 +383,43 @@ class IntentResponse:
         self.card[card_type] = {"title": title, "content": content}
 
     @callback
+    def async_set_error(self, code: IntentResponseErrorCode, message: str) -> None:
+        """Set response error."""
+        self.response_type = IntentResponseType.ERROR
+        self.error_code = code
+
+        # Speak error message
+        self.async_set_speech(message)
+
+    @callback
+    def async_set_target(self, target: IntentResponseTarget) -> None:
+        """Set response target."""
+        self.target = target
+
+    @callback
     def as_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of an intent response."""
         response_dict: dict[str, Any] = {
             "speech": self.speech,
             "card": self.card,
             "language": self.language,
+            "response_type": self.response_type.value,
         }
 
         if self.reprompt:
             response_dict["reprompt"] = self.reprompt
+
+        response_data: dict[str, Any] = {}
+
+        if self.response_type == IntentResponseType.ERROR:
+            assert self.error_code is not None, "error code is required"
+            response_data["code"] = self.error_code.value
+        else:
+            # action done or query answer
+            response_data["target"] = (
+                dataclasses.asdict(self.target) if self.target is not None else None
+            )
+
+        response_dict["data"] = response_data
 
         return response_dict

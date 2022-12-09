@@ -11,7 +11,12 @@
         "flow_title": "{name} ({host})",
         "step": {
             "import_failed": {
-                "description": "Nepodarilo sa nastavi\u0165 most (hostite\u013e: {host}) importovan\u00fd z konfigura\u010dn\u00e9ho s\u00faboru.yaml."
+                "description": "Nepodarilo sa nastavi\u0165 most (hostite\u013e: {host}) importovan\u00fd z konfigura\u010dn\u00e9ho s\u00faboru.yaml.",
+                "title": "Import konfigur\u00e1cie bridge Cas\u00e9ta zlyhal."
+            },
+            "link": {
+                "description": "Ak chcete sp\u00e1rova\u0165 s {name} ({host}), po odoslan\u00ed tohto formul\u00e1ra stla\u010dte \u010dierne tla\u010didlo na zadnej strane bridge.",
+                "title": "Sp\u00e1rujte s bridge"
             },
             "user": {
                 "data": {

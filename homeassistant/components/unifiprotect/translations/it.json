@@ -41,6 +41,15 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "license_plate": {
+                "state": {
+                    "none": "Libero"
+                }
+            }
+        }
+    },
     "issues": {
         "deprecate_smart_sensor": {
             "description": "Il sensore unificato \"Oggetto rilevato\" per i rilevamenti intelligenti \u00e8 ora deprecato. \u00c8 stato sostituito con singoli sensori binari di rilevamento intelligente per ogni tipo di rilevamento intelligente. Si prega di aggiornare eventuali modelli o automazioni di conseguenza.",

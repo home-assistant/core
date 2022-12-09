@@ -24,12 +24,12 @@ from homeassistant.const import (
     LIGHT_LUX,
     MASS_KILOGRAMS,
     PERCENTAGE,
-    POWER_VOLT_AMPERE,
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     VOLUME_CUBIC_METERS,
     Platform,
+    UnitOfApparentPower,
     UnitOfSoundPressure,
 )
 from homeassistant.core import HomeAssistant
@@ -182,7 +182,8 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "V_VA": SensorEntityDescription(
         key="V_VA",
-        native_unit_of_measurement=POWER_VOLT_AMPERE,
+        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+        device_class=SensorDeviceClass.APPARENT_POWER,
     ),
 }
 

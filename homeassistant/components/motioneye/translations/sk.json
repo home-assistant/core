@@ -24,5 +24,15 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "stream_url_template": "\u0160abl\u00f3na webovej adresy streamu",
+                    "webhook_set_overwrite": "Prep\u00ed\u0161te nerozpoznan\u00e9 webhooky"
+                }
+            }
+        }
     }
 }
