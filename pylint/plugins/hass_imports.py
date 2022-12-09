@@ -264,6 +264,10 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^CONF_UNIT_SYSTEM_(\w*)$"),
         ),
         ObsoleteImportMatch(
+            reason="replaced by unit enums",
+            constant=re.compile(r"^DATA_RATE_(\w*)$"),
+        ),
+        ObsoleteImportMatch(
             reason="replaced by ***DeviceClass enum",
             constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
         ),
@@ -274,6 +278,10 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
         ObsoleteImportMatch(
             reason="replaced by EntityCategory enum",
             constant=re.compile(r"^(ENTITY_CATEGORY_(\w*))|(ENTITY_CATEGORIES)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by unit enums",
+            constant=re.compile(r"^IRRADIATION_(\w*)$"),
         ),
         ObsoleteImportMatch(
             reason="replaced by unit enums",
@@ -297,12 +305,16 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
         ),
         ObsoleteImportMatch(
             reason="replaced by unit enums",
-            constant=re.compile(r"^SPEED_(\w*)$"),
+            constant=re.compile(r"^SOUND_PRESSURE_(\w*)$"),
         ),
         ObsoleteImportMatch(
             reason="replaced by unit enums",
-            constant=re.compile(r"^TEMP_(\w*)$"),
+            constant=re.compile(r"^SPEED_(\w*)$"),
         ),
+        # ObsoleteImportMatch(
+        #    reason="replaced by unit enums",
+        #    constant=re.compile(r"^TEMP_(\w*)$"),
+        # ),
         ObsoleteImportMatch(
             reason="replaced by unit enums",
             constant=re.compile(r"^VOLUME_(\w*)$"),
