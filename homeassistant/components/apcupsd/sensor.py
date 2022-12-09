@@ -21,11 +21,11 @@ from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
     FREQUENCY_HERTZ,
     PERCENTAGE,
-    POWER_VOLT_AMPERE,
     POWER_WATT,
     TEMP_CELSIUS,
     TIME_MINUTES,
     TIME_SECONDS,
+    UnitOfApparentPower,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -290,8 +290,8 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "nomapnt": SensorEntityDescription(
         key="nomapnt",
         name="UPS Nominal Apparent Power",
-        native_unit_of_measurement=POWER_VOLT_AMPERE,
-        icon="mdi:flash",
+        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+        device_class=SensorDeviceClass.APPARENT_POWER,
     ),
     "numxfers": SensorEntityDescription(
         key="numxfers",
@@ -423,7 +423,7 @@ INFERRED_UNITS = {
     " Percent": PERCENTAGE,
     " Volts": ELECTRIC_POTENTIAL_VOLT,
     " Ampere": ELECTRIC_CURRENT_AMPERE,
-    " Volt-Ampere": POWER_VOLT_AMPERE,
+    " Volt-Ampere": UnitOfApparentPower.VOLT_AMPERE,
     " Watts": POWER_WATT,
     " Hz": FREQUENCY_HERTZ,
     " C": TEMP_CELSIUS,

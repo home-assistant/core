@@ -62,6 +62,7 @@
                     "attribute": "Atribut",
                     "device_class": "Classe de dispositiu",
                     "index": "\u00cdndex",
+                    "name": "Nom",
                     "select": "Selecciona",
                     "state_class": "Classe d'estat",
                     "unit_of_measurement": "Unitat de mesura",
@@ -82,6 +83,7 @@
                     "attribute": "Atribut",
                     "device_class": "Classe de dispositiu",
                     "index": "\u00cdndex",
+                    "name": "Nom",
                     "select": "Selecciona",
                     "state_class": "Classe d'estat",
                     "unit_of_measurement": "Unitat de mesura",
@@ -110,8 +112,11 @@
                     "authentication": "Selecciona el m\u00e8tode d'autenticaci\u00f3",
                     "headers": "Cap\u00e7aleres",
                     "method": "M\u00e8tode",
+                    "password": "Contrasenya",
                     "resource": "Recurs",
-                    "timeout": "Temps d'espera"
+                    "timeout": "Temps d'espera",
+                    "username": "Nom d'usuari",
+                    "verify_ssl": "Verifica el certificat SSL"
                 },
                 "data_description": {
                     "authentication": "Tipus d'autenticaci\u00f3 HTTP. O b\u00e0sica o 'digest'",

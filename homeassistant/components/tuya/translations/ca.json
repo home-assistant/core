@@ -71,6 +71,7 @@
             },
             "fingerbot_mode": {
                 "state": {
+                    "click": "Prem",
                     "switch": "Interruptor"
                 }
             },

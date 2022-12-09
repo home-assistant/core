@@ -72,7 +72,8 @@
                     "data_bit": "Po\u010det d\u00e1tov\u00fdch bitov",
                     "off_delay": "Oneskorenie vypnutia",
                     "off_delay_enabled": "Povoli\u0165 oneskorenie vypnutia",
-                    "replace_device": "Vyberte zariadenie, ktor\u00e9 chcete nahradi\u0165"
+                    "replace_device": "Vyberte zariadenie, ktor\u00e9 chcete nahradi\u0165",
+                    "venetian_blind_mode": "Re\u017eim \u017eal\u00fazie"
                 },
                 "title": "Konfigur\u00e1cia mo\u017enost\u00ed zariadenia"
             }

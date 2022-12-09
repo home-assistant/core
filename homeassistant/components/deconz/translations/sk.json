@@ -2,7 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "Bridge je u\u017e nakonfigurovan\u00fd",
-            "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha"
+            "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha",
+            "no_bridges": "Nena\u0161li sa \u017eiadne deCONZ bridge",
+            "no_hardware_available": "\u017diadny r\u00e1diov\u00fd hardv\u00e9r pripojen\u00fd k deCONZ",
+            "updated_instance": "Aktualizovan\u00e1 in\u0161tancia deCONZ s novou adresou hostite\u013ea"
         },
         "error": {
             "linking_not_possible": "Nepodarilo sa prepoji\u0165 s br\u00e1nou",
@@ -11,9 +14,11 @@
         "flow_title": "{host}",
         "step": {
             "hassio_confirm": {
-                "description": "Chcete nakonfigurova\u0165 Home Assistant na pripojenie k br\u00e1ne deCONZ poskytovanej doplnkom {addon}?"
+                "description": "Chcete nakonfigurova\u0165 Home Assistant na pripojenie k br\u00e1ne deCONZ poskytovanej doplnkom {addon}?",
+                "title": "Br\u00e1na deCONZ Zigbee prostredn\u00edctvom doplnku Home Assistant"
             },
             "link": {
+                "description": "Odomknite svoju br\u00e1nu deCONZ a zaregistrujte sa v aplik\u00e1cii Home Assistant. \n\n 1. Cho\u010fte do deCONZ Settings - > Gateway - > Advanced\n 2. Stla\u010dte tla\u010didlo \u201eAutentifik\u00e1cia aplik\u00e1cie\u201c.",
                 "title": "Prepojenie s deCONZ"
             },
             "manual_input": {

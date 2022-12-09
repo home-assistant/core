@@ -4,7 +4,9 @@
             "auto": "Auto"
         },
         "yamaha_musiccast__zone_equalizer_mode": {
-            "auto": "Auto"
+            "auto": "Auto",
+            "bypass": "Bypass",
+            "manual": "Manu\u00e1lne"
         },
         "yamaha_musiccast__zone_link_audio_delay": {
             "audio_sync": "Synchroniz\u00e1cia zvuku",
@@ -32,7 +34,12 @@
         "yamaha_musiccast__zone_surr_decoder_type": {
             "auto": "Auto",
             "dolby_pl": "Dolby ProLogic",
+            "dolby_pl2x_game": "Dolby ProLogic 2x Game",
+            "dolby_pl2x_movie": "Dolby ProLogic 2x Movie",
+            "dolby_pl2x_music": "Dolby ProLogic 2x Music",
             "dolby_surround": "Dolby Surround",
+            "dts_neo6_cinema": "DTS Neo:6 Kino",
+            "dts_neo6_music": "DTS Neo:6 Hudba",
             "dts_neural_x": "DTS Neural:X",
             "toggle": "Prepn\u00fa\u0165"
         },

@@ -23,5 +23,52 @@
                 "title": "WOLF SmartSet-tilkobling"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "state": {
+                "state": {
+                    "1_x_warmwasser": "1 x DHW",
+                    "abgasklappe": "Spjeld for r\u00f8ykgass",
+                    "absenkbetrieb": "Tilbakeslagsmodus",
+                    "absenkstop": "Tilbakeslagsstopp",
+                    "aktiviert": "Aktivert",
+                    "antilegionellenfunktion": "Anti-legionella funksjon",
+                    "at_abschaltung": "OT-avstenging",
+                    "at_frostschutz": "OT frostsikring",
+                    "aus": "Uf\u00f8r",
+                    "kalibration_warmwasserbetrieb": "DHW-kalibrering",
+                    "kaskadenbetrieb": "Kaskade operasjon",
+                    "kombibetrieb": "Kombimodus",
+                    "kombigerat": "Kombikjele",
+                    "kombigerat_mit_solareinbindung": "Kombikjele med solintegrasjon",
+                    "mindest_kombizeit": "Minimum kombitid",
+                    "nachlauf_heizkreispumpe": "P\u00e5kj\u00f8ring av varmekretspumpe",
+                    "nachspulen": "Etterspyling",
+                    "nur_heizgerat": "Kun kjele",
+                    "parallelbetrieb": "Parallell modus",
+                    "partymodus": "Festmodus",
+                    "perm_cooling": "PermCooling",
+                    "permanent": "Permanent",
+                    "permanentbetrieb": "Permanent modus",
+                    "reduzierter_betrieb": "Begrenset modus",
+                    "rt_abschaltung": "RT-avstenging",
+                    "rt_frostschutz": "RT frostbeskyttelse",
+                    "ruhekontakt": "Hvilekontakt",
+                    "schornsteinfeger": "Utslippstest",
+                    "smart_grid": "SmartGrid",
+                    "smart_home": "SmartHome",
+                    "softstart": "Myk start",
+                    "solarbetrieb": "Solar modus",
+                    "sparbetrieb": "\u00d8konomimodus",
+                    "sparen": "\u00d8konomi",
+                    "spreizung_hoch": "dT for bred",
+                    "spreizung_kf": "Spre KF",
+                    "stabilisierung": "Stabilisering",
+                    "standby": "Ventemodus",
+                    "start": "Start"
+                }
+            }
+        }
     }
 }

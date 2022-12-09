@@ -11,7 +11,9 @@
             "user": {
                 "data": {
                     "api_key": "API k\u013e\u00fa\u010d",
-                    "name": "N\u00e1zov"
+                    "destination": "Cie\u013e",
+                    "name": "N\u00e1zov",
+                    "origin": "V\u00fdchodzie miesto"
                 }
             }
         }
@@ -20,8 +22,14 @@
         "step": {
             "init": {
                 "data": {
+                    "avoid": "Vyhn\u00fa\u0165 sa",
                     "language": "Jazyk",
+                    "mode": "Re\u017eim cestovania",
                     "time": "\u010cas",
+                    "time_type": "Typ \u010dasu",
+                    "traffic_mode": "Re\u017eim prem\u00e1vky",
+                    "transit_mode": "Re\u017eim verejnej dopravy",
+                    "transit_routing_preference": "Predvo\u013eba smerovania verejnej dopravy",
                     "units": "Jednotky"
                 }
             }

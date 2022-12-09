@@ -14,11 +14,11 @@ from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
     FREQUENCY_HERTZ,
     PERCENTAGE,
-    POWER_VOLT_AMPERE,
     POWER_WATT,
     TEMP_CELSIUS,
     TIME_SECONDS,
     Platform,
+    UnitOfApparentPower,
 )
 from homeassistant.helpers.entity import EntityCategory
 
@@ -182,8 +182,8 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
     "ups.power": SensorEntityDescription(
         key="ups.power",
         name="Current Apparent Power",
-        native_unit_of_measurement=POWER_VOLT_AMPERE,
-        icon="mdi:flash",
+        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+        device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -191,8 +191,8 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
     "ups.power.nominal": SensorEntityDescription(
         key="ups.power.nominal",
         name="Nominal Power",
-        native_unit_of_measurement=POWER_VOLT_AMPERE,
-        icon="mdi:flash",
+        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+        device_class=SensorDeviceClass.APPARENT_POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),

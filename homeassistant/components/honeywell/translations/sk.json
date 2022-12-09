@@ -8,7 +8,15 @@
                 "data": {
                     "password": "Heslo",
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
-                }
+                },
+                "description": "Zadajte prihlasovacie \u00fadaje pou\u017eit\u00e9 na prihl\u00e1senie na mytotalconnectcomfort.com."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "description": "\u010eal\u0161ie mo\u017enosti konfigur\u00e1cie Honeywell. Teploty s\u00fa nastaven\u00e9 vo stup\u0148och Fahrenheita."
             }
         }
     }

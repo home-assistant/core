@@ -19,5 +19,48 @@
                 "description": "Sett opp MusicCast for \u00e5 integrere med Home Assistant."
             }
         }
+    },
+    "entity": {
+        "select": {
+            "dimmer": {
+                "state": {
+                    "auto": "Auto"
+                }
+            },
+            "zone_equalizer_mode": {
+                "state": {
+                    "auto": "Auto",
+                    "bypass": "Bypass",
+                    "manual": "H\u00e5ndbok"
+                }
+            },
+            "zone_link_audio_delay": {
+                "state": {
+                    "audio_sync": "Lydsynkronisering",
+                    "audio_sync_off": "Lydsynkronisering av",
+                    "audio_sync_on": "Lydsynkronisering p\u00e5",
+                    "balanced": "Balansert",
+                    "lip_sync": "Leppesynkronisering"
+                }
+            },
+            "zone_link_audio_quality": {
+                "state": {
+                    "compressed": "Komprimert",
+                    "uncompressed": "Ukomprimert"
+                }
+            },
+            "zone_link_control": {
+                "state": {
+                    "speed": "Hastighet",
+                    "stability": "Stabilitet",
+                    "standard": "Standard"
+                }
+            },
+            "zone_sleep": {
+                "state": {
+                    "120 min": "120 minutter"
+                }
+            }
+        }
     }
 }

@@ -7,7 +7,8 @@
             "app_setup_error": "Nie je mo\u017en\u00e9 nastavi\u0165 aplik\u00e1ciu SmartApp. Pros\u00edm sk\u00faste znova.",
             "token_forbidden": "Token nem\u00e1 po\u017eadovan\u00e9 rozsahy OAuth.",
             "token_invalid_format": "Token mus\u00ed by\u0165 vo form\u00e1te UID/GUID",
-            "token_unauthorized": "Token je neplatn\u00fd alebo u\u017e nie je autorizovan\u00fd."
+            "token_unauthorized": "Token je neplatn\u00fd alebo u\u017e nie je autorizovan\u00fd.",
+            "webhook_error": "SmartThings nedok\u00e1zal overi\u0165 webov\u00fa adresu webhooku. Uistite sa, \u017ee adresa URL webhooku je dostupn\u00e1 z internetu a sk\u00faste to znova."
         },
         "step": {
             "authorize": {
@@ -23,6 +24,7 @@
                 "data": {
                     "location_id": "Umiestnenie"
                 },
+                "description": "Vyberte umiestnenie SmartThings, ktor\u00e9 chcete prida\u0165 do aplik\u00e1cie Home Assistant. N\u00e1sledne otvor\u00edme nov\u00e9 okno a po\u017eiadame v\u00e1s o prihl\u00e1senie a autoriz\u00e1ciu in\u0161tal\u00e1cie integr\u00e1cie Home Assistant do zvolen\u00e9ho miesta.",
                 "title": "Vyberte umiestnenie"
             },
             "user": {

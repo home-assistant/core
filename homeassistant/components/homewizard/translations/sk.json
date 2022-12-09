@@ -16,6 +16,7 @@
                 "data": {
                     "ip_address": "IP adresa"
                 },
+                "description": "Zadajte IP adresu svojho zariadenia HomeWizard Energy na integr\u00e1ciu s Home Assistant.",
                 "title": "Konfigur\u00e1cia zariadenia"
             }
         }
