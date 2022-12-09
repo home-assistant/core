@@ -122,6 +122,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
 
     async def mqtt_async_added_to_hass(self) -> None:
         """Restore state for entities with expire_after set."""
+        expire_after: int | None
         if (
             (expire_after := self._config.get(CONF_EXPIRE_AFTER)) is not None
             and expire_after > 0
@@ -248,7 +249,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                 self._delay_listener()
                 self._delay_listener = None
 
-            off_delay = self._config.get(CONF_OFF_DELAY)
+            off_delay: int | None = self._config.get(CONF_OFF_DELAY)
             if self._attr_is_on and off_delay is not None:
                 self._delay_listener = evt.async_call_later(
                     self.hass, off_delay, off_delay_listener
