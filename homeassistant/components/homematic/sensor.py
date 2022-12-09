@@ -15,7 +15,6 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
-    ELECTRIC_CURRENT_MILLIAMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
@@ -26,6 +25,7 @@ from homeassistant.const import (
     PRESSURE_HPA,
     TEMP_CELSIUS,
     VOLUME_CUBIC_METERS,
+    UnitOfElectricCurrent,
     UnitOfPrecipitationDepth,
     UnitOfSpeed,
 )
@@ -124,7 +124,7 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     "CURRENT": SensorEntityDescription(
         key="CURRENT",
-        native_unit_of_measurement=ELECTRIC_CURRENT_MILLIAMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),

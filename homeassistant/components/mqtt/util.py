@@ -177,7 +177,7 @@ async def async_create_certificate_temp_files(
     await hass.async_add_executor_job(_create_temp_dir_and_files)
 
 
-def get_file_path(option: str, default: str | None = None) -> Path | str | None:
+def get_file_path(option: str, default: str | None = None) -> str | None:
     """Get file path of a certificate file."""
     temp_dir = Path(tempfile.gettempdir()) / TEMP_DIR_NAME
     if not temp_dir.exists():
@@ -187,7 +187,7 @@ def get_file_path(option: str, default: str | None = None) -> Path | str | None:
     if not file_path.exists():
         return default
 
-    return temp_dir / option
+    return str(temp_dir / option)
 
 
 def migrate_certificate_file_to_content(file_name_or_auto: str) -> str | None:
