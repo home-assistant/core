@@ -1716,6 +1716,9 @@ pylitterbot==2022.12.0
 # homeassistant.components.pylontech_us
 pylontech==2.0
 
+# homeassistant.components.pylontech_us
+pylontech==2.0
+
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.17.1
 
