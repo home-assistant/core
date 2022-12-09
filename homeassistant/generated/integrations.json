@@ -1957,6 +1957,12 @@
           "iot_class": "cloud_push",
           "name": "Google Assistant"
         },
+        "google_assistant_sdk": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Google Assistant SDK"
+        },
         "google_cloud": {
           "integration_type": "hub",
           "config_flow": false,
