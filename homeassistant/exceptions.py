@@ -114,6 +114,10 @@ class PlatformNotReady(IntegrationError):
     """Error to indicate that platform is not ready."""
 
 
+class ConfigEntryError(IntegrationError):
+    """Error to indicate that config entry setup has failed."""
+
+
 class ConfigEntryNotReady(IntegrationError):
     """Error to indicate that config entry is not ready."""
 

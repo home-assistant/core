@@ -1389,6 +1389,14 @@ def test_is_state(hass: HomeAssistant) -> None:
     )
     assert tpl.async_render() == "test.object"
 
+    tpl = template.Template(
+        """
+{{ is_state("test.object", ["on", "off", "available"]) }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is True
+
 
 def test_is_state_attr(hass: HomeAssistant) -> None:
     """Test is_state_attr method."""
@@ -2736,6 +2744,21 @@ async def test_device_attr(hass: HomeAssistant) -> None:
         hass, f"{{{{ is_device_attr('{device_entry.id}', 'model', 'test') }}}}"
     )
     assert_result_info(info, True)
+    assert info.rate_limit is None
+
+    # Test filter syntax (device_attr)
+    info = render_to_info(
+        hass, f"{{{{ '{entity_entry.entity_id}' | device_attr('model') }}}}"
+    )
+    assert_result_info(info, "test")
+    assert info.rate_limit is None
+
+    # Test test syntax (is_device_attr)
+    info = render_to_info(
+        hass,
+        f"{{{{ ['{device_entry.id}'] | select('is_device_attr', 'model', 'test') | list }}}}",
+    )
+    assert_result_info(info, [device_entry.id])
     assert info.rate_limit is None
 
 

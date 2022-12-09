@@ -1,0 +1,24 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "after_time": "\u010cas zapnutia",
+                    "before_time": "\u010cas vypnutia",
+                    "name": "N\u00e1zov"
+                },
+                "description": "Vytvorte bin\u00e1rny senzor, ktor\u00fd sa zap\u00edna alebo vyp\u00edna v z\u00e1vislosti od \u010dasu."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "after_time": "\u010cas zapnutia",
+                    "before_time": "\u010cas vypnutia"
+                }
+            }
+        }
+    }
+}

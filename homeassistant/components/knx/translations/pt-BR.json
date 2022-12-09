@@ -7,11 +7,13 @@
         "error": {
             "cannot_connect": "Falha ao conectar",
             "file_not_found": "O arquivo `.knxkeys` especificado n\u00e3o foi encontrado no caminho config/.storage/knx/",
+            "invalid_backbone_key": "Chave de backbone inv\u00e1lida. 32 n\u00fameros hexadecimais esperados.",
             "invalid_individual_address": "O valor n\u00e3o corresponde ao padr\u00e3o do endere\u00e7o individual KNX.\n '\u00e1rea.linha.dispositivo'",
             "invalid_ip_address": "Endere\u00e7o IPv4 inv\u00e1lido.",
             "invalid_signature": "A senha para descriptografar o arquivo `.knxkeys` est\u00e1 errada.",
             "no_router_discovered": "Nenhum roteador KNXnet/IP foi descoberto na rede.",
-            "no_tunnel_discovered": "N\u00e3o foi poss\u00edvel encontrar um servidor de encapsulamento KNX em sua rede."
+            "no_tunnel_discovered": "N\u00e3o foi poss\u00edvel encontrar um servidor de encapsulamento KNX em sua rede.",
+            "unsupported_tunnel_type": "O tipo de tunelamento selecionado n\u00e3o \u00e9 compat\u00edvel com o gateway."
         },
         "step": {
             "connection_type": {
@@ -41,13 +43,22 @@
                     "individual_address": "Endere\u00e7o individual",
                     "local_ip": "IP local do Home Assistant",
                     "multicast_group": "Grupo multicast",
-                    "multicast_port": "Porta multicast"
+                    "multicast_port": "Porta multicast",
+                    "routing_secure": "Usar KNX IP Secure"
                 },
                 "data_description": {
                     "individual_address": "Endere\u00e7o KNX a ser usado pelo Home Assistant, por exemplo, `0.0.4`",
                     "local_ip": "Deixe em branco para usar a descoberta autom\u00e1tica."
                 },
                 "description": "Por favor, configure as op\u00e7\u00f5es de roteamento."
+            },
+            "secure_key_source": {
+                "description": "Selecione como deseja configurar o KNX/IP Secure.",
+                "menu_options": {
+                    "secure_knxkeys": "Use um arquivo `.knxkeys` contendo chaves IP seguras",
+                    "secure_routing_manual": "Configure a chave de backbone IP segura manualmente",
+                    "secure_tunnel_manual": "Configurar credenciais seguras de IP manualmente"
+                }
             },
             "secure_knxkeys": {
                 "data": {
@@ -59,6 +70,17 @@
                     "knxkeys_password": "Isso foi definido ao exportar o arquivo do ETS."
                 },
                 "description": "Por favor, insira as informa\u00e7\u00f5es para o seu arquivo `.knxkeys`."
+            },
+            "secure_routing_manual": {
+                "data": {
+                    "backbone_key": "Chave de backbone",
+                    "sync_latency_tolerance": "Toler\u00e2ncia de lat\u00eancia de rede"
+                },
+                "data_description": {
+                    "backbone_key": "Pode ser visto no relat\u00f3rio 'Seguran\u00e7a' de um projeto ETS. Por exemplo. '00112233445566778899AABBCCDDEEFF'",
+                    "sync_latency_tolerance": "O padr\u00e3o \u00e9 1000."
+                },
+                "description": "Por favor, insira suas informa\u00e7\u00f5es seguras de IP."
             },
             "secure_tunnel_manual": {
                 "data": {
@@ -73,13 +95,6 @@
                 },
                 "description": "Por favor, insira suas informa\u00e7\u00f5es seguras de IP."
             },
-            "secure_tunneling": {
-                "description": "Selecione como deseja configurar o KNX/IP Secure.",
-                "menu_options": {
-                    "secure_knxkeys": "Use um arquivo `.knxkeys` contendo chaves seguras de IP",
-                    "secure_tunnel_manual": "Configurar chaves seguras de IP manualmente"
-                }
-            },
             "tunnel": {
                 "data": {
                     "gateway": "Conex\u00e3o do t\u00fanel KNX"
@@ -92,11 +107,13 @@
         "error": {
             "cannot_connect": "Falha ao conectar",
             "file_not_found": "O arquivo `.knxkeys` especificado n\u00e3o foi encontrado no caminho config/.storage/knx/",
+            "invalid_backbone_key": "Chave de backbone inv\u00e1lida. 32 n\u00fameros hexadecimais esperados.",
             "invalid_individual_address": "O valor n\u00e3o corresponde ao padr\u00e3o do endere\u00e7o individual KNX.\n '\u00e1rea.linha.dispositivo'",
             "invalid_ip_address": "Endere\u00e7o IPv4 inv\u00e1lido.",
             "invalid_signature": "A senha para descriptografar o arquivo `.knxkeys` est\u00e1 errada.",
             "no_router_discovered": "Nenhum roteador KNXnet/IP foi descoberto na rede.",
-            "no_tunnel_discovered": "N\u00e3o foi poss\u00edvel encontrar um servidor de encapsulamento KNX em sua rede."
+            "no_tunnel_discovered": "N\u00e3o foi poss\u00edvel encontrar um servidor de encapsulamento KNX em sua rede.",
+            "unsupported_tunnel_type": "O tipo de tunelamento selecionado n\u00e3o \u00e9 compat\u00edvel com o gateway."
         },
         "step": {
             "communication_settings": {
@@ -142,13 +159,22 @@
                     "individual_address": "Endere\u00e7o individual",
                     "local_ip": "IP local do Home Assistant",
                     "multicast_group": "Grupo multicast",
-                    "multicast_port": "Porta multicast"
+                    "multicast_port": "Porta multicast",
+                    "routing_secure": "Usar KNX IP Secure"
                 },
                 "data_description": {
                     "individual_address": "Endere\u00e7o KNX a ser usado pelo Home Assistant, por exemplo, `0.0.4`",
                     "local_ip": "Deixe em branco para usar a descoberta autom\u00e1tica."
                 },
                 "description": "Por favor, configure as op\u00e7\u00f5es de roteamento."
+            },
+            "secure_key_source": {
+                "description": "Selecione como deseja configurar o KNX/IP Secure.",
+                "menu_options": {
+                    "secure_knxkeys": "Use um arquivo `.knxkeys` contendo chaves IP seguras",
+                    "secure_routing_manual": "Configure a chave de backbone IP segura manualmente",
+                    "secure_tunnel_manual": "Configurar credenciais seguras de IP manualmente"
+                }
             },
             "secure_knxkeys": {
                 "data": {
@@ -160,6 +186,17 @@
                     "knxkeys_password": "Isso foi definido ao exportar o arquivo do ETS."
                 },
                 "description": "Por favor, insira as informa\u00e7\u00f5es para o seu arquivo `.knxkeys`."
+            },
+            "secure_routing_manual": {
+                "data": {
+                    "backbone_key": "Chave de backbone",
+                    "sync_latency_tolerance": "Toler\u00e2ncia de lat\u00eancia de rede"
+                },
+                "data_description": {
+                    "backbone_key": "Pode ser visto no relat\u00f3rio 'Seguran\u00e7a' de um projeto ETS. Por exemplo. '00112233445566778899AABBCCDDEEFF'",
+                    "sync_latency_tolerance": "O padr\u00e3o \u00e9 1000."
+                },
+                "description": "Por favor, insira suas informa\u00e7\u00f5es seguras de IP."
             },
             "secure_tunnel_manual": {
                 "data": {
@@ -173,13 +210,6 @@
                     "user_password": "Senha para a conex\u00e3o de t\u00fanel espec\u00edfica definida no painel 'Propriedades' do t\u00fanel no ETS."
                 },
                 "description": "Por favor, insira suas informa\u00e7\u00f5es seguras de IP."
-            },
-            "secure_tunneling": {
-                "description": "Selecione como deseja configurar o KNX/IP Secure.",
-                "menu_options": {
-                    "secure_knxkeys": "Use um arquivo `.knxkeys` contendo chaves seguras de IP",
-                    "secure_tunnel_manual": "Configurar chaves seguras de IP manualmente"
-                }
             },
             "tunnel": {
                 "data": {

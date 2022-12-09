@@ -7,8 +7,10 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
-            "invalid_setup": "Add your Adam instead of your Anna, see the Home Assistant Plugwise integration documentation for more information",
-            "unknown": "Unexpected error"
+            "invalid_setup": "Add your Adam instead of your Anna, see the documentation",
+            "response_error": "Invalid XML data, or error indication received",
+            "unknown": "Unexpected error",
+            "unsupported": "Device with unsupported firmware"
         },
         "step": {
             "user": {
@@ -20,6 +22,27 @@
                 },
                 "description": "Please enter",
                 "title": "Connect to the Smile"
+            }
+        }
+    },
+    "entity": {
+        "select": {
+            "dhw_mode": {
+                "state": {
+                    "auto": "Auto",
+                    "boost": "Boost",
+                    "comfort": "Comfort",
+                    "off": "Off"
+                }
+            },
+            "regulation_mode": {
+                "state": {
+                    "bleeding_cold": "Bleeding cold",
+                    "bleeding_hot": "Bleeding hot",
+                    "cooling": "Cooling",
+                    "heating": "Heating",
+                    "off": "Off"
+                }
             }
         }
     }

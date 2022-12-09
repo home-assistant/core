@@ -7,6 +7,7 @@
         },
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "no_ip": "Neplatn\u00e1 IP adresa.",
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
         "step": {

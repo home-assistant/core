@@ -18,5 +18,15 @@
                 "description": "Enter the hostname or IP address of your TOLO Sauna device."
             }
         }
+    },
+    "entity": {
+        "select": {
+            "lamp_mode": {
+                "state": {
+                    "automatic": "Automatic",
+                    "manual": "Manual"
+                }
+            }
+        }
     }
 }

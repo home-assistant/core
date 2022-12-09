@@ -57,6 +57,16 @@ async def test_nanoleaf_nl55_setup(hass):
                     friendly_name="Nanoleaf Strip 3B32 Thread Capabilities",
                     unique_id="00:00:00:00:00:00_1_31_115",
                     entity_category=EntityCategory.DIAGNOSTIC,
+                    capabilities={
+                        "options": [
+                            "border_router_capable",
+                            "full",
+                            "minimal",
+                            "none",
+                            "router_eligible",
+                            "sleepy",
+                        ]
+                    },
                     state="border_router_capable",
                 ),
                 EntityTestInfo(
@@ -64,6 +74,17 @@ async def test_nanoleaf_nl55_setup(hass):
                     friendly_name="Nanoleaf Strip 3B32 Thread Status",
                     unique_id="00:00:00:00:00:00_1_31_117",
                     entity_category=EntityCategory.DIAGNOSTIC,
+                    capabilities={
+                        "options": [
+                            "border_router",
+                            "child",
+                            "detached",
+                            "disabled",
+                            "joining",
+                            "leader",
+                            "router",
+                        ]
+                    },
                     state="border_router",
                 ),
             ],

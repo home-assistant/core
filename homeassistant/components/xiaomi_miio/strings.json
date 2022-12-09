@@ -62,5 +62,30 @@
         }
       }
     }
+  },
+  "entity": {
+    "select": {
+      "led_brightness": {
+        "state": {
+          "bright": "Bright",
+          "dim": "Dim",
+          "off": "Off"
+        }
+      },
+      "display_orientation": {
+        "state": {
+          "forward": "Forward",
+          "left": "Left",
+          "right": "Right"
+        }
+      },
+      "ptc_level": {
+        "state": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
+      }
+    }
   }
 }

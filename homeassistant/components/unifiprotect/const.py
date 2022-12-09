@@ -7,6 +7,7 @@ from homeassistant.const import Platform
 DOMAIN = "unifiprotect"
 
 ATTR_EVENT_SCORE = "event_score"
+ATTR_EVENT_ID = "event_id"
 ATTR_WIDTH = "width"
 ATTR_HEIGHT = "height"
 ATTR_FPS = "fps"

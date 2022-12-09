@@ -307,7 +307,7 @@ PLATFORM_SCHEMA_MODERN = vol.All(
     valid_preset_mode_configuration,
 )
 
-# Configuring MQTT Climate under the climate platform key is deprecated in HA Core 2022.6
+# Configuring MQTT Climate under the climate platform key was deprecated in HA Core 2022.6
 # Setup for the legacy YAML format was removed in HA Core 2022.12
 PLATFORM_SCHEMA = vol.All(
     warn_for_legacy_schema(climate.DOMAIN),
@@ -749,6 +749,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
+        operation_mode: HVACMode | None
         if (operation_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
             await self.async_set_hvac_mode(operation_mode)
 

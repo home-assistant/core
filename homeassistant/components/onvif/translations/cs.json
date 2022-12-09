@@ -43,7 +43,8 @@
         "step": {
             "onvif_devices": {
                 "data": {
-                    "extra_arguments": "Dal\u0161\u00ed FFMPEG argumenty"
+                    "extra_arguments": "Dal\u0161\u00ed FFMPEG argumenty",
+                    "use_wallclock_as_timestamps": "Pou\u017eijte n\u00e1st\u011bnn\u00e9 hodiny jako \u010dasov\u00e1 raz\u00edtka"
                 },
                 "title": "Mo\u017enosti za\u0159\u00edzen\u00ed ONVIF"
             }

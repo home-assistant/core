@@ -1,5 +1,9 @@
 {
     "issues": {
+        "country_not_configured": {
+            "description": "Es wurde kein Land konfiguriert. Bitte aktualisiere die Konfiguration, indem du unten auf die Schaltfl\u00e4che \"Mehr erfahren\" klickst.",
+            "title": "Das Land wurde nicht konfiguriert"
+        },
         "historic_currency": {
             "description": "Die W\u00e4hrung {currency} wird nicht mehr verwendet, bitte konfiguriere die W\u00e4hrungskonfiguration neu.",
             "title": "Die konfigurierte W\u00e4hrung ist nicht mehr in Gebrauch"

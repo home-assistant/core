@@ -82,13 +82,14 @@ from homeassistant.const import (
     ENTITY_MATCH_NONE,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
     WEEKDAYS,
+    UnitOfTemperature,
 )
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
 from homeassistant.generated import currencies
+from homeassistant.generated.countries import COUNTRIES
+from homeassistant.generated.languages import LANGUAGES
 from homeassistant.util import raise_if_invalid_path, slugify as util_slugify
 import homeassistant.util.dt as dt_util
 
@@ -577,13 +578,13 @@ def string_with_no_html(value: Any) -> str:
     return str(value)
 
 
-def temperature_unit(value: Any) -> str:
+def temperature_unit(value: Any) -> UnitOfTemperature:
     """Validate and transform temperature unit."""
     value = str(value).upper()
     if value == "C":
-        return TEMP_CELSIUS
+        return UnitOfTemperature.CELSIUS
     if value == "F":
-        return TEMP_FAHRENHEIT
+        return UnitOfTemperature.FAHRENHEIT
     raise vol.Invalid("invalid temperature unit (expected C or F)")
 
 
@@ -1662,3 +1663,7 @@ currency = vol.In(
 historic_currency = vol.In(
     currencies.HISTORIC_CURRENCIES, msg="invalid ISO 4217 formatted historic currency"
 )
+
+country = vol.In(COUNTRIES, msg="invalid ISO 3166 formatted country")
+
+language = vol.In(LANGUAGES, msg="invalid RFC 5646 formatted language")

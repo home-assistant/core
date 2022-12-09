@@ -163,6 +163,7 @@ async def async_setup_entry(
         attr: str | None = sensor_config.get(CONF_ATTRIBUTE)
         index: int = int(sensor_config[CONF_INDEX])
         value_string: str | None = sensor_config.get(CONF_VALUE_TEMPLATE)
+        unique_id: str = sensor_config[CONF_UNIQUE_ID]
 
         value_template: Template | None = (
             Template(value_string, hass) if value_string is not None else None
@@ -173,7 +174,7 @@ async def async_setup_entry(
                 coordinator,
                 sensor_config,
                 name,
-                None,
+                unique_id,
                 select,
                 attr,
                 index,

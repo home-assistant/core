@@ -15,7 +15,11 @@ import requests
 
 from homeassistant import config_entries
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.util.dt import utcnow
 
 from . import entity, event
@@ -183,7 +187,9 @@ class DataUpdateCoordinator(Generic[_T]):
         fails. Additionally logging is handled by config entry setup
         to ensure that multiple retries do not cause log spam.
         """
-        await self._async_refresh(log_failures=False, raise_on_auth_failed=True)
+        await self._async_refresh(
+            log_failures=False, raise_on_auth_failed=True, raise_on_entry_error=True
+        )
         if self.last_update_success:
             return
         ex = ConfigEntryNotReady()
@@ -199,6 +205,7 @@ class DataUpdateCoordinator(Generic[_T]):
         log_failures: bool = True,
         raise_on_auth_failed: bool = False,
         scheduled: bool = False,
+        raise_on_entry_error: bool = False,
     ) -> None:
         """Refresh data."""
         if self._unsub_refresh:
@@ -249,6 +256,19 @@ class DataUpdateCoordinator(Generic[_T]):
                 if log_failures:
                     self.logger.error("Error fetching %s data: %s", self.name, err)
                 self.last_update_success = False
+
+        except ConfigEntryError as err:
+            self.last_exception = err
+            if self.last_update_success:
+                if log_failures:
+                    self.logger.error(
+                        "Config entry setup failed while fetching %s data: %s",
+                        self.name,
+                        err,
+                    )
+                self.last_update_success = False
+            if raise_on_entry_error:
+                raise
 
         except ConfigEntryAuthFailed as err:
             auth_failed = True

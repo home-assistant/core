@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 
 from aiohomekit.model import Accessory, Transport
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
@@ -32,9 +31,9 @@ from homeassistant.const import (
     POWER_WATT,
     PRESSURE_HPA,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    SOUND_PRESSURE_DB,
     TEMP_CELSIUS,
     Platform,
+    UnitOfSoundPressure,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
@@ -45,8 +44,6 @@ from . import KNOWN_DEVICES
 from .connection import HKDevice
 from .entity import CharacteristicEntity, HomeKitEntity
 from .utils import folded_name
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -299,22 +296,42 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
     CharacteristicsTypes.THREAD_NODE_CAPABILITIES: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.THREAD_NODE_CAPABILITIES,
         name="Thread Capabilities",
-        device_class="homekit_controller__thread_node_capabilities",
         entity_category=EntityCategory.DIAGNOSTIC,
         format=thread_node_capability_to_str,
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "border_router_capable",
+            "full",
+            "minimal",
+            "none",
+            "router_eligible",
+            "sleepy",
+        ],
+        translation_key="thread_node_capabilities",
     ),
     CharacteristicsTypes.THREAD_STATUS: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.THREAD_STATUS,
         name="Thread Status",
-        device_class="homekit_controller__thread_status",
         entity_category=EntityCategory.DIAGNOSTIC,
         format=thread_status_to_str,
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "border_router",
+            "child",
+            "detached",
+            "disabled",
+            "joining",
+            "leader",
+            "router",
+        ],
+        translation_key="thread_status",
     ),
     CharacteristicsTypes.VENDOR_NETATMO_NOISE: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.VENDOR_NETATMO_NOISE,
         name="Noise",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=SOUND_PRESSURE_DB,
+        native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
+        device_class=SensorDeviceClass.SOUND_PRESSURE,
     ),
 }
 

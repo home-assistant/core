@@ -57,5 +57,18 @@
             "single_push": "\"{subtype}\" stisknuto jednou",
             "triple": "\"{subtype}\" stisknuto t\u0159ikr\u00e1t"
         }
+    },
+    "options": {
+        "abort": {
+            "ble_unsupported": "Podpora Bluetooth vy\u017eaduje verzi firmwaru {ble_min_version} nebo nov\u011bj\u0161\u00ed."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "ble_scanner_mode": "Re\u017eim skenov\u00e1n\u00ed Bluetooth"
+                },
+                "description": "Bluetooth skenov\u00e1n\u00ed m\u016f\u017ee b\u00fdt aktivn\u00ed nebo pasivn\u00ed. Kdy\u017e je aktivn\u00ed, Shelly po\u017eaduje data z okoln\u00edch za\u0159\u00edzen\u00ed; s pasivn\u00ed, Shelly p\u0159ij\u00edm\u00e1 nevy\u017e\u00e1dan\u00e1 data z okoln\u00edch za\u0159\u00edzen\u00ed."
+            }
+        }
     }
 }

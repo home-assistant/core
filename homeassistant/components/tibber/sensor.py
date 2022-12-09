@@ -613,7 +613,7 @@ class TibberDataCoordinator(DataUpdateCoordinator):
                         else home.hourly_consumption_data
                     )
 
-                    from_time = hourly_data[0]["from"]
+                    from_time = dt_util.parse_datetime(hourly_data[0]["from"])
                     if from_time is None:
                         continue
                     start = from_time - timedelta(hours=1)

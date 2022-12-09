@@ -3,12 +3,6 @@ from __future__ import annotations
 
 from homeassistant.const import (
     UNIT_NOT_RECOGNIZED_TEMPLATE,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
-    VOLUME_FLUID_OUNCE,
-    VOLUME_GALLONS,
-    VOLUME_LITERS,
-    VOLUME_MILLILITERS,
     UnitOfEnergy,
     UnitOfLength,
     UnitOfMass,
@@ -16,6 +10,7 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfVolume,
     UnitOfVolumetricFlux,
 )
 from homeassistant.exceptions import HomeAssistantError
@@ -332,21 +327,21 @@ class VolumeConverter(BaseUnitConverter):
     """Utility to convert volume values."""
 
     UNIT_CLASS = "volume"
-    NORMALIZED_UNIT = VOLUME_CUBIC_METERS
+    NORMALIZED_UNIT = UnitOfVolume.CUBIC_METERS
     # Units in terms of m³
     _UNIT_CONVERSION: dict[str, float] = {
-        VOLUME_LITERS: 1 / _L_TO_CUBIC_METER,
-        VOLUME_MILLILITERS: 1 / _ML_TO_CUBIC_METER,
-        VOLUME_GALLONS: 1 / _GALLON_TO_CUBIC_METER,
-        VOLUME_FLUID_OUNCE: 1 / _FLUID_OUNCE_TO_CUBIC_METER,
-        VOLUME_CUBIC_METERS: 1,
-        VOLUME_CUBIC_FEET: 1 / _CUBIC_FOOT_TO_CUBIC_METER,
+        UnitOfVolume.LITERS: 1 / _L_TO_CUBIC_METER,
+        UnitOfVolume.MILLILITERS: 1 / _ML_TO_CUBIC_METER,
+        UnitOfVolume.GALLONS: 1 / _GALLON_TO_CUBIC_METER,
+        UnitOfVolume.FLUID_OUNCES: 1 / _FLUID_OUNCE_TO_CUBIC_METER,
+        UnitOfVolume.CUBIC_METERS: 1,
+        UnitOfVolume.CUBIC_FEET: 1 / _CUBIC_FOOT_TO_CUBIC_METER,
     }
     VALID_UNITS = {
-        VOLUME_LITERS,
-        VOLUME_MILLILITERS,
-        VOLUME_GALLONS,
-        VOLUME_FLUID_OUNCE,
-        VOLUME_CUBIC_METERS,
-        VOLUME_CUBIC_FEET,
+        UnitOfVolume.LITERS,
+        UnitOfVolume.MILLILITERS,
+        UnitOfVolume.GALLONS,
+        UnitOfVolume.FLUID_OUNCES,
+        UnitOfVolume.CUBIC_METERS,
+        UnitOfVolume.CUBIC_FEET,
     }

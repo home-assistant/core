@@ -1,0 +1,10 @@
+{
+    "state": {
+        "uptimerobot__monitor_status": {
+            "down": "Dole",
+            "not_checked_yet": "Zatia\u013e neskontrolovan\u00e9",
+            "pause": "Pauza",
+            "up": "Hore"
+        }
+    }
+}

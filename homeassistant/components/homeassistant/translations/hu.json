@@ -1,5 +1,9 @@
 {
     "issues": {
+        "country_not_configured": {
+            "description": "Az orsz\u00e1g nincs be\u00e1ll\u00edtva. K\u00e9rem, friss\u00edtse a konfigur\u00e1ci\u00f3t az al\u00e1bbi gombra kattintva.",
+            "title": "Az orsz\u00e1g nincs konfigur\u00e1lva"
+        },
         "historic_currency": {
             "description": "{currency} p\u00e9nznem m\u00e1r nincs haszn\u00e1latban, k\u00e9rj\u00fck, konfigur\u00e1lja \u00fajra a p\u00e9nznemet.",
             "title": "A be\u00e1ll\u00edtott p\u00e9nznem m\u00e1r nincs haszn\u00e1latban"

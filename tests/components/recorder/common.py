@@ -53,7 +53,7 @@ def do_adhoc_statistics(hass: HomeAssistant, **kwargs: Any) -> None:
     """Trigger an adhoc statistics run."""
     if not (start := kwargs.get("start")):
         start = statistics.get_start_time()
-    get_instance(hass).queue_task(StatisticsTask(start))
+    get_instance(hass).queue_task(StatisticsTask(start, False))
 
 
 def wait_recording_done(hass: HomeAssistant) -> None:

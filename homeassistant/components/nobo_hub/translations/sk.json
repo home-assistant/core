@@ -2,6 +2,32 @@
     "config": {
         "abort": {
             "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+        },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165 - skontrolujte s\u00e9riov\u00e9 \u010d\u00edslo",
+            "invalid_ip": "Neplatn\u00e1 IP adresa",
+            "invalid_serial": "Neplatn\u00e9 s\u00e9riov\u00e9 \u010d\u00edslo",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "manual": {
+                "data": {
+                    "ip_address": "IP adresa",
+                    "serial": "S\u00e9riov\u00e9 \u010d\u00edslo (12 \u010d\u00edslic)"
+                }
+            },
+            "selected": {
+                "data": {
+                    "serial_suffix": "Pr\u00edpona s\u00e9riov\u00e9ho \u010d\u00edsla (3 \u010d\u00edslice)"
+                },
+                "description": "Konfigur\u00e1cia {hub}. Ak sa chcete pripoji\u0165 k rozbo\u010dova\u010du, mus\u00edte zada\u0165 posledn\u00e9 3 \u010d\u00edslice s\u00e9riov\u00e9ho \u010d\u00edsla hubu."
+            },
+            "user": {
+                "data": {
+                    "device": "Objaven\u00e9 huby"
+                },
+                "description": "Na konfigur\u00e1ciu vyberte Nob\u00f8 Ecohub."
+            }
         }
     }
 }

@@ -17,7 +17,7 @@
                 "description": "M\u00f6chtest du {name} einrichten?"
             },
             "confirm_slow": {
-                "description": "Von diesem Ger\u00e4t wurde in der letzten Minute kein Broadcast gesendet, so dass wir nicht sicher sind, ob dieses Ger\u00e4t Verschl\u00fcsselung verwendet oder nicht. Dies kann daran liegen, dass das Ger\u00e4t ein langsames Sendeintervall verwendet. Best\u00e4tige, dass du das Ger\u00e4t trotzdem hinzuf\u00fcgen m\u00f6chtest. Wenn das n\u00e4chste Mal ein Broadcast empfangen wird, wirst du aufgefordert, den Bindkey einzugeben, falls er ben\u00f6tigt wird."
+                "description": "Von diesem Ger\u00e4t wurde in der letzten Minute kein Broadcast gesendet, sodass wir nicht sicher sind, ob dieses Ger\u00e4t Verschl\u00fcsselung verwendet oder nicht. Dies kann daran liegen, dass das Ger\u00e4t ein langsames Sendeintervall verwendet. Best\u00e4tige, dass du das Ger\u00e4t trotzdem hinzuf\u00fcgen m\u00f6chtest. Wenn das n\u00e4chste Mal ein Broadcast empfangen wird, wirst du aufgefordert, den Bindkey einzugeben, falls er ben\u00f6tigt wird."
             },
             "get_encryption_key_4_5": {
                 "data": {

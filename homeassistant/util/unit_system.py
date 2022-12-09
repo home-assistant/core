@@ -17,6 +17,7 @@ from homeassistant.const import (
     WIND_SPEED,
     UnitOfLength,
     UnitOfMass,
+    UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -83,14 +84,14 @@ class UnitSystem:
         self,
         name: str,
         *,
-        accumulated_precipitation: str,
+        accumulated_precipitation: UnitOfPrecipitationDepth,
         conversions: dict[tuple[SensorDeviceClass | str | None, str | None], str],
-        length: str,
-        mass: str,
-        pressure: str,
-        temperature: str,
-        volume: str,
-        wind_speed: str,
+        length: UnitOfLength,
+        mass: UnitOfMass,
+        pressure: UnitOfPressure,
+        temperature: UnitOfTemperature,
+        volume: UnitOfVolume,
+        wind_speed: UnitOfSpeed,
     ) -> None:
         """Initialize the unit system object."""
         errors: str = ", ".join(
@@ -247,8 +248,14 @@ validate_unit_system = vol.All(
 
 METRIC_SYSTEM = UnitSystem(
     _CONF_UNIT_SYSTEM_METRIC,
-    accumulated_precipitation=UnitOfLength.MILLIMETERS,
+    accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
     conversions={
+        # Force atmospheric pressures to hPa
+        **{
+            ("atmospheric_pressure", unit): UnitOfPressure.HPA
+            for unit in UnitOfPressure
+            if unit != UnitOfPressure.HPA
+        },
         # Convert non-metric distances
         ("distance", UnitOfLength.FEET): UnitOfLength.METERS,
         ("distance", UnitOfLength.INCHES): UnitOfLength.MILLIMETERS,
@@ -279,8 +286,14 @@ METRIC_SYSTEM = UnitSystem(
 
 US_CUSTOMARY_SYSTEM = UnitSystem(
     _CONF_UNIT_SYSTEM_US_CUSTOMARY,
-    accumulated_precipitation=UnitOfLength.INCHES,
+    accumulated_precipitation=UnitOfPrecipitationDepth.INCHES,
     conversions={
+        # Force atmospheric pressures to inHg
+        **{
+            ("atmospheric_pressure", unit): UnitOfPressure.INHG
+            for unit in UnitOfPressure
+            if unit != UnitOfPressure.INHG
+        },
         # Convert non-USCS distances
         ("distance", UnitOfLength.CENTIMETERS): UnitOfLength.INCHES,
         ("distance", UnitOfLength.KILOMETERS): UnitOfLength.MILES,

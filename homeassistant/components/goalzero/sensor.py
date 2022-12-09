@@ -11,7 +11,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
     PERCENTAGE,
@@ -20,6 +19,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TIME_MINUTES,
     TIME_SECONDS,
+    UnitOfElectricCurrent,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -41,7 +41,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="ampsIn",
         name="Amps in",
         device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
@@ -56,7 +56,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="ampsOut",
         name="Amps out",
         device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
@@ -91,7 +91,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="timeToEmptyFull",
         name="Time to empty/full",
-        device_class=TIME_MINUTES,
+        device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=TIME_MINUTES,
     ),
     SensorEntityDescription(

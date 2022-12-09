@@ -160,7 +160,7 @@ PLATFORM_SCHEMA_LEGACY_MODERN = (
     .extend(MQTT_VACUUM_SCHEMA.schema)
 )
 
-# Configuring MQTT Vacuums under the vacuum platform key is deprecated in HA Core 2022.6
+# Configuring MQTT Vacuums under the vacuum platform key was deprecated in HA Core 2022.6
 PLATFORM_SCHEMA_LEGACY = vol.All(
     cv.PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_LEGACY_MODERN.schema),
     warn_for_legacy_schema(VACUUM_DOMAIN),
@@ -220,6 +220,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LEGACY_VACUUM_ATTRIBUTES_BLOCKED
 
+    _command_topic: str | None
     _encoding: str | None
     _qos: bool
     _retain: bool

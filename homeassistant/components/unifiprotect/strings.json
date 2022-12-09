@@ -76,5 +76,14 @@
       "title": "Setup error using Early Access version",
       "description": "You are using v{version} of UniFi Protect which is an Early Access version. An unrecoverable error occurred while trying to load the integration. Please [downgrade to a stable version](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) of UniFi Protect to continue using the integration.\n\nError: {error}"
     }
+  },
+  "entity": {
+    "sensor": {
+      "license_plate": {
+        "state": {
+          "none": "Clear"
+        }
+      }
+    }
   }
 }

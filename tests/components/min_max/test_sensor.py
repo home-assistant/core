@@ -33,6 +33,7 @@ MEAN_4_DIGITS = round(sum(VALUES) / COUNT, 4)
 MEDIAN = round(statistics.median(VALUES), 2)
 RANGE_1_DIGIT = round(max(VALUES) - min(VALUES), 1)
 RANGE_4_DIGITS = round(max(VALUES) - min(VALUES), 4)
+SUM_VALUE = sum(VALUES)
 
 
 async def test_default_name_sensor(hass: HomeAssistant) -> None:
@@ -466,3 +467,60 @@ async def test_sensor_incorrect_state(
 
     assert state.state == "15.3"
     assert "Unable to store state. Only numerical states are supported" in caplog.text
+
+
+async def test_sum_sensor(hass: HomeAssistant) -> None:
+    """Test the sum sensor."""
+    config = {
+        "sensor": {
+            "platform": "min_max",
+            "name": "test_sum",
+            "type": "sum",
+            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "unique_id": "very_unique_id_sum_sensor",
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    entity_ids = config["sensor"]["entity_ids"]
+
+    for entity_id, value in dict(zip(entity_ids, VALUES)).items():
+        hass.states.async_set(entity_id, value)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sum")
+
+    assert str(float(SUM_VALUE)) == state.state
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+
+    entity_reg = er.async_get(hass)
+    entity = entity_reg.async_get("sensor.test_sum")
+    assert entity.unique_id == "very_unique_id_sum_sensor"
+
+
+async def test_sum_sensor_no_state(hass: HomeAssistant) -> None:
+    """Test the sum sensor with no state ."""
+    config = {
+        "sensor": {
+            "platform": "min_max",
+            "name": "test_sum",
+            "type": "sum",
+            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "unique_id": "very_unique_id_sum_sensor",
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    entity_ids = config["sensor"]["entity_ids"]
+
+    for entity_id, value in dict(zip(entity_ids, VALUES_ERROR)).items():
+        hass.states.async_set(entity_id, value)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sum")
+
+    assert state.state == STATE_UNKNOWN
