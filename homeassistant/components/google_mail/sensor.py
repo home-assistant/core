@@ -8,7 +8,7 @@ from typing import Any
 
 from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import build
+from googleapiclient.discovery import Resource, build
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -92,10 +92,8 @@ async def async_setup_service(hass: HomeAssistant) -> None:
             and entry.domain == DOMAIN
         ]
 
-    def _set_vacation(call: ServiceCall, entry: ConfigEntry) -> None:
+    def _set_vacation(call: ServiceCall, service: Resource) -> None:
         """Run vacation call in the executor."""
-        credentials = Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN])
-        service = build("gmail", "v1", credentials=credentials)
         settings = {
             "enableAutoReply": call.data[ATTR_ENABLED],
             "responseSubject": call.data.get(ATTR_TITLE),
@@ -117,27 +115,24 @@ async def async_setup_service(hass: HomeAssistant) -> None:
         _settings = service.users().settings()  # pylint: disable=no-member
         _settings.updateVacation(userId="me", body=settings).execute()
 
-    def _draft_email(call: ServiceCall, entry: ConfigEntry) -> None:
+    def _draft_email(call: ServiceCall, service: Resource) -> None:
         """Draft am email."""
-        credentials = Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN])
-        service = build("gmail", "v1", credentials=credentials)
-
         message = EmailMessage()
         message.set_content(call.data[ATTR_MESSAGE])
         if to_addr := call.data.get(ATTR_TO):
-            message[ATTR_TO] = to_addr
-        message[ATTR_FROM] = call.data.get(ATTR_FROM, entry.unique_id)
+            message["To"] = to_addr
+        message["From"] = call.data.get(ATTR_FROM, "me")
         message["Subject"] = call.data.get(ATTR_TITLE)
 
         encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
 
-        msg = {ATTR_MESSAGE: {"raw": encoded_message}}
         users = service.users()  # pylint: disable=no-member
         if call.data[ATTR_SEND]:
             if not call.data.get(ATTR_TO):
                 raise vol.Invalid("recipient address required")
-            users.messages().send(userId="me", body=msg).execute()
+            users.messages().send(userId="me", body={"raw": encoded_message}).execute()
         else:
+            msg = {ATTR_MESSAGE: {"raw": encoded_message}}
             users.drafts().create(userId="me", body=msg).execute()
 
     async def gmail_service(call: ServiceCall) -> None:
@@ -150,8 +145,10 @@ async def async_setup_service(hass: HomeAssistant) -> None:
                 func = _set_vacation
             if call.service == SERVICE_EMAIL:
                 func = _draft_email
+            credentials = Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN])
+            service = build("gmail", "v1", credentials=credentials)
             try:
-                await hass.async_add_executor_job(func, call, entry)
+                await hass.async_add_executor_job(func, call, service)
             except RefreshError as ex:
                 entry.async_start_reauth(hass)
                 raise ex
