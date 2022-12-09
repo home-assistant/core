@@ -430,8 +430,8 @@ class SmartEnergyMetering(Sensor):
         0x05: f"IMP {UnitOfVolume.GALLONS}/{UnitOfTime.HOURS}",
         0x06: f"BTU/{UnitOfTime.HOURS}",
         0x07: f"l/{UnitOfTime.HOURS}",
-        0x08: "kPa",  # gauge
-        0x09: "kPa",  # absolute
+        0x08: UnitOfPressure.KPA,  # gauge
+        0x09: UnitOfPressure.KPA,  # absolute
         0x0A: f"1000 {UnitOfVolume.GALLONS}/{UnitOfTime.HOURS}",
         0x0B: "unitless",
         0x0C: f"MJ/{UnitOfTime.SECONDS}",
