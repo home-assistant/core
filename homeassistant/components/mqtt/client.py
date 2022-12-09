@@ -303,8 +303,8 @@ class MqttClientSetup:
         # Enable logging
         self._client.enable_logger()
 
-        username = config.get(CONF_USERNAME)
-        password = config.get(CONF_PASSWORD)
+        username: str | None = config.get(CONF_USERNAME)
+        password: str | None = config.get(CONF_PASSWORD)
         if username is not None:
             self._client.username_pw_set(username, password)
 
