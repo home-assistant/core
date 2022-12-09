@@ -550,6 +550,9 @@ fritzconnection==1.10.3
 # homeassistant.components.google_translate
 gTTS==2.2.4
 
+# homeassistant.components.google_assistant_sdk
+gassist-text==0.0.4
+
 # homeassistant.components.google
 gcal-sync==4.0.4
 
