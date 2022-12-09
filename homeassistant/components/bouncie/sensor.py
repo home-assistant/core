@@ -92,9 +92,7 @@ class BouncieSensor(CoordinatorEntity[BouncieDataUpdateCoordinator], SensorEntit
         self._state = None
         self._attrs: dict[str, str] = {}
         self._vehicle_info = vehicle_info
-        self._attr_unique_id = (
-            f'{self._vehicle_info["vin"]}-{self.entity_description.key}'
-        )
+        self._attr_unique_id = self.entity_description.key
         self._attr_has_entity_name = True
         self._attr_device_info = DeviceInfo(
             identifiers={(const.DOMAIN, self._vehicle_info["vin"])},
