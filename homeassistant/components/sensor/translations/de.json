@@ -2,6 +2,7 @@
     "device_automation": {
         "condition_type": {
             "is_apparent_power": "Aktuelle Scheinleistung von {entity_name}",
+            "is_atmospheric_pressure": "Aktueller atmosph\u00e4rischer Druck von {entity_name}",
             "is_battery_level": "{entity_name} Batteriestand",
             "is_carbon_dioxide": "Aktuelle {entity_name} Kohlenstoffdioxid-Konzentration",
             "is_carbon_monoxide": "Aktuelle {entity_name} Kohlenstoffmonoxid-Konzentration",
@@ -28,6 +29,7 @@
             "is_pressure": "{entity_name} Druck",
             "is_reactive_power": "Aktuelle Blindleistung von {entity_name}",
             "is_signal_strength": "Aktuelle {entity_name} Signalst\u00e4rke",
+            "is_sound_pressure": "Aktueller Schalldruck von {entity_name}",
             "is_speed": "Aktuelle Geschwindigkeit von {entity_name}",
             "is_sulphur_dioxide": "Aktuelle Schwefeldioxid-Konzentration von {entity_name}",
             "is_temperature": "Aktuelle {entity_name} Temperatur",
@@ -40,6 +42,7 @@
         },
         "trigger_type": {
             "apparent_power": "{entity_name} \u00c4nderungen der Scheinleistung",
+            "atmospheric_pressure": "Der atmosph\u00e4rische Druck von {entity_name} \u00e4ndert sich",
             "battery_level": "{entity_name} Batteriestatus\u00e4nderungen",
             "carbon_dioxide": "{entity_name} Kohlenstoffdioxid-Konzentrations\u00e4nderung",
             "carbon_monoxide": "{entity_name} Kohlenstoffmonoxid-Konzentrations\u00e4nderung",
@@ -66,6 +69,7 @@
             "pressure": "{entity_name} Druck\u00e4nderungen",
             "reactive_power": "{entity_name} Blindleistung \u00e4ndert sich",
             "signal_strength": "{entity_name} Signalst\u00e4rke\u00e4nderungen",
+            "sound_pressure": "Der Schalldruck von {entity_name} \u00e4ndert sich",
             "speed": "Geschwindigkeit von {entity_name} \u00e4ndert sich",
             "sulphur_dioxide": "\u00c4nderung der Schwefeldioxidkonzentration bei {entity_name}",
             "temperature": "{entity_name} Temperatur\u00e4nderungen",

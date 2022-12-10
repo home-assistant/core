@@ -21,6 +21,14 @@
             "device_not_selected": "Vyberte zariadenia, ktor\u00e9 chcete nakonfigurova\u0165"
         },
         "step": {
+            "ack_no_options": {
+                "data": {
+                    "few": "Pr\u00e1zdnych",
+                    "many": "Pr\u00e1zdnych",
+                    "one": "Pr\u00e1zdny",
+                    "other": "Pr\u00e1zdny"
+                }
+            },
             "configure_device": {
                 "data": {
                     "precision": "Presnos\u0165 sn\u00edma\u010da"

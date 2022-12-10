@@ -2,6 +2,7 @@
     "device_automation": {
         "condition_type": {
             "is_apparent_power": "La potencia aparente actual de {entity_name}",
+            "is_atmospheric_pressure": "Presi\u00f3n atmosf\u00e9rica actual de {entity_name}",
             "is_battery_level": "El nivel de bater\u00eda actual de {entity_name}",
             "is_carbon_dioxide": "El nivel de la concentraci\u00f3n de di\u00f3xido de carbono actual de {entity_name}",
             "is_carbon_monoxide": "El nivel de la concentraci\u00f3n de mon\u00f3xido de carbono actual de {entity_name}",
@@ -41,6 +42,7 @@
         },
         "trigger_type": {
             "apparent_power": "La potencia aparente de {entity_name} cambia",
+            "atmospheric_pressure": "La presi\u00f3n atmosf\u00e9rica de {entity_name} cambia",
             "battery_level": "El nivel de bater\u00eda de {entity_name} cambia",
             "carbon_dioxide": "La concentraci\u00f3n de di\u00f3xido de carbono de {entity_name} cambia",
             "carbon_monoxide": "La concentraci\u00f3n de mon\u00f3xido de carbono de {entity_name} cambia",

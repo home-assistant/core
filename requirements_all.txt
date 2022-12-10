@@ -261,7 +261,7 @@ aiosenseme==0.6.1
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==5.1.0
+aioshelly==5.1.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -1507,7 +1507,7 @@ pycfdns==2.0.1
 pychannels==1.2.3
 
 # homeassistant.components.cast
-pychromecast==13.0.1
+pychromecast==13.0.2
 
 # homeassistant.components.pocketcasts
 pycketcasts==1.0.1
@@ -1869,7 +1869,7 @@ pyrecswitch==1.0.2
 pyrepetierng==0.1.0
 
 # homeassistant.components.risco
-pyrisco==0.5.6
+pyrisco==0.5.7
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.6

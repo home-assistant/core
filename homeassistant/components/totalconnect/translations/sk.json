@@ -32,6 +32,10 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "auto_bypass_low_battery": "Auto bypass slabej bat\u00e9rie"
+                },
+                "description": "Automaticky bypass z\u00f3ny v momente, ke\u010f hl\u00e1si slab\u00fa bat\u00e9riu.",
                 "title": "Mo\u017enosti TotalConnect"
             }
         }
