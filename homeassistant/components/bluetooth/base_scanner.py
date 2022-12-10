@@ -32,7 +32,6 @@ from .const import (
 )
 from .models import HaBluetoothConnector
 
-REMOTE_SCANNER_STORAGE_VERSION = 1
 MONOTONIC_TIME: Final = monotonic_time_coarse
 
 
