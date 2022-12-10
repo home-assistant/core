@@ -78,6 +78,7 @@ from .models import (
     HaBluetoothConnector,
 )
 from .scanner import HaScanner, ScannerStartError
+from .storage import BluetoothStorage
 
 if TYPE_CHECKING:
     from homeassistant.helpers.typing import ConfigType
@@ -162,7 +163,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     integration_matcher = IntegrationMatcher(await async_get_bluetooth(hass))
     integration_matcher.async_setup()
     bluetooth_adapters = get_adapters()
-    manager = BluetoothManager(hass, integration_matcher, bluetooth_adapters)
+    bluetooth_storage = BluetoothStorage(hass)
+    await bluetooth_storage.async_setup()
+    manager = BluetoothManager(
+        hass, integration_matcher, bluetooth_adapters, bluetooth_storage
+    )
     await manager.async_setup()
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, manager.async_stop)
     hass.data[DATA_MANAGER] = models.MANAGER = manager
