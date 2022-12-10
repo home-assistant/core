@@ -98,7 +98,7 @@ def async_ble_device_from_address(
 def async_get_discovered_devices_and_advertisement_data_by_address(
     hass: HomeAssistant, address: str, connectable: bool = True
 ) -> list[tuple[BLEDevice, AdvertisementData]]:
-    """Return BLEDevice for an address if its present."""
+    """Return all discovered [BLEDevice, AdvertisementData] tuples for an address."""
     if DATA_MANAGER not in hass.data:
         return []
     return _get_manager(
