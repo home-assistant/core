@@ -181,7 +181,7 @@ def deserialize_discovered_device_advertisement_datas(
             AdvertisementData(
                 local_name=advertisement_data["local_name"],
                 manufacturer_data={
-                    manufacturer_id: bytes.fromhex(manufacturer_data)
+                    int(manufacturer_id): bytes.fromhex(manufacturer_data)
                     for manufacturer_id, manufacturer_data in advertisement_data[
                         "manufacturer_data"
                     ].items()
