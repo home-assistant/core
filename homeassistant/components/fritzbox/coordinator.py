@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from xml.etree.ElementTree import ParseError
 
 from pyfritzhome import Fritzhome, FritzhomeDevice, LoginError
 from pyfritzhome.devicetypes import FritzhomeTemplate
@@ -34,6 +35,13 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
         self.entry = entry
         self.fritz: Fritzhome = hass.data[DOMAIN][self.entry.entry_id][CONF_CONNECTIONS]
         self.configuration_url = self.fritz.get_prefixed_host()
+        self.has_templates = True
+        try:
+            hass.async_add_executor_job(self.fritz.update_templates)
+        except ParseError:
+            LOGGER.info("Disable smarthome templates")
+            self.has_templates = False
+
         super().__init__(
             hass,
             LOGGER,
@@ -45,7 +53,8 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
         """Update all fritzbox device data."""
         try:
             self.fritz.update_devices()
-            self.fritz.update_templates()
+            if self.has_templates:
+                self.fritz.update_templates()
         except requests.exceptions.ConnectionError as ex:
             raise UpdateFailed from ex
         except requests.exceptions.HTTPError:
@@ -55,7 +64,8 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
             except LoginError as ex:
                 raise ConfigEntryAuthFailed from ex
             self.fritz.update_devices()
-            self.fritz.update_templates()
+            if self.has_templates:
+                self.fritz.update_templates()
 
         devices = self.fritz.get_devices()
         device_data = {}
@@ -75,10 +85,11 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
 
             device_data[device.ain] = device
 
-        templates = self.fritz.get_templates()
         template_data = {}
-        for template in templates:
-            template_data[template.ain] = template
+        if self.has_templates:
+            templates = self.fritz.get_templates()
+            for template in templates:
+                template_data[template.ain] = template
 
         return FritzboxCoordinatorData(devices=device_data, templates=template_data)
 

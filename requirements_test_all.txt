@@ -649,7 +649,7 @@ hdate==0.10.4
 here_routing==0.1.1
 
 # homeassistant.components.here_travel_time
-here_transit==1.0.0
+here_transit==1.1.1
 
 # homeassistant.components.hlk_sw16
 hlk-sw16==0.0.9
@@ -1816,7 +1816,7 @@ xmltodict==0.13.0
 yalesmartalarmclient==0.3.9
 
 # homeassistant.components.yalexs_ble
-yalexs-ble==1.11.3
+yalexs-ble==1.11.4
 
 # homeassistant.components.august
 yalexs==1.2.6
