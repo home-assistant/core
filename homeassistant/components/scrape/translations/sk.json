@@ -20,6 +20,10 @@
                 },
                 "data_description": {
                     "attribute": "Z\u00edskajte hodnotu atrib\u00fatu na vybranom tagu",
+                    "device_class": "Typ/trieda sn\u00edma\u010da na nastavenie ikony na frontende",
+                    "index": "Definuje, ktor\u00e9 z prvkov vr\u00e1ten\u00fdch selektorom CSS sa maj\u00fa pou\u017ei\u0165",
+                    "select": "Definuje, ktor\u00e1 zna\u010dka sa m\u00e1 h\u013eada\u0165. Podrobnosti n\u00e1jdete v selektoroch CSS Beautifulsoup",
+                    "state_class": "State_class sn\u00edma\u010da",
                     "unit_of_measurement": "Vyberte si meranie teploty alebo si vytvorte vlastn\u00e9",
                     "value_template": "Definuje \u0161abl\u00f3nu na z\u00edskanie stavu senzora"
                 }
@@ -36,6 +40,7 @@
                     "verify_ssl": "Overi\u0165 SSL certifik\u00e1t"
                 },
                 "data_description": {
+                    "authentication": "Typ overovania HTTP. Bu\u010f z\u00e1kladn\u00e9, alebo digest",
                     "headers": "Hlavi\u010dky, ktor\u00e9 sa maj\u00fa pou\u017ei\u0165 pre webov\u00fa po\u017eiadavku",
                     "resource": "Adresa URL webovej lokality, ktor\u00e1 obsahuje hodnotu",
                     "timeout": "\u010casov\u00fd limit pre pripojenie k webovej str\u00e1nke",
@@ -65,6 +70,10 @@
                 },
                 "data_description": {
                     "attribute": "Z\u00edskajte hodnotu atrib\u00fatu na vybranom tagu",
+                    "device_class": "Typ/trieda sn\u00edma\u010da na nastavenie ikony na frontende",
+                    "index": "Definuje, ktor\u00e9 z prvkov vr\u00e1ten\u00fdch selektorom CSS sa maj\u00fa pou\u017ei\u0165",
+                    "select": "Definuje, ktor\u00e1 zna\u010dka sa m\u00e1 h\u013eada\u0165. Podrobnosti n\u00e1jdete v selektoroch CSS Beautifulsoup",
+                    "state_class": "State_class sn\u00edma\u010da",
                     "unit_of_measurement": "Vyberte si meranie teploty alebo si vytvorte vlastn\u00e9",
                     "value_template": "Definuje \u0161abl\u00f3nu na z\u00edskanie stavu senzora"
                 }
@@ -82,6 +91,10 @@
                 },
                 "data_description": {
                     "attribute": "Z\u00edskajte hodnotu atrib\u00fatu na vybranom tagu",
+                    "device_class": "Typ/trieda sn\u00edma\u010da na nastavenie ikony na frontende",
+                    "index": "Definuje, ktor\u00e9 z prvkov vr\u00e1ten\u00fdch selektorom CSS sa maj\u00fa pou\u017ei\u0165",
+                    "select": "Definuje, ktor\u00e1 zna\u010dka sa m\u00e1 h\u013eada\u0165. Podrobnosti n\u00e1jdete v selektoroch CSS Beautifulsoup",
+                    "state_class": "State_class sn\u00edma\u010da",
                     "unit_of_measurement": "Vyberte si meranie teploty alebo si vytvorte vlastn\u00e9",
                     "value_template": "Definuje \u0161abl\u00f3nu na z\u00edskanie stavu senzora"
                 }
@@ -106,6 +119,7 @@
                     "verify_ssl": "Overi\u0165 SSL certifik\u00e1t"
                 },
                 "data_description": {
+                    "authentication": "Typ overovania HTTP. Bu\u010f z\u00e1kladn\u00e9, alebo digest",
                     "headers": "Hlavi\u010dky, ktor\u00e9 sa maj\u00fa pou\u017ei\u0165 pre webov\u00fa po\u017eiadavku",
                     "resource": "Adresa URL webovej lokality, ktor\u00e1 obsahuje hodnotu",
                     "timeout": "\u010casov\u00fd limit pre pripojenie k webovej str\u00e1nke",

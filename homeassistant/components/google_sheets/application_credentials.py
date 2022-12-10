@@ -1,13 +1,8 @@
 """application_credentials platform for Google Sheets."""
-
 import oauth2client
 
 from homeassistant.components.application_credentials import AuthorizationServer
 from homeassistant.core import HomeAssistant
-
-AUTHORIZATION_SERVER = AuthorizationServer(
-    oauth2client.GOOGLE_AUTH_URI, oauth2client.GOOGLE_TOKEN_URI
-)
 
 
 async def async_get_authorization_server(hass: HomeAssistant) -> AuthorizationServer:

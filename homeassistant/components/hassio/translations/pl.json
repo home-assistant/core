@@ -25,7 +25,7 @@
             "title": "\"Niezdrowy\" system \u2014 niezaufany kod"
         },
         "unsupported": {
-            "description": "System nie jest obs\u0142ugiwany z powodu \u201e{pow\u00f3d}\u201d. Skorzystaj z linku, aby dowiedzie\u0107 si\u0119 wi\u0119cej i jak to naprawi\u0107.",
+            "description": "System nie jest obs\u0142ugiwany z powodu \u201e{reason}\u201d. Skorzystaj z linku, aby dowiedzie\u0107 si\u0119 wi\u0119cej i jak to naprawi\u0107.",
             "title": "Nieobs\u0142ugiwany system \u2013 {reason}"
         },
         "unsupported_apparmor": {
