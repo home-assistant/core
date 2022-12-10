@@ -48,9 +48,6 @@ def async_load_history_from_system(
             address,
             device_adv,
         ) in adv_history.discovered_device_advertisement_datas.items():
-            timestamp = discovered_device_timestamps[address]
-            if now_monotonic - timestamp > adv_history.expire_seconds:
-                continue
             advertisement_data = device_adv[1]
             if (
                 existing := loaded_history.get(address)
