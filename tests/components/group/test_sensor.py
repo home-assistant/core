@@ -9,6 +9,7 @@ from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
+    SensorDeviceClass,
     SensorStateClass,
 )
 from homeassistant.const import SERVICE_RELOAD, STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -466,3 +467,64 @@ async def test_sum_sensor_require_all_states(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.test_sum")
 
     assert state.state == STATE_UNKNOWN
+
+
+async def test_sensor_calculated_properties(hass: HomeAssistant) -> None:
+    """Test the sensor calculating device_class, state_class and unit of measurement."""
+    config = {
+        SENSOR_DOMAIN: {
+            "platform": GROUP_DOMAIN,
+            "name": "test_sum",
+            "type": "sum",
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "unique_id": "very_unique_id_sum_sensor",
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    entity_ids = config["sensor"]["entities"]
+
+    hass.states.async_set(
+        entity_ids[0],
+        VALUES[0],
+        {
+            "device_class": SensorDeviceClass.ENERGY,
+            "state_class": SensorStateClass.MEASUREMENT,
+            "unit_of_measurement": "kWh",
+        },
+    )
+    hass.states.async_set(
+        entity_ids[1],
+        VALUES[1],
+        {
+            "device_class": SensorDeviceClass.ENERGY,
+            "state_class": SensorStateClass.MEASUREMENT,
+            "unit_of_measurement": "kWh",
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sum")
+    assert state.state == str(float(sum([VALUES[0], VALUES[1]])))
+    assert state.attributes.get("device_class") == "energy"
+    assert state.attributes.get("state_class") == "measurement"
+    assert state.attributes.get("unit_of_measurement") == "kWh"
+
+    hass.states.async_set(
+        entity_ids[2],
+        VALUES[2],
+        {
+            "device_class": SensorDeviceClass.BATTERY,
+            "state_class": SensorStateClass.TOTAL,
+            "unit_of_measurement": None,
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sum")
+    assert state.state == str(sum(VALUES))
+    assert state.attributes.get("device_class") is None
+    assert state.attributes.get("state_class") is None
+    assert state.attributes.get("unit_of_measurement") is None

@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
     DOMAIN,
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     STATE_CLASSES_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
@@ -82,9 +83,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_ROUND_DIGITS, default=2): vol.Coerce(int),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): str,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(
-            CONF_STATE_CLASS, default=SensorStateClass.MEASUREMENT
-        ): STATE_CLASSES_SCHEMA,
+        vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
     }
 )
 
@@ -108,7 +107,7 @@ async def async_setup_platform(
                 config[CONF_TYPE],
                 config[CONF_ROUND_DIGITS],
                 config.get(CONF_UNIT_OF_MEASUREMENT),
-                config[CONF_STATE_CLASS],
+                config.get(CONF_STATE_CLASS),
                 config.get(CONF_DEVICE_CLASS),
             )
         ]
@@ -239,16 +238,19 @@ class SensorGroup(GroupEntity, SensorEntity):
         sensor_type: str,
         round_digits: int,
         unit_of_measurement: str | None,
-        state_class: str | None,
-        device_class: str | None,
+        state_class: SensorStateClass | None,
+        device_class: SensorDeviceClass | None,
     ) -> None:
         """Initialize a sensor group."""
         self._entity_ids = entity_ids
         self._sensor_type = sensor_type
         self._round_digits = round_digits
         self._attr_state_class = state_class
+        self.calc_state_class: SensorStateClass | None = None
         self._attr_device_class = device_class
+        self.calc_device_class: SensorDeviceClass | None = None
         self._attr_native_unit_of_measurement = unit_of_measurement
+        self.calc_unit_of_measurement: str | None = None
         self._attr_name = name
         if name == DEFAULT_NAME:
             self._attr_name = f"{DEFAULT_NAME} {sensor_type}".capitalize()
@@ -325,6 +327,7 @@ class SensorGroup(GroupEntity, SensorEntity):
             return
 
         # Calculate values
+        self._calculate_entity_properties()
         self._calc_values(sensor_values)
         self._attr_native_value = getattr(self, self._sensor_attr)
 
@@ -350,3 +353,52 @@ class SensorGroup(GroupEntity, SensorEntity):
         self.median = calc_median(sensor_values, self._round_digits)
         self.range = calc_range(sensor_values, self._round_digits)
         self.sum = calc_sum(sensor_values, self._round_digits)
+
+    @property
+    def device_class(self) -> SensorDeviceClass | None:
+        """Return device class."""
+        if self._attr_device_class is not None:
+            return self._attr_device_class
+        return self.calc_device_class
+
+    @property
+    def state_class(self) -> SensorStateClass | str | None:
+        """Return state class."""
+        if self._attr_state_class is not None:
+            return self._attr_state_class
+        return self.calc_state_class
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return native unit of measurement."""
+        if self._attr_native_unit_of_measurement is not None:
+            return self._attr_native_unit_of_measurement
+        return self.calc_unit_of_measurement
+
+    def _calculate_entity_properties(self) -> None:
+        """Calculate device_class, state_class and unit of measurement."""
+        calc_device_class = []
+        calc_state_class = []
+        calc_unit_of_measurement = []
+
+        for entity_id in self._entity_ids:
+            if (state := self.hass.states.get(entity_id)) is not None:
+                calc_device_class.append(state.attributes.get("device_class"))
+                calc_state_class.append(state.attributes.get("state_class"))
+                calc_unit_of_measurement.append(
+                    state.attributes.get("unit_of_measurement")
+                )
+
+        if not calc_device_class:
+            return
+
+        self.calc_device_class = None
+        self.calc_state_class = None
+        self.calc_unit_of_measurement = None
+        # Calculate properties and save if all same
+        if all(x == calc_device_class[0] for x in calc_device_class):
+            self.calc_device_class = calc_device_class[0]
+        if all(x == calc_state_class[0] for x in calc_state_class):
+            self.calc_state_class = calc_state_class[0]
+        if all(x == calc_unit_of_measurement[0] for x in calc_unit_of_measurement):
+            self.calc_unit_of_measurement = calc_unit_of_measurement[0]
