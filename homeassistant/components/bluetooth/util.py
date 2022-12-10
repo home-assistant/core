@@ -45,11 +45,11 @@ def async_load_history_from_system(
         discovered_device_timestamps = adv_history.discovered_device_timestamps
         for (
             address,
-            device_adv,
+            (device, advertisement_data),
         ) in adv_history.discovered_device_advertisement_datas.items():
             service_info = (
                 bluetooth_service_info_bleak_from_device_and_advertisement_data(
-                    device_adv[0],
+                    device,
                     advertisement_data,
                     scanner,
                     discovered_device_timestamps[address],
