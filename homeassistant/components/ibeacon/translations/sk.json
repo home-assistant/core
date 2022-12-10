@@ -15,7 +15,8 @@
             "init": {
                 "data": {
                     "min_rssi": "Minim\u00e1lne RSSI"
-                }
+                },
+                "description": "iBeacons s hodnotou RSSI ni\u017e\u0161ou ako je minimum RSSI bud\u00fa ignorovan\u00e9. Ak integr\u00e1cia vid\u00ed susedn\u00e9 iBeacony, zv\u00fd\u0161enie tejto hodnoty m\u00f4\u017ee pom\u00f4c\u0165."
             }
         }
     }
