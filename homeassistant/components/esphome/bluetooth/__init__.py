@@ -72,7 +72,7 @@ async def async_connect_scanner(
     )
     unload_callbacks = [
         async_register_scanner(hass, scanner, connectable),
-        scanner.async_setup(),
+        await scanner.async_setup(),
     ]
     await cli.subscribe_bluetooth_le_advertisements(scanner.async_on_advertisement)
     if connectable:

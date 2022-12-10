@@ -2,6 +2,7 @@
     "device_automation": {
         "condition_type": {
             "is_apparent_power": "aktualna moc pozorna {entity_name}",
+            "is_atmospheric_pressure": "obecne ci\u015bnienie atmosferyczne {entity_name}",
             "is_battery_level": "obecny poziom na\u0142adowania baterii {entity_name}",
             "is_carbon_dioxide": "obecny poziom st\u0119\u017cenia dwutlenku w\u0119gla w {entity_name}",
             "is_carbon_monoxide": "obecny poziom st\u0119\u017cenia tlenku w\u0119gla w {entity_name}",
@@ -41,6 +42,7 @@
         },
         "trigger_type": {
             "apparent_power": "zmieni si\u0119 moc pozorna {entity_name}",
+            "atmospheric_pressure": "zmieni si\u0119 ci\u015bnienie atmosferyczne {entity_name}",
             "battery_level": "zmieni si\u0119 poziom baterii {entity_name}",
             "carbon_dioxide": "{entity_name} wykryje zmian\u0119 st\u0119\u017cenia dwutlenku w\u0119gla",
             "carbon_monoxide": "{entity_name} wykryje zmian\u0119 st\u0119\u017cenia tlenku w\u0119gla",

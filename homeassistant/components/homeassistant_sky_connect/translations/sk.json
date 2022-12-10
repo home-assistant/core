@@ -5,6 +5,7 @@
             "addon_install_failed": "Nepodarilo sa nain\u0161talova\u0165 doplnok Silicon Labs Multiprotocol.",
             "addon_set_config_failed": "Nepodarilo sa nastavi\u0165 konfigur\u00e1ciu Silicon Labs Multiprotocol.",
             "addon_start_failed": "Nepodarilo sa spusti\u0165 doplnok Silicon Labs Multiprotocol.",
+            "disabled_due_to_bug": "Hardv\u00e9rov\u00e9 mo\u017enosti s\u00fa do\u010dasne deaktivovan\u00e9, k\u00fdm oprav\u00edme chybu. [Viac inform\u00e1ci\u00ed]({url})",
             "not_hassio": "Hardv\u00e9rov\u00e9 mo\u017enosti je mo\u017en\u00e9 nakonfigurova\u0165 iba v in\u0161tal\u00e1ci\u00e1ch HassOS.",
             "zha_migration_failed": "Migr\u00e1cia ZHA nebola \u00faspe\u0161n\u00e1."
         },

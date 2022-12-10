@@ -48,7 +48,7 @@ async def async_connect_scanner(
     )
     unload_callbacks = [
         async_register_scanner(hass, scanner, False),
-        scanner.async_setup(),
+        await scanner.async_setup(),
         coordinator.async_subscribe_events(scanner.async_on_event),
     ]
     await async_start_scanner(

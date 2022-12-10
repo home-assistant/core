@@ -14,8 +14,15 @@ from bleak_retry_connector import NO_RSSI_VALUE
 from bluetooth_adapters import adapter_human_name
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HomeAssistant,
+    callback as hass_callback,
+)
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.storage import Store
 from homeassistant.util.dt import monotonic_time_coarse
 
 from .const import (
@@ -24,6 +31,7 @@ from .const import (
 )
 from .models import HaBluetoothConnector
 
+REMOTE_SCANNER_STORAGE_VERSION = 1
 MONOTONIC_TIME: Final = monotonic_time_coarse
 
 
@@ -80,6 +88,52 @@ class BaseHaScanner(ABC):
         }
 
 
+def serialize_discovered_device_advertisement_datas(
+    discovered_device_advertisement_datas: dict[
+        str, tuple[BLEDevice, AdvertisementData]
+    ]
+) -> dict[str, dict[str, Any]]:
+    """Serialize discovered_device_advertisement_datas."""
+    data: dict[str, dict[str, Any]] = {}
+    for (
+        address,
+        device_advertisement_data,
+    ) in discovered_device_advertisement_datas.items():
+        device, advertisement_data = device_advertisement_data
+        data[address] = {
+            "device": {
+                "address": device.address,
+                "name": device.name,
+                "rssi": device.rssi,
+                "details": device.details,
+            },
+            "advertisement_data": advertisement_data._asdict(),
+        }
+    return data
+
+
+def deserialize_discovered_device_advertisement_datas(
+    discovered_device_advertisement_datas: dict[str, list[dict[str, Any]]]
+) -> dict[str, tuple[BLEDevice, AdvertisementData]]:
+    """Deserialize discovered_device_advertisement_datas."""
+    data: dict[str, tuple[BLEDevice, AdvertisementData]] = {}
+    for (
+        address,
+        device_advertisement_data,
+    ) in discovered_device_advertisement_datas.items():
+        device, advertisement_data = device_advertisement_data
+        data[address] = (
+            BLEDevice(  # type: ignore[no-untyped-call]
+                address=device["address"],
+                name=device["name"],
+                rssi=device["rssi"],
+                details=device["details"],
+            ),
+            AdvertisementData(**advertisement_data),
+        )
+    return data
+
+
 class BaseHaRemoteScanner(BaseHaScanner):
     """Base class for a Home Assistant remote BLE scanner."""
 
@@ -91,6 +145,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
         "_connectable",
         "_details",
         "_expire_seconds",
+        "_storage",
     )
 
     def __init__(
@@ -113,18 +168,56 @@ class BaseHaRemoteScanner(BaseHaScanner):
         self._connectable = connectable
         self._details: dict[str, str | HaBluetoothConnector] = {"source": scanner_id}
         self._expire_seconds = FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
+        self._storage: Store = Store(
+            hass,
+            REMOTE_SCANNER_STORAGE_VERSION,
+            f"bluetooth.remote_scanner.{scanner_id}",
+        )
         if connectable:
             self._details["connector"] = connector
             self._expire_seconds = (
                 CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
             )
 
-    @hass_callback
-    def async_setup(self) -> CALLBACK_TYPE:
+    async def async_setup(self) -> CALLBACK_TYPE:
         """Set up the scanner."""
-        return async_track_time_interval(
+        if raw_storage := await self._storage.async_load():
+            self._discovered_device_advertisement_datas = (
+                deserialize_discovered_device_advertisement_datas(
+                    raw_storage["discovered_device_advertisement_datas"]
+                )
+            )
+            self._discovered_device_timestamps = raw_storage[
+                "discovered_device_timestamps"
+            ]
+
+        cancel_track = async_track_time_interval(
             self.hass, self._async_expire_devices, timedelta(seconds=30)
         )
+        cancel_save_on_stop = self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self.async_save
+        )
+
+        @hass_callback
+        def _cancel() -> None:
+            self._storage.async_delay_save(self.async_save)
+            cancel_track()
+            cancel_save_on_stop()
+
+        return _cancel
+
+    async def async_save(self, event: Event | None = None) -> None:
+        """Save the scanner."""
+        await self._storage.async_save(self._async_data_to_save())
+
+    def _async_data_to_save(self) -> dict[str, Any]:
+        """Return data to save."""
+        return {
+            "discovered_device_advertisement_datas": serialize_discovered_device_advertisement_datas(
+                self._discovered_device_advertisement_datas
+            ),
+            "discovered_device_timestamps": self._discovered_device_timestamps,
+        }
 
     def _async_expire_devices(self, _datetime: datetime.datetime) -> None:
         """Expire old devices."""

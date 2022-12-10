@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "not_insteon_device": "Zisten\u00e9 zariadenie nie je zariadenie Insteon",
             "single_instance_allowed": "U\u017e je nakonfigurovan\u00fd. Mo\u017en\u00e1 len jedna konfigur\u00e1cia."
         },
         "error": {
@@ -17,7 +18,9 @@
                 "data": {
                     "host": "IP adresa",
                     "port": "Port"
-                }
+                },
+                "description": "Nakonfigurujte Insteon Hub Verzia 1 (pred rokom 2014).",
+                "title": "Insteon Hub Verzia 1"
             },
             "hubv2": {
                 "data": {
@@ -25,12 +28,22 @@
                     "password": "Heslo",
                     "port": "Port",
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
-                }
+                },
+                "description": "Nakonfigurujte Insteon Hub Verzia 2.",
+                "title": "Insteon Hub Verzia 2"
             },
             "plm": {
                 "data": {
                     "device": "Cesta k zariadeniu USB"
-                }
+                },
+                "description": "Nakonfigurujte Insteon PowerLink Modem (PLM).",
+                "title": "Insteon PLM"
+            },
+            "user": {
+                "data": {
+                    "modem_type": "Typ modemu."
+                },
+                "description": "Vyberte typ modemu Insteon."
             }
         }
     },
