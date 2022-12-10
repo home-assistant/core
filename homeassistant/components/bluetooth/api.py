@@ -27,6 +27,7 @@ from .wrappers import HaBleakScannerWrapper
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
+    from bleak.backends.scanner import AdvertisementData
 
 
 def _get_manager(hass: HomeAssistant) -> BluetoothManager:
@@ -91,6 +92,20 @@ def async_ble_device_from_address(
     if DATA_MANAGER not in hass.data:
         return None
     return _get_manager(hass).async_ble_device_from_address(address, connectable)
+
+
+@hass_callback
+def async_get_discovered_devices_and_advertisement_data_by_address(
+    hass: HomeAssistant, address: str, connectable: bool = True
+) -> list[tuple[BLEDevice, AdvertisementData]]:
+    """Return BLEDevice for an address if its present."""
+    if DATA_MANAGER not in hass.data:
+        return []
+    return _get_manager(
+        hass
+    ).async_get_discovered_devices_and_advertisement_data_by_address(
+        address, connectable
+    )
 
 
 @hass_callback
