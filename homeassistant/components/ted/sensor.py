@@ -9,20 +9,26 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
     Platform,
     UnitOfEnergy,
     UnitOfPower,
 )
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import COORDINATOR, DOMAIN, NAME, OPTION_DEFAULTS
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def build_sensor_descs(name, prefix, stype, is_net):
+def build_sensor_descs(name: str, prefix: str, stype: str, is_net: bool):
     """Return a list of sensors with given key prefix and type (Production / Consumption)."""
     if is_net:  # If the sensor represents a net energy
         total_state_class = SensorStateClass.TOTAL
@@ -53,7 +59,7 @@ def build_sensor_descs(name, prefix, stype, is_net):
     ]
 
 
-def build_mtu_sensor_descs(name, stype, is_net):
+def build_mtu_sensor_descs(name: str, stype: str, is_net: bool):
     """Return a list of mtu sensors with given key prefix and type (Production / Consumption)."""
     return [
         *build_sensor_descs(name, "mtu_energy", stype, is_net),
@@ -66,14 +72,18 @@ def build_mtu_sensor_descs(name, stype, is_net):
     ]
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up TED sensor platform."""
     data = hass.data[DOMAIN][config_entry.entry_id]
     coordinator = data[COORDINATOR]
     config_name = data[NAME]
 
     entity_registry = hass.helpers.entity_registry.async_get(hass)
-    config_id = config_entry.unique_id
+    config_id = str(config_entry.unique_id)
     entities = []
     for desc in build_sensor_descs(config_name, "consumption", "Energy Usage", False):
         entities.append(TedSensor(desc, config_id, coordinator))
@@ -97,7 +107,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     "spyders",
                     spyder_id,
                     sensor_description,
-                    config_entry.unique_id,
+                    config_id,
                     coordinator,
                 )
             )
@@ -117,7 +127,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     "mtus",
                     mtu_id,
                     sensor_description,
-                    config_entry.unique_id,
+                    config_id,
                     coordinator,
                 )
             )
@@ -135,13 +145,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 entity_registry.async_remove(entity_id)
 
     async_add_entities(entities)
-    return True
 
 
 class TedSensor(CoordinatorEntity, SensorEntity):
     """Implementation of a Ted5000 and Ted6000 sensor."""
 
-    def __init__(self, description, device_id, coordinator):
+    def __init__(
+        self,
+        description: SensorEntityDescription,
+        device_id: str,
+        coordinator: DataUpdateCoordinator,
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._device_id = device_id
@@ -150,7 +164,7 @@ class TedSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
 
     @property
-    def native_value(self):
+    def native_value(self) -> float:
         """Return the state of the resources."""
         key, field = self.entity_description.key.split("_")
         return getattr(self.coordinator.data.get(key), field)
@@ -159,7 +173,14 @@ class TedSensor(CoordinatorEntity, SensorEntity):
 class TedBreakdownSensor(TedSensor):
     """Implementation of a Ted5000 and Ted6000 mtu or spyder."""
 
-    def __init__(self, group, position, description, device_id, coordinator):
+    def __init__(
+        self,
+        group: str,
+        position: int,
+        description: SensorEntityDescription,
+        device_id: str,
+        coordinator: DataUpdateCoordinator,
+    ) -> None:
         """Initialize the sensor."""
         sensor_id = f"{device_id}_{group}_{position}"
         self._group = group
@@ -167,7 +188,7 @@ class TedBreakdownSensor(TedSensor):
         super().__init__(description, sensor_id, coordinator)
 
     @property
-    def native_value(self):
+    def native_value(self) -> float:
         """Return the state of the resources."""
         _, key, field = self.entity_description.key.split("_")
         return getattr(

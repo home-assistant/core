@@ -9,7 +9,11 @@ import tedpy
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import (
+    ConfigEntry,
+    OptionsFlow,
+    OptionsFlowWithConfigEntry,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
@@ -79,17 +83,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get options flow for this handler."""
         return TedOptionsFlowHandler(config_entry)
 
 
-class TedOptionsFlowHandler(config_entries.OptionsFlow):
+class TedOptionsFlowHandler(OptionsFlowWithConfigEntry):
     """Config flow options for TED."""
-
-    def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize TED options flow."""
-        self.config_entry = entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -113,7 +113,7 @@ class TedOptionsFlowHandler(config_entries.OptionsFlow):
             ),
         )
 
-    def create_option_schema_field(self, name):
+    def create_option_schema_field(self, name: str):
         """Create the schema for a specific TED option with the appropriate default value."""
         return vol.Required(
             name, default=self.config_entry.options.get(name, OPTION_DEFAULTS[name])
