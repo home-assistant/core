@@ -22,7 +22,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -251,11 +251,7 @@ class MinMaxSensor(SensorEntity):
             )
         )
 
-        # Replay current state of source entities
-        for entity_id in self._entity_ids:
-            state = self.hass.states.get(entity_id)
-            state_event = Event("", {"entity_id": entity_id, "new_state": state})
-            self._async_min_max_sensor_state_listener(state_event, update_state=False)
+        self._async_min_max_sensor_state_listener(None, update_state=False)
 
     @property
     def native_value(self) -> StateType | datetime:
@@ -285,13 +281,16 @@ class MinMaxSensor(SensorEntity):
 
     @callback
     def _async_min_max_sensor_state_listener(
-        self, event: EventType, update_state: bool = True
+        self, event: EventType | None, update_state: bool = True
     ) -> None:
         """Handle the sensor state changes."""
         calc_states: dict[str, float | str] = {}
 
-        entity_state: State | None = event.data.get("new_state")
-        entity: str = event.data["entity_id"]
+        entity_state: State | None = None
+        entity: str | None = None
+        if event:
+            entity_state = event.data.get("new_state")
+            entity = event.data["entity_id"]
 
         states: list[tuple[str, State]] = [
             (entity_id, state)
@@ -328,11 +327,9 @@ class MinMaxSensor(SensorEntity):
 
         self.update_attributes(entity_state, entity)
 
-        if not update_state:
-            self._calc_values(calc_states)
-            return
-
         self._calc_values(calc_states)
+        if not update_state:
+            return
         self.async_write_ha_state()
 
     @callback
@@ -350,9 +347,9 @@ class MinMaxSensor(SensorEntity):
         self.range = calc_range(sensor_values, self._round_digits)
         self.sum = calc_sum(sensor_values, self._round_digits)
 
-    def update_attributes(self, state: State | None, entity: str) -> None:
+    def update_attributes(self, state: State | None, entity: str | None) -> None:
         """Update attributes."""
-        if state is None:
+        if state is None or entity is None:
             return
         try:
             self.last = float(state.state)
