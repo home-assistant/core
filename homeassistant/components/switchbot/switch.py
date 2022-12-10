@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 import switchbot
 
@@ -15,7 +14,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DOMAIN
 from .coordinator import SwitchbotDataUpdateCoordinator
-from .entity import SwitchbotEntity
+from .entity import SwitchbotSwitchedEntity
 
 # Initialize the logger
 _LOGGER = logging.getLogger(__name__)
@@ -32,7 +31,7 @@ async def async_setup_entry(
     async_add_entities([SwitchBotSwitch(coordinator)])
 
 
-class SwitchBotSwitch(SwitchbotEntity, SwitchEntity, RestoreEntity):
+class SwitchBotSwitch(SwitchbotSwitchedEntity, SwitchEntity, RestoreEntity):
     """Representation of a Switchbot switch."""
 
     _attr_device_class = SwitchDeviceClass.SWITCH
@@ -50,24 +49,6 @@ class SwitchBotSwitch(SwitchbotEntity, SwitchEntity, RestoreEntity):
             return
         self._attr_is_on = last_state.state == STATE_ON
         self._last_run_success = last_state.attributes.get("last_run_success")
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn device on."""
-        _LOGGER.info("Turn Switchbot bot on %s", self._address)
-
-        self._last_run_success = bool(await self._device.turn_on())
-        if self._last_run_success:
-            self._attr_is_on = True
-        self.async_write_ha_state()
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn device off."""
-        _LOGGER.info("Turn Switchbot bot off %s", self._address)
-
-        self._last_run_success = bool(await self._device.turn_off())
-        if self._last_run_success:
-            self._attr_is_on = False
-        self.async_write_ha_state()
 
     @property
     def assumed_state(self) -> bool:
