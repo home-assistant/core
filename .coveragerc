@@ -1245,6 +1245,7 @@ omit =
     homeassistant/components/switchbot/coordinator.py
     homeassistant/components/switchbot/cover.py
     homeassistant/components/switchbot/entity.py
+    homeassistant/components/switchbot/humidifier.py
     homeassistant/components/switchbot/light.py
     homeassistant/components/switchbot/sensor.py
     homeassistant/components/switchbot/switch.py
