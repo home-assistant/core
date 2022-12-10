@@ -34,8 +34,35 @@ class DiscoveredDeviceAdvertisementDataDict(TypedDict):
 
     connectable: bool
     expire_seconds: float
-    discovered_device_advertisement_datas: dict[str, dict[str, dict[str, Any]]]
+    discovered_device_advertisement_datas: dict[str, DiscoveredDeviceDict]
     discovered_device_timestamps: dict[str, float]
+
+
+class BLEDeviceDict(TypedDict):
+    """BLEDevice dict."""
+
+    address: str
+    name: str | None
+    rssi: int | None
+    details: dict[str, Any]
+
+
+class AdvertisementDataDict(TypedDict):
+    """AdvertisementData dict."""
+
+    local_name: str | None
+    manufacturer_data: dict[str, str]
+    service_data: dict[str, str]
+    service_uuids: list[str]
+    rssi: int
+    tx_power: int | None
+
+
+class DiscoveredDeviceDict(TypedDict):
+    """Discovered device dict."""
+
+    device: BLEDeviceDict
+    advertisement_data: AdvertisementDataDict
 
 
 class BluetoothStorage:
@@ -127,78 +154,99 @@ def serialize_discovered_device_advertisement_datas(
     discovered_device_advertisement_datas: dict[
         str, tuple[BLEDevice, AdvertisementData]
     ]
-) -> dict[str, dict[str, Any]]:
+) -> dict[str, DiscoveredDeviceDict]:
     """Serialize discovered_device_advertisement_datas."""
-    data: dict[str, dict[str, Any]] = {}
-    for (
-        address,
-        device_advertisement_data,
-    ) in discovered_device_advertisement_datas.items():
-        device, advertisement_data = device_advertisement_data
-        data[address] = {
-            "device": {
-                "address": device.address,
-                "name": device.name,
-                "rssi": device.rssi,
-                "details": device.details,
-            },
-            "advertisement_data": {
-                "local_name": advertisement_data.local_name,
-                "manufacturer_data": {
-                    manufacturer_id: manufacturer_data.hex()
-                    for manufacturer_id, manufacturer_data in advertisement_data.manufacturer_data.items()
-                },
-                "service_data": {
-                    service_uuid: service_data.hex()
-                    for service_uuid, service_data in advertisement_data.service_data.items()
-                },
-                "service_uuids": advertisement_data.service_uuids,
-                "tx_power": advertisement_data.tx_power,
-                "rssi": advertisement_data.rssi,
-            },
-        }
-    return data
+    return {
+        address: DiscoveredDeviceDict(
+            device=ble_device_to_dict(device),
+            advertisement_data=advertisement_data_to_dict(advertisement_data),
+        )
+        for (
+            address,
+            (device, advertisement_data),
+        ) in discovered_device_advertisement_datas.items()
+    }
 
 
 def deserialize_discovered_device_advertisement_datas(
-    discovered_device_advertisement_datas: dict[str, dict[str, dict[str, Any]]]
+    discovered_device_advertisement_datas: dict[str, DiscoveredDeviceDict]
 ) -> dict[str, tuple[BLEDevice, AdvertisementData]]:
     """Deserialize discovered_device_advertisement_datas."""
-    data: dict[str, tuple[BLEDevice, AdvertisementData]] = {}
-    for (
-        address,
-        device_advertisement_data,
-    ) in discovered_device_advertisement_datas.items():
-        device = device_advertisement_data["device"]
-        advertisement_data = device_advertisement_data["advertisement_data"]
-        data[address] = (
-            BLEDevice(  # type: ignore[no-untyped-call]
-                address=device["address"],
-                name=device["name"],
-                rssi=device["rssi"],
-                details=device["details"],
-            ),
-            AdvertisementData(
-                local_name=advertisement_data["local_name"],
-                manufacturer_data={
-                    int(manufacturer_id): bytes.fromhex(manufacturer_data)
-                    for manufacturer_id, manufacturer_data in advertisement_data[
-                        "manufacturer_data"
-                    ].items()
-                },
-                service_data={
-                    service_uuid: bytes.fromhex(service_data)
-                    for service_uuid, service_data in advertisement_data[
-                        "service_data"
-                    ].items()
-                },
-                service_uuids=advertisement_data["service_uuids"],
-                rssi=advertisement_data["rssi"],
-                tx_power=advertisement_data["tx_power"],
-                platform_data=(),
+    return {
+        address: (
+            ble_device_from_dict(device_advertisement_data["device"]),
+            advertisement_data_from_dict(
+                device_advertisement_data["advertisement_data"]
             ),
         )
-    return data
+        for (
+            address,
+            device_advertisement_data,
+        ) in discovered_device_advertisement_datas.items()
+    }
+
+
+def ble_device_from_dict(ble_device: BLEDeviceDict) -> BLEDevice:
+    """Deserialize ble_device."""
+    return BLEDevice(  # type: ignore[no-untyped-call]
+        address=ble_device["address"],
+        name=ble_device["name"],
+        rssi=ble_device["rssi"],
+        details=ble_device["details"],
+    )
+
+
+def ble_device_to_dict(ble_device: BLEDevice) -> BLEDeviceDict:
+    """Serialize ble_device."""
+    return BLEDeviceDict(
+        address=ble_device.address,
+        name=ble_device.name,
+        rssi=ble_device.rssi,
+        details=ble_device.details,
+    )
+
+
+def advertisement_data_from_dict(
+    advertisement_data: AdvertisementDataDict,
+) -> AdvertisementData:
+    """Deserialize advertisement_data."""
+    return AdvertisementData(
+        local_name=advertisement_data["local_name"],
+        manufacturer_data={
+            int(manufacturer_id): bytes.fromhex(manufacturer_data)
+            for manufacturer_id, manufacturer_data in advertisement_data[
+                "manufacturer_data"
+            ].items()
+        },
+        service_data={
+            service_uuid: bytes.fromhex(service_data)
+            for service_uuid, service_data in advertisement_data["service_data"].items()
+        },
+        service_uuids=advertisement_data["service_uuids"],
+        rssi=advertisement_data["rssi"],
+        tx_power=advertisement_data["tx_power"],
+        platform_data=(),
+    )
+
+
+def advertisement_data_to_dict(
+    advertisement_data: AdvertisementData,
+) -> AdvertisementDataDict:
+    """Serialize advertisement_data."""
+    return AdvertisementDataDict(
+        local_name=advertisement_data.local_name,
+        manufacturer_data={
+            str(manufacturer_id): manufacturer_data.hex()
+            for manufacturer_id, manufacturer_data in advertisement_data.manufacturer_data.items()
+        },
+        service_data={
+            service_uuid: service_data.hex()
+            for service_uuid, service_data in advertisement_data.service_data.items()
+        },
+        service_uuids=advertisement_data.service_uuids,
+        rssi=advertisement_data.rssi,
+        tx_power=advertisement_data.tx_power,
+    )
 
 
 def deserialize_discovered_device_timestamps(
