@@ -138,7 +138,8 @@ class BaseHaRemoteScanner(BaseHaScanner):
                 CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
             )
 
-    async def async_setup(self) -> CALLBACK_TYPE:
+    @hass_callback
+    def async_setup(self) -> CALLBACK_TYPE:
         """Set up the scanner."""
         if history := self._storage.async_get_advertisement_history(self.source):
             self._discovered_device_advertisement_datas = (
