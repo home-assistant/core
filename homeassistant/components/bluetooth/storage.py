@@ -14,7 +14,7 @@ from homeassistant.helpers.storage import Store
 
 REMOTE_SCANNER_STORAGE_VERSION = 1
 REMOTE_SCANNER_STORAGE_KEY = "bluetooth.remote_scanners"
-SCANNER_SAVE_DELAY = 10
+SCANNER_SAVE_DELAY = 5
 
 
 class BluetoothStorage:
