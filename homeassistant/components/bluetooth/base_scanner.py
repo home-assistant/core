@@ -151,7 +151,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
         cancel_track = async_track_time_interval(
             self.hass, self._async_expire_devices, timedelta(seconds=30)
         )
-        cancel_stop = self.hass.bus.async_listen_once(
+        cancel_stop = self.hass.bus.async_listen(
             EVENT_HOMEASSISTANT_STOP, self._save_history
         )
 
