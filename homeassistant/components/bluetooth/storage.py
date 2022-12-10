@@ -197,7 +197,7 @@ def deserialize_discovered_device_advertisement_datas(
     """Deserialize discovered_device_advertisement_datas."""
     return {
         address: (
-            ble_device_from_dict(device_advertisement_data["device"]),
+            BLEDevice(**device_advertisement_data["device"]),  # type: ignore[no-untyped-call]
             advertisement_data_from_dict(
                 device_advertisement_data["advertisement_data"]
             ),
@@ -207,11 +207,6 @@ def deserialize_discovered_device_advertisement_datas(
             device_advertisement_data,
         ) in discovered_device_advertisement_datas.items()
     }
-
-
-def ble_device_from_dict(ble_device: BLEDeviceDict) -> BLEDevice:
-    """Deserialize ble_device."""
-    return BLEDevice(**ble_device)  # type: ignore[no-untyped-call]
 
 
 def ble_device_to_dict(ble_device: BLEDevice) -> BLEDeviceDict:
