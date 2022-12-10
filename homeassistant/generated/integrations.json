@@ -2261,6 +2261,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "homewizard_climate": {
+      "name": "Homewizard Climate",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "honeywell": {
       "name": "Honeywell",
       "integrations": {
