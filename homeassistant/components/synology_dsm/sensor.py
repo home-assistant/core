@@ -19,10 +19,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DISKS,
     DATA_MEGABYTES,
-    DATA_RATE_KILOBYTES_PER_SECOND,
     DATA_TERABYTES,
     PERCENTAGE,
     TEMP_CELSIUS,
+    UnitOfDataRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -166,7 +166,8 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoCoreUtilization.API_KEY,
         key="network_up",
         name="Upload Throughput",
-        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:upload",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -174,7 +175,8 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoCoreUtilization.API_KEY,
         key="network_down",
         name="Download Throughput",
-        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:download",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -351,7 +353,7 @@ class SynoDSMUtilSensor(SynoDSMSensor):
             return round(attr / 1024.0**2, 1)
 
         # Network
-        if self.native_unit_of_measurement == DATA_RATE_KILOBYTES_PER_SECOND:
+        if self.native_unit_of_measurement == UnitOfDataRate.KILOBYTES_PER_SECOND:
             return round(attr / 1024.0, 1)
 
         # CPU load average

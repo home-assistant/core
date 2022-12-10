@@ -29,7 +29,7 @@ from homeassistant.const import (
     POWER_KILO_WATT,
     TEMP_CELSIUS,
     TIME_MINUTES,
-    VOLUME_LITERS,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -312,7 +312,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         entity_class=RenaultSensor[KamereonVehicleCockpitData],
         icon="mdi:fuel",
         name="Fuel quantity",
-        native_unit_of_measurement=VOLUME_LITERS,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
         state_class=SensorStateClass.MEASUREMENT,
         requires_fuel=True,
         value_lambda=_get_rounded_value,
