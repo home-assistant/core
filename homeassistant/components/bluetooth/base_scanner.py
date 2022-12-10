@@ -11,7 +11,7 @@ from typing import Any, Final
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 from bleak_retry_connector import NO_RSSI_VALUE
-from bluetooth_adapters import adapter_human_name
+from bluetooth_adapters import DiscoveredDeviceAdvertisementData, adapter_human_name
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -167,10 +167,12 @@ class BaseHaRemoteScanner(BaseHaScanner):
         """Save the history."""
         self._storage.async_set_advertisement_history(
             self.source,
-            self.connectable,
-            self._expire_seconds,
-            self._discovered_device_advertisement_datas,
-            self._discovered_device_timestamps,
+            DiscoveredDeviceAdvertisementData(
+                self.connectable,
+                self._expire_seconds,
+                self._discovered_device_advertisement_datas,
+                self._discovered_device_timestamps,
+            ),
         )
 
     def _async_expire_devices(self, _datetime: datetime.datetime) -> None:

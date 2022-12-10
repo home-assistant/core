@@ -1,13 +1,11 @@
 """Storage for remote scanners."""
 from __future__ import annotations
 
-from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementData
 from bluetooth_adapters import (
     DiscoveredDeviceAdvertisementData,
     DiscoveryStorageType,
-    discovered_device_advertisement_data_dict_to_dict,
     discovered_device_advertisement_data_from_dict,
+    discovered_device_advertisement_data_to_dict,
     expire_stale_scanner_discovered_device_advertisement_data,
 )
 
@@ -54,20 +52,8 @@ class BluetoothStorage:
 
     @callback
     def async_set_advertisement_history(
-        self,
-        scanner: str,
-        connectable: bool,
-        expire_seconds: float,
-        discovered_device_advertisement_datas: dict[
-            str, tuple[BLEDevice, AdvertisementData]
-        ],
-        discovered_device_timestamps: dict[str, float],
+        self, scanner: str, data: DiscoveredDeviceAdvertisementData
     ) -> None:
         """Set discovered devices by scanner."""
-        self._data[scanner] = discovered_device_advertisement_data_dict_to_dict(
-            connectable,
-            expire_seconds,
-            discovered_device_advertisement_datas,
-            discovered_device_timestamps,
-        )
+        self._data[scanner] = discovered_device_advertisement_data_to_dict(data)
         self._store.async_delay_save(self._async_get_data, SCANNER_SAVE_DELAY)
