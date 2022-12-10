@@ -32,8 +32,6 @@ class SwitchBotHumidifier(SwitchbotSwitchedEntity, HumidifierEntity):
     """Representation of a Switchbot humidifier."""
 
     _attr_device_class = HumidifierDeviceClass.HUMIDIFIER
-    _attr_min_humidity = 0
-    _attr_max_humidity = 100
     _device: switchbot.SwitchbotHumidifier
 
     def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
