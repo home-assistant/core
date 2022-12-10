@@ -15,11 +15,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     POWER_WATT,
+    UnitOfElectricCurrent,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -151,7 +151,7 @@ SENSOR_PROCESS_DATA = [
         module_id="devices:local:pv1",
         key="I",
         name="DC1 Current",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         formatter="format_float",
@@ -178,7 +178,7 @@ SENSOR_PROCESS_DATA = [
         module_id="devices:local:pv2",
         key="I",
         name="DC2 Current",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         formatter="format_float",
@@ -205,7 +205,7 @@ SENSOR_PROCESS_DATA = [
         module_id="devices:local:pv3",
         key="I",
         name="DC3 Current",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         formatter="format_float",

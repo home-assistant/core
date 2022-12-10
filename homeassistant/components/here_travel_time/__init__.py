@@ -1,8 +1,6 @@
 """The HERE Travel Time integration."""
 from __future__ import annotations
 
-import logging
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_MODE, Platform
 from homeassistant.core import HomeAssistant
@@ -28,7 +26,6 @@ from .coordinator import (
 from .model import HERETravelTimeConfig
 
 PLATFORMS = [Platform.SENSOR]
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:

@@ -261,7 +261,7 @@ aiosenseme==0.6.1
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==5.1.0
+aioshelly==5.1.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -450,7 +450,7 @@ bluemaestro-ble==0.2.0
 bluetooth-adapters==0.12.0
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==0.5.4
+bluetooth-auto-recovery==0.5.5
 
 # homeassistant.components.bluetooth
 # homeassistant.components.led_ble
@@ -556,7 +556,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.75.0
+dbus-fast==1.82.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.4
@@ -737,6 +737,9 @@ fritzconnection==1.10.3
 # homeassistant.components.google_translate
 gTTS==2.2.4
 
+# homeassistant.components.google_assistant_sdk
+gassist-text==0.0.4
+
 # homeassistant.components.google
 gcal-sync==4.0.4
 
@@ -866,7 +869,7 @@ heatmiserV3==1.1.18
 here_routing==0.1.1
 
 # homeassistant.components.here_travel_time
-here_transit==1.0.0
+here_transit==1.1.1
 
 # homeassistant.components.hikvisioncam
 hikvision==0.4
@@ -1507,7 +1510,7 @@ pycfdns==2.0.1
 pychannels==1.2.3
 
 # homeassistant.components.cast
-pychromecast==13.0.1
+pychromecast==13.0.2
 
 # homeassistant.components.pocketcasts
 pycketcasts==1.0.1
@@ -1869,7 +1872,7 @@ pyrecswitch==1.0.2
 pyrepetierng==0.1.0
 
 # homeassistant.components.risco
-pyrisco==0.5.6
+pyrisco==0.5.7
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.6
