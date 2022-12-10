@@ -72,11 +72,6 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         parsed = parse_advertisement_data(
             discovery_info.device, discovery_info.advertisement
         )
-        _LOGGER.debug(
-            "Discovered switchbot device: %s, parsed: %s",
-            discovery_info.as_dict(),
-            parsed,
-        )
         if not parsed or parsed.data.get("modelName") not in SUPPORTED_MODEL_TYPES:
             return self.async_abort(reason="not_supported")
         model_name = parsed.data.get("modelName")

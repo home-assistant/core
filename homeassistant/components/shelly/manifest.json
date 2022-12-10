@@ -3,7 +3,6 @@
   "name": "Shelly",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/shelly",
-  "requirements": ["aioshelly==5.1.1"],
   "dependencies": ["bluetooth", "http"],
   "zeroconf": [
     {
