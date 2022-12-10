@@ -26,6 +26,16 @@
             "user": {
                 "data": {
                     "host": "IP adresa"
+                },
+                "description": "Pripojte sa k va\u0161ej br\u00e1ne pohybu, ak nie je nastaven\u00e1 adresa IP, pou\u017eije sa automatick\u00e9 zis\u0165ovanie"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "wait_for_push": "\u010cakanie na multicast push pri aktualiz\u00e1cii"
                 }
             }
         }

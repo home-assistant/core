@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "pick_implementation": {
+                "title": "Vali tuvastusmeetod"
+            },
+            "reauth_confirm": {
+                "title": "Taastuvasta sidumine"
+            }
+        }
+    }
+}

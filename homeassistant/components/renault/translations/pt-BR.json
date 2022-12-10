@@ -31,5 +31,38 @@
                 "title": "Definir credenciais Renault"
             }
         }
+    },
+    "entity": {
+        "select": {
+            "charge_mode": {
+                "state": {
+                    "always": "Instant\u00e2neo",
+                    "always_charging": "Instant\u00e2neo",
+                    "schedule_mode": "Planejador"
+                }
+            }
+        },
+        "sensor": {
+            "charge_state": {
+                "state": {
+                    "charge_ended": "Carga encerrada",
+                    "charge_error": "N\u00e3o est\u00e1 carregando ou conectado",
+                    "charge_in_progress": "Carregando",
+                    "energy_flap_opened": "Aba de energia aberta",
+                    "not_in_charge": "N\u00e3o est\u00e1 carregando",
+                    "unavailable": "Indispon\u00edvel",
+                    "waiting_for_a_planned_charge": "Aguardando carga planejada",
+                    "waiting_for_current_charge": "Aguardando carga atual"
+                }
+            },
+            "plug_state": {
+                "state": {
+                    "plug_error": "Erro de plugue",
+                    "plug_unknown": "Plug desconhecido",
+                    "plugged": "Conectado",
+                    "unplugged": "Desconectado"
+                }
+            }
+        }
     }
 }
