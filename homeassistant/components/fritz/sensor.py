@@ -17,12 +17,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    DATA_GIGABYTES,
-    DATA_RATE_KILOBITS_PER_SECOND,
-    DATA_RATE_KILOBYTES_PER_SECOND,
-    SIGNAL_STRENGTH_DECIBELS,
-)
+from homeassistant.const import DATA_GIGABYTES, SIGNAL_STRENGTH_DECIBELS, UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -186,7 +181,8 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         key="kb_s_sent",
         name="Upload Throughput",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:upload",
         value_fn=_retrieve_kb_s_sent_state,
     ),
@@ -194,14 +190,16 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         key="kb_s_received",
         name="Download Throughput",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:download",
         value_fn=_retrieve_kb_s_received_state,
     ),
     FritzSensorEntityDescription(
         key="max_kb_s_sent",
         name="Max Connection Upload Throughput",
-        native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:upload",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_max_kb_s_sent_state,
@@ -209,7 +207,8 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
     FritzSensorEntityDescription(
         key="max_kb_s_received",
         name="Max Connection Download Throughput",
-        native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:download",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_max_kb_s_received_state,
@@ -233,14 +232,16 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
     FritzSensorEntityDescription(
         key="link_kb_s_sent",
         name="Link Upload Throughput",
-        native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:upload",
         value_fn=_retrieve_link_kb_s_sent_state,
     ),
     FritzSensorEntityDescription(
         key="link_kb_s_received",
         name="Link Download Throughput",
-        native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:download",
         value_fn=_retrieve_link_kb_s_received_state,
     ),
