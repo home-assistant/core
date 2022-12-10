@@ -221,15 +221,13 @@ class HaBleakClientWrapper(BleakClient):
             return _HaWrappedBleakBackend(ble_device, cls)
 
         source: str = details["source"]
+        # Make sure the backend can connect to the device
+        # as some backends have connection limits
         if (
             not (scanner := manager.async_scanner_by_source(source))
             or not scanner.connector
+            or not scanner.connector.can_connect()
         ):
-            return None
-
-        # Make sure the backend can connect to the device
-        # as some backends have connection limits
-        if not scanner.connector.can_connect():
             return None
 
         return _HaWrappedBleakBackend(ble_device, scanner.connector.client)
