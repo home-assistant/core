@@ -98,28 +98,7 @@ class BluetoothStorage:
     async def async_setup(self) -> None:
         """Set up the storage."""
         self._data = await self._store.async_load() or {}
-        self._expire_stale_data()
-
-    def _expire_stale_data(self) -> None:
-        now = time.time()
-        expired_scanners: list[str] = []
-        for scanner, data in self._data.items():
-            expire: list[str] = []
-            expire_seconds = data[EXPIRE_SECONDS]
-            timestamps = data[DISCOVERED_DEVICE_TIMESTAMPS]
-            discovered_device_advertisement_datas = data[
-                DISCOVERED_DEVICE_ADVERTISEMENT_DATAS
-            ]
-            for address, timestamp in timestamps.items():
-                if now - timestamp > expire_seconds:
-                    expire.append(address)
-            for address in expire:
-                del timestamps[address]
-                del discovered_device_advertisement_datas[address]
-            if not timestamps:
-                expired_scanners.append(scanner)
-        for scanner in expired_scanners:
-            del self._data[scanner]
+        expire_stale_scanner_discovered_device_advertisement_data(self._data)
 
     def scanners(self) -> list[str]:
         """Get all scanners."""
@@ -158,6 +137,32 @@ class BluetoothStorage:
             discovered_device_timestamps,
         )
         self._store.async_delay_save(self._async_get_data, SCANNER_SAVE_DELAY)
+
+
+def expire_stale_scanner_discovered_device_advertisement_data(
+    data_by_scanner: dict[str, DiscoveredDeviceAdvertisementDataDict]
+) -> None:
+    """Expire stale discovered device advertisement data."""
+    now = time.time()
+    expired_scanners: list[str] = []
+    for scanner, data in data_by_scanner.items():
+        expire: list[str] = []
+        expire_seconds = data[EXPIRE_SECONDS]
+        timestamps = data[DISCOVERED_DEVICE_TIMESTAMPS]
+        discovered_device_advertisement_datas = data[
+            DISCOVERED_DEVICE_ADVERTISEMENT_DATAS
+        ]
+        for address, timestamp in timestamps.items():
+            if now - timestamp > expire_seconds:
+                expire.append(address)
+        for address in expire:
+            del timestamps[address]
+            del discovered_device_advertisement_datas[address]
+        if not timestamps:
+            expired_scanners.append(scanner)
+
+    for scanner in expired_scanners:
+        del data_by_scanner[scanner]
 
 
 def discovered_device_advertisement_data_from_dict(
