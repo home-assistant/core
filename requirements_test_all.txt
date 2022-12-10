@@ -652,7 +652,7 @@ hdate==0.10.4
 here_routing==0.1.1
 
 # homeassistant.components.here_travel_time
-here_transit==1.0.0
+here_transit==1.1.1
 
 # homeassistant.components.hlk_sw16
 hlk-sw16==0.0.9
