@@ -13,6 +13,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util.dt import monotonic_time_coarse
 
 REMOTE_SCANNER_STORAGE_VERSION = 1
+REMOTE_SCANNER_STORAGE_KEY = "bluetooth.remote_scanners"
 SCANNER_SAVE_DELAY = 10
 MONOTONIC_TIME: Final = monotonic_time_coarse
 
@@ -29,6 +30,12 @@ class DiscoveredDeviceAdvertisementData:
     discovered_device_timestamps: dict[str, float]
 
 
+CONNECTABLE: Final = "connectable"
+EXPIRE_SECONDS: Final = "expire_seconds"
+DISCOVERED_DEVICE_ADVERTISEMENT_DATAS: Final = "discovered_device_advertisement_datas"
+DISCOVERED_DEVICE_TIMESTAMPS: Final = "discovered_device_timestamps"
+
+
 class DiscoveredDeviceAdvertisementDataDict(TypedDict):
     """Discovered device advertisement data dict in storage."""
 
@@ -38,6 +45,12 @@ class DiscoveredDeviceAdvertisementDataDict(TypedDict):
     discovered_device_timestamps: dict[str, float]
 
 
+ADDRESS: Final = "address"
+NAME: Final = "name"
+RSSI: Final = "rssi"
+DETAILS: Final = "details"
+
+
 class BLEDeviceDict(TypedDict):
     """BLEDevice dict."""
 
@@ -45,6 +58,13 @@ class BLEDeviceDict(TypedDict):
     name: str | None
     rssi: int | None
     details: dict[str, Any]
+
+
+LOCAL_NAME: Final = "local_name"
+MANUFACTURER_DATA: Final = "manufacturer_data"
+SERVICE_DATA: Final = "service_data"
+SERVICE_UUIDS: Final = "service_uuids"
+TX_POWER: Final = "tx_power"
 
 
 class AdvertisementDataDict(TypedDict):
@@ -71,21 +91,24 @@ class BluetoothStorage:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the storage."""
         self._store: Store[dict[str, DiscoveredDeviceAdvertisementDataDict]] = Store(
-            hass, REMOTE_SCANNER_STORAGE_VERSION, "bluetooth.remote_scanners"
+            hass, REMOTE_SCANNER_STORAGE_VERSION, REMOTE_SCANNER_STORAGE_KEY
         )
         self._data: dict[str, DiscoveredDeviceAdvertisementDataDict] = {}
 
     async def async_setup(self) -> None:
         """Set up the storage."""
         self._data = await self._store.async_load() or {}
+        self._expire_stale_data()
+
+    def _expire_stale_data(self) -> None:
         now = time.time()
         expired_scanners: list[str] = []
         for scanner, data in self._data.items():
             expire: list[str] = []
-            expire_seconds = data["expire_seconds"]
-            timestamps = data["discovered_device_timestamps"]
+            expire_seconds = data[EXPIRE_SECONDS]
+            timestamps = data[DISCOVERED_DEVICE_TIMESTAMPS]
             discovered_device_advertisement_datas = data[
-                "discovered_device_advertisement_datas"
+                DISCOVERED_DEVICE_ADVERTISEMENT_DATAS
             ]
             for address, timestamp in timestamps.items():
                 if now - timestamp > expire_seconds:
@@ -110,13 +133,13 @@ class BluetoothStorage:
         if not (scanner_data := self._data.get(scanner)):
             return None
         return DiscoveredDeviceAdvertisementData(
-            scanner_data["connectable"],
-            scanner_data["expire_seconds"],
+            scanner_data[CONNECTABLE],
+            scanner_data[EXPIRE_SECONDS],
             deserialize_discovered_device_advertisement_datas(
-                scanner_data["discovered_device_advertisement_datas"]
+                scanner_data[DISCOVERED_DEVICE_ADVERTISEMENT_DATAS]
             ),
             deserialize_discovered_device_timestamps(
-                scanner_data["discovered_device_timestamps"]
+                scanner_data[DISCOVERED_DEVICE_TIMESTAMPS]
             ),
         )
 
@@ -189,10 +212,10 @@ def deserialize_discovered_device_advertisement_datas(
 def ble_device_from_dict(ble_device: BLEDeviceDict) -> BLEDevice:
     """Deserialize ble_device."""
     return BLEDevice(  # type: ignore[no-untyped-call]
-        address=ble_device["address"],
-        name=ble_device["name"],
-        rssi=ble_device["rssi"],
-        details=ble_device["details"],
+        address=ble_device[ADDRESS],
+        name=ble_device[NAME],
+        rssi=ble_device[RSSI],
+        details=ble_device[DETAILS],
     )
 
 
@@ -211,20 +234,20 @@ def advertisement_data_from_dict(
 ) -> AdvertisementData:
     """Deserialize advertisement_data."""
     return AdvertisementData(
-        local_name=advertisement_data["local_name"],
+        local_name=advertisement_data[LOCAL_NAME],
         manufacturer_data={
             int(manufacturer_id): bytes.fromhex(manufacturer_data)
             for manufacturer_id, manufacturer_data in advertisement_data[
-                "manufacturer_data"
+                MANUFACTURER_DATA
             ].items()
         },
         service_data={
             service_uuid: bytes.fromhex(service_data)
-            for service_uuid, service_data in advertisement_data["service_data"].items()
+            for service_uuid, service_data in advertisement_data[SERVICE_DATA].items()
         },
-        service_uuids=advertisement_data["service_uuids"],
-        rssi=advertisement_data["rssi"],
-        tx_power=advertisement_data["tx_power"],
+        service_uuids=advertisement_data[SERVICE_UUIDS],
+        rssi=advertisement_data[RSSI],
+        tx_power=advertisement_data[TX_POWER],
         platform_data=(),
     )
 
