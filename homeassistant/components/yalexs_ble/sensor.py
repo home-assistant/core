@@ -55,7 +55,7 @@ SENSORS: tuple[YaleXSBLESensorEntityDescription, ...] = (
     ),
     YaleXSBLESensorEntityDescription(
         key="battery_level",
-        name="Estimated battery level",
+        name="Battery level",
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
@@ -73,6 +73,7 @@ SENSORS: tuple[YaleXSBLESensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         has_entity_name=True,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        entity_registry_enabled_default=False,
         value_fn=lambda state, info, connection: state.battery.voltage
         if state.battery
         else None,
