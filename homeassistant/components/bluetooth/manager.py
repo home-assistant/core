@@ -199,14 +199,9 @@ class BluetoothManager:
         """Set up the bluetooth manager."""
         await self._bluetooth_adapters.refresh()
         install_multiple_bleak_catcher()
-        self._all_history = async_load_history_from_system(
+        self._all_history, self._connectable_history = async_load_history_from_system(
             self._bluetooth_adapters, self.storage
         )
-        self._connectable_history = {
-            address: service_info
-            for address, service_info in self._all_history.items()
-            if service_info.connectable
-        }
         self.async_setup_unavailable_tracking()
 
     @hass_callback
