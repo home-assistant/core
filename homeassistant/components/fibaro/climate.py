@@ -156,15 +156,15 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
                 and device.unit in ("C", "F")
             ):
                 self._temp_sensor_device = FibaroDevice(device)
-                if device.has_unit:
-                    tempunit = device.unit
+                tempunit = device.unit
 
             if any(
                 action for action in TARGET_TEMP_ACTIONS if action in device.actions
             ):
                 self._target_temp_device = FibaroDevice(device)
                 self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
-                tempunit = device.unit
+                if device.has_unit:
+                    tempunit = device.unit
 
             if any(action for action in OP_MODE_ACTIONS if action in device.actions):
                 self._op_mode_device = FibaroDevice(device)
