@@ -42,6 +42,7 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.HYGROMETER.value: [Platform.SENSOR],
     SupportedModels.CONTACT.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
     SupportedModels.MOTION.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
+    SupportedModels.HUMIDIFIER.value: [Platform.HUMIDIFIER, Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
@@ -50,6 +51,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.PLUG.value: switchbot.SwitchbotPlugMini,
     SupportedModels.BULB.value: switchbot.SwitchbotBulb,
     SupportedModels.LIGHT_STRIP.value: switchbot.SwitchbotLightStrip,
+    SupportedModels.HUMIDIFIER.value: switchbot.SwitchbotHumidifier,
 }
 
 

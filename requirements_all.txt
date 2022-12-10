@@ -37,7 +37,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.22.0
+PySwitchbot==0.23.1
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -321,7 +321,7 @@ ambiclimate==0.2.1
 amcrest==1.9.7
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.69
+androidtv[async]==0.0.70
 
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
@@ -553,7 +553,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.80.0
+dbus-fast==1.82.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.4
@@ -866,7 +866,7 @@ heatmiserV3==1.1.18
 here_routing==0.1.1
 
 # homeassistant.components.here_travel_time
-here_transit==1.0.0
+here_transit==1.1.1
 
 # homeassistant.components.hikvisioncam
 hikvision==0.4
@@ -2609,13 +2609,13 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.3.9
 
 # homeassistant.components.yalexs_ble
-yalexs-ble==1.10.3
+yalexs-ble==1.11.4
 
 # homeassistant.components.august
 yalexs==1.2.6
 
 # homeassistant.components.august
-yalexs_ble==1.10.3
+yalexs_ble==1.11.4
 
 # homeassistant.components.yeelight
 yeelight==0.7.10

@@ -30,10 +30,15 @@ async def test_sensors(hass, nzbget_api) -> None:
             "AverageDownloadRate",
             "1.19",
             DATA_RATE_MEGABYTES_PER_SECOND,
-            None,
+            SensorDeviceClass.DATA_RATE,
         ),
         "download_paused": ("DownloadPaused", "False", None, None),
-        "speed": ("DownloadRate", "2.38", DATA_RATE_MEGABYTES_PER_SECOND, None),
+        "speed": (
+            "DownloadRate",
+            "2.38",
+            DATA_RATE_MEGABYTES_PER_SECOND,
+            SensorDeviceClass.DATA_RATE,
+        ),
         "size": ("DownloadedSizeMB", "256", DATA_MEGABYTES, None),
         "disk_free": ("FreeDiskSpaceMB", "1024", DATA_MEGABYTES, None),
         "post_processing_jobs": ("PostJobCount", "2", "Jobs", None),
@@ -44,7 +49,7 @@ async def test_sensors(hass, nzbget_api) -> None:
             "DownloadLimit",
             "0.95",
             DATA_RATE_MEGABYTES_PER_SECOND,
-            None,
+            SensorDeviceClass.DATA_RATE,
         ),
     }
 

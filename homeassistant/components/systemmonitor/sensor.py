@@ -27,12 +27,12 @@ from homeassistant.const import (
     CONF_TYPE,
     DATA_GIBIBYTES,
     DATA_MEBIBYTES,
-    DATA_RATE_MEGABYTES_PER_SECOND,
     EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
     STATE_OFF,
     STATE_ON,
     TEMP_CELSIUS,
+    UnitOfDataRate,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -183,16 +183,16 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     "throughput_network_in": SysMonitorSensorEntityDescription(
         key="throughput_network_in",
         name="Network throughput in",
-        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
-        icon="mdi:server-network",
+        native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         mandatory_arg=True,
     ),
     "throughput_network_out": SysMonitorSensorEntityDescription(
         key="throughput_network_out",
         name="Network throughput out",
-        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
-        icon="mdi:server-network",
+        native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         mandatory_arg=True,
     ),

@@ -24,10 +24,10 @@ from homeassistant.const import (
     POWER_WATT,
     PRESSURE_HPA,
     TEMP_CELSIUS,
-    VOLUME_CUBIC_METERS,
     UnitOfElectricCurrent,
     UnitOfPrecipitationDepth,
     UnitOfSpeed,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -154,13 +154,13 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     "GAS_POWER": SensorEntityDescription(
         key="GAS_POWER",
-        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "GAS_ENERGY_COUNTER": SensorEntityDescription(
         key="GAS_ENERGY_COUNTER",
-        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),

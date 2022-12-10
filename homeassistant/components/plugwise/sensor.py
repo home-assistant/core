@@ -15,7 +15,7 @@ from homeassistant.const import (
     POWER_WATT,
     PRESSURE_BAR,
     TEMP_CELSIUS,
-    VOLUME_CUBIC_METERS,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -222,14 +222,14 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="gas_consumed_interval",
         name="Gas consumed interval",
-        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key="gas_consumed_cumulative",
         name="Gas consumed cumulative",
-        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL,
     ),
