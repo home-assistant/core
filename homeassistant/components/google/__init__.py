@@ -329,8 +329,7 @@ def load_config(path: str) -> dict[str, Any]:
         with open(path, encoding="utf8") as file:
             data = yaml.safe_load(file)
             for calendar in data:
-                validated = DEVICE_SCHEMA(calendar)
-                calendars.update({validated[CONF_CAL_ID]: validated})
+                calendars[calendar[CONF_CAL_ID]] =  DEVICE_SCHEMA(calendar)
     except FileNotFoundError as err:
         _LOGGER.debug("Error reading calendar configuration: %s", err)
         # When YAML file could not be loaded/did not contain a dict
