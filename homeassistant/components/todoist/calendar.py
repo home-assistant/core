@@ -181,25 +181,27 @@ async def async_setup_platform(
 
     # Check config for more projects.
     extra_projects: list[CustomProject] = config[CONF_EXTRA_PROJECTS]
-    for project in extra_projects:
+    for extra_project in extra_projects:
         # Special filter: By date
-        project_due_date = project.get(CONF_PROJECT_DUE_DATE)
+        project_due_date = extra_project.get(CONF_PROJECT_DUE_DATE)
 
         # Special filter: By label
-        project_label_filter = project[CONF_PROJECT_LABEL_WHITELIST]
+        project_label_filter = extra_project[CONF_PROJECT_LABEL_WHITELIST]
 
         # Special filter: By name
         # Names must be converted into IDs.
-        project_name_filter = project[CONF_PROJECT_WHITELIST]
-        project_id_filter = [
-            project_id_lookup[project_name.lower()]
-            for project_name in project_name_filter
-        ]
+        project_name_filter = extra_project[CONF_PROJECT_WHITELIST]
+        project_id_filter: list[str] | None = None
+        if project_name_filter is not None:
+            project_id_filter = [
+                project_id_lookup[project_name.lower()]
+                for project_name in project_name_filter
+            ]
 
         # Create the custom project and add it to the devices array.
         project_devices.append(
             TodoistProjectEntity(
-                project,
+                {"id": extra_project["name"], "name": extra_project["name"]},
                 labels,
                 api,
                 utc_offset_hours=utc_offset_hours,
@@ -218,7 +220,7 @@ async def async_setup_platform(
 
         # Create the task
         content = call.data[CONTENT]
-        data = {"project_id": project_id}
+        data: dict[str, Any] = {"project_id": project_id}
 
         if LABELS in call.data:
             task_labels = call.data[LABELS]
