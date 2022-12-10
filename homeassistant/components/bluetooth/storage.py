@@ -19,7 +19,7 @@ MONOTONIC_TIME: Final = monotonic_time_coarse
 
 @dataclass
 class DiscoveredDeviceAdvertisementData:
-    """Discovered device advertisement data."""
+    """Discovered device advertisement data deserialized from storage."""
 
     connectable: bool
     expire_seconds: float
@@ -30,7 +30,7 @@ class DiscoveredDeviceAdvertisementData:
 
 
 class DiscoveredDeviceAdvertisementDataDict(TypedDict):
-    """Discovered device advertisement data dict."""
+    """Discovered device advertisement data dict in storage."""
 
     connectable: bool
     expire_seconds: float
