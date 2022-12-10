@@ -134,9 +134,9 @@ async def async_setup_entry(
                 config_entry.options[CONF_ALL],
                 config_entry.options[CONF_TYPE],
                 int(config_entry.options[CONF_ROUND_DIGITS]),
-                config_entry.options.get(CONF_UNIT_OF_MEASUREMENT),
-                config_entry.options[CONF_STATE_CLASS],
-                config_entry.options.get(CONF_DEVICE_CLASS),
+                None,
+                None,
+                None,
             )
         ]
     )

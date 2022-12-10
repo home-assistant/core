@@ -7,18 +7,7 @@ from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import (
-    CONF_STATE_CLASS,
-    SensorDeviceClass,
-    SensorStateClass,
-)
-from homeassistant.const import (
-    CONF_DEVICE_CLASS,
-    CONF_ENTITIES,
-    CONF_TYPE,
-    CONF_UNIT_OF_MEASUREMENT,
-    UnitOfTemperature,
-)
+from homeassistant.const import CONF_ENTITIES, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -98,27 +87,6 @@ SENSOR_OPTIONS = {
         selector.NumberSelectorConfig(
             min=0, max=6, mode=selector.NumberSelectorMode.BOX
         ),
-    ),
-    vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-        selector.SelectSelectorConfig(
-            options=[cls.value for cls in SensorDeviceClass],
-            mode=selector.SelectSelectorMode.DROPDOWN,
-        )
-    ),
-    vol.Optional(
-        CONF_STATE_CLASS, default=SensorStateClass.MEASUREMENT
-    ): selector.SelectSelector(
-        selector.SelectSelectorConfig(
-            options=[cls.value for cls in SensorStateClass],
-            mode=selector.SelectSelectorMode.DROPDOWN,
-        )
-    ),
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.SelectSelector(
-        selector.SelectSelectorConfig(
-            options=[cls.value for cls in UnitOfTemperature],
-            custom_value=True,
-            mode=selector.SelectSelectorMode.DROPDOWN,
-        )
     ),
 }
 
