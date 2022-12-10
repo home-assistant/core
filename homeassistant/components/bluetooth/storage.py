@@ -211,12 +211,7 @@ def deserialize_discovered_device_advertisement_datas(
 
 def ble_device_from_dict(ble_device: BLEDeviceDict) -> BLEDevice:
     """Deserialize ble_device."""
-    return BLEDevice(  # type: ignore[no-untyped-call]
-        address=ble_device[ADDRESS],
-        name=ble_device[NAME],
-        rssi=ble_device[RSSI],
-        details=ble_device[DETAILS],
-    )
+    return BLEDevice(**ble_device)  # type: ignore[no-untyped-call]
 
 
 def ble_device_to_dict(ble_device: BLEDevice) -> BLEDeviceDict:
