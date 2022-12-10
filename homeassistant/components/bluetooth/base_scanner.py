@@ -6,6 +6,7 @@ from collections.abc import Callable, Generator
 from contextlib import contextmanager
 import datetime
 from datetime import timedelta
+import time
 from typing import Any, Final
 
 from bleak.backends.device import BLEDevice
@@ -23,6 +24,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.storage import Store
+import homeassistant.util.dt as dt_util
 from homeassistant.util.dt import monotonic_time_coarse
 
 from .const import (
@@ -117,13 +119,26 @@ def serialize_discovered_device_advertisement_datas(
                 "rssi": device.rssi,
                 "details": device.details,
             },
-            "advertisement_data": advertisement_data._asdict(),
+            "advertisement_data": {
+                "local_name": advertisement_data.local_name,
+                "manufacturer_data": {
+                    manufacturer_id: manufacturer_data.hex()
+                    for manufacturer_id, manufacturer_data in advertisement_data.manufacturer_data.items()
+                },
+                "service_data": {
+                    service_uuid: service_data.hex()
+                    for service_uuid, service_data in advertisement_data.service_data.items()
+                },
+                "service_uuids": advertisement_data.service_uuids,
+                "tx_power": advertisement_data.tx_power,
+                "rssi": advertisement_data.rssi,
+            },
         }
     return data
 
 
 def deserialize_discovered_device_advertisement_datas(
-    discovered_device_advertisement_datas: dict[str, list[dict[str, Any]]]
+    discovered_device_advertisement_datas: dict[str, dict[str, dict[str, Any]]]
 ) -> dict[str, tuple[BLEDevice, AdvertisementData]]:
     """Deserialize discovered_device_advertisement_datas."""
     data: dict[str, tuple[BLEDevice, AdvertisementData]] = {}
@@ -131,7 +146,8 @@ def deserialize_discovered_device_advertisement_datas(
         address,
         device_advertisement_data,
     ) in discovered_device_advertisement_datas.items():
-        device, advertisement_data = device_advertisement_data
+        device = device_advertisement_data["device"]
+        advertisement_data = device_advertisement_data["advertisement_data"]
         data[address] = (
             BLEDevice(  # type: ignore[no-untyped-call]
                 address=device["address"],
@@ -139,9 +155,49 @@ def deserialize_discovered_device_advertisement_datas(
                 rssi=device["rssi"],
                 details=device["details"],
             ),
-            AdvertisementData(**advertisement_data),
+            AdvertisementData(
+                local_name=advertisement_data["local_name"],
+                manufacturer_data={
+                    manufacturer_id: bytes.fromhex(manufacturer_data)
+                    for manufacturer_id, manufacturer_data in advertisement_data[
+                        "manufacturer_data"
+                    ].items()
+                },
+                service_data={
+                    service_uuid: bytes.fromhex(service_data)
+                    for service_uuid, service_data in advertisement_data[
+                        "service_data"
+                    ].items()
+                },
+                service_uuids=advertisement_data["service_uuids"],
+                rssi=advertisement_data["rssi"],
+                tx_power=advertisement_data["tx_power"],
+                platform_data=(),
+            ),
         )
     return data
+
+
+def deserialize_discovered_device_timestamps(
+    discovered_device_timestamps: dict[str, float]
+) -> dict[str, float]:
+    """Deserialize discovered_device_timestamps."""
+    time_diff = time.time() - MONOTONIC_TIME()
+    return {
+        address: unix_time - time_diff
+        for address, unix_time in discovered_device_timestamps.items()
+    }
+
+
+def serialize_discovered_device_timestamps(
+    discovered_device_timestamps: dict[str, float]
+) -> dict[str, float]:
+    """Serialize discovered_device_timestamps."""
+    time_diff = time.time() - MONOTONIC_TIME()
+    return {
+        address: monotonic_time + time_diff
+        for address, monotonic_time in discovered_device_timestamps.items()
+    }
 
 
 class BaseHaRemoteScanner(BaseHaScanner):
@@ -194,9 +250,13 @@ class BaseHaRemoteScanner(BaseHaScanner):
                     raw_storage["discovered_device_advertisement_datas"]
                 )
             )
-            self._discovered_device_timestamps = raw_storage[
-                "discovered_device_timestamps"
-            ]
+            self._discovered_device_timestamps = (
+                deserialize_discovered_device_timestamps(
+                    raw_storage["discovered_device_timestamps"]
+                )
+            )
+            # Expire anything that is too old
+            self._async_expire_devices(dt_util.utcnow())
 
         cancel_track = async_track_time_interval(
             self.hass, self._async_expire_devices, timedelta(seconds=30)
@@ -207,7 +267,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
 
         @hass_callback
         def _cancel() -> None:
-            self._storage.async_delay_save(self.async_save)
+            self._storage.async_delay_save(self._async_data_to_save)
             cancel_track()
             cancel_save_on_stop()
 
@@ -223,7 +283,9 @@ class BaseHaRemoteScanner(BaseHaScanner):
             "discovered_device_advertisement_datas": serialize_discovered_device_advertisement_datas(
                 self._discovered_device_advertisement_datas
             ),
-            "discovered_device_timestamps": self._discovered_device_timestamps,
+            "discovered_device_timestamps": serialize_discovered_device_timestamps(
+                self._discovered_device_timestamps
+            ),
         }
 
     def _async_expire_devices(self, _datetime: datetime.datetime) -> None:

@@ -71,9 +71,13 @@ from .const import (
 )
 from .manager import BluetoothManager
 from .match import BluetoothCallbackMatcher, IntegrationMatcher
-from .models import BluetoothCallback, BluetoothChange, BluetoothScanningMode
+from .models import (
+    BluetoothCallback,
+    BluetoothChange,
+    BluetoothScanningMode,
+    HaBluetoothConnector,
+)
 from .scanner import HaScanner, ScannerStartError
-from .wrappers import HaBluetoothConnector
 
 if TYPE_CHECKING:
     from homeassistant.helpers.typing import ConfigType
