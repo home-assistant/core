@@ -90,7 +90,7 @@ class FibaroLight(FibaroDevice, LightEntity):
             or "rgbw" in fibaro_device.type
         )
         supports_dimming = (
-            "levelChange" in fibaro_device.raw_data.get("interfaces")
+            fibaro_device.has_interface("levelChange")
             and "setValue" in fibaro_device.actions
         )
 
@@ -155,17 +155,16 @@ class FibaroLight(FibaroDevice, LightEntity):
 
         JSON for HC2 uses always string, HC3 uses int for integers.
         """
-        props = self.fibaro_device.properties
         if self.current_binary_state:
             return True
-        with suppress(ValueError, TypeError):
-            if "brightness" in props and int(props.get("brightness")) != 0:
+        with suppress(TypeError):
+            if self.fibaro_device.brightness != 0:
                 return True
-        with suppress(ValueError, TypeError):
-            if "currentProgram" in props and int(props.get("currentProgram")) != 0:
+        with suppress(TypeError):
+            if self.fibaro_device.current_program != 0:
                 return True
-        with suppress(ValueError, TypeError):
-            if "currentProgramID" in props and int(props.get("currentProgramID")) != 0:
+        with suppress(TypeError):
+            if self.fibaro_device.current_program_id != 0:
                 return True
 
         return False
@@ -179,23 +178,19 @@ class FibaroLight(FibaroDevice, LightEntity):
         """Really update the state."""
         # Brightness handling
         if brightness_supported(self.supported_color_modes):
-            self._attr_brightness = scaleto255(
-                int(self.fibaro_device.properties.get("value"))
-            )
+            self._attr_brightness = scaleto255(self.fibaro_device.value.int_value())
 
         # Color handling
         if (
             color_supported(self.supported_color_modes)
-            and "color" in self.fibaro_device.properties
-            and "," in self.fibaro_device.properties.get("color")
+            and self.fibaro_device.color.has_color
         ):
             # Fibaro communicates the color as an 'R, G, B, W' string
-            rgbw_s = self.fibaro_device.properties.get("color")
-            if rgbw_s == "0,0,0,0" and "lastColorSet" in self.fibaro_device.properties:
-                rgbw_s = self.fibaro_device.properties.get("lastColorSet")
-            rgbw_list = [int(i) for i in rgbw_s.split(",")][:4]
+            rgbw = self.fibaro_device.color.rgbw_color
+            if rgbw == (0, 0, 0, 0) and self.fibaro_device.last_color_set.has_color:
+                rgbw = self.fibaro_device.last_color_set.rgbw_color
 
             if self._attr_color_mode == ColorMode.RGB:
-                self._attr_rgb_color = tuple(rgbw_list[:3])
+                self._attr_rgb_color = rgbw[:3]
             else:
-                self._attr_rgbw_color = tuple(rgbw_list)
+                self._attr_rgbw_color = rgbw

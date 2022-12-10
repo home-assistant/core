@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import json
 from typing import Any, cast
 
 from pyfibaro.fibaro_device import DeviceModel
@@ -107,9 +106,4 @@ class FibaroBinarySensor(FibaroDevice, BinarySensorEntity):
 
     def _get_moving_values(self) -> Mapping[str, Any]:
         """Get the moving values of the accelerator sensor in a dict."""
-        value = self.fibaro_device.properties.get("value")
-        if isinstance(value, str):
-            # HC2 returns dict as str
-            return json.loads(value)
-        # HC3 returns a real dict
-        return value
+        return self.fibaro_device.value.dict_value()

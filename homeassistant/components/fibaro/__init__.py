@@ -251,18 +251,15 @@ class FibaroController:
             device
             for device in self._device_map.values()
             if device.parent_fibaro_id == device_id
-            and (
-                "endPointId" not in device.properties
-                or device.properties.get("endPointId") == endpoint_id
-            )
+            and (not device.has_endpoint_id or device.endpoint_id == endpoint_id)
         ]
 
     def get_siblings(self, device):
         """Get the siblings of a device."""
-        if "endPointId" in device.properties:
+        if device.has_endpoint_id:
             return self.get_children2(
                 self._device_map[device.fibaro_id].parent_fibaro_id,
-                self._device_map[device.fibaro_id].properties.get("endPointId"),
+                self._device_map[device.fibaro_id].endpoint_id,
             )
         return self.get_children(self._device_map[device.fibaro_id].parent_fibaro_id)
 
@@ -286,8 +283,8 @@ class FibaroController:
                 platform = Platform.COVER
             elif "secure" in device.actions:
                 platform = Platform.LOCK
-            elif "value" in device.properties:
-                if device.properties.get("value") in ("true", "false"):
+            elif device.value.has_value:
+                if device.value.is_bool_value:
                     platform = Platform.BINARY_SENSOR
                 else:
                     platform = Platform.SENSOR
@@ -341,8 +338,6 @@ class FibaroController:
         scenes = self._client.read_scenes()
         self._scene_map = {}
         for device in scenes:
-            if "name" not in device.raw_data or "id" not in device.raw_data:
-                continue
             device.fibaro_controller = self
             if device.room_id == 0:
                 room_name = "Unknown"
@@ -368,8 +363,6 @@ class FibaroController:
         last_endpoint = None
         for device in devices:
             try:
-                if "name" not in device.raw_data or "id" not in device.raw_data:
-                    continue
                 device.fibaro_controller = self
                 if device.room_id == 0:
                     room_name = "Unknown"
@@ -380,10 +373,7 @@ class FibaroController:
                 device.ha_id = (
                     f"{slugify(room_name)}_{slugify(device.name)}_{device.fibaro_id}"
                 )
-                if device.raw_data.get("enabled") and (
-                    "isPlugin" not in device.raw_data
-                    or (not device.raw_data.get("isPlugin") or self._import_plugins)
-                ):
+                if device.enabled and (not device.is_plugin or self._import_plugins):
                     device.mapped_platform = self._map_device_to_platform(device)
                 else:
                     device.mapped_platform = None
@@ -405,11 +395,11 @@ class FibaroController:
                     continue
                 # We group climate devices into groups with the same
                 # endPointID belonging to the same parent device.
-                if "endPointId" in device.properties:
+                if device.has_endpoint_id:
                     _LOGGER.debug(
                         "climate device: %s, endPointId: %s",
                         device.ha_id,
-                        device.properties.get("endPointId"),
+                        device.endpoint_id,
                     )
                 else:
                     _LOGGER.debug("climate device: %s, no endPointId", device.ha_id)
@@ -418,16 +408,12 @@ class FibaroController:
                 # which is a hack, but solves a problem with FGT having
                 # hidden compatibility devices before the real device
                 if last_climate_parent != device.parent_fibaro_id or (
-                    "endPointId" in device.properties
-                    and last_endpoint != device.properties.get("endPointId")
+                    device.has_endpoint_id and last_endpoint != device.endpoint_id
                 ):
                     _LOGGER.debug("Handle separately")
                     self.fibaro_devices[platform].append(device)
                     last_climate_parent = device.parent_fibaro_id
-                    if "endPointId" in device.properties:
-                        last_endpoint = device.properties.get("endPointId")
-                    else:
-                        last_endpoint = 0
+                    last_endpoint = device.endpoint_id
                 else:
                     _LOGGER.debug("not handling separately")
             except (KeyError, ValueError):
@@ -543,10 +529,7 @@ class FibaroDevice(Entity):
         if isinstance(fibaro_device, DeviceModel):
             self._attr_device_info = self.controller.get_device_info(fibaro_device)
         # propagate hidden attribute set in fibaro home center to HA
-        if (
-            "visible" in fibaro_device.raw_data
-            and fibaro_device.raw_data.get("visible") is False
-        ):
+        if not fibaro_device.visible:
             self._attr_entity_registry_visible_default = False
 
     async def async_added_to_hass(self):
@@ -560,15 +543,15 @@ class FibaroDevice(Entity):
     @property
     def level(self):
         """Get the level of Fibaro device."""
-        if "value" in self.fibaro_device.properties:
-            return self.fibaro_device.properties.get("value")
+        if self.fibaro_device.value.has_value:
+            return self.fibaro_device.value.int_value()
         return None
 
     @property
     def level2(self):
         """Get the tilt level of Fibaro device."""
-        if "value2" in self.fibaro_device.properties:
-            return self.fibaro_device.properties.get("value2")
+        if self.fibaro_device.value_2.has_value:
+            return self.fibaro_device.value_2.int_value()
         return None
 
     def dont_know_message(self, action):
@@ -582,15 +565,15 @@ class FibaroDevice(Entity):
     def set_level(self, level):
         """Set the level of Fibaro device."""
         self.action("setValue", level)
-        if "value" in self.fibaro_device.properties:
+        if self.fibaro_device.value.has_value:
             self.fibaro_device.properties["value"] = level
-        if "brightness" in self.fibaro_device.properties:
+        if self.fibaro_device.has_brightness:
             self.fibaro_device.properties["brightness"] = level
 
     def set_level2(self, level):
         """Set the level2 of Fibaro device."""
         self.action("setValue2", level)
-        if "value2" in self.fibaro_device.properties:
+        if self.fibaro_device.value_2.has_value:
             self.fibaro_device.properties["value2"] = level
 
     def call_turn_on(self):
@@ -622,14 +605,7 @@ class FibaroDevice(Entity):
     @property
     def current_binary_state(self):
         """Return the current binary state."""
-        if self.fibaro_device.properties.get("value") == "false":
-            return False
-        if (
-            self.fibaro_device.properties.get("value") == "true"
-            or int(self.fibaro_device.properties.get("value")) > 0
-        ):
-            return True
-        return False
+        return self.fibaro_device.value.bool_value(False)
 
     @property
     def extra_state_attributes(self):
@@ -637,21 +613,10 @@ class FibaroDevice(Entity):
         attr = {"fibaro_id": self.fibaro_device.fibaro_id}
 
         if isinstance(self.fibaro_device, DeviceModel):
-            try:
-                if "battery" in self.fibaro_device.raw_data.get("interfaces"):
-                    attr[ATTR_BATTERY_LEVEL] = int(
-                        self.fibaro_device.properties.get("batteryLevel")
-                    )
-                if "armed" in self.fibaro_device.properties:
-                    armed = self.fibaro_device.properties.get("armed")
-                    if isinstance(armed, bool):
-                        attr[ATTR_ARMED] = armed
-                    elif isinstance(armed, str) and armed.lower() in ("true", "false"):
-                        attr[ATTR_ARMED] = armed.lower() == "true"
-                    else:
-                        attr[ATTR_ARMED] = None
-            except (ValueError, KeyError):
-                pass
+            if self.fibaro_device.has_battery_level:
+                attr[ATTR_BATTERY_LEVEL] = self.fibaro_device.battery_level
+            if self.fibaro_device.has_armed:
+                attr[ATTR_ARMED] = self.fibaro_device.armed
 
         return attr
 

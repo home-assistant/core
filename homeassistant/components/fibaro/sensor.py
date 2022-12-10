@@ -141,14 +141,13 @@ class FibaroSensor(FibaroDevice, SensorEntity):
         with suppress(KeyError, ValueError):
             if not self.native_unit_of_measurement:
                 self._attr_native_unit_of_measurement = FIBARO_TO_HASS_UNIT.get(
-                    fibaro_device.properties.get("unit"),
-                    fibaro_device.properties.get("unit"),
+                    fibaro_device.unit, fibaro_device.unit
                 )
 
     def update(self) -> None:
         """Update the state."""
-        with suppress(KeyError, ValueError):
-            self._attr_native_value = float(self.fibaro_device.properties.get("value"))
+        with suppress(TypeError):
+            self._attr_native_value = self.fibaro_device.value.float_value()
 
 
 class FibaroAdditionalSensor(FibaroDevice, SensorEntity):
