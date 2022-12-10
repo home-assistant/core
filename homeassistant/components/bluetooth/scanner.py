@@ -132,6 +132,7 @@ class HaScanner(BaseHaScanner):
         """Init bluetooth discovery."""
         source = address if address != DEFAULT_ADDRESS else adapter or SOURCE_LOCAL
         super().__init__(hass, source, adapter)
+        self.connectable = True
         self.mode = mode
         self.adapter = adapter
         self._start_stop_lock = asyncio.Lock()

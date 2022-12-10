@@ -38,12 +38,22 @@ MONOTONIC_TIME: Final = monotonic_time_coarse
 class BaseHaScanner(ABC):
     """Base class for Ha Scanners."""
 
-    __slots__ = ("hass", "source", "_connecting", "name", "scanning")
+    __slots__ = (
+        "hass",
+        "connectable",
+        "source",
+        "connector",
+        "_connecting",
+        "name",
+        "scanning",
+    )
 
     def __init__(self, hass: HomeAssistant, source: str, adapter: str) -> None:
         """Initialize the scanner."""
         self.hass = hass
+        self.connectable = False
         self.source = source
+        self.connector: HaBluetoothConnector | None = None
         self._connecting = 0
         self.name = adapter_human_name(adapter, source) if adapter != source else source
         self.scanning = True
@@ -141,8 +151,6 @@ class BaseHaRemoteScanner(BaseHaScanner):
         "_new_info_callback",
         "_discovered_device_advertisement_datas",
         "_discovered_device_timestamps",
-        "_connector",
-        "_connectable",
         "_details",
         "_expire_seconds",
         "_storage",
@@ -164,8 +172,8 @@ class BaseHaRemoteScanner(BaseHaScanner):
             str, tuple[BLEDevice, AdvertisementData]
         ] = {}
         self._discovered_device_timestamps: dict[str, float] = {}
-        self._connector = connector
-        self._connectable = connectable
+        self.connectable = connectable
+        self.connector = connector
         self._details: dict[str, str | HaBluetoothConnector] = {"source": scanner_id}
         self._expire_seconds = FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
         self._storage: Store = Store(
@@ -174,7 +182,6 @@ class BaseHaRemoteScanner(BaseHaScanner):
             f"bluetooth.remote_scanner.{scanner_id}",
         )
         if connectable:
-            self._details["connector"] = connector
             self._expire_seconds = (
                 CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
             )
@@ -315,7 +322,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
                 source=self.source,
                 device=device,
                 advertisement=advertisement_data,
-                connectable=self._connectable,
+                connectable=self.connectable,
                 time=now,
             )
         )
