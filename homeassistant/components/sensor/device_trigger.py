@@ -143,6 +143,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_PRESSURE,
                     CONF_REACTIVE_POWER,
                     CONF_SIGNAL_STRENGTH,
+                    CONF_SPEED,
                     CONF_SULPHUR_DIOXIDE,
                     CONF_TEMPERATURE,
                     CONF_VOLATILE_ORGANIC_COMPOUNDS,

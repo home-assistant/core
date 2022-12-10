@@ -143,6 +143,7 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_PRESSURE,
                     CONF_IS_REACTIVE_POWER,
                     CONF_IS_SIGNAL_STRENGTH,
+                    CONF_IS_SPEED,
                     CONF_IS_SULPHUR_DIOXIDE,
                     CONF_IS_TEMPERATURE,
                     CONF_IS_VOLATILE_ORGANIC_COMPOUNDS,
