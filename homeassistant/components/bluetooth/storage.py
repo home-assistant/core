@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import time
-from typing import Any, Final
+from typing import Any, Final, TypedDict
 
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
@@ -19,7 +19,7 @@ MONOTONIC_TIME: Final = monotonic_time_coarse
 
 @dataclass
 class DiscoveredDeviceAdvertisementData:
-    """Discovered device advertisement data."""
+    """Discovered device advertisement data deserialized from storage."""
 
     connectable: bool
     expire_seconds: float
@@ -29,19 +29,47 @@ class DiscoveredDeviceAdvertisementData:
     discovered_device_timestamps: dict[str, float]
 
 
+class DiscoveredDeviceAdvertisementDataDict(TypedDict):
+    """Discovered device advertisement data dict in storage."""
+
+    connectable: bool
+    expire_seconds: float
+    discovered_device_advertisement_datas: dict[str, dict[str, dict[str, Any]]]
+    discovered_device_timestamps: dict[str, float]
+
+
 class BluetoothStorage:
     """Storage for remote scanners."""
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the storage."""
-        self._store: Store[dict[str, dict[str, Any]]] = Store(
+        self._store: Store[dict[str, DiscoveredDeviceAdvertisementDataDict]] = Store(
             hass, REMOTE_SCANNER_STORAGE_VERSION, "bluetooth.remote_scanners"
         )
-        self._data: dict[str, dict[str, Any]] = {}
+        self._data: dict[str, DiscoveredDeviceAdvertisementDataDict] = {}
 
     async def async_setup(self) -> None:
         """Set up the storage."""
         self._data = await self._store.async_load() or {}
+        now = time.time()
+        expired_scanners: list[str] = []
+        for scanner, data in self._data.items():
+            expire: list[str] = []
+            expire_seconds = data["expire_seconds"]
+            timestamps = data["discovered_device_timestamps"]
+            discovered_device_advertisement_datas = data[
+                "discovered_device_advertisement_datas"
+            ]
+            for address, timestamp in timestamps.items():
+                if now - timestamp > expire_seconds:
+                    expire.append(address)
+            for address in expire:
+                del timestamps[address]
+                del discovered_device_advertisement_datas[address]
+            if not timestamps:
+                expired_scanners.append(scanner)
+        for scanner in expired_scanners:
+            del self._data[scanner]
 
     def scanners(self) -> list[str]:
         """Get all scanners."""
@@ -66,7 +94,7 @@ class BluetoothStorage:
         )
 
     @callback
-    def _async_get_data(self) -> dict[str, dict[str, Any]]:
+    def _async_get_data(self) -> dict[str, DiscoveredDeviceAdvertisementDataDict]:
         """Get data to save to disk."""
         return self._data
 
@@ -82,16 +110,16 @@ class BluetoothStorage:
         discovered_device_timestamps: dict[str, float],
     ) -> None:
         """Set discovered devices by scanner."""
-        self._data[scanner] = {
-            "connectable": connectable,
-            "expire_seconds": expire_seconds,
-            "discovered_device_advertisement_datas": serialize_discovered_device_advertisement_datas(
+        self._data[scanner] = DiscoveredDeviceAdvertisementDataDict(
+            connectable=connectable,
+            expire_seconds=expire_seconds,
+            discovered_device_advertisement_datas=serialize_discovered_device_advertisement_datas(
                 discovered_device_advertisement_datas
             ),
-            "discovered_device_timestamps": serialize_discovered_device_timestamps(
+            discovered_device_timestamps=serialize_discovered_device_timestamps(
                 discovered_device_timestamps
             ),
-        }
+        )
         self._store.async_delay_save(self._async_get_data, SCANNER_SAVE_DELAY)
 
 
