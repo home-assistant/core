@@ -132,16 +132,7 @@ class BluetoothStorage:
         """Get discovered devices by scanner."""
         if not (scanner_data := self._data.get(scanner)):
             return None
-        return DiscoveredDeviceAdvertisementData(
-            scanner_data[CONNECTABLE],
-            scanner_data[EXPIRE_SECONDS],
-            deserialize_discovered_device_advertisement_datas(
-                scanner_data[DISCOVERED_DEVICE_ADVERTISEMENT_DATAS]
-            ),
-            deserialize_discovered_device_timestamps(
-                scanner_data[DISCOVERED_DEVICE_TIMESTAMPS]
-            ),
-        )
+        return discovered_device_advertisement_data_from_dict(scanner_data)
 
     @callback
     def _async_get_data(self) -> dict[str, DiscoveredDeviceAdvertisementDataDict]:
@@ -160,17 +151,50 @@ class BluetoothStorage:
         discovered_device_timestamps: dict[str, float],
     ) -> None:
         """Set discovered devices by scanner."""
-        self._data[scanner] = DiscoveredDeviceAdvertisementDataDict(
-            connectable=connectable,
-            expire_seconds=expire_seconds,
-            discovered_device_advertisement_datas=serialize_discovered_device_advertisement_datas(
-                discovered_device_advertisement_datas
-            ),
-            discovered_device_timestamps=serialize_discovered_device_timestamps(
-                discovered_device_timestamps
-            ),
+        self._data[scanner] = discovered_device_advertisement_data_dict_to_dict(
+            connectable,
+            expire_seconds,
+            discovered_device_advertisement_datas,
+            discovered_device_timestamps,
         )
         self._store.async_delay_save(self._async_get_data, SCANNER_SAVE_DELAY)
+
+
+def discovered_device_advertisement_data_from_dict(
+    scanner_data: DiscoveredDeviceAdvertisementDataDict,
+) -> DiscoveredDeviceAdvertisementData:
+    """Build discovered_device_advertisement_data dict."""
+    return DiscoveredDeviceAdvertisementData(
+        scanner_data[CONNECTABLE],
+        scanner_data[EXPIRE_SECONDS],
+        deserialize_discovered_device_advertisement_datas(
+            scanner_data[DISCOVERED_DEVICE_ADVERTISEMENT_DATAS]
+        ),
+        deserialize_discovered_device_timestamps(
+            scanner_data[DISCOVERED_DEVICE_TIMESTAMPS]
+        ),
+    )
+
+
+def discovered_device_advertisement_data_dict_to_dict(
+    connectable: bool,
+    expire_seconds: float,
+    discovered_device_advertisement_datas: dict[
+        str, tuple[BLEDevice, AdvertisementData]
+    ],
+    discovered_device_timestamps: dict[str, float],
+) -> DiscoveredDeviceAdvertisementDataDict:
+    """Build discovered_device_advertisement_data dict."""
+    return DiscoveredDeviceAdvertisementDataDict(
+        connectable=connectable,
+        expire_seconds=expire_seconds,
+        discovered_device_advertisement_datas=serialize_discovered_device_advertisement_datas(
+            discovered_device_advertisement_datas
+        ),
+        discovered_device_timestamps=serialize_discovered_device_timestamps(
+            discovered_device_timestamps
+        ),
+    )
 
 
 def serialize_discovered_device_advertisement_datas(
