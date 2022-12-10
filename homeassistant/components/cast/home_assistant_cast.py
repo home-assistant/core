@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant import auth, config_entries, core
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, dispatcher
+from homeassistant.helpers import config_validation as cv, dispatcher, instance_id
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.service import async_register_admin_service
 
@@ -49,10 +49,13 @@ async def async_setup_ha_cast(
         except NoURLAvailableError as err:
             raise HomeAssistantError(NO_URL_AVAILABLE_ERROR) from err
 
+        hass_uuid = await instance_id.async_get(hass)
+
         controller = HomeAssistantController(
             # If you are developing Home Assistant Cast, uncomment and set to your dev app id.
             # app_id="5FE44367",
             hass_url=hass_url,
+            hass_uuid=hass_uuid,
             client_id=None,
             refresh_token=refresh_token.token,
         )

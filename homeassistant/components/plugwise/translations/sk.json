@@ -17,9 +17,11 @@
                 "data": {
                     "host": "IP adresa",
                     "password": "Smile ID",
-                    "port": "Port"
+                    "port": "Port",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno Smile"
                 },
-                "description": "Pros\u00edm, zadajte"
+                "description": "Pros\u00edm, zadajte",
+                "title": "Pripojte sa k Smile"
             }
         }
     },
