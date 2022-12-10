@@ -48,15 +48,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return vol.Schema(schema)
 
-    @callback
-    def _async_current_hosts(self):
-        """Return a set of hosts."""
-        return {
-            entry.data[CONF_HOST]
-            for entry in self._async_current_entries(include_ignore=False)
-            if CONF_HOST in entry.data
-        }
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -64,9 +55,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            if user_input[CONF_HOST] in self._async_current_hosts():
-                return self.async_abort(reason="already_configured")
-
             try:
                 reader = await tedpy.createTED(
                     user_input[CONF_HOST], async_client=get_async_client(self.hass)
@@ -75,11 +63,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.serial = reader.gateway_id
                 self.model = 5000 if isinstance(reader, tedpy.TED5000) else 6000
                 await self.async_set_unique_id(self.serial)
+                self._abort_if_unique_id_configured({CONF_HOST: user_input[CONF_HOST]})
             except httpx.HTTPError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
             else:
                 data = user_input.copy()
                 data[CONF_NAME] = f"TED {self.model}"
