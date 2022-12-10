@@ -22,18 +22,22 @@ def mock_api() -> AsyncMock:
     api = AsyncMock()
     api.get_projects.return_value = [
         Project(
-            id=12345,
+            id="12345",
             color="blue",
             comment_count=0,
-            favorite=False,
+            is_favorite=False,
             name="Name",
-            shared=False,
-            sync_id=123,
+            is_shared=False,
             url="",
+            is_inbox_project=False,
+            is_team_inbox=False,
+            order=1,
+            parent_id=None,
+            view_style="list",
         )
     ]
     api.get_labels.return_value = [
-        Label(id=1, name="label1", color=1, order=1, favorite=False)
+        Label(id="1", name="label1", color="1", order=1, is_favorite=False)
     ]
     api.get_collaborators.return_value = []
     return api
@@ -41,20 +45,20 @@ def mock_api() -> AsyncMock:
 
 def test_parse_due_date_invalid():
     """Test None is returned if the due date can't be parsed."""
-    data = Due(date="invalid", recurring=False, string="")
+    data = Due(date="invalid", is_recurring=False, string="")
     assert _parse_due_date(data, timezone_offset=-8) is None
 
 
 def test_parse_due_date_with_no_time_data():
     """Test due date is parsed correctly when it has no time data."""
-    data = Due(date="2022-02-02", recurring=False, string="Feb 2 2:00 PM")
+    data = Due(date="2022-02-02", is_recurring=False, string="Feb 2 2:00 PM")
     actual = _parse_due_date(data, timezone_offset=-8)
     assert datetime(2022, 2, 2, 8, 0, 0, tzinfo=dt.UTC) == actual
 
 
 def test_parse_due_date_without_timezone_uses_offset():
     """Test due date uses user local timezone offset when it has no timezone."""
-    data = Due(date="2022-02-02T14:00:00", recurring=False, string="Feb 2 2:00 PM")
+    data = Due(date="2022-02-02T14:00:00", is_recurring=False, string="Feb 2 2:00 PM")
     actual = _parse_due_date(data, timezone_offset=-8)
     assert datetime(2022, 2, 2, 22, 0, 0, tzinfo=dt.UTC) == actual
 
@@ -116,5 +120,5 @@ def test_get_system_utc_offset_hours_timezone_invalid():
 
 
 def test_get_system_utc_offset_hours_valid_timezone():
-    """Test 0 is returned if time_zone param is not a valid value."""
-    assert get_system_utc_offset_hours("America/Los_Angeles") == -7
+    """Test offset is returned if time_zone param is a valid value."""
+    assert get_system_utc_offset_hours("America/Los_Angeles") == -8

@@ -135,7 +135,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Todoist platform."""
-    token = config.get(CONF_TOKEN)
+    token = config[CONF_TOKEN]
     utc_offset_hours: int = config.get(
         CONF_UTC_OFFSET_HOURS, get_system_utc_offset_hours(hass.config.time_zone)
     )
@@ -328,7 +328,7 @@ class TodoistProjectEntity(CalendarEntity):
         utc_offset_hours: int,
         due_date_days: int | None = None,
         whitelisted_labels: list[str] | None = None,
-        whitelisted_projects: list[int] | None = None,
+        whitelisted_projects: list[str] | None = None,
     ) -> None:
         """Create the Todoist Calendar Entity."""
         self.data = TodoistProjectData(
@@ -430,7 +430,7 @@ class TodoistProjectData:
         utc_offset_hours: int,
         due_date_days: int | None = None,
         whitelisted_labels: list[str] | None = None,
-        whitelisted_projects: list[int] | None = None,
+        whitelisted_projects: list[str] | None = None,
     ) -> None:
         """Initialize a Todoist Project."""
         self.event: TodoistEvent | None = None
@@ -454,12 +454,12 @@ class TodoistProjectData:
             self._due_date_days = timedelta(days=due_date_days)
 
         # Only tasks with one of these labels will be included.
-        self._label_whitelist: list[Label] = []
+        self._label_whitelist: list[str] = []
         if whitelisted_labels is not None:
             self._label_whitelist = whitelisted_labels
 
         # This project includes only projects with these names.
-        self._project_id_whitelist: list[int] = []
+        self._project_id_whitelist: list[str] = []
         if whitelisted_projects is not None:
             self._project_id_whitelist = whitelisted_projects
 
@@ -487,16 +487,27 @@ class TodoistProjectData:
 
         Will return 'None' if the task is to be filtered out.
         """
-        task = {}
+        task: TodoistEvent = {
+            ALL_DAY: False,
+            COMPLETED: False,
+            DESCRIPTION: "",
+            DUE_TODAY: False,
+            END: None,
+            LABELS: [],
+            OVERDUE: False,
+            PRIORITY: 1,
+            START: dt.utcnow(),
+            SUMMARY: "",
+        }
         # Fields are required to be in all returned task objects.
         task[SUMMARY] = data.content
-        task[COMPLETED] = data.completed
+        task[COMPLETED] = data.is_completed
         task[PRIORITY] = data.priority
         task[DESCRIPTION] = f"https://todoist.com/showTask?id={data.id}"
 
         # All task Labels (optional parameter).
         task[LABELS] = [
-            label.name.lower() for label in self._labels if label.id in data.label_ids
+            label.name.lower() for label in self._labels if label.id in data.labels
         ]
 
         if self._label_whitelist and (
@@ -517,25 +528,25 @@ class TodoistProjectData:
                 data.due,
                 self._utc_offset_hours,
             )
+            if task[END] is not None:
+                if self._due_date_days is not None and (
+                    task[END] > dt.utcnow() + self._due_date_days
+                ):
+                    # This task is out of range of our due date;
+                    # it shouldn't be counted.
+                    return None
 
-            if self._due_date_days is not None and (
-                task[END] > dt.utcnow() + self._due_date_days
-            ):
-                # This task is out of range of our due date;
-                # it shouldn't be counted.
-                return None
+                task[DUE_TODAY] = task[END].date() == dt.utcnow().date()
 
-            task[DUE_TODAY] = task[END].date() == dt.utcnow().date()
-
-            # Special case: Task is overdue.
-            if task[END] <= task[START]:
-                task[OVERDUE] = True
-                # Set end time to the current time plus 1 hour.
-                # We're pretty much guaranteed to update within that 1 hour,
-                # so it should be fine.
-                task[END] = task[START] + timedelta(hours=1)
-            else:
-                task[OVERDUE] = False
+                # Special case: Task is overdue.
+                if task[END] <= task[START]:
+                    task[OVERDUE] = True
+                    # Set end time to the current time plus 1 hour.
+                    # We're pretty much guaranteed to update within that 1 hour,
+                    # so it should be fine.
+                    task[END] = task[START] + timedelta(hours=1)
+                else:
+                    task[OVERDUE] = False
         else:
             # If we ask for everything due before a certain date, don't count
             # things which have no due dates.
