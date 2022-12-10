@@ -13,7 +13,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DEFAULT_ACCESS, DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class OAuth2FlowHandler(
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
         return {
-            "scope": "https://www.googleapis.com/auth/drive.file",
+            "scope": DEFAULT_ACCESS,
             # Add params to ensure we get back a refresh token
             "access_type": "offline",
             "prompt": "consent",
