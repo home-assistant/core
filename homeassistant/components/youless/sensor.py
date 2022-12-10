@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_DEVICE,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
-    VOLUME_CUBIC_METERS,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -98,7 +98,7 @@ class YoulessBaseSensor(CoordinatorEntity, SensorEntity):
 class GasSensor(YoulessBaseSensor):
     """The Youless gas sensor."""
 
-    _attr_native_unit_of_measurement = VOLUME_CUBIC_METERS
+    _attr_native_unit_of_measurement = UnitOfVolume.CUBIC_METERS
     _attr_device_class = SensorDeviceClass.GAS
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
 

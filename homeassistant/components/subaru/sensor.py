@@ -18,8 +18,7 @@ from homeassistant.const import (
     LENGTH_MILES,
     PERCENTAGE,
     PRESSURE_HPA,
-    VOLUME_GALLONS,
-    VOLUME_LITERS,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -55,7 +54,7 @@ _LOGGER = logging.getLogger(__name__)
 FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS = "L/100km"
 FUEL_CONSUMPTION_MILES_PER_GALLON = "mi/gal"
 
-L_PER_GAL = VolumeConverter.convert(1, VOLUME_GALLONS, VOLUME_LITERS)
+L_PER_GAL = VolumeConverter.convert(1, UnitOfVolume.GALLONS, UnitOfVolume.LITERS)
 KM_PER_MI = DistanceConverter.convert(1, LENGTH_MILES, LENGTH_KILOMETERS)
 
 # Sensor available to "Subaru Safety Plus" subscribers with Gen1 or Gen2 vehicles

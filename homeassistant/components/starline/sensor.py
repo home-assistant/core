@@ -14,7 +14,7 @@ from homeassistant.const import (
     LENGTH_KILOMETERS,
     PERCENTAGE,
     TEMP_CELSIUS,
-    VOLUME_LITERS,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -160,7 +160,7 @@ class StarlineSensor(StarlineEntity, SensorEntity):
             if type_value == "percents":
                 return PERCENTAGE
             if type_value == "litres":
-                return VOLUME_LITERS
+                return UnitOfVolume.LITERS
         return self.entity_description.native_unit_of_measurement
 
     @property
