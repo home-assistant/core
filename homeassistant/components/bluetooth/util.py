@@ -16,22 +16,21 @@ from .storage import BluetoothStorage
 @callback
 def async_load_history_from_system(
     adapters: BluetoothAdapters, storage: BluetoothStorage
-) -> dict[str, BluetoothServiceInfoBleak]:
+) -> tuple[dict[str, BluetoothServiceInfoBleak], dict[str, BluetoothServiceInfoBleak]]:
     """Load the device and advertisement_data history if available on the current system."""
     now_monotonic = monotonic_time_coarse()
-    loaded_history: dict[str, BluetoothServiceInfoBleak] = {}
+    connectable_loaded_history: dict[str, BluetoothServiceInfoBleak] = {}
+    all_loaded_history: dict[str, BluetoothServiceInfoBleak] = {}
 
     # Restore local adapters
     for address, history in adapters.history.items():
         device = history.device
         advertisement_data = history.advertisement_data
-
         if (
-            existing := loaded_history.get(address)
-        ) and advertisement_data.rssi < existing.rssi:
+            existing_all := connectable_loaded_history.get(address)
+        ) and advertisement_data.rssi < existing_all.rssi:
             continue
-
-        loaded_history[
+        connectable_loaded_history[address] = all_loaded_history[
             address
         ] = bluetooth_service_info_bleak_from_device_and_advertisement_data(
             device, advertisement_data, history.source, now_monotonic, True
@@ -48,22 +47,27 @@ def async_load_history_from_system(
             address,
             device_adv,
         ) in adv_history.discovered_device_advertisement_datas.items():
-            advertisement_data = device_adv[1]
-            if (
-                existing := loaded_history.get(address)
-            ) and advertisement_data.rssi < existing.rssi:
-                continue
-            loaded_history[
-                address
-            ] = bluetooth_service_info_bleak_from_device_and_advertisement_data(
-                device_adv[0],
-                advertisement_data,
-                scanner,
-                discovered_device_timestamps[address],
-                connectable,
+            service_info = (
+                bluetooth_service_info_bleak_from_device_and_advertisement_data(
+                    device_adv[0],
+                    advertisement_data,
+                    scanner,
+                    discovered_device_timestamps[address],
+                    connectable,
+                )
             )
+            if (
+                not (existing_all := all_loaded_history.get(address))
+                or service_info.rssi > existing_all.rssi
+            ):
+                all_loaded_history[address] = service_info
+            if connectable and (
+                not (existing_connectable := connectable_loaded_history.get(address))
+                or service_info.rssi > existing_connectable.rssi
+            ):
+                connectable_loaded_history[address] = service_info
 
-    return loaded_history
+    return all_loaded_history, connectable_loaded_history
 
 
 def bluetooth_service_info_bleak_from_device_and_advertisement_data(
