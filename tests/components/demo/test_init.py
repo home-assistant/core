@@ -243,7 +243,6 @@ async def test_issues_created(mock_history, hass, hass_client, hass_ws_client):
         "description_placeholders": None,
         "flow_id": flow_id,
         "handler": "demo",
-        "title": "",
         "type": "create_entry",
         "version": 1,
     }
