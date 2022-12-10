@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-import asyncio
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 import datetime
@@ -201,7 +200,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
 
         @hass_callback
         def _cancel() -> None:
-            asyncio.create_task(self.async_save())
+            self._storage.async_delay_save(self.async_save)
             cancel_track()
             cancel_save_on_stop()
 
