@@ -10,6 +10,9 @@ AIOAladdinConnect==0.1.48
 # homeassistant.components.adax
 Adax-local==0.1.5
 
+# homeassistant.components.homekit
+HAP-python==4.6.0
+
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
 
@@ -830,9 +833,6 @@ guppy3==3.1.2
 
 # homeassistant.components.iaqualink
 h2==4.1.0
-
-# homeassistant.components.homekit
-ha-HAP-python==4.5.2
 
 # homeassistant.components.generic
 # homeassistant.components.stream
