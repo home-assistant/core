@@ -75,6 +75,7 @@
             },
             "options_1": {
                 "data": {
+                    "bool": "Volite\u013en\u00e1 booleovsk\u00e1 hodnota",
                     "constant": "Kon\u0161tanta",
                     "int": "\u010c\u00edseln\u00fd vstup"
                 }

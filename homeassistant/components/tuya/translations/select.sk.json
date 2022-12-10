@@ -98,7 +98,15 @@
             "power_on": "Akt\u00edvny"
         },
         "tuya__vacuum_cistern": {
-            "closed": "Zatvoren\u00fd"
+            "closed": "Zatvoren\u00fd",
+            "high": "Vysok\u00e1",
+            "low": "N\u00edzka",
+            "middle": "Stredn\u00e1"
+        },
+        "tuya__vacuum_collection": {
+            "large": "Ve\u013ek\u00fd",
+            "middle": "Stredn\u00fd",
+            "small": "Mal\u00fd"
         },
         "tuya__vacuum_mode": {
             "chargego": "N\u00e1vrat do doku",
