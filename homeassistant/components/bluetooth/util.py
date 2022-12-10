@@ -1,8 +1,6 @@
 """The bluetooth integration utilities."""
 from __future__ import annotations
 
-from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementData
 from bluetooth_adapters import BluetoothAdapters
 from bluetooth_auto_recovery import recover_adapter
 
@@ -32,7 +30,7 @@ def async_load_history_from_system(
             continue
         connectable_loaded_history[address] = all_loaded_history[
             address
-        ] = bluetooth_service_info_bleak_from_device_and_advertisement_data(
+        ] = BluetoothServiceInfoBleak.from_device_and_advertisement_data(
             device, advertisement_data, history.source, now_monotonic, True
         )
 
@@ -47,14 +45,12 @@ def async_load_history_from_system(
             address,
             (device, advertisement_data),
         ) in adv_history.discovered_device_advertisement_datas.items():
-            service_info = (
-                bluetooth_service_info_bleak_from_device_and_advertisement_data(
-                    device,
-                    advertisement_data,
-                    scanner,
-                    discovered_device_timestamps[address],
-                    connectable,
-                )
+            service_info = BluetoothServiceInfoBleak.from_device_and_advertisement_data(
+                device,
+                advertisement_data,
+                scanner,
+                discovered_device_timestamps[address],
+                connectable,
             )
             if (
                 not (existing_all := all_loaded_history.get(address))
@@ -68,29 +64,6 @@ def async_load_history_from_system(
                 connectable_loaded_history[address] = service_info
 
     return all_loaded_history, connectable_loaded_history
-
-
-def bluetooth_service_info_bleak_from_device_and_advertisement_data(
-    device: BLEDevice,
-    advertisement_data: AdvertisementData,
-    source: str,
-    time: float,
-    connectable: bool,
-) -> BluetoothServiceInfoBleak:
-    """Create a BluetoothServiceInfoBleak from a device and advertisement_data."""
-    return BluetoothServiceInfoBleak(
-        name=advertisement_data.local_name or device.name or device.address,
-        address=device.address,
-        rssi=advertisement_data.rssi,
-        manufacturer_data=advertisement_data.manufacturer_data,
-        service_data=advertisement_data.service_data,
-        service_uuids=advertisement_data.service_uuids,
-        source=source,
-        device=device,
-        advertisement=advertisement_data,
-        connectable=connectable,
-        time=time,
-    )
 
 
 async def async_reset_adapter(adapter: str | None) -> bool | None:
