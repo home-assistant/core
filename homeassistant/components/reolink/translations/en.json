@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "This camera is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect with the camera",
+            "invalid_auth": "Invalid username or password",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port",
+                    "use_https": "Enable HTTPS",
+                    "username": "Username",
+                    "password": "Password"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "protocol": "Protocol"
+                }
+            }
+        }
+    }
+}

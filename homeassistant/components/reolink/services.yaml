@@ -1,0 +1,134 @@
+ptz_control:
+  name: Pan/Zoom/Tilt control
+  description: Execute a PTZ command.
+  target:
+    entity:
+      domain: camera
+    device:
+      integration: None
+  fields:
+    command:
+      name: Command
+      description: Command to execute.
+      required: true
+      example: LEFTUP
+      default: "UP"
+      selector:
+        select:
+          options:
+            - "AUTO"
+            - "DOWN"
+            - "FOCUSDEC"
+            - "FOCUSINC"
+            - "LEFT"
+            - "LEFTDOWN"
+            - "LEFTUP"
+            - "RIGHT"
+            - "RIGHTDOWN"
+            - "RIGHTUP"
+            - "STOP"
+            - "TOPOS"
+            - "UP"
+            - "ZOOMDEC"
+            - "ZOOMINC"
+    preset:
+      name: Preset
+      description: (Optional) In case of the command TOPOS. The available presets are listed as attribute on the camera.
+      example: HOME
+      default: ""
+      selector:
+        text:
+    speed:
+      name: Speed
+      description: (Optional) Speed at which the movement takes place.
+      example: 25
+      default: 0
+      selector:
+        number:
+          min: 0
+          mode: box
+
+set_sensitivity:
+  name: Set motion sensitivity
+  description: Set the motion detection sensitivity.
+  target:
+    entity:
+      domain: camera
+    device:
+      integration: None
+  fields:
+    sensitivity:
+      name: Sensitivity
+      description: New sensitivity, value between 1 (low sensitivity) and 50 (high sensitivity)
+      required: true
+      example: 25
+      default: 25
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    preset:
+      name: Preset
+      description: >-
+        (Optional) Set the sensitivity of a specific preset (time schedule). When no value is supplied,
+        all presets will be changed.
+      default: ""
+      selector:
+        text:
+
+set_daynight:
+  name: Set Day/Night mode
+  description: Set day and night parameter.
+  target:
+    entity:
+      domain: camera
+    device:
+      integration: None
+  fields:
+    mode:
+      name: Mode
+      description: >-
+        The day and night mode parameter supports the following values:
+          AUTO: Auto switch between black & white mode
+          COLOR: Always record videos in color mode
+          BLACKANDWHITE: Always record videos in black & white mode
+      required: true
+      example: AUTO
+      default: "AUTO"
+      selector:
+        select:
+          options:
+            - "AUTO"
+            - "COLOR"
+            - "BLACKANDWHITE"
+
+set_backlight:
+  name: Set backlight
+  description:  >-
+    Optimizing brightness and contrast levels to compensate for differences
+    between dark and bright objects using either BLC or WDR mode.
+    This may improve image clarity in high contrast situations,
+    but it should be tested at different times of the day and night to ensure there is no negative effect.
+  target:
+    entity:
+      domain: camera
+    device:
+      integration: None
+  fields:
+    mode:
+      name: Mode
+      description: >-
+        The backlight parameter supports the following values:
+          BACKLIGHTCONTROL: use Backlight Control
+          DYNAMICRANGECONTROL: use Dynamic Range Control
+          OFF: no optimization
+      required: true
+      example: DYNAMICRANGECONTROL
+      default: "DYNAMICRANGECONTROL"
+      selector:
+        select:
+          options:
+            - "BACKLIGHTCONTROL"
+            - "DYNAMICRANGECONTROL"
+            - "OFF"
