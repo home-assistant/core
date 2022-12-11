@@ -8,10 +8,12 @@ from bluetooth_adapters import AdvertisementHistory
 import pytest
 
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth import storage
 from homeassistant.components.bluetooth.manager import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.json import json_loads
 from homeassistant.setup import async_setup_component
 
 from . import (
@@ -21,6 +23,8 @@ from . import (
     inject_advertisement_with_time_and_source,
     inject_advertisement_with_time_and_source_connectable,
 )
+
+from tests.common import load_fixture
 
 
 @pytest.fixture
@@ -264,6 +268,33 @@ async def test_switching_adapters_based_on_stale(
 async def test_restore_history_from_dbus(hass, one_adapter):
     """Test we can restore history from dbus."""
     address = "AA:BB:CC:CC:CC:FF"
+
+    ble_device = BLEDevice(address, "name")
+    history = {
+        address: AdvertisementHistory(
+            ble_device, generate_advertisement_data(local_name="name"), "hci0"
+        )
+    }
+
+    with patch(
+        "bluetooth_adapters.systems.linux.LinuxAdapters.history",
+        history,
+    ):
+        assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+        await hass.async_block_till_done()
+
+    assert bluetooth.async_ble_device_from_address(hass, address) is ble_device
+
+
+async def test_restore_history_from_dbus_and_remote_adapters(
+    hass, one_adapter, hass_storage
+):
+    """Test we can restore history from dbus."""
+    address = "AA:BB:CC:CC:CC:FF"
+
+    hass_storage[storage.REMOTE_SCANNER_STORAGE_KEY] = json_loads(
+        load_fixture("bluetooth.remote_adapters", bluetooth.DOMAIN)
+    )
 
     ble_device = BLEDevice(address, "name")
     history = {
