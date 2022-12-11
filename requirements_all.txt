@@ -758,6 +758,7 @@ georss_ign_sismologia_client==0.3
 # homeassistant.components.qld_bushfire
 georss_qld_bushfire_alert_client==0.5
 
+# homeassistant.components.dlna_dmr
 # homeassistant.components.kef
 # homeassistant.components.minecraft_server
 # homeassistant.components.nmap_tracker
@@ -1765,7 +1766,7 @@ pynetgear==0.10.8
 pynetio==0.1.9.1
 
 # homeassistant.components.nina
-pynina==0.1.8
+pynina==0.2.0
 
 # homeassistant.components.nobo_hub
 pynobo==1.6.0
