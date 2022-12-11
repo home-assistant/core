@@ -1,4 +1,5 @@
 """Climate platform for homewizard_climate."""
+import logging
 import time
 
 from homewizard_climate_websocket.model.climate_device_state import (
@@ -30,10 +31,8 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Todo."""
-    print(f"async_setup_entry: {hass.data[DOMAIN][entry.entry_id]}")
     websockets = hass.data[DOMAIN][entry.entry_id]["websockets"]
     entities = [HomeWizardClimateEntity(ws, hass) for ws in websockets]
-    print(entities)
     async_add_entities(entities)
 
 
@@ -47,6 +46,9 @@ class HomeWizardClimateEntity(ClimateEntity):
         self._device_web_socket = device_web_socket
         self._device_web_socket.set_on_state_change(self.on_device_state_change)
         self._hass = hass
+        self._logger = logging.getLogger(
+            f"{__name__}.{self._device_web_socket.device.identifier}"
+        )
 
     @property
     def unique_id(self) -> str:
@@ -75,7 +77,7 @@ class HomeWizardClimateEntity(ClimateEntity):
 
     @property
     def supported_features(self) -> ClimateEntityFeature:
-        """Todo."""
+        """Return the list of supported features."""
         return (
             ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.FAN_MODE
@@ -108,7 +110,6 @@ class HomeWizardClimateEntity(ClimateEntity):
         else:
             result = HVACMode.OFF
 
-        print(f"Got HVAC: {result}")
         return result
 
     @property
@@ -153,7 +154,6 @@ class HomeWizardClimateEntity(ClimateEntity):
 
     def set_temperature(self, **kwargs) -> None:
         """Todo."""
-        print(kwargs)
         self._device_web_socket.set_target_temperature(
             int(kwargs.get(ATTR_TEMPERATURE, "0"))
         )
@@ -179,7 +179,6 @@ class HomeWizardClimateEntity(ClimateEntity):
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Todo."""
-        print(hvac_mode)
         if hvac_mode == HVACMode.HEAT:
             if not self._device_web_socket.last_state.power_on:
                 self._device_web_socket.turn_on()
@@ -219,7 +218,9 @@ class HomeWizardClimateEntity(ClimateEntity):
     def turn_aux_heat_off(self) -> None:
         """Todo."""
 
-    def on_device_state_change(self, state: HomeWizardClimateDeviceState):
+    def on_device_state_change(
+        self, state: HomeWizardClimateDeviceState, diff: str
+    ) -> None:
         """Todo."""
-        print(f"State update to: {state}")
+        self._logger.debug("State updated, diff: %s", diff)
         self._hass.add_job(self.async_write_ha_state)

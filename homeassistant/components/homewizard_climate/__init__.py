@@ -1,6 +1,8 @@
 """The Homewizard Climate integration."""
 from __future__ import annotations
 
+import logging
+
 from homewizard_climate_websocket.api.api import HomeWizardClimateApi
 from homewizard_climate_websocket.model.climate_device import HomeWizardClimateDevice
 from homewizard_climate_websocket.ws.hw_websocket import HomeWizardClimateWebSocket
@@ -10,6 +12,8 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN, PASSWORD, USERNAME
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
@@ -28,9 +32,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     websockets = []
     for device in devices:
-        websocket: HomeWizardClimateWebSocket = HomeWizardClimateWebSocket(api, device)
-        hass.async_add_executor_job(websocket.connect)
-        # hass.loop.run_in_executer(ws.connect())
+        websocket: HomeWizardClimateWebSocket = HomeWizardClimateWebSocket(
+            api,
+            device,
+            on_initialized=device_initialized(device),
+        )
+        websocket.connect_in_thread()
         websockets.append(websocket)
 
     hass.data[DOMAIN][entry.entry_id] = {}
@@ -39,6 +46,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+def device_initialized(device: HomeWizardClimateDevice):
+    """Todo."""
+    _LOGGER.info("Device %s initialized", device.identifier)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
