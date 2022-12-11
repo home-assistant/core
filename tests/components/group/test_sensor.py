@@ -6,7 +6,7 @@ from pytest import LogCaptureFixture
 
 from homeassistant import config as hass_config
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
-from homeassistant.components.group.sensor import DEFAULT_NAME
+from homeassistant.components.group.sensor import DEFAULT_NAME, calc_sum
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
@@ -410,7 +410,7 @@ async def test_sensor_incorrect_state(
 
     assert state.state == "15.3"
     assert (
-        "Unable to use state. Only numerical states are supported, entity sensor.test_2 excluded from calculation"
+        "Unable to use state. Only numerical states are supported, entity sensor.test_2 with value string excluded from calculation"
         in caplog.text
     )
 
@@ -536,3 +536,19 @@ async def test_sensor_calculated_properties(hass: HomeAssistant) -> None:
     assert state.attributes.get("device_class") is None
     assert state.attributes.get("state_class") is None
     assert state.attributes.get("unit_of_measurement") is None
+
+
+async def test_sensor_calc_sum_error() -> None:
+    """Test sum calculation."""
+    values = [
+        ("sensor.entity1", 10),
+        ("sensor.entity2", 11),
+        ("sensor.entity3", 12),
+    ]
+    values_error = [
+        ("sensor.entity1", 10),
+        ("sensor.entity2", "string"),
+        ("sensor.entity3", 12),
+    ]
+    assert calc_sum(values, 2) == 33.00
+    assert calc_sum(values_error, 2) == 22.00
