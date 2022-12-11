@@ -35,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         websocket: HomeWizardClimateWebSocket = HomeWizardClimateWebSocket(
             api,
             device,
-            on_initialized=device_initialized(device),
+            on_initialized=device_initialized,
         )
         websocket.connect_in_thread()
         websockets.append(websocket)
