@@ -12,7 +12,7 @@ awesomeversion==22.9.0
 bcrypt==3.1.7
 bleak-retry-connector==2.10.1
 bleak==0.19.2
-bluetooth-adapters==0.12.0
+bluetooth-adapters==0.14.1
 bluetooth-auto-recovery==0.5.5
 bluetooth-data-tools==0.3.0
 certifi>=2021.5.30
@@ -21,7 +21,7 @@ cryptography==38.0.3
 dbus-fast==1.82.0
 fnvhash==0.1.0
 hass-nabucasa==0.61.0
-home-assistant-bluetooth==1.8.1
+home-assistant-bluetooth==1.9.0
 home-assistant-frontend==20221208.0
 httpx==0.23.1
 ifaddr==0.1.7
