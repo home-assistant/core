@@ -342,7 +342,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ),
     ViCareSensorEntityDescription(
         key="power_production_this_week",
-        name="Power production this week",
+        name="Energy production this week",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value_getter=lambda api: api.getPowerProductionThisWeek(),
         device_class=SensorDeviceClass.ENERGY,
