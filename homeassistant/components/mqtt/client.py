@@ -491,8 +491,9 @@ class MQTT:
         if not isinstance(topic, str):
             raise HomeAssistantError("Topic needs to be a string!")
 
+        matcher: Any = await self.hass.async_add_executor_job(_matcher_for_topic, topic)
         subscription = Subscription(
-            topic, _matcher_for_topic(topic), HassJob(msg_callback), qos, encoding
+            topic, matcher, HassJob(msg_callback), qos, encoding
         )
         self.subscriptions.append(subscription)
         self._matching_subscriptions.cache_clear()
@@ -523,6 +524,8 @@ class MQTT:
         """
 
         def _client_unsubscribe(topic: str) -> int:
+            result: int
+            mid: int
             result, mid = self._mqttc.unsubscribe(topic)
             _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
             _raise_on_error(result)
