@@ -300,7 +300,11 @@ class HomeAssistant:
     @property
     def is_stopping(self) -> bool:
         """Return if Home Assistant is stopping."""
-        return self.state in (CoreState.stopping, CoreState.stopping_services, CoreState.final_write)
+        return self.state in (
+            CoreState.stopping,
+            CoreState.stopping_services,
+            CoreState.final_write,
+        )
 
     def start(self) -> int:
         """Start Home Assistant.
@@ -689,7 +693,11 @@ class HomeAssistant:
             # regardless of the state of the loop.
             if self.state == CoreState.not_running:  # just ignore
                 return
-            if self.state in [CoreState.stopping, CoreState.stopping_services, CoreState.final_write]:
+            if self.state in [
+                CoreState.stopping,
+                CoreState.stopping_services,
+                CoreState.final_write,
+            ]:
                 _LOGGER.info("Additional call to async_stop was ignored")
                 return
             if self.state == CoreState.starting:
