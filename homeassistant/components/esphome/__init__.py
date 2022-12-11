@@ -252,6 +252,15 @@ async def async_setup_entry(  # noqa: C901
         nonlocal device_id
         try:
             device_info = await cli.device_info()
+
+            # Migrate config entry to new unique ID if necessary
+            # This was changed in 2023.1
+            if entry.unique_id != device_info.mac_address:
+                domain_data.migrate_unique_id(entry, device_info.mac_address)
+                hass.config_entries.async_update_entry(
+                    entry, unique_id=device_info.mac_address
+                )
+
             entry_data.device_info = device_info
             assert cli.api_version is not None
             entry_data.api_version = cli.api_version
