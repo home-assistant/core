@@ -44,10 +44,10 @@ ECOBEE_MODEL_TO_NAME = {
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
+    Platform.FAN,
     Platform.HUMIDIFIER,
     Platform.SENSOR,
     Platform.WEATHER,
-    Platform.FAN,
 ]
 
 MANUFACTURER = "ecobee"

@@ -1,7 +1,6 @@
 """Support for using ventilator with ecobee thermostats."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 from typing import Any
 
@@ -82,27 +81,16 @@ class EcobeeVentilator(FanEntity):
         self.thermostat_index = thermostat_index
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
         ecobee_name = self.thermostat["name"]
-        self._attr_name= f"{ecobee_name} Ventilator"
-
-        self.update_without_throttle = False
-
-
-    @property
-    def unique_id(self):
-        """Return unique_id for ventilator."""
-        return f"{self.thermostat['identifier']}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for the ecobee ventilator."""
-        model = ECOBEE_MODEL_TO_NAME.get(self.thermostat['modelNumber'])
-
-        return DeviceInfo(
+        self._attr_name = f"{ecobee_name} Ventilator"
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.thermostat["identifier"])},
             manufacturer=MANUFACTURER,
-            model=model,
+            model=ECOBEE_MODEL_TO_NAME.get(self.thermostat["modelNumber"]),
             name=self.name,
         )
+        self._attr_unique_id = f"{self.thermostat['identifier']}"
+
+        self.update_without_throttle = False
 
     @property
     def available(self):
@@ -111,11 +99,7 @@ class EcobeeVentilator(FanEntity):
 
     async def async_update(self):
         """Get the latest state from the thermostat."""
-        if self.update_without_throttle:
-            await self.data.update(no_throttle=True)
-            self.update_without_throttle = False
-        else:
-            await self.data.update()
+        await self.data.update()
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
 
     @property
