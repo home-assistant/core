@@ -794,6 +794,7 @@ class ProtectEventSensor(EventEntityMixin, SensorEntity):
             return
 
         if is_license_plate:
-            self._attr_native_value = self._event.metadata.license_plate.name
+            # type verified above
+            self._attr_native_value = self._event.metadata.license_plate.name  # type: ignore[union-attr]
         else:
             self._attr_native_value = self._event.smart_detect_types[0].value
