@@ -369,6 +369,16 @@ class PrometheusMetrics:
         value = self.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
 
+    def _handle_cover(self, state):
+        metric = self._metric(
+            "cover_state",
+            self.prometheus_cli.Gauge,
+            "State of the cover (0/1)",
+        )
+
+        value = self.state_as_number(state)
+        metric.labels(**self._labels(state)).set(value)
+
     def _handle_light(self, state):
         metric = self._metric(
             "light_brightness_percent",

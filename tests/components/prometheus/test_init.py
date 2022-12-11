@@ -11,6 +11,7 @@ from homeassistant.components import (
     binary_sensor,
     climate,
     counter,
+    cover,
     device_tracker,
     humidifier,
     input_boolean,
@@ -44,11 +45,13 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     EVENT_STATE_CHANGED,
     PERCENTAGE,
+    STATE_CLOSED,
     STATE_HOME,
     STATE_LOCKED,
     STATE_NOT_HOME,
     STATE_OFF,
     STATE_ON,
+    STATE_OPEN,
     STATE_UNLOCKED,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -436,6 +439,24 @@ async def test_lock(client, lock_entities):
         'lock_state{domain="lock",'
         'entity="lock.kitchen_door",'
         'friendly_name="Kitchen Door"} 0.0' in body
+    )
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_cover(client, cover_entities):
+    """Test prometheus metrics for cover."""
+    body = await generate_latest_metrics(client)
+
+    assert (
+        'cover_state{domain="cover",'
+        'entity="cover.garage_door",'
+        'friendly_name="Garage Door"} 1.0' in body
+    )
+
+    assert (
+        'cover_state{domain="cover",'
+        'entity="cover.window_shade",'
+        'friendly_name="Window Shade"} 0.0' in body
     )
 
 
@@ -1082,6 +1103,34 @@ async def lock_fixture(hass, registry):
     )
     set_state_with_entry(hass, lock_2, STATE_UNLOCKED)
     data["lock_2"] = lock_2
+
+    await hass.async_block_till_done()
+    return data
+
+
+@pytest.fixture(name="cover_entities")
+async def cover_fixture(hass, registry):
+    """Simulate cover entities."""
+    data = {}
+    cover_1 = registry.async_get_or_create(
+        domain=cover.DOMAIN,
+        platform="test",
+        unique_id="cover_1",
+        suggested_object_id="garage_door",
+        original_name="Garage Door",
+    )
+    set_state_with_entry(hass, cover_1, STATE_OPEN)
+    data["cover_1"] = cover_1
+
+    cover_2 = registry.async_get_or_create(
+        domain=cover.DOMAIN,
+        platform="test",
+        unique_id="cover_2",
+        suggested_object_id="window_shade",
+        original_name="Window Shade",
+    )
+    set_state_with_entry(hass, cover_2, STATE_CLOSED)
+    data["cover_2"] = cover_2
 
     await hass.async_block_till_done()
     return data
