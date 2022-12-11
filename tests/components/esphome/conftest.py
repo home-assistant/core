@@ -31,7 +31,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_PASSWORD: "pwd",
             CONF_NOISE_PSK: "12345678123456781234567812345678",
         },
-        unique_id="11:22:33:44:55:66",
+        unique_id="11:22:33:44:55:aa",
     )
 
 

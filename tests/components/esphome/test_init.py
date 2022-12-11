@@ -20,11 +20,11 @@ async def test_unique_id_updated_to_mac(hass, mock_client, mock_zeroconf):
 
     mock_client.device_info = AsyncMock(
         return_value=DeviceInfo(
-            mac_address="11:22:33:44:55:66",
+            mac_address="1122334455aa",
         )
     )
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.unique_id == "11:22:33:44:55:66"
+    assert entry.unique_id == "11:22:33:44:55:aa"

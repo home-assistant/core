@@ -21,6 +21,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.device_registry import format_mac
 
 from . import CONF_NOISE_PSK, DOMAIN
 
@@ -157,9 +158,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="mdns_missing_mac")
 
         # mac address is lowercase and without :, normalize it
-        mac_address = ":".join(
-            mac_address[i : i + 2].upper() for i in range(0, len(mac_address), 2)
-        )
+        mac_address = format_mac(mac_address)
 
         # Hostname is format: livingroom.local.
         self._name = discovery_info.hostname[: -len(".local.")]
@@ -176,13 +175,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle DHCP discovery."""
-        # mac address is lowercase and without :, normalize it
-        mac_address = discovery_info.macaddress
-        mac_address = ":".join(
-            mac_address[i : i + 2].upper() for i in range(0, len(mac_address), 2)
-        )
-
-        await self.async_set_unique_id(mac_address)
+        await self.async_set_unique_id(format_mac(discovery_info.macaddress))
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
         # This should never happen since we only listen to DHCP requests
         # for configured devices.
