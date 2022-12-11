@@ -99,12 +99,7 @@ class EcobeeVentilator(FanEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information for the ecobee ventilator."""
-        model: str | None
-        try:
-            model = f"{ECOBEE_MODEL_TO_NAME[self.thermostat['modelNumber']]} Thermostat"
-        except KeyError:
-            # Ecobee model is not in our list
-            model = None
+        model = ECOBEE_MODEL_TO_NAME.get(self.thermostat['modelNumber'])
 
         return DeviceInfo(
             identifiers={(DOMAIN, self.thermostat["identifier"])},
