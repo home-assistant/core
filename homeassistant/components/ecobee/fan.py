@@ -82,7 +82,7 @@ class EcobeeVentilator(FanEntity):
         self.thermostat_index = thermostat_index
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
         ecobee_name = self.thermostat["name"]
-        self._name = f"{ecobee_name} Ventilator"
+        self._attr_name= f"{ecobee_name} Ventilator"
 
         self.update_without_throttle = False
 
