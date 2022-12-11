@@ -19,7 +19,6 @@ from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(minutes=3)
 
 ATTR_VENTILATOR_MIN_ON_TIME_HOME = "ventilator_min_on_time_home"
 ATTR_VENTILATOR_MIN_ON_TIME_AWAY = "ventilator_min_on_time_away"
