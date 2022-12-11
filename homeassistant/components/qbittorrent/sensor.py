@@ -197,6 +197,7 @@ class QBittorrentSensor(CoordinatorEntity[QBittorrentUpdateCoordinator], SensorE
         if self.entity_description.key == SENSOR_TYPE_TORRENTS:
             if self.coordinator.data is not None:
                 torrents = self.coordinator.data["torrents"]
+                # pylint: disable=consider-using-tuple
                 attrs["Torrents"] = [
                     {k: entry[k] for k in ["name", "eta", "progress", "state"]}
                     for entry in torrents.values()
