@@ -1254,7 +1254,7 @@ pymysensors==0.24.0
 pynetgear==0.10.8
 
 # homeassistant.components.nina
-pynina==0.1.8
+pynina==0.2.0
 
 # homeassistant.components.nobo_hub
 pynobo==1.6.0
