@@ -23,6 +23,7 @@ from bleak.backends.service import BleakGATTServiceCollection
 from bleak.exc import BleakError
 
 from homeassistant.components.bluetooth import async_scanner_by_source
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 
 from ..domain_data import DomainData
@@ -125,7 +126,11 @@ class ESPHomeClient(BaseBleakClient):
     """ESPHome Bleak Client."""
 
     def __init__(
-        self, address_or_ble_device: BLEDevice | str, *args: Any, **kwargs: Any
+        self,
+        address_or_ble_device: BLEDevice | str,
+        *args: Any,
+        config_entry: ConfigEntry,
+        **kwargs: Any,
     ) -> None:
         """Initialize the ESPHomeClient."""
         assert isinstance(address_or_ble_device, BLEDevice)
@@ -136,7 +141,6 @@ class ESPHomeClient(BaseBleakClient):
         assert self._ble_device.details is not None
         self._source = self._ble_device.details["source"]
         self.domain_data = DomainData.get(self._hass)
-        config_entry = self.domain_data.get_by_unique_id(self._source)
         self.entry_data = self.domain_data.get_entry_data(config_entry)
         self._client = self.entry_data.client
         self._is_connected = False
