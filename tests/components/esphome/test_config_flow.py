@@ -232,7 +232,7 @@ async def test_discovery_initiation(hass, mock_client, mock_zeroconf):
     """Test discovery importing works."""
     mock_client.device_info = AsyncMock(
         return_value=DeviceInfo(
-            uses_password=False, name="test8266", mac_address="11:22:33:44:55:AA"
+            uses_password=False, name="test8266", mac_address="11:22:33:44:55:aa"
         )
     )
 
@@ -261,7 +261,25 @@ async def test_discovery_initiation(hass, mock_client, mock_zeroconf):
     assert result["data"][CONF_PORT] == 6053
 
     assert result["result"]
-    assert result["result"].unique_id == "11:22:33:44:55:AA"
+    assert result["result"].unique_id == "11:22:33:44:55:aa"
+
+
+async def test_discovery_no_mac(hass, mock_client, mock_zeroconf):
+    """Test discovery aborted if old ESPHome without mac in zeroconf."""
+    service_info = zeroconf.ZeroconfServiceInfo(
+        host="192.168.43.183",
+        addresses=["192.168.43.183"],
+        hostname="test8266.local.",
+        name="mock_name",
+        port=6053,
+        properties={},
+        type="mock_type",
+    )
+    flow = await hass.config_entries.flow.async_init(
+        "esphome", context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
+    )
+    assert flow["type"] == FlowResultType.ABORT
+    assert flow["reason"] == "mdns_missing_mac"
 
 
 async def test_discovery_already_configured(hass, mock_client):
@@ -269,7 +287,7 @@ async def test_discovery_already_configured(hass, mock_client):
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "test8266.local", CONF_PORT: 6053, CONF_PASSWORD: ""},
-        unique_id="11:22:33:44:55:AA",
+        unique_id="11:22:33:44:55:aa",
     )
 
     entry.add_to_hass(hass)
@@ -325,7 +343,7 @@ async def test_discovery_updates_unique_id(hass, mock_client):
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "192.168.43.183", CONF_PORT: 6053, CONF_PASSWORD: ""},
-        unique_id="11:22:33:44:55:AA",
+        unique_id="11:22:33:44:55:aa",
     )
 
     entry.add_to_hass(hass)
@@ -346,7 +364,7 @@ async def test_discovery_updates_unique_id(hass, mock_client):
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
-    assert entry.unique_id == "11:22:33:44:55:AA"
+    assert entry.unique_id == "11:22:33:44:55:aa"
 
 
 async def test_user_requires_psk(hass, mock_client, mock_zeroconf):
@@ -557,7 +575,7 @@ async def test_discovery_dhcp_updates_host(hass, mock_client):
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "192.168.43.183", CONF_PORT: 6053, CONF_PASSWORD: ""},
-        unique_id="11:22:33:44:55:AA",
+        unique_id="11:22:33:44:55:aa",
     )
     entry.add_to_hass(hass)
 

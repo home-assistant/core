@@ -43,6 +43,7 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -255,11 +256,10 @@ async def async_setup_entry(  # noqa: C901
 
             # Migrate config entry to new unique ID if necessary
             # This was changed in 2023.1
-            if entry.unique_id != device_info.mac_address:
-                domain_data.migrate_unique_id(entry, device_info.mac_address)
-                hass.config_entries.async_update_entry(
-                    entry, unique_id=device_info.mac_address
-                )
+            if entry.unique_id != format_mac(device_info.mac_address):
+                new_unique_id = format_mac(device_info.mac_address)
+                domain_data.migrate_unique_id(entry, new_unique_id)
+                hass.config_entries.async_update_entry(entry, unique_id=new_unique_id)
 
             entry_data.device_info = device_info
             assert cli.api_version is not None
