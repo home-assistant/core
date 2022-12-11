@@ -30,5 +30,15 @@
                 "description": "Na konfigur\u00e1ciu vyberte Nob\u00f8 Ecohub."
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "override_type": "Typ prep\u00edsania"
+                },
+                "description": "Vyberte typ prepisu \"Teraz\", aby sa prepis dokon\u010dil pri \u010fal\u0161ej zmene profilu v priebehu t\u00fd\u017ed\u0148a."
+            }
+        }
     }
 }

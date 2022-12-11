@@ -25,7 +25,8 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "Interval aktualiz\u00e1cie"
+                    "scan_interval": "Interval aktualiz\u00e1cie",
+                    "tracked_asset_pairs": "Sledovan\u00e9 p\u00e1ry akt\u00edv"
                 }
             }
         }

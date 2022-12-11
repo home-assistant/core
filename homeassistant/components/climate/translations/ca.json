@@ -25,5 +25,106 @@
             "off": "OFF"
         }
     },
+    "state_attributes": {
+        "_": {
+            "aux_heat": {
+                "name": "Escalfor auxiliar"
+            },
+            "current_humidity": {
+                "name": "Humitat actual"
+            },
+            "current_temperature": {
+                "name": "Temperatura actual"
+            },
+            "fan_mode": {
+                "name": "Mode del ventilador",
+                "state": {
+                    "auto": "Autom\u00e0tic",
+                    "diffuse": "Dif\u00fas",
+                    "focus": "Enfocament",
+                    "high": "Alt",
+                    "low": "Baix",
+                    "medium": "Mitj\u00e0",
+                    "middle": "Mig",
+                    "off": "OFF",
+                    "on": "ON",
+                    "top": "Superior"
+                }
+            },
+            "fan_modes": {
+                "name": "Modes del ventilador"
+            },
+            "humidity": {
+                "name": "Humitat objectiu"
+            },
+            "hvac_action": {
+                "name": "Acci\u00f3 actual",
+                "state": {
+                    "cooling": "Refredant",
+                    "drying": "Assecant",
+                    "fan": "Ventilador",
+                    "heating": "Escalfant",
+                    "idle": "Inactiu",
+                    "off": "OFF"
+                }
+            },
+            "hvac_modes": {
+                "name": "Modes HVAC"
+            },
+            "max_humidity": {
+                "name": "Humitat m\u00e0xima objectiu"
+            },
+            "max_temp": {
+                "name": "Temperatura m\u00e0xima objectiu"
+            },
+            "min_humidity": {
+                "name": "Humitat objectiu m\u00ednima"
+            },
+            "min_temp": {
+                "name": "Temperatura objectiu m\u00ednima"
+            },
+            "preset_mode": {
+                "name": "Configuraci\u00f3",
+                "state": {
+                    "activity": "Activitat",
+                    "away": "A fora",
+                    "boost": "Incrementat",
+                    "comfort": "Confort",
+                    "eco": "Eco",
+                    "home": "A casa",
+                    "none": "Cap",
+                    "sleep": "Dormint"
+                }
+            },
+            "preset_modes": {
+                "name": "Configuracions"
+            },
+            "swing_mode": {
+                "name": "Mode d'oscil\u00b7laci\u00f3",
+                "state": {
+                    "both": "Ambd\u00f3s",
+                    "horizontal": "Horitzontal",
+                    "off": "OFF",
+                    "on": "ON",
+                    "vertical": "Vertical"
+                }
+            },
+            "swing_modes": {
+                "name": "Modes d'oscil\u00b7laci\u00f3"
+            },
+            "target_temp_high": {
+                "name": "Temperatura objectiu superior"
+            },
+            "target_temp_low": {
+                "name": "Temperatura objectiu inferior"
+            },
+            "target_temp_step": {
+                "name": "Pas de la temperatura objectiu"
+            },
+            "temperature": {
+                "name": "Temperatura objectiu"
+            }
+        }
+    },
     "title": "Climatitzaci\u00f3"
 }

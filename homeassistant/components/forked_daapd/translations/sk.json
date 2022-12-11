@@ -29,6 +29,7 @@
         "step": {
             "init": {
                 "data": {
+                    "librespot_java_port": "Port pre librespot-java pipe control (ak sa pou\u017e\u00edva)",
                     "max_playlists": "Maxim\u00e1lny po\u010det zoznamov skladieb pou\u017eit\u00fdch ako zdroje",
                     "tts_pause_time": "Sekundy na pauzu pred a po TTS",
                     "tts_volume": "Objem TTS (pohybuje sa v rozsahu [0,1])"
