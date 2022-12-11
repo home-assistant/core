@@ -27,8 +27,6 @@ class ZamgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
-        errors: dict[str, Any] = {}
-
         if self._client is None:
             self._client = ZamgData()
             self._client.session = async_get_clientsession(self.hass)
@@ -42,10 +40,7 @@ class ZamgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except (ZamgApiError, ZamgNoDataError) as err:
                 LOGGER.error("Config_flow: Received error from ZAMG: %s", err)
-                errors["base"] = "cannot_connect"
-                return self.async_abort(
-                    reason="cannot_connect", description_placeholders=errors
-                )
+                return self.async_abort(reason="cannot_connect")
             LOGGER.debug("config_flow: closest station = %s", closest_station_id)
             user_input = {}
 
@@ -72,10 +67,7 @@ class ZamgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self._client.update()
         except (ZamgApiError, ZamgNoDataError) as err:
             LOGGER.error("Config_flow: Received error from ZAMG: %s", err)
-            errors["base"] = "cannot_connect"
-            return self.async_abort(
-                reason="cannot_connect", description_placeholders=errors
-            )
+            return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(
             title=self._client.get_station_name,
@@ -121,18 +113,10 @@ class ZamgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         except (ZamgApiError) as err:
             LOGGER.error("Config_flow import: Received error from ZAMG: %s", err)
-            errors = {}
-            errors["base"] = "cannot_connect"
-            return self.async_abort(
-                reason="cannot_connect", description_placeholders=errors
-            )
+            return self.async_abort(reason="cannot_connect")
         except (ZamgStationNotFoundError) as err:
             LOGGER.error("Config_flow import: Received error from ZAMG: %s", err)
-            errors = {}
-            errors["base"] = "station_not_found"
-            return self.async_abort(
-                reason="station_not_found", description_placeholders=errors
-            )
+            return self.async_abort(reason="station_not_found")
 
         return await self.async_step_user(
             user_input={
