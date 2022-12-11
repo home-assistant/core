@@ -34,12 +34,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     arrival = (
         dt.parse_time(config_entry.options[CONF_ARRIVAL_TIME])
-        if config_entry.options[CONF_ARRIVAL_TIME] is not None
+        if config_entry.options.get(CONF_ARRIVAL_TIME) is not None
         else None
     )
     departure = (
         dt.parse_time(config_entry.options[CONF_DEPARTURE_TIME])
-        if config_entry.options[CONF_DEPARTURE_TIME] is not None
+        if config_entry.options.get(CONF_DEPARTURE_TIME) is not None
         else None
     )
 
