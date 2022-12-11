@@ -31,9 +31,9 @@ async def test_form(hass):
         "homeassistant.components.switchbee.async_setup_entry",
         return_value=True,
     ), patch(
-        "switchbee.api.CentralUnitAPI.fetch_states", return_value=None
+        "switchbee.api.polling.CentralUnitPolling.fetch_states", return_value=None
     ), patch(
-        "switchbee.api.CentralUnitAPI._login", return_value=None
+        "switchbee.api.polling.CentralUnitPolling._login", return_value=None
     ):
 
         result2 = await hass.config_entries.flow.async_configure(
