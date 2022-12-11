@@ -1564,6 +1564,7 @@ scapy==2.4.5
 screenlogicpy==0.5.4
 
 # homeassistant.components.backup
+# homeassistant.components.qnap_qsw
 securetar==2022.2.0
 
 # homeassistant.components.emulated_kasa

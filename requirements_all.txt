@@ -2258,6 +2258,7 @@ screenlogicpy==0.5.4
 scsgate==0.1.0
 
 # homeassistant.components.backup
+# homeassistant.components.qnap_qsw
 securetar==2022.2.0
 
 # homeassistant.components.sendgrid
