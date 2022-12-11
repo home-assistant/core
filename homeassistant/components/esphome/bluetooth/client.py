@@ -155,6 +155,7 @@ class ESPHomeClient(BaseBleakClient):
         assert device_info is not None
         self._connection_version = device_info.bluetooth_proxy_version
         self._address_type = address_or_ble_device.details["address_type"]
+        self._source_name = f"{config_entry.title} [{self._source}]"
 
     def __str__(self) -> str:
         """Return the string representation of the client."""
