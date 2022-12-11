@@ -12,6 +12,9 @@ AIOAladdinConnect==0.1.48
 # homeassistant.components.adax
 Adax-local==0.1.5
 
+# homeassistant.components.homekit
+HAP-python==4.6.0
+
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
 
@@ -174,7 +177,7 @@ aiokafka==0.7.2
 aiolifx==0.8.7
 
 # homeassistant.components.lifx
-aiolifx_effects==0.3.0
+aiolifx_effects==0.3.1
 
 # homeassistant.components.lifx
 aiolifx_themes==0.2.0
@@ -622,9 +625,6 @@ guppy3==3.1.2
 
 # homeassistant.components.iaqualink
 h2==4.1.0
-
-# homeassistant.components.homekit
-ha-HAP-python==4.5.2
 
 # homeassistant.components.generic
 # homeassistant.components.stream

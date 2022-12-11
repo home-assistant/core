@@ -28,6 +28,10 @@
             "description": "Syst\u00e9m nie je podporovan\u00fd z {reason}. Ak sa chcete dozvedie\u0165 viac a ako to opravi\u0165, pou\u017eite odkaz.",
             "title": "Nepodporovan\u00fd syst\u00e9m \u2013 {reason}"
         },
+        "unsupported_apparmor": {
+            "description": "Syst\u00e9m nie je podporovan\u00fd, preto\u017ee AppArmor nefunguje spr\u00e1vne a doplnky s\u00fa spusten\u00e9 nechr\u00e1nen\u00fdm a nezabezpe\u010den\u00fdm sp\u00f4sobom. Ak sa chcete dozvedie\u0165 viac a ako to opravi\u0165, pou\u017eite odkaz.",
+            "title": "Nepodporovan\u00fd syst\u00e9m \u2013 probl\u00e9my s AppArmor"
+        },
         "unsupported_cgroup_version": {
             "description": "Syst\u00e9m nie je podporovan\u00fd, preto\u017ee sa pou\u017e\u00edva nespr\u00e1vna verzia Docker CGroup. Ak chcete zisti\u0165 spr\u00e1vnu verziu a ako to opravi\u0165, pou\u017eite odkaz.",
             "title": "Nepodporovan\u00fd syst\u00e9m \u2013 verzia CGroup"
@@ -108,6 +112,7 @@
     "system_health": {
         "info": {
             "agent_version": "Verzia agenta",
+            "board": "Board",
             "disk_total": "Disk celkovo",
             "disk_used": "Disk pou\u017eit\u00fd",
             "docker_version": "Verzia Dockera",
