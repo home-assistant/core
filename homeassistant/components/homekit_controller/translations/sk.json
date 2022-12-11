@@ -82,6 +82,7 @@
         "sensor": {
             "thread_node_capabilities": {
                 "state": {
+                    "border_router_capable": "Mo\u017enos\u0165 Border Router",
                     "full": "\u00dapln\u00e9 koncov\u00e9 zariadenie",
                     "minimal": "Minim\u00e1lne koncov\u00e9 zariadenie",
                     "none": "\u017diadne",
@@ -91,9 +92,12 @@
             },
             "thread_status": {
                 "state": {
+                    "border_router": "Border Router",
+                    "child": "Child",
                     "detached": "Oddelen\u00e9",
                     "disabled": "Zak\u00e1zan\u00e9",
                     "joining": "Prip\u00e1ja sa",
+                    "leader": "Leader",
                     "router": "Router"
                 }
             }
