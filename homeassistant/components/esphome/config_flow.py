@@ -151,7 +151,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         mac_address: str | None = discovery_info.properties.get("mac")
 
-        # Shouldn't happen as all ESPHome entries have this.
+        # Mac address was added in Sept 20, 2021.
+        # https://github.com/esphome/esphome/pull/2303
         if mac_address is None:
             return self.async_abort(reason="mdns_missing_mac")
 
