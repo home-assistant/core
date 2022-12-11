@@ -232,7 +232,7 @@ async def test_discovery_initiation(hass, mock_client, mock_zeroconf):
     """Test discovery importing works."""
     mock_client.device_info = AsyncMock(
         return_value=DeviceInfo(
-            uses_password=False, name="test8266", mac_address="11:22:33:44:55:66"
+            uses_password=False, name="test8266", mac_address="11:22:33:44:55:AA"
         )
     )
 
@@ -243,7 +243,7 @@ async def test_discovery_initiation(hass, mock_client, mock_zeroconf):
         name="mock_name",
         port=6053,
         properties={
-            "mac": "11:22:33:44:55:66",
+            "mac": "1122334455aa",
         },
         type="mock_type",
     )
@@ -261,7 +261,7 @@ async def test_discovery_initiation(hass, mock_client, mock_zeroconf):
     assert result["data"][CONF_PORT] == 6053
 
     assert result["result"]
-    assert result["result"].unique_id == "11:22:33:44:55:66"
+    assert result["result"].unique_id == "11:22:33:44:55:AA"
 
 
 async def test_discovery_already_configured(hass, mock_client):
@@ -269,7 +269,7 @@ async def test_discovery_already_configured(hass, mock_client):
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "test8266.local", CONF_PORT: 6053, CONF_PASSWORD: ""},
-        unique_id="11:22:33:44:55:66",
+        unique_id="11:22:33:44:55:AA",
     )
 
     entry.add_to_hass(hass)
@@ -280,7 +280,7 @@ async def test_discovery_already_configured(hass, mock_client):
         hostname="test8266.local.",
         name="mock_name",
         port=6053,
-        properties={"mac": "11:22:33:44:55:66"},
+        properties={"mac": "1122334455aa"},
         type="mock_type",
     )
     result = await hass.config_entries.flow.async_init(
@@ -299,7 +299,7 @@ async def test_discovery_duplicate_data(hass, mock_client):
         hostname="test8266.local.",
         name="mock_name",
         port=6053,
-        properties={"address": "test8266.local", "mac": "11:22:33:44:55:66"},
+        properties={"address": "test8266.local", "mac": "1122334455aa"},
         type="mock_type",
     )
 
@@ -325,7 +325,7 @@ async def test_discovery_updates_unique_id(hass, mock_client):
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "192.168.43.183", CONF_PORT: 6053, CONF_PASSWORD: ""},
-        unique_id="11:22:33:44:55:66",
+        unique_id="11:22:33:44:55:AA",
     )
 
     entry.add_to_hass(hass)
@@ -336,7 +336,7 @@ async def test_discovery_updates_unique_id(hass, mock_client):
         hostname="test8266.local.",
         name="mock_name",
         port=6053,
-        properties={"address": "test8266.local", "mac": "11:22:33:44:55:66"},
+        properties={"address": "test8266.local", "mac": "1122334455aa"},
         type="mock_type",
     )
     result = await hass.config_entries.flow.async_init(
@@ -346,7 +346,7 @@ async def test_discovery_updates_unique_id(hass, mock_client):
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
-    assert entry.unique_id == "11:22:33:44:55:66"
+    assert entry.unique_id == "11:22:33:44:55:AA"
 
 
 async def test_user_requires_psk(hass, mock_client, mock_zeroconf):
@@ -557,14 +557,14 @@ async def test_discovery_dhcp_updates_host(hass, mock_client):
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "192.168.43.183", CONF_PORT: 6053, CONF_PASSWORD: ""},
-        unique_id="11:22:33:44:55:66",
+        unique_id="11:22:33:44:55:AA",
     )
     entry.add_to_hass(hass)
 
     service_info = dhcp.DhcpServiceInfo(
         ip="192.168.43.184",
         hostname="test8266",
-        macaddress="11:22:33:44:55:66",
+        macaddress="1122334455aa",
     )
     result = await hass.config_entries.flow.async_init(
         "esphome", context={"source": config_entries.SOURCE_DHCP}, data=service_info
