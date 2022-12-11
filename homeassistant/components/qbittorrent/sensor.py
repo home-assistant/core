@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, Final
 
 from qbittorrent.client import Client, LoginRequired
 from requests.exceptions import RequestException
@@ -15,7 +15,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -46,7 +45,7 @@ SENSOR_TYPE_UPLOAD_SPEED = "upload_speed"
 SENSOR_TYPE_TORRENTS = "torrents"
 
 DEFAULT_NAME = "qBittorrent"
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
+DEFAULT_SCAN_INTERVAL: Final = timedelta(seconds=30)
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -103,7 +102,7 @@ def setup_platform(
         raise PlatformNotReady from err
 
     name = config.get(CONF_NAME)
-    scan_interval: timedelta = config.get(CONF_SCAN_INTERVAL)
+    scan_interval: timedelta = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     coordinator = QBittorrentUpdateCoordinator(hass, client, scan_interval)
 
@@ -196,14 +195,13 @@ class QBittorrentSensor(CoordinatorEntity[QBittorrentUpdateCoordinator], SensorE
         """Return the state attributes."""
         attrs = {}
         if self.entity_description.key == SENSOR_TYPE_TORRENTS:
-            if self.coordinator.data is None:
-                return
-            torrents = self.coordinator.data["torrents"]
-            attrs["Torrents"] = [
-                {k: entry[k] for k in ["name", "eta", "progress", "state"]}
-                for entry in torrents.values()
-            ]
-            current_time = datetime.now().replace(microsecond=0)
-            for entry in attrs["Torrents"]:
-                entry["eta"] = current_time + timedelta(seconds=entry["eta"])
+            if self.coordinator.data is not None:
+                torrents = self.coordinator.data["torrents"]
+                attrs["Torrents"] = [
+                    {k: entry[k] for k in ["name", "eta", "progress", "state"]}
+                    for entry in torrents.values()
+                ]
+                current_time = datetime.now().replace(microsecond=0)
+                for entry in attrs["Torrents"]:
+                    entry["eta"] = current_time + timedelta(seconds=entry["eta"])
         return attrs
