@@ -301,8 +301,9 @@ class SensorGroup(GroupEntity, SensorEntity):
                 except ValueError:
                     test_states.append(False)
                     _LOGGER.warning(
-                        "Unable to use state. Only numerical states are supported, entity %s excluded from calculation",
+                        "Unable to use state. Only numerical states are supported, entity %s with value %s excluded from calculation",
                         entity_id,
+                        state.state,
                     )
                     continue
                 test_states.append(True)
