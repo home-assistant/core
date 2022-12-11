@@ -86,10 +86,6 @@ class EcobeeVentilator(FanEntity):
 
         self.update_without_throttle = False
 
-    @property
-    def name(self):
-        """Return the name of the ventilator."""
-        return self._name
 
     @property
     def unique_id(self):
