@@ -28,7 +28,8 @@
             "user": {
                 "data": {
                     "password": "Heslo",
-                    "username": "Email"
+                    "username": "Email",
+                    "with_family": "S rodinou"
                 },
                 "description": "Zadajte svoje poverenia",
                 "title": "iCloud poverenia"
