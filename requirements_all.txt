@@ -196,7 +196,7 @@ aiokef==0.2.16
 aiolifx==0.8.7
 
 # homeassistant.components.lifx
-aiolifx_effects==0.3.0
+aiolifx_effects==0.3.1
 
 # homeassistant.components.lifx
 aiolifx_themes==0.2.0
@@ -261,7 +261,7 @@ aiosenseme==0.6.1
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==5.1.0
+aioshelly==5.1.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -321,7 +321,7 @@ ambiclimate==0.2.1
 amcrest==1.9.7
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.69
+androidtv[async]==0.0.70
 
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
@@ -1504,7 +1504,7 @@ pycfdns==2.0.1
 pychannels==1.2.3
 
 # homeassistant.components.cast
-pychromecast==13.0.1
+pychromecast==13.0.2
 
 # homeassistant.components.pocketcasts
 pycketcasts==1.0.1
@@ -1866,7 +1866,7 @@ pyrecswitch==1.0.2
 pyrepetierng==0.1.0
 
 # homeassistant.components.risco
-pyrisco==0.5.6
+pyrisco==0.5.7
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.6
