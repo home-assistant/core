@@ -62,6 +62,7 @@ async def test_form_host_already_exists(hass: HomeAssistant) -> None:
             "name": "TED",
         },
         title="TED",
+        unique_id="unique_id",
     )
     config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
@@ -72,6 +73,8 @@ async def test_form_host_already_exists(hass: HomeAssistant) -> None:
 
     with patch("tedpy.TED5000.check", return_value=True), patch(
         "tedpy.TED5000.update", return_value=True
+    ), patch(
+        "tedpy.TED5000.gateway_id", new_callable=PropertyMock, return_value="unique_id"
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -97,22 +100,6 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
-
-
-async def test_form_unknown_error(hass: HomeAssistant) -> None:
-    """Test we handle unknown error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch("tedpy.createTED", side_effect=ValueError):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"host": "1.1.1.1"},
-        )
-
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
 
 
 async def test_options_flow(hass):
