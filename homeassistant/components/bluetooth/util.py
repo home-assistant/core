@@ -23,18 +23,18 @@ def async_load_history_from_system(
     # Restore local adapters
     for address, history in adapters.history.items():
         if (
-            existing_all := connectable_loaded_history.get(address)
-        ) and history.advertisement_data.rssi < existing_all.rssi:
-            continue
-        connectable_loaded_history[address] = all_loaded_history[
-            address
-        ] = BluetoothServiceInfoBleak.from_device_and_advertisement_data(
-            history.device,
-            history.advertisement_data,
-            history.source,
-            now_monotonic,
-            True,
-        )
+            not (existing_all := connectable_loaded_history.get(address))
+            or history.advertisement_data.rssi > existing_all.rssi
+        ):
+            connectable_loaded_history[address] = all_loaded_history[
+                address
+            ] = BluetoothServiceInfoBleak.from_device_and_advertisement_data(
+                history.device,
+                history.advertisement_data,
+                history.source,
+                now_monotonic,
+                True,
+            )
 
     # Restore remote adapters
     for scanner in storage.scanners():

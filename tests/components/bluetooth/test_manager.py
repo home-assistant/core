@@ -289,11 +289,11 @@ async def test_restore_history_from_dbus(hass, one_adapter):
 async def test_restore_history_from_dbus_and_remote_adapters(
     hass, one_adapter, hass_storage
 ):
-    """Test we can restore history from dbus."""
+    """Test we can restore history from dbus along with remote adapters."""
     address = "AA:BB:CC:CC:CC:FF"
 
     hass_storage[storage.REMOTE_SCANNER_STORAGE_KEY] = json_loads(
-        load_fixture("bluetooth.remote_adapters", bluetooth.DOMAIN)
+        load_fixture("bluetooth.remote_scanners", bluetooth.DOMAIN)
     )
 
     ble_device = BLEDevice(address, "name")
@@ -303,14 +303,55 @@ async def test_restore_history_from_dbus_and_remote_adapters(
         )
     }
 
+    # Patch out the call to expire_stale_scanner_discovered_device_advertisement_data
+    # since all our fixtures will have expired data, and the bluetooth-adapters
+    # library already has tests for that
     with patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.history",
         history,
+    ), patch(
+        "homeassistant.components.bluetooth.storage.expire_stale_scanner_discovered_device_advertisement_data"
     ):
         assert await async_setup_component(hass, bluetooth.DOMAIN, {})
         await hass.async_block_till_done()
 
     assert bluetooth.async_ble_device_from_address(hass, address) is ble_device
+    assert (
+        bluetooth.async_ble_device_from_address(hass, "EB:0B:36:35:6F:A4") is not None
+    )
+
+
+async def test_restore_history_from_dbus_and_corrupted_remote_adapters(
+    hass, one_adapter, hass_storage
+):
+    """Test we can restore history from dbus when the remote adapters data is corrupted."""
+    address = "AA:BB:CC:CC:CC:FF"
+
+    hass_storage[storage.REMOTE_SCANNER_STORAGE_KEY] = json_loads(
+        load_fixture("bluetooth.remote_scanners.corrupt", bluetooth.DOMAIN)
+    )
+
+    ble_device = BLEDevice(address, "name")
+    history = {
+        address: AdvertisementHistory(
+            ble_device, generate_advertisement_data(local_name="name"), "hci0"
+        )
+    }
+
+    # Patch out the call to expire_stale_scanner_discovered_device_advertisement_data
+    # since all our fixtures will have expired data, and the bluetooth-adapters
+    # library already has tests for that
+    with patch(
+        "bluetooth_adapters.systems.linux.LinuxAdapters.history",
+        history,
+    ), patch(
+        "homeassistant.components.bluetooth.storage.expire_stale_scanner_discovered_device_advertisement_data"
+    ):
+        assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+        await hass.async_block_till_done()
+
+    assert bluetooth.async_ble_device_from_address(hass, address) is ble_device
+    assert bluetooth.async_ble_device_from_address(hass, "EB:0B:36:35:6F:A4") is None
 
 
 async def test_switching_adapters_based_on_rssi_connectable_to_non_connectable(
