@@ -8,10 +8,12 @@ from bluetooth_adapters import AdvertisementHistory
 import pytest
 
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth import storage
 from homeassistant.components.bluetooth.manager import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.json import json_loads
 from homeassistant.setup import async_setup_component
 
 from . import (
@@ -21,6 +23,8 @@ from . import (
     inject_advertisement_with_time_and_source,
     inject_advertisement_with_time_and_source_connectable,
 )
+
+from tests.common import load_fixture
 
 
 @pytest.fixture
@@ -280,6 +284,76 @@ async def test_restore_history_from_dbus(hass, one_adapter):
         await hass.async_block_till_done()
 
     assert bluetooth.async_ble_device_from_address(hass, address) is ble_device
+
+
+async def test_restore_history_from_dbus_and_remote_adapters(
+    hass, one_adapter, hass_storage
+):
+    """Test we can restore history from dbus along with remote adapters."""
+    address = "AA:BB:CC:CC:CC:FF"
+
+    data = hass_storage[storage.REMOTE_SCANNER_STORAGE_KEY] = json_loads(
+        load_fixture("bluetooth.remote_scanners", bluetooth.DOMAIN)
+    )
+    now = time.time()
+    timestamps = data["data"]["atom-bluetooth-proxy-ceaac4"][
+        "discovered_device_timestamps"
+    ]
+    for address in timestamps:
+        timestamps[address] = now
+
+    ble_device = BLEDevice(address, "name")
+    history = {
+        address: AdvertisementHistory(
+            ble_device, generate_advertisement_data(local_name="name"), "hci0"
+        )
+    }
+
+    with patch(
+        "bluetooth_adapters.systems.linux.LinuxAdapters.history",
+        history,
+    ):
+        assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+        await hass.async_block_till_done()
+
+    assert bluetooth.async_ble_device_from_address(hass, address) is not None
+    assert (
+        bluetooth.async_ble_device_from_address(hass, "EB:0B:36:35:6F:A4") is not None
+    )
+
+
+async def test_restore_history_from_dbus_and_corrupted_remote_adapters(
+    hass, one_adapter, hass_storage
+):
+    """Test we can restore history from dbus when the remote adapters data is corrupted."""
+    address = "AA:BB:CC:CC:CC:FF"
+
+    data = hass_storage[storage.REMOTE_SCANNER_STORAGE_KEY] = json_loads(
+        load_fixture("bluetooth.remote_scanners.corrupt", bluetooth.DOMAIN)
+    )
+    now = time.time()
+    timestamps = data["data"]["atom-bluetooth-proxy-ceaac4"][
+        "discovered_device_timestamps"
+    ]
+    for address in timestamps:
+        timestamps[address] = now
+
+    ble_device = BLEDevice(address, "name")
+    history = {
+        address: AdvertisementHistory(
+            ble_device, generate_advertisement_data(local_name="name"), "hci0"
+        )
+    }
+
+    with patch(
+        "bluetooth_adapters.systems.linux.LinuxAdapters.history",
+        history,
+    ):
+        assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+        await hass.async_block_till_done()
+
+    assert bluetooth.async_ble_device_from_address(hass, address) is not None
+    assert bluetooth.async_ble_device_from_address(hass, "EB:0B:36:35:6F:A4") is None
 
 
 async def test_switching_adapters_based_on_rssi_connectable_to_non_connectable(

@@ -1092,6 +1092,9 @@ async def mock_enable_bluetooth(
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+    yield
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
 
 @pytest.fixture(name="mock_bluetooth_adapters")
