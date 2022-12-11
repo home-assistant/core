@@ -257,9 +257,9 @@ async def async_setup_entry(  # noqa: C901
             # Migrate config entry to new unique ID if necessary
             # This was changed in 2023.1
             if entry.unique_id != format_mac(device_info.mac_address):
-                new_unique_id = format_mac(device_info.mac_address)
-                domain_data.migrate_unique_id(entry, new_unique_id)
-                hass.config_entries.async_update_entry(entry, unique_id=new_unique_id)
+                hass.config_entries.async_update_entry(
+                    entry, unique_id=format_mac(device_info.mac_address)
+                )
 
             entry_data.device_info = device_info
             assert cli.api_version is not None
