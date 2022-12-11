@@ -669,6 +669,9 @@ class AvmWrapper(FritzBoxTools):
         def wrap_external_ipv6() -> str:
             return str(self.fritz_status.external_ipv6)
 
+        if not self.device_is_router:
+            return False
+
         return bool(await self.hass.async_add_executor_job(wrap_external_ipv6))
 
     async def async_get_connection_info(self) -> ConnectionInfo:
