@@ -26,6 +26,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
+    EVENT_HOMEASSISTANT_STOP_SERVICES,
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
     EVENT_STATE_CHANGED,
@@ -170,6 +171,7 @@ def test_async_run_hass_job_delegates_non_async():
 async def test_stage_shutdown(hass):
     """Simulate a shutdown, test calling stuff."""
     test_stop = async_capture_events(hass, EVENT_HOMEASSISTANT_STOP)
+    test_stop_services = async_capture_events(hass, EVENT_HOMEASSISTANT_STOP_SERVICES)
     test_final_write = async_capture_events(hass, EVENT_HOMEASSISTANT_FINAL_WRITE)
     test_close = async_capture_events(hass, EVENT_HOMEASSISTANT_CLOSE)
     test_all = async_capture_events(hass, MATCH_ALL)
@@ -177,9 +179,10 @@ async def test_stage_shutdown(hass):
     await hass.async_stop()
 
     assert len(test_stop) == 1
+    assert len(test_stop_services) == 1
     assert len(test_close) == 1
     assert len(test_final_write) == 1
-    assert len(test_all) == 2
+    assert len(test_all) == 3
 
 
 async def test_shutdown_calls_block_till_done_after_shutdown_run_callback_threadsafe(

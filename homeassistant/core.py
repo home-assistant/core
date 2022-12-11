@@ -56,6 +56,7 @@ from .const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
+    EVENT_HOMEASSISTANT_STOP_SERVICES,
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
     EVENT_STATE_CHANGED,
@@ -96,9 +97,10 @@ if TYPE_CHECKING:
     from .config_entries import ConfigEntries
 
 
-STAGE_1_SHUTDOWN_TIMEOUT = 100
+STAGE_1_SHUTDOWN_TIMEOUT = 40
 STAGE_2_SHUTDOWN_TIMEOUT = 60
-STAGE_3_SHUTDOWN_TIMEOUT = 30
+STAGE_3_SHUTDOWN_TIMEOUT = 60
+STAGE_4_SHUTDOWN_TIMEOUT = 30
 
 block_async_io.enable()
 
@@ -248,6 +250,7 @@ class CoreState(enum.Enum):
     starting = "STARTING"
     running = "RUNNING"
     stopping = "STOPPING"
+    stopping_services = "STOPPING_SERVICES"
     final_write = "FINAL_WRITE"
     stopped = "STOPPED"
 
@@ -297,7 +300,7 @@ class HomeAssistant:
     @property
     def is_stopping(self) -> bool:
         """Return if Home Assistant is stopping."""
-        return self.state in (CoreState.stopping, CoreState.final_write)
+        return self.state in (CoreState.stopping, CoreState.stopping_services, CoreState.final_write)
 
     def start(self) -> int:
         """Start Home Assistant.
@@ -686,7 +689,7 @@ class HomeAssistant:
             # regardless of the state of the loop.
             if self.state == CoreState.not_running:  # just ignore
                 return
-            if self.state in [CoreState.stopping, CoreState.final_write]:
+            if self.state in [CoreState.stopping, CoreState.stopping_services, CoreState.final_write]:
                 _LOGGER.info("Additional call to async_stop was ignored")
                 return
             if self.state == CoreState.starting:
@@ -708,8 +711,9 @@ class HomeAssistant:
             )
 
         # stage 2
-        self.state = CoreState.final_write
-        self.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+        self.state = CoreState.stopping_services
+        self.async_track_tasks()
+        self.bus.async_fire(EVENT_HOMEASSISTANT_STOP_SERVICES)
         try:
             async with self.timeout.async_timeout(STAGE_2_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
@@ -719,6 +723,17 @@ class HomeAssistant:
             )
 
         # stage 3
+        self.state = CoreState.final_write
+        self.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+        try:
+            async with self.timeout.async_timeout(STAGE_3_SHUTDOWN_TIMEOUT):
+                await self.async_block_till_done()
+        except asyncio.TimeoutError:
+            _LOGGER.warning(
+                "Timed out waiting for shutdown stage 3 to complete, the shutdown will continue"
+            )
+
+        # stage 4
         self.state = CoreState.not_running
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
 
@@ -730,11 +745,11 @@ class HomeAssistant:
         shutdown_run_callback_threadsafe(self.loop)
 
         try:
-            async with self.timeout.async_timeout(STAGE_3_SHUTDOWN_TIMEOUT):
+            async with self.timeout.async_timeout(STAGE_4_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                "Timed out waiting for shutdown stage 3 to complete, the shutdown will continue"
+                "Timed out waiting for shutdown stage 4 to complete, the shutdown will continue"
             )
 
         self.exit_code = exit_code
