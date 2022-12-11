@@ -149,11 +149,16 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        mac_address = discovery_info.properties.get("mac")
+        mac_address: str | None = discovery_info.properties.get("mac")
 
         # Shouldn't happen as all ESPHome entries have this.
         if mac_address is None:
             return self.async_abort(reason="mdns_missing_mac")
+
+        # mac address is lowercase and without :, normalize it
+        mac_address = ":".join(
+            mac_address[i : i + 2].upper() for i in range(0, len(mac_address), 2)
+        )
 
         # Hostname is format: livingroom.local.
         self._name = discovery_info.hostname[: -len(".local.")]
@@ -170,7 +175,13 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle DHCP discovery."""
-        await self.async_set_unique_id(discovery_info.macaddress)
+        # mac address is lowercase and without :, normalize it
+        mac_address = discovery_info.macaddress
+        mac_address = ":".join(
+            mac_address[i : i + 2].upper() for i in range(0, len(mac_address), 2)
+        )
+
+        await self.async_set_unique_id(mac_address)
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
         # This should never happen since we only listen to DHCP requests
         # for configured devices.
