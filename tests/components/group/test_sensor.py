@@ -6,13 +6,19 @@ from pytest import LogCaptureFixture
 
 from homeassistant import config as hass_config
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
+from homeassistant.components.group.sensor import DEFAULT_NAME
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.const import SERVICE_RELOAD, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    SERVICE_RELOAD,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    UnitOfVolume,
+)
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -414,11 +420,13 @@ async def test_sum_sensor(hass: HomeAssistant) -> None:
     config = {
         SENSOR_DOMAIN: {
             "platform": GROUP_DOMAIN,
-            "name": "test_sum",
+            "name": DEFAULT_NAME,
             "type": "sum",
             "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
             "unique_id": "very_unique_id_sum_sensor",
             "state_class": SensorStateClass.MEASUREMENT,
+            "device_class": SensorDeviceClass.GAS,
+            "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         }
     }
 
@@ -431,13 +439,13 @@ async def test_sum_sensor(hass: HomeAssistant) -> None:
         hass.states.async_set(entity_id, value)
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.test_sum")
+    state = hass.states.get("sensor.sensor_group_sum")
 
     assert str(float(SUM_VALUE)) == state.state
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
     entity_reg = er.async_get(hass)
-    entity = entity_reg.async_get("sensor.test_sum")
+    entity = entity_reg.async_get("sensor.sensor_group_sum")
     assert entity.unique_id == "very_unique_id_sum_sensor"
 
 
