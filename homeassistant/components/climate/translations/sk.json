@@ -68,6 +68,9 @@
                     "off": "Vypnut\u00e9"
                 }
             },
+            "hvac_modes": {
+                "name": "Re\u017eimy HVAC"
+            },
             "max_humidity": {
                 "name": "Maxim\u00e1lna cie\u013eov\u00e1 vlhkos\u0165"
             },

@@ -196,7 +196,7 @@ aiokef==0.2.16
 aiolifx==0.8.7
 
 # homeassistant.components.lifx
-aiolifx_effects==0.3.0
+aiolifx_effects==0.3.1
 
 # homeassistant.components.lifx
 aiolifx_themes==0.2.0
