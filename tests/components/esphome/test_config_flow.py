@@ -264,6 +264,24 @@ async def test_discovery_initiation(hass, mock_client, mock_zeroconf):
     assert result["result"].unique_id == "11:22:33:44:55:AA"
 
 
+async def test_discovery_no_mac(hass, mock_client, mock_zeroconf):
+    """Test discovery aborted if old ESPHome without mac in zeroconf."""
+    service_info = zeroconf.ZeroconfServiceInfo(
+        host="192.168.43.183",
+        addresses=["192.168.43.183"],
+        hostname="test8266.local.",
+        name="mock_name",
+        port=6053,
+        properties={},
+        type="mock_type",
+    )
+    flow = await hass.config_entries.flow.async_init(
+        "esphome", context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
+    )
+    assert flow["type"] == FlowResultType.ABORT
+    assert flow["reason"] == "mdns_missing_mac"
+
+
 async def test_discovery_already_configured(hass, mock_client):
     """Test discovery aborts if already configured via hostname."""
     entry = MockConfigEntry(
