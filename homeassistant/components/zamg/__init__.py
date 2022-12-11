@@ -48,29 +48,29 @@ async def _async_migrate_entries(
 
         Example: 'WIEN/HOHE WARTE_11035' --> '11035'.
         """
-        if conf_entry_id := entry.config_entry_id:
-            if conf_entry := hass.config_entries.async_get_entry(conf_entry_id):
-                station_id = conf_entry.data[CONF_STATION_ID]
-                if entry.domain == Platform.WEATHER and entry.unique_id != station_id:
-                    new_unique_id = station_id
-                    LOGGER.debug(
-                        "Migrating entity '%s' unique_id from '%s' to '%s'",
-                        entry.entity_id,
-                        entry.unique_id,
-                        new_unique_id,
-                    )
-                    if existing_entity_id := entity_registry.async_get_entity_id(
-                        entry.domain, entry.platform, new_unique_id
-                    ):
-                        LOGGER.debug(
-                            "Cannot migrate to unique_id '%s', already exists for '%s'",
-                            new_unique_id,
-                            existing_entity_id,
-                        )
-                        return None
-                    return {
-                        "new_unique_id": new_unique_id,
-                    }
+        if (
+            entry.domain == Platform.WEATHER
+            and entry.unique_id != config_entry.data[CONF_STATION_ID]
+        ):
+            new_unique_id = config_entry.data[CONF_STATION_ID]
+            LOGGER.debug(
+                "Migrating entity '%s' unique_id from '%s' to '%s'",
+                entry.entity_id,
+                entry.unique_id,
+                new_unique_id,
+            )
+            if existing_entity_id := entity_registry.async_get_entity_id(
+                entry.domain, entry.platform, new_unique_id
+            ):
+                LOGGER.debug(
+                    "Cannot migrate to unique_id '%s', already exists for '%s'",
+                    new_unique_id,
+                    existing_entity_id,
+                )
+                return None
+            return {
+                "new_unique_id": new_unique_id,
+            }
         return None
 
     await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
