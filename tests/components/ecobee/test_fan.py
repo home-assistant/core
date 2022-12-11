@@ -113,3 +113,17 @@ async def test_set_ventilator_timer_on(ventilator, data):
     data.reset_mock()
     ventilator.set_ventilator_timer(True)
     data.ecobee.set_ventilator_timer.assert_has_calls([mock.call(1, True)])
+
+
+async def test_turn_on(ventilator, data):
+    """Test set ventilator mode to on."""
+    data.reset_mock()
+    ventilator.turn_on()
+    data.ecobee.set_ventilator_timer.assert_has_calls([mock.call(1, True)])
+
+
+async def test_turn_off(ventilator, data):
+    """Test set ventilator mode to on."""
+    data.reset_mock()
+    ventilator.turn_off()
+    data.ecobee.set_ventilator_timer.assert_has_calls([mock.call(1, False)])
