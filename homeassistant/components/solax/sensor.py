@@ -21,8 +21,8 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
     PERCENTAGE,
-    POWER_WATT,
     TEMP_CELSIUS,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
@@ -70,7 +70,7 @@ SENSOR_DESCRIPTIONS: dict[tuple[Units, bool], SensorEntityDescription] = {
     (Units.W, False): SensorEntityDescription(
         key=f"{Units.W}_{False}",
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (Units.PERCENT, False): SensorEntityDescription(
