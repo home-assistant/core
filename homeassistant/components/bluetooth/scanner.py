@@ -130,6 +130,7 @@ class HaScanner(BaseHaScanner):
         new_info_callback: Callable[[BluetoothServiceInfoBleak], None],
     ) -> None:
         """Init bluetooth discovery."""
+        self.mac_address = address
         source = address if address != DEFAULT_ADDRESS else adapter or SOURCE_LOCAL
         super().__init__(hass, source, adapter)
         self.mode = mode
@@ -375,7 +376,7 @@ class HaScanner(BaseHaScanner):
         # so we log at debug level. If we later come up with a repair
         # strategy, we will change this to raise a repair issue as well.
         _LOGGER.debug("%s: adapter stopped responding; executing reset", self.name)
-        result = await async_reset_adapter(self.adapter)
+        result = await async_reset_adapter(self.adapter, self.mac_address)
         _LOGGER.debug("%s: adapter reset result: %s", self.name, result)
 
     async def async_stop(self) -> None:
