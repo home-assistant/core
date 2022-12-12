@@ -6,9 +6,11 @@ from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -82,6 +84,7 @@ BINARY_SENSORS: tuple[PlugwiseBinarySensorEntityDescription, ...] = (
         name="Plugwise notification",
         icon="mdi:mailbox-up-outline",
         icon_off="mdi:mailbox-outline",
+        device_class=BinarySensorDeviceClass.ALERT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
