@@ -1,6 +1,9 @@
 """Bouncie Sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -18,45 +21,101 @@ from . import BouncieDataUpdateCoordinator, const
 ATTRIBUTION = "Data provided by Bouncie"
 PARALLEL_UPDATES = 1
 
-SENSORS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+
+@dataclass
+class BouncieSensorEntityDescriptionMixin:
+    """Mixing for Bouncie entity."""
+
+    value_fn: Callable
+    extra_attrs_fn: Callable
+
+
+@dataclass
+class BouncieSensorEntityDescription(
+    SensorEntityDescription, BouncieSensorEntityDescriptionMixin
+):
+    """Entity description class for Bouncie sensors."""
+
+
+def update_car_stats_attributes(vehicle_info):
+    """Return car statistics update time."""
+    return {
+        const.ATTR_VEHICLE_STATS_LAST_UPDATED_KEY: vehicle_info["stats"]["lastUpdated"]
+    }
+
+
+def update_car_info_attributes(vehicle_info):
+    """Return car information."""
+    extra_attrs = {}
+    extra_attrs[const.ATTR_VEHICLE_STANDARD_ENGINE_KEY] = vehicle_info["standardEngine"]
+    extra_attrs[const.ATTR_VEHICLE_VIN_KEY] = vehicle_info["vin"]
+    extra_attrs[const.ATTR_VEHICLE_IMEI_KEY] = vehicle_info["imei"]
+    return {**extra_attrs, **update_car_stats_attributes(vehicle_info)}
+
+
+SENSORS: tuple[BouncieSensorEntityDescription, ...] = (
+    BouncieSensorEntityDescription(
         key="car-info",
         icon="mdi:car",
         name="Car Info",
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda vehicle_info: "Running"
+        if vehicle_info["stats"]["isRunning"]
+        else "Not Running",
+        extra_attrs_fn=update_car_info_attributes,
     ),
-    SensorEntityDescription(
+    BouncieSensorEntityDescription(
         key="car-odometer",
         icon="mdi:counter",
         name="Car Odometer",
         device_class=SensorDeviceClass.DISTANCE,
+        value_fn=lambda vehicle_info: int(vehicle_info["stats"]["odometer"]),
+        extra_attrs_fn=update_car_stats_attributes,
     ),
-    SensorEntityDescription(
+    BouncieSensorEntityDescription(
         key="car-address",
         icon="mdi:map-marker",
         name="Car Address",
+        value_fn=lambda vehicle_info: vehicle_info["stats"]["location"]["address"],
+        extra_attrs_fn=update_car_stats_attributes,
     ),
-    SensorEntityDescription(
+    BouncieSensorEntityDescription(
         key="car-fuel",
         icon="mdi:gas-station",
         name="Car Fuel",
         device_class=SensorDeviceClass.BATTERY,
+        value_fn=lambda vehicle_info: int(vehicle_info["stats"]["fuelLevel"]),
+        extra_attrs_fn=update_car_stats_attributes,
     ),
-    SensorEntityDescription(
+    BouncieSensorEntityDescription(
         key="car-speed",
         icon="mdi:speedometer",
         name="Car Speed",
         device_class=SensorDeviceClass.SPEED,
+        value_fn=lambda vehicle_info: vehicle_info["stats"]["speed"],
+        extra_attrs_fn=update_car_stats_attributes,
     ),
-    SensorEntityDescription(
+    BouncieSensorEntityDescription(
         key="car-mil",
         icon="mdi:engine",
         name="Car MIL",
+        value_fn=lambda vehicle_info: vehicle_info["stats"]["mil"]["milOn"],
+        extra_attrs_fn=lambda vehicle_info: {
+            const.ATTR_VEHICLE_MIL_LAST_UPDATED_KEY: vehicle_info["stats"]["mil"][
+                "lastUpdated"
+            ]
+        },
     ),
-    SensorEntityDescription(
+    BouncieSensorEntityDescription(
         key="car-battery",
         icon="mdi:car-battery",
         name="Car Battery",
+        value_fn=lambda vehicle_info: vehicle_info["stats"]["battery"]["status"],
+        extra_attrs_fn=lambda vehicle_info: {
+            const.ATTR_VEHICLE_BATTERY_LAST_UPDATED_KEY: vehicle_info["stats"][
+                "battery"
+            ]["lastUpdated"]
+        },
     ),
 )
 
@@ -79,18 +138,17 @@ class BouncieSensor(CoordinatorEntity[BouncieDataUpdateCoordinator], SensorEntit
     """Bouncie sensor."""
 
     _attr_attribution = ATTRIBUTION
+    entity_description: BouncieSensorEntityDescription
 
     def __init__(
         self,
         coordinator: BouncieDataUpdateCoordinator,
-        description: SensorEntityDescription,
+        description: BouncieSensorEntityDescription,
         vehicle_info: dict,
     ) -> None:
         """Init the BouncieSensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._state = None
-        self._attrs: dict[str, str] = {}
         self._vehicle_info = vehicle_info
         self._attr_unique_id = self.entity_description.key
         self._attr_has_entity_name = True
@@ -102,78 +160,12 @@ class BouncieSensor(CoordinatorEntity[BouncieDataUpdateCoordinator], SensorEntit
             hw_version=self._vehicle_info[const.VEHICLE_MODEL_KEY]["year"],
         )
 
-    def _update_car_info_state(self):
-        self._state = (
-            "Running" if self._vehicle_info["stats"]["isRunning"] else "Not Running"
-        )
-
-    def _update_car_info_attributes(self):
-        self._attrs[const.ATTR_VEHICLE_STANDARD_ENGINE_KEY] = self._vehicle_info[
-            "standardEngine"
-        ]
-        self._attrs[const.ATTR_VEHICLE_VIN_KEY] = self._vehicle_info["vin"]
-        self._attrs[const.ATTR_VEHICLE_IMEI_KEY] = self._vehicle_info["imei"]
-        self._update_car_stats_attributes()
-
-    def _update_car_odometer_state(self):
-        self._state = int(self._vehicle_info["stats"]["odometer"])
-
-    def _update_car_stats_attributes(self):
-        self._attrs[const.ATTR_VEHICLE_STATS_LAST_UPDATED_KEY] = self._vehicle_info[
-            "stats"
-        ]["lastUpdated"]
-
-    def _update_car_address_state(self):
-        self._state = self._vehicle_info["stats"]["location"]["address"]
-
-    def _update_car_fuel_level_state(self):
-        self._state = int(self._vehicle_info["stats"]["fuelLevel"])
-
-    def _update_car_speed_state(self):
-        self._state = self._vehicle_info["stats"]["speed"]
-
-    def _update_car_mil_state(self):
-        self._state = self._vehicle_info["stats"]["mil"]["milOn"]
-
-    def _update_car_mil_attributes(self):
-        self._state = self._vehicle_info["stats"]["mil"]["lastUpdated"]
-
-    def _update_car_battery_state(self):
-        self._state = self._vehicle_info["stats"]["battery"]["status"]
-
-    def _update_car_battery_attributes(self):
-        self._attrs[const.ATTR_VEHICLE_BATTERY_LAST_UPDATED_KEY] = self._vehicle_info[
-            "stats"
-        ]["battery"]["lastUpdated"]
-
     @property
     def native_value(self) -> str | None:
         """Return state value."""
-        if self.entity_description.key.startswith("car-info"):
-            self._update_car_info_state()
-        elif self.entity_description.key.startswith("car-odometer"):
-            self._update_car_odometer_state()
-        elif self.entity_description.key.startswith("car-address"):
-            self._update_car_address_state()
-        elif self.entity_description.key.startswith("car-fuel"):
-            self._update_car_fuel_level_state()
-        elif self.entity_description.key.startswith("car-speed"):
-            self._update_car_speed_state()
-        elif self.entity_description.key.startswith("car-mil"):
-            self._update_car_mil_state()
-        elif self.entity_description.key.startswith("car-battery"):
-            self._update_car_battery_state()
-        return self._state
+        return self.entity_description.value_fn(self._vehicle_info)
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return state attributes."""
-        if self.entity_description.key.startswith("car-info"):
-            self._update_car_info_attributes()
-        elif self.entity_description.key.startswith("car-mil"):
-            self._update_car_mil_attributes()
-        elif self.entity_description.key.startswith("car-battery"):
-            self._update_car_battery_attributes()
-        else:
-            self._update_car_stats_attributes()
-        return self._attrs
+        return self.entity_description.extra_attrs_fn(self._vehicle_info)
