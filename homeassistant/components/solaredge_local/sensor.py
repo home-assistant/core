@@ -83,6 +83,7 @@ SENSOR_TYPES: tuple[SolarEdgeLocalSensorEntityDescription, ...] = (
         key="currentPower",
         name="Current Power",
         native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
         icon="mdi:solar-power",
     ),
     SolarEdgeLocalSensorEntityDescription(
@@ -131,6 +132,7 @@ SENSOR_TYPES: tuple[SolarEdgeLocalSensorEntityDescription, ...] = (
         key="optimizerpower",
         name="Average Optimizer Power",
         native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
         icon="mdi:solar-panel",
     ),
     SolarEdgeLocalSensorEntityDescription(
@@ -162,6 +164,7 @@ SENSOR_TYPES_ENERGY_IMPORT: tuple[SolarEdgeLocalSensorEntityDescription, ...] = 
         key="currentPowerimport",
         name="current import Power",
         native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
         icon="mdi:arrow-collapse-down",
     ),
     SolarEdgeLocalSensorEntityDescription(
@@ -178,6 +181,7 @@ SENSOR_TYPES_ENERGY_EXPORT: tuple[SolarEdgeLocalSensorEntityDescription, ...] = 
         key="currentPowerexport",
         name="current export Power",
         native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
         icon="mdi:arrow-expand-up",
     ),
     SolarEdgeLocalSensorEntityDescription(
