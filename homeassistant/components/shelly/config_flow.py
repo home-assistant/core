@@ -226,13 +226,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except FirmwareUnsupported:
             return self.async_abort(reason="unsupported_firmware")
 
-        await self.async_set_unique_id(self.info["mac"])
-
-        for entry in self._async_current_entries():
-            if entry.unique_id == self.unique_id:
-                if entry.data[CONF_HOST] == host:
-                    await async_reconnect_soon(self.hass, entry)
-                break
+        if (
+            current_entry := await self.async_set_unique_id(self.info["mac"])
+        ) and current_entry.data[CONF_HOST] == host:
+            await async_reconnect_soon(self.hass, current_entry)
 
         self._abort_if_unique_id_configured({CONF_HOST: host})
         self.host = host
