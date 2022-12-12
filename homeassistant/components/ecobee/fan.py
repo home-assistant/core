@@ -10,7 +10,6 @@ from homeassistant.components.fan import FanEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -21,11 +20,9 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_VENTILATOR_MIN_ON_TIME_HOME = "ventilator_min_on_time_home"
 ATTR_VENTILATOR_MIN_ON_TIME_AWAY = "ventilator_min_on_time_away"
-ATTR_IS_VENTILATOR_TIMER_ON = "is_ventilator_timer_on"
 
 SERVICE_SET_VENTILATOR_MIN_ON_TIME_HOME = "set_ventilator_min_on_time_home"
 SERVICE_SET_VENTILATOR_MIN_ON_TIME_AWAY = "set_ventilator_min_on_time_away"
-SERVICE_SET_VENTILATOR_TIMER = "set_ventilator_timer"
 
 
 async def async_setup_entry(
@@ -61,14 +58,6 @@ async def async_setup_entry(
             vol.Required(ATTR_VENTILATOR_MIN_ON_TIME_AWAY): vol.Coerce(int),
         },
         "set_ventilator_min_on_time_away",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_SET_VENTILATOR_TIMER,
-        {
-            vol.Required(ATTR_IS_VENTILATOR_TIMER_ON): cv.boolean,
-        },
-        "set_ventilator_timer",
     )
 
 
@@ -115,9 +104,6 @@ class EcobeeVentilator(FanEntity):
             "ventilator_min_on_time_away": self.thermostat["settings"][
                 "ventilatorMinOnTimeAway"
             ],
-            "is_ventilator_timer_on": self.thermostat["settings"][
-                "isVentilatorTimerOn"
-            ],
         }
 
     def turn_on(
@@ -127,11 +113,11 @@ class EcobeeVentilator(FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the ventilator 20 min manual timer."""
-        self.set_ventilator_timer(True)
+        self.data.ecobee.set_ventilator_timer(self.thermostat_index, True)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off the ventilator 20 min manual timer."""
-        self.set_ventilator_timer(False)
+        self.data.ecobee.set_ventilator_timer(self.thermostat_index, False)
 
     def set_ventilator_min_on_time_home(self, ventilator_min_on_time_home):
         """Set the minimum ventilator on time for home mode."""
@@ -143,16 +129,4 @@ class EcobeeVentilator(FanEntity):
         """Set the minimum ventilator on time for away mode."""
         self.data.ecobee.set_ventilator_min_on_time_away(
             self.thermostat_index, ventilator_min_on_time_away
-        )
-
-    def set_ventilator_timer(self, is_ventilator_timer_on):
-        """Set the ventilator timer.
-
-        If set to true, the ventilator_off_date_time is set to now() + 20 minutes,
-        ventilator will start running and stop after 20 minutes.
-        If set to false, the ventilator_off_date_time is set to it's default value,
-        ventilator will stop.
-        """
-        self.data.ecobee.set_ventilator_timer(
-            self.thermostat_index, is_ventilator_timer_on
         )

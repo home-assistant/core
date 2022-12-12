@@ -236,22 +236,3 @@ set_ventilator_min_on_time_away:
           min: 0
           max: 60
           unit_of_measurement: minutes
-
-set_ventilator_timer:
-  name: set ventilator timer
-  description: >-
-    Turn on or off ventilator timer.
-    If turned on, ventilator will start running and stop after 20 minutes.
-    If turned off, ventilator will stop.
-  target:
-    entity:
-      integration: ecobee
-      domain: fan
-  fields:
-    is_ventilator_timer_on:
-      name: Fan minimum on time
-      description: New value of fan min on time.
-      required: true
-      example: "true"
-      selector:
-        boolean:

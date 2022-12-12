@@ -84,7 +84,6 @@ async def test_attribute(ventilator):
         "ventilator type": "hrv",
         "ventilator_min_on_time_home": 20,
         "ventilator_min_on_time_away": 10,
-        "is_ventilator_timer_on": False,
     }
 
 
@@ -106,13 +105,6 @@ async def test_set_ventilator_min_on_time_away(ventilator, data):
     data.reset_mock()
     ventilator.set_ventilator_min_on_time_away(30)
     data.ecobee.set_ventilator_min_on_time_away.assert_has_calls([mock.call(1, 30)])
-
-
-async def test_set_ventilator_timer_on(ventilator, data):
-    """Test set ventilator mode to on."""
-    data.reset_mock()
-    ventilator.set_ventilator_timer(True)
-    data.ecobee.set_ventilator_timer.assert_has_calls([mock.call(1, True)])
 
 
 async def test_turn_on(ventilator, data):
