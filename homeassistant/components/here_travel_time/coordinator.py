@@ -97,7 +97,7 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator):
 
         return self._parse_routing_response(response)
 
-    def _parse_routing_response(self, response: Any) -> HERETravelTimeData:
+    def _parse_routing_response(self, response: dict[str, Any]) -> HERETravelTimeData:
         """Parse the routing response dict to a HERETravelTimeData."""
         section: dict = response["routes"][0]["sections"][0]
         summary: dict = section["summary"]
@@ -183,7 +183,7 @@ class HERETransitDataUpdateCoordinator(DataUpdateCoordinator):
         except (HERETransitConnectionError, HERETransitNoRouteFoundError) as error:
             raise UpdateFailed from error
 
-    def _parse_transit_response(self, response: Any) -> HERETravelTimeData:
+    def _parse_transit_response(self, response: dict[str, Any]) -> HERETravelTimeData:
         """Parse the transit response dict to a HERETravelTimeData."""
         sections: dict = response["routes"][0]["sections"]
         attribution: str | None = build_hass_attribution(sections)
