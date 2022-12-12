@@ -16,10 +16,7 @@ from homeassistant.exceptions import HomeAssistantError
 from .const import DOMAIN, LOGGER
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_EMAIL): str,
-        vol.Required(CONF_PASSWORD): str,
-    }
+    {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
 )
 
 
@@ -36,12 +33,12 @@ class HoneygainHub:
         """Test if we can authenticate with the API."""
         try:
             return self.honeygain.login(username, password)
-        except KeyError as exc:
-            LOGGER.error("Failed to validate the credentials")
-            raise InvalidAuth from exc
         except JSONDecodeError as exc:
             LOGGER.error("Failed to connect to Honeygain for authentication")
             raise CannotConnect from exc
+        except KeyError as exc:
+            LOGGER.error("Failed to validate the credentials")
+            raise InvalidAuth from exc
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
