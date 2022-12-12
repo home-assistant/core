@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from bluetooth_adapters import (
     DiscoveredDeviceAdvertisementData,
+    DiscoveredDeviceAdvertisementDataDict,
     DiscoveryStorageType,
     discovered_device_advertisement_data_from_dict,
     discovered_device_advertisement_data_to_dict,
@@ -44,6 +45,13 @@ class BluetoothStorage:
         if not (scanner_data := self._data.get(scanner)):
             return None
         return discovered_device_advertisement_data_from_dict(scanner_data)
+
+    @callback
+    def async_get_advertisement_history_as_dict(
+        self, scanner: str
+    ) -> DiscoveredDeviceAdvertisementDataDict | None:
+        """Get discovered devices by scanner as a dict."""
+        return self._data.get(scanner)
 
     @callback
     def _async_get_data(self) -> DiscoveryStorageType:
