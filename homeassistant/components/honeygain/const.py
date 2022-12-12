@@ -2,6 +2,6 @@
 import logging
 
 DOMAIN = "honeygain"
-UPDATE_INTERVAL = 10
+UPDATE_INTERVAL_MINS = 5
 
 LOGGER = logging.getLogger(__package__)

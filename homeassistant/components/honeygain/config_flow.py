@@ -1,7 +1,7 @@
 """Config flow for Honeygain integration."""
 from __future__ import annotations
 
-import logging
+from json import JSONDecodeError
 from typing import Any
 
 from pyHoneygain import HoneyGain
@@ -13,9 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, LOGGER
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -39,7 +37,11 @@ class HoneygainHub:
         try:
             return self.honeygain.login(username, password)
         except KeyError as exc:
+            LOGGER.error("Failed to validate the credentials")
             raise InvalidAuth from exc
+        except JSONDecodeError as exc:
+            LOGGER.error("Failed to connect to Honeygain for authentication")
+            raise CannotConnect from exc
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
@@ -61,8 +63,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Honeygain."""
 
-    VERSION = 1
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -81,7 +81,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except InvalidAuth:
             errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
+            LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
             return self.async_create_entry(title=info["title"], data=user_input)
