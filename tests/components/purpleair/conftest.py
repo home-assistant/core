@@ -27,26 +27,31 @@ def check_api_key_fixture():
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(hass, config_entry_options):
+def config_entry_fixture(hass, config_entry_data, config_entry_options):
     """Define a config entry fixture."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="abcde",
         unique_id="abcde12345",
+        data=config_entry_data,
         options=config_entry_options,
     )
     entry.add_to_hass(hass)
     return entry
 
 
-@pytest.fixture(name="config_entry_options")
-def config_entry_options_fixture():
+@pytest.fixture(name="config_entry_data")
+def config_entry_data_fixture():
     """Define a config entry data fixture."""
     return {
         "api_key": "abcde12345",
-        "latitude": 51.5285582,
-        "longitude": -0.2416796,
-        "distance": 5,
+    }
+
+
+@pytest.fixture(name="config_entry_options")
+def config_entry_options_fixture():
+    """Define a config entry options fixture."""
+    return {
         "sensor_indices": [123456],
     }
 
@@ -77,7 +82,7 @@ def get_sensors_response_fixture():
 
 
 @pytest.fixture(name="setup_purpleair")
-async def setup_purpleair_fixture(hass, api, config_entry_options):
+async def setup_purpleair_fixture(hass, api, config_entry_data):
     """Define a fixture to set up PurpleAir."""
     with patch(
         "homeassistant.components.purpleair.config_flow.API", return_value=api
@@ -86,6 +91,6 @@ async def setup_purpleair_fixture(hass, api, config_entry_options):
     ), patch(
         "homeassistant.components.purpleair.PLATFORMS", []
     ):
-        assert await async_setup_component(hass, DOMAIN, config_entry_options)
+        assert await async_setup_component(hass, DOMAIN, config_entry_data)
         await hass.async_block_till_done()
         yield
