@@ -1,6 +1,8 @@
 """Support for AirVisual Pro sensors."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -116,35 +118,32 @@ class AirVisualProSensor(AirVisualProEntity, SensorEntity):
 
     _attr_has_entity_name = True
 
+    @property
+    def measurements(self) -> dict[str, Any]:
+        """Define collected measurements data."""
+        return self.coordinator.data["measurements"]
+
     @callback
     def _async_update_from_latest_data(self) -> None:
         """Update the entity from the latest data."""
         if self.entity_description.key == SENSOR_KIND_AQI:
             if self.coordinator.data["settings"]["is_aqi_usa"]:
-                self._attr_native_value = self.coordinator.data["measurements"][
-                    "aqi_us"
-                ]
+                self._attr_native_value = self.measurements["aqi_us"]
             else:
-                self._attr_native_value = self.coordinator.data["measurements"][
-                    "aqi_cn"
-                ]
+                self._attr_native_value = self.measurements["aqi_cn"]
         elif self.entity_description.key == SENSOR_KIND_BATTERY_LEVEL:
             self._attr_native_value = self.coordinator.data["status"]["battery"]
         elif self.entity_description.key == SENSOR_KIND_CO2:
-            self._attr_native_value = self.coordinator.data["measurements"].get("co2")
+            self._attr_native_value = self.measurements.get("co2")
         elif self.entity_description.key == SENSOR_KIND_HUMIDITY:
-            self._attr_native_value = self.coordinator.data["measurements"].get(
-                "humidity"
-            )
+            self._attr_native_value = self.measurements.get("humidity")
         elif self.entity_description.key == SENSOR_KIND_PM_0_1:
-            self._attr_native_value = self.coordinator.data["measurements"].get("pm0_1")
+            self._attr_native_value = self.measurements.get("pm0_1")
         elif self.entity_description.key == SENSOR_KIND_PM_1_0:
-            self._attr_native_value = self.coordinator.data["measurements"].get("pm1_0")
+            self._attr_native_value = self.measurements.get("pm1_0")
         elif self.entity_description.key == SENSOR_KIND_PM_2_5:
-            self._attr_native_value = self.coordinator.data["measurements"].get("pm2_5")
+            self._attr_native_value = self.measurements.get("pm2_5")
         elif self.entity_description.key == SENSOR_KIND_TEMPERATURE:
-            self._attr_native_value = self.coordinator.data["measurements"].get(
-                "temperature_C"
-            )
+            self._attr_native_value = self.measurements.get("temperature_C")
         elif self.entity_description.key == SENSOR_KIND_VOC:
-            self._attr_native_value = self.coordinator.data["measurements"].get("voc")
+            self._attr_native_value = self.measurements.get("voc")

@@ -21,7 +21,7 @@ from .const import DOMAIN, LOGGER
 
 PLATFORMS = [Platform.SENSOR]
 
-DEFAULT_UPDATE_INTERVAL = timedelta(minutes=1)
+UPDATE_INTERVAL = timedelta(minutes=1)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -41,13 +41,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         LOGGER,
         name="Node/Pro data",
-        update_interval=DEFAULT_UPDATE_INTERVAL,
+        update_interval=UPDATE_INTERVAL,
         update_method=async_get_data,
     )
 
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -56,9 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
@@ -73,7 +70,6 @@ class AirVisualProEntity(CoordinatorEntity):
         """Initialize."""
         super().__init__(coordinator)
 
-        self._attr_extra_state_attributes = {}
         self._attr_unique_id = f"{coordinator.data['serial_number']}_{description.key}"
         self.entity_description = description
 
