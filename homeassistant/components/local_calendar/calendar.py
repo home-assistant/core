@@ -15,11 +15,7 @@ from pydantic import ValidationError
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
-    EVENT_DESCRIPTION,
-    EVENT_END,
     EVENT_RRULE,
-    EVENT_START,
-    EVENT_SUMMARY,
     CalendarEntity,
     CalendarEntityFeature,
     CalendarEvent,
@@ -104,22 +100,13 @@ class LocalCalendarEntity(CalendarEntity):
 
     async def async_create_event(self, **kwargs: Any) -> None:
         """Add a new event to calendar."""
-        event_data = {
-            EVENT_SUMMARY: kwargs[EVENT_SUMMARY],
-            EVENT_START: kwargs[EVENT_START],
-            EVENT_END: kwargs[EVENT_END],
-            EVENT_DESCRIPTION: kwargs.get(EVENT_DESCRIPTION),
-        }
-        try:
-            event = Event.parse_obj(event_data)
-        except ValidationError as err:
-            _LOGGER.debug(
-                "Error parsing event input fields: %s (%s)", event_data, str(err)
-            )
-            raise vol.Invalid("Error parsing event input fields") from err
         if rrule := kwargs.get(EVENT_RRULE):
-            event.rrule = Recur.from_rrule(rrule)
-
+            kwargs[EVENT_RRULE] = Recur.from_rrule(rrule)
+        try:
+            event = Event.parse_obj(kwargs)
+        except ValidationError as err:
+            _LOGGER.debug("Error parsing event input fields: %s (%s)", kwargs, str(err))
+            raise vol.Invalid("Error parsing event input fields") from err
         EventStore(self._calendar).add(event)
         await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
@@ -136,6 +123,34 @@ class LocalCalendarEntity(CalendarEntity):
             range_value = Range.THIS_AND_FUTURE
         EventStore(self._calendar).delete(
             uid,
+            recurrence_id=recurrence_id,
+            recurrence_range=range_value,
+        )
+        await self._async_store()
+        await self.async_update_ha_state(force_refresh=True)
+
+    async def async_update_event(
+        self,
+        uid: str,
+        event: dict[str, Any],
+        recurrence_id: str | None = None,
+        recurrence_range: str | None = None,
+    ) -> None:
+        """Update an existing event on the calendar."""
+        if rrule := event.get(EVENT_RRULE):
+            event[EVENT_RRULE] = Recur.from_rrule(rrule)
+        try:
+            new_event = Event.parse_obj(event)
+        except ValidationError as err:
+            _LOGGER.debug("Error parsing event input fields: %s (%s)", event, str(err))
+            raise vol.Invalid("Error parsing event input fields") from err
+        _LOGGER.debug(new_event)
+        range_value: Range = Range.NONE
+        if recurrence_range == Range.THIS_AND_FUTURE:
+            range_value = Range.THIS_AND_FUTURE
+        EventStore(self._calendar).edit(
+            uid,
+            new_event,
             recurrence_id=recurrence_id,
             recurrence_range=range_value,
         )
