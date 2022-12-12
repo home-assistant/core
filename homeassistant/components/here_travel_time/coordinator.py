@@ -88,8 +88,8 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator):
 
     def _parse_routing_response(self, response: dict[str, Any]) -> HERETravelTimeData:
         """Parse the routing response dict to a HERETravelTimeData."""
-        section: dict = response["routes"][0]["sections"][0]
-        summary: dict = section["summary"]
+        section: dict[str, Any] = response["routes"][0]["sections"][0]
+        summary: dict[str, int] = section["summary"]
         mapped_origin_lat: float = section["departure"]["place"]["location"]["lat"]
         mapped_origin_lon: float = section["departure"]["place"]["location"]["lng"]
         mapped_destination_lat: float = section["arrival"]["place"]["location"]["lat"]
@@ -172,7 +172,7 @@ class HERETransitDataUpdateCoordinator(DataUpdateCoordinator):
 
     def _parse_transit_response(self, response: dict[str, Any]) -> HERETravelTimeData:
         """Parse the transit response dict to a HERETravelTimeData."""
-        sections: dict = response["routes"][0]["sections"]
+        sections: list[dict[str, Any]] = response["routes"][0]["sections"]
         attribution: str | None = build_hass_attribution(sections)
         mapped_origin_lat: float = sections[0]["departure"]["place"]["location"]["lat"]
         mapped_origin_lon: float = sections[0]["departure"]["place"]["location"]["lng"]
@@ -252,7 +252,7 @@ def prepare_parameters(
     return (origin, destination, arrival, departure)
 
 
-def build_hass_attribution(sections: dict) -> str | None:
+def build_hass_attribution(sections: list[dict[str, Any]]) -> str | None:
     """Build a hass frontend ready string out of the attributions."""
     relevant_attributions = []
     for section in sections:
