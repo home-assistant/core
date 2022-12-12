@@ -26,7 +26,7 @@ async def test_duplicate_error(hass, config, config_entry):
         (Exception, {"base": "unknown"}),
     ],
 )
-async def test_errors(hass, config, exc, errors):
+async def test_errors(hass, config, exc, errors, setup_airvisual_pro):
     """Test that an exceptions show an error."""
     with patch(
         "homeassistant.components.airvisual_pro.config_flow.NodeSamba.async_connect",
@@ -38,20 +38,29 @@ async def test_errors(hass, config, exc, errors):
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"] == errors
 
+    # Validate that we can still proceed after an error if the underlying condition
+    # resolves:
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=config
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == "192.168.1.101"
+    assert result["data"] == {
+        CONF_IP_ADDRESS: "192.168.1.101",
+        CONF_PASSWORD: "password123",
+    }
 
-async def test_show_form(hass):
-    """Test that the form is served with no input."""
+
+async def test_step_user(hass, config, setup_airvisual_pro):
+    """Test that the user step works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
-
-async def test_step_user(hass, config, setup_airvisual_pro):
-    """Test that the user step works."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=config
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=config
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "192.168.1.101"
