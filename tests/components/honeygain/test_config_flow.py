@@ -110,9 +110,9 @@ def test_authenticate_raises_cannot_connect_error(test_user, hass: HomeAssistant
     honeygain_hub = HoneygainHub()
     with patch(
         "pyHoneygain.HoneyGain.login",
-        side_effect=JSONDecodeError(msg="Error", doc="{}", pos=1),
+        side_effect=JSONDecodeError(msg="Error", doc="<error>", pos=1),
     ):
-        with pytest.raises(InvalidAuth):
+        with pytest.raises(CannotConnect):
             honeygain_hub.authenticate(test_user["email"], test_user["password"])
 
 
