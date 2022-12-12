@@ -284,7 +284,7 @@ class APISpaceApiView(HomeAssistantView):
         if (space_state := hass.states.get(state_entity)) is not None:
             state = {
                 ATTR_OPEN: space_state.state != "off",
-                ATTR_LASTCHANGE: dt_util.as_timestamp(space_state.last_updated),
+                ATTR_LASTCHANGE: int(dt_util.as_timestamp(space_state.last_updated)),
             }
         else:
             state = {ATTR_OPEN: "null", ATTR_LASTCHANGE: 0}
