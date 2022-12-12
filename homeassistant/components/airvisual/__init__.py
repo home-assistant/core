@@ -1,6 +1,7 @@
 """The airvisual component."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 from datetime import timedelta
 from math import ceil
@@ -11,7 +12,8 @@ from pyairvisual.cloud_api import InvalidKeyError, KeyExpiredError, Unauthorized
 from pyairvisual.errors import AirVisualError
 from pyairvisual.node import NodeProError
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.airvisual_pro import DOMAIN as AIRVISUAL_PRO_DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_IP_ADDRESS,
@@ -310,6 +312,25 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     data={CONF_API_KEY: entry.data[CONF_API_KEY], **geography},
                 )
             )
+
+    # 2 -> 3: Moving AirVisual Pro to its own domain
+    if version == 2:
+        version = 3
+
+        if entry.data[CONF_INTEGRATION_TYPE] == INTEGRATION_TYPE_NODE_PRO:
+            data = {**entry.data}
+            data.pop(CONF_INTEGRATION_TYPE)
+
+            tasks = [
+                hass.config_entries.async_remove(entry.entry_id),
+                hass.config_entries.flow.async_init(
+                    AIRVISUAL_PRO_DOMAIN, context={"source": SOURCE_IMPORT}, data=data
+                ),
+            ]
+            await asyncio.gather(*tasks)
+        else:
+            entry.version = version
+            hass.config_entries.async_update_entry(entry)
 
     LOGGER.info("Migration to version %s successful", version)
 
