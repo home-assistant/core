@@ -138,12 +138,6 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def _async_abort_parallel_flow(self, product):
-        """Abort parallel config flows."""
-        for progress in self._async_in_progress():
-            if progress["context"].get("unique_id") == product.unique_id:
-                self.hass.config_entries.flow.async_abort(progress["flow_id"])
-
     async def async_step_user(self, user_input=None):
         """Handle initial user-triggered config step."""
         hass = self.hass
@@ -185,10 +179,9 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.handle_step_exception(
                 "user", ex, schema, *addr, UNKNOWN, _LOGGER.error
             )
-        await self._async_abort_parallel_flow(product)
 
         # Check if configured but IP changed since
-        await self.async_set_unique_id(product.unique_id)
+        await self.async_set_unique_id(product.unique_id, raise_on_progress=False)
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(title=product.name, data=user_input)
