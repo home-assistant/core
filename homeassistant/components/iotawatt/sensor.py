@@ -19,9 +19,9 @@ from homeassistant.const import (
     ENERGY_WATT_HOUR,
     FREQUENCY_HERTZ,
     PERCENTAGE,
-    POWER_WATT,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity, entity_registry
@@ -75,7 +75,7 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, IotaWattSensorEntityDescription] = {
     ),
     "Watts": IotaWattSensorEntityDescription(
         "Watts",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
     ),
