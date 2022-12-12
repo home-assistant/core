@@ -730,6 +730,17 @@ class SensorEntity(Entity):
     def async_registry_entry_updated(self) -> None:
         """Run when the entity registry entry has been updated."""
         self._sensor_option_precision = self._custom_precision_or_none()
+        assert self.registry_entry
+        if (
+            sensor_options := self.registry_entry.options.get(f"{DOMAIN}.private")
+        ) and "refresh_initial_entity_options" in sensor_options:
+            registry = er.async_get(self.hass)
+            initial_options = self.get_initial_entity_options() or {}
+            registry.async_update_entity_options(
+                self.entity_id,
+                f"{DOMAIN}.private",
+                initial_options.get(f"{DOMAIN}.private"),
+            )
         self._sensor_option_unit_of_measurement = self._custom_unit_or_undef(
             DOMAIN, CONF_UNIT_OF_MEASUREMENT
         )
@@ -808,3 +819,21 @@ class RestoreSensor(SensorEntity, RestoreEntity):
         if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
             return None
         return SensorExtraStoredData.from_dict(restored_last_extra_data.as_dict())
+
+
+@callback
+def async_update_suggested_units(hass: HomeAssistant) -> None:
+    """Update the suggested_unit_of_measurement according to the unit system."""
+    registry = er.async_get(hass)
+
+    for entry in registry.entities.values():
+        if entry.domain != DOMAIN:
+            continue
+
+        sensor_private_options = dict(entry.options.get(f"{DOMAIN}.private", {}))
+        sensor_private_options["refresh_initial_entity_options"] = True
+        registry.async_update_entity_options(
+            entry.entity_id,
+            f"{DOMAIN}.private",
+            sensor_private_options,
+        )
