@@ -230,12 +230,14 @@ class ESPHomeClient(BaseBleakClient):
             Boolean representing connection status.
         """
         await self._wait_for_free_connection_slot(CONNECT_FREE_SLOT_TIMEOUT)
+        domain_data = self.domain_data
         entry_data = self.entry_data
-        self._mtu = entry_data.get_gatt_mtu_cache(self._address_as_int)
+
+        self._mtu = domain_data.get_gatt_mtu_cache(self._address_as_int)
         has_cache = bool(
             dangerous_use_bleak_cache
             and self._connection_version >= MIN_BLUETOOTH_PROXY_VERSION_HAS_CACHE
-            and entry_data.get_gatt_services_cache(self._address_as_int)
+            and domain_data.get_gatt_services_cache(self._address_as_int)
             and self._mtu
         )
         connected_future: asyncio.Future[bool] = asyncio.Future()
@@ -257,7 +259,7 @@ class ESPHomeClient(BaseBleakClient):
                 self._is_connected = True
                 if not self._mtu:
                     self._mtu = mtu
-                    entry_data.set_gatt_mtu_cache(self._address_as_int, mtu)
+                    domain_data.set_gatt_mtu_cache(self._address_as_int, mtu)
             else:
                 self._async_ble_device_disconnected()
 
@@ -392,14 +394,14 @@ class ESPHomeClient(BaseBleakClient):
            A :py:class:`bleak.backends.service.BleakGATTServiceCollection` with this device's services tree.
         """
         address_as_int = self._address_as_int
-        entry_data = self.entry_data
+        domain_data = self.domain_data
         # If the connection version >= 3, we must use the cache
         # because the esp has already wiped the services list to
         # save memory.
         if (
             self._connection_version >= MIN_BLUETOOTH_PROXY_VERSION_HAS_CACHE
             or dangerous_use_bleak_cache
-        ) and (cached_services := entry_data.get_gatt_services_cache(address_as_int)):
+        ) and (cached_services := domain_data.get_gatt_services_cache(address_as_int)):
             _LOGGER.debug(
                 "%s: %s - %s: Cached services hit",
                 self._source_name,
@@ -458,7 +460,7 @@ class ESPHomeClient(BaseBleakClient):
             self._ble_device.name,
             self._ble_device.address,
         )
-        entry_data.set_gatt_services_cache(address_as_int, services)
+        domain_data.set_gatt_services_cache(address_as_int, services)
         return services
 
     def _resolve_characteristic(
@@ -475,8 +477,8 @@ class ESPHomeClient(BaseBleakClient):
 
     async def clear_cache(self) -> None:
         """Clear the GATT cache."""
-        self.entry_data.clear_gatt_services_cache(self._address_as_int)
-        self.entry_data.clear_gatt_mtu_cache(self._address_as_int)
+        self.domain_data.clear_gatt_services_cache(self._address_as_int)
+        self.domain_data.clear_gatt_mtu_cache(self._address_as_int)
 
     @verify_connected
     @api_error_as_bleak_error
