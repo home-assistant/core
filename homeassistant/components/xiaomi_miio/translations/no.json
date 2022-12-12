@@ -51,6 +51,15 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "ptc_level": {
+                "state": {
+                    "medium": "Medium"
+                }
+            }
+        }
+    },
     "options": {
         "error": {
             "cloud_credentials_incomplete": "Utskriftsinformasjon for skyen er fullstendig. Fyll ut brukernavn, passord og land"

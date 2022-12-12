@@ -152,7 +152,6 @@ async def test_legacy_subscription_repair_flow(
         "type": "create_entry",
         "flow_id": flow_id,
         "handler": DOMAIN,
-        "title": "",
         "description": None,
         "description_placeholders": None,
     }

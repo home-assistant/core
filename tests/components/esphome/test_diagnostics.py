@@ -27,4 +27,4 @@ async def test_diagnostics(
         CONF_PASSWORD: "**REDACTED**",
         CONF_NOISE_PSK: "**REDACTED**",
     }
-    assert result["config"]["unique_id"] == "esphome-device"
+    assert result["config"]["unique_id"] == "11:22:33:44:55:aa"

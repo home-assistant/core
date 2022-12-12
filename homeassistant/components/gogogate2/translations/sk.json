@@ -15,7 +15,8 @@
                     "password": "Heslo",
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
                 },
-                "description": "Ni\u017e\u0161ie uve\u010fte po\u017eadovan\u00e9 inform\u00e1cie."
+                "description": "Ni\u017e\u0161ie uve\u010fte po\u017eadovan\u00e9 inform\u00e1cie.",
+                "title": "Nastavte Gogogate2 alebo ismartgate"
             }
         }
     }

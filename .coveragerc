@@ -225,7 +225,6 @@ omit =
     homeassistant/components/denonavr/media_player.py
     homeassistant/components/denonavr/receiver.py
     homeassistant/components/deutsche_bahn/sensor.py
-    homeassistant/components/devolo_home_control/sensor.py
     homeassistant/components/devolo_home_control/switch.py
     homeassistant/components/digital_ocean/*
     homeassistant/components/discogs/sensor.py
@@ -1246,6 +1245,7 @@ omit =
     homeassistant/components/switchbot/coordinator.py
     homeassistant/components/switchbot/cover.py
     homeassistant/components/switchbot/entity.py
+    homeassistant/components/switchbot/humidifier.py
     homeassistant/components/switchbot/light.py
     homeassistant/components/switchbot/sensor.py
     homeassistant/components/switchbot/switch.py

@@ -10,11 +10,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    DATA_GIGABYTES,
-    DATA_RATE_MEGABITS_PER_SECOND,
-    TEMP_CELSIUS,
-)
+from homeassistant.const import DATA_GIGABYTES, TEMP_CELSIUS, UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -57,8 +53,9 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         key=SENSORS_RATES[0],
         name="Download Speed",
         icon="mdi:download-network",
+        device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         entity_registry_enabled_default=False,
         factor=125000,
     ),
@@ -66,8 +63,9 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         key=SENSORS_RATES[1],
         name="Upload Speed",
         icon="mdi:upload-network",
+        device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         entity_registry_enabled_default=False,
         factor=125000,
     ),

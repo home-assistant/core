@@ -1,5 +1,5 @@
 """Class to hold remote accessories."""
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 import logging
 
 from pyhap.const import CATEGORY_TELEVISION
@@ -75,7 +75,7 @@ REMOTE_KEYS = {
 }
 
 
-class RemoteInputSelectAccessory(HomeAccessory):
+class RemoteInputSelectAccessory(HomeAccessory, ABC):
     """Generate a InputSelect accessory."""
 
     def __init__(

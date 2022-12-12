@@ -17,15 +17,14 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     CONF_RESOURCES,
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
-    FREQUENCY_HERTZ,
     PERCENTAGE,
-    POWER_VOLT_AMPERE,
-    POWER_WATT,
-    TEMP_CELSIUS,
-    TIME_MINUTES,
-    TIME_SECONDS,
+    UnitOfApparentPower,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfFrequency,
+    UnitOfPower,
+    UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -79,8 +78,8 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "battv": SensorEntityDescription(
         key="battv",
         name="UPS Battery Voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        icon="mdi:flash",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
     ),
     "bcharge": SensorEntityDescription(
         key="bcharge",
@@ -151,8 +150,8 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "hitrans": SensorEntityDescription(
         key="hitrans",
         name="UPS Transfer High",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        icon="mdi:flash",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
     ),
     "hostname": SensorEntityDescription(
         key="hostname",
@@ -169,7 +168,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "itemp": SensorEntityDescription(
         key="itemp",
         name="UPS Internal Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     "laststest": SensorEntityDescription(
@@ -191,14 +190,14 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "linefreq": SensorEntityDescription(
         key="linefreq",
         name="UPS Line Frequency",
-        native_unit_of_measurement=FREQUENCY_HERTZ,
-        icon="mdi:information-outline",
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        device_class=SensorDeviceClass.FREQUENCY,
     ),
     "linev": SensorEntityDescription(
         key="linev",
         name="UPS Input Voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        icon="mdi:flash",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
     ),
     "loadpct": SensorEntityDescription(
         key="loadpct",
@@ -215,8 +214,8 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "lotrans": SensorEntityDescription(
         key="lotrans",
         name="UPS Transfer Low",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        icon="mdi:flash",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
     ),
     "mandate": SensorEntityDescription(
         key="mandate",
@@ -232,8 +231,8 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "maxlinev": SensorEntityDescription(
         key="maxlinev",
         name="UPS Input Voltage High",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        icon="mdi:flash",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
     ),
     "maxtime": SensorEntityDescription(
         key="maxtime",
@@ -249,8 +248,8 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "minlinev": SensorEntityDescription(
         key="minlinev",
         name="UPS Input Voltage Low",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        icon="mdi:flash",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
     ),
     "mintimel": SensorEntityDescription(
         key="mintimel",
@@ -266,32 +265,32 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "nombattv": SensorEntityDescription(
         key="nombattv",
         name="UPS Battery Nominal Voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        icon="mdi:flash",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
     ),
     "nominv": SensorEntityDescription(
         key="nominv",
         name="UPS Nominal Input Voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        icon="mdi:flash",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
     ),
     "nomoutv": SensorEntityDescription(
         key="nomoutv",
         name="UPS Nominal Output Voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        icon="mdi:flash",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
     ),
     "nompower": SensorEntityDescription(
         key="nompower",
         name="UPS Nominal Output Power",
-        native_unit_of_measurement=POWER_WATT,
-        icon="mdi:flash",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
     ),
     "nomapnt": SensorEntityDescription(
         key="nomapnt",
         name="UPS Nominal Apparent Power",
-        native_unit_of_measurement=POWER_VOLT_AMPERE,
-        icon="mdi:flash",
+        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+        device_class=SensorDeviceClass.APPARENT_POWER,
     ),
     "numxfers": SensorEntityDescription(
         key="numxfers",
@@ -301,14 +300,14 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "outcurnt": SensorEntityDescription(
         key="outcurnt",
         name="UPS Output Current",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        icon="mdi:flash",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
     ),
     "outputv": SensorEntityDescription(
         key="outputv",
         name="UPS Output Voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        icon="mdi:flash",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
     ),
     "reg1": SensorEntityDescription(
         key="reg1",
@@ -416,17 +415,17 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
 }
 
-SPECIFIC_UNITS = {"ITEMP": TEMP_CELSIUS}
+SPECIFIC_UNITS = {"ITEMP": UnitOfTemperature.CELSIUS}
 INFERRED_UNITS = {
-    " Minutes": TIME_MINUTES,
-    " Seconds": TIME_SECONDS,
+    " Minutes": UnitOfTime.MINUTES,
+    " Seconds": UnitOfTime.SECONDS,
     " Percent": PERCENTAGE,
-    " Volts": ELECTRIC_POTENTIAL_VOLT,
-    " Ampere": ELECTRIC_CURRENT_AMPERE,
-    " Volt-Ampere": POWER_VOLT_AMPERE,
-    " Watts": POWER_WATT,
-    " Hz": FREQUENCY_HERTZ,
-    " C": TEMP_CELSIUS,
+    " Volts": UnitOfElectricPotential.VOLT,
+    " Ampere": UnitOfElectricCurrent.AMPERE,
+    " Volt-Ampere": UnitOfApparentPower.VOLT_AMPERE,
+    " Watts": UnitOfPower.WATT,
+    " Hz": UnitOfFrequency.HERTZ,
+    " C": UnitOfTemperature.CELSIUS,
     " Percent Load Capacity": PERCENTAGE,
 }
 

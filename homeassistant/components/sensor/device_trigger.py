@@ -31,10 +31,12 @@ from . import ATTR_STATE_CLASS, DOMAIN, SensorDeviceClass
 DEVICE_CLASS_NONE = "none"
 
 CONF_APPARENT_POWER = "apparent_power"
+CONF_ATMOSPHERIC_PRESSURE = "atmospheric_pressure"
 CONF_BATTERY_LEVEL = "battery_level"
 CONF_CO = "carbon_monoxide"
 CONF_CO2 = "carbon_dioxide"
 CONF_CURRENT = "current"
+CONF_DATA_RATE = "data_rate"
 CONF_DATA_SIZE = "data_size"
 CONF_DISTANCE = "distance"
 CONF_ENERGY = "energy"
@@ -42,6 +44,7 @@ CONF_FREQUENCY = "frequency"
 CONF_GAS = "gas"
 CONF_HUMIDITY = "humidity"
 CONF_ILLUMINANCE = "illuminance"
+CONF_IRRADIANCE = "irradiance"
 CONF_MOISTURE = "moisture"
 CONF_NITROGEN_DIOXIDE = "nitrogen_dioxide"
 CONF_NITROGEN_MONOXIDE = "nitrogen_monoxide"
@@ -57,6 +60,7 @@ CONF_PRECIPITATION_INTENSITY = "precipitation_intensity"
 CONF_PRESSURE = "pressure"
 CONF_REACTIVE_POWER = "reactive_power"
 CONF_SIGNAL_STRENGTH = "signal_strength"
+CONF_SOUND_PRESSURE = "sound_pressure"
 CONF_SPEED = "speed"
 CONF_SULPHUR_DIOXIDE = "sulphur_dioxide"
 CONF_TEMPERATURE = "temperature"
@@ -70,10 +74,12 @@ CONF_WIND_SPEED = "wind_speed"
 
 ENTITY_TRIGGERS = {
     SensorDeviceClass.APPARENT_POWER: [{CONF_TYPE: CONF_APPARENT_POWER}],
+    SensorDeviceClass.ATMOSPHERIC_PRESSURE: [{CONF_TYPE: CONF_ATMOSPHERIC_PRESSURE}],
     SensorDeviceClass.BATTERY: [{CONF_TYPE: CONF_BATTERY_LEVEL}],
     SensorDeviceClass.CO: [{CONF_TYPE: CONF_CO}],
     SensorDeviceClass.CO2: [{CONF_TYPE: CONF_CO2}],
     SensorDeviceClass.CURRENT: [{CONF_TYPE: CONF_CURRENT}],
+    SensorDeviceClass.DATA_RATE: [{CONF_TYPE: CONF_DATA_RATE}],
     SensorDeviceClass.DATA_SIZE: [{CONF_TYPE: CONF_DATA_SIZE}],
     SensorDeviceClass.DISTANCE: [{CONF_TYPE: CONF_DISTANCE}],
     SensorDeviceClass.ENERGY: [{CONF_TYPE: CONF_ENERGY}],
@@ -81,6 +87,7 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.GAS: [{CONF_TYPE: CONF_GAS}],
     SensorDeviceClass.HUMIDITY: [{CONF_TYPE: CONF_HUMIDITY}],
     SensorDeviceClass.ILLUMINANCE: [{CONF_TYPE: CONF_ILLUMINANCE}],
+    SensorDeviceClass.IRRADIANCE: [{CONF_TYPE: CONF_IRRADIANCE}],
     SensorDeviceClass.MOISTURE: [{CONF_TYPE: CONF_MOISTURE}],
     SensorDeviceClass.NITROGEN_DIOXIDE: [{CONF_TYPE: CONF_NITROGEN_DIOXIDE}],
     SensorDeviceClass.NITROGEN_MONOXIDE: [{CONF_TYPE: CONF_NITROGEN_MONOXIDE}],
@@ -98,6 +105,7 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.PRESSURE: [{CONF_TYPE: CONF_PRESSURE}],
     SensorDeviceClass.REACTIVE_POWER: [{CONF_TYPE: CONF_REACTIVE_POWER}],
     SensorDeviceClass.SIGNAL_STRENGTH: [{CONF_TYPE: CONF_SIGNAL_STRENGTH}],
+    SensorDeviceClass.SOUND_PRESSURE: [{CONF_TYPE: CONF_SOUND_PRESSURE}],
     SensorDeviceClass.SPEED: [{CONF_TYPE: CONF_SPEED}],
     SensorDeviceClass.SULPHUR_DIOXIDE: [{CONF_TYPE: CONF_SULPHUR_DIOXIDE}],
     SensorDeviceClass.TEMPERATURE: [{CONF_TYPE: CONF_TEMPERATURE}],
@@ -120,10 +128,12 @@ TRIGGER_SCHEMA = vol.All(
             vol.Required(CONF_TYPE): vol.In(
                 [
                     CONF_APPARENT_POWER,
+                    CONF_ATMOSPHERIC_PRESSURE,
                     CONF_BATTERY_LEVEL,
                     CONF_CO,
                     CONF_CO2,
                     CONF_CURRENT,
+                    CONF_DATA_RATE,
                     CONF_DATA_SIZE,
                     CONF_DISTANCE,
                     CONF_ENERGY,
@@ -131,6 +141,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_GAS,
                     CONF_HUMIDITY,
                     CONF_ILLUMINANCE,
+                    CONF_IRRADIANCE,
                     CONF_MOISTURE,
                     CONF_NITROGEN_DIOXIDE,
                     CONF_NITROGEN_MONOXIDE,
@@ -146,6 +157,8 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_PRESSURE,
                     CONF_REACTIVE_POWER,
                     CONF_SIGNAL_STRENGTH,
+                    CONF_SOUND_PRESSURE,
+                    CONF_SPEED,
                     CONF_SULPHUR_DIOXIDE,
                     CONF_TEMPERATURE,
                     CONF_VOLATILE_ORGANIC_COMPOUNDS,
