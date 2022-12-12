@@ -198,6 +198,9 @@ async def test_options_add_sensor_errors(
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "add_sensor"
 
+    device_registry = dr.async_get(hass)
+    assert len(device_registry.devices.values()) == 1
+
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
@@ -212,6 +215,9 @@ async def test_options_add_sensor_errors(
 
 async def test_options_remove_sensor(hass, config_entry, setup_purpleair):
     """Test removing a sensor via the options flow."""
+    device_registry = dr.async_get(hass)
+    assert len(device_registry.devices.values()) == 1
+
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == data_entry_flow.FlowResultType.MENU
     assert result["step_id"] == "init"
@@ -222,7 +228,6 @@ async def test_options_remove_sensor(hass, config_entry, setup_purpleair):
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "remove_sensor"
 
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_device({(DOMAIN, "123456")})
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -235,6 +240,7 @@ async def test_options_remove_sensor(hass, config_entry, setup_purpleair):
     }
 
     assert config_entry.options["sensor_indices"] == []
+    assert len(device_registry.devices.values()) == 0
 
 
 @pytest.mark.parametrize(
