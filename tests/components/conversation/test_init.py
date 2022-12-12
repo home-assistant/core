@@ -101,10 +101,10 @@ async def test_http_processing_intent(hass, hass_client, hass_admin_user):
 
         intent_type = "OrderBeer"
 
-        async def async_handle(self, intent):
+        async def async_handle(self, intent, conversation_id):
             """Handle the intent."""
             assert intent.context.user_id == hass_admin_user.id
-            response = intent.create_response()
+            response = intent.create_response(conversation_id=conversation_id)
             response.async_set_speech(
                 "I've ordered a {}!".format(intent.slots["type"]["value"])
             )
