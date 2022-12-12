@@ -26,10 +26,10 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     LENGTH_KILOMETERS,
     PERCENTAGE,
-    POWER_KILO_WATT,
     TEMP_CELSIUS,
     TIME_MINUTES,
-    VOLUME_LITERS,
+    UnitOfPower,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -209,7 +209,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         device_class=SensorDeviceClass.POWER,
         entity_class=RenaultSensor[KamereonVehicleBatteryStatusData],
         name="Admissible charging power",
-        native_unit_of_measurement=POWER_KILO_WATT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     RenaultSensorEntityDescription(
@@ -222,7 +222,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         device_class=SensorDeviceClass.POWER,
         entity_class=RenaultSensor[KamereonVehicleBatteryStatusData],
         name="Charging power",
-        native_unit_of_measurement=POWER_KILO_WATT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
         value_lambda=_get_charging_power,
     ),
@@ -312,7 +312,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         entity_class=RenaultSensor[KamereonVehicleCockpitData],
         icon="mdi:fuel",
         name="Fuel quantity",
-        native_unit_of_measurement=VOLUME_LITERS,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
         state_class=SensorStateClass.MEASUREMENT,
         requires_fuel=True,
         value_lambda=_get_rounded_value,

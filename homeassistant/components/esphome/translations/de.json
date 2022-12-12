@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "mdns_missing_mac": "Fehlende MAC-Adresse in MDNS-Eigenschaften.",
             "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {

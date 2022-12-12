@@ -45,6 +45,7 @@ from .match import (
     ble_device_matches,
 )
 from .models import BluetoothCallback, BluetoothChange, BluetoothServiceInfoBleak
+from .storage import BluetoothStorage
 from .usage import install_multiple_bleak_catcher, uninstall_multiple_bleak_catcher
 from .util import async_load_history_from_system
 
@@ -102,6 +103,7 @@ class BluetoothManager:
         hass: HomeAssistant,
         integration_matcher: IntegrationMatcher,
         bluetooth_adapters: BluetoothAdapters,
+        storage: BluetoothStorage,
     ) -> None:
         """Init bluetooth manager."""
         self.hass = hass
@@ -128,6 +130,7 @@ class BluetoothManager:
         self._adapters: dict[str, AdapterDetails] = {}
         self._sources: dict[str, BaseHaScanner] = {}
         self._bluetooth_adapters = bluetooth_adapters
+        self.storage = storage
 
     @property
     def supports_passive_scan(self) -> bool:
@@ -196,12 +199,9 @@ class BluetoothManager:
         """Set up the bluetooth manager."""
         await self._bluetooth_adapters.refresh()
         install_multiple_bleak_catcher()
-        history = async_load_history_from_system(self._bluetooth_adapters)
-        # Everything is connectable so it fall into both
-        # buckets since the host system can only provide
-        # connectable devices
-        self._all_history = history.copy()
-        self._connectable_history = history.copy()
+        self._all_history, self._connectable_history = async_load_history_from_system(
+            self._bluetooth_adapters, self.storage
+        )
         self.async_setup_unavailable_tracking()
 
     @hass_callback

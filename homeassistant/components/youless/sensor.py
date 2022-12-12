@@ -12,8 +12,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE,
     ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
-    VOLUME_CUBIC_METERS,
+    UnitOfPower,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -98,7 +98,7 @@ class YoulessBaseSensor(CoordinatorEntity, SensorEntity):
 class GasSensor(YoulessBaseSensor):
     """The Youless gas sensor."""
 
-    _attr_native_unit_of_measurement = VOLUME_CUBIC_METERS
+    _attr_native_unit_of_measurement = UnitOfVolume.CUBIC_METERS
     _attr_device_class = SensorDeviceClass.GAS
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
 
@@ -117,7 +117,7 @@ class GasSensor(YoulessBaseSensor):
 class CurrentPowerSensor(YoulessBaseSensor):
     """The current power usage sensor."""
 
-    _attr_native_unit_of_measurement = POWER_WATT
+    _attr_native_unit_of_measurement = UnitOfPower.WATT
     _attr_device_class = SensorDeviceClass.POWER
     _attr_state_class = SensorStateClass.MEASUREMENT
 
@@ -220,7 +220,7 @@ class ExtraMeterSensor(YoulessBaseSensor):
 class ExtraMeterPowerSensor(YoulessBaseSensor):
     """The Youless extra meter power value sensor (s0)."""
 
-    _attr_native_unit_of_measurement = POWER_WATT
+    _attr_native_unit_of_measurement = UnitOfPower.WATT
     _attr_device_class = SensorDeviceClass.POWER
     _attr_state_class = SensorStateClass.MEASUREMENT
 

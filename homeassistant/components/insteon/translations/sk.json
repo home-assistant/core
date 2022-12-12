@@ -59,7 +59,8 @@
                     "address": "Adresa zariadenia (t. j. 1a2b3c)",
                     "cat": "Kateg\u00f3ria zariadenia (t. j. 0x10)",
                     "subcat": "Podkateg\u00f3ria zariadenia (napr. 0x0a)"
-                }
+                },
+                "description": "Pridanie prep\u00edsania zariadenia."
             },
             "add_x10": {
                 "data": {
@@ -81,8 +82,10 @@
             },
             "init": {
                 "data": {
+                    "add_override": "Pridanie prep\u00edsania zariadenia.",
                     "add_x10": "Pridajte zariadenie X10.",
                     "change_hub_config": "Zme\u0148te konfigur\u00e1ciu hubu.",
+                    "remove_override": "Odstr\u00e1nenie prep\u00edsania zariadenia.",
                     "remove_x10": "Odstr\u00e1\u0148te zariadenie X10."
                 }
             },

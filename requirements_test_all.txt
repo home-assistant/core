@@ -12,6 +12,9 @@ AIOAladdinConnect==0.1.48
 # homeassistant.components.adax
 Adax-local==0.1.5
 
+# homeassistant.components.homekit
+HAP-python==4.6.0
+
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
 
@@ -33,7 +36,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.22.0
+PySwitchbot==0.23.1
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -43,7 +46,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.6.7
 
 # homeassistant.components.vicare
-PyViCare==2.19.0
+PyViCare==2.21.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -174,7 +177,7 @@ aiokafka==0.7.2
 aiolifx==0.8.7
 
 # homeassistant.components.lifx
-aiolifx_effects==0.3.0
+aiolifx_effects==0.3.1
 
 # homeassistant.components.lifx
 aiolifx_themes==0.2.0
@@ -221,7 +224,7 @@ aiopvpc==3.0.0
 aiopyarr==22.11.0
 
 # homeassistant.components.qnap_qsw
-aioqsw==0.2.2
+aioqsw==0.3.1
 
 # homeassistant.components.recollect_waste
 aiorecollect==1.0.8
@@ -290,7 +293,7 @@ amberelectric==1.0.4
 ambiclimate==0.2.1
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.69
+androidtv[async]==0.0.70
 
 # homeassistant.components.anthemav
 anthemav==1.4.1
@@ -361,10 +364,10 @@ blinkpy==0.19.2
 bluemaestro-ble==0.2.0
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.12.0
+bluetooth-adapters==0.14.1
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==0.5.5
+bluetooth-auto-recovery==1.0.0
 
 # homeassistant.components.bluetooth
 # homeassistant.components.led_ble
@@ -574,6 +577,7 @@ georss_ign_sismologia_client==0.3
 # homeassistant.components.qld_bushfire
 georss_qld_bushfire_alert_client==0.5
 
+# homeassistant.components.dlna_dmr
 # homeassistant.components.kef
 # homeassistant.components.minecraft_server
 # homeassistant.components.nmap_tracker
@@ -626,9 +630,6 @@ guppy3==3.1.2
 # homeassistant.components.iaqualink
 h2==4.1.0
 
-# homeassistant.components.homekit
-ha-HAP-python==4.5.2
-
 # homeassistant.components.generic
 # homeassistant.components.stream
 ha-av==10.0.0
@@ -667,7 +668,7 @@ hole==0.7.0
 holidays==0.17.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20221208.0
+home-assistant-frontend==20221212.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1257,7 +1258,7 @@ pymysensors==0.24.0
 pynetgear==0.10.8
 
 # homeassistant.components.nina
-pynina==0.1.8
+pynina==0.2.0
 
 # homeassistant.components.nobo_hub
 pynobo==1.6.0
@@ -1387,7 +1388,7 @@ pyspcwebgw==0.4.0
 pysqueezebox==0.6.1
 
 # homeassistant.components.switchbee
-pyswitchbee==1.6.1
+pyswitchbee==1.7.3
 
 # homeassistant.components.syncthru
 pysyncthru==0.7.10
@@ -1822,13 +1823,13 @@ xmltodict==0.13.0
 yalesmartalarmclient==0.3.9
 
 # homeassistant.components.yalexs_ble
-yalexs-ble==1.10.3
+yalexs-ble==1.11.4
 
 # homeassistant.components.august
 yalexs==1.2.6
 
 # homeassistant.components.august
-yalexs_ble==1.10.3
+yalexs_ble==1.11.4
 
 # homeassistant.components.yeelight
 yeelight==0.7.10
@@ -1846,7 +1847,7 @@ zamg==0.1.1
 zeroconf==0.39.4
 
 # homeassistant.components.zha
-zha-quirks==0.0.88
+zha-quirks==0.0.89
 
 # homeassistant.components.zha
 zigpy-deconz==0.19.2

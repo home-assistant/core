@@ -19,9 +19,9 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_WATT,
     PRESSURE_KPA,
     TEMP_CELSIUS,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -97,7 +97,7 @@ SENSORS_MAP: dict[str, ZWaveMeSensorEntityDescription] = {
     "meterElectric_watt": ZWaveMeSensorEntityDescription(
         key="meterElectric_watt",
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "temperature": ZWaveMeSensorEntityDescription(

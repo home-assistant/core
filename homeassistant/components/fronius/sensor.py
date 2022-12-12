@@ -16,10 +16,10 @@ from homeassistant.const import (
     FREQUENCY_HERTZ,
     PERCENTAGE,
     POWER_VOLT_AMPERE_REACTIVE,
-    POWER_WATT,
     TEMP_CELSIUS,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
@@ -132,7 +132,7 @@ INVERTER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="power_ac",
         name="Power AC",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -396,7 +396,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="power_real_phase_1",
         name="Power real phase 1",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -404,7 +404,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="power_real_phase_2",
         name="Power real phase 2",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -412,7 +412,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="power_real_phase_3",
         name="Power real phase 3",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -420,7 +420,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="power_real",
         name="Power real",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -485,7 +485,7 @@ OHMPILOT_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="power_real_ac",
         name="Power",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -546,28 +546,28 @@ POWER_FLOW_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="power_battery",
         name="Power battery",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="power_grid",
         name="Power grid",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="power_load",
         name="Power load",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="power_photovoltaics",
         name="Power photovoltaics",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),

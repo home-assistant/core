@@ -92,7 +92,7 @@ async def test_setup_success(
 
     assert not hass.data.get(DOMAIN)
     assert entries[0].state is ConfigEntryState.NOT_LOADED
-    assert not len(hass.services.async_services().get(DOMAIN, {}))
+    assert not hass.services.async_services().get(DOMAIN, {})
 
 
 @pytest.mark.parametrize(
@@ -125,7 +125,6 @@ async def test_missing_required_scopes_requires_reauth(
 async def test_expired_token_refresh_success(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
-    scopes: list[str],
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test expired token is refreshed."""
@@ -168,7 +167,6 @@ async def test_expired_token_refresh_success(
 async def test_expired_token_refresh_failure(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
-    scopes: list[str],
     aioclient_mock: AiohttpClientMocker,
     status: http.HTTPStatus,
     expected_state: ConfigEntryState,

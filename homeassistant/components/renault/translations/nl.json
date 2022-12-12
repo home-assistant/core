@@ -31,5 +31,14 @@
                 "title": "Renault-inloggegevens instellen"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "charge_state": {
+                "state": {
+                    "charge_in_progress": "Opladen"
+                }
+            }
+        }
     }
 }

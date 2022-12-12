@@ -1,0 +1,8 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "already_in_progress": "De configuratie is momenteel al bezig"
+        }
+    }
+}
