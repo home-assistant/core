@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime, time, timedelta
 import logging
+from typing import Any
 
 import here_routing
 from here_routing import HERERoutingApi, Return, RoutingMode, Spans, TransportMode
@@ -96,7 +97,7 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator):
 
         return self._parse_routing_response(response)
 
-    def _parse_routing_response(self, response) -> HERETravelTimeData:
+    def _parse_routing_response(self, response: Any) -> HERETravelTimeData:
         """Parse the routing response dict to a HERETravelTimeData."""
         section: dict = response["routes"][0]["sections"][0]
         summary: dict = section["summary"]
@@ -113,7 +114,7 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator):
         destination_name: str | None = None
         if (names := section["spans"][-1].get("names")) is not None:
             destination_name = names[0]["value"]
-        return HERETravelTimeData(
+        return HERETravelTimeData(  # type: ignore[no-any-return]
             {
                 ATTR_ATTRIBUTION: None,
                 ATTR_DURATION: round(summary["baseDuration"] / 60),  # type: ignore[misc]
@@ -182,7 +183,7 @@ class HERETransitDataUpdateCoordinator(DataUpdateCoordinator):
         except (HERETransitConnectionError, HERETransitNoRouteFoundError) as error:
             raise UpdateFailed from error
 
-    def _parse_transit_response(self, response) -> HERETravelTimeData:
+    def _parse_transit_response(self, response: Any) -> HERETravelTimeData:
         """Parse the transit response dict to a HERETravelTimeData."""
         sections: dict = response["routes"][0]["sections"]
         attribution: str | None = build_hass_attribution(sections)
@@ -202,7 +203,7 @@ class HERETransitDataUpdateCoordinator(DataUpdateCoordinator):
         duration: float = sum(
             section["travelSummary"]["duration"] for section in sections
         )
-        return HERETravelTimeData(
+        return HERETravelTimeData(  # type: ignore[no-any-return]
             {
                 ATTR_ATTRIBUTION: attribution,
                 ATTR_DURATION: round(duration / 60),  # type: ignore[misc]
