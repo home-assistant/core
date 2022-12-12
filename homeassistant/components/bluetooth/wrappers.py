@@ -246,12 +246,14 @@ class HaBleakClientWrapper(BleakClient):
         device_advertisement_datas = models.MANAGER.async_get_discovered_devices_and_advertisement_data_by_address(
             address, True
         )
-        for device_advertisement_data in sorted(
+        devices = sorted(
             device_advertisement_datas,
             key=lambda device_advertisement_data: device_advertisement_data[1].rssi
             or NO_RSSI_VALUE,
             reverse=True,
-        ):
+        )
+        _LOGGER.warning("%s: connection options: %s", address, devices)
+        for device_advertisement_data in devices:
             if backend := self._async_get_backend_for_ble_device(
                 models.MANAGER, device_advertisement_data[0]
             ):
