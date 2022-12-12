@@ -19,13 +19,12 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_TYPE,
     CONF_USERNAME,
-    ENERGY_KILO_WATT_HOUR,
     EVENT_HOMEASSISTANT_STOP,
-    MASS_KILOGRAMS,
-    POWER_WATT,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    TIME_HOURS,
+    UnitOfEnergy,
+    UnitOfMass,
+    UnitOfPower,
+    UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
@@ -44,11 +43,11 @@ INVERTER_TYPES = ["ethernet", "wifi"]
 
 SAJ_UNIT_MAPPINGS = {
     "": None,
-    "h": TIME_HOURS,
-    "kg": MASS_KILOGRAMS,
-    "kWh": ENERGY_KILO_WATT_HOUR,
-    "W": POWER_WATT,
-    "°C": TEMP_CELSIUS,
+    "h": UnitOfTime.HOURS,
+    "kg": UnitOfMass.KILOGRAMS,
+    "kWh": UnitOfEnergy.KILO_WATT_HOUR,
+    "W": UnitOfPower.WATT,
+    "°C": UnitOfTemperature.CELSIUS,
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -204,19 +203,23 @@ class SAJsensor(SensorEntity):
         return self._state
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         return SAJ_UNIT_MAPPINGS[self._sensor.unit]
 
     @property
-    def device_class(self):
+    def device_class(self) -> SensorDeviceClass | None:
         """Return the device class the sensor belongs to."""
-        if self.native_unit_of_measurement == POWER_WATT:
+        if self.native_unit_of_measurement == UnitOfPower.WATT:
             return SensorDeviceClass.POWER
-        if self.native_unit_of_measurement == ENERGY_KILO_WATT_HOUR:
+        if self.native_unit_of_measurement == UnitOfEnergy.KILO_WATT_HOUR:
             return SensorDeviceClass.ENERGY
-        if self.native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
+        if self.native_unit_of_measurement in (
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
+        ):
             return SensorDeviceClass.TEMPERATURE
+        return None
 
     @property
     def per_day_basis(self) -> bool:
