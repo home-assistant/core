@@ -3,7 +3,7 @@ from datetime import timedelta
 import logging
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import ENERGY_WATT_HOUR, PERCENTAGE, POWER_WATT
+from homeassistant.const import ENERGY_WATT_HOUR, PERCENTAGE, UnitOfPower
 
 from .models import SolarEdgeSensorEntityDescription
 
@@ -70,7 +70,7 @@ SENSOR_TYPES = [
         name="Current Power",
         icon="mdi:solar-power",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
     ),
     SolarEdgeSensorEntityDescription(
