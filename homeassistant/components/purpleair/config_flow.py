@@ -1,6 +1,7 @@
 """Config flow for PurpleAir integration."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 from aiopurpleair import API
@@ -70,24 +71,34 @@ def async_get_nearby_sensors_schema(options: list[SelectOptionDict]) -> vol.Sche
     )
 
 
-class FlowError(Exception):
-    """Define an exception that indicates a flow error."""
+@dataclass
+class ValidationResult:
+    """Define a validation result."""
+
+    data: dict[str, Any] | list[Any] | None
+    errors: dict[str, Any]
 
 
-async def async_validate_api_key(hass: HomeAssistant, api_key: str) -> None:
-    """Validate an API key."""
+async def async_validate_api_key(hass: HomeAssistant, api_key: str) -> dict[str, Any]:
+    """Validate an API key.
+
+    This method returns a dictionary of errors (if appropriate).
+    """
     api = async_get_api(hass, api_key)
+    errors = {}
 
     try:
         await api.async_check_api_key()
-    except InvalidApiKeyError as err:
-        raise FlowError("invalid_api_key") from err
+    except InvalidApiKeyError:
+        errors["base"] = "invalid_api_key"
     except PurpleAirError as err:
         LOGGER.error("PurpleAir error while checking API key: %s", err)
-        raise FlowError("unknown") from err
+        errors["base"] = "unknown"
     except Exception as err:  # pylint: disable=broad-except
         LOGGER.exception("Unexpected exception while checking API key: %s", err)
-        raise FlowError("unknown") from err
+        errors["base"] = "unknown"
+
+    return ValidationResult(data=None, errors=errors)
 
 
 async def async_validate_coordinates(
@@ -99,6 +110,7 @@ async def async_validate_coordinates(
 ) -> list[NearbySensorResult]:
     """Validate coordinates."""
     api = async_get_api(hass, api_key)
+    errors = {}
 
     try:
         nearby_sensor_results = await api.sensors.async_get_nearby_sensors(
@@ -106,15 +118,15 @@ async def async_validate_coordinates(
         )
     except PurpleAirError as err:
         LOGGER.error("PurpleAir error while getting nearby sensors: %s", err)
-        raise FlowError("unknown") from err
+        errors["base"] = "unknown"
     except Exception as err:  # pylint: disable=broad-except
         LOGGER.exception("Unexpected exception while getting nearby sensors: %s", err)
-        raise FlowError("unknown") from err
+        errors["base"] = "unknown"
 
     if not nearby_sensor_results:
-        raise FlowError("no_sensors_near_coordinates")
+        errors["base"] = "no_sensors_near_coordinates"
 
-    return nearby_sensor_results
+    return ValidationResult(data=nearby_sensor_results, errors=errors)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -136,19 +148,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=async_get_coordinates_schema(self.hass),
             )
 
-        try:
-            nearby_sensor_results = await async_validate_coordinates(
-                self.hass,
-                self._flow_data[CONF_API_KEY],
-                user_input[CONF_LATITUDE],
-                user_input[CONF_LONGITUDE],
-                user_input[CONF_DISTANCE],
-            )
-        except FlowError as err:
+        validation = await async_validate_coordinates(
+            self.hass,
+            self._flow_data[CONF_API_KEY],
+            user_input[CONF_LATITUDE],
+            user_input[CONF_LONGITUDE],
+            user_input[CONF_DISTANCE],
+        )
+
+        if validation.errors:
             return self.async_show_form(
                 step_id="by_coordinates",
                 data_schema=async_get_coordinates_schema(self.hass),
-                errors={"base": str(err)},
+                errors=validation.errors,
             )
 
         self._flow_data[CONF_NEARBY_SENSOR_OPTIONS] = [
@@ -156,7 +168,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 value=str(result.sensor.sensor_index),
                 label=f"{result.sensor.name} ({round(result.distance, 1)} km away)",
             )
-            for result in nearby_sensor_results
+            for result in validation.data
         ]
 
         return await self.async_step_choose_sensor()
@@ -192,13 +204,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(api_key)
         self._abort_if_unique_id_configured()
 
-        try:
-            await async_validate_api_key(self.hass, api_key)
-        except FlowError as err:
+        validation = await async_validate_api_key(self.hass, api_key)
+
+        if validation.errors:
             return self.async_show_form(
-                step_id="user",
-                data_schema=API_KEY_SCHEMA,
-                errors={"base": str(err)},
+                step_id="user", data_schema=API_KEY_SCHEMA, errors=validation.errors
             )
 
         self._flow_data = {CONF_API_KEY: api_key}
