@@ -80,17 +80,14 @@ class EcobeeVentilator(FanEntity):
         self.data = data
         self.thermostat_index = thermostat_index
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
-        ecobee_name = self.thermostat["name"]
-        self._attr_name = f"{ecobee_name} Ventilator"
+        self._attr_name = f'{self.thermostat["name"]} Ventilator'
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.thermostat["identifier"])},
             manufacturer=MANUFACTURER,
             model=ECOBEE_MODEL_TO_NAME.get(self.thermostat["modelNumber"]),
-            name=self.name,
+            name=self._attr_name,
         )
-        self._attr_unique_id = f"{self.thermostat['identifier']}"
-
-        self.update_without_throttle = False
+        self._attr_unique_id = self.thermostat["identifier"]
 
     @property
     def available(self):
