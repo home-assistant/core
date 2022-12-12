@@ -46,12 +46,14 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     PERCENTAGE,
     STATE_CLOSED,
+    STATE_CLOSING,
     STATE_HOME,
     STATE_LOCKED,
     STATE_NOT_HOME,
     STATE_OFF,
     STATE_ON,
     STATE_OPEN,
+    STATE_OPENING,
     STATE_UNLOCKED,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -445,19 +447,60 @@ async def test_lock(client, lock_entities):
 @pytest.mark.parametrize("namespace", [""])
 async def test_cover(client, cover_entities):
     """Test prometheus metrics for cover."""
+    data = {**cover_entities}
     body = await generate_latest_metrics(client)
 
-    assert (
-        'cover_state{domain="cover",'
-        'entity="cover.garage_door",'
-        'friendly_name="Garage Door"} 1.0' in body
-    )
+    open_covers = ["cover_open", "cover_position", "cover_tilt_position"]
+    for testcover in data:
+        open_metric = (
+            f'cover_state{{domain="cover",'
+            f'entity="{cover_entities[testcover].entity_id}",'
+            f'friendly_name="{cover_entities[testcover].original_name}",'
+            f'state="open"}} {1.0 if cover_entities[testcover].unique_id in open_covers else 0.0}'
+        )
+        assert open_metric in body
 
-    assert (
-        'cover_state{domain="cover",'
-        'entity="cover.window_shade",'
-        'friendly_name="Window Shade"} 0.0' in body
-    )
+        closed_metric = (
+            f'cover_state{{domain="cover",'
+            f'entity="{cover_entities[testcover].entity_id}",'
+            f'friendly_name="{cover_entities[testcover].original_name}",'
+            f'state="closed"}} {1.0 if cover_entities[testcover].unique_id == "cover_closed" else 0.0}'
+        )
+        assert closed_metric in body
+
+        opening_metric = (
+            f'cover_state{{domain="cover",'
+            f'entity="{cover_entities[testcover].entity_id}",'
+            f'friendly_name="{cover_entities[testcover].original_name}",'
+            f'state="opening"}} {1.0 if cover_entities[testcover].unique_id == "cover_opening" else 0.0}'
+        )
+        assert opening_metric in body
+
+        closing_metric = (
+            f'cover_state{{domain="cover",'
+            f'entity="{cover_entities[testcover].entity_id}",'
+            f'friendly_name="{cover_entities[testcover].original_name}",'
+            f'state="closing"}} {1.0 if cover_entities[testcover].unique_id == "cover_closing" else 0.0}'
+        )
+        assert closing_metric in body
+
+        if testcover == "cover_position":
+            position_metric = (
+                f'cover_position{{domain="cover",'
+                f'entity="{cover_entities[testcover].entity_id}",'
+                f'friendly_name="{cover_entities[testcover].original_name}"'
+                f"}} 50.0"
+            )
+            assert position_metric in body
+
+        if testcover == "cover_tilt_position":
+            tilt_position_metric = (
+                f'cover_tilt_position{{domain="cover",'
+                f'entity="{cover_entities[testcover].entity_id}",'
+                f'friendly_name="{cover_entities[testcover].original_name}"'
+                f"}} 50.0"
+            )
+            assert tilt_position_metric in body
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -1112,25 +1155,69 @@ async def lock_fixture(hass, registry):
 async def cover_fixture(hass, registry):
     """Simulate cover entities."""
     data = {}
-    cover_1 = registry.async_get_or_create(
+    cover_open = registry.async_get_or_create(
         domain=cover.DOMAIN,
         platform="test",
-        unique_id="cover_1",
-        suggested_object_id="garage_door",
-        original_name="Garage Door",
+        unique_id="cover_open",
+        suggested_object_id="open_shade",
+        original_name="Open Shade",
     )
-    set_state_with_entry(hass, cover_1, STATE_OPEN)
-    data["cover_1"] = cover_1
+    set_state_with_entry(hass, cover_open, STATE_OPEN)
+    data["cover_open"] = cover_open
 
-    cover_2 = registry.async_get_or_create(
+    cover_closed = registry.async_get_or_create(
         domain=cover.DOMAIN,
         platform="test",
-        unique_id="cover_2",
-        suggested_object_id="window_shade",
-        original_name="Window Shade",
+        unique_id="cover_closed",
+        suggested_object_id="closed_shade",
+        original_name="Closed Shade",
     )
-    set_state_with_entry(hass, cover_2, STATE_CLOSED)
-    data["cover_2"] = cover_2
+    set_state_with_entry(hass, cover_closed, STATE_CLOSED)
+    data["cover_closed"] = cover_closed
+
+    cover_closing = registry.async_get_or_create(
+        domain=cover.DOMAIN,
+        platform="test",
+        unique_id="cover_closing",
+        suggested_object_id="closing_shade",
+        original_name="Closing Shade",
+    )
+    set_state_with_entry(hass, cover_closing, STATE_CLOSING)
+    data["cover_closing"] = cover_closing
+
+    cover_opening = registry.async_get_or_create(
+        domain=cover.DOMAIN,
+        platform="test",
+        unique_id="cover_opening",
+        suggested_object_id="opening_shade",
+        original_name="Opening Shade",
+    )
+    set_state_with_entry(hass, cover_opening, STATE_OPENING)
+    data["cover_opening"] = cover_opening
+
+    cover_position = registry.async_get_or_create(
+        domain=cover.DOMAIN,
+        platform="test",
+        unique_id="cover_position",
+        suggested_object_id="position_shade",
+        original_name="Position Shade",
+    )
+    cover_position_attributes = {cover.ATTR_POSITION: 50}
+    set_state_with_entry(hass, cover_position, STATE_OPEN, cover_position_attributes)
+    data["cover_position"] = cover_position
+
+    cover_tilt_position = registry.async_get_or_create(
+        domain=cover.DOMAIN,
+        platform="test",
+        unique_id="cover_tilt_position",
+        suggested_object_id="tilt_position_shade",
+        original_name="Tilt Position Shade",
+    )
+    cover_tilt_position_attributes = {cover.ATTR_TILT_POSITION: 50}
+    set_state_with_entry(
+        hass, cover_tilt_position, STATE_OPEN, cover_tilt_position_attributes
+    )
+    data["cover_tilt_position"] = cover_tilt_position
 
     await hass.async_block_till_done()
     return data
