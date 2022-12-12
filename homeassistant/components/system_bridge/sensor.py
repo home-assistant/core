@@ -21,9 +21,9 @@ from homeassistant.const import (
     FREQUENCY_HERTZ,
     FREQUENCY_MEGAHERTZ,
     PERCENTAGE,
-    POWER_WATT,
     REVOLUTIONS_PER_MINUTE,
     TEMP_CELSIUS,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -455,7 +455,7 @@ async def async_setup_entry(
                     entity_registry_enabled_default=False,
                     device_class=SensorDeviceClass.POWER,
                     state_class=SensorStateClass.MEASUREMENT,
-                    native_unit_of_measurement=POWER_WATT,
+                    native_unit_of_measurement=UnitOfPower.WATT,
                     value=lambda data, k=gpu["key"]: getattr(data.gpu, f"{k}_power"),
                 ),
                 entry.data[CONF_PORT],

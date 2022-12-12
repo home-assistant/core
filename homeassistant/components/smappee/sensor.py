@@ -14,7 +14,7 @@ from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
-    POWER_WATT,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -53,7 +53,7 @@ TREND_SENSORS: tuple[SmappeePollingSensorEntityDescription, ...] = (
     SmappeePollingSensorEntityDescription(
         key="total_power",
         name="Total consumption - Active power",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         sensor_id="total_power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -62,7 +62,7 @@ TREND_SENSORS: tuple[SmappeePollingSensorEntityDescription, ...] = (
     SmappeePollingSensorEntityDescription(
         key="alwayson",
         name="Always on - Active power",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         sensor_id="alwayson",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -104,7 +104,7 @@ REACTIVE_SENSORS: tuple[SmappeeSensorEntityDescription, ...] = (
     SmappeeSensorEntityDescription(
         key="total_reactive_power",
         name="Total consumption - Reactive power",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         sensor_id="total_reactive_power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -114,7 +114,7 @@ SOLAR_SENSORS: tuple[SmappeePollingSensorEntityDescription, ...] = (
     SmappeePollingSensorEntityDescription(
         key="solar_power",
         name="Total production - Active power",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         sensor_id="solar_power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -254,7 +254,7 @@ async def async_setup_entry(
                     description=SmappeeSensorEntityDescription(
                         key="load",
                         name=measurement.name,
-                        native_unit_of_measurement=POWER_WATT,
+                        native_unit_of_measurement=UnitOfPower.WATT,
                         sensor_id=measurement_id,
                         device_class=SensorDeviceClass.POWER,
                         state_class=SensorStateClass.MEASUREMENT,
