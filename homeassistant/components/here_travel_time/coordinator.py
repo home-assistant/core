@@ -16,7 +16,7 @@ from here_transit import (
 )
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ATTRIBUTION, UnitOfLength
+from homeassistant.const import UnitOfLength
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.location import find_coordinates
@@ -24,18 +24,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt
 from homeassistant.util.unit_conversion import DistanceConverter
 
-from .const import (
-    ATTR_DESTINATION,
-    ATTR_DESTINATION_NAME,
-    ATTR_DISTANCE,
-    ATTR_DURATION,
-    ATTR_DURATION_IN_TRAFFIC,
-    ATTR_ORIGIN,
-    ATTR_ORIGIN_NAME,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    ROUTE_MODE_FASTEST,
-)
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, ROUTE_MODE_FASTEST
 from .model import HERETravelTimeConfig, HERETravelTimeData
 
 _LOGGER = logging.getLogger(__name__)
@@ -114,17 +103,15 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator):
         destination_name: str | None = None
         if (names := section["spans"][-1].get("names")) is not None:
             destination_name = names[0]["value"]
-        return HERETravelTimeData(  # type: ignore[no-any-return]
-            {
-                ATTR_ATTRIBUTION: None,
-                ATTR_DURATION: round(summary["baseDuration"] / 60),  # type: ignore[misc]
-                ATTR_DURATION_IN_TRAFFIC: round(summary["duration"] / 60),
-                ATTR_DISTANCE: distance,
-                ATTR_ORIGIN: f"{mapped_origin_lat},{mapped_origin_lon}",
-                ATTR_DESTINATION: f"{mapped_destination_lat},{mapped_destination_lon}",
-                ATTR_ORIGIN_NAME: origin_name,
-                ATTR_DESTINATION_NAME: destination_name,
-            }
+        return HERETravelTimeData(
+            attribution=None,
+            duration=round(summary["baseDuration"] / 60),
+            duration_in_traffic=round(summary["duration"] / 60),
+            distance=distance,
+            origin=f"{mapped_origin_lat},{mapped_origin_lon}",
+            destination=f"{mapped_destination_lat},{mapped_destination_lon}",
+            origin_name=origin_name,
+            destination_name=destination_name,
         )
 
 
@@ -203,17 +190,15 @@ class HERETransitDataUpdateCoordinator(DataUpdateCoordinator):
         duration: float = sum(
             section["travelSummary"]["duration"] for section in sections
         )
-        return HERETravelTimeData(  # type: ignore[no-any-return]
-            {
-                ATTR_ATTRIBUTION: attribution,
-                ATTR_DURATION: round(duration / 60),  # type: ignore[misc]
-                ATTR_DURATION_IN_TRAFFIC: round(duration / 60),
-                ATTR_DISTANCE: distance,
-                ATTR_ORIGIN: f"{mapped_origin_lat},{mapped_origin_lon}",
-                ATTR_DESTINATION: f"{mapped_destination_lat},{mapped_destination_lon}",
-                ATTR_ORIGIN_NAME: sections[0]["departure"]["place"].get("name"),
-                ATTR_DESTINATION_NAME: sections[-1]["arrival"]["place"].get("name"),
-            }
+        return HERETravelTimeData(
+            attribution=attribution,
+            duration=round(duration / 60),
+            duration_in_traffic=round(duration / 60),
+            distance=distance,
+            origin=f"{mapped_origin_lat},{mapped_origin_lon}",
+            destination=f"{mapped_destination_lat},{mapped_destination_lon}",
+            origin_name=sections[0]["departure"]["place"].get("name"),
+            destination_name=sections[-1]["arrival"]["place"].get("name"),
         )
 
 
