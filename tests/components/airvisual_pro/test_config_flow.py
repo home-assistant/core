@@ -51,19 +51,16 @@ async def test_errors(hass, config, exc, errors, setup_airvisual_pro):
     }
 
 
-async def test_show_form(hass):
-    """Test that the form is served with no input."""
+async def test_step_user(hass, config, setup_airvisual_pro):
+    """Test that the user step works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
-
-async def test_step_user(hass, config, setup_airvisual_pro):
-    """Test that the user step works."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=config
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=config
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "192.168.1.101"
