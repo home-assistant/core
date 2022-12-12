@@ -212,7 +212,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_discovered_mac(self, mac: str, host: str) -> None:
-        """Return True if mac is already discovered."""
+        """Abort and reconnect soon if the device with the mac address is already configured."""
         if (
             current_entry := await self.async_set_unique_id(mac)
         ) and current_entry.data[CONF_HOST] == host:
