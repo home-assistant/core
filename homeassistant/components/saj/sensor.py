@@ -190,7 +190,7 @@ class SAJsensor(SensorEntity):
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         if self._inverter_name:
             return f"saj_{self._inverter_name}_{self._sensor.name}"
@@ -253,6 +253,6 @@ class SAJsensor(SensorEntity):
             self.async_write_ha_state()
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return a unique identifier for this sensor."""
         return f"{self._serialnumber}_{self._sensor.name}"
