@@ -46,11 +46,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await hass.async_add_executor_job(fritz.update_templates)
-        LOGGER.debug("Enable smarthome templates")
-        has_templates = True
     except ParseError:
         LOGGER.debug("Disable smarthome templates")
         has_templates = False
+    else:
+        LOGGER.debug("Enable smarthome templates")
+        has_templates = True
 
     coordinator = FritzboxDataUpdateCoordinator(hass, entry, has_templates)
 
