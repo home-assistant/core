@@ -46,6 +46,7 @@ class BaseHaScanner(ABC):
         "_connecting",
         "name",
         "scanning",
+        "_last_detection",
     )
 
     def __init__(
@@ -63,6 +64,7 @@ class BaseHaScanner(ABC):
         self._connecting = 0
         self.name = adapter_human_name(adapter, source) if adapter != source else source
         self.scanning = True
+        self._last_detection = 0.0
 
     @contextmanager
     def connecting(self) -> Generator[None, None, None]:
@@ -90,8 +92,12 @@ class BaseHaScanner(ABC):
     async def async_diagnostics(self) -> dict[str, Any]:
         """Return diagnostic information about the scanner."""
         return {
+            "name": self.name,
             "source": self.source,
+            "scanning": self.scanning,
             "type": self.__class__.__name__,
+            "last_detection": self._last_detection,
+            "monotonic_time": MONOTONIC_TIME(),
             "discovered_devices_and_advertisement_data": [
                 {
                     "name": device_adv[0].name,
@@ -222,6 +228,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
     ) -> None:
         """Call the registered callback."""
         now = MONOTONIC_TIME()
+        self._last_detection = now
         if prev_discovery := self._discovered_device_advertisement_datas.get(address):
             # Merge the new data with the old data
             # to function the same as BlueZ which
@@ -289,6 +296,5 @@ class BaseHaRemoteScanner(BaseHaScanner):
                 self.source
             ),
             "connectable": self.connectable,
-            "scanning": self.scanning,
             "discovered_device_timestamps": self._discovered_device_timestamps,
         }
