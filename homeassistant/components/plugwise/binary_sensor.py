@@ -84,7 +84,7 @@ BINARY_SENSORS: tuple[PlugwiseBinarySensorEntityDescription, ...] = (
         name="Plugwise notification",
         icon="mdi:mailbox-up-outline",
         icon_off="mdi:mailbox-outline",
-        device_class=BinarySensorDeviceClass.ALERT,
+        device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
