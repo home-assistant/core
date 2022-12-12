@@ -29,7 +29,7 @@ class SensorValueEntityDescription(SensorEntityDescription):
 HONEYGAIN_SENSORS: list[SensorValueEntityDescription] = [
     SensorValueEntityDescription(
         key="account_balance",
-        name="Account Balance",
+        name="Account balance",
         icon="mdi:hand-coin",
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.MONETARY,
@@ -38,7 +38,7 @@ HONEYGAIN_SENSORS: list[SensorValueEntityDescription] = [
     ),
     SensorValueEntityDescription(
         key="today_earnings",
-        name="Today's Earnings",
+        name="Today's earnings",
         icon="mdi:calendar-today",
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.MONETARY,
@@ -76,8 +76,6 @@ class HoneygainAccountSensor(SensorEntity):
         """Create Sensor for displaying Honeygain account details."""
         self.entity_description = sensor_description
         self._honeygain_data = honeygain_data
-        self.entity_id = f"sensor.{sensor_description.key}"
-        self._attr_name = f"Honeygain {sensor_description.name}"
         self._attr_unique_id = f"honeygain-{self._honeygain_data.user['referral_code']}-{sensor_description.key}"
         self._attr_native_value = sensor_description.value(self._honeygain_data)
         self._attr_device_info = DeviceInfo(
