@@ -62,7 +62,11 @@ class RobotUpdateEntity(LitterRobotEntity[LitterRobot4], UpdateEntity):
         """Initialize a Litter-Robot update entity."""
         super().__init__(robot, hub, description)
         self._poll_unsub: Callable[[], None] | None = None
-        self._attr_installed_version = robot.firmware
+
+    @property
+    def installed_version(self) -> str:
+        """Version installed and in use."""
+        return self.robot.firmware
 
     @property
     def in_progress(self) -> bool:
@@ -78,7 +82,7 @@ class RobotUpdateEntity(LitterRobotEntity[LitterRobot4], UpdateEntity):
         else:
             latest_version = self.installed_version
 
-        if self._attr_latest_version != self._attr_installed_version:
+        if self._attr_latest_version != self.installed_version:
             self._attr_latest_version = latest_version
             self.async_write_ha_state()
 
