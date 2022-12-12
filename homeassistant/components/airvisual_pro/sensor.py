@@ -101,6 +101,14 @@ SENSOR_DESCRIPTIONS = (
 )
 
 
+@callback
+def async_get_aqi_locale(settings: dict[str, Any]) -> str:
+    """Return the correct AQI locale based on settings data."""
+    if settings["is_aqi_usa"]:
+        return "aqi_us"
+    return "aqi_cn"
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -118,32 +126,40 @@ class AirVisualProSensor(AirVisualProEntity, SensorEntity):
 
     _attr_has_entity_name = True
 
+    MEASUREMENTS_KEY_TO_VALUE = {
+        SENSOR_KIND_CO2: "co2",
+        SENSOR_KIND_HUMIDITY: "humidity",
+        SENSOR_KIND_PM_0_1: "pm0_1",
+        SENSOR_KIND_PM_1_0: "pm1_0",
+        SENSOR_KIND_PM_2_5: "pm2_5",
+        SENSOR_KIND_TEMPERATURE: "temperature_C",
+        SENSOR_KIND_VOC: "voc",
+    }
+
     @property
     def measurements(self) -> dict[str, Any]:
-        """Define collected measurements data."""
+        """Define measurements data."""
         return self.coordinator.data["measurements"]
+
+    @property
+    def settings(self) -> dict[str, Any]:
+        """Define settings data."""
+        return self.coordinator.data["settings"]
+
+    @property
+    def status(self) -> dict[str, Any]:
+        """Define status data."""
+        return self.coordinator.data["status"]
 
     @callback
     def _async_update_from_latest_data(self) -> None:
         """Update the entity from the latest data."""
         if self.entity_description.key == SENSOR_KIND_AQI:
-            if self.coordinator.data["settings"]["is_aqi_usa"]:
-                self._attr_native_value = self.measurements["aqi_us"]
-            else:
-                self._attr_native_value = self.measurements["aqi_cn"]
+            locale = async_get_aqi_locale(self.settings)
+            self._attr_native_value = self.measurements[locale]
         elif self.entity_description.key == SENSOR_KIND_BATTERY_LEVEL:
-            self._attr_native_value = self.coordinator.data["status"]["battery"]
-        elif self.entity_description.key == SENSOR_KIND_CO2:
-            self._attr_native_value = self.measurements.get("co2")
-        elif self.entity_description.key == SENSOR_KIND_HUMIDITY:
-            self._attr_native_value = self.measurements.get("humidity")
-        elif self.entity_description.key == SENSOR_KIND_PM_0_1:
-            self._attr_native_value = self.measurements.get("pm0_1")
-        elif self.entity_description.key == SENSOR_KIND_PM_1_0:
-            self._attr_native_value = self.measurements.get("pm1_0")
-        elif self.entity_description.key == SENSOR_KIND_PM_2_5:
-            self._attr_native_value = self.measurements.get("pm2_5")
-        elif self.entity_description.key == SENSOR_KIND_TEMPERATURE:
-            self._attr_native_value = self.measurements.get("temperature_C")
-        elif self.entity_description.key == SENSOR_KIND_VOC:
-            self._attr_native_value = self.measurements.get("voc")
+            self._attr_native_value = self.status["battery"]
+        else:
+            self._attr_native_value = self.MEASUREMENTS_KEY_TO_VALUE[
+                self.entity_description.key
+            ]
