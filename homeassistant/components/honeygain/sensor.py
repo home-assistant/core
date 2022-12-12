@@ -45,6 +45,12 @@ HONEYGAIN_SENSORS: list[SensorValueEntityDescription] = [
         native_unit_of_measurement=CURRENCY_DOLLAR,
         value=lambda x: x.balances.get("realtime").get("usd_cents") / 100,
     ),
+    SensorValueEntityDescription(
+        key="active_devices",
+        name="Active device count",
+        icon="mdi:server-network",
+        value=lambda x: x.user.get("active_devices_count"),
+    ),
 ]
 
 
