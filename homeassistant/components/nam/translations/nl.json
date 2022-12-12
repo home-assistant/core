@@ -37,5 +37,16 @@
                 "description": "Stel Nettigo Air Monitor integratie in."
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "caqi_level": {
+                "state": {
+                    "high": "Hoog",
+                    "low": "Laag",
+                    "medium": "Medium"
+                }
+            }
+        }
     }
 }
