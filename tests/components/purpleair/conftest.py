@@ -1,5 +1,5 @@
 """Define fixtures for PurpleAir tests."""
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiopurpleair.endpoints.sensors import NearbySensorResult
 from aiopurpleair.models.sensors import GetSensorsResponse
@@ -9,6 +9,15 @@ from homeassistant.components.purpleair import DOMAIN
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
+
+
+@pytest.fixture(name="api")
+def api_fixture(check_api_key, get_nearby_sensors, get_sensors):
+    """Define a fixture to return a mocked aiopurple API object."""
+    api = Mock(async_check_api_key=check_api_key)
+    api.sensors.async_get_nearby_sensors = get_nearby_sensors
+    api.sensors.async_get_sensors = get_sensors
+    return api
 
 
 @pytest.fixture(name="check_api_key")
@@ -68,19 +77,12 @@ def get_sensors_response_fixture():
 
 
 @pytest.fixture(name="setup_purpleair")
-async def setup_purpleair_fixture(
-    hass, check_api_key, config_entry_options, get_nearby_sensors, get_sensors
-):
+async def setup_purpleair_fixture(hass, api, config_entry_options):
     """Define a fixture to set up PurpleAir."""
     with patch(
-        "homeassistant.components.purpleair.config_flow.API.async_check_api_key",
-        check_api_key,
+        "homeassistant.components.purpleair.config_flow.API", return_value=api
     ), patch(
-        "aiopurpleair.endpoints.sensors.SensorsEndpoints.async_get_nearby_sensors",
-        get_nearby_sensors,
-    ), patch(
-        "aiopurpleair.endpoints.sensors.SensorsEndpoints.async_get_sensors",
-        get_sensors,
+        "homeassistant.components.purpleair.coordinator.API", return_value=api
     ), patch(
         "homeassistant.components.purpleair.PLATFORMS", []
     ):

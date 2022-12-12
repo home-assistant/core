@@ -21,7 +21,13 @@ async def test_duplicate_error(hass, config_entry, setup_purpleair):
 async def test_create_entry_by_coordinates(hass, setup_purpleair):
     """Test creating an entry by entering a latitude/longitude."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={"api_key": "abcde12345"}
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"api_key": "abcde12345"}
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "by_coordinates"
@@ -51,15 +57,6 @@ async def test_create_entry_by_coordinates(hass, setup_purpleair):
     assert result["options"] == {
         "sensor_indices": [123456],
     }
-
-
-async def test_show_form(hass, setup_purpleair):
-    """Test showing the initial form."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "user"
 
 
 @pytest.mark.parametrize(

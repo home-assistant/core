@@ -15,8 +15,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CONF_SENSOR_INDICES, LOGGER
 
-DEFAULT_UPDATE_INTERVAL = timedelta(minutes=2)
-
 SENSOR_FIELDS_TO_RETRIEVE = [
     "0.3_um_count",
     "0.5_um_count",
@@ -43,6 +41,8 @@ SENSOR_FIELDS_TO_RETRIEVE = [
     "voc",
 ]
 
+UPDATE_INTERVAL = timedelta(minutes=2)
+
 
 class PurpleAirDataUpdateCoordinator(DataUpdateCoordinator[GetSensorsResponse]):
     """Define a PurpleAir-specific coordinator."""
@@ -56,7 +56,7 @@ class PurpleAirDataUpdateCoordinator(DataUpdateCoordinator[GetSensorsResponse]):
         self._entry = entry
 
         super().__init__(
-            hass, LOGGER, name=entry.title, update_interval=DEFAULT_UPDATE_INTERVAL
+            hass, LOGGER, name=entry.title, update_interval=UPDATE_INTERVAL
         )
 
     async def _async_update_data(self) -> GetSensorsResponse:
