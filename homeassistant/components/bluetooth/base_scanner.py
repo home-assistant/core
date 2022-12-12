@@ -291,10 +291,15 @@ class BaseHaRemoteScanner(BaseHaScanner):
 
     async def async_diagnostics(self) -> dict[str, Any]:
         """Return diagnostic information about the scanner."""
+        now = MONOTONIC_TIME()
         return await super().async_diagnostics() | {
             "storage": self._storage.async_get_advertisement_history_as_dict(
                 self.source
             ),
             "connectable": self.connectable,
             "discovered_device_timestamps": self._discovered_device_timestamps,
+            "time_since_last_device_detection": {
+                address: now - timestamp
+                for address, timestamp in self._discovered_device_timestamps.items()
+            },
         }
