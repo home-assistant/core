@@ -256,7 +256,6 @@ class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._user_id = user_id
         self.entity_description = description
         self._source_type = description.key
         self._sensor_type = description.sensor_type
