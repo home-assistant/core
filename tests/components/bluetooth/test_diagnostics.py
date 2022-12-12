@@ -571,6 +571,7 @@ async def test_diagnostics_remote_adapter(
                     {
                         "connectable": False,
                         "discovered_device_timestamps": {"44:44:33:11:23:45": ANY},
+                        "time_since_last_device_detection": {"44:44:33:11:23:45": ANY},
                         "discovered_devices_and_advertisement_data": [
                             {
                                 "address": "44:44:33:11:23:45",
