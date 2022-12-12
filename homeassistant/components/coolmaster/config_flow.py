@@ -29,7 +29,7 @@ DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         **MODES_SCHEMA,
-        vol.Required(CONF_SWING_SUPPORT, default=True): bool,
+        vol.Required(CONF_SWING_SUPPORT, default=False): bool,
     }
 )
 
