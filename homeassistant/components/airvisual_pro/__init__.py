@@ -53,12 +53,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             data = await node.async_get_latest_measurements()
         except NodeConnectionError as err:
-            LOGGER.error(
-                "Connection error while retrieving data (attempting reconnection): %s",
-                err,
-            )
             hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
-            return {}
+            raise UpdateFailed(f"Connection to Pro unit lost: {err}") from err
         except NodeProError as err:
             raise UpdateFailed(f"Error while retrieving data: {err}") from err
 
