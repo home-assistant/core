@@ -285,7 +285,9 @@ class BaseHaRemoteScanner(BaseHaScanner):
     async def async_diagnostics(self) -> dict[str, Any]:
         """Return diagnostic information about the scanner."""
         return await super().async_diagnostics() | {
-            "storage": self._storage.async_get_advertisement_history(self.source),
+            "storage": self._storage.async_get_advertisement_history_as_dict(
+                self.source
+            ),
             "connectable": self.connectable,
             "scanning": self.scanning,
             "discovered_device_timestamps": self._discovered_device_timestamps,
