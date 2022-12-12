@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "already_in_progress": "\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d",
+            "mdns_missing_mac": "MDNS \u5c6c\u6027\u4e2d\u7f3a\u5c11 MAC \u4f4d\u5740\u3002",
             "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
         },
         "error": {
