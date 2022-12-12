@@ -1,6 +1,6 @@
 """The sensor tests for the QNAP QSW platform."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from aioqsw.const import API_ERROR_CODE, API_ERROR_MESSAGE, API_RESULT, API_VERSION
 import pytest
@@ -98,7 +98,9 @@ async def test_qnap_qsw_update(hass: HomeAssistant) -> None:
     )
     assert update.attributes[ATTR_IN_PROGRESS] is False
 
-    with patch(
+    with patch("tarfile.open", MagicMock()), patch(
+        "pathlib.Path.mkdir", MagicMock()
+    ), patch(
         "homeassistant.components.qnap_qsw.QnapQswApi.get_firmware_update_check",
         return_value=FIRMWARE_UPDATE_CHECK_MOCK,
     ) as mock_firmware_update_check, patch(
