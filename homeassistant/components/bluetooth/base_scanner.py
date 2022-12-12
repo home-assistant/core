@@ -48,12 +48,18 @@ class BaseHaScanner(ABC):
         "scanning",
     )
 
-    def __init__(self, hass: HomeAssistant, source: str, adapter: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        source: str,
+        adapter: str,
+        connector: HaBluetoothConnector | None = None,
+    ) -> None:
         """Initialize the scanner."""
         self.hass = hass
         self.connectable = False
         self.source = source
-        self.connector: HaBluetoothConnector | None = None
+        self.connector = connector
         self._connecting = 0
         self.name = adapter_human_name(adapter, source) if adapter != source else source
         self.scanning = True
@@ -84,6 +90,7 @@ class BaseHaScanner(ABC):
     async def async_diagnostics(self) -> dict[str, Any]:
         """Return diagnostic information about the scanner."""
         return {
+            "source": self.source,
             "type": self.__class__.__name__,
             "discovered_devices_and_advertisement_data": [
                 {
@@ -120,14 +127,13 @@ class BaseHaRemoteScanner(BaseHaScanner):
         connectable: bool,
     ) -> None:
         """Initialize the scanner."""
-        super().__init__(hass, scanner_id, name)
+        super().__init__(hass, scanner_id, name, connector)
         self._new_info_callback = new_info_callback
         self._discovered_device_advertisement_datas: dict[
             str, tuple[BLEDevice, AdvertisementData]
         ] = {}
         self._discovered_device_timestamps: dict[str, float] = {}
         self.connectable = connectable
-        self.connector = connector
         self._details: dict[str, str | HaBluetoothConnector] = {"source": scanner_id}
         self._expire_seconds = FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
         assert models.MANAGER is not None
@@ -279,15 +285,8 @@ class BaseHaRemoteScanner(BaseHaScanner):
     async def async_diagnostics(self) -> dict[str, Any]:
         """Return diagnostic information about the scanner."""
         return await super().async_diagnostics() | {
-            "type": self.__class__.__name__,
-            "discovered_devices_and_advertisement_data": [
-                {
-                    "name": device_adv[0].name,
-                    "address": device_adv[0].address,
-                    "rssi": device_adv[0].rssi,
-                    "advertisement_data": device_adv[1],
-                    "details": device_adv[0].details,
-                }
-                for device_adv in self.discovered_devices_and_advertisement_data.values()
-            ],
+            "storage": self._storage.async_get_advertisement_history(self.source),
+            "connectable": self.connectable,
+            "scanning": self.scanning,
+            "discovered_device_timestamps": self._discovered_device_timestamps,
         }
