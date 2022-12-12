@@ -51,7 +51,9 @@ class LocalCalendarEntity(CalendarEntity):
 
     _attr_has_entity_name = True
     _attr_supported_features = (
-        CalendarEntityFeature.CREATE_EVENT | CalendarEntityFeature.DELETE_EVENT
+        CalendarEntityFeature.CREATE_EVENT
+        | CalendarEntityFeature.DELETE_EVENT
+        | CalendarEntityFeature.UPDATE_EVENT
     )
 
     def __init__(
