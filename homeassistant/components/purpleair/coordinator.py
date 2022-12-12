@@ -9,7 +9,7 @@ from aiopurpleair.models.sensors import GetSensorsResponse
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -49,11 +49,11 @@ class PurpleAirDataUpdateCoordinator(DataUpdateCoordinator[GetSensorsResponse]):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize."""
+        self._entry = entry
         self._api = API(
             entry.data[CONF_API_KEY],
             session=aiohttp_client.async_get_clientsession(hass),
         )
-        self._entry = entry
 
         super().__init__(
             hass, LOGGER, name=entry.title, update_interval=UPDATE_INTERVAL
@@ -68,3 +68,8 @@ class PurpleAirDataUpdateCoordinator(DataUpdateCoordinator[GetSensorsResponse]):
             )
         except PurpleAirError as err:
             raise UpdateFailed(f"Error while fetching data: {err}") from err
+
+    @callback
+    def async_get_map_url(self, sensor_index: int) -> str:
+        """Get the map URL for a sensor index."""
+        return self._api.get_map_url(sensor_index)

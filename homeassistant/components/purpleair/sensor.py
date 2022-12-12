@@ -216,6 +216,6 @@ class PurpleAirSensorEntity(PurpleAirEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> float | str | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.sensor_data)

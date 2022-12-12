@@ -53,7 +53,7 @@ class PurpleAirEntity(CoordinatorEntity[PurpleAirDataUpdateCoordinator]):
         self._sensor_index = sensor_index
 
         self._attr_device_info = DeviceInfo(
-            configuration_url=f"{MAP_URL_BASE}?select={self._sensor_index}",
+            configuration_url=self.coordinator.async_get_map_url(sensor_index),
             hw_version=self.sensor_data.hardware,
             identifiers={(DOMAIN, str(self._sensor_index))},
             manufacturer="PurpleAir, Inc.",
