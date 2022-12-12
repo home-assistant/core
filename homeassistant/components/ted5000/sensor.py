@@ -105,10 +105,9 @@ class Ted5000Sensor(SensorEntity):
     @property
     def native_value(self) -> int | float | None:
         """Return the state of the resources."""
-        with suppress(KeyError):
-            return self._gateway.data[self._mtu][
-                self.entity_description.native_unit_of_measurement
-            ]
+        if unit := self.entity_description.native_unit_of_measurement:
+            with suppress(KeyError):
+                return self._gateway.data[self._mtu][unit]
         return None
 
     def update(self) -> None:
@@ -122,7 +121,7 @@ class Ted5000Gateway:
     def __init__(self, url: str) -> None:
         """Initialize the data object."""
         self.url = url
-        self.data: dict[int, dict[str | None, int | float]] = {}
+        self.data: dict[int, dict[str, int | float]] = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self) -> None:
