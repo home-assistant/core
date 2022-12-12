@@ -27,7 +27,6 @@ from homeassistant.const import (
     LIGHT_LUX,
     MASS_KILOGRAMS,
     PERCENTAGE,
-    POWER_WATT,
     PRESSURE_HPA,
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -38,6 +37,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     TEMP_KELVIN,
     UnitOfApparentPower,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -221,7 +221,7 @@ SENSOR_UNIT_MAP = {
     hc.LIGHT_LUX: LIGHT_LUX,
     hc.MASS_KILOGRAMS: MASS_KILOGRAMS,
     hc.PERCENTAGE: PERCENTAGE,
-    hc.POWER_WATT: POWER_WATT,
+    hc.POWER_WATT: UnitOfPower.WATT,
     hc.PRESSURE_HPA: PRESSURE_HPA,
     hc.SIGNAL_STRENGTH_DECIBELS: SIGNAL_STRENGTH_DECIBELS,
     hc.SIGNAL_STRENGTH_DECIBELS_MILLIWATT: SIGNAL_STRENGTH_DECIBELS_MILLIWATT,

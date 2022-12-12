@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, UnitOfPower
 
 from .models import ForecastSolarSensorEntityDescription
 
@@ -47,7 +47,7 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         state=lambda estimate: estimate.power_production_now,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
     ),
     ForecastSolarSensorEntityDescription(
         key="power_production_next_hour",
@@ -57,7 +57,7 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
         name="Estimated power production - next hour",
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
     ),
     ForecastSolarSensorEntityDescription(
         key="power_production_next_12hours",
@@ -67,7 +67,7 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
         name="Estimated power production - next 12 hours",
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
     ),
     ForecastSolarSensorEntityDescription(
         key="power_production_next_24hours",
@@ -77,7 +77,7 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
         name="Estimated power production - next 24 hours",
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
     ),
     ForecastSolarSensorEntityDescription(
         key="energy_current_hour",

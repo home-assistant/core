@@ -8,7 +8,7 @@
         }
       },
       "confirm": {
-        "description": "Do you want to setup {name}?"
+        "description": "Do you want to set up {name}?"
       },
       "password": {
         "description": "The {name} device requires a password",
