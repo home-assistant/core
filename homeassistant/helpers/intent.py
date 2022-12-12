@@ -80,7 +80,7 @@ async def async_handle(
 
     try:
         _LOGGER.info("Triggering intent handler %s", handler)
-        result = await handler.async_handle(intent)
+        result = await handler.async_handle(intent, conversation_id)
         return result
     except vol.Invalid as err:
         _LOGGER.warning("Received invalid slot info for %s: %s", intent_type, err)

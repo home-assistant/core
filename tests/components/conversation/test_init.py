@@ -295,6 +295,7 @@ async def test_http_api_no_valid_targets(hass, init_components, hass_client):
         "conversation_id": None,
     }
 
+
 async def test_http_api_handle_failure(hass, init_components, hass_client):
     """Test the HTTP conversation API with an error during handling."""
     client = await hass_client()
