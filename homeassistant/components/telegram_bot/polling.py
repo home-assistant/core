@@ -48,7 +48,7 @@ class PollBot(BaseTelegramBotEntity):
         self.dispatcher = self.updater.dispatcher
         self.dispatcher.add_handler(TypeHandler(Update, self.handle_update))
         self.dispatcher.add_error_handler(process_error)
-        super().__init__(hass, config)
+        super().__init__(hass, config, "polling")
 
     def start_polling(self, event=None):
         """Start the polling task."""

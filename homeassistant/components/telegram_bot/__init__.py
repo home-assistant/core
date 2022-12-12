@@ -13,6 +13,7 @@ from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from telegram import (
     Bot,
     CallbackQuery,
+    File,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     Message,
@@ -42,6 +43,13 @@ from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
+from .const import DOMAIN
+from .media_source import (
+    generate_media_source_id,
+    TelegramManager,
+    TelegramView,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DATA = "data"
@@ -63,6 +71,7 @@ ATTR_FROM_FIRST = "from_first"
 ATTR_FROM_LAST = "from_last"
 ATTR_KEYBOARD = "keyboard"
 ATTR_KEYBOARD_INLINE = "inline_keyboard"
+ATTR_MEDIA_URL = "media_url"
 ATTR_MESSAGEID = "message_id"
 ATTR_MSG = "message"
 ATTR_MSGID = "id"
@@ -93,8 +102,6 @@ CONF_PROXY_URL = "proxy_url"
 CONF_PROXY_PARAMS = "proxy_params"
 CONF_TRUSTED_NETWORKS = "trusted_networks"
 
-DOMAIN = "telegram_bot"
-
 SERVICE_SEND_MESSAGE = "send_message"
 SERVICE_SEND_PHOTO = "send_photo"
 SERVICE_SEND_STICKER = "send_sticker"
@@ -114,6 +121,7 @@ SERVICE_LEAVE_CHAT = "leave_chat"
 EVENT_TELEGRAM_CALLBACK = "telegram_callback"
 EVENT_TELEGRAM_COMMAND = "telegram_command"
 EVENT_TELEGRAM_TEXT = "telegram_text"
+EVENT_TELEGRAM_VOICE = "telegram_voice"
 EVENT_TELEGRAM_SENT = "telegram_sent"
 
 PARSER_HTML = "html"
@@ -339,11 +347,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if not config[DOMAIN]:
         return False
 
+    telegram_manager = TelegramManager(hass)
+    hass.data[DOMAIN] = telegram_manager
     for p_config in config[DOMAIN]:
         # Each platform config gets its own bot
         bot = initialize_bot(p_config)
         p_type = p_config.get(CONF_PLATFORM)
-
+        telegram_manager.bots[p_type] = bot
         platform = importlib.import_module(f".{p_config[CONF_PLATFORM]}", __name__)
 
         _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
@@ -356,6 +366,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Error setting up platform %s", p_type)
             return False
+
+        hass.http.register_view(TelegramView(telegram_manager))
 
         notify_service = TelegramNotificationService(
             hass, bot, p_config.get(CONF_ALLOWED_CHAT_IDS), p_config.get(ATTR_PARSER)
@@ -914,10 +926,14 @@ class TelegramNotificationService:
 class BaseTelegramBotEntity:
     """The base class for the telegram bot."""
 
-    def __init__(self, hass, config):
+    def __init__(self, hass, config, bot_platform: str):
         """Initialize the bot base class."""
         self.allowed_chat_ids = config[CONF_ALLOWED_CHAT_IDS]
         self.hass = hass
+        # the bot platform is used to identify the bot,
+        # since we have one bot per platform.
+        self.bot_platform = bot_platform
+        
 
     def handle_update(self, update: Update, context: CallbackContext) -> bool:
         """Handle updates from bot dispatcher set up by the respective platform."""
@@ -962,6 +978,15 @@ class BaseTelegramBotEntity:
             # This is a command message - set event type to command and split data into command and args
             event_type = EVENT_TELEGRAM_COMMAND
             event_data.update(self._get_command_event_data(message.text))
+        elif message.voice is not None:
+            file=message.voice.get_file()
+            event_type = EVENT_TELEGRAM_VOICE
+            event_data[ATTR_TEXT] = message.text
+            event_data[ATTR_MEDIA_URL] = generate_media_source_id(
+                file_id=file.file_id,
+                mime_type=message.voice.mime_type,
+                bot_platform=self.bot_platform,
+            )
         else:
             event_type = EVENT_TELEGRAM_TEXT
             event_data[ATTR_TEXT] = message.text
