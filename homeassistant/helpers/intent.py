@@ -60,6 +60,7 @@ async def async_handle(
     text_input: str | None = None,
     context: Context | None = None,
     language: str | None = None,
+    conversation_id: str | None = None,
 ) -> IntentResponse:
     """Handle an intent."""
     handler: IntentHandler = hass.data.get(DATA_KEY, {}).get(intent_type)
@@ -164,7 +165,9 @@ class IntentHandler:
 
         return self._slot_schema(slots)  # type: ignore[no-any-return]
 
-    async def async_handle(self, intent_obj: Intent) -> IntentResponse:
+    async def async_handle(
+        self, intent_obj: Intent, conversation_id: str | None = None
+    ) -> IntentResponse:
         """Handle the intent."""
         raise NotImplementedError()
 
@@ -206,7 +209,9 @@ class ServiceIntentHandler(IntentHandler):
         self.service = service
         self.speech = speech
 
-    async def async_handle(self, intent_obj: Intent) -> IntentResponse:
+    async def async_handle(
+        self, intent_obj: Intent, conversation_id: str | None = None
+    ) -> IntentResponse:
         """Handle the hass intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -219,14 +224,22 @@ class ServiceIntentHandler(IntentHandler):
             context=intent_obj.context,
         )
 
-        response = intent_obj.create_response()
+        response = intent_obj.create_response(conversation_id=conversation_id)
         response.async_set_speech(self.speech.format(state.name))
-        response.async_set_target(
-            IntentResponseTarget(
-                name=state.name,
-                type=IntentResponseTargetType.ENTITY,
-                id=state.entity_id,
-            )
+
+        # Targets go from general to specific
+        response.async_set_targets(
+            [
+                IntentResponseTarget(
+                    type=IntentResponseTargetType.DOMAIN,
+                    name=state.domain,
+                ),
+                IntentResponseTarget(
+                    type=IntentResponseTargetType.ENTITY,
+                    name=state.name,
+                    id=state.entity_id,
+                ),
+            ],
         )
         return response
 
@@ -277,9 +290,11 @@ class Intent:
         self.category = category
 
     @callback
-    def create_response(self) -> IntentResponse:
+    def create_response(self, conversation_id: str | None = None) -> IntentResponse:
         """Create a response."""
-        return IntentResponse(self, language=self.language)
+        return IntentResponse(
+            self, language=self.language, conversation_id=conversation_id
+        )
 
 
 class IntentResponseType(Enum):
@@ -314,12 +329,14 @@ class IntentResponseTargetType(str, Enum):
     AREA = "area"
     DEVICE = "device"
     ENTITY = "entity"
-    OTHER = "other"
+    DOMAIN = "domain"
+    DEVICE_CLASS = "device_class"
+    CUSTOM = "custom"
 
 
 @dataclass
 class IntentResponseTarget:
-    """Main target of the intent response."""
+    """Target of the intent response."""
 
     name: str
     type: IntentResponseTargetType
@@ -333,6 +350,7 @@ class IntentResponse:
         self,
         intent: Intent | None = None,
         language: str | None = None,
+        conversation_id: str | None = None,
     ) -> None:
         """Initialize an IntentResponse."""
         self.intent = intent
@@ -340,8 +358,9 @@ class IntentResponse:
         self.reprompt: dict[str, dict[str, Any]] = {}
         self.card: dict[str, dict[str, str]] = {}
         self.language = language
+        self.conversation_id = conversation_id
         self.error_code: IntentResponseErrorCode | None = None
-        self.target: IntentResponseTarget | None = None
+        self.targets: list[IntentResponseTarget] = []
 
         if (self.intent is not None) and (self.intent.category == IntentCategory.QUERY):
             # speech will be the answer to the query
@@ -392,9 +411,9 @@ class IntentResponse:
         self.async_set_speech(message)
 
     @callback
-    def async_set_target(self, target: IntentResponseTarget) -> None:
-        """Set response target."""
-        self.target = target
+    def async_set_targets(self, targets: list[IntentResponseTarget]) -> None:
+        """Set response targets."""
+        self.targets = targets
 
     @callback
     def as_dict(self) -> dict[str, Any]:
@@ -404,6 +423,7 @@ class IntentResponse:
             "card": self.card,
             "language": self.language,
             "response_type": self.response_type.value,
+            "conversation_id": self.conversation_id,
         }
 
         if self.reprompt:
@@ -416,9 +436,9 @@ class IntentResponse:
             response_data["code"] = self.error_code.value
         else:
             # action done or query answer
-            response_data["target"] = (
-                dataclasses.asdict(self.target) if self.target is not None else None
-            )
+            response_data["targets"] = [
+                dataclasses.asdict(target) for target in self.targets
+            ]
 
         response_dict["data"] = response_data
 

@@ -142,7 +142,8 @@ async def test_http_processing_intent(hass, hass_client, hass_admin_user):
             }
         },
         "language": hass.config.language,
-        "data": {"target": None},
+        "data": {"targets": []},
+        "conversation_id": None,
     }
 
 
@@ -218,12 +219,20 @@ async def test_http_api(hass, init_components, hass_client):
         "language": hass.config.language,
         "response_type": "action_done",
         "data": {
-            "target": {
-                "name": "kitchen",
-                "type": "entity",
-                "id": "light.kitchen",
-            }
+            "targets": [
+                {
+                    "type": "domain",
+                    "name": "light",
+                    "id": None,
+                },
+                {
+                    "type": "entity",
+                    "name": "kitchen",
+                    "id": "light.kitchen",
+                },
+            ]
         },
+        "conversation_id": None,
     }
 
     assert len(calls) == 1
@@ -255,6 +264,7 @@ async def test_http_api_no_match(hass, init_components, hass_client):
         "data": {
             "code": "no_intent_match",
         },
+        "conversation_id": None,
     }
 
 
@@ -282,6 +292,7 @@ async def test_http_api_no_valid_targets(hass, init_components, hass_client):
         "data": {
             "code": "no_valid_targets",
         },
+        "conversation_id": None,
     }
 
 
@@ -318,6 +329,7 @@ async def test_http_api_handle_failure(hass, init_components, hass_client):
         "data": {
             "code": "failed_to_handle",
         },
+        "conversation_id": None,
     }
 
 
@@ -343,7 +355,9 @@ async def test_custom_agent(hass, hass_client, hass_admin_user):
         async def async_process(self, text, context, conversation_id, language):
             """Process some text."""
             calls.append((text, context, conversation_id, language))
-            response = intent.IntentResponse(language=language)
+            response = intent.IntentResponse(
+                language=language, conversation_id=conversation_id
+            )
             response.async_set_speech("Test response")
             return response
 
@@ -372,7 +386,8 @@ async def test_custom_agent(hass, hass_client, hass_admin_user):
             }
         },
         "language": "test-language",
-        "data": {"target": None},
+        "data": {"targets": []},
+        "conversation_id": "test-conv-id",
     }
 
     assert len(calls) == 1
