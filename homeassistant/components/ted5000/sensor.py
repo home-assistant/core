@@ -77,13 +77,12 @@ def setup_platform(
     # Get MUT information to create the sensors.
     gateway.update()
 
-    dev = []
+    entities = []
     for mtu in gateway.data:
         for description in SENSORS:
-            dev.append(Ted5000Sensor(gateway, name, mtu, description))
-            dev.append(Ted5000Sensor(gateway, name, mtu, description))
+            entities.append(Ted5000Sensor(gateway, name, mtu, description))
 
-    add_entities(dev)
+    add_entities(entities)
 
 
 class Ted5000Sensor(SensorEntity):
