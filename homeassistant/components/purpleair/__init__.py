@@ -12,8 +12,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import PurpleAirDataUpdateCoordinator
 
-MAP_URL_BASE = "https://map.purpleair.com/1/mAQI/a10/p604800/cC0"
-
 PLATFORMS = [Platform.SENSOR]
 
 
