@@ -46,6 +46,7 @@ PLATFORMS = [
     Platform.CLIMATE,
     Platform.FAN,
     Platform.HUMIDIFIER,
+    Platform.NUMBER,
     Platform.SENSOR,
     Platform.WEATHER,
 ]

@@ -1,9 +1,9 @@
-"""The test for the ecobee thermostat ventilator module."""
+"""The test for the ecobee thermostat number module."""
 from unittest import mock
 
 import pytest
 
-from homeassistant.components.ecobee import fan as ecobee
+from homeassistant.components.ecobee import number as ecobee
 
 
 @pytest.fixture
@@ -66,40 +66,37 @@ def data_fixture(ecobee_fixture):
     return data
 
 
-@pytest.fixture(name="ventilator")
-def ventilator_fixture(data):
-    """Set up ecobee ventilator object."""
-    return ecobee.EcobeeVentilator(data, 1)
+@pytest.fixture(name="homeNumber")
+def home_number_fixture(data):
+    """Set up ecobee number min time home object."""
+    return ecobee.EcobeeVentilatorMinTimeHome(data, 1)
 
 
-async def test_name(ventilator):
+async def test_name_home(homeNumber):
     """Test name property."""
-    assert ventilator.name == "Ecobee Ventilator"
+    assert homeNumber.name == "Ventilator min time home"
 
 
-async def test_attribute(ventilator):
-    """Test attribute and extra attribute of ventilator."""
-    assert ventilator.state == "off"
-    assert ventilator.extra_state_attributes == {
-        "ventilator type": "hrv",
-    }
-
-
-async def test_state_on_based_on_equipement_status(ecobee_fixture, ventilator):
-    """Test the interpretation of on/off status based on the equipementStatus."""
-    ecobee_fixture["equipmentStatus"] = "fan,ventilator"
-    assert ventilator.state == "on"
-
-
-async def test_turn_on(ventilator, data):
-    """Test set ventilator mode to on."""
+async def test_set_ventilator_min_on_time_home(homeNumber, data):
+    """Test set ventilator min time home."""
     data.reset_mock()
-    ventilator.turn_on()
-    data.ecobee.set_ventilator_timer.assert_has_calls([mock.call(1, True)])
+    homeNumber.set_native_value(40)
+    data.ecobee.set_ventilator_min_on_time_home.assert_has_calls([mock.call(1, 40)])
 
 
-async def test_turn_off(ventilator, data):
-    """Test set ventilator mode to on."""
+@pytest.fixture(name="awayNumber")
+def away_number_fixture(data):
+    """Set up ecobee number min time away object."""
+    return ecobee.EcobeeVentilatorMinTimeAway(data, 1)
+
+
+async def test_name_away(awayNumber):
+    """Test name property."""
+    assert awayNumber.name == "Ventilator min time away"
+
+
+async def test_set_ventilator_min_on_time_away(awayNumber, data):
+    """Test set ventilator min time away."""
     data.reset_mock()
-    ventilator.turn_off()
-    data.ecobee.set_ventilator_timer.assert_has_calls([mock.call(1, False)])
+    awayNumber.set_native_value(15)
+    data.ecobee.set_ventilator_min_on_time_away.assert_has_calls([mock.call(1, 15)])
