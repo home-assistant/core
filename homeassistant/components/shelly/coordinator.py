@@ -14,6 +14,7 @@ from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCal
 from aioshelly.rpc_device import RpcDevice, UpdateType
 from awesomeversion import AwesomeVersion
 
+from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
@@ -646,3 +647,15 @@ def get_rpc_coordinator_by_device_id(
                 return coordinator
 
     return None
+
+
+async def async_reconnect_soon(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry
+) -> None:
+    """Try to reconnect soon."""
+    if (
+        entry.state == config_entries.ConfigEntryState.LOADED
+        and (entry_data := get_entry_data(hass).get(entry.entry_id))
+        and (coordinator := entry_data.rpc)
+    ):
+        asyncio.create_task(coordinator.async_request_refresh())
