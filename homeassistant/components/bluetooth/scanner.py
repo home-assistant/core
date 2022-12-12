@@ -137,7 +137,6 @@ class HaScanner(BaseHaScanner):
         self.adapter = adapter
         self._start_stop_lock = asyncio.Lock()
         self._cancel_watchdog: CALLBACK_TYPE | None = None
-        self._last_detection = 0.0
         self._start_time = 0.0
         self._new_info_callback = new_info_callback
         self.scanning = False
@@ -166,9 +165,6 @@ class HaScanner(BaseHaScanner):
         base_diag = await super().async_diagnostics()
         return base_diag | {
             "adapter": self.adapter,
-            "source": self.source,
-            "name": self.name,
-            "last_detection": self._last_detection,
             "start_time": self._start_time,
         }
 
