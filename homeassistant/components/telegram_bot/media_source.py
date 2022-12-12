@@ -1,19 +1,19 @@
 """Telegram media source."""
 from __future__ import annotations
 
+from collections import deque
 from functools import partial
+from http import HTTPStatus
 from io import BytesIO
-import mimetypes
-from typing import TYPE_CHECKING, Dict, TypedDict
+import logging
+from typing import  Dict, TypedDict
 
 from aiohttp import web
 import telegram
 from yarl import URL
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source import (
-    BrowseMediaSource,
     MediaSource,
     MediaSourceItem,
     PlayMedia,
@@ -25,6 +25,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.network import get_url
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class MediaSourceOptions(TypedDict):
@@ -47,8 +49,7 @@ class TelegramManager:
         self.bots: Dict[str, telegram.Bot] = {}
         self.mem_cache = {}
         self.mem_cache_entries = deque([], maxlen=5)
-        # prepare local media directory
-        # cleanup job to rm older files?
+
 
     def _generate_cache_key(self, media: MediaSourceOptions) -> str:
         return media["file_id"]
@@ -167,4 +168,3 @@ class TelegramView(HomeAssistantView):
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
         return web.Response(body=data, content_type=content)
-

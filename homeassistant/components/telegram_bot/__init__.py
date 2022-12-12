@@ -13,7 +13,6 @@ from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from telegram import (
     Bot,
     CallbackQuery,
-    File,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     Message,
