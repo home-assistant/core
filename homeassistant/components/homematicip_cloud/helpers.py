@@ -4,6 +4,6 @@
 def is_error_response(response) -> bool:
     """Response from async call contains errors or not."""
     if isinstance(response, dict):
-        return "errorCode" in response and response["errorCode"] != ""
+        return response.get("errorCode") not in ("", None)
 
     return False
