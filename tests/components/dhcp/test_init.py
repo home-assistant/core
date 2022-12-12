@@ -10,13 +10,13 @@ from scapy.layers.l2 import Ether
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
-from homeassistant.components.device_tracker.const import (
+from homeassistant.components.device_tracker import (
     ATTR_HOST_NAME,
     ATTR_IP,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
     CONNECTED_DEVICE_REGISTERED,
-    SOURCE_TYPE_ROUTER,
+    SourceType,
 )
 from homeassistant.components.dhcp.const import DOMAIN
 from homeassistant.const import (
@@ -603,7 +603,7 @@ async def test_device_tracker_hostname_and_macaddress_exists_before_start(hass):
         {
             ATTR_HOST_NAME: "Connect",
             ATTR_IP: "192.168.210.56",
-            ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER,
+            ATTR_SOURCE_TYPE: SourceType.ROUTER,
             ATTR_MAC: "B8:B7:F1:6D:B5:33",
         },
     )
@@ -701,7 +701,7 @@ async def test_device_tracker_hostname_and_macaddress_after_start(hass):
             {
                 ATTR_HOST_NAME: "Connect",
                 ATTR_IP: "192.168.210.56",
-                ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER,
+                ATTR_SOURCE_TYPE: SourceType.ROUTER,
                 ATTR_MAC: "B8:B7:F1:6D:B5:33",
             },
         )
@@ -738,7 +738,7 @@ async def test_device_tracker_hostname_and_macaddress_after_start_not_home(hass)
             {
                 ATTR_HOST_NAME: "connect",
                 ATTR_IP: "192.168.210.56",
-                ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER,
+                ATTR_SOURCE_TYPE: SourceType.ROUTER,
                 ATTR_MAC: "B8:B7:F1:6D:B5:33",
             },
         )
@@ -795,7 +795,7 @@ async def test_device_tracker_hostname_and_macaddress_after_start_hostname_missi
             STATE_HOME,
             {
                 ATTR_IP: "192.168.210.56",
-                ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER,
+                ATTR_SOURCE_TYPE: SourceType.ROUTER,
                 ATTR_MAC: "B8:B7:F1:6D:B5:33",
             },
         )
@@ -814,7 +814,7 @@ async def test_device_tracker_ignore_self_assigned_ips_before_start(hass):
         {
             ATTR_HOST_NAME: "connect",
             ATTR_IP: "169.254.210.56",
-            ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER,
+            ATTR_SOURCE_TYPE: SourceType.ROUTER,
             ATTR_MAC: "B8:B7:F1:6D:B5:33",
         },
     )

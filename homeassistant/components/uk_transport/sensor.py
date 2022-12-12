@@ -134,7 +134,7 @@ class UkTransportSensor(SensorEntity):
             {"app_id": self._api_app_id, "app_key": self._api_app_key}, **params
         )
 
-        response = requests.get(self._url, params=request_params)
+        response = requests.get(self._url, params=request_params, timeout=10)
         if response.status_code != HTTPStatus.OK:
             _LOGGER.warning("Invalid response from API")
         elif "error" in response.json():

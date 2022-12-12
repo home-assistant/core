@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
             "no_devices_found": "No devices found on the network",
             "no_unconfigured_devices": "No unconfigured devices found."
         },
@@ -23,7 +24,7 @@
                     "key": "Offline Key (32-byte hex string)",
                     "slot": "Offline Key Slot (Integer between 0 and 255)"
                 },
-                "description": "Check the documentation at {docs_url} for how to find the offline key."
+                "description": "Check the documentation for how to find the offline key."
             }
         }
     }

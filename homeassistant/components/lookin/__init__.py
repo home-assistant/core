@@ -101,16 +101,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     push_coordinator = LookinPushCoordinator(entry.title)
 
-    meteo_coordinator: LookinDataUpdateCoordinator = LookinDataUpdateCoordinator(
-        hass,
-        push_coordinator,
-        name=entry.title,
-        update_method=lookin_protocol.get_meteo_sensor,
-        update_interval=timedelta(
-            minutes=5
-        ),  # Updates are pushed (fallback is polling)
-    )
-    await meteo_coordinator.async_config_entry_first_refresh()
+    if lookin_device.model >= 2:
+        meteo_coordinator: LookinDataUpdateCoordinator = LookinDataUpdateCoordinator(
+            hass,
+            push_coordinator,
+            name=entry.title,
+            update_method=lookin_protocol.get_meteo_sensor,
+            update_interval=timedelta(
+                minutes=5
+            ),  # Updates are pushed (fallback is polling)
+        )
+        await meteo_coordinator.async_config_entry_first_refresh()
 
     device_coordinators: dict[str, LookinDataUpdateCoordinator] = {}
     for remote in devices:
@@ -148,17 +149,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     lookin_udp_subs = await manager.async_get_subscriptions()
 
-    entry.async_on_unload(
-        lookin_udp_subs.subscribe_event(
-            lookin_device.id, UDPCommandType.meteo, None, _async_meteo_push_update
+    if lookin_device.model >= 2:
+        entry.async_on_unload(
+            lookin_udp_subs.subscribe_event(
+                lookin_device.id, UDPCommandType.meteo, None, _async_meteo_push_update
+            )
         )
-    )
 
     hass.data[DOMAIN][entry.entry_id] = LookinData(
         host=host,
         lookin_udp_subs=lookin_udp_subs,
         lookin_device=lookin_device,
-        meteo_coordinator=meteo_coordinator,
+        meteo_coordinator=meteo_coordinator if lookin_device.model >= 2 else None,
         devices=devices,
         lookin_protocol=lookin_protocol,
         device_coordinators=device_coordinators,

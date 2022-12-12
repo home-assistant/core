@@ -96,6 +96,8 @@ def setup_platform(
 class WaterFurnaceSensor(SensorEntity):
     """Implementing the Waterfurnace sensor."""
 
+    _attr_should_poll = False
+
     def __init__(self, client, config):
         """Initialize the sensor."""
         self.client = client
@@ -131,12 +133,7 @@ class WaterFurnaceSensor(SensorEntity):
         """Return the units of measurement."""
         return self._unit_of_measurement
 
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
-
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(

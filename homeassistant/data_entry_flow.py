@@ -4,7 +4,9 @@ from __future__ import annotations
 import abc
 import asyncio
 from collections.abc import Iterable, Mapping
+import copy
 from dataclasses import dataclass
+import logging
 from types import MappingProxyType
 from typing import Any, TypedDict
 
@@ -15,6 +17,8 @@ from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
 from .helpers.frame import report
 from .util import uuid as uuid_util
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class FlowResultType(StrEnum):
@@ -80,27 +84,27 @@ class AbortFlow(FlowError):
 class FlowResult(TypedDict, total=False):
     """Typed result dict."""
 
-    version: int
-    type: FlowResultType
+    context: dict[str, Any]
+    data_schema: vol.Schema | None
+    data: Mapping[str, Any]
+    description_placeholders: Mapping[str, str | None] | None
+    description: str | None
+    errors: dict[str, str] | None
+    extra: str
     flow_id: str
     handler: str
-    title: str
-    data: Mapping[str, Any]
-    step_id: str
-    data_schema: vol.Schema | None
-    extra: str
-    required: bool
-    errors: dict[str, str] | None
-    description: str | None
-    description_placeholders: Mapping[str, str | None] | None
-    progress_action: str
-    url: str
-    reason: str
-    context: dict[str, Any]
-    result: Any
     last_step: bool | None
-    options: Mapping[str, Any]
     menu_options: list[str] | dict[str, str]
+    options: Mapping[str, Any]
+    progress_action: str
+    reason: str
+    required: bool
+    result: Any
+    step_id: str
+    title: str
+    type: FlowResultType
+    url: str
+    version: int
 
 
 @callback
@@ -175,7 +179,7 @@ class FlowManager(abc.ABC):
         )
 
     @callback
-    def async_get(self, flow_id: str) -> FlowResult | None:
+    def async_get(self, flow_id: str) -> FlowResult:
         """Return a flow in progress as a partial FlowResult."""
         if (flow := self._progress.get(flow_id)) is None:
             raise UnknownFlow
@@ -337,6 +341,11 @@ class FlowManager(abc.ABC):
         if not self._handler_progress_index[handler]:
             del self._handler_progress_index[handler]
 
+        try:
+            flow.async_remove()
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.exception("Error removing %s config flow: %s", flow.handler, err)
+
     async def _async_handle_step(
         self,
         flow: Any,
@@ -435,6 +444,34 @@ class FlowHandler:
         """If we should show advanced options."""
         return self.context.get("show_advanced_options", False)
 
+    def add_suggested_values_to_schema(
+        self, data_schema: vol.Schema, suggested_values: Mapping[str, Any]
+    ) -> vol.Schema:
+        """Make a copy of the schema, populated with suggested values.
+
+        For each schema marker matching items in `suggested_values`,
+        the `suggested_value` will be set. The existing `suggested_value` will
+        be left untouched if there is no matching item.
+        """
+        schema = {}
+        for key, val in data_schema.schema.items():
+            if isinstance(key, vol.Marker):
+                # Exclude advanced field
+                if (
+                    key.description
+                    and key.description.get("advanced")
+                    and not self.show_advanced_options
+                ):
+                    continue
+
+            new_key = key
+            if key in suggested_values and isinstance(key, vol.Marker):
+                # Copy the marker to not modify the flow schema
+                new_key = copy.copy(key)
+                new_key.description = {"suggested_value": suggested_values[key]}
+            schema[new_key] = val
+        return vol.Schema(schema)
+
     @callback
     def async_show_form(
         self,
@@ -461,22 +498,25 @@ class FlowHandler:
     def async_create_entry(
         self,
         *,
-        title: str,
+        title: str | None = None,
         data: Mapping[str, Any],
         description: str | None = None,
         description_placeholders: Mapping[str, str] | None = None,
     ) -> FlowResult:
         """Finish config flow and create a config entry."""
-        return FlowResult(
+        flow_result = FlowResult(
             version=self.VERSION,
             type=FlowResultType.CREATE_ENTRY,
             flow_id=self.flow_id,
             handler=self.handler,
-            title=title,
             data=data,
             description=description,
             description_placeholders=description_placeholders,
+            context=self.context,
         )
+        if title is not None:
+            flow_result["title"] = title
+        return flow_result
 
     @callback
     def async_abort(
@@ -567,6 +607,10 @@ class FlowHandler:
             menu_options=menu_options,
             description_placeholders=description_placeholders,
         )
+
+    @callback
+    def async_remove(self) -> None:
+        """Notification that the config flow has been removed."""
 
 
 @callback

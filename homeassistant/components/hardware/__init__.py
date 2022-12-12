@@ -12,6 +12,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Hardware."""
     hass.data[DOMAIN] = {}
 
-    websocket_api.async_setup(hass)
+    await websocket_api.async_setup(hass)
 
     return True

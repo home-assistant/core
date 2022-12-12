@@ -2,7 +2,10 @@
     "config": {
         "abort": {
             "cannot_connect": "Tilkobling mislyktes",
-            "unknown": "Uforventet feil"
+            "unknown": "Uventet feil"
+        },
+        "error": {
+            "unknown": "Uventet feil"
         },
         "step": {
             "reauth": {

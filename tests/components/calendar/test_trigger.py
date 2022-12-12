@@ -62,14 +62,15 @@ class FakeSchedule:
         self,
         start: datetime.timedelta,
         end: datetime.timedelta,
-        description: str = None,
-        location: str = None,
+        summary: str | None = None,
+        description: str | None = None,
+        location: str | None = None,
     ) -> dict[str, Any]:
         """Create a new fake event, used by tests."""
         event = calendar.CalendarEvent(
             start=start,
             end=end,
-            summary=f"Event {secrets.token_hex(16)}",  # Arbitrary unique data
+            summary=summary if summary else f"Event {secrets.token_hex(16)}",
             description=description,
             location=location,
         )
@@ -85,8 +86,13 @@ class FakeSchedule:
         """Get all events in a specific time frame, used by the demo calendar."""
         assert start_date < end_date
         values = []
+        local_start_date = dt_util.as_local(start_date)
+        local_end_date = dt_util.as_local(end_date)
         for event in self.events:
-            if start_date < event.start < end_date or start_date < event.end < end_date:
+            if (
+                event.start_datetime_local < local_end_date
+                and local_start_date < event.end_datetime_local
+            ):
                 values.append(event)
         return values
 
@@ -99,9 +105,26 @@ class FakeSchedule:
 
     async def fire_until(self, end: datetime.timedelta) -> None:
         """Simulate the passage of time by firing alarms until the time is reached."""
+
+        current_time = dt_util.as_utc(self.freezer())
+        if (end - current_time) > (TEST_UPDATE_INTERVAL * 2):
+            # Jump ahead to right before the target alarm them to remove
+            # unnecessary waiting, before advancing in smaller increments below.
+            # This leaves time for multiple update intervals to refresh the set
+            # of upcoming events
+            await self.fire_time(end - TEST_UPDATE_INTERVAL * 2)
+
         while dt_util.utcnow() < end:
             self.freezer.tick(TEST_TIME_ADVANCE_INTERVAL)
             await self.fire_time(dt_util.utcnow())
+
+
+@pytest.fixture
+def set_time_zone(hass):
+    """Set the time zone for the tests."""
+    # Set our timezone to CST/Regina so we can check calculations
+    # This keeps UTC-6 all year round
+    hass.config.set_time_zone("America/Regina")
 
 
 @pytest.fixture
@@ -534,25 +557,72 @@ async def test_update_missed(hass, calls, fake_schedule):
     ]
 
 
-async def test_event_payload(hass, calls, fake_schedule):
-    """Test the a calendar trigger based on start time."""
-    event_data = fake_schedule.create_event(
-        start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
-        end=datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
-        description="Description",
-        location="Location",
-    )
+@pytest.mark.parametrize(
+    "create_data,fire_time,payload_data",
+    [
+        (
+            {
+                "start": datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
+                "end": datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
+                "summary": "Summary",
+            },
+            datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
+            {
+                "summary": "Summary",
+                "start": "2022-04-19T11:00:00+00:00",
+                "end": "2022-04-19T11:30:00+00:00",
+                "all_day": False,
+            },
+        ),
+        (
+            {
+                "start": datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
+                "end": datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
+                "summary": "Summary",
+                "description": "Description",
+                "location": "Location",
+            },
+            datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
+            {
+                "summary": "Summary",
+                "start": "2022-04-19T11:00:00+00:00",
+                "end": "2022-04-19T11:30:00+00:00",
+                "all_day": False,
+                "description": "Description",
+                "location": "Location",
+            },
+        ),
+        (
+            {
+                "summary": "Summary",
+                "start": datetime.date.fromisoformat("2022-04-20"),
+                "end": datetime.date.fromisoformat("2022-04-21"),
+            },
+            datetime.datetime.fromisoformat("2022-04-20 00:00:01-06:00"),
+            {
+                "summary": "Summary",
+                "start": "2022-04-20",
+                "end": "2022-04-21",
+                "all_day": True,
+            },
+        ),
+    ],
+    ids=["basic", "more-fields", "all-day"],
+)
+async def test_event_payload(
+    hass, calls, fake_schedule, set_time_zone, create_data, fire_time, payload_data
+):
+    """Test the fields in the calendar event payload are set."""
+    fake_schedule.create_event(**create_data)
     await create_automation(hass, EVENT_START)
     assert len(calls()) == 0
 
-    await fake_schedule.fire_until(
-        datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00")
-    )
+    await fake_schedule.fire_until(fire_time)
     assert calls() == [
         {
             "platform": "calendar",
             "event": EVENT_START,
-            "calendar_event": event_data,
+            "calendar_event": payload_data,
         }
     ]
 

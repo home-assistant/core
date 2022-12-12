@@ -24,7 +24,7 @@
         "trigger_subtype": {
             "away": "Fuori casa",
             "hg": "protezione antigelo",
-            "schedule": "programma"
+            "schedule": "calendarizzazione"
         },
         "trigger_type": {
             "alarm_started": "{entity_name} ha rilevato un allarme",

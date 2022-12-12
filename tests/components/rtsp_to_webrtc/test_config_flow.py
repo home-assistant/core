@@ -9,7 +9,10 @@ import rtsp_to_webrtc
 from homeassistant import config_entries
 from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.components.rtsp_to_webrtc import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+
+from .conftest import ComponentSetup
 
 from tests.common import MockConfigEntry
 
@@ -121,7 +124,9 @@ async def test_hassio_discovery(hass):
                 "addon": "RTSPtoWebRTC",
                 "host": "fake-server",
                 "port": 8083,
-            }
+            },
+            name="RTSPtoWebRTC",
+            slug="rtsp-to-webrtc",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -158,7 +163,9 @@ async def test_hassio_single_config_entry(hass: HomeAssistant) -> None:
                 "addon": "RTSPtoWebRTC",
                 "host": "fake-server",
                 "port": 8083,
-            }
+            },
+            name="RTSPtoWebRTC",
+            slug="rtsp-to-webrtc",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -178,7 +185,9 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
                 "addon": "RTSPtoWebRTC",
                 "host": "fake-server",
                 "port": 8083,
-            }
+            },
+            name="RTSPtoWebRTC",
+            slug="rtsp-to-webrtc",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -195,7 +204,9 @@ async def test_hassio_discovery_server_failure(hass: HomeAssistant) -> None:
                 "addon": "RTSPtoWebRTC",
                 "host": "fake-server",
                 "port": 8083,
-            }
+            },
+            name="RTSPtoWebRTC",
+            slug="rtsp-to-webrtc",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -212,3 +223,46 @@ async def test_hassio_discovery_server_failure(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result.get("type") == "abort"
         assert result.get("reason") == "server_failure"
+
+
+async def test_options_flow(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setup_integration: ComponentSetup,
+) -> None:
+    """Test setting stun server in options flow."""
+    with patch(
+        "homeassistant.components.rtsp_to_webrtc.async_setup_entry",
+        return_value=True,
+    ):
+        await setup_integration()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert not config_entry.options
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+    data_schema = result["data_schema"].schema
+    assert set(data_schema) == {"stun_server"}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "stun_server": "example.com:1234",
+        },
+    )
+    assert result["type"] == "create_entry"
+    await hass.async_block_till_done()
+    assert config_entry.options == {"stun_server": "example.com:1234"}
+
+    # Clear the value
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] == "create_entry"
+    await hass.async_block_till_done()
+    assert config_entry.options == {}

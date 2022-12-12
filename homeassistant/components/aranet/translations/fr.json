@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "no_devices_found": "Aucun appareil Aranet non configur\u00e9 n\u2019a \u00e9t\u00e9 trouv\u00e9."
+        },
+        "error": {
+            "unknown": "Erreur inattendue"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Voulez-vous configurer {name}\u00a0?"
+            },
+            "user": {
+                "data": {
+                    "address": "Appareil"
+                },
+                "description": "S\u00e9lectionnez l'appareil \u00e0 configurer"
+            }
+        }
+    }
+}

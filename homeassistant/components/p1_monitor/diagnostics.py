@@ -10,7 +10,13 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from . import P1MonitorDataUpdateCoordinator
-from .const import DOMAIN, SERVICE_PHASES, SERVICE_SETTINGS, SERVICE_SMARTMETER
+from .const import (
+    DOMAIN,
+    SERVICE_PHASES,
+    SERVICE_SETTINGS,
+    SERVICE_SMARTMETER,
+    SERVICE_WATERMETER,
+)
 
 TO_REDACT = {
     CONF_HOST,
@@ -23,7 +29,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator: P1MonitorDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    return {
+    data = {
         "entry": {
             "title": entry.title,
             "data": async_redact_data(entry.data, TO_REDACT),
@@ -34,3 +40,8 @@ async def async_get_config_entry_diagnostics(
             "settings": asdict(coordinator.data[SERVICE_SETTINGS]),
         },
     }
+
+    if coordinator.has_water_meter:
+        data["data"]["watermeter"] = asdict(coordinator.data[SERVICE_WATERMETER])
+
+    return data

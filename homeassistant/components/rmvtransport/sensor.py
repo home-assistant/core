@@ -186,7 +186,7 @@ class RMVDepartureSensor(SensorEntity):
         """Return the unit this state is expressed in."""
         return TIME_MINUTES
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data and update the state."""
         await self.data.async_update()
 

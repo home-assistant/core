@@ -73,7 +73,7 @@ class BeewiSmartclimSensor(SensorEntity):
         self._attr_device_class = self._device
         self._attr_unique_id = f"{mac}_{device}"
 
-    def update(self):
+    def update(self) -> None:
         """Fetch new state data from the poller."""
         self._poller.update_sensor()
         self._attr_native_value = None

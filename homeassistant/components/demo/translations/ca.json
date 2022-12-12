@@ -1,4 +1,25 @@
 {
+    "entity": {
+        "select": {
+            "speed": {
+                "state": {
+                    "light_speed": "Velocitat de la llum",
+                    "ludicrous_speed": "Velocitat Ludicrous",
+                    "ridiculous_speed": "Velocitat rid\u00edcula"
+                }
+            }
+        },
+        "sensor": {
+            "thermostat_mode": {
+                "state": {
+                    "away": "A fora",
+                    "comfort": "Confort",
+                    "eco": "Eco",
+                    "sleep": "Dormint"
+                }
+            }
+        }
+    },
     "issues": {
         "bad_psu": {
             "fix_flow": {
@@ -11,11 +32,19 @@
             },
             "title": "La font d'alimentaci\u00f3 no \u00e9s estable"
         },
+        "cold_tea": {
+            "fix_flow": {
+                "abort": {
+                    "not_tea_time": "No es pot tornar a escalfar el te en aquest moment"
+                }
+            },
+            "title": "El te \u00e9s fred"
+        },
         "out_of_blinker_fluid": {
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "description": "Prem D'acord quan s'hagi omplert el l\u00edquid d'intermitents",
+                        "description": "Prem ENVIA quan s'hagi omplert el l\u00edquid d'intermitents",
                         "title": "Cal omplir el l\u00edquid d'intermitents"
                     }
                 }

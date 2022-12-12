@@ -42,7 +42,7 @@ class NumberCapability(MusicCastCapabilityEntity, NumberEntity):
         self,
         coordinator: MusicCastDataUpdateCoordinator,
         capability: NumberSetter,
-        zone_id: str = None,
+        zone_id: str | None = None,
     ) -> None:
         """Initialize the number entity."""
         super().__init__(coordinator, capability, zone_id)

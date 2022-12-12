@@ -1,6 +1,7 @@
 """Config flow for the Huawei LTE platform."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
@@ -89,6 +90,70 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
+    async def _async_show_reauth_form(
+        self,
+        user_input: dict[str, Any],
+        errors: dict[str, str] | None = None,
+    ) -> FlowResult:
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_USERNAME, default=user_input.get(CONF_USERNAME) or ""
+                    ): str,
+                    vol.Optional(
+                        CONF_PASSWORD, default=user_input.get(CONF_PASSWORD) or ""
+                    ): str,
+                }
+            ),
+            errors=errors or {},
+        )
+
+    async def _try_connect(
+        self, user_input: dict[str, Any], errors: dict[str, str]
+    ) -> Connection | None:
+        """Try connecting with given data."""
+        username = user_input.get(CONF_USERNAME) or ""
+        password = user_input.get(CONF_PASSWORD) or ""
+
+        def _get_connection() -> Connection:
+            return Connection(
+                url=user_input[CONF_URL],
+                username=username,
+                password=password,
+                timeout=CONNECTION_TIMEOUT,
+            )
+
+        conn = None
+        try:
+            conn = await self.hass.async_add_executor_job(_get_connection)
+        except LoginErrorUsernameWrongException:
+            errors[CONF_USERNAME] = "incorrect_username"
+        except LoginErrorPasswordWrongException:
+            errors[CONF_PASSWORD] = "incorrect_password"
+        except LoginErrorUsernamePasswordWrongException:
+            errors[CONF_USERNAME] = "invalid_auth"
+        except LoginErrorUsernamePasswordOverrunException:
+            errors["base"] = "login_attempts_exceeded"
+        except ResponseErrorException:
+            _LOGGER.warning("Response error", exc_info=True)
+            errors["base"] = "response_error"
+        except Timeout:
+            _LOGGER.warning("Connection timeout", exc_info=True)
+            errors[CONF_URL] = "connection_timeout"
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.warning("Unknown error connecting to device", exc_info=True)
+            errors[CONF_URL] = "unknown"
+        return conn
+
+    @staticmethod
+    def _logout(conn: Connection) -> None:
+        try:
+            conn.user_session.user.logout()  # type: ignore[union-attr]
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.debug("Could not logout", exc_info=True)
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -108,25 +173,9 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input=user_input, errors=errors
             )
 
-        def logout() -> None:
-            try:
-                conn.user_session.user.logout()  # type: ignore[union-attr]
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.debug("Could not logout", exc_info=True)
-
-        def try_connect(user_input: dict[str, Any]) -> Connection:
-            """Try connecting with given credentials."""
-            username = user_input.get(CONF_USERNAME) or ""
-            password = user_input.get(CONF_PASSWORD) or ""
-            conn = Connection(
-                user_input[CONF_URL],
-                username=username,
-                password=password,
-                timeout=CONNECTION_TIMEOUT,
-            )
-            return conn
-
-        def get_device_info() -> tuple[GetResponseType, GetResponseType]:
+        def get_device_info(
+            conn: Connection,
+        ) -> tuple[GetResponseType, GetResponseType]:
             """Get router info."""
             client = Client(conn)
             try:
@@ -147,33 +196,17 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 wlan_settings = {}
             return device_info, wlan_settings
 
-        try:
-            conn = await self.hass.async_add_executor_job(try_connect, user_input)
-        except LoginErrorUsernameWrongException:
-            errors[CONF_USERNAME] = "incorrect_username"
-        except LoginErrorPasswordWrongException:
-            errors[CONF_PASSWORD] = "incorrect_password"
-        except LoginErrorUsernamePasswordWrongException:
-            errors[CONF_USERNAME] = "invalid_auth"
-        except LoginErrorUsernamePasswordOverrunException:
-            errors["base"] = "login_attempts_exceeded"
-        except ResponseErrorException:
-            _LOGGER.warning("Response error", exc_info=True)
-            errors["base"] = "response_error"
-        except Timeout:
-            _LOGGER.warning("Connection timeout", exc_info=True)
-            errors[CONF_URL] = "connection_timeout"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.warning("Unknown error connecting to device", exc_info=True)
-            errors[CONF_URL] = "unknown"
+        conn = await self._try_connect(user_input, errors)
         if errors:
-            await self.hass.async_add_executor_job(logout)
             return await self._async_show_user_form(
                 user_input=user_input, errors=errors
             )
+        assert conn
 
-        info, wlan_settings = await self.hass.async_add_executor_job(get_device_info)
-        await self.hass.async_add_executor_job(logout)
+        info, wlan_settings = await self.hass.async_add_executor_job(
+            get_device_info, conn
+        )
+        await self.hass.async_add_executor_job(self._logout, conn)
 
         user_input[CONF_MAC] = get_device_macs(info, wlan_settings)
 
@@ -227,6 +260,38 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_NAME: discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
         }
         return await self._async_show_user_form(user_input)
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Dialog that informs the user that reauth is required."""
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        assert entry
+        if not user_input:
+            return await self._async_show_reauth_form(
+                user_input={
+                    CONF_USERNAME: entry.data[CONF_USERNAME],
+                    CONF_PASSWORD: entry.data[CONF_PASSWORD],
+                }
+            )
+
+        new_data = {**entry.data, **user_input}
+        errors: dict[str, str] = {}
+        conn = await self._try_connect(new_data, errors)
+        if conn:
+            await self.hass.async_add_executor_job(self._logout, conn)
+        if errors:
+            return await self._async_show_reauth_form(
+                user_input=user_input, errors=errors
+            )
+
+        self.hass.config_entries.async_update_entry(entry, data=new_data)
+        await self.hass.config_entries.async_reload(entry.entry_id)
+        return self.async_abort(reason="reauth_successful")
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):

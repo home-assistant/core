@@ -1,13 +1,14 @@
 """Tests for homekit_controller config flow."""
 import asyncio
 import unittest.mock
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import aiohomekit
 from aiohomekit.exceptions import AuthenticationError
 from aiohomekit.model import Accessories, Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
+from bleak.exc import BleakError
 import pytest
 
 from homeassistant import config_entries
@@ -524,8 +525,6 @@ async def test_discovery_already_configured_update_csharp(hass, controller):
     entry.add_to_hass(hass)
 
     connection_mock = AsyncMock()
-    connection_mock.pairing.connect.reconnect_soon = AsyncMock()
-    connection_mock.async_notify_config_changed = MagicMock()
     hass.data[KNOWN_DEVICES] = {"AA:BB:CC:DD:EE:FF": connection_mock}
 
     device = setup_mock_accessory(controller)
@@ -548,7 +547,6 @@ async def test_discovery_already_configured_update_csharp(hass, controller):
 
     assert entry.data["AccessoryIP"] == discovery_info.host
     assert entry.data["AccessoryPort"] == discovery_info.port
-    assert connection_mock.async_notify_config_changed.call_count == 1
 
 
 @pytest.mark.parametrize("exception,expected", PAIRING_START_ABORT_ERRORS)
@@ -737,6 +735,57 @@ async def test_pair_form_errors_on_finish(hass, controller, exception, expected)
     )
     assert result["type"] == "form"
     assert result["errors"]["pairing_code"] == expected
+
+    assert get_flow_context(hass, result) == {
+        "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
+        "unique_id": "00:00:00:00:00:00",
+        "source": config_entries.SOURCE_ZEROCONF,
+        "pairing": True,
+    }
+
+
+async def test_pair_unknown_errors(hass, controller):
+    """Test describing unknown errors."""
+    device = setup_mock_accessory(controller)
+    discovery_info = get_device_discovery_info(device)
+
+    # Device is discovered
+    result = await hass.config_entries.flow.async_init(
+        "homekit_controller",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    assert get_flow_context(hass, result) == {
+        "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
+        "unique_id": "00:00:00:00:00:00",
+        "source": config_entries.SOURCE_ZEROCONF,
+    }
+
+    # User initiates pairing - this triggers the device to show a pairing code
+    # and then HA to show a pairing form
+    finish_pairing = unittest.mock.AsyncMock(
+        side_effect=BleakError("The bluetooth connection failed")
+    )
+    with patch.object(device, "async_start_pairing", return_value=finish_pairing):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] == "form"
+    assert get_flow_context(hass, result) == {
+        "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
+        "unique_id": "00:00:00:00:00:00",
+        "source": config_entries.SOURCE_ZEROCONF,
+    }
+
+    # User enters pairing code
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"pairing_code": "111-22-333"}
+    )
+    assert result["type"] == "form"
+    assert result["errors"]["pairing_code"] == "pairing_failed"
+    assert (
+        result["description_placeholders"]["error"] == "The bluetooth connection failed"
+    )
 
     assert get_flow_context(hass, result) == {
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},

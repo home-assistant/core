@@ -1,12 +1,20 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Lokasi sudah dikonfigurasi"
+            "already_configured": "Lokasi sudah dikonfigurasi",
+            "reauth_successful": "Autentikasi ulang berhasil"
         },
         "error": {
             "invalid_api_key": "Kunci API tidak valid"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Kunci API"
+                },
+                "description": "Masukkan kembali kunci API untuk {latitude}, {longitude}.",
+                "title": "Autentikasi Ulang Integrasi"
+            },
             "user": {
                 "data": {
                     "api_key": "Kunci API",
@@ -16,6 +24,16 @@
                 },
                 "title": "Isi informasi Anda"
             }
+        }
+    },
+    "issues": {
+        "deprecated_service_multiple_alternate_targets": {
+            "description": "Perbarui semua otomasi atau skrip yang menggunakan layanan ini untuk menggunakan layanan `{alternate_service}` dengan salah satu ID entitas berikut sebagai target: `{alternate_targets}`.",
+            "title": "Layanan {deprecated_service} dalam proses penghapusan"
+        },
+        "deprecated_service_single_alternate_target": {
+            "description": "Perbarui semua otomasi atau skrip yang menggunakan layanan ini untuk menggunakan layanan `{alternate_service}` dengan `{alternate_targets}` sebagai target.",
+            "title": "Layanan {deprecated_service} dalam proses penghapusan"
         }
     },
     "options": {

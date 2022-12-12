@@ -40,10 +40,11 @@ from homeassistant.const import (
     CONF_RESOURCES,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
-    POWER_WATT,
+    REVOLUTIONS_PER_MINUTE,
     TEMP_CELSIUS,
     TIME_DAYS,
     VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -159,7 +160,7 @@ SENSOR_TYPES = (
         key=ATTR_SUPPLY_FAN_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
         name="Supply fan speed",
-        native_unit_of_measurement="rpm",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         icon="mdi:fan-plus",
         sensor_id=SENSOR_FAN_SUPPLY_SPEED,
     ),
@@ -175,7 +176,7 @@ SENSOR_TYPES = (
         key=ATTR_EXHAUST_FAN_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
         name="Exhaust fan speed",
-        native_unit_of_measurement="rpm",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         icon="mdi:fan-minus",
         sensor_id=SENSOR_FAN_EXHAUST_SPEED,
     ),
@@ -240,7 +241,7 @@ SENSOR_TYPES = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         name="Power usage",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         sensor_id=SENSOR_POWER_CURRENT,
     ),
     ComfoconnectSensorEntityDescription(
@@ -256,7 +257,7 @@ SENSOR_TYPES = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         name="Preheater power usage",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         sensor_id=SENSOR_PREHEATER_POWER_CURRENT,
     ),
     ComfoconnectSensorEntityDescription(

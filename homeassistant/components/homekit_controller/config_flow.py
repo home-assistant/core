@@ -15,7 +15,7 @@ from aiohomekit.controller.abstract import (
 from aiohomekit.exceptions import AuthenticationError
 from aiohomekit.model.categories import Categories
 from aiohomekit.model.status_flags import StatusFlags
-from aiohomekit.utils import domain_supported, domain_to_name
+from aiohomekit.utils import domain_supported, domain_to_name, serialize_broadcast_key
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -24,7 +24,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import device_registry as dr
 
-from .connection import HKDevice
 from .const import DOMAIN, KNOWN_DEVICES
 from .storage import async_get_entity_storage
 from .utils import async_get_controller
@@ -253,17 +252,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         category = Categories(int(properties.get("ci", 0)))
         paired = not status_flags & 0x01
 
-        # The configuration number increases every time the characteristic map
-        # needs updating. Some devices use a slightly off-spec name so handle
-        # both cases.
-        try:
-            config_num = int(properties["c#"])
-        except KeyError:
-            _LOGGER.warning(
-                "HomeKit device %s: c# not exposed, in violation of spec", hkid
-            )
-            config_num = None
-
         # Set unique-id and error out if it's already configured
         existing_entry = await self.async_set_unique_id(
             normalized_hkid, raise_on_progress=False
@@ -280,17 +268,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.async_update_entry(
                     existing_entry, data={**existing_entry.data, **updated_ip_port}
                 )
-            conn: HKDevice = self.hass.data[KNOWN_DEVICES][hkid]
-            # When we rediscover the device, let aiohomekit know
-            # that the device is available and we should not wait
-            # to retry connecting any longer. reconnect_soon
-            # will do nothing if the device is already connected
-            await conn.pairing.reconnect_soon()
-            if config_num and conn.config_num != config_num:
-                _LOGGER.debug(
-                    "HomeKit info %s: c# incremented, refreshing entities", hkid
-                )
-                conn.async_notify_config_changed(config_num)
             return self.async_abort(reason="already_configured")
 
         _LOGGER.debug("Discovered device %s (%s - %s)", name, model, hkid)
@@ -443,6 +420,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Should never call this step without setting self.hkid
         assert self.hkid
+        description_placeholders = {}
 
         errors = {}
 
@@ -488,10 +466,11 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="accessory_not_found_error")
             except InsecureSetupCode:
                 errors["pairing_code"] = "insecure_setup_code"
-            except Exception:  # pylint: disable=broad-except
+            except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception("Pairing attempt failed with an unhandled exception")
                 self.finish_pairing = None
                 errors["pairing_code"] = "pairing_failed"
+                description_placeholders["error"] = str(err)
 
         if not self.finish_pairing:
             # Its possible that the first try may have been busy so
@@ -519,11 +498,12 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 # TLV error, usually not in pairing mode
                 _LOGGER.exception("Pairing communication failed")
                 return await self.async_step_protocol_error()
-            except Exception:  # pylint: disable=broad-except
+            except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception("Pairing attempt failed with an unhandled exception")
                 errors["pairing_code"] = "pairing_failed"
+                description_placeholders["error"] = str(err)
 
-        return self._async_step_pair_show_form(errors)
+        return self._async_step_pair_show_form(errors, description_placeholders)
 
     async def async_step_busy_error(
         self, user_input: dict[str, Any] | None = None
@@ -554,7 +534,9 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @callback
     def _async_step_pair_show_form(
-        self, errors: dict[str, str] | None = None
+        self,
+        errors: dict[str, str] | None = None,
+        description_placeholders: dict[str, str] | None = None,
     ) -> FlowResult:
         assert self.category
 
@@ -570,7 +552,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="pair",
             errors=errors or {},
-            description_placeholders=placeholders,
+            description_placeholders=placeholders | (description_placeholders or {}),
             data_schema=vol.Schema(schema),
         )
 
@@ -600,6 +582,8 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             pairing.id,
             accessories_state.config_num,
             accessories_state.accessories.serialize(),
+            serialize_broadcast_key(accessories_state.broadcast_key),
+            accessories_state.state_num,
         )
 
         return self.async_create_entry(title=name, data=pairing_data)

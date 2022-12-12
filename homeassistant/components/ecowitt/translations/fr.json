@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Voulez-vous vraiment configurer Ecowitt\u00a0?"
+            }
+        }
+    }
+}

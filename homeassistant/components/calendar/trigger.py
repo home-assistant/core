@@ -8,10 +8,6 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
 from homeassistant.const import CONF_ENTITY_ID, CONF_EVENT, CONF_OFFSET, CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -21,6 +17,7 @@ from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
     async_track_time_interval,
 )
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
@@ -40,6 +37,8 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
         vol.Optional(CONF_OFFSET, default=datetime.timedelta(0)): cv.time_period,
     }
 )
+
+# mypy: disallow-any-generics
 
 
 class CalendarEventListener:
@@ -167,15 +166,15 @@ class CalendarEventListener:
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach trigger for the specified calendar."""
     entity_id = config[CONF_ENTITY_ID]
     event_type = config[CONF_EVENT]
     offset = config[CONF_OFFSET]
 
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
     if not (entity := component.get_entity(entity_id)) or not isinstance(
         entity, CalendarEntity
     ):
@@ -184,7 +183,7 @@ async def async_attach_trigger(
         )
 
     trigger_data = {
-        **automation_info["trigger_data"],
+        **trigger_info["trigger_data"],
         "platform": DOMAIN,
         "event": event_type,
         "offset": offset,

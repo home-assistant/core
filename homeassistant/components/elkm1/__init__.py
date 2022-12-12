@@ -7,11 +7,11 @@ import logging
 import re
 from types import MappingProxyType
 from typing import Any, cast
-from urllib.parse import urlparse
 
 import async_timeout
 from elkm1_lib.elements import Element
 from elkm1_lib.elk import Elk
+from elkm1_lib.util import parse_url
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -94,6 +94,11 @@ SET_TIME_SERVICE_SCHEMA = vol.Schema(
         vol.Optional("prefix", default=""): cv.string,
     }
 )
+
+
+def hostname_from_url(url: str) -> str:
+    """Return the hostname from a url."""
+    return parse_url(url)[1]
 
 
 def _host_validator(config: dict[str, str]) -> dict[str, str]:
@@ -231,7 +236,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Elk-M1 Control from a config entry."""
     conf: MappingProxyType[str, Any] = entry.data
 
-    host = urlparse(entry.data[CONF_HOST]).hostname
+    host = hostname_from_url(entry.data[CONF_HOST])
 
     _LOGGER.debug("Setting up elkm1 %s", conf["host"])
 
@@ -444,6 +449,7 @@ class ElkEntity(Entity):
     """Base class for all Elk entities."""
 
     _attr_has_entity_name = True
+    _attr_should_poll = False
 
     def __init__(self, element: Element, elk: Elk, elk_data: dict[str, Any]) -> None:
         """Initialize the base of all Elk devices."""
@@ -471,11 +477,6 @@ class ElkEntity(Entity):
     def unique_id(self) -> str:
         """Return unique id of the element."""
         return self._unique_id
-
-    @property
-    def should_poll(self) -> bool:
-        """Don't poll this device."""
-        return False
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

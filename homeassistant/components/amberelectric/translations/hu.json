@@ -1,5 +1,10 @@
 {
     "config": {
+        "error": {
+            "invalid_api_token": "\u00c9rv\u00e9nytelen API kulcs",
+            "no_site": "Nincs megadva a helysz\u00edn",
+            "unknown_error": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
         "step": {
             "site": {
                 "data": {

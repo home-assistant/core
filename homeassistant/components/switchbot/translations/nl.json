@@ -9,13 +9,13 @@
         },
         "flow_title": "{name}",
         "step": {
-            "user": {
+            "confirm": {
+                "description": "Wilt u {name} instellen?"
+            },
+            "password": {
                 "data": {
-                    "mac": "MAC-adres apparaat",
-                    "name": "Naam",
                     "password": "Wachtwoord"
-                },
-                "title": "Switchbot-apparaat instellen"
+                }
             }
         }
     },
@@ -23,10 +23,7 @@
         "step": {
             "init": {
                 "data": {
-                    "retry_count": "Aantal herhalingen",
-                    "retry_timeout": "Time-out tussen nieuwe pogingen",
-                    "scan_timeout": "Hoe lang te scannen voor advertentiegegevens",
-                    "update_time": "Tijd tussen updates (seconden)"
+                    "retry_count": "Aantal herhalingen"
                 }
             }
         }

@@ -237,6 +237,8 @@ def _async_fire_send_keys_event(
 class LcnEntity(Entity):
     """Parent class for all entities associated with the LCN component."""
 
+    _attr_should_poll = False
+
     def __init__(
         self, config: ConfigType, entry_id: str, device_connection: DeviceConnectionType
     ) -> None:
@@ -279,11 +281,6 @@ class LcnEntity(Entity):
                 generate_unique_id(self.entry_id, self.config[CONF_ADDRESS]),
             ),
         }
-
-    @property
-    def should_poll(self) -> bool:
-        """Lcn device entity pushes its state to HA."""
-        return False
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""

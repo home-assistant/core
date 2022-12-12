@@ -12,6 +12,9 @@
             "user": {
                 "data": {
                     "host": "V\u00e4rd"
+                },
+                "data_description": {
+                    "host": "IP-adressen eller v\u00e4rdnamnet f\u00f6r din Pure Energie-m\u00e4tare."
                 }
             },
             "zeroconf_confirm": {

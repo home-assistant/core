@@ -6,5 +6,6 @@
   "requirements": ["nextcord==2.0.0a8"],
   "codeowners": ["@tkdrob"],
   "iot_class": "cloud_push",
-  "loggers": ["discord"]
+  "loggers": ["discord"],
+  "integration_type": "service"
 }

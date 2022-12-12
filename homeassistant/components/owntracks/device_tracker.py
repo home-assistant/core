@@ -1,9 +1,9 @@
 """Device tracker platform that adds support for OwnTracks over MQTT."""
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
-from homeassistant.components.device_tracker.const import (
+from homeassistant.components.device_tracker import (
     ATTR_SOURCE_TYPE,
     DOMAIN,
     SourceType,
+    TrackerEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -53,8 +53,7 @@ async def async_setup_entry(
 
     hass.data[OT_DOMAIN]["context"].set_async_see(_receive_data)
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class OwnTracksEntity(TrackerEntity, RestoreEntity):
@@ -124,7 +123,7 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         """Return the device info."""
         return DeviceInfo(identifiers={(OT_DOMAIN, self._dev_id)}, name=self.name)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to Home Assistant."""
         await super().async_added_to_hass()
 

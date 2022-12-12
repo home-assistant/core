@@ -5,15 +5,13 @@ import asyncio
 import logging
 
 from homeassistant.components.humidifier import (
+    ATTR_HUMIDITY,
+    MODE_AWAY,
+    MODE_NORMAL,
     PLATFORM_SCHEMA,
     HumidifierDeviceClass,
     HumidifierEntity,
     HumidifierEntityFeature,
-)
-from homeassistant.components.humidifier.const import (
-    ATTR_HUMIDITY,
-    MODE_AWAY,
-    MODE_NORMAL,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -112,6 +110,8 @@ async def async_setup_platform(
 class GenericHygrostat(HumidifierEntity, RestoreEntity):
     """Representation of a Generic Hygrostat device."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         name,
@@ -147,7 +147,6 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         self._min_humidity = min_humidity
         self._max_humidity = max_humidity
         self._target_humidity = target_humidity
-        self._attr_supported_features = 0
         if away_humidity:
             self._attr_supported_features |= HumidifierEntityFeature.MODES
         self._away_humidity = away_humidity
@@ -219,11 +218,6 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         return None
 
     @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
-
-    @property
     def name(self):
         """Return the name of the hygrostat."""
         return self._name
@@ -287,7 +281,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
             return
 
         self._target_humidity = humidity
-        await self._async_operate(force=True)
+        await self._async_operate()
         await self.async_update_ha_state()
 
     @property

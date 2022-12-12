@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, ENERGY_KILO_WATT_HOUR
+from homeassistant.const import ENERGY_KILO_WATT_HOUR
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -83,6 +83,9 @@ async def async_setup_entry(
 class SrpEntity(SensorEntity):
     """Implementation of a Srp Energy Usage sensor."""
 
+    _attr_attribution = ATTRIBUTION
+    _attr_should_poll = False
+
     def __init__(self, coordinator):
         """Initialize the SrpEntity class."""
         self._name = SENSOR_NAME
@@ -126,22 +129,6 @@ class SrpEntity(SensorEntity):
         return None
 
     @property
-    def should_poll(self):
-        """No need to poll. Coordinator notifies entity of updates."""
-        return False
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        if not self.coordinator.data:
-            return None
-        attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-        }
-
-        return attributes
-
-    @property
     def available(self):
         """Return if entity is available."""
         return self.coordinator.last_update_success
@@ -156,7 +143,7 @@ class SrpEntity(SensorEntity):
         """Return the state class."""
         return SensorStateClass.TOTAL_INCREASING
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         self.async_on_remove(
             self.coordinator.async_add_listener(self.async_write_ha_state)
@@ -164,7 +151,7 @@ class SrpEntity(SensorEntity):
         if self.coordinator.data:
             self._state = self.coordinator.data
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the entity.
 
         Only used by the generic entity update service.

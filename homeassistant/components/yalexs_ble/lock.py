@@ -55,8 +55,8 @@ class YaleXSBLELock(YALEXSBLEEntity, LockEntity):
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
-        return await self._device.unlock()
+        await self._device.unlock()
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
-        return await self._device.lock()
+        await self._device.lock()

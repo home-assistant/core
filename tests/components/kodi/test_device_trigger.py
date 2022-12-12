@@ -4,7 +4,7 @@ import pytest
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.kodi import DOMAIN
-from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.setup import async_setup_component
 
 from . import init_integration

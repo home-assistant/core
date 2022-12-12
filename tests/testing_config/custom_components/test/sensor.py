@@ -32,6 +32,7 @@ UNITS_OF_MEASUREMENT = {
     SensorDeviceClass.CO2: CONCENTRATION_PARTS_PER_MILLION,  # ppm of CO2 concentration
     SensorDeviceClass.HUMIDITY: PERCENTAGE,  # % of humidity in the air
     SensorDeviceClass.ILLUMINANCE: "lm",  # current light level (lx/lm)
+    SensorDeviceClass.MOISTURE: PERCENTAGE,  # % of water in a substance
     SensorDeviceClass.NITROGEN_DIOXIDE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of nitrogen dioxide
     SensorDeviceClass.NITROGEN_MONOXIDE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of nitrogen monoxide
     SensorDeviceClass.NITROUS_OXIDE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of nitrogen oxide
@@ -107,9 +108,19 @@ class MockSensor(MockEntity, SensorEntity):
         return self._handle("native_value")
 
     @property
+    def options(self):
+        """Return the options for this sensor."""
+        return self._handle("options")
+
+    @property
     def state_class(self):
         """Return the state class of this sensor."""
         return self._handle("state_class")
+
+    @property
+    def suggested_unit_of_measurement(self):
+        """Return the state class of this sensor."""
+        return self._handle("suggested_unit_of_measurement")
 
 
 class MockRestoreSensor(MockSensor, RestoreSensor):

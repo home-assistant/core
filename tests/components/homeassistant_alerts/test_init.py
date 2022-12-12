@@ -8,6 +8,7 @@ from unittest.mock import ANY, patch
 import pytest
 
 from homeassistant.components.homeassistant_alerts import DOMAIN, UPDATE_INTERVAL
+from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -28,14 +29,22 @@ Content for {filename}
     )
 
 
+@pytest.fixture(autouse=True)
+async def setup_repairs(hass):
+    """Set up the repairs integration."""
+    assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
+
+
 @pytest.mark.parametrize(
-    "ha_version, expected_alerts",
+    "ha_version, supervisor_info, expected_alerts",
     (
         (
             "2022.7.0",
+            {"version": "2022.11.0"},
             [
                 ("aladdin_connect.markdown", "aladdin_connect"),
                 ("dark_sky.markdown", "darksky"),
+                ("hassio.markdown", "hassio"),
                 ("hikvision.markdown", "hikvision"),
                 ("hikvision.markdown", "hikvisioncam"),
                 ("hive_us.markdown", "hive"),
@@ -49,6 +58,7 @@ Content for {filename}
         ),
         (
             "2022.8.0",
+            {"version": "2022.11.1"},
             [
                 ("dark_sky.markdown", "darksky"),
                 ("hikvision.markdown", "hikvision"),
@@ -64,6 +74,7 @@ Content for {filename}
         ),
         (
             "2021.10.0",
+            None,
             [
                 ("aladdin_connect.markdown", "aladdin_connect"),
                 ("dark_sky.markdown", "darksky"),
@@ -84,6 +95,7 @@ async def test_alerts(
     hass_ws_client,
     aioclient_mock: AiohttpClientMocker,
     ha_version,
+    supervisor_info,
     expected_alerts,
 ) -> None:
     """Test creating issues based on alerts."""
@@ -112,9 +124,18 @@ async def test_alerts(
     for domain in activated_components:
         hass.config.components.add(domain)
 
+    if supervisor_info is not None:
+        hass.config.components.add("hassio")
+
     with patch(
         "homeassistant.components.homeassistant_alerts.__version__",
         ha_version,
+    ), patch(
+        "homeassistant.components.homeassistant_alerts.is_hassio",
+        return_value=supervisor_info is not None,
+    ), patch(
+        "homeassistant.components.homeassistant_alerts.get_supervisor_info",
+        return_value=supervisor_info,
     ):
         assert await async_setup_component(hass, DOMAIN, {})
 

@@ -3,8 +3,8 @@
         "abort": {
             "all_student_already_configured": "Todos los estudiantes ya han sido a\u00f1adidos.",
             "already_configured": "Ese estudiante ya ha sido a\u00f1adido.",
-            "no_matching_entries": "No se encontraron entradas que coincidan, usa una cuenta diferente o elimina la integraci\u00f3n con el estudiante obsoleto.",
-            "reauth_successful": "Re-autenticaci\u00f3n exitosa"
+            "no_matching_entries": "No se encontraron entradas que coincidan, por favor, usa una cuenta diferente o elimina la integraci\u00f3n con el estudiante obsoleto.",
+            "reauth_successful": "La autenticaci\u00f3n se volvi\u00f3 a realizar correctamente"
         },
         "error": {
             "cannot_connect": "Error de conexi\u00f3n - por favor, comprueba tu conexi\u00f3n a Internet",
@@ -36,7 +36,7 @@
                     "region": "S\u00edmbolo",
                     "token": "Token"
                 },
-                "description": "Inicie sesi\u00f3n en tu cuenta de Vulcan utilizando la p\u00e1gina de registro de la aplicaci\u00f3n m\u00f3vil."
+                "description": "Inicia sesi\u00f3n en tu cuenta Vulcan utilizando la p\u00e1gina de registro de la aplicaci\u00f3n m\u00f3vil."
             },
             "select_saved_credentials": {
                 "data": {

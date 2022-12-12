@@ -1,4 +1,6 @@
 """Websocket commands for the Backup integration."""
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -22,7 +24,7 @@ def async_register_websocket_handlers(hass: HomeAssistant) -> None:
 async def handle_info(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """List all stored backups."""
     manager: BackupManager = hass.data[DOMAIN]
@@ -47,7 +49,7 @@ async def handle_info(
 async def handle_remove(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Remove a backup."""
     manager: BackupManager = hass.data[DOMAIN]
@@ -61,7 +63,7 @@ async def handle_remove(
 async def handle_create(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Generate a backup."""
     manager: BackupManager = hass.data[DOMAIN]

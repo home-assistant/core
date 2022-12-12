@@ -11,7 +11,7 @@
             "validate_verification_code": "Det gick inte att verifiera verifieringskoden, v\u00e4lj en betrodd enhet och starta verifieringen igen"
         },
         "step": {
-            "reauth": {
+            "reauth_confirm": {
                 "data": {
                     "password": "L\u00f6senord"
                 },

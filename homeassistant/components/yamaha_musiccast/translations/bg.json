@@ -13,5 +13,29 @@
                 }
             }
         }
+    },
+    "entity": {
+        "select": {
+            "zone_link_control": {
+                "state": {
+                    "speed": "\u0421\u043a\u043e\u0440\u043e\u0441\u0442"
+                }
+            },
+            "zone_sleep": {
+                "state": {
+                    "120 min": "120 \u043c\u0438\u043d\u0443\u0442\u0438",
+                    "30 min": "30 \u043c\u0438\u043d\u0443\u0442\u0438",
+                    "60 min": "60 \u043c\u0438\u043d\u0443\u0442\u0438",
+                    "90 min": "90 \u043c\u0438\u043d\u0443\u0442\u0438",
+                    "off": "\u0418\u0437\u043a\u043b."
+                }
+            },
+            "zone_surr_decoder_type": {
+                "state": {
+                    "dolby_pl": "Dolby ProLogic",
+                    "dolby_surround": "Dolby Surround"
+                }
+            }
+        }
     }
 }

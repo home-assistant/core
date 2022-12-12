@@ -14,7 +14,7 @@
             "authentication_error": "Ugyldig HomeKit kode. Vennligst sjekk den og pr\u00f8v igjen.",
             "insecure_setup_code": "Den forespurte installasjonskoden er usikker p\u00e5 grunn av triviell natur. Dette tilbeh\u00f8ret oppfyller ikke grunnleggende sikkerhetskrav.",
             "max_peers_error": "Enheten nekter \u00e5 sammenkoble da den ikke har ledig sammenkoblingslagring.",
-            "pairing_failed": "En uh\u00e5ndtert feil oppstod under fors\u00f8k p\u00e5 \u00e5 koble til denne enheten. Dette kan v\u00e6re en midlertidig feil, eller at enheten din kan ikke st\u00f8ttes for \u00f8yeblikket.",
+            "pairing_failed": "Det oppstod en uh\u00e5ndtert feil under fors\u00f8k p\u00e5 \u00e5 pare med denne enheten. Dette kan v\u00e6re en midlertidig feil eller enheten din st\u00f8ttes kanskje ikke for \u00f8yeblikket: {error}",
             "unable_to_pair": "Kunne ikke koble til, vennligst pr\u00f8v igjen.",
             "unknown_error": "Enheten rapporterte en ukjent feil. Sammenkobling mislyktes."
         },
@@ -67,6 +67,40 @@
             "double_press": "\"{subtype}\" trykket to ganger",
             "long_press": "\"{subtype}\" trykket og holdt",
             "single_press": "\"{subtype}\" trykket"
+        }
+    },
+    "entity": {
+        "select": {
+            "ecobee_mode": {
+                "state": {
+                    "away": "Borte",
+                    "home": "Hjemme",
+                    "sleep": "Sove"
+                }
+            }
+        },
+        "sensor": {
+            "thread_node_capabilities": {
+                "state": {
+                    "border_router_capable": "Kan med kantruter",
+                    "full": "Full End-enhet",
+                    "minimal": "Minimal sluttenhet",
+                    "none": "Ingen",
+                    "router_eligible": "Ruterkvalifisert sluttenhet",
+                    "sleepy": "S\u00f8vnig sluttenhet"
+                }
+            },
+            "thread_status": {
+                "state": {
+                    "border_router": "Border Router",
+                    "child": "Barn",
+                    "detached": "Frakoblet",
+                    "disabled": "Deaktivert",
+                    "joining": "Blir med",
+                    "leader": "Leder",
+                    "router": "Ruter"
+                }
+            }
         }
     },
     "title": "HomeKit-kontroller"

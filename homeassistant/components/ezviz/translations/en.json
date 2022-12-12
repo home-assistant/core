@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured_account": "Account is already configured",
-            "ezviz_cloud_account_missing": "Ezviz cloud account missing. Please reconfigure Ezviz cloud account",
+            "ezviz_cloud_account_missing": "EZVIZ cloud account missing. Please reconfigure EZVIZ cloud account",
             "unknown": "Unexpected error"
         },
         "error": {
@@ -17,8 +17,8 @@
                     "password": "Password",
                     "username": "Username"
                 },
-                "description": "Enter RTSP credentials for Ezviz camera {serial} with IP {ip_address}",
-                "title": "Discovered Ezviz Camera"
+                "description": "Enter RTSP credentials for EZVIZ camera {serial} with IP {ip_address}",
+                "title": "Discovered EZVIZ Camera"
             },
             "user": {
                 "data": {
@@ -26,7 +26,7 @@
                     "url": "URL",
                     "username": "Username"
                 },
-                "title": "Connect to Ezviz Cloud"
+                "title": "Connect to EZVIZ Cloud"
             },
             "user_custom_url": {
                 "data": {
@@ -35,7 +35,7 @@
                     "username": "Username"
                 },
                 "description": "Manually specify your region URL",
-                "title": "Connect to custom Ezviz URL"
+                "title": "Connect to custom EZVIZ URL"
             }
         }
     },

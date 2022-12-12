@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament",
-            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
+            "already_configured": "El servei ja est\u00e0 configurat",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",

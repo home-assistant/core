@@ -23,10 +23,5 @@
                 }
             }
         }
-    },
-    "issues": {
-        "deprecated_yaml": {
-            "title": "La configuraci\u00f3 YAML d'Open Exchange Rates est\u00e0 sent eliminada"
-        }
     }
 }

@@ -3,7 +3,7 @@ import pytest
 import voluptuous_serialize
 
 import homeassistant.components.automation as automation
-from homeassistant.components.climate import DOMAIN, const, device_condition
+from homeassistant.components.climate import DOMAIN, HVACMode, const, device_condition
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.helpers import config_validation as cv, device_registry
 from homeassistant.helpers.entity import EntityCategory
@@ -207,7 +207,7 @@ async def test_if_state(hass, calls):
 
     hass.states.async_set(
         "climate.entity",
-        const.HVAC_MODE_COOL,
+        HVACMode.COOL,
         {
             const.ATTR_PRESET_MODE: const.PRESET_AWAY,
         },
@@ -220,7 +220,7 @@ async def test_if_state(hass, calls):
 
     hass.states.async_set(
         "climate.entity",
-        const.HVAC_MODE_AUTO,
+        HVACMode.AUTO,
         {
             const.ATTR_PRESET_MODE: const.PRESET_AWAY,
         },
@@ -239,7 +239,7 @@ async def test_if_state(hass, calls):
 
     hass.states.async_set(
         "climate.entity",
-        const.HVAC_MODE_AUTO,
+        HVACMode.AUTO,
         {
             const.ATTR_PRESET_MODE: const.PRESET_HOME,
         },
@@ -256,7 +256,7 @@ async def test_if_state(hass, calls):
     [
         (
             False,
-            {const.ATTR_HVAC_MODES: [const.HVAC_MODE_COOL, const.HVAC_MODE_OFF]},
+            {const.ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF]},
             {},
             "is_hvac_mode",
             [
@@ -285,7 +285,7 @@ async def test_if_state(hass, calls):
         (
             True,
             {},
-            {const.ATTR_HVAC_MODES: [const.HVAC_MODE_COOL, const.HVAC_MODE_OFF]},
+            {const.ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF]},
             "is_hvac_mode",
             [
                 {
@@ -339,7 +339,7 @@ async def test_capabilities(
     if set_state:
         hass.states.async_set(
             f"{DOMAIN}.test_5678",
-            const.HVAC_MODE_COOL,
+            HVACMode.COOL,
             capabilities_state,
         )
 

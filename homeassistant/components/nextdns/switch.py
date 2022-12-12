@@ -1,35 +1,39 @@
 """Support for the NextDNS service."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Generic
 
-from nextdns import Settings
+from aiohttp import ClientError
+from aiohttp.client_exceptions import ClientConnectorError
+from nextdns import ApiError, Settings
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import NextDnsSettingsUpdateCoordinator, TCoordinatorData
+from . import CoordinatorDataT, NextDnsSettingsUpdateCoordinator
 from .const import ATTR_SETTINGS, DOMAIN
 
 PARALLEL_UPDATES = 1
 
 
 @dataclass
-class NextDnsSwitchRequiredKeysMixin(Generic[TCoordinatorData]):
+class NextDnsSwitchRequiredKeysMixin(Generic[CoordinatorDataT]):
     """Class for NextDNS entity required keys."""
 
-    state: Callable[[TCoordinatorData], bool]
+    state: Callable[[CoordinatorDataT], bool]
 
 
 @dataclass
 class NextDnsSwitchEntityDescription(
-    SwitchEntityDescription, NextDnsSwitchRequiredKeysMixin[TCoordinatorData]
+    SwitchEntityDescription, NextDnsSwitchRequiredKeysMixin[CoordinatorDataT]
 ):
     """NextDNS switch entity description."""
 
@@ -184,6 +188,342 @@ SWITCHES = (
         icon="mdi:youtube",
         state=lambda data: data.youtube_restricted_mode,
     ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_9gag",
+        name="Block 9GAG",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:file-gif-box",
+        state=lambda data: data.block_9gag,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_amazon",
+        name="Block Amazon",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:cart-outline",
+        state=lambda data: data.block_amazon,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_blizzard",
+        name="Block Blizzard",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:sword-cross",
+        state=lambda data: data.block_blizzard,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_dailymotion",
+        name="Block Dailymotion",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:movie-search-outline",
+        state=lambda data: data.block_dailymotion,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_discord",
+        name="Block Discord",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:message-text",
+        state=lambda data: data.block_discord,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_disneyplus",
+        name="Block Disney Plus",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:movie-search-outline",
+        state=lambda data: data.block_disneyplus,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_ebay",
+        name="Block eBay",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:basket-outline",
+        state=lambda data: data.block_ebay,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_facebook",
+        name="Block Facebook",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:facebook",
+        state=lambda data: data.block_facebook,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_fortnite",
+        name="Block Fortnite",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:tank",
+        state=lambda data: data.block_fortnite,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_hulu",
+        name="Block Hulu",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:hulu",
+        state=lambda data: data.block_hulu,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_imgur",
+        name="Block Imgur",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:camera-image",
+        state=lambda data: data.block_imgur,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_instagram",
+        name="Block Instagram",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:instagram",
+        state=lambda data: data.block_instagram,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_leagueoflegends",
+        name="Block League of Legends",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:sword",
+        state=lambda data: data.block_leagueoflegends,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_messenger",
+        name="Block Messenger",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:message-text",
+        state=lambda data: data.block_messenger,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_minecraft",
+        name="Block Minecraft",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:minecraft",
+        state=lambda data: data.block_minecraft,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_netflix",
+        name="Block Netflix",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:netflix",
+        state=lambda data: data.block_netflix,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_pinterest",
+        name="Block Pinterest",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:pinterest",
+        state=lambda data: data.block_pinterest,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_primevideo",
+        name="Block Prime Video",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:filmstrip",
+        state=lambda data: data.block_primevideo,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_reddit",
+        name="Block Reddit",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:reddit",
+        state=lambda data: data.block_reddit,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_roblox",
+        name="Block Roblox",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:robot",
+        state=lambda data: data.block_roblox,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_signal",
+        name="Block Signal",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:chat-outline",
+        state=lambda data: data.block_signal,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_skype",
+        name="Block Skype",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:skype",
+        state=lambda data: data.block_skype,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_snapchat",
+        name="Block Snapchat",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:snapchat",
+        state=lambda data: data.block_snapchat,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_spotify",
+        name="Block Spotify",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:spotify",
+        state=lambda data: data.block_spotify,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_steam",
+        name="Block Steam",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:steam",
+        state=lambda data: data.block_steam,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_telegram",
+        name="Block Telegram",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:send-outline",
+        state=lambda data: data.block_telegram,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_tiktok",
+        name="Block TikTok",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:music-note",
+        state=lambda data: data.block_tiktok,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_tinder",
+        name="Block Tinder",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:fire",
+        state=lambda data: data.block_tinder,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_tumblr",
+        name="Block Tumblr",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:image-outline",
+        state=lambda data: data.block_tumblr,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_twitch",
+        name="Block Twitch",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:twitch",
+        state=lambda data: data.block_twitch,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_twitter",
+        name="Block Twitter",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:twitter",
+        state=lambda data: data.block_twitter,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_vimeo",
+        name="Block Vimeo",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:vimeo",
+        state=lambda data: data.block_vimeo,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_vk",
+        name="Block VK",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:power-socket-eu",
+        state=lambda data: data.block_vk,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_whatsapp",
+        name="Block WhatsApp",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:whatsapp",
+        state=lambda data: data.block_whatsapp,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_xboxlive",
+        name="Block Xbox Live",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:microsoft-xbox",
+        state=lambda data: data.block_xboxlive,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_youtube",
+        name="Block YouTube",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:youtube",
+        state=lambda data: data.block_youtube,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_zoom",
+        name="Block Zoom",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:video",
+        state=lambda data: data.block_zoom,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_dating",
+        name="Block dating",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:candelabra",
+        state=lambda data: data.block_dating,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_gambling",
+        name="Block gambling",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:slot-machine",
+        state=lambda data: data.block_gambling,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_piracy",
+        name="Block piracy",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:pirate",
+        state=lambda data: data.block_piracy,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_porn",
+        name="Block porn",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:movie-off",
+        state=lambda data: data.block_porn,
+    ),
+    NextDnsSwitchEntityDescription[Settings](
+        key="block_social_networks",
+        name="Block social networks",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:facebook",
+        state=lambda data: data.block_social_networks,
+    ),
 )
 
 
@@ -228,20 +568,28 @@ class NextDnsSwitch(CoordinatorEntity[NextDnsSettingsUpdateCoordinator], SwitchE
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
-        result = await self.coordinator.nextdns.set_setting(
-            self.coordinator.profile_id, self.entity_description.key, True
-        )
-
-        if result:
-            self._attr_is_on = True
-            self.async_write_ha_state()
+        await self.async_set_setting(True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
-        result = await self.coordinator.nextdns.set_setting(
-            self.coordinator.profile_id, self.entity_description.key, False
-        )
+        await self.async_set_setting(False)
+
+    async def async_set_setting(self, new_state: bool) -> None:
+        """Set the new state."""
+        try:
+            result = await self.coordinator.nextdns.set_setting(
+                self.coordinator.profile_id, self.entity_description.key, new_state
+            )
+        except (
+            ApiError,
+            ClientConnectorError,
+            asyncio.TimeoutError,
+            ClientError,
+        ) as err:
+            raise HomeAssistantError(
+                f"NextDNS API returned an error calling set_setting for {self.entity_id}: {err}"
+            ) from err
 
         if result:
-            self._attr_is_on = False
+            self._attr_is_on = new_state
             self.async_write_ha_state()

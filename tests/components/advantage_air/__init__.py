@@ -17,6 +17,9 @@ TEST_SYSTEM_URL = (
     f"http://{USER_INPUT[CONF_IP_ADDRESS]}:{USER_INPUT[CONF_PORT]}/getSystemData"
 )
 TEST_SET_URL = f"http://{USER_INPUT[CONF_IP_ADDRESS]}:{USER_INPUT[CONF_PORT]}/setAircon"
+TEST_SET_LIGHT_URL = (
+    f"http://{USER_INPUT[CONF_IP_ADDRESS]}:{USER_INPUT[CONF_PORT]}/setLight"
+)
 
 
 async def add_mock_config(hass):

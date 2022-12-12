@@ -1,13 +1,18 @@
 """Tests for the devolo Home Control climate."""
 from unittest.mock import patch
 
-from homeassistant.components.climate import DOMAIN
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
+    DOMAIN,
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
+    ATTR_TEMPERATURE,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 
 from . import configure_integration
@@ -30,6 +35,7 @@ async def test_climate(hass: HomeAssistant):
     assert state is not None
     assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_TEMPERATURE] == test_gateway.devices["Test"].value
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Test"
 
     # Emulate websocket message: temperature changed
     test_gateway.publisher.dispatch("Test", ("Test", 21.0))

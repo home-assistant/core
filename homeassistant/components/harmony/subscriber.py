@@ -1,4 +1,5 @@
 """Mixin class for handling harmony callback subscriptions."""
+from __future__ import annotations
 
 import asyncio
 import logging
@@ -85,7 +86,9 @@ class HarmonySubscriberMixin:
         self.async_unlock_start_activity()
         self._call_callbacks("activity_started", activity_info)
 
-    def _call_callbacks(self, callback_func_name: str, argument: tuple = None) -> None:
+    def _call_callbacks(
+        self, callback_func_name: str, argument: tuple | None = None
+    ) -> None:
         for subscription in self._subscriptions:
             current_callback = getattr(subscription, callback_func_name)
             if current_callback:

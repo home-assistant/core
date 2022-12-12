@@ -10,11 +10,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_NAME,
-    DATA_MEGABYTES,
-    DATA_RATE_MEGABYTES_PER_SECOND,
-)
+from homeassistant.const import CONF_NAME, DATA_MEGABYTES, UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
@@ -34,7 +30,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="AverageDownloadRate",
         name="Average Speed",
-        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
     ),
     SensorEntityDescription(
         key="DownloadPaused",
@@ -43,7 +40,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="DownloadRate",
         name="Speed",
-        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
     ),
     SensorEntityDescription(
         key="DownloadedSizeMB",
@@ -73,6 +71,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="UpTimeSec",
         name="Uptime",
         device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key="DownloadLimit",
+        name="Speed Limit",
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
     ),
 )
 
@@ -125,6 +129,9 @@ class NZBGetSensor(NZBGetEntity, SensorEntity):
             _LOGGER.warning("Unable to locate value for %s", sensor_type)
             self._native_value = None
         elif "DownloadRate" in sensor_type and value > 0:
+            # Convert download rate from Bytes/s to MBytes/s
+            self._native_value = round(value / 2**20, 2)
+        elif "DownloadLimit" in sensor_type and value > 0:
             # Convert download rate from Bytes/s to MBytes/s
             self._native_value = round(value / 2**20, 2)
         elif "UpTimeSec" in sensor_type and value > 0:

@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
-from pylgnetcast import LgNetCastClient, LgNetCastError
+from pylgnetcast import LG_COMMAND, LgNetCastClient, LgNetCastError
 from requests import RequestException
 import voluptuous as vol
 
@@ -12,16 +13,10 @@ from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
-from homeassistant.components.media_player.const import MEDIA_TYPE_CHANNEL
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
-    CONF_HOST,
-    CONF_NAME,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -80,6 +75,7 @@ class LgTVDevice(MediaPlayerEntity):
     """Representation of a LG TV."""
 
     _attr_device_class = MediaPlayerDeviceClass.TV
+    _attr_media_content_type = MediaType.CHANNEL
 
     def __init__(self, client, name, on_action_script):
         """Initialize the LG TV device."""
@@ -93,7 +89,6 @@ class LgTVDevice(MediaPlayerEntity):
         self._channel_id = None
         self._channel_name = ""
         self._program_name = ""
-        self._state = None
         self._sources = {}
         self._source_names = []
 
@@ -104,14 +99,14 @@ class LgTVDevice(MediaPlayerEntity):
             with self._client as client:
                 client.send_command(command)
         except (LgNetCastError, RequestException):
-            self._state = STATE_OFF
+            self._attr_state = MediaPlayerState.OFF
 
-    def update(self):
+    def update(self) -> None:
         """Retrieve the latest data from the LG TV."""
 
         try:
             with self._client as client:
-                self._state = STATE_PLAYING
+                self._attr_state = MediaPlayerState.PLAYING
 
                 self.__update_volume()
 
@@ -146,7 +141,7 @@ class LgTVDevice(MediaPlayerEntity):
                     )
                     self._source_names = [n for n, k in sorted_sources]
         except (LgNetCastError, RequestException):
-            self._state = STATE_OFF
+            self._attr_state = MediaPlayerState.OFF
 
     def __update_volume(self):
         volume_info = self._client.get_volume()
@@ -159,11 +154,6 @@ class LgTVDevice(MediaPlayerEntity):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
 
     @property
     def is_volume_muted(self):
@@ -191,11 +181,6 @@ class LgTVDevice(MediaPlayerEntity):
         return self._channel_id
 
     @property
-    def media_content_type(self):
-        """Content type of current playing media."""
-        return MEDIA_TYPE_CHANNEL
-
-    @property
     def media_channel(self):
         """Channel currently playing."""
         return self._channel_name
@@ -206,7 +191,7 @@ class LgTVDevice(MediaPlayerEntity):
         return self._program_name
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         if self._on_action_script:
             return SUPPORT_LGTV | MediaPlayerEntityFeature.TURN_ON
@@ -219,65 +204,65 @@ class LgTVDevice(MediaPlayerEntity):
             f"{self._client.url}data?target=screen_image&_={datetime.now().timestamp()}"
         )
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn off media player."""
-        self.send_command(1)
+        self.send_command(LG_COMMAND.POWER)
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn on the media player."""
         if self._on_action_script:
             self._on_action_script.run(context=self._context)
 
-    def volume_up(self):
+    def volume_up(self) -> None:
         """Volume up the media player."""
-        self.send_command(24)
+        self.send_command(LG_COMMAND.VOLUME_UP)
 
-    def volume_down(self):
+    def volume_down(self) -> None:
         """Volume down media player."""
-        self.send_command(25)
+        self.send_command(LG_COMMAND.VOLUME_DOWN)
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self._client.set_volume(float(volume * 100))
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Send mute command."""
-        self.send_command(26)
+        self.send_command(LG_COMMAND.MUTE_TOGGLE)
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Select input source."""
         self._client.change_channel(self._sources[source])
 
-    def media_play_pause(self):
+    def media_play_pause(self) -> None:
         """Simulate play pause media player."""
         if self._playing:
             self.media_pause()
         else:
             self.media_play()
 
-    def media_play(self):
+    def media_play(self) -> None:
         """Send play command."""
         self._playing = True
-        self._state = STATE_PLAYING
-        self.send_command(33)
+        self._attr_state = MediaPlayerState.PLAYING
+        self.send_command(LG_COMMAND.PLAY)
 
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Send media pause command to media player."""
         self._playing = False
-        self._state = STATE_PAUSED
-        self.send_command(34)
+        self._attr_state = MediaPlayerState.PAUSED
+        self.send_command(LG_COMMAND.PAUSE)
 
-    def media_next_track(self):
+    def media_next_track(self) -> None:
         """Send next track command."""
-        self.send_command(36)
+        self.send_command(LG_COMMAND.FAST_FORWARD)
 
-    def media_previous_track(self):
+    def media_previous_track(self) -> None:
         """Send the previous track command."""
-        self.send_command(37)
+        self.send_command(LG_COMMAND.REWIND)
 
-    def play_media(self, media_type, media_id, **kwargs):
+    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
         """Tune to channel."""
-        if media_type != MEDIA_TYPE_CHANNEL:
+        if media_type != MediaType.CHANNEL:
             raise ValueError(f"Invalid media type: {media_type}")
 
         for name, channel in self._sources.items():

@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Akun sudah dikonfigurasi",
             "already_configured_account": "Akun sudah dikonfigurasi",
             "already_configured_device": "Perangkat sudah dikonfigurasi",
             "no_devices_found": "Tidak ada perangkat yang ditemukan di jaringan",
@@ -26,17 +25,13 @@
                 "description": "Ingin menyiapkan {model} ({device_id})?"
             },
             "local": {
-                "data": {
-                    "host": "Alamat IP"
-                },
-                "description": "API Awair Local harus diaktifkan dengan mengikuti langkah-langkah berikut: {url}"
+                "description": "Ikuti [petunjuk ini]( {url} ) untuk mengaktifkan API Lokal Awair. \n\n Klik kirim setelah selesai."
             },
-            "reauth": {
+            "local_pick": {
                 "data": {
-                    "access_token": "Token Akses",
-                    "email": "Email"
-                },
-                "description": "Masukkan kembali token akses pengembang Awair Anda."
+                    "device": "Perangkat",
+                    "host": "Alamat IP"
+                }
             },
             "reauth_confirm": {
                 "data": {
@@ -46,11 +41,7 @@
                 "description": "Masukkan kembali token akses pengembang Awair Anda."
             },
             "user": {
-                "data": {
-                    "access_token": "Token Akses",
-                    "email": "Email"
-                },
-                "description": "Anda harus mendaftar untuk mendapatkan token akses pengembang Awair di: https://developer.getawair.com/onboard/login",
+                "description": "Pilih lokal untuk pengalaman terbaik. Hanya gunakan opsi cloud jika perangkat tidak terhubung ke jaringan yang sama dengan Home Assistant, atau jika Anda memiliki perangkat versi lawas.",
                 "menu_options": {
                     "cloud": "Terhubung melalui cloud",
                     "local": "Terhubung secara lokal (lebih disukai)"

@@ -20,6 +20,7 @@ from homeassistant.components.generic.const import (
     CONF_STREAM_SOURCE,
     DOMAIN,
 )
+from homeassistant.components.stream.const import CONF_RTSP_TRANSPORT
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
@@ -209,6 +210,7 @@ async def test_stream_source(hass, hass_client, hass_ws_client, fakeimgbytes_png
             CONF_VERIFY_SSL: False,
             CONF_USERNAME: "barney",
             CONF_PASSWORD: "betty",
+            CONF_RTSP_TRANSPORT: "http",
         },
     )
     mock_entry.add_to_hass(hass)

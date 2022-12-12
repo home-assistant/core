@@ -30,7 +30,7 @@
                     "include_associated": "Usar datos de asociaciones de puntos de acceso WiFi (se ignoran si se usan datos de puntos de acceso)",
                     "interfaces": "Elige las interfaces para escanear",
                     "scan_interval": "Intervalo de escaneo",
-                    "try_hotspot": "Usar los datos de 'ip hotspot' (m\u00e1s precisos)"
+                    "try_hotspot": "Usar los datos de 'ip hotspot' (m\u00e1s preciso)"
                 }
             }
         }

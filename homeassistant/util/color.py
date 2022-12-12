@@ -436,10 +436,12 @@ def color_rgbw_to_rgb(r: int, g: int, b: int, w: int) -> tuple[int, int, int]:
 
 
 def color_rgb_to_rgbww(
-    r: int, g: int, b: int, min_mireds: int, max_mireds: int
+    r: int, g: int, b: int, min_kelvin: int, max_kelvin: int
 ) -> tuple[int, int, int, int, int]:
     """Convert an rgb color to an rgbww representation."""
     # Find the color temperature when both white channels have equal brightness
+    max_mireds = color_temperature_kelvin_to_mired(min_kelvin)
+    min_mireds = color_temperature_kelvin_to_mired(max_kelvin)
     mired_range = max_mireds - min_mireds
     mired_midpoint = min_mireds + mired_range / 2
     color_temp_kelvin = color_temperature_mired_to_kelvin(mired_midpoint)
@@ -460,10 +462,12 @@ def color_rgb_to_rgbww(
 
 
 def color_rgbww_to_rgb(
-    r: int, g: int, b: int, cw: int, ww: int, min_mireds: int, max_mireds: int
+    r: int, g: int, b: int, cw: int, ww: int, min_kelvin: int, max_kelvin: int
 ) -> tuple[int, int, int]:
     """Convert an rgbww color to an rgb representation."""
     # Calculate color temperature of the white channels
+    max_mireds = color_temperature_kelvin_to_mired(min_kelvin)
+    min_mireds = color_temperature_kelvin_to_mired(max_kelvin)
     mired_range = max_mireds - min_mireds
     try:
         ct_ratio = ww / (cw + ww)
@@ -530,9 +534,15 @@ def color_temperature_to_rgb(
 
 
 def color_temperature_to_rgbww(
-    temperature: int, brightness: int, min_mireds: int, max_mireds: int
+    temperature: int, brightness: int, min_kelvin: int, max_kelvin: int
 ) -> tuple[int, int, int, int, int]:
-    """Convert color temperature in mireds to rgbcw."""
+    """Convert color temperature in kelvin to rgbcw.
+
+    Returns a (r, g, b, cw, ww) tuple.
+    """
+    max_mireds = color_temperature_kelvin_to_mired(min_kelvin)
+    min_mireds = color_temperature_kelvin_to_mired(max_kelvin)
+    temperature = color_temperature_kelvin_to_mired(temperature)
     mired_range = max_mireds - min_mireds
     cold = ((max_mireds - temperature) / mired_range) * brightness
     warm = brightness - cold
@@ -540,22 +550,33 @@ def color_temperature_to_rgbww(
 
 
 def rgbww_to_color_temperature(
-    rgbww: tuple[int, int, int, int, int], min_mireds: int, max_mireds: int
+    rgbww: tuple[int, int, int, int, int], min_kelvin: int, max_kelvin: int
 ) -> tuple[int, int]:
-    """Convert rgbcw to color temperature in mireds."""
+    """Convert rgbcw to color temperature in kelvin.
+
+    Returns a tuple (color_temperature, brightness).
+    """
     _, _, _, cold, warm = rgbww
-    return while_levels_to_color_temperature(cold, warm, min_mireds, max_mireds)
+    return _white_levels_to_color_temperature(cold, warm, min_kelvin, max_kelvin)
 
 
-def while_levels_to_color_temperature(
-    cold: int, warm: int, min_mireds: int, max_mireds: int
+def _white_levels_to_color_temperature(
+    cold: int, warm: int, min_kelvin: int, max_kelvin: int
 ) -> tuple[int, int]:
-    """Convert whites to color temperature in mireds."""
+    """Convert whites to color temperature in kelvin.
+
+    Returns a tuple (color_temperature, brightness).
+    """
+    max_mireds = color_temperature_kelvin_to_mired(min_kelvin)
+    min_mireds = color_temperature_kelvin_to_mired(max_kelvin)
     brightness = warm / 255 + cold / 255
     if brightness == 0:
-        return (max_mireds, 0)
+        # Return the warmest color if brightness is 0
+        return (min_kelvin, 0)
     return round(
-        ((cold / 255 / brightness) * (min_mireds - max_mireds)) + max_mireds
+        color_temperature_mired_to_kelvin(
+            ((cold / 255 / brightness) * (min_mireds - max_mireds)) + max_mireds
+        )
     ), min(255, round(brightness * 255))
 
 

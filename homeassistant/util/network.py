@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from ipaddress import IPv4Address, IPv6Address, ip_address, ip_network
+import re
 
 import yarl
 
@@ -84,6 +85,20 @@ def is_ipv6_address(address: str) -> bool:
         return False
 
     return True
+
+
+def is_host_valid(host: str) -> bool:
+    """Check if a given string is an IP address or valid hostname."""
+    if is_ip_address(host):
+        return True
+    if len(host) > 255:
+        return False
+    if re.match(r"^[0-9\.]+$", host):  # reject invalid IPv4
+        return False
+    if host.endswith("."):  # dot at the end is correct
+        host = host[:-1]
+    allowed = re.compile(r"(?!-)[A-Z\d\-]{1,63}(?<!-)$", re.IGNORECASE)
+    return all(allowed.match(x) for x in host.split("."))
 
 
 def normalize_url(address: str) -> str:

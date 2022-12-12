@@ -143,7 +143,6 @@ class HistoryStatsSensorBase(
 class HistoryStatsSensor(HistoryStatsSensorBase):
     """A HistoryStats sensor."""
 
-    _attr_device_class = SensorDeviceClass.DURATION
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
@@ -157,6 +156,8 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
         self._attr_native_unit_of_measurement = UNITS[sensor_type]
         self._type = sensor_type
         self._process_update()
+        if self._type == CONF_TYPE_TIME:
+            self._attr_device_class = SensorDeviceClass.DURATION
 
     @callback
     def _process_update(self) -> None:

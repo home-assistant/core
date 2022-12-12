@@ -1,0 +1,12 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "Para terminar de configurar la integraci\u00f3n, usa la aplicaci\u00f3n Ecowitt (en tu tel\u00e9fono) o accede a Ecowitt WebUI en un navegador en la direcci\u00f3n IP de la estaci\u00f3n. \n\nElige tu estaci\u00f3n - > Men\u00fa Otros - > Servidores de carga de bricolaje. Presiona siguiente y selecciona 'Personalizado' \n\n- IP del servidor: `{server}`\n- Ruta: `{path}`\n- Puerto: `{port}` \n\nHaz clic en 'Guardar'."
+        },
+        "step": {
+            "user": {
+                "description": "\u00bfEst\u00e1s seguro de que quieres configurar Ecowitt?"
+            }
+        }
+    }
+}

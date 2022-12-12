@@ -49,6 +49,7 @@ FAN_SELECTS = [
         name="Smart Mode",
         value_fn=lambda device: SMART_MODE_TO_HASS[device.fan_smartmode],
         set_fn=_set_smart_mode,
+        options=list(SMART_MODE_TO_HASS.values()),
     ),
 ]
 
@@ -70,7 +71,6 @@ class HASensemeSelect(SensemeEntity, SelectEntity):
     """SenseME select component."""
 
     entity_description: SenseMESelectEntityDescription
-    _attr_options = list(SMART_MODE_TO_HASS.values())
 
     def __init__(
         self, device: SensemeFan, description: SenseMESelectEntityDescription

@@ -1,4 +1,19 @@
 {
+    "issues": {
+        "legacy_subscription": {
+            "fix_flow": {
+                "abort": {
+                    "operation_took_too_long": "Toiming v\u00f5ttis liiga kaua aega. Palun proovi hiljem uuesti."
+                },
+                "step": {
+                    "confirm_change_plan": {
+                        "description": "Oleme hiljuti uuendanud oma tellimiss\u00fcsteemi. Home Assistant Cloudi kasutamise j\u00e4tkamiseks pead \u00fchekordselt kinnitama muudatuse PayPalis.\n\nSee v\u00f5tab aega 1 minut ja ei t\u00f5sta hinda."
+                    }
+                }
+            },
+            "title": "Tuvastati p\u00e4randtellimus"
+        }
+    },
     "system_health": {
         "info": {
             "alexa_enabled": "Alexa on lubatud",

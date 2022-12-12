@@ -14,7 +14,7 @@
         "step": {
             "user": {
                 "data": {
-                    "adb_server_ip": "Direcci\u00f3n IP del servidor ADB (d\u00e9jalo vac\u00edo para no utilizarlo)",
+                    "adb_server_ip": "Direcci\u00f3n IP del servidor ADB (d\u00e9jalo vac\u00edo para no usarlo)",
                     "adb_server_port": "Puerto del servidor ADB",
                     "adbkey": "Ruta a tu archivo de clave ADB (d\u00e9jalo en blanco para generarlo autom\u00e1ticamente)",
                     "device_class": "Tipo de dispositivo",

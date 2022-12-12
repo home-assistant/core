@@ -25,11 +25,9 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.json import JSONEncoder
 import homeassistant.util.dt as dt_util
 
+from .common import async_wait_recording_done, wait_recording_done
+
 from tests.common import SetupRecorderInstanceT, mock_state_change_event
-from tests.components.recorder.common import (
-    async_wait_recording_done,
-    wait_recording_done,
-)
 
 
 async def _async_get_states(
@@ -256,6 +254,9 @@ def test_state_changes_during_period_descending(hass_recorder):
 
     start = dt_util.utcnow()
     point = start + timedelta(seconds=1)
+    point2 = start + timedelta(seconds=1, microseconds=2)
+    point3 = start + timedelta(seconds=1, microseconds=3)
+    point4 = start + timedelta(seconds=1, microseconds=4)
     end = point + timedelta(seconds=1)
 
     with patch(
@@ -267,12 +268,19 @@ def test_state_changes_during_period_descending(hass_recorder):
     with patch(
         "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
     ):
-        states = [
-            set_state("idle"),
-            set_state("Netflix"),
-            set_state("Plex"),
-            set_state("YouTube"),
-        ]
+        states = [set_state("idle")]
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point2
+    ):
+        states.append(set_state("Netflix"))
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point3
+    ):
+        states.append(set_state("Plex"))
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point4
+    ):
+        states.append(set_state("YouTube"))
 
     with patch(
         "homeassistant.components.recorder.core.dt_util.utcnow", return_value=end
@@ -652,10 +660,15 @@ def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
 
 
 async def test_state_changes_during_period_query_during_migration_to_schema_25(
-    hass: ha.HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    hass: ha.HomeAssistant,
+    recorder_db_url: str,
 ):
     """Test we can query data prior to schema 25 and during migration to schema 25."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test doesn't run on MySQL / MariaDB; we can't drop table state_attributes
+        return
+
     instance = await async_setup_recorder_instance(hass, {})
 
     start = dt_util.utcnow()
@@ -702,10 +715,15 @@ async def test_state_changes_during_period_query_during_migration_to_schema_25(
 
 
 async def test_get_states_query_during_migration_to_schema_25(
-    hass: ha.HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    hass: ha.HomeAssistant,
+    recorder_db_url: str,
 ):
     """Test we can query data prior to schema 25 and during migration to schema 25."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test doesn't run on MySQL / MariaDB; we can't drop table state_attributes
+        return
+
     instance = await async_setup_recorder_instance(hass, {})
 
     start = dt_util.utcnow()
@@ -748,10 +766,15 @@ async def test_get_states_query_during_migration_to_schema_25(
 
 
 async def test_get_states_query_during_migration_to_schema_25_multiple_entities(
-    hass: ha.HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    hass: ha.HomeAssistant,
+    recorder_db_url: str,
 ):
     """Test we can query data prior to schema 25 and during migration to schema 25."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test doesn't run on MySQL / MariaDB; we can't drop table state_attributes
+        return
+
     instance = await async_setup_recorder_instance(hass, {})
 
     start = dt_util.utcnow()
@@ -797,8 +820,8 @@ async def test_get_states_query_during_migration_to_schema_25_multiple_entities(
 
 
 async def test_get_full_significant_states_handles_empty_last_changed(
-    hass: ha.HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    hass: ha.HomeAssistant,
 ):
     """Test getting states when last_changed is null."""
     await async_setup_recorder_instance(hass, {})

@@ -4,19 +4,20 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import DATA_GIGABYTES, DATA_MEGABYTES, UnitOfDataRate
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, SIGNAL_SABNZBD_UPDATED
-from ...config_entries import ConfigEntry
-from ...const import DATA_GIGABYTES, DATA_MEGABYTES, DATA_RATE_MEGABYTES_PER_SECOND
-from ...core import HomeAssistant
-from ...helpers.device_registry import DeviceEntryType
-from ...helpers.entity import DeviceInfo
-from ...helpers.entity_platform import AddEntitiesCallback
 from .const import DEFAULT_NAME, KEY_API_DATA, KEY_NAME
 
 
@@ -42,7 +43,8 @@ SENSOR_TYPES: tuple[SabnzbdSensorEntityDescription, ...] = (
     SabnzbdSensorEntityDescription(
         key=SPEED_KEY,
         name="Speed",
-        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SabnzbdSensorEntityDescription(
@@ -163,7 +165,7 @@ class SabnzbdSensor(SensorEntity):
             name=DEFAULT_NAME,
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         self.async_on_remove(
             async_dispatcher_connect(

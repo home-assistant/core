@@ -22,9 +22,20 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "pressure_tendency": {
+                "state": {
+                    "falling": "malej\u0105ce",
+                    "rising": "rosn\u0105ce",
+                    "steady": "sta\u0142e"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
-            "user": {
+            "init": {
                 "data": {
                     "forecast": "Prognoza pogody"
                 },

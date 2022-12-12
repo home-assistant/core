@@ -9,11 +9,24 @@
             "unknown": "Ov\u00e4ntat fel"
         },
         "step": {
-            "user": {
+            "cloud": {
                 "data": {
                     "password": "L\u00f6senord",
                     "pin": "Pin-kod",
                     "username": "Anv\u00e4ndarnamn"
+                }
+            },
+            "local": {
+                "data": {
+                    "host": "V\u00e4rd",
+                    "pin": "Pin-kod",
+                    "port": "Port"
+                }
+            },
+            "user": {
+                "menu_options": {
+                    "cloud": "Risco Cloud (rekommenderas)",
+                    "local": "Lokal Risco Panel (avancerat)"
                 }
             }
         }

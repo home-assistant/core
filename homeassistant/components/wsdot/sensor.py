@@ -113,7 +113,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
         self._travel_time_id = travel_time_id
         WashingtonStateTransportSensor.__init__(self, name, access_code)
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from WSDOT."""
         params = {
             ATTR_ACCESS_CODE: self._access_code,

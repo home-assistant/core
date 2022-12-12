@@ -55,5 +55,10 @@ async def test_diagnostics(
                 "energy_production_price_high": "0.20522",
                 "energy_production_price_low": "0.20522",
             },
+            "watermeter": {
+                "consumption_day": 112.0,
+                "consumption_total": 1696.14,
+                "pulse_count": 112.0,
+            },
         },
     }

@@ -1,7 +1,5 @@
 """Config flow for Vilfo Router integration."""
-import ipaddress
 import logging
-import re
 
 from vilfo import Client as VilfoClient
 from vilfo.exceptions import (
@@ -12,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_ID, CONF_MAC
+from homeassistant.util.network import is_host_valid
 
 from .const import DOMAIN, ROUTER_DEFAULT_HOST
 
@@ -27,16 +26,6 @@ DATA_SCHEMA = vol.Schema(
 RESULT_SUCCESS = "success"
 RESULT_CANNOT_CONNECT = "cannot_connect"
 RESULT_INVALID_AUTH = "invalid_auth"
-
-
-def host_valid(host):
-    """Return True if hostname or IP address is valid."""
-    try:
-        if ipaddress.ip_address(host).version in (4, 6):
-            return True
-    except ValueError:
-        disallowed = re.compile(r"[^a-zA-Z\d\-]")
-        return all(x and not disallowed.search(x) for x in host.split("."))
 
 
 def _try_connect_and_fetch_basic_info(host, token):
@@ -80,7 +69,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     """
 
     # Validate the host before doing anything else.
-    if not host_valid(data[CONF_HOST]):
+    if not is_host_valid(data[CONF_HOST]):
         raise InvalidHost
 
     config = {}

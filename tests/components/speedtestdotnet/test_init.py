@@ -1,4 +1,5 @@
 """Tests for SpeedTest integration."""
+
 from datetime import timedelta
 from unittest.mock import MagicMock
 
@@ -9,7 +10,6 @@ from homeassistant.components.speedtestdotnet.const import (
     CONF_SERVER_ID,
     CONF_SERVER_NAME,
     DOMAIN,
-    SPEED_TEST_SERVICE,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_SCAN_INTERVAL, STATE_UNAVAILABLE
@@ -38,7 +38,6 @@ async def test_successful_config_entry(hass: HomeAssistant) -> None:
 
     assert entry.state == ConfigEntryState.LOADED
     assert hass.data[DOMAIN]
-    assert hass.services.has_service(DOMAIN, SPEED_TEST_SERVICE)
 
 
 async def test_setup_failed(hass: HomeAssistant, mock_api: MagicMock) -> None:

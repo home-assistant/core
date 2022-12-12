@@ -4,7 +4,7 @@
   "documentation": "https://www.home-assistant.io/integrations/home_connect",
   "dependencies": ["application_credentials"],
   "codeowners": ["@DavidMStraub"],
-  "requirements": ["homeconnect==0.7.1"],
+  "requirements": ["homeconnect==0.7.2"],
   "config_flow": true,
   "iot_class": "cloud_push",
   "loggers": ["homeconnect"]

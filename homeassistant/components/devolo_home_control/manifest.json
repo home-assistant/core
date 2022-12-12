@@ -1,6 +1,7 @@
 {
   "domain": "devolo_home_control",
   "name": "devolo Home Control",
+  "integration_type": "hub",
   "documentation": "https://www.home-assistant.io/integrations/devolo_home_control",
   "requirements": ["devolo-home-control-api==0.18.2"],
   "after_dependencies": ["zeroconf"],

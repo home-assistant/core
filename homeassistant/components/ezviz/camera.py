@@ -57,7 +57,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: entity_platform.AddEntitiesCallback,
 ) -> None:
-    """Set up Ezviz cameras based on a config entry."""
+    """Set up EZVIZ cameras based on a config entry."""
 
     coordinator: EzvizDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         DATA_COORDINATOR
@@ -73,7 +73,7 @@ async def async_setup_entry(
             if item.unique_id == camera and item.source != SOURCE_IGNORE
         ]
 
-        # There seem to be a bug related to localRtspPort in Ezviz API.
+        # There seem to be a bug related to localRtspPort in EZVIZ API.
         local_rtsp_port = (
             value["local_rtsp_port"]
             if value["local_rtsp_port"] != 0
@@ -174,7 +174,7 @@ async def async_setup_entry(
 
 
 class EzvizCamera(EzvizEntity, Camera):
-    """An implementation of a Ezviz security camera."""
+    """An implementation of a EZVIZ security camera."""
 
     def __init__(
         self,
@@ -187,7 +187,7 @@ class EzvizCamera(EzvizEntity, Camera):
         local_rtsp_port: int,
         ffmpeg_arguments: str | None,
     ) -> None:
-        """Initialize a Ezviz security camera."""
+        """Initialize a EZVIZ security camera."""
         super().__init__(coordinator, serial)
         Camera.__init__(self)
         self.stream_options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = True

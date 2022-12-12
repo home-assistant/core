@@ -1,6 +1,7 @@
 {
   "domain": "devolo_home_network",
   "name": "devolo Home Network",
+  "integration_type": "device",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/devolo_home_network",
   "requirements": ["devolo-plc-api==0.8.0"],

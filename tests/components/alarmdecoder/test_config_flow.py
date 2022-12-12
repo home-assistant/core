@@ -27,7 +27,7 @@ from homeassistant.components.alarmdecoder.const import (
     PROTOCOL_SERIAL,
     PROTOCOL_SOCKET,
 )
-from homeassistant.components.binary_sensor import DEVICE_CLASS_WINDOW
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import HomeAssistant
 
@@ -181,7 +181,10 @@ async def test_options_arm_flow(hass: HomeAssistant):
 async def test_options_zone_flow(hass: HomeAssistant):
     """Test options flow for adding/deleting zones."""
     zone_number = "2"
-    zone_settings = {CONF_ZONE_NAME: "Front Entry", CONF_ZONE_TYPE: DEVICE_CLASS_WINDOW}
+    zone_settings = {
+        CONF_ZONE_NAME: "Front Entry",
+        CONF_ZONE_TYPE: BinarySensorDeviceClass.WINDOW,
+    }
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
 
@@ -257,7 +260,10 @@ async def test_options_zone_flow(hass: HomeAssistant):
 async def test_options_zone_flow_validation(hass: HomeAssistant):
     """Test input validation for zone options flow."""
     zone_number = "2"
-    zone_settings = {CONF_ZONE_NAME: "Front Entry", CONF_ZONE_TYPE: DEVICE_CLASS_WINDOW}
+    zone_settings = {
+        CONF_ZONE_NAME: "Front Entry",
+        CONF_ZONE_TYPE: BinarySensorDeviceClass.WINDOW,
+    }
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
 

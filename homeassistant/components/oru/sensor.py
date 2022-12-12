@@ -75,7 +75,7 @@ class CurrentEnergyUsageSensor(SensorEntity):
         """Return the state of the sensor."""
         return self._state
 
-    def update(self):
+    def update(self) -> None:
         """Fetch new state data for the sensor."""
         try:
             last_read = self.meter.last_read()

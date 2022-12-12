@@ -3,12 +3,9 @@ from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.renault.const import (
     CONF_KAMEREON_ACCOUNT_ID,
     CONF_LOCALE,
-    DEVICE_CLASS_CHARGE_MODE,
-    DEVICE_CLASS_CHARGE_STATE,
-    DEVICE_CLASS_PLUG_STATE,
     DOMAIN,
 )
-from homeassistant.components.select.const import ATTR_OPTIONS
+from homeassistant.components.select import ATTR_OPTIONS
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
@@ -27,7 +24,6 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_PASSWORD,
     CONF_USERNAME,
-    ELECTRIC_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     LENGTH_KILOMETERS,
     PERCENTAGE,
@@ -122,7 +118,6 @@ MOCK_VEHICLES = {
         Platform.DEVICE_TRACKER: [],
         Platform.SELECT: [
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_CHARGE_MODE,
                 ATTR_ENTITY_ID: "select.reg_number_charge_mode",
                 ATTR_ICON: "mdi:calendar-remove",
                 ATTR_OPTIONS: ["always", "always_charging", "schedule_mode"],
@@ -132,6 +127,7 @@ MOCK_VEHICLES = {
         ],
         Platform.SENSOR: [
             {
+                ATTR_DEVICE_CLASS: SensorDeviceClass.DISTANCE,
                 ATTR_ENTITY_ID: "sensor.reg_number_battery_autonomy",
                 ATTR_ICON: "mdi:ev-station",
                 ATTR_STATE: "141",
@@ -171,9 +167,19 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
             },
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_CHARGE_STATE,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.ENUM,
                 ATTR_ENTITY_ID: "sensor.reg_number_charge_state",
                 ATTR_ICON: "mdi:flash",
+                ATTR_OPTIONS: [
+                    "not_in_charge",
+                    "waiting_for_a_planned_charge",
+                    "charge_ended",
+                    "waiting_for_current_charge",
+                    "energy_flap_opened",
+                    "charge_in_progress",
+                    "charge_error",
+                    "unavailable",
+                ],
                 ATTR_STATE: "charge_in_progress",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_charge_state",
             },
@@ -194,6 +200,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: TIME_MINUTES,
             },
             {
+                ATTR_DEVICE_CLASS: SensorDeviceClass.DISTANCE,
                 ATTR_ENTITY_ID: "sensor.reg_number_mileage",
                 ATTR_ICON: "mdi:sign-direction",
                 ATTR_STATE: "49114",
@@ -223,9 +230,10 @@ MOCK_VEHICLES = {
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_hvac_last_activity",
             },
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_PLUG_STATE,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.ENUM,
                 ATTR_ENTITY_ID: "sensor.reg_number_plug_state",
                 ATTR_ICON: "mdi:power-plug",
+                ATTR_OPTIONS: ["unplugged", "plugged", "plug_error", "plug_unknown"],
                 ATTR_STATE: "plugged",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_plug_state",
             },
@@ -339,7 +347,6 @@ MOCK_VEHICLES = {
         ],
         Platform.SELECT: [
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_CHARGE_MODE,
                 ATTR_ENTITY_ID: "select.reg_number_charge_mode",
                 ATTR_ICON: "mdi:calendar-clock",
                 ATTR_OPTIONS: ["always", "always_charging", "schedule_mode"],
@@ -349,6 +356,7 @@ MOCK_VEHICLES = {
         ],
         Platform.SENSOR: [
             {
+                ATTR_DEVICE_CLASS: SensorDeviceClass.DISTANCE,
                 ATTR_ENTITY_ID: "sensor.reg_number_battery_autonomy",
                 ATTR_ICON: "mdi:ev-station",
                 ATTR_STATE: "128",
@@ -388,19 +396,29 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
             },
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_CHARGE_STATE,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.ENUM,
                 ATTR_ENTITY_ID: "sensor.reg_number_charge_state",
                 ATTR_ICON: "mdi:flash-off",
+                ATTR_OPTIONS: [
+                    "not_in_charge",
+                    "waiting_for_a_planned_charge",
+                    "charge_ended",
+                    "waiting_for_current_charge",
+                    "energy_flap_opened",
+                    "charge_in_progress",
+                    "charge_error",
+                    "unavailable",
+                ],
                 ATTR_STATE: "charge_error",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_charge_state",
             },
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.CURRENT,
-                ATTR_ENTITY_ID: "sensor.reg_number_charging_power",
+                ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
+                ATTR_ENTITY_ID: "sensor.reg_number_admissible_charging_power",
                 ATTR_STATE: STATE_UNKNOWN,
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_charging_power",
-                ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
+                ATTR_UNIT_OF_MEASUREMENT: POWER_KILO_WATT,
             },
             {
                 ATTR_ENTITY_ID: "sensor.reg_number_charging_remaining_time",
@@ -411,6 +429,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: TIME_MINUTES,
             },
             {
+                ATTR_DEVICE_CLASS: SensorDeviceClass.DISTANCE,
                 ATTR_ENTITY_ID: "sensor.reg_number_mileage",
                 ATTR_ICON: "mdi:sign-direction",
                 ATTR_STATE: "49114",
@@ -440,9 +459,10 @@ MOCK_VEHICLES = {
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_hvac_last_activity",
             },
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_PLUG_STATE,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.ENUM,
                 ATTR_ENTITY_ID: "sensor.reg_number_plug_state",
                 ATTR_ICON: "mdi:power-plug-off",
+                ATTR_OPTIONS: ["unplugged", "plugged", "plug_error", "plug_unknown"],
                 ATTR_STATE: "unplugged",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_plug_state",
             },
@@ -556,7 +576,6 @@ MOCK_VEHICLES = {
         ],
         Platform.SELECT: [
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_CHARGE_MODE,
                 ATTR_ENTITY_ID: "select.reg_number_charge_mode",
                 ATTR_ICON: "mdi:calendar-remove",
                 ATTR_OPTIONS: ["always", "always_charging", "schedule_mode"],
@@ -566,6 +585,7 @@ MOCK_VEHICLES = {
         ],
         Platform.SENSOR: [
             {
+                ATTR_DEVICE_CLASS: SensorDeviceClass.DISTANCE,
                 ATTR_ENTITY_ID: "sensor.reg_number_battery_autonomy",
                 ATTR_ICON: "mdi:ev-station",
                 ATTR_STATE: "141",
@@ -605,19 +625,29 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
             },
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_CHARGE_STATE,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.ENUM,
                 ATTR_ENTITY_ID: "sensor.reg_number_charge_state",
                 ATTR_ICON: "mdi:flash",
+                ATTR_OPTIONS: [
+                    "not_in_charge",
+                    "waiting_for_a_planned_charge",
+                    "charge_ended",
+                    "waiting_for_current_charge",
+                    "energy_flap_opened",
+                    "charge_in_progress",
+                    "charge_error",
+                    "unavailable",
+                ],
                 ATTR_STATE: "charge_in_progress",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_charge_state",
             },
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.CURRENT,
-                ATTR_ENTITY_ID: "sensor.reg_number_charging_power",
+                ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
+                ATTR_ENTITY_ID: "sensor.reg_number_admissible_charging_power",
                 ATTR_STATE: "27.0",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_charging_power",
-                ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
+                ATTR_UNIT_OF_MEASUREMENT: POWER_KILO_WATT,
             },
             {
                 ATTR_ENTITY_ID: "sensor.reg_number_charging_remaining_time",
@@ -628,6 +658,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: TIME_MINUTES,
             },
             {
+                ATTR_DEVICE_CLASS: SensorDeviceClass.DISTANCE,
                 ATTR_ENTITY_ID: "sensor.reg_number_fuel_autonomy",
                 ATTR_ICON: "mdi:gas-station",
                 ATTR_STATE: "35",
@@ -636,6 +667,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
             },
             {
+                ATTR_DEVICE_CLASS: SensorDeviceClass.VOLUME,
                 ATTR_ENTITY_ID: "sensor.reg_number_fuel_quantity",
                 ATTR_ICON: "mdi:fuel",
                 ATTR_STATE: "3",
@@ -644,6 +676,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: VOLUME_LITERS,
             },
             {
+                ATTR_DEVICE_CLASS: SensorDeviceClass.DISTANCE,
                 ATTR_ENTITY_ID: "sensor.reg_number_mileage",
                 ATTR_ICON: "mdi:sign-direction",
                 ATTR_STATE: "5567",
@@ -652,9 +685,10 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
             },
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_PLUG_STATE,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.ENUM,
                 ATTR_ENTITY_ID: "sensor.reg_number_plug_state",
                 ATTR_ICON: "mdi:power-plug",
+                ATTR_OPTIONS: ["unplugged", "plugged", "plug_error", "plug_unknown"],
                 ATTR_STATE: "plugged",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_plug_state",
             },
@@ -749,6 +783,7 @@ MOCK_VEHICLES = {
         Platform.SELECT: [],
         Platform.SENSOR: [
             {
+                ATTR_DEVICE_CLASS: SensorDeviceClass.DISTANCE,
                 ATTR_ENTITY_ID: "sensor.reg_number_fuel_autonomy",
                 ATTR_ICON: "mdi:gas-station",
                 ATTR_STATE: "35",
@@ -757,6 +792,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
             },
             {
+                ATTR_DEVICE_CLASS: SensorDeviceClass.VOLUME,
                 ATTR_ENTITY_ID: "sensor.reg_number_fuel_quantity",
                 ATTR_ICON: "mdi:fuel",
                 ATTR_STATE: "3",
@@ -765,6 +801,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: VOLUME_LITERS,
             },
             {
+                ATTR_DEVICE_CLASS: SensorDeviceClass.DISTANCE,
                 ATTR_ENTITY_ID: "sensor.reg_number_mileage",
                 ATTR_ICON: "mdi:sign-direction",
                 ATTR_STATE: "5567",

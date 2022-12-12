@@ -3,7 +3,6 @@
   "name": "Mi Flora",
   "documentation": "https://www.home-assistant.io/integrations/miflora",
   "requirements": [],
-  "dependencies": ["repairs"],
   "codeowners": ["@danielhiversen", "@basnijholt"],
   "iot_class": "local_polling"
 }

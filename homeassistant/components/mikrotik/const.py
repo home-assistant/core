@@ -1,8 +1,6 @@
 """Constants used in the Mikrotik components."""
 from typing import Final
 
-from homeassistant.const import Platform
-
 DOMAIN: Final = "mikrotik"
 DEFAULT_NAME: Final = "Mikrotik"
 DEFAULT_API_PORT: Final = 8728
@@ -40,7 +38,6 @@ MIKROTIK_SERVICES: Final = {
     IS_CAPSMAN: "/caps-man/interface/print",
 }
 
-PLATFORMS: Final = [Platform.DEVICE_TRACKER]
 
 ATTR_DEVICE_TRACKER: Final = [
     "comment",

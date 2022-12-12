@@ -215,7 +215,7 @@ class MeaterProbeTemperature(
         return self.entity_description.value(device)
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if entity is available."""
         # See if the device was returned from the API. If not, it's offline
         return (

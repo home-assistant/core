@@ -1,4 +1,19 @@
 {
+    "issues": {
+        "legacy_subscription": {
+            "fix_flow": {
+                "abort": {
+                    "operation_took_too_long": "\u4f5c\u696d\u8017\u6642\u904e\u4e45\u3001\u8acb\u7a0d\u5019\u518d\u8a66\u3002"
+                },
+                "step": {
+                    "confirm_change_plan": {
+                        "description": "\u6211\u5011\u6700\u8fd1\u66f4\u65b0\u4e86\u8a02\u95b1\u7cfb\u7d71\u3001\u6b32\u7e7c\u7e8c\u4f7f\u7528 Home Assistant \u96f2\u670d\u52d9\u3001\u9700\u8981\u91cd\u65b0\u540c\u610f PayPal \u4e0a\u7684\u8b8a\u66f4\u3002\n\n\u5927\u6982\u9700\u8981 1 \u5206\u9418\u3001\u540c\u6642\u4e0d\u6703\u589e\u52a0\u4efb\u4f55\u8cbb\u7528\u3002"
+                    }
+                }
+            },
+            "title": "\u767c\u73fe\u820a\u8a02\u95b1\u6a21\u5f0f"
+        }
+    },
     "system_health": {
         "info": {
             "alexa_enabled": "Alexa \u5df2\u555f\u7528",

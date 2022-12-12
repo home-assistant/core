@@ -9,11 +9,24 @@
             "unknown": "Error inesperat"
         },
         "step": {
-            "user": {
+            "cloud": {
                 "data": {
                     "password": "Contrasenya",
                     "pin": "Codi PIN",
                     "username": "Nom d'usuari"
+                }
+            },
+            "local": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "pin": "Codi PIN",
+                    "port": "Port"
+                }
+            },
+            "user": {
+                "menu_options": {
+                    "cloud": "Risco Cloud (recomanat)",
+                    "local": "Panell Risco local (avan\u00e7at)"
                 }
             }
         }

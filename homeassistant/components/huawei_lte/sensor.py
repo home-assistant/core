@@ -17,11 +17,11 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DATA_BYTES,
-    DATA_RATE_BYTES_PER_SECOND,
     FREQUENCY_MEGAHERTZ,
     PERCENTAGE,
     STATE_UNKNOWN,
     TIME_SECONDS,
+    UnitOfDataRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity, EntityCategory
@@ -371,7 +371,8 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "CurrentDownloadRate"): SensorMeta(
         name="Current download rate",
-        native_unit_of_measurement=DATA_RATE_BYTES_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:download",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -383,7 +384,8 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "CurrentUploadRate"): SensorMeta(
         name="Current upload rate",
-        native_unit_of_measurement=DATA_RATE_BYTES_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:upload",
         state_class=SensorStateClass.MEASUREMENT,
     ),

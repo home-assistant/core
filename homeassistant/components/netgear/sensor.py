@@ -17,9 +17,9 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DATA_MEGABYTES,
-    DATA_RATE_MEGABITS_PER_SECOND,
     PERCENTAGE,
     TIME_MILLISECONDS,
+    UnitOfDataRate,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
@@ -36,7 +36,7 @@ from .const import (
     KEY_COORDINATOR_UTIL,
     KEY_ROUTER,
 )
-from .router import NetgearDeviceEntity, NetgearRouter, NetgearRouterEntity
+from .router import NetgearDeviceEntity, NetgearRouter, NetgearRouterCoordinatorEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -228,14 +228,16 @@ SENSOR_SPEED_TYPES = [
         key="NewOOKLAUplinkBandwidth",
         name="Uplink Bandwidth",
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:upload",
     ),
     NetgearSensorEntityDescription(
         key="NewOOKLADownlinkBandwidth",
         name="Downlink Bandwidth",
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:download",
     ),
     NetgearSensorEntityDescription(
@@ -338,8 +340,7 @@ async def async_setup_entry(
             )
             tracked.add(mac)
 
-        if new_entities:
-            async_add_entities(new_entities)
+        async_add_entities(new_entities)
 
     entry.async_on_unload(coordinator.async_add_listener(new_device_callback))
 
@@ -381,7 +382,7 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
             self._state = self._device[self._attribute]
 
 
-class NetgearRouterSensorEntity(NetgearRouterEntity, RestoreSensor):
+class NetgearRouterSensorEntity(NetgearRouterCoordinatorEntity, RestoreSensor):
     """Representation of a device connected to a Netgear router."""
 
     _attr_entity_registry_enabled_default = False
