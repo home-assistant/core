@@ -219,6 +219,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle zeroconf discovery."""
         host = discovery_info.host
+        if (
+            current_entry := await self.async_set_unique_id(self.info["mac"])
+        ) and current_entry.data[CONF_HOST] == host:
+            await async_reconnect_soon(self.hass, current_entry)
+        self._abort_if_unique_id_configured({CONF_HOST: host})
+
         try:
             self.info = await self._async_get_info(host)
         except DeviceConnectionError:
@@ -226,14 +232,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except FirmwareUnsupported:
             return self.async_abort(reason="unsupported_firmware")
 
-        if (
-            current_entry := await self.async_set_unique_id(self.info["mac"])
-        ) and current_entry.data[CONF_HOST] == host:
-            await async_reconnect_soon(self.hass, current_entry)
-
-        self._abort_if_unique_id_configured({CONF_HOST: host})
         self.host = host
-
         self.context.update(
             {
                 "title_placeholders": {"name": discovery_info.name.split(".")[0]},
