@@ -226,7 +226,7 @@ class ServiceIntentHandler(IntentHandler):
 
         response = intent_obj.create_response(conversation_id=conversation_id)
         response.async_set_speech(self.speech.format(state.name))
-        
+
         # Targets go from general to specific
         response.async_set_targets(
             [
@@ -337,50 +337,6 @@ class IntentResponseTargetType(str, Enum):
 @dataclass
 class IntentResponseTarget:
     """Target of the intent response."""
-
-    name: str
-    type: IntentResponseTargetType
-    id: str | None = None
-
-
-class IntentResponseType(Enum):
-    """Type of the intent response."""
-
-    ACTION_DONE = "action_done"
-    """Intent caused an action to occur"""
-
-    QUERY_ANSWER = "query_answer"
-    """Response is an answer to a query"""
-
-    ERROR = "error"
-    """Response is an error"""
-
-
-class IntentResponseErrorCode(str, Enum):
-    """Reason for an intent response error."""
-
-    NO_INTENT_MATCH = "no_intent_match"
-    """Text could not be matched to an intent"""
-
-    NO_VALID_TARGETS = "no_valid_targets"
-    """Intent was matched, but no valid areas/devices/entities were targeted"""
-
-    FAILED_TO_HANDLE = "failed_to_handle"
-    """Unexpected error occurred while handling intent"""
-
-
-class IntentResponseTargetType(str, Enum):
-    """Type of target for an intent response."""
-
-    AREA = "area"
-    DEVICE = "device"
-    ENTITY = "entity"
-    OTHER = "other"
-
-
-@dataclass
-class IntentResponseTarget:
-    """Main target of the intent response."""
 
     name: str
     type: IntentResponseTargetType
