@@ -4,7 +4,7 @@
   "config_flow": true,
   "integration_type": "hub",
   "documentation": "https://www.home-assistant.io/integrations/overkiz",
-  "requirements": ["pyoverkiz==1.7.1"],
+  "requirements": ["pyoverkiz==1.7.2"],
   "zeroconf": [
     {
       "type": "_kizbox._tcp.local.",

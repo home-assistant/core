@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "N\u00e1zev hostitele nebo IP adresa"
+                }
+            }
+        }
+    }
+}

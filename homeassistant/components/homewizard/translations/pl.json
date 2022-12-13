@@ -9,7 +9,7 @@
         },
         "step": {
             "discovery_confirm": {
-                "description": "Czy chcesz skonfigurowa\u0107 {product_type} ({serial}) pod adresem {ip_address}?",
+                "description": "Czy chcesz skonfigurowa\u0107 {product_type} ({serial}) o adresie {ip_address}?",
                 "title": "Potwierdzenie"
             },
             "user": {
