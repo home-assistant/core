@@ -21,7 +21,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AirVisualProData, AirVisualProEntity
-from .const import DOMAIN
+from .const import CONF_DATA, DOMAIN
 
 SENSOR_KIND_AQI = "air_quality_index"
 SENSOR_KIND_BATTERY_LEVEL = "battery_level"
@@ -112,7 +112,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up AirVisual sensors based on a config entry."""
-    data: AirVisualProData = hass.data[DOMAIN][entry.entry_id]
+    data: AirVisualProData = hass.data[DOMAIN][entry.entry_id][CONF_DATA]
 
     async_add_entities(
         AirVisualProSensor(data.coordinator, description)
