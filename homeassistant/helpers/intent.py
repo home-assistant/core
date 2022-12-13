@@ -315,6 +315,9 @@ class IntentResponseErrorCode(str, Enum):
     FAILED_TO_HANDLE = "failed_to_handle"
     """Unexpected error occurred while handling intent"""
 
+    UNKNOWN = "unknown"
+    """Error outside the scope of intent processing"""
+
 
 class IntentResponseTargetType(str, Enum):
     """Type of target for an intent response."""
