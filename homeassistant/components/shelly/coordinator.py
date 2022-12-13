@@ -659,4 +659,4 @@ async def async_reconnect_soon(
         and (entry_data := get_entry_data(hass).get(entry.entry_id))
         and (coordinator := entry_data.rpc)
     ):
-        asyncio.create_task(coordinator.async_request_refresh())
+        hass.async_create_task(coordinator.async_request_refresh())
