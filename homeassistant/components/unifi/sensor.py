@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 
 from homeassistant.components.sensor import DOMAIN, SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DATA_MEGABYTES
+from homeassistant.const import UnitOfInformation
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
@@ -90,8 +90,9 @@ class UniFiBandwidthSensor(UniFiClient, SensorEntity):
 
     DOMAIN = DOMAIN
 
+    _attr_device_class = SensorDeviceClass.DATA_SIZE
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_native_unit_of_measurement = DATA_MEGABYTES
+    _attr_native_unit_of_measurement = UnitOfInformation.MEGABYTES
 
     @property
     def name(self) -> str:

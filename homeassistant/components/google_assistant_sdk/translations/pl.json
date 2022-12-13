@@ -11,7 +11,7 @@
             "missing_configuration": "Komponent nie jest skonfigurowany. Post\u0119puj zgodnie z dokumentacj\u0105.",
             "oauth_error": "Otrzymano nieprawid\u0142owe dane tokena.",
             "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119",
-            "timeout_connect": "Limit czasu na nawi\u0105zanie po\u0142\u0105czenia",
+            "timeout_connect": "Up\u0142yn\u0105\u0142 limit czasu po\u0142\u0105czenia",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "create_entry": {

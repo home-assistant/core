@@ -159,7 +159,7 @@ aioecowitt==2022.11.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==13.0.1
+aioesphomeapi==13.0.2
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -202,7 +202,7 @@ aiolifx==0.8.7
 aiolifx_effects==0.3.1
 
 # homeassistant.components.lifx
-aiolifx_themes==0.2.0
+aiolifx_themes==0.3.0
 
 # homeassistant.components.livisi
 aiolivisi==0.0.14
@@ -237,6 +237,9 @@ aioopenexchangerates==0.4.0
 # homeassistant.components.acmeda
 aiopulse==0.4.3
 
+# homeassistant.components.purpleair
+aiopurpleair==2022.12.1
+
 # homeassistant.components.hunterdouglas_powerview
 aiopvapi==2.0.4
 
@@ -264,7 +267,7 @@ aiosenseme==0.6.1
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==5.1.1
+aioshelly==5.1.2
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -425,7 +428,7 @@ bimmer_connected==0.10.4
 bizkaibus==0.1.1
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==2.10.1
+bleak-retry-connector==2.10.2
 
 # homeassistant.components.bluetooth
 bleak==0.19.2
@@ -885,7 +888,7 @@ hole==0.7.0
 holidays==0.17.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20221212.0
+home-assistant-frontend==20221213.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1460,6 +1463,7 @@ pyaftership==21.11.0
 pyairnow==1.1.0
 
 # homeassistant.components.airvisual
+# homeassistant.components.airvisual_pro
 pyairvisual==2022.11.1
 
 # homeassistant.components.almond
@@ -1508,7 +1512,7 @@ pycfdns==2.0.1
 pychannels==1.2.3
 
 # homeassistant.components.cast
-pychromecast==13.0.3
+pychromecast==13.0.4
 
 # homeassistant.components.pocketcasts
 pycketcasts==1.0.1
@@ -1816,7 +1820,7 @@ pyotgw==2.1.3
 pyotp==2.7.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.7.1
+pyoverkiz==1.7.2
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0

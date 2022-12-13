@@ -28,7 +28,7 @@
                     "username": "Brukernavn",
                     "verify_ssl": "Verifisere SSL-sertifikat"
                 },
-                "description": "Vil du konfigurere {name} ({host})?"
+                "description": "Vil du sette opp {name} ( {host} )?"
             },
             "reauth_confirm": {
                 "data": {

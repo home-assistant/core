@@ -2,9 +2,9 @@
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import (
-    DATA_MEBIBYTES,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    UnitOfInformation,
 )
 
 SENSOR_SMS = "sms"
@@ -14,7 +14,7 @@ SENSOR_USAGE = "usage"
 SENSOR_UNITS = {
     SENSOR_SMS: "unread",
     SENSOR_SMS_TOTAL: "messages",
-    SENSOR_USAGE: DATA_MEBIBYTES,
+    SENSOR_USAGE: UnitOfInformation.MEBIBYTES,
     "radio_quality": PERCENTAGE,
     "rx_level": SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     "tx_level": SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
