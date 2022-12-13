@@ -1,5 +1,5 @@
 """Define tests for the PurpleAir config flow."""
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
 import pytest
@@ -60,7 +60,7 @@ async def test_create_entry_by_coordinates(hass, setup_purpleair):
 
 
 @pytest.mark.parametrize(
-    "get_nearby_sensors,errors",
+    "get_nearby_sensors_mock,errors",
     [
         (AsyncMock(return_value=[]), {"base": "no_sensors_near_coordinates"}),
         (AsyncMock(side_effect=Exception), {"base": "unknown"}),
@@ -68,11 +68,79 @@ async def test_create_entry_by_coordinates(hass, setup_purpleair):
     ],
 )
 async def test_step_by_coordinates_nearby_sensor_errors(
-    hass, config_entry_options, errors, setup_purpleair
+    hass, api, errors, get_nearby_sensors_mock, setup_purpleair
 ):
     """Test errors in the by_coordinates step during checking for nearby sensors."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={"api_key": "abcde12345"}
+    with patch.object(api.sensors, "async_get_nearby_sensors", get_nearby_sensors_mock):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data={"api_key": "abcde12345"}
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "by_coordinates"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                "latitude": 51.5285582,
+                "longitude": -0.2416796,
+                "distance": 5,
+            },
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["errors"] == errors
+
+    # Validate that we can still proceed after an error if the underlying condition
+    # resolves:
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            "latitude": 51.5285582,
+            "longitude": -0.2416796,
+            "distance": 5,
+        },
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "choose_sensor"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            "sensor_index": "123456",
+        },
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == "abcde"
+    assert result["data"] == {
+        "api_key": "abcde12345",
+    }
+    assert result["options"] == {
+        "sensor_indices": [123456],
+    }
+
+
+@pytest.mark.parametrize(
+    "check_api_key_mock,errors",
+    [
+        (AsyncMock(side_effect=Exception), {"base": "unknown"}),
+        (AsyncMock(side_effect=InvalidApiKeyError), {"base": "invalid_api_key"}),
+        (AsyncMock(side_effect=PurpleAirError), {"base": "unknown"}),
+    ],
+)
+async def test_step_check_api_key_errors(
+    hass, api, check_api_key_mock, errors, setup_purpleair
+):
+    """Test API errors in the by_coordinates step."""
+    with patch.object(api, "async_check_api_key", check_api_key_mock):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data={"api_key": "abcde12345"}
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["errors"] == errors
+
+    # Validate that we can still proceed after an error if the underlying condition
+    # resolves:
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"api_key": "abcde12345"}
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "by_coordinates"
@@ -86,21 +154,19 @@ async def test_step_by_coordinates_nearby_sensor_errors(
         },
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["errors"] == errors
+    assert result["step_id"] == "choose_sensor"
 
-
-@pytest.mark.parametrize(
-    "check_api_key,errors",
-    [
-        (AsyncMock(side_effect=Exception), {"base": "unknown"}),
-        (AsyncMock(side_effect=InvalidApiKeyError), {"base": "invalid_api_key"}),
-        (AsyncMock(side_effect=PurpleAirError), {"base": "unknown"}),
-    ],
-)
-async def test_step_check_api_key_errors(hass, errors, setup_purpleair):
-    """Test API errors in the by_coordinates step."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={"api_key": "abcde12345"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            "sensor_index": "123456",
+        },
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["errors"] == errors
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == "abcde"
+    assert result["data"] == {
+        "api_key": "abcde12345",
+    }
+    assert result["options"] == {
+        "sensor_indices": [123456],
+    }
