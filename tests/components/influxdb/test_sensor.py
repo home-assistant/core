@@ -39,6 +39,11 @@ BASE_V2_CONFIG = {
     "token": "token",
     "bucket": "Home Assistant",
 }
+BASE_V2_CONFIG2 = {
+    "api_version": API_VERSION_2,
+    "organization": "org",
+    "token": "token",
+}
 
 BASE_V1_QUERY = {
     "queries": [
@@ -51,6 +56,7 @@ BASE_V1_QUERY = {
         }
     ],
 }
+
 BASE_V2_QUERY = {
     "queries_flux": [
         {
@@ -213,6 +219,7 @@ async def _setup(hass, config_ext, queries, expected_sensors):
     [
         (DEFAULT_API_VERSION, BASE_V1_CONFIG, BASE_V1_QUERY, _set_query_mock_v1),
         (API_VERSION_2, BASE_V2_CONFIG, BASE_V2_QUERY, _set_query_mock_v2),
+        (API_VERSION_2, BASE_V2_CONFIG2, BASE_V2_QUERY, _set_query_mock_v2),
     ],
     indirect=["mock_client"],
 )
@@ -283,6 +290,29 @@ async def test_minimal_config(hass, mock_client, config_ext, queries, set_query_
             },
             _set_query_mock_v2,
         ),
+        (
+            API_VERSION_2,
+            {
+                "api_version": "2",
+                "ssl": "true",
+                "host": "host",
+                "port": "9000",
+                "path": "path",
+                "token": "token",
+                "organization": "org",
+            },
+            {
+                "queries_flux": [
+                    {
+                        "name": "test",
+                        "unique_id": "unique_test_id",
+                        "unit_of_measurement": "unit",
+                        "query": "query",
+                    }
+                ],
+            },
+            _set_query_mock_v2,
+        ),
     ],
     indirect=["mock_client"],
 )
@@ -292,7 +322,9 @@ async def test_full_config(hass, mock_client, config_ext, queries, set_query_moc
     await _setup(hass, config_ext, queries, ["sensor.test"])
 
 
-@pytest.mark.parametrize("config_ext", [(BASE_V1_CONFIG), (BASE_V2_CONFIG)])
+@pytest.mark.parametrize(
+    "config_ext", [(BASE_V1_CONFIG), (BASE_V2_CONFIG), (BASE_V2_CONFIG2)]
+)
 async def test_config_failure(hass, config_ext):
     """Test an invalid config."""
     config = {"platform": DOMAIN}
@@ -315,6 +347,13 @@ async def test_config_failure(hass, config_ext):
         (
             API_VERSION_2,
             BASE_V2_CONFIG,
+            BASE_V2_QUERY,
+            _set_query_mock_v2,
+            _make_v2_resultset,
+        ),
+        (
+            API_VERSION_2,
+            BASE_V2_CONFIG2,
             BASE_V2_QUERY,
             _set_query_mock_v2,
             _make_v2_resultset,
@@ -350,6 +389,13 @@ async def test_state_matches_query_result(
             _set_query_mock_v2,
             _make_v2_resultset,
         ),
+        (
+            API_VERSION_2,
+            BASE_V2_CONFIG2,
+            BASE_V2_QUERY,
+            _set_query_mock_v2,
+            _make_v2_resultset,
+        ),
     ],
     indirect=["mock_client"],
 )
@@ -376,6 +422,7 @@ async def test_state_matches_first_query_result_for_multiple_return(
             _set_query_mock_v1,
         ),
         (API_VERSION_2, BASE_V2_CONFIG, BASE_V2_QUERY, _set_query_mock_v2),
+        (API_VERSION_2, BASE_V2_CONFIG2, BASE_V2_QUERY, _set_query_mock_v2),
     ],
     indirect=["mock_client"],
 )
@@ -437,6 +484,27 @@ async def test_state_for_no_results(
             _set_query_mock_v2,
             ApiException(status=HTTPStatus.BAD_REQUEST, http_resp=MagicMock()),
         ),
+        (
+            API_VERSION_2,
+            BASE_V2_CONFIG2,
+            BASE_V2_QUERY,
+            _set_query_mock_v2,
+            OSError("fail"),
+        ),
+        (
+            API_VERSION_2,
+            BASE_V2_CONFIG2,
+            BASE_V2_QUERY,
+            _set_query_mock_v2,
+            ApiException(http_resp=MagicMock()),
+        ),
+        (
+            API_VERSION_2,
+            BASE_V2_CONFIG2,
+            BASE_V2_QUERY,
+            _set_query_mock_v2,
+            ApiException(status=HTTPStatus.BAD_REQUEST, http_resp=MagicMock()),
+        ),
     ],
     indirect=["mock_client"],
 )
@@ -477,6 +545,22 @@ async def test_error_querying_influx(
         (
             API_VERSION_2,
             BASE_V2_CONFIG,
+            {
+                "queries_flux": [
+                    {
+                        "name": "test",
+                        "unique_id": "unique_test_id",
+                        "query": "{{ illegal.template }}",
+                    }
+                ]
+            },
+            _set_query_mock_v2,
+            _make_v2_resultset,
+            "query",
+        ),
+        (
+            API_VERSION_2,
+            BASE_V2_CONFIG2,
             {
                 "queries_flux": [
                     {
@@ -552,6 +636,22 @@ async def test_error_rendering_template(
         (
             API_VERSION_2,
             BASE_V2_CONFIG,
+            BASE_V2_QUERY,
+            _set_query_mock_v2,
+            ApiException(http_resp=MagicMock()),
+            _make_v2_resultset,
+        ),
+        (
+            API_VERSION_2,
+            BASE_V2_CONFIG2,
+            BASE_V2_QUERY,
+            _set_query_mock_v2,
+            OSError("fail"),
+            _make_v2_resultset,
+        ),
+        (
+            API_VERSION_2,
+            BASE_V2_CONFIG2,
             BASE_V2_QUERY,
             _set_query_mock_v2,
             ApiException(http_resp=MagicMock()),
