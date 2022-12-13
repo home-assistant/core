@@ -4,34 +4,61 @@ from __future__ import annotations
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, SENSORS
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    CONF_URL,
+    CONF_USERNAME,
+    CONF_NAME,
+    CONF_LOCATION,
+)
+
+from . import NextcloudEntity
+
+from .const import (
+    DATA_KEY_API,
+    DOMAIN,
+    DATA_KEY_COORDINATOR,
+    SENSORS,
+)
 
 
-def setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Nextcloud sensors."""
-    if discovery_info is None:
-        return
     sensors = []
-    for name in hass.data[DOMAIN]:
+    
+    instance_name = entry.data[CONF_NAME]
+    ncm_data = hass.data[DOMAIN][instance_name]
+    
+    for name in ncm_data[DATA_KEY_API].data:
         if name in SENSORS:
-            sensors.append(NextcloudSensor(name))
-    add_entities(sensors, True)
+            sensors.append(NextcloudSensor(ncm_data[DATA_KEY_API],
+                                                        ncm_data[DATA_KEY_COORDINATOR],
+                                                        instance_name,
+                                                        entry.entry_id,
+                                                        name))
+    async_add_entities(sensors, True)
 
 
-class NextcloudSensor(SensorEntity):
+class NextcloudSensor(NextcloudEntity, SensorEntity):
     """Represents a Nextcloud sensor."""
 
-    def __init__(self, item):
+    def __init__(self, 
+                api: NextcloudMonitorCustom,
+                coordinator: DataUpdateCoordinator,
+                name: str,
+                server_unique_id: str, 
+                item
+                ):
         """Initialize the Nextcloud sensor."""
-        self._name = item
+        super().__init__(api, coordinator, name, server_unique_id)
+        
+        self._item = item
         self._state = None
+        self._attr_unique_id = f"{DOMAIN}_{self._name}_{self._item}"
 
     @property
     def icon(self):
@@ -41,18 +68,9 @@ class NextcloudSensor(SensorEntity):
     @property
     def name(self):
         """Return the name for this sensor."""
-        return self._name
+        return f"{DOMAIN}_{self._name}_{self._item}"
 
     @property
     def native_value(self):
         """Return the state for this sensor."""
-        return self._state
-
-    @property
-    def unique_id(self):
-        """Return the unique ID for this sensor."""
-        return f"{self.hass.data[DOMAIN]['instance']}#{self._name}"
-
-    def update(self) -> None:
-        """Update the sensor."""
-        self._state = self.hass.data[DOMAIN][self._name]
+        return self.api.data[self._item]

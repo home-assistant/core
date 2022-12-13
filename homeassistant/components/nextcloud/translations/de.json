@@ -1,0 +1,24 @@
+{
+  "config": {
+    "title": "Nextcloud Monitoring",
+    "step": {
+      "user": {
+        "title": "Nextcloud Monitoring Configuration",
+        "data": {
+          "name": "Custom Name of monitored Nextcloud Instance",
+          "url": "URL of the Nextcloud Instance",
+          "username": "Nextcloud Username",
+		  "password": "App Password",
+		  "verify_ssl": "Uncheck to allow self-signed certificates"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "Device is already configured",
+	  "cannot_connect": "Cannot connect to Instance, Check URL, Username and Password"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  }
+}
