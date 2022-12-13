@@ -3,7 +3,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from homeassistant.components.sensor import (
-    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
@@ -32,18 +31,16 @@ HONEYGAIN_SENSORS: list[SensorValueEntityDescription] = [
         name="Account balance",
         icon="mdi:hand-coin",
         state_class=SensorStateClass.TOTAL,
-        device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=CURRENCY_DOLLAR,
-        value=lambda x: x.balances.get("payout").get("usd_cents") / 100,
+        value=lambda x: f'{x.balances.get("payout").get("usd_cents") / 100:.2f}',
     ),
     SensorValueEntityDescription(
         key="today_earnings",
         name="Today's earnings",
         icon="mdi:calendar-today",
         state_class=SensorStateClass.TOTAL,
-        device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=CURRENCY_DOLLAR,
-        value=lambda x: x.balances.get("realtime").get("usd_cents") / 100,
+        value=lambda x: f'{x.balances.get("realtime").get("usd_cents") / 100:.2f}',
     ),
     SensorValueEntityDescription(
         key="active_devices",
