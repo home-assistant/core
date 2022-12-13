@@ -46,11 +46,26 @@
         "sensor": {
             "battery": {
                 "state": {
-                    "full": "Full"
+                    "full": "Full",
+                    "low": "Lav",
+                    "normal": "Normal",
+                    "verylow": "Veldig lav"
+                }
+            },
+            "discrete_rssi_level": {
+                "state": {
+                    "good": "Bra",
+                    "low": "Lav",
+                    "normal": "Normal",
+                    "verylow": "Veldig lav"
                 }
             },
             "priority_lock_originator": {
                 "state": {
+                    "external_gateway": "Ekstern gateway",
+                    "local_user": "Lokal bruker",
+                    "lsc": "LSC",
+                    "myself": "Meg selv",
                     "rain": "Regn",
                     "saac": "SAAC",
                     "security": "Sikkerhet",

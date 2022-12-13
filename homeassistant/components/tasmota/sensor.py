@@ -22,7 +22,6 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
-    FREQUENCY_HERTZ,
     LENGTH_CENTIMETERS,
     LIGHT_LUX,
     MASS_KILOGRAMS,
@@ -37,6 +36,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     TEMP_KELVIN,
     UnitOfApparentPower,
+    UnitOfFrequency,
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -216,7 +216,7 @@ SENSOR_UNIT_MAP = {
     hc.ELECTRICAL_CURRENT_AMPERE: ELECTRIC_CURRENT_AMPERE,
     hc.ELECTRICAL_VOLT_AMPERE: UnitOfApparentPower.VOLT_AMPERE,
     hc.ENERGY_KILO_WATT_HOUR: ENERGY_KILO_WATT_HOUR,
-    hc.FREQUENCY_HERTZ: FREQUENCY_HERTZ,
+    hc.FREQUENCY_HERTZ: UnitOfFrequency.HERTZ,
     hc.LENGTH_CENTIMETERS: LENGTH_CENTIMETERS,
     hc.LIGHT_LUX: LIGHT_LUX,
     hc.MASS_KILOGRAMS: MASS_KILOGRAMS,

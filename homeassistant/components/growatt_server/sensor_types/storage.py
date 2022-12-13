@@ -5,9 +5,9 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
-    FREQUENCY_HERTZ,
     PERCENTAGE,
     UnitOfElectricCurrent,
+    UnitOfFrequency,
     UnitOfPower,
 )
 
@@ -149,7 +149,8 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="storage_ac_input_frequency_out",
         name="AC input frequency",
         api_key="freqOutPut",
-        native_unit_of_measurement=FREQUENCY_HERTZ,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        device_class=SensorDeviceClass.FREQUENCY,
         precision=2,
     ),
     GrowattSensorEntityDescription(
@@ -164,7 +165,8 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="storage_ac_output_frequency",
         name="Ac output frequency",
         api_key="freqGrid",
-        native_unit_of_measurement=FREQUENCY_HERTZ,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        device_class=SensorDeviceClass.FREQUENCY,
         precision=2,
     ),
     GrowattSensorEntityDescription(
