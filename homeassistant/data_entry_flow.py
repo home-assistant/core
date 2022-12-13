@@ -81,7 +81,7 @@ class AbortFlow(FlowError):
         self.description_placeholders = description_placeholders
 
 
-class FlowResult(TypedDict, total=False):
+class _BaseFlowResult(TypedDict, total=False):
     """Typed result dict."""
 
     context: dict[str, Any]
@@ -100,20 +100,31 @@ class FlowResult(TypedDict, total=False):
     reason: str
     required: bool
     result: Any
-    step_id: str
     title: str
     type: FlowResultType
     url: str
     version: int
 
 
+class FlowResult(_BaseFlowResult, total=False):
+    """Typed result dict."""
+
+    step_id: str
+
+
+class ExtendedFlowResult(_BaseFlowResult, total=False):
+    """Typed result dict."""
+
+    step_id: str | None
+
+
 @callback
 def _async_flow_handler_to_flow_result(
     flows: Iterable[FlowHandler], include_uninitialized: bool
-) -> list[FlowResult]:
+) -> list[ExtendedFlowResult]:
     """Convert a list of FlowHandler to a partial FlowResult that can be serialized."""
     return [
-        FlowResult(
+        ExtendedFlowResult(
             flow_id=flow.flow_id,
             handler=flow.handler,
             context=flow.context,
@@ -179,14 +190,16 @@ class FlowManager(abc.ABC):
         )
 
     @callback
-    def async_get(self, flow_id: str) -> FlowResult:
+    def async_get(self, flow_id: str) -> ExtendedFlowResult:
         """Return a flow in progress as a partial FlowResult."""
         if (flow := self._progress.get(flow_id)) is None:
             raise UnknownFlow
         return _async_flow_handler_to_flow_result([flow], False)[0]
 
     @callback
-    def async_progress(self, include_uninitialized: bool = False) -> list[FlowResult]:
+    def async_progress(
+        self, include_uninitialized: bool = False
+    ) -> list[ExtendedFlowResult]:
         """Return the flows in progress as a partial FlowResult."""
         return _async_flow_handler_to_flow_result(
             self._progress.values(), include_uninitialized
@@ -195,7 +208,7 @@ class FlowManager(abc.ABC):
     @callback
     def async_progress_by_handler(
         self, handler: str, include_uninitialized: bool = False
-    ) -> list[FlowResult]:
+    ) -> list[ExtendedFlowResult]:
         """Return the flows in progress by handler as a partial FlowResult."""
         return _async_flow_handler_to_flow_result(
             self._async_progress_by_handler(handler), include_uninitialized
@@ -269,8 +282,10 @@ class FlowManager(abc.ABC):
         cur_step = flow.cur_step
         assert cur_step is not None
 
-        if cur_step.get("data_schema") is not None and user_input is not None:
-            user_input = cur_step["data_schema"](user_input)
+        if (
+            data_schema := cur_step.get("data_schema")
+        ) is not None and user_input is not None:
+            user_input = data_schema(user_input)
 
         # Handle a menu navigation choice
         if cur_step["type"] == FlowResultType.MENU and user_input:
