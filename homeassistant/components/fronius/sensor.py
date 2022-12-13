@@ -13,12 +13,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
-    FREQUENCY_HERTZ,
     PERCENTAGE,
     POWER_VOLT_AMPERE_REACTIVE,
     TEMP_CELSIUS,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
+    UnitOfFrequency,
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -101,7 +101,7 @@ INVERTER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="frequency_ac",
         name="Frequency AC",
-        native_unit_of_measurement=FREQUENCY_HERTZ,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -285,7 +285,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="frequency_phase_average",
         name="Frequency phase average",
-        native_unit_of_measurement=FREQUENCY_HERTZ,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
     ),

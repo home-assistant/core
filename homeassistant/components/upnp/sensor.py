@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DATA_BYTES, TIME_SECONDS, UnitOfDataRate
+from homeassistant.const import TIME_SECONDS, UnitOfDataRate, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -44,18 +44,20 @@ class UpnpSensorEntityDescription(UpnpEntityDescription, SensorEntityDescription
 SENSOR_DESCRIPTIONS: tuple[UpnpSensorEntityDescription, ...] = (
     UpnpSensorEntityDescription(
         key=BYTES_RECEIVED,
-        name=f"{DATA_BYTES} received",
+        name=f"{UnitOfInformation.BYTES} received",
         icon="mdi:server-network",
-        native_unit_of_measurement=DATA_BYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
         format="d",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     UpnpSensorEntityDescription(
         key=BYTES_SENT,
-        name=f"{DATA_BYTES} sent",
+        name=f"{UnitOfInformation.BYTES} sent",
         icon="mdi:server-network",
-        native_unit_of_measurement=DATA_BYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
         format="d",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
