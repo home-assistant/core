@@ -19,7 +19,6 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_IDENTIFIERS,
-    ATTR_MODE,
     ATTR_NAME,
     ATTR_SUGGESTED_AREA,
     ATTR_VIA_DEVICE,
@@ -29,12 +28,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import dt
 
 from .const import (
-    ATTR_OVERRIDE_ALLOWED,
     ATTR_SERIAL,
-    ATTR_TARGET_ID,
-    ATTR_TARGET_TYPE,
     ATTR_TEMP_COMFORT_C,
     ATTR_TEMP_ECO_C,
     CONF_OVERRIDE_TYPE,
@@ -124,12 +121,9 @@ class NoboZone(ClimateEntity):
             await self.async_set_preset_mode(PRESET_NONE)
         elif hvac_mode == HVACMode.HEAT:
             await self.async_set_preset_mode(PRESET_COMFORT)
-        self._attr_hvac_mode = hvac_mode
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new zone override."""
-        if self._nobo.zones[self._id][ATTR_OVERRIDE_ALLOWED] != "1":
-            return
         if preset_mode == PRESET_ECO:
             mode = nobo.API.OVERRIDE_MODE_ECO
         elif preset_mode == PRESET_AWAY:
@@ -163,7 +157,7 @@ class NoboZone(ClimateEntity):
     @callback
     def _read_state(self) -> None:
         """Read the current state from the hub. These are only local calls."""
-        state = self._nobo.get_current_zone_mode(self._id)
+        state = self._nobo.get_current_zone_mode(self._id, dt.now())
         self._attr_hvac_mode = HVACMode.AUTO
         self._attr_preset_mode = PRESET_NONE
 
@@ -176,17 +170,8 @@ class NoboZone(ClimateEntity):
         elif state == nobo.API.NAME_COMFORT:
             self._attr_preset_mode = PRESET_COMFORT
 
-        if self._nobo.zones[self._id][ATTR_OVERRIDE_ALLOWED] == "1":
-            for override in self._nobo.overrides:
-                if self._nobo.overrides[override][ATTR_MODE] == "0":
-                    continue  # "normal" overrides
-                if (
-                    self._nobo.overrides[override][ATTR_TARGET_TYPE]
-                    == nobo.API.OVERRIDE_TARGET_ZONE
-                    and self._nobo.overrides[override][ATTR_TARGET_ID] == self._id
-                ):
-                    self._attr_hvac_mode = HVACMode.HEAT
-                    break
+        if self._nobo.get_zone_override_mode(self._id) != nobo.API.NAME_NORMAL:
+            self._attr_hvac_mode = HVACMode.HEAT
 
         current_temperature = self._nobo.get_current_zone_temperature(self._id)
         self._attr_current_temperature = (
