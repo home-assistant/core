@@ -664,7 +664,7 @@ hole==0.7.0
 holidays==0.17.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20221212.0
+home-assistant-frontend==20221213.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1077,7 +1077,7 @@ pybravia==0.2.3
 pycfdns==2.0.1
 
 # homeassistant.components.cast
-pychromecast==13.0.3
+pychromecast==13.0.4
 
 # homeassistant.components.comfoconnect
 pycomfoconnect==0.4
