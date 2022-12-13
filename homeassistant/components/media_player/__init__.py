@@ -76,6 +76,7 @@ from .const import (  # noqa: F401
     ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_ARTIST,
     ATTR_MEDIA_CHANNEL,
+    ATTR_MEDIA_CHANNEL_NUM,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_DURATION,
@@ -205,6 +206,7 @@ ATTR_TO_PROPERTY = [
     ATTR_MEDIA_SEASON,
     ATTR_MEDIA_EPISODE,
     ATTR_MEDIA_CHANNEL,
+    ATTR_MEDIA_CHANNEL_NUM,
     ATTR_MEDIA_PLAYLIST,
     ATTR_APP_ID,
     ATTR_APP_NAME,
@@ -471,6 +473,7 @@ class MediaPlayerEntity(Entity):
     _attr_media_album_name: str | None = None
     _attr_media_artist: str | None = None
     _attr_media_channel: str | None = None
+    _attr_media_channel_num: int | None = None
     _attr_media_content_id: str | None = None
     _attr_media_content_type: MediaType | str | None = None
     _attr_media_duration: int | None = None
@@ -640,6 +643,11 @@ class MediaPlayerEntity(Entity):
     def media_channel(self) -> str | None:
         """Channel currently playing."""
         return self._attr_media_channel
+
+    @property
+    def media_channel_num(self) -> int | None:
+        """Channel number currently playing."""
+        return self._attr_media_channel_num
 
     @property
     def media_playlist(self) -> str | None:
