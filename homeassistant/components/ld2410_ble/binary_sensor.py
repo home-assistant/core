@@ -2,14 +2,21 @@
 
 from typing import Any
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
+from . import LD2410BLE
 from .const import DOMAIN
 from .models import LD2410BLEData
 
@@ -28,7 +35,9 @@ async def async_setup_entry(
 class IsMovingSensor(CoordinatorEntity, BinarySensorEntity):
     """Moving sensor for LD2410BLE."""
 
-    def __init__(self, coordinator, device, name):
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, device: LD2410BLE, name: str
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._coordinator = coordinator
@@ -49,25 +58,27 @@ class IsMovingSensor(CoordinatorEntity, BinarySensorEntity):
         self.async_write_ha_state()
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """Don't poll."""
         return False
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Is motion detected."""
         return self._value
 
     @property
-    def device_class(self):
+    def device_class(self) -> BinarySensorDeviceClass:
         """Motion."""
-        return "motion"
+        return BinarySensorDeviceClass.MOTION
 
 
 class IsStaticSensor(CoordinatorEntity, BinarySensorEntity):
     """Static sensor for LD2410BLE."""
 
-    def __init__(self, coordinator, device, name):
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, device: LD2410BLE, name: str
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._value = False
@@ -86,16 +97,16 @@ class IsStaticSensor(CoordinatorEntity, BinarySensorEntity):
         self.async_write_ha_state()
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """Don't poll."""
         return False
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Is occupancy detected."""
         return self._value
 
     @property
-    def device_class(self):
+    def device_class(self) -> BinarySensorDeviceClass:
         """Occupancy."""
-        return "occupancy"
+        return BinarySensorDeviceClass.OCCUPANCY
