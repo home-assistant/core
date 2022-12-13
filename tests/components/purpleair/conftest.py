@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry, load_fixture
 @pytest.fixture(name="api")
 def api_fixture(check_api_key, get_nearby_sensors, get_sensors):
     """Define a fixture to return a mocked aiopurple API object."""
-    api = Mock(async_check_api_key=check_api_key, get_map_url=Mock())
+    api = Mock(async_check_api_key=check_api_key)
     api.sensors.async_get_nearby_sensors = get_nearby_sensors
     api.sensors.async_get_sensors = get_sensors
     return api
