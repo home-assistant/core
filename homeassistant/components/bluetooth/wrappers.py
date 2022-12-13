@@ -252,7 +252,11 @@ class HaBleakClientWrapper(BleakClient):
             or NO_RSSI_VALUE,
             reverse=True,
         )
-        _LOGGER.warning("%s: connection options: %s", address, devices)
+        _LOGGER.warning(
+            "%s: connection options: %s",
+            address,
+            [(device, device[0].details) for device in devices],
+        )
         for device_advertisement_data in devices:
             if backend := self._async_get_backend_for_ble_device(
                 models.MANAGER, device_advertisement_data[0]
