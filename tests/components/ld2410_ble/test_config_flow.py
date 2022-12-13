@@ -28,7 +28,7 @@ async def test_user_step_success(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.ld2410_ble.config_flow.LD2410BLE.update",
+        "homeassistant.components.ld2410_ble.config_flow.LD2410BLE.initialise",
     ), patch(
         "homeassistant.components.ld2410_ble.async_setup_entry",
         return_value=True,
@@ -150,7 +150,7 @@ async def test_user_step_unknown_exception(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.ld2410_ble.config_flow.L2410DBLE.initialise",
+        "homeassistant.components.ld2410_ble.config_flow.LD2410BLE.initialise",
         side_effect=RuntimeError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
