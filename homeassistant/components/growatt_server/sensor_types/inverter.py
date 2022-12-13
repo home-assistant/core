@@ -5,9 +5,9 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
-    FREQUENCY_HERTZ,
     TEMP_CELSIUS,
     UnitOfElectricCurrent,
+    UnitOfFrequency,
     UnitOfPower,
 )
 
@@ -131,7 +131,8 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="inverter_frequency",
         name="AC frequency",
         api_key="fac",
-        native_unit_of_measurement=FREQUENCY_HERTZ,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        device_class=SensorDeviceClass.FREQUENCY,
         precision=1,
     ),
     GrowattSensorEntityDescription(
