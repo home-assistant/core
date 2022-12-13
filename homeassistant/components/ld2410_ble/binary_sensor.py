@@ -5,6 +5,7 @@ from typing import Any
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -20,6 +21,13 @@ from . import LD2410BLE
 from .const import DOMAIN
 from .models import LD2410BLEData
 
+IS_MOVING_DESCRIPTION = BinarySensorEntityDescription(
+    key="is_motion", device_class=BinarySensorDeviceClass.MOTION
+)
+IS_STATIC_DESCRIPTION = BinarySensorEntityDescription(
+    key="is_static", device_class=BinarySensorDeviceClass.PRESENCE
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -28,8 +36,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the platform for LD2410BLE."""
     data: LD2410BLEData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([IsMovingSensor(data.coordinator, data.device, entry.title)])
-    async_add_entities([IsStaticSensor(data.coordinator, data.device, entry.title)])
+    async_add_entities(
+        [
+            IsMovingSensor(data.coordinator, data.device, entry.title),
+            IsStaticSensor(data.coordinator, data.device, entry.title),
+        ]
+    )
 
 
 class IsMovingSensor(CoordinatorEntity, BinarySensorEntity):
@@ -44,6 +56,7 @@ class IsMovingSensor(CoordinatorEntity, BinarySensorEntity):
         self._value = False
 
         self._device = device
+        self.entity_description = IS_MOVING_DESCRIPTION
         self._attr_available = True
         self._attr_unique_id = device.address + "_is_moving"
         self._attr_device_info = DeviceInfo(
@@ -67,11 +80,6 @@ class IsMovingSensor(CoordinatorEntity, BinarySensorEntity):
         """Is motion detected."""
         return self._value
 
-    @property
-    def device_class(self) -> BinarySensorDeviceClass:
-        """Motion."""
-        return BinarySensorDeviceClass.MOTION
-
 
 class IsStaticSensor(CoordinatorEntity, BinarySensorEntity):
     """Static sensor for LD2410BLE."""
@@ -84,6 +92,7 @@ class IsStaticSensor(CoordinatorEntity, BinarySensorEntity):
         self._value = False
 
         self._device = device
+        self.entity_description = IS_STATIC_DESCRIPTION
         self._attr_unique_id = device.address + "_is_static"
         self._attr_device_info = DeviceInfo(
             name=name,
@@ -105,8 +114,3 @@ class IsStaticSensor(CoordinatorEntity, BinarySensorEntity):
     def is_on(self) -> bool:
         """Is occupancy detected."""
         return self._value
-
-    @property
-    def device_class(self) -> BinarySensorDeviceClass:
-        """Occupancy."""
-        return BinarySensorDeviceClass.OCCUPANCY
