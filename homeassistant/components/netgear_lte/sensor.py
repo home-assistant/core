@@ -1,7 +1,7 @@
 """Support for Netgear LTE sensors."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -73,8 +73,10 @@ class SMSTotalSensor(LTESensor):
 class UsageSensor(LTESensor):
     """Data usage sensor entity."""
 
+    _attr_device_class = SensorDeviceClass.DATA_SIZE
+
     @property
-    def native_value(self):
+    def native_value(self) -> float:
         """Return the state of the sensor."""
         return round(self.modem_data.data.usage / 1024**2, 1)
 
