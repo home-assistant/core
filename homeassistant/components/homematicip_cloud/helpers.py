@@ -1,6 +1,7 @@
 """Helper functions for Homematicip Cloud Integration."""
 
 from functools import wraps
+import json
 import logging
 
 from homeassistant.exceptions import HomeAssistantError
@@ -26,8 +27,13 @@ def handle_errors(func):
         """Handle errors from async call."""
         result = await func(self)
         if is_error_response(result):
+            _LOGGER.error(
+                "Error while execute function %s: %s",
+                __name__,
+                json.dumps(result),
+            )
             raise HomeAssistantError(
-                f"Error while execute function {func.__name__}: {result.get('errorCode')}"
+                f"Error while execute function {func.__name__}: {result.get('errorCode')}. See log for more information."
             )
 
     return inner
