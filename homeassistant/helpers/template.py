@@ -1482,12 +1482,13 @@ def is_nominal(hass: HomeAssistant, entity_id: str | State | Iterable | None) ->
         entity_id = [entity_id]
 
     # Loop through entity items provided.
+    value: str | None
     for entity in entity_id:
         if isinstance(entity, str):
             if state_obj := _get_state(hass, entity):
-                value: str | None = state_obj.state
+                value = state_obj.state
             else:
-                value: str | None = None if valid_entity_id(entity) else entity
+                value = None if valid_entity_id(entity) else entity
 
             if value is None or value in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
                 return False
