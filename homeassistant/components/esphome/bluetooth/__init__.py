@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from functools import partial
 import logging
 
 from aioesphomeapi import APIClient
@@ -63,7 +64,9 @@ async def async_connect_scanner(
         connectable,
     )
     connector = HaBluetoothConnector(
-        client=ESPHomeClient,
+        # MyPy doesn't like partials, but this is correct
+        # https://github.com/python/mypy/issues/1484
+        client=partial(ESPHomeClient, config_entry=entry),  # type: ignore[arg-type]
         source=source,
         can_connect=_async_can_connect_factory(entry_data, source),
     )

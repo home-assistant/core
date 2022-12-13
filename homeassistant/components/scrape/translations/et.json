@@ -83,13 +83,20 @@
                     "attribute": "Attribuut",
                     "device_class": "Seadme klass",
                     "index": "Indeks",
+                    "name": "<Empty>",
                     "select": "Vali",
                     "state_class": "Oleku klass",
                     "unit_of_measurement": "M\u00f5\u00f5t\u00fchik",
                     "value_template": "V\u00e4\u00e4rtuse mall"
                 },
                 "data_description": {
-                    "attribute": "Hangi valitud kirje v\u00e4\u00e4rtus"
+                    "attribute": "Hangi valitud kirje v\u00e4\u00e4rtus",
+                    "device_class": "Kuvatav ikoon anduri t\u00fc\u00fcbi/klassi alusel",
+                    "index": "M\u00e4\u00e4rab milliseid elemente CSS valikutest kasutada",
+                    "select": "M\u00e4\u00e4rab mida otsida. Lisateave Beatifulsoap CSS valikutest.",
+                    "state_class": "Anduri oleku klass",
+                    "unit_of_measurement": "Vali temperatuuri olem v\u00f5i loo uus",
+                    "value_template": "M\u00e4\u00e4rab anduri oleku malli"
                 }
             },
             "init": {

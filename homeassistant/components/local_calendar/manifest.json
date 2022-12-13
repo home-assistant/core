@@ -3,7 +3,7 @@
   "name": "Local Calendar",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/local_calendar",
-  "requirements": ["ical==4.1.1"],
+  "requirements": ["ical==4.2.2"],
   "codeowners": ["@allenporter"],
   "iot_class": "local_polling",
   "loggers": ["ical"]

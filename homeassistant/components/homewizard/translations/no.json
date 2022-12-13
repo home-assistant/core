@@ -9,7 +9,7 @@
         },
         "step": {
             "discovery_confirm": {
-                "description": "Vil du konfigurere {product_type} ( {serial} ) p\u00e5 {ip_address} ?",
+                "description": "Vil du sette opp {product_type} ({seriell}) p\u00e5 {ip_address}?",
                 "title": "Bekrefte"
             },
             "user": {

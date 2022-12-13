@@ -12,7 +12,8 @@
             "invalid_ip_address": "\u00c9rv\u00e9nytelen IPv4-c\u00edm.",
             "invalid_signature": "A '.knxkeys' f\u00e1jl visszafejt\u00e9s\u00e9hez haszn\u00e1lt jelsz\u00f3 helytelen.",
             "no_router_discovered": "Nem tal\u00e1lhat\u00f3 KNXnet/IP \u00fatv\u00e1laszt\u00f3 a h\u00e1l\u00f3zaton.",
-            "no_tunnel_discovered": "Nem tal\u00e1lhat\u00f3 KNX alag\u00fat-kiszolg\u00e1l\u00f3 a h\u00e1l\u00f3zaton."
+            "no_tunnel_discovered": "Nem tal\u00e1lhat\u00f3 KNX alag\u00fat-kiszolg\u00e1l\u00f3 a h\u00e1l\u00f3zaton.",
+            "unsupported_tunnel_type": "A kiv\u00e1lasztott alag\u00fatt\u00edpust az \u00e1tj\u00e1r\u00f3 nem t\u00e1mogatja."
         },
         "step": {
             "connection_type": {
@@ -111,7 +112,8 @@
             "invalid_ip_address": "\u00c9rv\u00e9nytelen IPv4-c\u00edm.",
             "invalid_signature": "A '.knxkeys' f\u00e1jl visszafejt\u00e9s\u00e9hez haszn\u00e1lt jelsz\u00f3 helytelen.",
             "no_router_discovered": "Nem tal\u00e1lhat\u00f3 KNXnet/IP \u00fatv\u00e1laszt\u00f3 a h\u00e1l\u00f3zaton.",
-            "no_tunnel_discovered": "Nem tal\u00e1lhat\u00f3 KNX alag\u00fat-kiszolg\u00e1l\u00f3 a h\u00e1l\u00f3zaton."
+            "no_tunnel_discovered": "Nem tal\u00e1lhat\u00f3 KNX alag\u00fat-kiszolg\u00e1l\u00f3 a h\u00e1l\u00f3zaton.",
+            "unsupported_tunnel_type": "A kiv\u00e1lasztott alag\u00fatt\u00edpust az \u00e1tj\u00e1r\u00f3 nem t\u00e1mogatja."
         },
         "step": {
             "communication_settings": {

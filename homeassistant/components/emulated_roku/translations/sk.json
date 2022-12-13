@@ -6,11 +6,16 @@
         "step": {
             "user": {
                 "data": {
+                    "advertise_ip": "Ozn\u00e1menie IP adresy",
+                    "advertise_port": "Port odosielania",
                     "host_ip": "IP adresa hostite\u013ea",
-                    "name": "N\u00e1zov"
+                    "listen_port": "Port prij\u00edmania",
+                    "name": "N\u00e1zov",
+                    "upnp_bind_multicast": "Viazanie multicast (True/False)"
                 },
                 "title": "Definujte konfigur\u00e1ciu servera"
             }
         }
-    }
+    },
+    "title": "Emulovan\u00fd Roku"
 }

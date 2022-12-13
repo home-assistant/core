@@ -8,8 +8,7 @@ import logging
 from typing import Any, NamedTuple, cast
 from uuid import UUID
 
-from vallox_websocket_api import PROFILE as VALLOX_PROFILE, Vallox
-from vallox_websocket_api.exceptions import ValloxApiException
+from vallox_websocket_api import PROFILE as VALLOX_PROFILE, Vallox, ValloxApiException
 from vallox_websocket_api.vallox import (
     get_model as _api_get_model,
     get_next_filter_change_date as _api_get_next_filter_change_date,
@@ -191,7 +190,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             metric_cache = await client.fetch_metrics()
             profile = await client.get_profile()
 
-        except (OSError, ValloxApiException) as err:
+        except ValloxApiException as err:
             raise UpdateFailed("Error during state cache update") from err
 
         return ValloxState(metric_cache, profile)
@@ -262,7 +261,7 @@ class ValloxServiceHandler:
             )
             return True
 
-        except (OSError, ValloxApiException) as err:
+        except ValloxApiException as err:
             _LOGGER.error("Error setting fan speed for Home profile: %s", err)
             return False
 
@@ -278,7 +277,7 @@ class ValloxServiceHandler:
             )
             return True
 
-        except (OSError, ValloxApiException) as err:
+        except ValloxApiException as err:
             _LOGGER.error("Error setting fan speed for Away profile: %s", err)
             return False
 
@@ -294,7 +293,7 @@ class ValloxServiceHandler:
             )
             return True
 
-        except (OSError, ValloxApiException) as err:
+        except ValloxApiException as err:
             _LOGGER.error("Error setting fan speed for Boost profile: %s", err)
             return False
 

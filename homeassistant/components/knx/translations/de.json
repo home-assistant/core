@@ -12,7 +12,8 @@
             "invalid_ip_address": "Ung\u00fcltige IPv4 Adresse.",
             "invalid_signature": "Das Passwort zum Entschl\u00fcsseln der `.knxkeys` Datei ist ung\u00fcltig.",
             "no_router_discovered": "Es wurde kein KNXnet/IP-Router im Netzwerk gefunden.",
-            "no_tunnel_discovered": "Es konnte kein KNX Tunneling Server in deinem Netzwerk gefunden werden."
+            "no_tunnel_discovered": "Es konnte kein KNX Tunneling Server in deinem Netzwerk gefunden werden.",
+            "unsupported_tunnel_type": "Ausgew\u00e4hlter Tunneltyp wird vom Gateway nicht unterst\u00fctzt."
         },
         "step": {
             "connection_type": {
@@ -111,7 +112,8 @@
             "invalid_ip_address": "Ung\u00fcltige IPv4 Adresse.",
             "invalid_signature": "Das Passwort zum Entschl\u00fcsseln der `.knxkeys` Datei ist ung\u00fcltig.",
             "no_router_discovered": "Es wurde kein KNXnet/IP-Router im Netzwerk gefunden.",
-            "no_tunnel_discovered": "Es konnte kein KNX Tunneling Server in deinem Netzwerk gefunden werden."
+            "no_tunnel_discovered": "Es konnte kein KNX Tunneling Server in deinem Netzwerk gefunden werden.",
+            "unsupported_tunnel_type": "Ausgew\u00e4hlter Tunneltyp wird vom Gateway nicht unterst\u00fctzt."
         },
         "step": {
             "communication_settings": {

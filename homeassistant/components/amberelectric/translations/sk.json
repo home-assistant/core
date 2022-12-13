@@ -6,6 +6,13 @@
             "unknown_error": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "step": {
+            "site": {
+                "data": {
+                    "site_name": "N\u00e1zov lokality",
+                    "site_nmi": "Miesto NMI"
+                },
+                "description": "Vyberte NMI lokality, ktor\u00fa chcete prida\u0165"
+            },
             "user": {
                 "data": {
                     "api_token": "API token",

@@ -44,6 +44,16 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "brightness_mode": {
+                "state": {
+                    "auto": "Otomatis",
+                    "manual": "Manual"
+                }
+            }
+        }
+    },
     "issues": {
         "manual_migration": {
             "description": "Integrasi LaMetric telah dimodernisasi: kini integrasinya dikonfigurasi dan disiapkan melalui antarmuka pengguna dan komunikasi menjadi lokal.\n\nSayangnya, tidak ada jalur migrasi otomatis yang mungkin dan oleh sebab itu Anda harus mengatur ulang integrasi LaMetric dengan Home Assistant. Baca dokumentasi integrasi LaMetric Home Assistant tentang cara persiapannya.\n\nHapus konfigurasi YAML LaMetric yang lama dari file configuration.yaml Anda dan mulai ulang Home Assistant untuk memperbaiki masalah ini.",

@@ -9,6 +9,11 @@ from here_routing import (
     Spans,
     TransportMode,
 )
+from here_transit import (
+    HERETransitDepartureArrivalTooCloseError,
+    HERETransitNoRouteFoundError,
+    HERETransitNoTransitRouteFoundError,
+)
 import pytest
 
 from homeassistant.components.here_travel_time.config_flow import DEFAULT_OPTIONS
@@ -330,7 +335,7 @@ async def test_destination_entity_not_found(hass: HomeAssistant, caplog):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
-    assert "device_tracker.test are not valid coordinates" in caplog.text
+    assert "Could not find entity device_tracker.test" in caplog.text
 
 
 @pytest.mark.usefixtures("valid_response")
@@ -356,7 +361,7 @@ async def test_origin_entity_not_found(hass: HomeAssistant, caplog):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
-    assert "device_tracker.test are not valid coordinates" in caplog.text
+    assert "Could not find entity device_tracker.test" in caplog.text
 
 
 @pytest.mark.usefixtures("valid_response")
@@ -386,7 +391,9 @@ async def test_invalid_destination_entity_state(hass: HomeAssistant, caplog):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
-    assert "test_state are not valid coordinates" in caplog.text
+    assert (
+        "device_tracker.test does not have valid coordinates: test_state" in caplog.text
+    )
 
 
 @pytest.mark.usefixtures("valid_response")
@@ -416,7 +423,9 @@ async def test_invalid_origin_entity_state(hass: HomeAssistant, caplog):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
-    assert "test_state are not valid coordinates" in caplog.text
+    assert (
+        "device_tracker.test does not have valid coordinates: test_state" in caplog.text
+    )
 
 
 async def test_route_not_found(hass: HomeAssistant, caplog):
@@ -579,3 +588,49 @@ async def test_restore_state(hass):
 
     state = hass.states.get("sensor.test_destination")
     assert state.state == "Destination Address 1"
+
+
+@pytest.mark.parametrize(
+    "exception,expected_message",
+    [
+        (
+            HERETransitNoRouteFoundError,
+            "Error fetching here_travel_time data",
+        ),
+        (
+            HERETransitNoTransitRouteFoundError,
+            "Error fetching here_travel_time data",
+        ),
+        (
+            HERETransitDepartureArrivalTooCloseError,
+            "Ignoring HERETransitDepartureArrivalTooCloseError",
+        ),
+    ],
+)
+async def test_transit_errors(hass: HomeAssistant, caplog, exception, expected_message):
+    """Test that transit errors are correctly handled."""
+    with patch(
+        "here_transit.HERETransitApi.route",
+        side_effect=exception(),
+    ):
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            unique_id="0123456789",
+            data={
+                CONF_ORIGIN_LATITUDE: float(ORIGIN_LATITUDE),
+                CONF_ORIGIN_LONGITUDE: float(ORIGIN_LONGITUDE),
+                CONF_DESTINATION_LATITUDE: float(DESTINATION_LATITUDE),
+                CONF_DESTINATION_LONGITUDE: float(DESTINATION_LONGITUDE),
+                CONF_API_KEY: API_KEY,
+                CONF_MODE: TRAVEL_MODE_PUBLIC,
+                CONF_NAME: "test",
+            },
+            options=DEFAULT_OPTIONS,
+        )
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+
+        assert expected_message in caplog.text

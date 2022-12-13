@@ -457,3 +457,15 @@ class AqaraPetFeederChildLock(ZHASwitchConfigurationEntity, id_suffix="child_loc
     _zcl_attribute: str = "child_lock"
     _attr_name = "Child lock"
     _attr_icon: str = "mdi:account-lock"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_ON_OFF,
+    models={"TS011F"},
+)
+class TuyaChildLockSwitch(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
+    """Representation of a child lock configuration entity."""
+
+    _zcl_attribute: str = "child_lock"
+    _attr_name = "Child lock"
+    _attr_icon: str = "mdi:account-lock"

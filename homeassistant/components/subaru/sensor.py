@@ -14,14 +14,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_POTENTIAL_VOLT,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
     PERCENTAGE,
     PRESSURE_HPA,
-    TEMP_CELSIUS,
-    VOLUME_GALLONS,
-    VOLUME_LITERS,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -57,7 +54,7 @@ _LOGGER = logging.getLogger(__name__)
 FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS = "L/100km"
 FUEL_CONSUMPTION_MILES_PER_GALLON = "mi/gal"
 
-L_PER_GAL = VolumeConverter.convert(1, VOLUME_GALLONS, VOLUME_LITERS)
+L_PER_GAL = VolumeConverter.convert(1, UnitOfVolume.GALLONS, UnitOfVolume.LITERS)
 KM_PER_MI = DistanceConverter.convert(1, LENGTH_MILES, LENGTH_KILOMETERS)
 
 # Sensor available to "Subaru Safety Plus" subscribers with Gen1 or Gen2 vehicles
@@ -115,20 +112,6 @@ API_GEN_2_SENSORS = [
         device_class=SensorDeviceClass.PRESSURE,
         name="Tire pressure RR",
         native_unit_of_measurement=PRESSURE_HPA,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key=sc.EXTERNAL_TEMP,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        name="External temp",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key=sc.BATTERY_VOLTAGE,
-        device_class=SensorDeviceClass.VOLTAGE,
-        name="12V battery voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 ]

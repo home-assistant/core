@@ -7,6 +7,7 @@ import logging
 from typing import Any
 
 from aiohttp import ClientError
+from awesomeversion import AwesomeVersion
 from ttls.client import Twinkly
 
 from homeassistant.components.light import (
@@ -25,6 +26,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
+    ATTR_VERSION,
     CONF_HOST,
     CONF_ID,
     CONF_NAME,
@@ -37,6 +39,7 @@ from .const import (
     DEV_PROFILE_RGBW,
     DOMAIN,
     HIDDEN_DEV_VALUES,
+    MIN_EFFECT_VERSION,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -96,6 +99,9 @@ class TwinklyLight(LightEntity):
         self._attributes: dict[Any, Any] = {}
         self._current_movie: dict[Any, Any] = {}
         self._movies: list[Any] = []
+        self._software_version = ""
+        # We guess that most devices are "new" and support effects
+        self._attr_supported_features = LightEntityFeature.EFFECT
 
     @property
     def available(self) -> bool:
@@ -130,12 +136,8 @@ class TwinklyLight(LightEntity):
             manufacturer="LEDWORKS",
             model=self.model,
             name=self.name,
+            sw_version=self._software_version,
         )
-
-    @property
-    def supported_features(self) -> LightEntityFeature:
-        """Return supported features."""
-        return LightEntityFeature.EFFECT
 
     @property
     def is_on(self) -> bool:
@@ -165,6 +167,19 @@ class TwinklyLight(LightEntity):
             effect_list.append(f"{movie['id']} {movie['name']}")
         return effect_list
 
+    async def async_added_to_hass(self) -> None:
+        """Device is added to hass."""
+        software_version = await self._client.get_firmware_version()
+        if ATTR_VERSION in software_version:
+            self._software_version = software_version[ATTR_VERSION]
+
+            if AwesomeVersion(self._software_version) < AwesomeVersion(
+                MIN_EFFECT_VERSION
+            ):
+                self._attr_supported_features = (
+                    self.supported_features & ~LightEntityFeature.EFFECT
+                )
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         if ATTR_BRIGHTNESS in kwargs:
@@ -178,36 +193,54 @@ class TwinklyLight(LightEntity):
 
             await self._client.set_brightness(brightness)
 
-        if ATTR_RGBW_COLOR in kwargs:
-            if kwargs[ATTR_RGBW_COLOR] != self._attr_rgbw_color:
-                self._attr_rgbw_color = kwargs[ATTR_RGBW_COLOR]
+        if (
+            ATTR_RGBW_COLOR in kwargs
+            and kwargs[ATTR_RGBW_COLOR] != self._attr_rgbw_color
+        ):
 
-                if isinstance(self._attr_rgbw_color, tuple):
-
-                    await self._client.interview()
-                    # Static color only supports rgb
-                    await self._client.set_static_colour(
-                        (
-                            self._attr_rgbw_color[0],
-                            self._attr_rgbw_color[1],
-                            self._attr_rgbw_color[2],
-                        )
+            await self._client.interview()
+            if LightEntityFeature.EFFECT & self.supported_features:
+                # Static color only supports rgb
+                await self._client.set_static_colour(
+                    (
+                        kwargs[ATTR_RGBW_COLOR][0],
+                        kwargs[ATTR_RGBW_COLOR][1],
+                        kwargs[ATTR_RGBW_COLOR][2],
                     )
-                    await self._client.set_mode("color")
-                    self._client.default_mode = "color"
+                )
+                await self._client.set_mode("color")
+                self._client.default_mode = "color"
+            else:
+                await self._client.set_cycle_colours(
+                    (
+                        kwargs[ATTR_RGBW_COLOR][3],
+                        kwargs[ATTR_RGBW_COLOR][0],
+                        kwargs[ATTR_RGBW_COLOR][1],
+                        kwargs[ATTR_RGBW_COLOR][2],
+                    )
+                )
+                await self._client.set_mode("movie")
+                self._client.default_mode = "movie"
+            self._attr_rgbw_color = kwargs[ATTR_RGBW_COLOR]
 
-        if ATTR_RGB_COLOR in kwargs:
-            if kwargs[ATTR_RGB_COLOR] != self._attr_rgb_color:
-                self._attr_rgb_color = kwargs[ATTR_RGB_COLOR]
+        if ATTR_RGB_COLOR in kwargs and kwargs[ATTR_RGB_COLOR] != self._attr_rgb_color:
 
-                if isinstance(self._attr_rgb_color, tuple):
+            await self._client.interview()
+            if LightEntityFeature.EFFECT & self.supported_features:
+                await self._client.set_static_colour(kwargs[ATTR_RGB_COLOR])
+                await self._client.set_mode("color")
+                self._client.default_mode = "color"
+            else:
+                await self._client.set_cycle_colours(kwargs[ATTR_RGB_COLOR])
+                await self._client.set_mode("movie")
+                self._client.default_mode = "movie"
 
-                    await self._client.interview()
-                    await self._client.set_static_colour(self._attr_rgb_color)
-                    await self._client.set_mode("color")
-                    self._client.default_mode = "color"
+            self._attr_rgb_color = kwargs[ATTR_RGB_COLOR]
 
-        if ATTR_EFFECT in kwargs:
+        if (
+            ATTR_EFFECT in kwargs
+            and LightEntityFeature.EFFECT & self.supported_features
+        ):
             movie_id = kwargs[ATTR_EFFECT].split(" ")[0]
             if "id" not in self._current_movie or int(movie_id) != int(
                 self._current_movie["id"]
@@ -268,8 +301,9 @@ class TwinklyLight(LightEntity):
                 if key not in HIDDEN_DEV_VALUES:
                     self._attributes[key] = value
 
-            await self.async_update_movies()
-            await self.async_update_current_movie()
+            if LightEntityFeature.EFFECT & self.supported_features:
+                await self.async_update_movies()
+                await self.async_update_current_movie()
 
             if not self._is_available:
                 _LOGGER.info("Twinkly '%s' is now available", self._client.host)

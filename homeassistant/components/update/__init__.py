@@ -174,7 +174,7 @@ async def async_clear_skipped(entity: UpdateEntity, service_call: ServiceCall) -
 class UpdateEntityDescription(EntityDescription):
     """A class that describes update entities."""
 
-    device_class: UpdateDeviceClass | str | None = None
+    device_class: UpdateDeviceClass | None = None
     entity_category: EntityCategory | None = EntityCategory.CONFIG
 
 
@@ -184,7 +184,7 @@ class UpdateEntity(RestoreEntity):
     entity_description: UpdateEntityDescription
     _attr_auto_update: bool = False
     _attr_installed_version: str | None = None
-    _attr_device_class: UpdateDeviceClass | str | None
+    _attr_device_class: UpdateDeviceClass | None
     _attr_in_progress: bool | int = False
     _attr_latest_version: str | None = None
     _attr_release_summary: str | None = None
@@ -206,7 +206,7 @@ class UpdateEntity(RestoreEntity):
         return self._attr_installed_version
 
     @property
-    def device_class(self) -> UpdateDeviceClass | str | None:
+    def device_class(self) -> UpdateDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
             return self._attr_device_class

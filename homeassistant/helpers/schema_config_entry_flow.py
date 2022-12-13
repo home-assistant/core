@@ -1,7 +1,7 @@
 """Helpers for creating schema based data entry flows."""
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from collections.abc import Callable, Coroutine, Mapping
 import copy
 from dataclasses import dataclass
@@ -250,7 +250,7 @@ class SchemaCommonFlowHandler:
         )
 
 
-class SchemaConfigFlowHandler(config_entries.ConfigFlow):
+class SchemaConfigFlowHandler(config_entries.ConfigFlow, ABC):
     """Handle a schema based config flow."""
 
     config_flow: Mapping[str, SchemaFlowStep]
@@ -401,7 +401,7 @@ class SchemaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
         """Finish config flow and create a config entry."""
         if self._async_options_flow_finished:
             self._async_options_flow_finished(self.hass, data)
-        return super().async_create_entry(title="", data=data, **kwargs)
+        return super().async_create_entry(data=data, **kwargs)
 
 
 @callback

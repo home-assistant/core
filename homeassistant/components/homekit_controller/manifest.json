@@ -3,7 +3,7 @@
   "name": "HomeKit Controller",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/homekit_controller",
-  "requirements": ["aiohomekit==2.3.4"],
+  "requirements": ["aiohomekit==2.4.1"],
   "zeroconf": ["_hap._tcp.local.", "_hap._udp.local."],
   "bluetooth": [{ "manufacturer_id": 76, "manufacturer_data_start": [6] }],
   "dependencies": ["bluetooth", "zeroconf"],

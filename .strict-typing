@@ -129,6 +129,7 @@ homeassistant.components.greeneye_monitor.*
 homeassistant.components.group.*
 homeassistant.components.guardian.*
 homeassistant.components.hardkernel.*
+homeassistant.components.hardware.*
 homeassistant.components.history.*
 homeassistant.components.homeassistant.triggers.event
 homeassistant.components.homeassistant_alerts.*
@@ -224,6 +225,7 @@ homeassistant.components.powerwall.*
 homeassistant.components.proximity.*
 homeassistant.components.prusalink.*
 homeassistant.components.pure_energie.*
+homeassistant.components.purpleair.*
 homeassistant.components.pvoutput.*
 homeassistant.components.qnap_qsw.*
 homeassistant.components.radarr.*

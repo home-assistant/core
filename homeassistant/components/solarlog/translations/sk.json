@@ -10,8 +10,10 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Hostite\u013e"
-                }
+                    "host": "Hostite\u013e",
+                    "name": "Prefix, ktor\u00fd sa m\u00e1 pou\u017ei\u0165 pre va\u0161e senzory Solar-Log"
+                },
+                "title": "Definujte svoje pripojenie Solar-Log"
             }
         }
     }
