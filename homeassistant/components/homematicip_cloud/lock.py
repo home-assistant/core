@@ -1,7 +1,7 @@
 """Support for HomematicIP Cloud lock devices."""
 from __future__ import annotations
 
-import json
+import logging
 from typing import Any
 
 from homematicip.aio.device import AsyncDoorLockDrive
@@ -10,11 +10,12 @@ from homematicip.base.enums import LockState, MotorState
 from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
-from .helpers import is_error_response
+from .helpers import handle_errors
+
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_AUTO_RELOCK_DELAY = "auto_relock_delay"
 ATTR_DOOR_HANDLE_TYPE = "door_handle_type"
@@ -69,29 +70,20 @@ class HomematicipDoorLockDrive(HomematicipGenericEntity, LockEntity):
         """Return true if device is unlocking."""
         return self._device.motorState == MotorState.OPENING
 
+    @handle_errors
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
-        result = await self._device.set_lock_state(LockState.LOCKED)
-        if is_error_response(result):
-            raise HomeAssistantError(
-                f"Error while locking the door lock ({self.name}): {json.dumps(result)}"
-            )
+        return await self._device.set_lock_state(LockState.LOCKED)
 
+    @handle_errors
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
-        result = await self._device.set_lock_state(LockState.UNLOCKED)
-        if is_error_response(result):
-            raise HomeAssistantError(
-                f"Error while unlocking the door lock ({self.name}): {json.dumps(result)}"
-            )
+        return await self._device.set_lock_state(LockState.UNLOCKED)
 
+    @handle_errors
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
-        result = await self._device.set_lock_state(LockState.OPEN)
-        if is_error_response(result):
-            raise HomeAssistantError(
-                f"Error while opening the door lock ({self.name}): {json.dumps(result)}"
-            )
+        return await self._device.set_lock_state(LockState.OPEN)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
