@@ -8,10 +8,12 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import zeroconf
 from homeassistant.components.blebox import config_flow
+from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
-from .conftest import mock_config, mock_only_feature, setup_product_mock
+from ...common import MockConfigEntry
+from .conftest import mock_config, mock_feature, mock_only_feature, setup_product_mock
 
 
 def create_valid_feature_mock(path="homeassistant.components.blebox.Products"):
@@ -216,45 +218,39 @@ async def test_flow_with_zeroconf(hass):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["data"] == {"host": "172.100.123.4", "port": 80}
 
 
-async def test_flow_with_zeroconf_when_already_in_progress(hass):
-    """Test behaviour if flow for device exists."""
-    result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
-            host="172.100.123.4",
-            addresses=["172.100.123.4"],
-            port=80,
-            hostname="bbx-bbtest123456.local.",
-            type="_bbxsrv._tcp.local.",
-            name="bbx-bbtest123456._bbxsrv._tcp.local.",
-            properties={"_raw": {}},
-        ),
+async def test_flow_with_zeroconf_when_already_configured(hass):
+    """Test behaviour if device already configured."""
+    entry = MockConfigEntry(
+        domain=config_flow.DOMAIN,
+        data={CONF_IP_ADDRESS: "172.100.123.4"},
+        unique_id="abcd0123ef5678",
     )
-
-    assert result["type"] == FlowResultType.FORM
-
-    print("result", result)
-
-    result2 = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
-            host="172.100.123.4",
-            addresses=["172.100.123.4"],
-            port=80,
-            hostname="bbx-bbtest123456.local.",
-            type="_bbxsrv._tcp.local.",
-            name="bbx-bbtest123456._bbxsrv._tcp.local.",
-            properties={"_raw": {}},
-        ),
+    entry.add_to_hass(hass)
+    feature: AsyncMock = mock_feature(
+        "sensors",
+        blebox_uniapi.sensor.Temperature,
     )
+    with patch("blebox_uniapi.box.Box.async_from_host", return_value=feature.product):
+        result2 = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=zeroconf.ZeroconfServiceInfo(
+                host="172.100.123.4",
+                addresses=["172.100.123.4"],
+                port=80,
+                hostname="bbx-bbtest123456.local.",
+                type="_bbxsrv._tcp.local.",
+                name="bbx-bbtest123456._bbxsrv._tcp.local.",
+                properties={"_raw": {}},
+            ),
+        )
 
-    assert result2["type"] == FlowResultType.ABORT
+        assert result2["type"] == FlowResultType.ABORT
+        assert result2["reason"] == "already_configured"
 
 
 async def test_flow_with_zeroconf_when_device_unsupported(hass):
