@@ -318,7 +318,7 @@ RPC_SENSORS: Final = {
         sub_key="apower",
         name="Power",
         native_unit_of_measurement=UnitOfPower.WATT,
-        value=lambda status, _: round(float(status), 1),
+        value=lambda status, _: None if status is None else round(float(status), 1),
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
