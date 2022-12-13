@@ -43,7 +43,7 @@ DISCOVERY_INFO_WITH_MAC = zeroconf.ZeroconfServiceInfo(
     hostname="mock_hostname",
     name="shelly1pm-AABBCCDDEEFF",
     port=None,
-    properties={zeroconf.ATTR_PROPERTIES_ID: "shelly1pm-12345"},
+    properties={zeroconf.ATTR_PROPERTIES_ID: "shelly1pm-AABBCCDDEEFF"},
     type="mock_type",
 )
 MOCK_CONFIG = {
@@ -1091,7 +1091,7 @@ async def test_zeroconf_already_configured_triggers_refresh_mac_in_name(
 
     with patch(
         "aioshelly.common.get_info",
-        return_value={"mac": "AABBCCDDEEFF", "type": "SHSW-1", "auth": False},
+        return_value={"mac": "", "type": "SHSW-1", "auth": False},
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
