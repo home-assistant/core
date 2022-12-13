@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Slu\u017eba u\u017e je nakonfigurovan\u00e1"
+            "already_configured": "Slu\u017eba u\u017e je nakonfigurovan\u00e1",
+            "anna_with_adam": "Anna aj Adam zistili. Pridajte svojho Adama namiesto svojej Anny"
         },
         "error": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
@@ -15,9 +16,12 @@
             "user": {
                 "data": {
                     "host": "IP adresa",
-                    "port": "Port"
+                    "password": "Smile ID",
+                    "port": "Port",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno Smile"
                 },
-                "description": "Pros\u00edm, zadajte"
+                "description": "Pros\u00edm, zadajte",
+                "title": "Pripojte sa k Smile"
             }
         }
     },
@@ -25,11 +29,16 @@
         "select": {
             "dhw_mode": {
                 "state": {
+                    "auto": "Auto",
+                    "boost": "Turbo",
+                    "comfort": "Komfort",
                     "off": "Vypnut\u00e9"
                 }
             },
             "regulation_mode": {
                 "state": {
+                    "bleeding_cold": "Studen\u00fd",
+                    "bleeding_hot": "Hor\u00faci",
                     "cooling": "Chladenie",
                     "heating": "Vykurovanie",
                     "off": "Vypnut\u00e9"

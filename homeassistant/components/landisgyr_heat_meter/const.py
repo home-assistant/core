@@ -7,12 +7,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ENERGY_MEGA_WATT_HOUR,
-    POWER_KILO_WATT,
     TEMP_CELSIUS,
     TIME_HOURS,
     TIME_MINUTES,
     VOLUME_CUBIC_METERS,
     VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+    UnitOfPower,
 )
 from homeassistant.helpers.entity import EntityCategory
 
@@ -97,14 +97,14 @@ HEAT_METER_SENSOR_TYPES = (
     SensorEntityDescription(
         key="power_max_kw",
         name="Power max",
-        native_unit_of_measurement=POWER_KILO_WATT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="power_max_previous_year_kw",
         name="Power max previous year",
-        native_unit_of_measurement=POWER_KILO_WATT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),

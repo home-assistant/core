@@ -6,7 +6,7 @@ from collections.abc import Callable
 import contextlib
 from dataclasses import dataclass
 import logging
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from bleak import BleakClient, BleakError
 from bleak.backends.client import BaseBleakClient, get_platform_client_backend_type
@@ -18,10 +18,13 @@ from homeassistant.core import CALLBACK_TYPE, callback as hass_callback
 from homeassistant.helpers.frame import report
 
 from . import models
-from .models import HaBluetoothConnector
 
 FILTER_UUIDS: Final = "UUIDs"
 _LOGGER = logging.getLogger(__name__)
+
+
+if TYPE_CHECKING:
+    from .manager import BluetoothManager
 
 
 @dataclass
@@ -207,23 +210,27 @@ class HaBleakClientWrapper(BleakClient):
 
     @hass_callback
     def _async_get_backend_for_ble_device(
-        self, ble_device: BLEDevice
+        self, manager: BluetoothManager, ble_device: BLEDevice
     ) -> _HaWrappedBleakBackend | None:
         """Get the backend for a BLEDevice."""
         details = ble_device.details
-        if not isinstance(details, dict) or "connector" not in details:
+        if not isinstance(details, dict) or "source" not in details:
             # If client is not defined in details
             # its the client for this platform
             cls = get_platform_client_backend_type()
             return _HaWrappedBleakBackend(ble_device, cls)
 
-        connector: HaBluetoothConnector = details["connector"]
+        source: str = details["source"]
         # Make sure the backend can connect to the device
         # as some backends have connection limits
-        if not connector.can_connect():
+        if (
+            not (scanner := manager.async_scanner_by_source(source))
+            or not scanner.connector
+            or not scanner.connector.can_connect()
+        ):
             return None
 
-        return _HaWrappedBleakBackend(ble_device, connector.client)
+        return _HaWrappedBleakBackend(ble_device, scanner.connector.client)
 
     @hass_callback
     def _async_get_best_available_backend_and_device(
@@ -246,7 +253,7 @@ class HaBleakClientWrapper(BleakClient):
             reverse=True,
         ):
             if backend := self._async_get_backend_for_ble_device(
-                device_advertisement_data[0]
+                models.MANAGER, device_advertisement_data[0]
             ):
                 return backend
 

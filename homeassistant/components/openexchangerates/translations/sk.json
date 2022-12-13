@@ -17,6 +17,9 @@
                 "data": {
                     "api_key": "API k\u013e\u00fa\u010d",
                     "base": "Z\u00e1kladn\u00e1 mena"
+                },
+                "data_description": {
+                    "base": "Pou\u017eitie inej z\u00e1kladnej meny ako USD vy\u017eaduje [platen\u00fd pl\u00e1n]({signup})."
                 }
             }
         }

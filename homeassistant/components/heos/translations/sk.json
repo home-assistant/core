@@ -11,6 +11,7 @@
                 "data": {
                     "host": "Hostite\u013e"
                 },
+                "description": "Zadajte n\u00e1zov hostite\u013ea alebo IP adresu zariadenia Heos (najlep\u0161ie pripojen\u00e9ho k\u00e1blom k sieti).",
                 "title": "Pripoji\u0165 sa k Heos"
             }
         }

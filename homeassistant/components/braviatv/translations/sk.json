@@ -29,7 +29,8 @@
                 "data": {
                     "pin": "PIN k\u00f3d",
                     "use_psk": "Pou\u017eite autentifik\u00e1ciu PSK"
-                }
+                },
+                "description": "Zadajte PIN k\u00f3d zobrazen\u00fd na telev\u00edzii Sony Bravia.\n\nPokia\u013e sa PIN k\u00f3d nezobraz\u00ed, je potrebn\u00e9 zru\u0161i\u0165 registr\u00e1ciu Home Assistant na telev\u00edzii, prejdite na: Nastavenia -> Sie\u0165 -> Nastavenie vzdialen\u00e9ho zariadenia -> Zru\u0161i\u0165 registr\u00e1ciu vzdialen\u00e9ho zariadenia."
             },
             "user": {
                 "data": {

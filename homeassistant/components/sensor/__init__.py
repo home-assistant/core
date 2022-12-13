@@ -133,6 +133,12 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `None`
     """
 
+    ATMOSPHERIC_PRESSURE = "atmospheric_pressure"
+    """Atmospheric pressure.
+
+    Unit of measurement: `UnitOfPressure` units
+    """
+
     BATTERY = "battery"
     """Percentage of battery that is left.
 
@@ -155,6 +161,18 @@ class SensorDeviceClass(StrEnum):
     """Current.
 
     Unit of measurement: `A`
+    """
+
+    DATA_RATE = "data_rate"
+    """Data rate.
+
+    Unit of measurement: UnitOfDataRate
+    """
+
+    DATA_SIZE = "data_size"
+    """Data size.
+
+    Unit of measurement: UnitOfInformation
     """
 
     DISTANCE = "distance"
@@ -193,6 +211,14 @@ class SensorDeviceClass(StrEnum):
     """Illuminance.
 
     Unit of measurement: `lx`, `lm`
+    """
+
+    IRRADIANCE = "irradiance"
+    """Irradiance.
+
+    Unit of measurement:
+    - SI / metric: `W/m²`
+    - USCS / imperial: `BTU/(h⋅ft²)`
     """
 
     MOISTURE = "moisture"
@@ -299,6 +325,12 @@ class SensorDeviceClass(StrEnum):
     """Signal strength.
 
     Unit of measurement: `dB`, `dBm`
+    """
+
+    SOUND_PRESSURE = "sound_pressure"
+    """Sound pressure.
+
+    Unit of measurement: `dB`, `dBA`
     """
 
     SPEED = "speed"
@@ -450,7 +482,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class SensorEntityDescription(EntityDescription):
     """A class that describes sensor entities."""
 
-    device_class: SensorDeviceClass | str | None = None
+    device_class: SensorDeviceClass | None = None
     suggested_unit_of_measurement: str | None = None
     last_reset: datetime | None = None
     native_unit_of_measurement: str | None = None
@@ -463,7 +495,7 @@ class SensorEntity(Entity):
     """Base class for sensor entities."""
 
     entity_description: SensorEntityDescription
-    _attr_device_class: SensorDeviceClass | str | None
+    _attr_device_class: SensorDeviceClass | None
     _attr_last_reset: datetime | None
     _attr_native_unit_of_measurement: str | None
     _attr_native_value: StateType | date | datetime | Decimal = None
@@ -547,7 +579,7 @@ class SensorEntity(Entity):
         self.async_registry_entry_updated()
 
     @property
-    def device_class(self) -> SensorDeviceClass | str | None:
+    def device_class(self) -> SensorDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
             return self._attr_device_class

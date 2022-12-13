@@ -25,7 +25,8 @@
                     "form_new_network": "Vyma\u017ete nastavenia siete a vytvorte nov\u00fa sie\u0165",
                     "reuse_settings": "Ponechajte nastavenia siete r\u00e1dia",
                     "upload_manual_backup": "Nahratie manu\u00e1lnej z\u00e1lohy"
-                }
+                },
+                "title": "Tvorba siete"
             },
             "choose_serial_port": {
                 "data": {
@@ -50,6 +51,7 @@
             "manual_port_config": {
                 "data": {
                     "baudrate": "r\u00fdchlos\u0165 portu",
+                    "flow_control": "riadenie toku d\u00e1t",
                     "path": "Cesta s\u00e9riov\u00e9ho zariadenia"
                 },
                 "description": "Zadajte nastavenia s\u00e9riov\u00e9ho portu",
@@ -59,17 +61,25 @@
                 "data": {
                     "overwrite_coordinator_ieee": "Natrvalo nahra\u010fte r\u00e1diov\u00fa adresu IEEE"
                 },
+                "description": "Va\u0161a z\u00e1loha m\u00e1 in\u00fa adresu IEEE ako va\u0161e r\u00e1dio. Aby va\u0161a sie\u0165 fungovala spr\u00e1vne, mala by sa zmeni\u0165 aj adresa IEEE v\u00e1\u0161ho r\u00e1dia. \n\n Ide o trval\u00fa oper\u00e1ciu.",
                 "title": "Prep\u00edsa\u0165 adresu IEEE r\u00e1dia"
             },
             "upload_manual_backup": {
                 "data": {
                     "uploaded_backup_file": "Nahrajte s\u00fabor"
                 },
+                "description": "Obnovte nastavenia siete z nahran\u00e9ho z\u00e1lo\u017en\u00e9ho s\u00faboru JSON. M\u00f4\u017eete si ho stiahnu\u0165 z inej in\u0161tal\u00e1cie ZHA z **Nastavenia siete** alebo pou\u017ei\u0165 s\u00fabor Zigbee2MQTT `coordinator_backup.json`.",
                 "title": "Nahratie manu\u00e1lnej z\u00e1lohy"
             }
         }
     },
     "config_panel": {
+        "zha_alarm_options": {
+            "alarm_arm_requires_code": "K\u00f3d po\u017eadovan\u00fd pre \u010dinnosti str\u00e1\u017eenia",
+            "alarm_failed_tries": "Po\u010det po sebe nasleduj\u00facich ne\u00faspe\u0161n\u00fdch zadan\u00ed k\u00f3du na spustenie alarmu",
+            "alarm_master_code": "Hlavn\u00fd k\u00f3d pre poplachov\u00e9 ovl\u00e1dacie panely",
+            "title": "Mo\u017enosti ovl\u00e1dacieho panela alarmov"
+        },
         "zha_options": {
             "always_prefer_xy_color_mode": "V\u017edy uprednost\u0148ujete farebn\u00fd re\u017eim XY",
             "consider_unavailable_battery": "Zariadenia nap\u00e1jan\u00e9 z bat\u00e9rie pova\u017eujte za nedostupn\u00e9 po (sekund\u00e1ch)",
@@ -82,6 +92,12 @@
         }
     },
     "device_automation": {
+        "action_type": {
+            "issue_all_led_effect": "V\u00fdstupn\u00fd efekt pre v\u0161etky LED",
+            "issue_individual_led_effect": "V\u00fdstupn\u00fd efekt pre jednu LED",
+            "squawk": "\u0160kr\u00edpanie",
+            "warn": "Upozornenie"
+        },
         "trigger_subtype": {
             "both_buttons": "Obe tla\u010didl\u00e1",
             "button_1": "Prv\u00e9 tla\u010didlo",
@@ -91,12 +107,15 @@
             "button_5": "Piate tla\u010didlo",
             "button_6": "\u0160ieste tla\u010didlo",
             "close": "Zavrie\u0165",
+            "dim_down": "Dim dole",
+            "dim_up": "Dim hore",
             "face_1": "Aktivovan\u00e9 tv\u00e1rou 1",
             "face_2": "Aktivovan\u00e9 tv\u00e1rou 2",
             "face_3": "Aktivovan\u00e9 tv\u00e1rou 3",
             "face_4": "Aktivovan\u00e9 tv\u00e1rou 4",
             "face_5": "Aktivovan\u00e9 tv\u00e1rou 5",
             "face_6": "Aktivovan\u00e9 tv\u00e1rou 6",
+            "face_any": "Aktiv\u00e1cia s \u013eubovo\u013en\u00fdm/fixn\u00fdm povrchom (povrchmi)",
             "left": "V\u013eavo",
             "open": "Otvori\u0165",
             "right": "Vpravo",
@@ -104,8 +123,14 @@
             "turn_on": "Zapn\u00fa\u0165"
         },
         "trigger_type": {
+            "device_dropped": "Zariadenie spadlo",
+            "device_flipped": "Zariadenie sa obr\u00e1tilo \u201e{subtype}\u201c",
+            "device_knocked": "Zariadenie zaklopalo \u201e{subtype}\u201c",
             "device_offline": "Zariadenie je offline",
+            "device_rotated": "Zariadenie oto\u010den\u00e9 \u201e{subtype}\u201c",
             "device_shaken": "Zariadenie sa zatriaslo",
+            "device_slid": "Zariadenie posunut\u00e9  \u201e{subtype}\u201c",
+            "device_tilted": "Zariadenie je naklonen\u00e9",
             "remote_button_alt_double_press": "dvojit\u00e9 kliknutie na tla\u010didlo \u201e{subtype}\u201c (Alternat\u00edvny re\u017eim)",
             "remote_button_alt_long_press": "Trvalo stla\u010den\u00e9 tla\u010didlo \u201e{subtype}\u201c (Alternat\u00edvny re\u017eim)",
             "remote_button_alt_long_release": "Tla\u010didlo \"{subtype}\" uvo\u013enen\u00e9 po dlhom stla\u010den\u00ed (alternat\u00edvny re\u017eim)",
@@ -150,7 +175,8 @@
                     "form_new_network": "Vyma\u017ete nastavenia siete a vytvorte nov\u00fa sie\u0165",
                     "reuse_settings": "Ponechajte nastavenia siete r\u00e1dia",
                     "upload_manual_backup": "Nahratie manu\u00e1lnej z\u00e1lohy"
-                }
+                },
+                "title": "Tvorba siete"
             },
             "choose_serial_port": {
                 "data": {
@@ -168,6 +194,7 @@
                 "title": "Odpojte star\u00e9 r\u00e1dio"
             },
             "intent_migrate": {
+                "description": "Va\u0161e star\u00e9 r\u00e1dio bude obnoven\u00e9 na v\u00fdrobn\u00e9 nastavenia. Ak pou\u017e\u00edvate kombinovan\u00fd adapt\u00e9r Z-Wave a Zigbee, ako je HUSBZB-1, resetuje sa iba \u010das\u0165 Zigbee. \n\n Chcete pokra\u010dova\u0165?",
                 "title": "Prejdite na nov\u00e9 r\u00e1dio"
             },
             "manual_pick_radio_type": {
@@ -180,6 +207,7 @@
             "manual_port_config": {
                 "data": {
                     "baudrate": "r\u00fdchlos\u0165 portu",
+                    "flow_control": "riadenie toku d\u00e1t",
                     "path": "Cesta s\u00e9riov\u00e9ho zariadenia"
                 },
                 "description": "Zadajte nastavenia s\u00e9riov\u00e9ho portu",
@@ -189,6 +217,7 @@
                 "data": {
                     "overwrite_coordinator_ieee": "Natrvalo nahra\u010fte r\u00e1diov\u00fa adresu IEEE"
                 },
+                "description": "Va\u0161a z\u00e1loha m\u00e1 in\u00fa adresu IEEE ako va\u0161e r\u00e1dio. Aby va\u0161a sie\u0165 fungovala spr\u00e1vne, mala by sa zmeni\u0165 aj adresa IEEE v\u00e1\u0161ho r\u00e1dia. \n\n Ide o trval\u00fa oper\u00e1ciu.",
                 "title": "Prep\u00edsa\u0165 adresu IEEE r\u00e1dia"
             },
             "prompt_migrate_or_reconfigure": {
@@ -203,6 +232,7 @@
                 "data": {
                     "uploaded_backup_file": "Nahrajte s\u00fabor"
                 },
+                "description": "Obnovte nastavenia siete z nahran\u00e9ho z\u00e1lo\u017en\u00e9ho s\u00faboru JSON. M\u00f4\u017eete si ho stiahnu\u0165 z inej in\u0161tal\u00e1cie ZHA z **Nastavenia siete** alebo pou\u017ei\u0165 s\u00fabor Zigbee2MQTT `coordinator_backup.json`.",
                 "title": "Nahratie manu\u00e1lnej z\u00e1lohy"
             }
         }

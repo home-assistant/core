@@ -40,11 +40,11 @@ from homeassistant.const import (
     CONF_RESOURCES,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
-    POWER_WATT,
     REVOLUTIONS_PER_MINUTE,
     TEMP_CELSIUS,
     TIME_DAYS,
     VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -241,7 +241,7 @@ SENSOR_TYPES = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         name="Power usage",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         sensor_id=SENSOR_POWER_CURRENT,
     ),
     ComfoconnectSensorEntityDescription(
@@ -257,7 +257,7 @@ SENSOR_TYPES = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         name="Preheater power usage",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         sensor_id=SENSOR_PREHEATER_POWER_CURRENT,
     ),
     ComfoconnectSensorEntityDescription(
