@@ -19,11 +19,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
+    FREQUENCY_HERTZ,
     PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
     UnitOfElectricCurrent,
-    UnitOfFrequency,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
@@ -116,9 +116,9 @@ _DESCRIPTIONS: dict[str, GoodweSensorEntityDescription] = {
     ),
     "Hz": GoodweSensorEntityDescription(
         key="Hz",
-        device_class=SensorDeviceClass.FREQUENCY,
+        device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        native_unit_of_measurement=FREQUENCY_HERTZ,
     ),
     "%": GoodweSensorEntityDescription(
         key="%",
