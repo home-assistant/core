@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 import socket
 
-from gps3.agps3threaded import AGPS3mechanism
+from agps3.agps3threaded import AGPS3mechanism
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -105,6 +105,7 @@ class GpsdSensor(SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes of the GPS."""
+
         return {
             ATTR_LATITUDE: self.agps_thread.data_stream.lat,
             ATTR_LONGITUDE: self.agps_thread.data_stream.lon,

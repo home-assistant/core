@@ -97,6 +97,9 @@ afsapi==0.2.7
 # homeassistant.components.agent_dvr
 agent-py==0.0.23
 
+# homeassistant.components.gpsd
+agps3==0.36.1
+
 # homeassistant.components.geo_json_events
 aio_geojson_generic_client==0.1
 
@@ -804,9 +807,6 @@ govee-ble==0.19.1
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
-
-# homeassistant.components.gpsd
-gps3==0.33.3
 
 # homeassistant.components.gree
 greeclimate==1.3.0

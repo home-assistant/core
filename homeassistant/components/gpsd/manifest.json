@@ -2,7 +2,7 @@
   "domain": "gpsd",
   "name": "GPSD",
   "documentation": "https://www.home-assistant.io/integrations/gpsd",
-  "requirements": ["gps3==0.33.3"],
+  "requirements": ["agps3==0.36.1"],
   "codeowners": ["@fabaff"],
   "iot_class": "local_polling",
   "loggers": ["gps3"]
