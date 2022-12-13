@@ -518,7 +518,6 @@ omit =
     homeassistant/components/homematic/*
     homeassistant/components/homeworks/*
     homeassistant/components/honeygain/__init__.py
-    homeassistant/components/honeygain/button.py
     homeassistant/components/honeygain/sensor.py
     homeassistant/components/honeywell/__init__.py
     homeassistant/components/honeywell/climate.py

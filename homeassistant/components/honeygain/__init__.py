@@ -12,7 +12,7 @@ from homeassistant.util import Throttle
 
 from .const import DOMAIN, LOGGER, UPDATE_INTERVAL_MINS
 
-PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BUTTON]
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 UPDATE_INTERVAL = timedelta(minutes=UPDATE_INTERVAL_MINS)
 
@@ -76,11 +76,3 @@ class HoneygainData:
             self.stats = self.honeygain.stats()
         except ConnectionError:
             LOGGER.warning("Failed to connect to Honeygain for update")
-
-    def open_daily_pot(self) -> None:
-        """Open the daily pot if it's available."""
-        try:
-            self.honeygain.open_honeypot()
-        except Exception as exc:
-            LOGGER.error("Failed to open daily pot: %s", exc)
-            raise Exception from exc
