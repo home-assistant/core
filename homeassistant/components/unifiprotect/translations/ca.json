@@ -41,17 +41,33 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "license_plate": {
+                "state": {
+                    "none": "Lliure"
+                }
+            }
+        }
+    },
     "issues": {
+        "deprecate_smart_sensor": {
+            "description": "El sensor 'unified' \"Detected Object\" per a deteccions intel\u00b7ligents est\u00e0 obsolet. S'ha substitu\u00eft per sensors binaris de detecci\u00f3 intel\u00b7ligent individuals per a cada tipus de detecci\u00f3. Actualitza les plantilles i/o automatitzacions que l'utilitzin.",
+            "title": "Sensor de detecci\u00f3 intel\u00b7ligent obsolet"
+        },
         "ea_setup_failed": {
+            "description": "Est\u00e0s utilitzant la versi\u00f3 v{version} d'UniFi Protect, que \u00e9s una versi\u00f3 d'acc\u00e9s anticipat. S'ha produ\u00eft un error irrecuperable en intentar carregar la integraci\u00f3. [Baixa a una versi\u00f3 estable](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) d'UniFi Protect per continuar utilitzant la integraci\u00f3. \n\n Error: {error}",
             "title": "Error de configuraci\u00f3 amb la versi\u00f3 d'acc\u00e9s anticipat"
         },
         "ea_warning": {
             "fix_flow": {
                 "step": {
                     "confirm": {
+                        "description": "Est\u00e0s segur que vols executar versions no admeses d'UniFi Protect? Aix\u00f2 pot fer que la integraci\u00f3 de Home Assistant s'espatlli.",
                         "title": "v{version} \u00e9s una versi\u00f3 d'acc\u00e9s anticipat"
                     },
                     "start": {
+                        "description": "Est\u00e0s utilitzant la versi\u00f3 v{version} d'UniFi Protect, que \u00e9s una versi\u00f3 d'acc\u00e9s anticipat. [Les versions d'acc\u00e9s anticipat no s\u00f3n compatibles amb Home Assistant](https://www.home-assistant.io/integrations/unifiprotect#about-unifi-early-access) i es recomana tornar a una versi\u00f3 estable el m\u00e9s aviat com possible. \n\nEn enviar aquest formulari, o b\u00e9 [has baixat la versi\u00f3 d'UniFi Protect](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) o b\u00e9 acceptes executar una versi\u00f3 no compatible.",
                         "title": "v{version} \u00e9s una versi\u00f3 d'acc\u00e9s anticipat"
                     }
                 }
@@ -64,6 +80,7 @@
             "init": {
                 "data": {
                     "all_updates": "M\u00e8triques en temps real (ALERTA: augmenta considerablement l'\u00fas de CPU)",
+                    "allow_ea": "Permet versions d'acc\u00e9s anticipat de Protect (ADVERT\u00c8NCIA: aix\u00f2 marcar\u00e0 la integraci\u00f3 com a no compatible)",
                     "disable_rtsp": "Desactiva el flux RTSP",
                     "max_media": "Nombre m\u00e0xim d'esdeveniments a carregar al navegador multim\u00e8dia (augmenta l'\u00fas de RAM)",
                     "override_connection_host": "Substitueix l'amfitri\u00f3 de connexi\u00f3"

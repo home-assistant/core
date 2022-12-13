@@ -12,7 +12,8 @@
             "invalid_ip_address": "Invalid IPv4 address.",
             "invalid_signature": "The password to decrypt the `.knxkeys` file is wrong.",
             "no_router_discovered": "No KNXnet/IP router was discovered on the network.",
-            "no_tunnel_discovered": "Could not find a KNX tunneling server on your network."
+            "no_tunnel_discovered": "Could not find a KNX tunneling server on your network.",
+            "unsupported_tunnel_type": "Selected tunnelling type not supported by gateway."
         },
         "step": {
             "connection_type": {
@@ -94,13 +95,6 @@
                 },
                 "description": "Please enter your IP secure information."
             },
-            "secure_tunneling": {
-                "description": "Select how you want to configure KNX/IP Secure.",
-                "menu_options": {
-                    "secure_knxkeys": "Use a `.knxkeys` file containing IP secure keys",
-                    "secure_tunnel_manual": "Configure IP secure keys manually"
-                }
-            },
             "tunnel": {
                 "data": {
                     "gateway": "KNX Tunnel Connection"
@@ -118,7 +112,8 @@
             "invalid_ip_address": "Invalid IPv4 address.",
             "invalid_signature": "The password to decrypt the `.knxkeys` file is wrong.",
             "no_router_discovered": "No KNXnet/IP router was discovered on the network.",
-            "no_tunnel_discovered": "Could not find a KNX tunneling server on your network."
+            "no_tunnel_discovered": "Could not find a KNX tunneling server on your network.",
+            "unsupported_tunnel_type": "Selected tunnelling type not supported by gateway."
         },
         "step": {
             "communication_settings": {
@@ -215,13 +210,6 @@
                     "user_password": "Password for the specific tunnel connection set in the 'Properties' panel of the tunnel in ETS."
                 },
                 "description": "Please enter your IP secure information."
-            },
-            "secure_tunneling": {
-                "description": "Select how you want to configure KNX/IP Secure.",
-                "menu_options": {
-                    "secure_knxkeys": "Use a `.knxkeys` file containing IP secure keys",
-                    "secure_tunnel_manual": "Configure IP secure keys manually"
-                }
             },
             "tunnel": {
                 "data": {

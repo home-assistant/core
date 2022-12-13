@@ -31,12 +31,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    DATA_BYTES,
-    DATA_RATE_BYTES_PER_SECOND,
-    TEMP_CELSIUS,
-    TIME_SECONDS,
-)
+from homeassistant.const import DATA_BYTES, TEMP_CELSIUS, TIME_SECONDS, UnitOfDataRate
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -101,10 +96,11 @@ SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
     ),
     QswSensorEntityDescription(
         entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:download-network",
         key=QSD_PORTS_STATISTICS,
         name="RX Speed",
-        native_unit_of_measurement=DATA_RATE_BYTES_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
         subkey=QSD_RX_SPEED,
     ),
@@ -130,10 +126,11 @@ SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
     ),
     QswSensorEntityDescription(
         entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:upload-network",
         key=QSD_PORTS_STATISTICS,
         name="TX Speed",
-        native_unit_of_measurement=DATA_RATE_BYTES_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
         subkey=QSD_TX_SPEED,
     ),

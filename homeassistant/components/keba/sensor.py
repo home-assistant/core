@@ -8,9 +8,9 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
-    POWER_KILO_WATT,
+    UnitOfElectricCurrent,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -38,7 +38,7 @@ async def async_setup_platform(
             SensorEntityDescription(
                 key="Curr user",
                 name="Max Current",
-                native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+                native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
                 device_class=SensorDeviceClass.CURRENT,
             ),
         ),
@@ -58,7 +58,7 @@ async def async_setup_platform(
             SensorEntityDescription(
                 key="P",
                 name="Charging Power",
-                native_unit_of_measurement=POWER_KILO_WATT,
+                native_unit_of_measurement=UnitOfPower.KILO_WATT,
                 device_class=SensorDeviceClass.POWER,
                 state_class=SensorStateClass.MEASUREMENT,
             ),

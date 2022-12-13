@@ -12,7 +12,8 @@
             "invalid_ip_address": "Ung\u00fcltige IPv4 Adresse.",
             "invalid_signature": "Das Passwort zum Entschl\u00fcsseln der `.knxkeys` Datei ist ung\u00fcltig.",
             "no_router_discovered": "Es wurde kein KNXnet/IP-Router im Netzwerk gefunden.",
-            "no_tunnel_discovered": "Es konnte kein KNX Tunneling Server in deinem Netzwerk gefunden werden."
+            "no_tunnel_discovered": "Es konnte kein KNX Tunneling Server in deinem Netzwerk gefunden werden.",
+            "unsupported_tunnel_type": "Ausgew\u00e4hlter Tunneltyp wird vom Gateway nicht unterst\u00fctzt."
         },
         "step": {
             "connection_type": {
@@ -26,7 +27,7 @@
                     "host": "Host",
                     "local_ip": "Lokale IP von Home Assistant",
                     "port": "Port",
-                    "route_back": "Zur\u00fcckrouten / NAT-Modus",
+                    "route_back": "Route back / NAT-Modus",
                     "tunneling_type": "KNX Tunneling Typ"
                 },
                 "data_description": {
@@ -54,9 +55,9 @@
             "secure_key_source": {
                 "description": "W\u00e4hle aus, wie du KNX/IP-Secure konfigurieren m\u00f6chtest.",
                 "menu_options": {
-                    "secure_knxkeys": "Verwenden einer \"knxkeys\"-Datei mit IP-Secure-Schl\u00fcsseln",
+                    "secure_knxkeys": "Verwende eine \".knxkeys\" Datei mit IP-Secure-Schl\u00fcsseln",
                     "secure_routing_manual": "IP-Secure Backbone-Schl\u00fcssel manuell konfigurieren",
-                    "secure_tunnel_manual": "IP-Secure-Anmeldeinformationen manuell konfigurieren"
+                    "secure_tunnel_manual": "IP-Secure-Schl\u00fcssel manuell konfigurieren"
                 }
             },
             "secure_knxkeys": {
@@ -73,10 +74,10 @@
             "secure_routing_manual": {
                 "data": {
                     "backbone_key": "Backbone-Schl\u00fcssel",
-                    "sync_latency_tolerance": "Netzwerklatenztoleranz"
+                    "sync_latency_tolerance": "Netzwerklatenz-Toleranz"
                 },
                 "data_description": {
-                    "backbone_key": "Kann im Bericht \"Sicherheit\" eines ETS-Projekts eingesehen werden. z.B. '00112233445566778899AABBCCDDEEFF'",
+                    "backbone_key": "Kann im Report \"Projekt-Sicherheit\" eines ETS-Projekts eingesehen werden. z.B. '00112233445566778899AABBCCDDEEFF'",
                     "sync_latency_tolerance": "Der Standardwert ist 1000."
                 },
                 "description": "Bitte gib deine IP-Secure Informationen ein."
@@ -93,13 +94,6 @@
                     "user_password": "Passwort f\u00fcr die spezifische Tunnelverbindung, die im Bereich \u201eEigenschaften\u201c des Tunnels in ETS festgelegt wurde."
                 },
                 "description": "Bitte gib deine IP-Secure Informationen ein."
-            },
-            "secure_tunneling": {
-                "description": "W\u00e4hle aus, wie du KNX/IP-Secure konfigurieren m\u00f6chtest.",
-                "menu_options": {
-                    "secure_knxkeys": "Verwende eine `.knxkeys` Datei, die IP-Secure Schl\u00fcssel enth\u00e4lt",
-                    "secure_tunnel_manual": "IP-Secure Schl\u00fcssel manuell konfigurieren"
-                }
             },
             "tunnel": {
                 "data": {
@@ -118,7 +112,8 @@
             "invalid_ip_address": "Ung\u00fcltige IPv4 Adresse.",
             "invalid_signature": "Das Passwort zum Entschl\u00fcsseln der `.knxkeys` Datei ist ung\u00fcltig.",
             "no_router_discovered": "Es wurde kein KNXnet/IP-Router im Netzwerk gefunden.",
-            "no_tunnel_discovered": "Es konnte kein KNX Tunneling Server in deinem Netzwerk gefunden werden."
+            "no_tunnel_discovered": "Es konnte kein KNX Tunneling Server in deinem Netzwerk gefunden werden.",
+            "unsupported_tunnel_type": "Ausgew\u00e4hlter Tunneltyp wird vom Gateway nicht unterst\u00fctzt."
         },
         "step": {
             "communication_settings": {
@@ -142,7 +137,7 @@
                     "host": "Host",
                     "local_ip": "Lokale IP von Home Assistant",
                     "port": "Port",
-                    "route_back": "Zur\u00fcckrouten / NAT-Modus",
+                    "route_back": "Route back / NAT-Modus",
                     "tunneling_type": "KNX Tunneling Typ"
                 },
                 "data_description": {
@@ -176,9 +171,9 @@
             "secure_key_source": {
                 "description": "W\u00e4hle aus, wie du KNX/IP-Secure konfigurieren m\u00f6chtest.",
                 "menu_options": {
-                    "secure_knxkeys": "Verwenden einer \"knxkeys\"-Datei mit IP-Secure-Schl\u00fcsseln",
+                    "secure_knxkeys": "Verwende eine \".knxkeys\" Datei mit IP-Secure-Schl\u00fcsseln",
                     "secure_routing_manual": "IP-Secure Backbone-Schl\u00fcssel manuell konfigurieren",
-                    "secure_tunnel_manual": "IP-Secure-Anmeldeinformationen manuell konfigurieren"
+                    "secure_tunnel_manual": "IP-Secure-Schl\u00fcssel manuell konfigurieren"
                 }
             },
             "secure_knxkeys": {
@@ -195,10 +190,10 @@
             "secure_routing_manual": {
                 "data": {
                     "backbone_key": "Backbone-Schl\u00fcssel",
-                    "sync_latency_tolerance": "Netzwerklatenztoleranz"
+                    "sync_latency_tolerance": "Netzwerklatenz-Toleranz"
                 },
                 "data_description": {
-                    "backbone_key": "Kann im Bericht \"Sicherheit\" eines ETS-Projekts eingesehen werden. z.B. '00112233445566778899AABBCCDDEEFF'",
+                    "backbone_key": "Kann im Report \"Projekt-Sicherheit\" eines ETS-Projekts eingesehen werden. z.B. '00112233445566778899AABBCCDDEEFF'",
                     "sync_latency_tolerance": "Der Standardwert ist 1000."
                 },
                 "description": "Bitte gib deine IP-Secure Informationen ein."
@@ -215,13 +210,6 @@
                     "user_password": "Passwort f\u00fcr die spezifische Tunnelverbindung, die im Bereich \u201eEigenschaften\u201c des Tunnels in ETS festgelegt wurde."
                 },
                 "description": "Bitte gib deine IP-Secure Informationen ein."
-            },
-            "secure_tunneling": {
-                "description": "W\u00e4hle aus, wie du KNX/IP-Secure konfigurieren m\u00f6chtest.",
-                "menu_options": {
-                    "secure_knxkeys": "Verwende eine `.knxkeys` Datei, die IP-Secure Schl\u00fcssel enth\u00e4lt",
-                    "secure_tunnel_manual": "IP-Secure Schl\u00fcssel manuell konfigurieren"
-                }
             },
             "tunnel": {
                 "data": {

@@ -21,7 +21,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .config_flow import normalize_hkid
 from .connection import HKDevice
-from .const import KNOWN_DEVICES, TRIGGERS
+from .const import KNOWN_DEVICES
 from .utils import async_get_controller
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,7 +59,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await async_get_controller(hass)
 
     hass.data[KNOWN_DEVICES] = {}
-    hass.data[TRIGGERS] = {}
 
     async def _async_stop_homekit_controller(event: Event) -> None:
         await asyncio.gather(

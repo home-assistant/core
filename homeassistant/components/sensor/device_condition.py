@@ -32,16 +32,20 @@ from . import ATTR_STATE_CLASS, DOMAIN, SensorDeviceClass
 DEVICE_CLASS_NONE = "none"
 
 CONF_IS_APPARENT_POWER = "is_apparent_power"
+CONF_IS_ATMOSPHERIC_PRESSURE = "atmospheric_pressure"
 CONF_IS_BATTERY_LEVEL = "is_battery_level"
 CONF_IS_CO = "is_carbon_monoxide"
 CONF_IS_CO2 = "is_carbon_dioxide"
 CONF_IS_CURRENT = "is_current"
+CONF_IS_DATA_RATE = "is_data_rate"
+CONF_IS_DATA_SIZE = "is_data_size"
 CONF_IS_DISTANCE = "is_distance"
 CONF_IS_ENERGY = "is_energy"
 CONF_IS_FREQUENCY = "is_frequency"
 CONF_IS_HUMIDITY = "is_humidity"
 CONF_IS_GAS = "is_gas"
 CONF_IS_ILLUMINANCE = "is_illuminance"
+CONF_IS_IRRADIANCE = "is_irradiance"
 CONF_IS_MOISTURE = "is_moisture"
 CONF_IS_NITROGEN_DIOXIDE = "is_nitrogen_dioxide"
 CONF_IS_NITROGEN_MONOXIDE = "is_nitrogen_monoxide"
@@ -58,6 +62,7 @@ CONF_IS_PRESSURE = "is_pressure"
 CONF_IS_SPEED = "is_speed"
 CONF_IS_REACTIVE_POWER = "is_reactive_power"
 CONF_IS_SIGNAL_STRENGTH = "is_signal_strength"
+CONF_IS_SOUND_PRESSURE = "is_sound_pressure"
 CONF_IS_SULPHUR_DIOXIDE = "is_sulphur_dioxide"
 CONF_IS_TEMPERATURE = "is_temperature"
 CONF_IS_VALUE = "is_value"
@@ -70,16 +75,20 @@ CONF_IS_WIND_SPEED = "is_wind_speed"
 
 ENTITY_CONDITIONS = {
     SensorDeviceClass.APPARENT_POWER: [{CONF_TYPE: CONF_IS_APPARENT_POWER}],
+    SensorDeviceClass.ATMOSPHERIC_PRESSURE: [{CONF_TYPE: CONF_IS_ATMOSPHERIC_PRESSURE}],
     SensorDeviceClass.BATTERY: [{CONF_TYPE: CONF_IS_BATTERY_LEVEL}],
     SensorDeviceClass.CO: [{CONF_TYPE: CONF_IS_CO}],
     SensorDeviceClass.CO2: [{CONF_TYPE: CONF_IS_CO2}],
     SensorDeviceClass.CURRENT: [{CONF_TYPE: CONF_IS_CURRENT}],
+    SensorDeviceClass.DATA_RATE: [{CONF_TYPE: CONF_IS_DATA_RATE}],
+    SensorDeviceClass.DATA_SIZE: [{CONF_TYPE: CONF_IS_DATA_SIZE}],
     SensorDeviceClass.DISTANCE: [{CONF_TYPE: CONF_IS_DISTANCE}],
     SensorDeviceClass.ENERGY: [{CONF_TYPE: CONF_IS_ENERGY}],
     SensorDeviceClass.FREQUENCY: [{CONF_TYPE: CONF_IS_FREQUENCY}],
     SensorDeviceClass.GAS: [{CONF_TYPE: CONF_IS_GAS}],
     SensorDeviceClass.HUMIDITY: [{CONF_TYPE: CONF_IS_HUMIDITY}],
     SensorDeviceClass.ILLUMINANCE: [{CONF_TYPE: CONF_IS_ILLUMINANCE}],
+    SensorDeviceClass.IRRADIANCE: [{CONF_TYPE: CONF_IS_IRRADIANCE}],
     SensorDeviceClass.MOISTURE: [{CONF_TYPE: CONF_IS_MOISTURE}],
     SensorDeviceClass.NITROGEN_DIOXIDE: [{CONF_TYPE: CONF_IS_NITROGEN_DIOXIDE}],
     SensorDeviceClass.NITROGEN_MONOXIDE: [{CONF_TYPE: CONF_IS_NITROGEN_MONOXIDE}],
@@ -97,6 +106,7 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.PRESSURE: [{CONF_TYPE: CONF_IS_PRESSURE}],
     SensorDeviceClass.REACTIVE_POWER: [{CONF_TYPE: CONF_IS_REACTIVE_POWER}],
     SensorDeviceClass.SIGNAL_STRENGTH: [{CONF_TYPE: CONF_IS_SIGNAL_STRENGTH}],
+    SensorDeviceClass.SOUND_PRESSURE: [{CONF_TYPE: CONF_IS_SOUND_PRESSURE}],
     SensorDeviceClass.SPEED: [{CONF_TYPE: CONF_IS_SPEED}],
     SensorDeviceClass.SULPHUR_DIOXIDE: [{CONF_TYPE: CONF_IS_SULPHUR_DIOXIDE}],
     SensorDeviceClass.TEMPERATURE: [{CONF_TYPE: CONF_IS_TEMPERATURE}],
@@ -118,33 +128,45 @@ CONDITION_SCHEMA = vol.All(
             vol.Required(CONF_TYPE): vol.In(
                 [
                     CONF_IS_APPARENT_POWER,
+                    CONF_IS_ATMOSPHERIC_PRESSURE,
                     CONF_IS_BATTERY_LEVEL,
                     CONF_IS_CO,
                     CONF_IS_CO2,
                     CONF_IS_CURRENT,
+                    CONF_IS_DATA_RATE,
+                    CONF_IS_DATA_SIZE,
                     CONF_IS_DISTANCE,
                     CONF_IS_ENERGY,
                     CONF_IS_FREQUENCY,
                     CONF_IS_GAS,
                     CONF_IS_HUMIDITY,
                     CONF_IS_ILLUMINANCE,
-                    CONF_IS_OZONE,
+                    CONF_IS_IRRADIANCE,
                     CONF_IS_MOISTURE,
                     CONF_IS_NITROGEN_DIOXIDE,
                     CONF_IS_NITROGEN_MONOXIDE,
                     CONF_IS_NITROUS_OXIDE,
+                    CONF_IS_OZONE,
                     CONF_IS_POWER,
                     CONF_IS_POWER_FACTOR,
                     CONF_IS_PM1,
                     CONF_IS_PM10,
                     CONF_IS_PM25,
+                    CONF_IS_PRECIPITATION,
+                    CONF_IS_PRECIPITATION_INTENSITY,
                     CONF_IS_PRESSURE,
                     CONF_IS_REACTIVE_POWER,
                     CONF_IS_SIGNAL_STRENGTH,
+                    CONF_IS_SOUND_PRESSURE,
+                    CONF_IS_SPEED,
                     CONF_IS_SULPHUR_DIOXIDE,
                     CONF_IS_TEMPERATURE,
                     CONF_IS_VOLATILE_ORGANIC_COMPOUNDS,
                     CONF_IS_VOLTAGE,
+                    CONF_IS_VOLUME,
+                    CONF_IS_WATER,
+                    CONF_IS_WEIGHT,
+                    CONF_IS_WIND_SPEED,
                     CONF_IS_VALUE,
                 ]
             ),

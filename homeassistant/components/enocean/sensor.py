@@ -19,10 +19,10 @@ from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
     PERCENTAGE,
-    POWER_WATT,
     STATE_CLOSED,
     STATE_OPEN,
     TEMP_CELSIUS,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -82,7 +82,7 @@ SENSOR_DESC_HUMIDITY = EnOceanSensorEntityDescription(
 SENSOR_DESC_POWER = EnOceanSensorEntityDescription(
     key=SENSOR_TYPE_POWER,
     name="Power",
-    native_unit_of_measurement=POWER_WATT,
+    native_unit_of_measurement=UnitOfPower.WATT,
     icon="mdi:power-plug",
     device_class=SensorDeviceClass.POWER,
     state_class=SensorStateClass.MEASUREMENT,

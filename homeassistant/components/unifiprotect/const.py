@@ -63,10 +63,9 @@ PLATFORMS = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TEXT,
 ]
 
 DISPATCH_ADD = "add_device"
 DISPATCH_ADOPT = "adopt_device"
 DISPATCH_CHANNELS = "new_camera_channels"
-
-DEVICE_CLASS_DETECTION = "unifiprotect__detection"

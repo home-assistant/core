@@ -663,6 +663,17 @@ class AvmWrapper(FritzBoxTools):
             partial(self.get_wan_link_properties)
         )
 
+    async def async_ipv6_active(self) -> bool:
+        """Check ip an ipv6 is active on the WAn interface."""
+
+        def wrap_external_ipv6() -> str:
+            return str(self.fritz_status.external_ipv6)
+
+        if not self.device_is_router:
+            return False
+
+        return bool(await self.hass.async_add_executor_job(wrap_external_ipv6))
+
     async def async_get_connection_info(self) -> ConnectionInfo:
         """Return ConnectionInfo data."""
 
@@ -671,6 +682,7 @@ class AvmWrapper(FritzBoxTools):
             connection=link_properties.get("NewWANAccessType", "").lower(),
             mesh_role=self.mesh_role,
             wan_enabled=self.device_is_router,
+            ipv6_active=await self.async_ipv6_active(),
         )
         _LOGGER.debug(
             "ConnectionInfo for FritzBox %s: %s",
@@ -1011,3 +1023,4 @@ class ConnectionInfo:
     connection: str
     mesh_role: MeshRoles
     wan_enabled: bool
+    ipv6_active: bool

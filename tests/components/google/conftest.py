@@ -64,7 +64,7 @@ CLIENT_SECRET = "client-secret"
 @pytest.fixture(name="calendar_access_role")
 def test_calendar_access_role() -> str:
     """Default access role to use for test_api_calendar in tests."""
-    return "reader"
+    return "owner"
 
 
 @pytest.fixture

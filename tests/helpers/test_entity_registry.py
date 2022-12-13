@@ -84,6 +84,7 @@ def test_get_or_create_updates_data(registry):
         original_icon="initial-original_icon",
         original_name="initial-original_name",
         supported_features=5,
+        translation_key="initial-translation_key",
         unit_of_measurement="initial-unit_of_measurement",
     )
 
@@ -106,6 +107,7 @@ def test_get_or_create_updates_data(registry):
         original_icon="initial-original_icon",
         original_name="initial-original_name",
         supported_features=5,
+        translation_key="initial-translation_key",
         unit_of_measurement="initial-unit_of_measurement",
     )
 
@@ -126,6 +128,7 @@ def test_get_or_create_updates_data(registry):
         original_icon="updated-original_icon",
         original_name="updated-original_name",
         supported_features=10,
+        translation_key="updated-translation_key",
         unit_of_measurement="updated-unit_of_measurement",
     )
 
@@ -149,6 +152,7 @@ def test_get_or_create_updates_data(registry):
         original_icon="updated-original_icon",
         original_name="updated-original_name",
         supported_features=10,
+        translation_key="updated-translation_key",
         unit_of_measurement="updated-unit_of_measurement",
     )
 
@@ -167,6 +171,7 @@ def test_get_or_create_updates_data(registry):
         original_icon=None,
         original_name=None,
         supported_features=None,
+        translation_key=None,
         unit_of_measurement=None,
     )
 
@@ -190,6 +195,7 @@ def test_get_or_create_updates_data(registry):
         original_icon=None,
         original_name=None,
         supported_features=0,  # supported_features is stored as an int
+        translation_key=None,
         unit_of_measurement=None,
     )
 
@@ -242,6 +248,7 @@ async def test_loading_saving_data(hass, registry):
         original_icon="hass:original-icon",
         original_name="Original Name",
         supported_features=5,
+        translation_key="initial-translation_key",
         unit_of_measurement="initial-unit_of_measurement",
     )
     registry.async_update_entity(
@@ -287,6 +294,7 @@ async def test_loading_saving_data(hass, registry):
     assert new_entry2.original_icon == "hass:original-icon"
     assert new_entry2.original_name == "Original Name"
     assert new_entry2.supported_features == 5
+    assert new_entry2.translation_key == "initial-translation_key"
     assert new_entry2.unit_of_measurement == "initial-unit_of_measurement"
 
 

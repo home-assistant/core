@@ -15,12 +15,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    Platform,
-)
+from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -164,7 +159,8 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
             ):
                 self._target_temp_device = FibaroDevice(device)
                 self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
-                tempunit = device.properties.unit
+                if "unit" in device.properties:
+                    tempunit = device.properties.unit
 
             if any(action for action in OP_MODE_ACTIONS if action in device.actions):
                 self._op_mode_device = FibaroDevice(device)
@@ -175,9 +171,9 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
                 self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
 
         if tempunit == "F":
-            self._attr_temperature_unit = TEMP_FAHRENHEIT
+            self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
         else:
-            self._attr_temperature_unit = TEMP_CELSIUS
+            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
 
         if self._fan_mode_device:
             fan_modes = (

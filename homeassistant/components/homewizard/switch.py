@@ -22,20 +22,16 @@ async def async_setup_entry(
     """Set up switches."""
     coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
+    entities: list[SwitchEntity] = []
+
     if coordinator.data["state"]:
-        async_add_entities(
-            [
-                HWEnergyMainSwitchEntity(coordinator, entry),
-                HWEnergySwitchLockEntity(coordinator, entry),
-            ]
-        )
+        entities.append(HWEnergyMainSwitchEntity(coordinator, entry))
+        entities.append(HWEnergySwitchLockEntity(coordinator, entry))
 
     if coordinator.data["system"]:
-        async_add_entities(
-            [
-                HWEnergyEnableCloudEntity(hass, coordinator, entry),
-            ]
-        )
+        entities.append(HWEnergyEnableCloudEntity(hass, coordinator, entry))
+
+    async_add_entities(entities)
 
 
 class HWEnergySwitchEntity(

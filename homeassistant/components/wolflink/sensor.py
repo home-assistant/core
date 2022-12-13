@@ -143,10 +143,7 @@ class WolfLinkPercentage(WolfLinkSensor):
 class WolfLinkState(WolfLinkSensor):
     """Class for entities which has defined list of state."""
 
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return "wolflink__state"
+    _attr_translation_key = "state"
 
     @property
     def native_value(self):

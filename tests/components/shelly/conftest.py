@@ -124,6 +124,7 @@ MOCK_BLOCKS = [
 
 MOCK_CONFIG = {
     "input:0": {"id": 0, "type": "button"},
+    "light:0": {"name": "test light_0"},
     "switch:0": {"name": "test switch_0"},
     "cover:0": {"name": "test cover_0"},
     "sys": {
@@ -169,6 +170,7 @@ MOCK_STATUS_COAP = {
 
 MOCK_STATUS_RPC = {
     "switch:0": {"output": True},
+    "light:0": {"output": True, "brightness": 53.0},
     "cloud": {"connected": False},
     "cover:0": {
         "state": "stopped",

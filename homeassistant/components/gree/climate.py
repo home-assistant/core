@@ -35,12 +35,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    PRECISION_WHOLE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -151,7 +146,9 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
     def temperature_unit(self) -> str:
         """Return the temperature units for the device."""
         units = self.coordinator.device.temperature_units
-        return TEMP_CELSIUS if units == TemperatureUnits.C else TEMP_FAHRENHEIT
+        if units == TemperatureUnits.C:
+            return UnitOfTemperature.CELSIUS
+        return UnitOfTemperature.FAHRENHEIT
 
     @property
     def current_temperature(self) -> float:
@@ -182,12 +179,16 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature supported by the device."""
-        return TEMP_MIN if self.temperature_unit == TEMP_CELSIUS else TEMP_MIN_F
+        if self.temperature_unit == UnitOfTemperature.CELSIUS:
+            return TEMP_MIN
+        return TEMP_MIN_F
 
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature supported by the device."""
-        return TEMP_MAX if self.temperature_unit == TEMP_CELSIUS else TEMP_MAX_F
+        if self.temperature_unit == UnitOfTemperature.CELSIUS:
+            return TEMP_MAX
+        return TEMP_MAX_F
 
     @property
     def target_temperature_step(self) -> float:

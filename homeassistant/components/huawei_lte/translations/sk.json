@@ -21,6 +21,7 @@
                     "password": "Heslo",
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
                 },
+                "description": "Zadajte prihlasovacie \u00fadaje k zariadeniu.",
                 "title": "Znova overi\u0165 integr\u00e1ciu"
             },
             "user": {
@@ -29,6 +30,7 @@
                     "url": "URL",
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
                 },
+                "description": "Zadajte pr\u00edstupov\u00e9 \u00fadaje zariadenia.",
                 "title": "Nakonfigurujte Huawei LTE"
             }
         }
@@ -38,7 +40,9 @@
             "init": {
                 "data": {
                     "name": "N\u00e1zov notifika\u010dnej slu\u017eby (zmena vy\u017eaduje re\u0161tart)",
-                    "recipient": "Pr\u00edjemcovia upozornen\u00ed SMS"
+                    "recipient": "Pr\u00edjemcovia upozornen\u00ed SMS",
+                    "track_wired_clients": "Sledovanie klientov k\u00e1blovej siete",
+                    "unauthenticated_mode": "Neoveren\u00fd re\u017eim (zmena vy\u017eaduje op\u00e4tovn\u00e9 na\u010d\u00edtanie)"
                 }
             }
         }

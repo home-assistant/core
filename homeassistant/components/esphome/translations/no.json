@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
+            "mdns_missing_mac": "Manglende MAC-adresse i MDNS-egenskaper.",
             "reauth_successful": "Re-autentisering var vellykket"
         },
         "error": {

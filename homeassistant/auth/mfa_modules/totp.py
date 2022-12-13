@@ -206,9 +206,7 @@ class TotpSetupFlow(SetupFlow):
                 result = await self._auth_module.async_setup_user(
                     self._user_id, {"secret": self._ota_secret}
                 )
-                return self.async_create_entry(
-                    title=self._auth_module.name, data={"result": result}
-                )
+                return self.async_create_entry(data={"result": result})
 
             errors["base"] = "invalid_code"
 

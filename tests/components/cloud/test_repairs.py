@@ -70,7 +70,7 @@ async def test_legacy_subscription_delete_issue_if_no_longer_legacy(
         domain="cloud", issue_id="legacy_subscription"
     )
 
-    cloud_repairs.async_manage_legacy_subscription_issue(hass, {"provider": None})
+    cloud_repairs.async_manage_legacy_subscription_issue(hass, {})
     assert not issue_registry.async_get_issue(
         domain="cloud", issue_id="legacy_subscription"
     )
@@ -87,6 +87,10 @@ async def test_legacy_subscription_repair_flow(
     aioclient_mock.get(
         "https://accounts.nabucasa.com/payments/subscription_info",
         json={"provider": None},
+    )
+    aioclient_mock.post(
+        "https://accounts.nabucasa.com/payments/migrate_paypal_agreement",
+        json={"url": "https://paypal.com"},
     )
 
     cloud_repairs.async_manage_legacy_subscription_issue(hass, {"provider": "legacy"})
@@ -133,7 +137,7 @@ async def test_legacy_subscription_repair_flow(
         "flow_id": flow_id,
         "handler": DOMAIN,
         "step_id": "change_plan",
-        "url": "https://account.nabucasa.com/",
+        "url": "https://paypal.com",
         "description_placeholders": None,
     }
 
@@ -148,7 +152,6 @@ async def test_legacy_subscription_repair_flow(
         "type": "create_entry",
         "flow_id": flow_id,
         "handler": DOMAIN,
-        "title": "",
         "description": None,
         "description_placeholders": None,
     }
@@ -161,8 +164,15 @@ async def test_legacy_subscription_repair_flow(
 async def test_legacy_subscription_repair_flow_timeout(
     hass: HomeAssistant,
     hass_client: Callable[..., Awaitable[ClientSession]],
+    mock_auth: Generator[None, AsyncMock, None],
+    aioclient_mock: AiohttpClientMocker,
 ):
     """Test timeout flow of the fix flow for legacy subscription."""
+    aioclient_mock.post(
+        "https://accounts.nabucasa.com/payments/migrate_paypal_agreement",
+        status=403,
+    )
+
     issue_registry: ir.IssueRegistry = ir.async_get(hass)
 
     cloud_repairs.async_manage_legacy_subscription_issue(hass, {"provider": "legacy"})

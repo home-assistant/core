@@ -8,9 +8,17 @@
         "error": {
             "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
             "cannot_communicate": "Komunik\u00e1cia zlyhala",
-            "cannot_connect": "Nepodarilo sa pripoji\u0165"
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "few": "Pr\u00e1zdnych",
+            "many": "Pr\u00e1zdnych",
+            "one": "Pr\u00e1zdny",
+            "other": "Pr\u00e1zdny"
         },
         "step": {
+            "few": "Pr\u00e1zdnych",
+            "many": "Pr\u00e1zdnych",
+            "one": "Pr\u00e1zdny",
+            "other": "Pr\u00e1zdny",
             "setup_network": {
                 "data": {
                     "dsmr_version": "Vyberte verziu DSMR",

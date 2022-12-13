@@ -19,7 +19,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -166,7 +166,7 @@ class ViCareWater(WaterHeaterEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return TEMP_CELSIUS
+        return UnitOfTemperature.CELSIUS
 
     @property
     def current_temperature(self):

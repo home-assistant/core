@@ -161,7 +161,7 @@ def migrate_schema(
             "Database is about to correct DB schema errors: %s",
             ", ".join(sorted(schema_errors)),
         )
-        statistics_correct_db_schema(engine, session_maker, schema_errors)
+        statistics_correct_db_schema(instance, engine, session_maker, schema_errors)
 
 
 def _create_index(

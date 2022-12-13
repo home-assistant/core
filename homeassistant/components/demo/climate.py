@@ -12,7 +12,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -36,7 +36,7 @@ async def async_setup_platform(
                 unique_id="climate_1",
                 name="HeatPump",
                 target_temperature=68,
-                unit_of_measurement=TEMP_FAHRENHEIT,
+                unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
                 preset=None,
                 current_temperature=77,
                 fan_mode=None,
@@ -54,7 +54,7 @@ async def async_setup_platform(
                 unique_id="climate_2",
                 name="Hvac",
                 target_temperature=21,
-                unit_of_measurement=TEMP_CELSIUS,
+                unit_of_measurement=UnitOfTemperature.CELSIUS,
                 preset=None,
                 current_temperature=22,
                 fan_mode="On High",
@@ -72,7 +72,7 @@ async def async_setup_platform(
                 unique_id="climate_3",
                 name="Ecobee",
                 target_temperature=None,
-                unit_of_measurement=TEMP_CELSIUS,
+                unit_of_measurement=UnitOfTemperature.CELSIUS,
                 preset="home",
                 preset_modes=["home", "eco"],
                 current_temperature=23,

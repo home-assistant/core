@@ -453,7 +453,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class MediaPlayerEntityDescription(EntityDescription):
     """A class that describes media player entities."""
 
-    device_class: MediaPlayerDeviceClass | str | None = None
+    device_class: MediaPlayerDeviceClass | None = None
 
 
 class MediaPlayerEntity(Entity):
@@ -464,7 +464,7 @@ class MediaPlayerEntity(Entity):
 
     _attr_app_id: str | None = None
     _attr_app_name: str | None = None
-    _attr_device_class: MediaPlayerDeviceClass | str | None
+    _attr_device_class: MediaPlayerDeviceClass | None
     _attr_group_members: list[str] | None = None
     _attr_is_volume_muted: bool | None = None
     _attr_media_album_artist: str | None = None
@@ -491,13 +491,13 @@ class MediaPlayerEntity(Entity):
     _attr_sound_mode: str | None = None
     _attr_source_list: list[str] | None = None
     _attr_source: str | None = None
-    _attr_state: MediaPlayerState | str | None = None
+    _attr_state: MediaPlayerState | None = None
     _attr_supported_features: MediaPlayerEntityFeature = MediaPlayerEntityFeature(0)
     _attr_volume_level: float | None = None
 
     # Implement these for your media player
     @property
-    def device_class(self) -> MediaPlayerDeviceClass | str | None:
+    def device_class(self) -> MediaPlayerDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
             return self._attr_device_class
@@ -506,7 +506,7 @@ class MediaPlayerEntity(Entity):
         return None
 
     @property
-    def state(self) -> MediaPlayerState | str | None:
+    def state(self) -> MediaPlayerState | None:
         """State of the player."""
         return self._attr_state
 

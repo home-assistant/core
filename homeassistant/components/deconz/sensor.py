@@ -37,9 +37,9 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_WATT,
     PRESSURE_HPA,
     TEMP_CELSIUS,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
@@ -180,7 +180,7 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
         instance_check=Power,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
     ),
     DeconzSensorDescription[Pressure](
         key="pressure",

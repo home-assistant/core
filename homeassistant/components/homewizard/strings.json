@@ -10,7 +10,7 @@
       },
       "discovery_confirm": {
         "title": "Confirm",
-        "description": "Do you want to setup {product_type} ({serial}) at {ip_address}?"
+        "description": "Do you want to set up {product_type} ({serial}) at {ip_address}?"
       }
     },
     "abort": {

@@ -7,14 +7,19 @@ import logging
 import here_routing
 from here_routing import HERERoutingApi, Return, RoutingMode, Spans, TransportMode
 import here_transit
-from here_transit import HERETransitApi
+from here_transit import (
+    HERETransitApi,
+    HERETransitConnectionError,
+    HERETransitDepartureArrivalTooCloseError,
+    HERETransitNoRouteFoundError,
+)
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ATTRIBUTION, UnitOfLength
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.location import find_coordinates
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt
 from homeassistant.util.unit_conversion import DistanceConverter
 
@@ -154,23 +159,28 @@ class HERETransitDataUpdateCoordinator(DataUpdateCoordinator):
             arrival,
             departure,
         )
+        try:
+            response = await self._api.route(
+                origin=here_transit.Place(latitude=origin[0], longitude=origin[1]),
+                destination=here_transit.Place(
+                    latitude=destination[0], longitude=destination[1]
+                ),
+                arrival_time=arrival,
+                departure_time=departure,
+                return_values=[
+                    here_transit.Return.POLYLINE,
+                    here_transit.Return.TRAVEL_SUMMARY,
+                ],
+            )
 
-        response = await self._api.route(
-            origin=here_transit.Place(latitude=origin[0], longitude=origin[1]),
-            destination=here_transit.Place(
-                latitude=destination[0], longitude=destination[1]
-            ),
-            arrival_time=arrival,
-            departure_time=departure,
-            return_values=[
-                here_transit.Return.POLYLINE,
-                here_transit.Return.TRAVEL_SUMMARY,
-            ],
-        )
+            _LOGGER.debug("Raw response is: %s", response)
 
-        _LOGGER.debug("Raw response is: %s", response)
-
-        return self._parse_transit_response(response)
+            return self._parse_transit_response(response)
+        except HERETransitDepartureArrivalTooCloseError:
+            _LOGGER.debug("Ignoring HERETransitDepartureArrivalTooCloseError")
+            return None
+        except (HERETransitConnectionError, HERETransitNoRouteFoundError) as error:
+            raise UpdateFailed from error
 
     def _parse_transit_response(self, response) -> HERETravelTimeData:
         """Parse the transit response dict to a HERETravelTimeData."""
@@ -215,13 +225,15 @@ def prepare_parameters(
     def _from_entity_id(entity_id: str) -> list[str]:
         coordinates = find_coordinates(hass, entity_id)
         if coordinates is None:
-            raise InvalidCoordinatesException(f"No coordinates found for {entity_id}")
+            raise UpdateFailed(f"No coordinates found for {entity_id}")
+        if coordinates is entity_id:
+            raise UpdateFailed(f"Could not find entity {entity_id}")
         try:
             formatted_coordinates = coordinates.split(",")
             vol.Schema(cv.gps(formatted_coordinates))
         except (AttributeError, vol.ExactSequenceInvalid) as ex:
-            raise InvalidCoordinatesException(
-                f"{coordinates} are not valid coordinates"
+            raise UpdateFailed(
+                f"{entity_id} does not have valid coordinates: {coordinates}"
             ) from ex
         return formatted_coordinates
 
@@ -275,7 +287,3 @@ def next_datetime(simple_time: time) -> datetime:
     if combined < datetime.now():
         combined = combined + timedelta(days=1)
     return combined
-
-
-class InvalidCoordinatesException(Exception):
-    """Coordinates for origin or destination are malformed."""

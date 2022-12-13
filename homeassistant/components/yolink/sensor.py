@@ -53,6 +53,7 @@ class YoLinkSensorEntityDescription(
     """YoLink SensorEntityDescription."""
 
     value: Callable = lambda state: state
+    should_update_entity: Callable = lambda state: True
 
 
 SENSOR_DEVICE_TYPE = [
@@ -127,6 +128,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         name="Temperature",
         state_class=SensorStateClass.MEASUREMENT,
         exists_fn=lambda device: device.device_type in MCU_DEV_TEMPERATURE_SENSOR,
+        should_update_entity=lambda value: value is not None,
     ),
     YoLinkSensorEntityDescription(
         key="loraInfo",
@@ -137,6 +139,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        should_update_entity=lambda value: value is not None,
     ),
 )
 
@@ -195,7 +198,7 @@ class YoLinkSensorEntity(YoLinkEntity, SensorEntity):
             attr_val := self.entity_description.value(
                 state.get(self.entity_description.key)
             )
-        ) is None and self.entity_description.key in ["devTemperature", "loraInfo"]:
+        ) is None and self.entity_description.should_update_entity(attr_val) is False:
             return
         self._attr_native_value = attr_val
         self.async_write_ha_state()

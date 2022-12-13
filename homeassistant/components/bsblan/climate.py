@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from bsblan import BSBLAN, BSBLANError, Device, Info, State
+from bsblan import BSBLAN, BSBLANError, Device, Info, State, StaticState
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -15,7 +15,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -56,6 +56,7 @@ async def async_setup_entry(
                 data.client,
                 data.device,
                 data.info,
+                data.static,
                 entry,
             )
         ],
@@ -83,20 +84,21 @@ class BSBLANClimate(BSBLANEntity, CoordinatorEntity, ClimateEntity):
         client: BSBLAN,
         device: Device,
         info: Info,
+        static: StaticState,
         entry: ConfigEntry,
     ) -> None:
         """Initialize BSBLAN climate device."""
-        super().__init__(client, device, info, entry)
+        super().__init__(client, device, info, static, entry)
         CoordinatorEntity.__init__(self, coordinator)
         self._attr_unique_id = f"{format_mac(device.MAC)}-climate"
 
-        self._attr_min_temp = float(self.coordinator.data.min_temp.value)
-        self._attr_max_temp = float(self.coordinator.data.max_temp.value)
-        self._attr_temperature_unit = (
-            TEMP_CELSIUS
-            if self.coordinator.data.current_temperature.unit == "&deg;C"
-            else TEMP_FAHRENHEIT
-        )
+        self._attr_min_temp = float(static.min_temp.value)
+        self._attr_max_temp = float(static.max_temp.value)
+        # check if self.coordinator.data.current_temperature.unit is "&deg;C" or "°C"
+        if self.coordinator.data.current_temperature.unit in ("&deg;C", "°C"):
+            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+        else:
+            self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
     @property
     def current_temperature(self) -> float | None:

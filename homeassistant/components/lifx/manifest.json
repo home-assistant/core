@@ -5,8 +5,8 @@
   "documentation": "https://www.home-assistant.io/integrations/lifx",
   "requirements": [
     "aiolifx==0.8.7",
-    "aiolifx_effects==0.3.0",
-    "aiolifx_themes==0.2.0"
+    "aiolifx_effects==0.3.1",
+    "aiolifx_themes==0.3.0"
   ],
   "quality_scale": "platinum",
   "dependencies": ["network"],

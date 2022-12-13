@@ -16,7 +16,7 @@
                     "password": "Password",
                     "username": "Username"
                 },
-                "description": "Do you want to setup {name} ({ip_address})? You will need a local user created in your UniFi OS Console to log in with. Ubiquiti Cloud Users will not work. For more information: {local_user_documentation_url}",
+                "description": "Do you want to set up {name} ({ip_address})? You will need a local user created in your UniFi OS Console to log in with. Ubiquiti Cloud Users will not work. For more information: {local_user_documentation_url}",
                 "title": "UniFi Protect Discovered"
             },
             "reauth_confirm": {
@@ -38,6 +38,15 @@
                 },
                 "description": "You will need a local user created in your UniFi OS Console to log in with. Ubiquiti Cloud Users will not work. For more information: {local_user_documentation_url}",
                 "title": "UniFi Protect Setup"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "license_plate": {
+                "state": {
+                    "none": "Clear"
+                }
             }
         }
     },
