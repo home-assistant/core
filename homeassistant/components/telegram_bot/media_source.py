@@ -6,7 +6,7 @@ from functools import partial
 from http import HTTPStatus
 from io import BytesIO
 import logging
-from typing import  Dict, TypedDict
+from typing import TypedDict
 
 from aiohttp import web
 import telegram
@@ -31,7 +31,8 @@ _LOGGER = logging.getLogger(__name__)
 
 class MediaSourceOptions(TypedDict):
     """Media source options."""
-    # telefram.File identifier:
+
+     # telefram.File identifier:
     file_id: str
     # Play_Media needs the mime and telegram provides it
     mime_type: str
@@ -42,27 +43,24 @@ class MediaSourceOptions(TypedDict):
     bot_platform: str
 
 
-
 class TelegramManager:
+    """Download and serve telegram media."""
+
     def __init__(self, hass):
+        """Initialize storing all needed info."""
         self.hass = hass
-        self.bots: Dict[str, telegram.Bot] = {}
+        self.bots: dict[str, telegram.Bot] = {}
         self.mem_cache = {}
         self.mem_cache_entries = deque([], maxlen=5)
 
-
-    def _generate_cache_key(self, media: MediaSourceOptions) -> str:
-        return media["file_id"]
-
     async def async_get_url(self, media: MediaSourceOptions) -> str:
         """Get URL for play message.
+
         This method is a coroutine.
         """
-        cache_key = self._generate_cache_key(media)
+        filename = media["file_id"]
         # Is file already in memory
-        if cache_key in self.mem_cache:
-            filename = media["file_id"]
-        else:
+        if filename not in self.mem_cache:
             filename = await self.hass.async_add_executor_job(
                 partial(self._download_file, media=media)
             )
@@ -83,15 +81,18 @@ class TelegramManager:
         return media["file_id"]
 
     async def async_read_telegram_file(self, filename: str):
+        """Returns the requested filename."""
         try:
             (mime_type, data) = self.mem_cache[filename]
         except KeyError as err:
             raise Unresolvable(str(err)) from err
         return mime_type, data
 
+
 async def async_get_media_source(hass: HomeAssistant) -> TelegramMediaSource:
     """Set up telegram media source."""
     return TelegramMediaSource(hass)
+
 
 @callback
 def generate_media_source_id(
@@ -110,6 +111,7 @@ def generate_media_source_id(
         DOMAIN,
         str(URL.build(path=file_id, query=params)),
     )
+
 
 @callback
 def media_source_id_to_kwargs(media_source_id: str) -> MediaSourceOptions:

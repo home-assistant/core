@@ -932,7 +932,6 @@ class BaseTelegramBotEntity:
         # the bot platform is used to identify the bot,
         # since we have one bot per platform.
         self.bot_platform = bot_platform
-        
 
     def handle_update(self, update: Update, context: CallbackContext) -> bool:
         """Handle updates from bot dispatcher set up by the respective platform."""
@@ -978,7 +977,7 @@ class BaseTelegramBotEntity:
             event_type = EVENT_TELEGRAM_COMMAND
             event_data.update(self._get_command_event_data(message.text))
         elif message.voice is not None:
-            file=message.voice.get_file()
+            file = message.voice.get_file()
             event_type = EVENT_TELEGRAM_VOICE
             event_data[ATTR_TEXT] = message.text
             event_data[ATTR_MEDIA_URL] = generate_media_source_id(
