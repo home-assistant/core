@@ -81,7 +81,7 @@ class AbortFlow(FlowError):
         self.description_placeholders = description_placeholders
 
 
-class _BaseFlowResult(TypedDict, total=False):
+class FlowResult(TypedDict, total=False):
     """Typed result dict."""
 
     context: dict[str, Any]
@@ -100,39 +100,31 @@ class _BaseFlowResult(TypedDict, total=False):
     reason: str
     required: bool
     result: Any
+    step_id: str
     title: str
     type: FlowResultType
     url: str
     version: int
 
 
-class FlowResult(_BaseFlowResult, total=False):
-    """Typed result dict."""
-
-    step_id: str
-
-
-class ExtendedFlowResult(_BaseFlowResult, total=False):
-    """Typed result dict."""
-
-    step_id: str | None
-
-
 @callback
 def _async_flow_handler_to_flow_result(
     flows: Iterable[FlowHandler], include_uninitialized: bool
-) -> list[ExtendedFlowResult]:
+) -> list[FlowResult]:
     """Convert a list of FlowHandler to a partial FlowResult that can be serialized."""
-    return [
-        ExtendedFlowResult(
+    results = []
+    for flow in flows:
+        if not include_uninitialized and flow.cur_step is None:
+            continue
+        result = FlowResult(
             flow_id=flow.flow_id,
             handler=flow.handler,
             context=flow.context,
-            step_id=flow.cur_step["step_id"] if flow.cur_step else None,
         )
-        for flow in flows
-        if include_uninitialized or flow.cur_step is not None
-    ]
+        if flow.cur_step:
+            result["step_id"] = flow.cur_step["step_id"]
+        results.append(result)
+    return results
 
 
 class FlowManager(abc.ABC):
@@ -190,16 +182,14 @@ class FlowManager(abc.ABC):
         )
 
     @callback
-    def async_get(self, flow_id: str) -> ExtendedFlowResult:
+    def async_get(self, flow_id: str) -> FlowResult:
         """Return a flow in progress as a partial FlowResult."""
         if (flow := self._progress.get(flow_id)) is None:
             raise UnknownFlow
         return _async_flow_handler_to_flow_result([flow], False)[0]
 
     @callback
-    def async_progress(
-        self, include_uninitialized: bool = False
-    ) -> list[ExtendedFlowResult]:
+    def async_progress(self, include_uninitialized: bool = False) -> list[FlowResult]:
         """Return the flows in progress as a partial FlowResult."""
         return _async_flow_handler_to_flow_result(
             self._progress.values(), include_uninitialized
@@ -208,7 +198,7 @@ class FlowManager(abc.ABC):
     @callback
     def async_progress_by_handler(
         self, handler: str, include_uninitialized: bool = False
-    ) -> list[ExtendedFlowResult]:
+    ) -> list[FlowResult]:
         """Return the flows in progress by handler as a partial FlowResult."""
         return _async_flow_handler_to_flow_result(
             self._async_progress_by_handler(handler), include_uninitialized
