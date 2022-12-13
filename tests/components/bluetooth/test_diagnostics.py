@@ -604,6 +604,7 @@ async def test_diagnostics_remote_adapter(
                         "source": "esp32",
                         "storage": None,
                         "type": "FakeScanner",
+                        "start_time": ANY,
                     },
                 ],
             },
