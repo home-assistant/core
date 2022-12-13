@@ -53,7 +53,9 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_PAYLOAD_HOME, default=STATE_HOME): cv.string,
         vol.Optional(CONF_PAYLOAD_NOT_HOME, default=STATE_NOT_HOME): cv.string,
-        vol.Optional(CONF_PAYLOAD_AUTO_ZONE, default=DEFAULT_PAYLOAD_AUTO_ZONE): cv.string,
+        vol.Optional(
+            CONF_PAYLOAD_AUTO_ZONE, default=DEFAULT_PAYLOAD_AUTO_ZONE
+        ): cv.string,
         vol.Optional(CONF_SOURCE_TYPE, default=DEFAULT_SOURCE_TYPE): vol.In(
             SOURCE_TYPES
         ),
