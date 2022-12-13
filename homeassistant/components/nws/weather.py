@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from types import MappingProxyType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
@@ -97,11 +97,13 @@ async def async_setup_entry(
     )
 
 
-class NWSForecast(Forecast):
-    """Forecast with extra fields needed for NWS."""
+if TYPE_CHECKING:
 
-    detailed_description: str | None
-    daytime: bool | None
+    class NWSForecast(Forecast):
+        """Forecast with extra fields needed for NWS."""
+
+        detailed_description: str | None
+        daytime: bool | None
 
 
 class NWSWeather(WeatherEntity):
