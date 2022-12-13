@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -50,7 +51,7 @@ def washer_state(washer: WasherDryer) -> str | None:
     if machine_state == MachineState.RunningMainCycle and machine_cycle:
         return machine_cycle
 
-    return MACHINE_STATE.get(machine_state)
+    return MACHINE_STATE.get(machine_state, STATE_UNKNOWN)
 
 
 @dataclass
