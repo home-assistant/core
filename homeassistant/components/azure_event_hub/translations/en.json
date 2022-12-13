@@ -32,7 +32,7 @@
                     "event_hub_instance_name": "Event Hub Instance Name",
                     "use_connection_string": "Use Connection String"
                 },
-                "title": "Setup your Azure Event Hub integration"
+                "title": "Set up your Azure Event Hub integration"
             }
         }
     },

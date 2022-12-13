@@ -10,7 +10,7 @@
         "flow_title": "{name} ( {address} )",
         "step": {
             "confirm": {
-                "description": "Vil du konfigurere {name}?"
+                "description": "Vil du sette opp {name} ?"
             },
             "password": {
                 "data": {
