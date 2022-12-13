@@ -305,14 +305,6 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
                     OverkizCommand.SET_BOOST_MODE, OverkizCommand.OFF
                 )
 
-            if self.executor.has_command(OverkizCommand.SET_BOOST_MODE_DURATION):
-                await self.executor.async_execute_command(
-                    OverkizCommand.SET_BOOST_MODE_DURATION, 0
-                )
-                await self.executor.async_execute_command(
-                    OverkizCommand.REFRESH_BOOST_MODE_DURATION
-                )
-
             if self.executor.has_command(OverkizCommand.SET_CURRENT_OPERATING_MODE):
                 current_operating_mode = self.executor.select_state(
                     OverkizState.CORE_OPERATING_MODE
@@ -330,6 +322,11 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
         await self.executor.async_execute_command(
             OverkizCommand.SET_DHW_MODE, self.overkiz_to_operation_mode[operation_mode]
         )
+
+        if self.executor.has_command(OverkizCommand.REFRESH_BOOST_MODE_DURATION):
+            await self.executor.async_execute_command(
+                OverkizCommand.REFRESH_BOOST_MODE_DURATION
+            )
 
         if self.executor.has_command(OverkizCommand.REFRESH_DHW_MODE):
             await self.executor.async_execute_command(OverkizCommand.REFRESH_DHW_MODE)

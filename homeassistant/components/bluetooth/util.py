@@ -36,9 +36,9 @@ def async_load_history_from_system(
     }
 
 
-async def async_reset_adapter(adapter: str | None) -> bool | None:
+async def async_reset_adapter(adapter: str | None, mac_address: str) -> bool | None:
     """Reset the adapter."""
     if adapter and adapter.startswith("hci"):
         adapter_id = int(adapter[3:])
-        return await recover_adapter(adapter_id)
+        return await recover_adapter(adapter_id, mac_address)
     return False
