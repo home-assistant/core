@@ -11,7 +11,7 @@ from homeassistant.components.device_tracker import (
     SourceType,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import FREQUENCY_GIGAHERTZ, STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, UnitOfFrequency
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -119,7 +119,7 @@ class DevoloScannerEntity(CoordinatorEntity, ScannerEntity):
         if station:
             attrs["wifi"] = WIFI_APTYPE.get(station["vap_type"], STATE_UNKNOWN)
             attrs["band"] = (
-                f"{WIFI_BANDS.get(station['band'])} {FREQUENCY_GIGAHERTZ}"
+                f"{WIFI_BANDS.get(station['band'])} {UnitOfFrequency.GIGAHERTZ}"
                 if WIFI_BANDS.get(station["band"])
                 else STATE_UNKNOWN
             )
