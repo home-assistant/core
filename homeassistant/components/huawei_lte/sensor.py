@@ -694,10 +694,9 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
     @property
     def icon(self) -> str | None:
         """Return icon for sensor."""
-        icon = self.entity_description.icon
         if self.entity_description.icon_fn:
             return self.entity_description.icon_fn(self.state)
-        return icon
+        return self.entity_description.icon
 
     async def async_update(self) -> None:
         """Update state."""
