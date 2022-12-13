@@ -10,6 +10,7 @@ from apcaccess import status
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,6 +19,8 @@ DOMAIN: Final = "apcupsd"
 VALUE_ONLINE: Final = 8
 PLATFORMS: Final = (Platform.BINARY_SENSOR, Platform.SENSOR)
 MIN_TIME_BETWEEN_UPDATES: Final = timedelta(seconds=60)
+
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
