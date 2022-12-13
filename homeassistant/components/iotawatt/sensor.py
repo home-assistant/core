@@ -17,10 +17,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
-    FREQUENCY_HERTZ,
     PERCENTAGE,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
+    UnitOfFrequency,
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -60,8 +60,9 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, IotaWattSensorEntityDescription] = {
     ),
     "Hz": IotaWattSensorEntityDescription(
         "Hz",
-        native_unit_of_measurement=FREQUENCY_HERTZ,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.FREQUENCY,
         icon="mdi:flash",
         entity_registry_enabled_default=False,
     ),
