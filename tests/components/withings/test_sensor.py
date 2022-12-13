@@ -333,7 +333,7 @@ async def test_sensor_default_enabled_entities(
         entity_id = await async_get_entity_id(hass, attribute, person.user_id)
         state_obj = hass.states.get(entity_id)
 
-        if attribute.enabled_by_default:
+        if attribute.entity_description.entity_registry_enabled_default:
             async_assert_state_equals(entity_id, state_obj, expected, attribute)
         else:
             assert state_obj is None
