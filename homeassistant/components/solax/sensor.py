@@ -19,9 +19,9 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
-    FREQUENCY_HERTZ,
     PERCENTAGE,
     TEMP_CELSIUS,
+    UnitOfFrequency,
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
@@ -82,7 +82,7 @@ SENSOR_DESCRIPTIONS: dict[tuple[Units, bool], SensorEntityDescription] = {
     (Units.HZ, False): SensorEntityDescription(
         key=f"{Units.HZ}_{False}",
         device_class=SensorDeviceClass.FREQUENCY,
-        native_unit_of_measurement=FREQUENCY_HERTZ,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (Units.NONE, False): SensorEntityDescription(

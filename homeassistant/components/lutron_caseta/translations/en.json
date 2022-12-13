@@ -11,7 +11,7 @@
         "flow_title": "{name} ({host})",
         "step": {
             "import_failed": {
-                "description": "Couldn\u2019t setup bridge (host: {host}) imported from configuration.yaml.",
+                "description": "Couldn\u2019t set up bridge (host: {host}) imported from configuration.yaml.",
                 "title": "Failed to import Cas\u00e9ta bridge configuration."
             },
             "link": {

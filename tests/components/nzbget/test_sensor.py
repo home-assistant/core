@@ -25,7 +25,12 @@ async def test_sensors(hass, nzbget_api) -> None:
     uptime = now - timedelta(seconds=600)
 
     sensors = {
-        "article_cache": ("ArticleCacheMB", "64", DATA_MEGABYTES, None),
+        "article_cache": (
+            "ArticleCacheMB",
+            "64",
+            DATA_MEGABYTES,
+            SensorDeviceClass.DATA_SIZE,
+        ),
         "average_speed": (
             "AverageDownloadRate",
             "1.19",
@@ -39,11 +44,26 @@ async def test_sensors(hass, nzbget_api) -> None:
             DATA_RATE_MEGABYTES_PER_SECOND,
             SensorDeviceClass.DATA_RATE,
         ),
-        "size": ("DownloadedSizeMB", "256", DATA_MEGABYTES, None),
-        "disk_free": ("FreeDiskSpaceMB", "1024", DATA_MEGABYTES, None),
+        "size": (
+            "DownloadedSizeMB",
+            "256",
+            DATA_MEGABYTES,
+            SensorDeviceClass.DATA_SIZE,
+        ),
+        "disk_free": (
+            "FreeDiskSpaceMB",
+            "1024",
+            DATA_MEGABYTES,
+            SensorDeviceClass.DATA_SIZE,
+        ),
         "post_processing_jobs": ("PostJobCount", "2", "Jobs", None),
         "post_processing_paused": ("PostPaused", "False", None, None),
-        "queue_size": ("RemainingSizeMB", "512", DATA_MEGABYTES, None),
+        "queue_size": (
+            "RemainingSizeMB",
+            "512",
+            DATA_MEGABYTES,
+            SensorDeviceClass.DATA_SIZE,
+        ),
         "uptime": ("UpTimeSec", uptime.isoformat(), None, SensorDeviceClass.TIMESTAMP),
         "speed_limit": (
             "DownloadLimit",
