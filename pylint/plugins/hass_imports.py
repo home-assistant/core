@@ -265,7 +265,7 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
         ),
         ObsoleteImportMatch(
             reason="replaced by unit enums",
-            constant=re.compile(r"^DATA_RATE_(\w*)$"),
+            constant=re.compile(r"^DATA_(\w*)$"),
         ),
         ObsoleteImportMatch(
             reason="replaced by ***DeviceClass enum",
@@ -278,6 +278,10 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
         ObsoleteImportMatch(
             reason="replaced by EntityCategory enum",
             constant=re.compile(r"^(ENTITY_CATEGORY_(\w*))|(ENTITY_CATEGORIES)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by unit enums",
+            constant=re.compile(r"^FREQUENCY_(\w*)$"),
         ),
         ObsoleteImportMatch(
             reason="replaced by unit enums",
