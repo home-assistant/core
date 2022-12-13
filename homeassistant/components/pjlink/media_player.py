@@ -11,6 +11,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -50,9 +51,9 @@ def setup_platform(
     encoding = config.get(CONF_ENCODING)
     password = config.get(CONF_PASSWORD)
 
-    if "pjlink" not in hass.data:
-        hass.data["pjlink"] = {}
-    hass_data = hass.data["pjlink"]
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+    hass_data = hass.data[DOMAIN]
 
     device_label = f"{host}:{port}"
     if device_label in hass_data:
