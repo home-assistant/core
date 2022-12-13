@@ -264,6 +264,12 @@ class BraviaTVOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
 
         sources = coordinator.source_map.values()
         source_list = [item["title"] for item in sources]
+        ignored_sources = self.options.get(CONF_IGNORED_SOURCES, [])
+
+        for item in ignored_sources:
+            if item not in source_list:
+                source_list.append(item)
+
         self.data_schema = vol.Schema(
             {
                 vol.Optional(CONF_IGNORED_SOURCES): cv.multi_select(source_list),
