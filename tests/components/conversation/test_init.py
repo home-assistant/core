@@ -224,11 +224,6 @@ async def test_http_api(hass, init_components, hass_client):
             "data": {
                 "targets": [
                     {
-                        "type": "domain",
-                        "name": "light",
-                        "id": None,
-                    },
-                    {
                         "type": "entity",
                         "name": "kitchen",
                         "id": "light.kitchen",

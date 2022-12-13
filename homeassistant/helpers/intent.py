@@ -281,7 +281,7 @@ class Intent:
     @callback
     def create_response(self) -> IntentResponse:
         """Create a response."""
-        return IntentResponse(self, language=self.language)
+        return IntentResponse(language=self.language, intent=self)
 
 
 class IntentResponseType(Enum):
@@ -338,15 +338,15 @@ class IntentResponse:
 
     def __init__(
         self,
+        language: str,
         intent: Intent | None = None,
-        language: str | None = None,
     ) -> None:
         """Initialize an IntentResponse."""
+        self.language = language
         self.intent = intent
         self.speech: dict[str, dict[str, Any]] = {}
         self.reprompt: dict[str, dict[str, Any]] = {}
         self.card: dict[str, dict[str, str]] = {}
-        self.language = language
         self.error_code: IntentResponseErrorCode | None = None
         self.targets: list[IntentResponseTarget] = []
 
