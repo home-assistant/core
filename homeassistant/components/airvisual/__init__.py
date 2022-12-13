@@ -314,7 +314,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
 
     # 2 -> 3: Moving AirVisual Pro to its own domain
-    if version == 2:
+    elif version == 2:
         version = 3
 
         if entry.data[CONF_INTEGRATION_TYPE] == INTEGRATION_TYPE_NODE_PRO:

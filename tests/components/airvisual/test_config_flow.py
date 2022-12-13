@@ -32,6 +32,7 @@ from homeassistant.const import (
     CONF_SHOW_ON_MAP,
     CONF_STATE,
 )
+from homeassistant.setup import async_setup_component
 
 
 @pytest.mark.parametrize(
@@ -174,8 +175,8 @@ async def test_errors(hass, data, exc, errors, integration_type):
         )
     ],
 )
-async def test_migration(hass, config, config_entry, setup_airvisual, unique_id):
-    """Test migrating from version 1 to the current version."""
+async def test_migration_1_2(hass, config, config_entry, setup_airvisual, unique_id):
+    """Test migrating from version 1 to 2."""
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 2
 
@@ -197,6 +198,29 @@ async def test_migration(hass, config, config_entry, setup_airvisual, unique_id)
         CONF_COUNTRY: "China",
         CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY_NAME,
     }
+
+
+@pytest.mark.parametrize(
+    "config,config_entry_version,unique_id",
+    [
+        (
+            {
+                CONF_IP_ADDRESS: "192.168.1.100",
+                CONF_PASSWORD: "abcde12345",
+                CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_NODE_PRO,
+            },
+            2,
+            "192.16.1.100",
+        )
+    ],
+)
+async def test_migration_2_3(hass, config, config_entry, unique_id):
+    """Test migrating from version 2 to 3."""
+    with patch.object(hass.config_entries.flow, "async_init"):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+        config_entries = hass.config_entries.async_entries(DOMAIN)
+        assert len(config_entries) == 0
 
 
 async def test_options_flow(hass, config_entry):
