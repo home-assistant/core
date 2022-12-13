@@ -413,4 +413,4 @@ def percentage_to_brightness(percentage: int) -> int:
 def mac_address_from_name(name: str) -> str | None:
     """Convert a name to a mac address."""
     mac = name.partition(".")[0].partition("-")[-1]
-    return mac.upper() if len(mac) == 16 else None
+    return mac.upper() if len(mac) == 12 else None
