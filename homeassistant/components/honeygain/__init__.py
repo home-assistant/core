@@ -10,6 +10,7 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util import Throttle
 
+from .config_flow import CannotConnect, InvalidAuth
 from .const import DOMAIN, LOGGER, UPDATE_INTERVAL_MINS
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -66,5 +67,7 @@ class HoneygainData:
             self.user = self.honeygain.me()
             self.balances = self.honeygain.balances()
             self.stats = self.honeygain.stats()
-        except ConnectionError:
+        except CannotConnect:
             LOGGER.warning("Failed to connect to Honeygain for update")
+        except InvalidAuth:
+            LOGGER.warning("Failed to authenticate with Honeygain for update")
