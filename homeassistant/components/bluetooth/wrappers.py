@@ -261,6 +261,12 @@ class HaBleakClientWrapper(BleakClient):
             if backend := self._async_get_backend_for_ble_device(
                 models.MANAGER, device_advertisement_data[0]
             ):
+                _LOGGER.warning(
+                    "%s: using backend: %s with details %s",
+                    address,
+                    backend,
+                    device_advertisement_data[0].details,
+                )
                 return backend
 
         raise BleakError(
