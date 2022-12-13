@@ -43,11 +43,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .media_source import (
-    generate_media_source_id,
-    TelegramManager,
-    TelegramView,
-)
+from .media_source import TelegramManager, TelegramView, generate_media_source_id
 
 _LOGGER = logging.getLogger(__name__)
 
