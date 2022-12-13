@@ -348,7 +348,7 @@ class FlowManager(abc.ABC):
 
     async def _async_handle_step(
         self,
-        flow: Any,
+        flow: FlowHandler,
         step_id: str,
         user_input: dict | BaseServiceInfo | None,
         step_done: asyncio.Future | None = None,
@@ -415,7 +415,7 @@ class FlowHandler:
     """Handle the configuration flow of a component."""
 
     # Set by flow manager
-    cur_step: dict[str, Any] | None = None
+    cur_step: FlowResult | None = None
 
     # While not purely typed, it makes typehinting more useful for us
     # and removes the need for constant None checks or asserts.
