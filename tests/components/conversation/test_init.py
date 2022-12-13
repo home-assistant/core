@@ -101,10 +101,10 @@ async def test_http_processing_intent(hass, hass_client, hass_admin_user):
 
         intent_type = "OrderBeer"
 
-        async def async_handle(self, intent, conversation_id):
+        async def async_handle(self, intent):
             """Handle the intent."""
             assert intent.context.user_id == hass_admin_user.id
-            response = intent.create_response(conversation_id=conversation_id)
+            response = intent.create_response()
             response.async_set_speech(
                 "I've ordered a {}!".format(intent.slots["type"]["value"])
             )
@@ -131,18 +131,20 @@ async def test_http_processing_intent(hass, hass_client, hass_admin_user):
     data = await resp.json()
 
     assert data == {
-        "response_type": "action_done",
-        "card": {
-            "simple": {"content": "You chose a Grolsch.", "title": "Beer ordered"}
+        "response": {
+            "response_type": "action_done",
+            "card": {
+                "simple": {"content": "You chose a Grolsch.", "title": "Beer ordered"}
+            },
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "I've ordered a Grolsch!",
+                }
+            },
+            "language": hass.config.language,
+            "data": {"targets": []},
         },
-        "speech": {
-            "plain": {
-                "extra_data": None,
-                "speech": "I've ordered a Grolsch!",
-            }
-        },
-        "language": hass.config.language,
-        "data": {"targets": []},
         "conversation_id": None,
     }
 
@@ -214,23 +216,25 @@ async def test_http_api(hass, init_components, hass_client):
     data = await resp.json()
 
     assert data == {
-        "card": {},
-        "speech": {"plain": {"extra_data": None, "speech": "Turned kitchen on"}},
-        "language": hass.config.language,
-        "response_type": "action_done",
-        "data": {
-            "targets": [
-                {
-                    "type": "domain",
-                    "name": "light",
-                    "id": None,
-                },
-                {
-                    "type": "entity",
-                    "name": "kitchen",
-                    "id": "light.kitchen",
-                },
-            ]
+        "response": {
+            "card": {},
+            "speech": {"plain": {"extra_data": None, "speech": "Turned kitchen on"}},
+            "language": hass.config.language,
+            "response_type": "action_done",
+            "data": {
+                "targets": [
+                    {
+                        "type": "domain",
+                        "name": "light",
+                        "id": None,
+                    },
+                    {
+                        "type": "entity",
+                        "name": "kitchen",
+                        "id": "light.kitchen",
+                    },
+                ]
+            },
         },
         "conversation_id": None,
     }
@@ -252,17 +256,19 @@ async def test_http_api_no_match(hass, init_components, hass_client):
     data = await resp.json()
 
     assert data == {
-        "card": {},
-        "speech": {
-            "plain": {
-                "extra_data": None,
-                "speech": "Sorry, I didn't understand that",
+        "response": {
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Sorry, I didn't understand that",
+                },
             },
-        },
-        "language": hass.config.language,
-        "response_type": "error",
-        "data": {
-            "code": "no_intent_match",
+            "language": hass.config.language,
+            "response_type": "error",
+            "data": {
+                "code": "no_intent_match",
+            },
         },
         "conversation_id": None,
     }
@@ -280,17 +286,19 @@ async def test_http_api_no_valid_targets(hass, init_components, hass_client):
     data = await resp.json()
 
     assert data == {
-        "response_type": "error",
-        "card": {},
-        "speech": {
-            "plain": {
-                "extra_data": None,
-                "speech": "Unable to find an entity called kitchen",
+        "response": {
+            "response_type": "error",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Unable to find an entity called kitchen",
+                },
             },
-        },
-        "language": hass.config.language,
-        "data": {
-            "code": "no_valid_targets",
+            "language": hass.config.language,
+            "data": {
+                "code": "no_valid_targets",
+            },
         },
         "conversation_id": None,
     }
@@ -317,17 +325,19 @@ async def test_http_api_handle_failure(hass, init_components, hass_client):
     data = await resp.json()
 
     assert data == {
-        "response_type": "error",
-        "card": {},
-        "speech": {
-            "plain": {
-                "extra_data": None,
-                "speech": "Unexpected error turning on the kitchen light",
-            }
-        },
-        "language": hass.config.language,
-        "data": {
-            "code": "failed_to_handle",
+        "response": {
+            "response_type": "error",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Unexpected error turning on the kitchen light",
+                }
+            },
+            "language": hass.config.language,
+            "data": {
+                "code": "failed_to_handle",
+            },
         },
         "conversation_id": None,
     }
@@ -355,9 +365,7 @@ async def test_custom_agent(hass, hass_client, hass_admin_user):
         async def async_process(self, text, context, conversation_id, language):
             """Process some text."""
             calls.append((text, context, conversation_id, language))
-            response = intent.IntentResponse(
-                language=language, conversation_id=conversation_id
-            )
+            response = intent.IntentResponse(language=language)
             response.async_set_speech("Test response")
             return response
 
@@ -377,16 +385,18 @@ async def test_custom_agent(hass, hass_client, hass_admin_user):
     )
     assert resp.status == HTTPStatus.OK
     assert await resp.json() == {
-        "response_type": "action_done",
-        "card": {},
-        "speech": {
-            "plain": {
-                "extra_data": None,
-                "speech": "Test response",
-            }
+        "response": {
+            "response_type": "action_done",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Test response",
+                }
+            },
+            "language": "test-language",
+            "data": {"targets": []},
         },
-        "language": "test-language",
-        "data": {"targets": []},
         "conversation_id": "test-conv-id",
     }
 

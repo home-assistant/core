@@ -60,7 +60,6 @@ async def async_handle(
     text_input: str | None = None,
     context: Context | None = None,
     language: str | None = None,
-    conversation_id: str | None = None,
 ) -> IntentResponse:
     """Handle an intent."""
     handler: IntentHandler = hass.data.get(DATA_KEY, {}).get(intent_type)
@@ -80,7 +79,7 @@ async def async_handle(
 
     try:
         _LOGGER.info("Triggering intent handler %s", handler)
-        result = await handler.async_handle(intent, conversation_id)
+        result = await handler.async_handle(intent)
         return result
     except vol.Invalid as err:
         _LOGGER.warning("Received invalid slot info for %s: %s", intent_type, err)
@@ -165,9 +164,7 @@ class IntentHandler:
 
         return self._slot_schema(slots)  # type: ignore[no-any-return]
 
-    async def async_handle(
-        self, intent_obj: Intent, conversation_id: str | None = None
-    ) -> IntentResponse:
+    async def async_handle(self, intent_obj: Intent) -> IntentResponse:
         """Handle the intent."""
         raise NotImplementedError()
 
@@ -209,9 +206,7 @@ class ServiceIntentHandler(IntentHandler):
         self.service = service
         self.speech = speech
 
-    async def async_handle(
-        self, intent_obj: Intent, conversation_id: str | None = None
-    ) -> IntentResponse:
+    async def async_handle(self, intent_obj: Intent) -> IntentResponse:
         """Handle the hass intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -224,7 +219,7 @@ class ServiceIntentHandler(IntentHandler):
             context=intent_obj.context,
         )
 
-        response = intent_obj.create_response(conversation_id=conversation_id)
+        response = intent_obj.create_response()
         response.async_set_speech(self.speech.format(state.name))
 
         # Targets go from general to specific
@@ -290,11 +285,9 @@ class Intent:
         self.category = category
 
     @callback
-    def create_response(self, conversation_id: str | None = None) -> IntentResponse:
+    def create_response(self) -> IntentResponse:
         """Create a response."""
-        return IntentResponse(
-            self, language=self.language, conversation_id=conversation_id
-        )
+        return IntentResponse(self, language=self.language)
 
 
 class IntentResponseType(Enum):
@@ -350,7 +343,6 @@ class IntentResponse:
         self,
         intent: Intent | None = None,
         language: str | None = None,
-        conversation_id: str | None = None,
     ) -> None:
         """Initialize an IntentResponse."""
         self.intent = intent
@@ -358,7 +350,6 @@ class IntentResponse:
         self.reprompt: dict[str, dict[str, Any]] = {}
         self.card: dict[str, dict[str, str]] = {}
         self.language = language
-        self.conversation_id = conversation_id
         self.error_code: IntentResponseErrorCode | None = None
         self.targets: list[IntentResponseTarget] = []
 
@@ -423,7 +414,6 @@ class IntentResponse:
             "card": self.card,
             "language": self.language,
             "response_type": self.response_type.value,
-            "conversation_id": self.conversation_id,
         }
 
         if self.reprompt:

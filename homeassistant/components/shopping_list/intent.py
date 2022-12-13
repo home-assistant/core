@@ -42,9 +42,7 @@ class ListTopItemsIntent(intent.IntentHandler):
     intent_type = INTENT_LAST_ITEMS
     slot_schema = {"item": cv.string}
 
-    async def async_handle(
-        self, intent_obj: intent.Intent, conversation_id: str | None = None
-    ):
+    async def async_handle(self, intent_obj: intent.Intent):
         """Handle the intent."""
         items = intent_obj.hass.data[DOMAIN].items[-5:]
         response = intent_obj.create_response()

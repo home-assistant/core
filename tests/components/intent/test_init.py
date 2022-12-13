@@ -17,10 +17,10 @@ async def test_http_handle_intent(hass, hass_client, hass_admin_user):
 
         intent_type = "OrderBeer"
 
-        async def async_handle(self, intent, conversation_id):
+        async def async_handle(self, intent):
             """Handle the intent."""
             assert intent.context.user_id == hass_admin_user.id
-            response = intent.create_response(conversation_id=conversation_id)
+            response = intent.create_response()
             response.async_set_speech(
                 "I've ordered a {}!".format(intent.slots["type"]["value"])
             )
@@ -55,7 +55,6 @@ async def test_http_handle_intent(hass, hass_client, hass_admin_user):
         "language": hass.config.language,
         "response_type": "action_done",
         "data": {"targets": []},
-        "conversation_id": None,
     }
 
 

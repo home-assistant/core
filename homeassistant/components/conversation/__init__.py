@@ -207,7 +207,7 @@ async def _async_converse(
     conversation_id: str | None,
     context: core.Context,
     language: str | None = None,
-) -> intent.IntentResponse:
+) -> dict[str, Any]:
     """Process text and get intent."""
     agent = await _get_agent(hass)
     if language is None:
@@ -240,4 +240,6 @@ async def _async_converse(
             "Sorry, I didn't understand that",
         )
 
-    return intent_result
+    # Wrap with conversation id
+
+    return {"response": intent_result, "conversation_id": conversation_id}

@@ -79,7 +79,7 @@ class ScriptIntentHandler(intent.IntentHandler):
         self.intent_type = intent_type
         self.config = config
 
-    async def async_handle(self, intent_obj, conversation_id: str | None = None):
+    async def async_handle(self, intent_obj: intent.Intent):
         """Handle the intent."""
         speech = self.config.get(CONF_SPEECH)
         reprompt = self.config.get(CONF_REPROMPT)

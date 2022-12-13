@@ -37,9 +37,7 @@ class HumidityHandler(intent.IntentHandler):
         vol.Required("humidity"): vol.All(vol.Coerce(int), vol.Range(0, 100)),
     }
 
-    async def async_handle(
-        self, intent_obj: intent.Intent, conversation_id: str | None = None
-    ) -> intent.IntentResponse:
+    async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the hass intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
