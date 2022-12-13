@@ -11,7 +11,7 @@ from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_TYPE
-from homeassistant.core import HomeAssistant, async_get_hass, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
@@ -80,9 +80,8 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     @callback
     @staticmethod
-    def async_setup_preview() -> None:
+    def async_setup_preview(hass: HomeAssistant) -> None:
         """Set up preview WS API."""
-        hass = async_get_hass()
         websocket_api.async_register_command(hass, ws_preview_min_max)
 
 

@@ -274,10 +274,11 @@ class SchemaConfigFlowHandler(config_entries.ConfigFlow, ABC):
             if cls.options_flow is None:
                 raise UnknownHandler
 
-            cls.async_setup_preview()
-
             return SchemaOptionsFlowHandler(
-                config_entry, cls.options_flow, cls.async_options_flow_finished
+                config_entry,
+                cls.options_flow,
+                cls.async_options_flow_finished,
+                cls.async_setup_preview,
             )
 
         # Create an async_get_options_flow method
@@ -290,11 +291,10 @@ class SchemaConfigFlowHandler(config_entries.ConfigFlow, ABC):
     def __init__(self) -> None:
         """Initialize config flow."""
         self._common_handler = SchemaCommonFlowHandler(self, self.config_flow, None)
-        self.async_setup_preview()
 
     @callback
     @staticmethod
-    def async_setup_preview() -> None:
+    def async_setup_preview(hass: HomeAssistant) -> None:
         """Set up preview."""
 
     @classmethod
@@ -369,6 +369,7 @@ class SchemaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
         options_flow: Mapping[str, SchemaFlowStep],
         async_options_flow_finished: Callable[[HomeAssistant, Mapping[str, Any]], None]
         | None = None,
+        async_setup_preview: Callable[[HomeAssistant], None] | None = None,
     ) -> None:
         """Initialize options flow.
 
@@ -389,6 +390,9 @@ class SchemaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                 f"async_step_{step}",
                 types.MethodType(self._async_step(step), self),
             )
+
+        if async_setup_preview:
+            setattr(self, "async_setup_preview", async_setup_preview)
 
     @staticmethod
     def _async_step(step_id: str) -> Callable:
