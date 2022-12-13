@@ -330,7 +330,7 @@ class NotifySetupFlow(SetupFlow):
                     self._user_id,
                     {"notify_service": self._notify_service, "target": self._target},
                 )
-                return self.async_create_entry(title=self._auth_module.name, data={})
+                return self.async_create_entry(data={})
 
             errors["base"] = "invalid_code"
 

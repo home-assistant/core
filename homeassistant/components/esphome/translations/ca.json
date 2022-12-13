@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "El dispositiu ja est\u00e0 configurat",
             "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
+            "mdns_missing_mac": "Falta l'adre\u00e7a MAC a les propietats MDNS.",
             "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {

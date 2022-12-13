@@ -101,6 +101,8 @@ class PhilipsTVMediaPlayer(
 
     async def async_added_to_hass(self) -> None:
         """Handle being added to hass."""
+        await super().async_added_to_hass()
+
         if (entry := self.registry_entry) and entry.device_id:
             self.async_on_remove(
                 self._turn_on.async_register(

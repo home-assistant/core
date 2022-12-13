@@ -8,6 +8,7 @@
             "user": {
                 "data": {
                     "access_id": "Tuya IoT Access ID",
+                    "access_secret": "Tuya IoT Access Secret",
                     "country_code": "Krajina",
                     "password": "Heslo",
                     "username": "\u00da\u010det"
@@ -70,6 +71,7 @@
             },
             "fingerbot_mode": {
                 "state": {
+                    "click": "Stla\u010di\u0165",
                     "switch": "Prep\u00edna\u010d"
                 }
             },
@@ -120,7 +122,9 @@
             },
             "light_mode": {
                 "state": {
-                    "none": "Neakt\u00edvny"
+                    "none": "Neakt\u00edvny",
+                    "pos": "Zobrazuje umiestnenie prep\u00edna\u010da",
+                    "relay": "Ozna\u010duje stav zapnutia/vypnutia"
                 }
             },
             "motion_sensitivity": {
@@ -146,12 +150,39 @@
                     "power_on": "Akt\u00edvny"
                 }
             },
+            "vacuum_cistern": {
+                "state": {
+                    "closed": "Zatvoren\u00fd",
+                    "high": "Vysok\u00e1",
+                    "low": "N\u00edzka",
+                    "middle": "Stredn\u00e1"
+                }
+            },
+            "vacuum_collection": {
+                "state": {
+                    "large": "Ve\u013ek\u00fd",
+                    "middle": "Stredn\u00fd",
+                    "small": "Mal\u00fd"
+                }
+            },
             "vacuum_mode": {
                 "state": {
+                    "bow": "Obl\u00fak",
                     "chargego": "N\u00e1vrat do doku",
+                    "left_bow": "Obl\u00fak v\u013eavo",
+                    "left_spiral": "\u0160pir\u00e1la v\u013eavo",
                     "mop": "Mop",
+                    "part": "\u010cas\u0165",
+                    "partial_bow": "Obl\u00fak \u010diasto\u010dne",
+                    "pick_zone": "V\u00fdber z\u00f3ny",
                     "point": "Bod",
+                    "pose": "Poz\u00edcia",
                     "random": "N\u00e1hodn\u00fd",
+                    "right_bow": "Obl\u00fak vpravo",
+                    "right_spiral": "\u0160pir\u00e1la vpravo",
+                    "single": "Raz",
+                    "smart": "Smart",
+                    "spiral": "\u0160pir\u00e1la",
                     "standby": "Pohotovostn\u00fd re\u017eim",
                     "wall_follow": "Sledovanie steny",
                     "zone": "Z\u00f3na"

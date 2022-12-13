@@ -16,9 +16,9 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DATA_BYTES,
-    ELECTRIC_CURRENT_MILLIAMPERE,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    UnitOfElectricCurrent,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -51,7 +51,7 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
     WLEDSensorEntityDescription(
         key="estimated_current",
         name="Estimated current",
-        native_unit_of_measurement=ELECTRIC_CURRENT_MILLIAMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -67,7 +67,7 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
     WLEDSensorEntityDescription(
         key="info_leds_max_power",
         name="Max current",
-        native_unit_of_measurement=ELECTRIC_CURRENT_MILLIAMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.CURRENT,
         value_fn=lambda device: device.info.leds.max_power,

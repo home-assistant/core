@@ -5,7 +5,7 @@
         },
         "yamaha_musiccast__zone_equalizer_mode": {
             "auto": "Automatico",
-            "bypass": "Bypass",
+            "bypass": "Escluso",
             "manual": "Manuale"
         },
         "yamaha_musiccast__zone_link_audio_delay": {
@@ -45,7 +45,7 @@
         },
         "yamaha_musiccast__zone_tone_control_mode": {
             "auto": "Automatico",
-            "bypass": "Bypass",
+            "bypass": "Escluso",
             "manual": "Manuale"
         }
     }

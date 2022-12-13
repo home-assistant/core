@@ -43,6 +43,7 @@
         "step": {
             "init": {
                 "data": {
+                    "ffmpeg_arguments": "Argumenty odovzdan\u00e9 ffmpeg pre kamery",
                     "timeout": "\u010casov\u00fd limit po\u017eiadavky (sekundy)"
                 }
             }

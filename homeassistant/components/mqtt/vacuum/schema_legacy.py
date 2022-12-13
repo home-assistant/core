@@ -220,6 +220,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LEGACY_VACUUM_ATTRIBUTES_BLOCKED
 
+    _command_topic: str | None
     _encoding: str | None
     _qos: bool
     _retain: bool

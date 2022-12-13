@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "incomplete_discovery": "Ne\u00fapln\u00e9 vyh\u013ead\u00e1vanie",
             "no_devices_found": "V sieti sa nena\u0161li \u017eiadne zariadenia"
         },
         "error": {

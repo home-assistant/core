@@ -10,11 +10,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_NAME,
-    DATA_MEGABYTES,
-    DATA_RATE_MEGABYTES_PER_SECOND,
-)
+from homeassistant.const import CONF_NAME, DATA_MEGABYTES, UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
@@ -34,7 +30,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="AverageDownloadRate",
         name="Average Speed",
-        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
     ),
     SensorEntityDescription(
         key="DownloadPaused",
@@ -43,7 +40,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="DownloadRate",
         name="Speed",
-        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
     ),
     SensorEntityDescription(
         key="DownloadedSizeMB",
@@ -77,7 +75,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="DownloadLimit",
         name="Speed Limit",
-        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
     ),
 )
 

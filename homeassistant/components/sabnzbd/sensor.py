@@ -4,16 +4,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    DATA_GIGABYTES,
-    DATA_MEGABYTES,
-    DATA_RATE_MEGABYTES_PER_SECOND,
-)
+from homeassistant.const import DATA_GIGABYTES, DATA_MEGABYTES, UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -46,7 +43,8 @@ SENSOR_TYPES: tuple[SabnzbdSensorEntityDescription, ...] = (
     SabnzbdSensorEntityDescription(
         key=SPEED_KEY,
         name="Speed",
-        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SabnzbdSensorEntityDescription(

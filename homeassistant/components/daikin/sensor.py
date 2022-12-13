@@ -17,8 +17,8 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
     PERCENTAGE,
-    POWER_KILO_WATT,
     TEMP_CELSIUS,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -90,7 +90,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         name="Compressor estimated power consumption",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=POWER_KILO_WATT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         value_func=lambda device: round(device.current_total_power_consumption, 2),
     ),
     DaikinSensorEntityDescription(

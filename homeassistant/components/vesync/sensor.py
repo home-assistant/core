@@ -21,7 +21,7 @@ from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
-    POWER_WATT,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -105,7 +105,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         key="power",
         name="current power",
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.details["power"],
         update_fn=update_energy,

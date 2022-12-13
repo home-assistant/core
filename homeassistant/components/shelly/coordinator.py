@@ -479,6 +479,9 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
                 return
             self.connected = False
             self._async_run_disconnected_events()
+        # Try to reconnect right away if hass is not stopping
+        if not self.hass.is_stopping:
+            await self.async_request_refresh()
 
     @callback
     def _async_run_disconnected_events(self) -> None:

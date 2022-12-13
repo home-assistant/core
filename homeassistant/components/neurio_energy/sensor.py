@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import CONF_API_KEY, ENERGY_KILO_WATT_HOUR, POWER_WATT
+from homeassistant.const import CONF_API_KEY, ENERGY_KILO_WATT_HOUR, UnitOfPower
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -149,7 +149,7 @@ class NeurioEnergy(SensorEntity):
         self._state = None
 
         if sensor_type == ACTIVE_TYPE:
-            self._unit_of_measurement = POWER_WATT
+            self._unit_of_measurement = UnitOfPower.WATT
             self._attr_device_class = SensorDeviceClass.POWER
             self._attr_state_class = SensorStateClass.MEASUREMENT
         elif sensor_type == DAILY_TYPE:
