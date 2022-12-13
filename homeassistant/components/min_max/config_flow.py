@@ -12,6 +12,7 @@ from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
@@ -90,7 +91,7 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     {
         vol.Required("type"): "min_max/preview",
         vol.Required("flow_id"): str,
-        vol.Required("flow_type"): str,
+        vol.Required("flow_type"): vol.Any("config_flow", "options_flow"),
         vol.Required("user_input"): dict,
     }
 )
@@ -105,7 +106,8 @@ def ws_preview_min_max(
         validated = OPTIONS_SCHEMA(msg["user_input"])
         flow_status = hass.config_entries.options.async_get(msg["flow_id"])
         config_entry = hass.config_entries.async_get_entry(flow_status["handler"])
-        assert config_entry
+        if not config_entry:
+            raise HomeAssistantError
         name = config_entry.options["name"]
     sensor = MinMaxSensor(
         validated[CONF_ENTITY_IDS],
