@@ -14,7 +14,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import intent
 from homeassistant.setup import ATTR_COMPONENT
 
-from .agent import AbstractConversationAgent
+from .agent import AbstractConversationAgent, ConversationResult
 from .const import DOMAIN
 from .util import create_matcher
 
@@ -116,7 +116,7 @@ class DefaultAgent(AbstractConversationAgent):
         context: core.Context,
         conversation_id: str | None = None,
         language: str | None = None,
-    ) -> intent.IntentResponse | None:
+    ) -> ConversationResult | None:
         """Process a sentence."""
         intents = self.hass.data[DOMAIN]
 
@@ -125,7 +125,7 @@ class DefaultAgent(AbstractConversationAgent):
                 if not (match := matcher.match(text)):
                     continue
 
-                return await intent.async_handle(
+                intent_response = await intent.async_handle(
                     self.hass,
                     DOMAIN,
                     intent_type,
@@ -133,6 +133,10 @@ class DefaultAgent(AbstractConversationAgent):
                     text,
                     context,
                     language,
+                )
+
+                return ConversationResult(
+                    response=intent_response, conversation_id=conversation_id
                 )
 
         return None
