@@ -149,6 +149,82 @@ async def test_http_processing_intent(hass, hass_client, hass_admin_user):
     }
 
 
+async def test_http_partial_action(hass, hass_client, hass_admin_user):
+    """Test processing intent via HTTP API with a partial completion."""
+
+    class TestIntentHandler(intent.IntentHandler):
+        """Test Intent Handler."""
+
+        intent_type = "TurnOffLights"
+
+        async def async_handle(self, handle_intent: intent.Intent):
+            """Handle the intent."""
+            response = handle_intent.create_response()
+            area = handle_intent.slots["area"]["value"]
+            response.async_set_targets(
+                [
+                    intent.IntentResponseTarget(
+                        type=intent.IntentResponseTargetType.AREA, name=area, id=area
+                    )
+                ]
+            )
+
+            # Mark some targets as successful, others as failed
+            response.async_set_partial_action_done(
+                success_targets=[
+                    intent.IntentResponseTarget(
+                        type=intent.IntentResponseTargetType.ENTITY,
+                        name="light1",
+                        id="light.light1",
+                    )
+                ],
+                failed_targets=[
+                    intent.IntentResponseTarget(
+                        type=intent.IntentResponseTargetType.ENTITY,
+                        name="light2",
+                        id="light.light2",
+                    )
+                ],
+            )
+            return response
+
+    intent.async_register(hass, TestIntentHandler())
+
+    result = await async_setup_component(
+        hass,
+        "conversation",
+        {
+            "conversation": {
+                "intents": {"TurnOffLights": ["turn off the lights in the {area}"]}
+            }
+        },
+    )
+    assert result
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "Turn off the lights in the kitchen"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data == {
+        "response": {
+            "response_type": "partial_action_done",
+            "card": {},
+            "speech": {},
+            "language": hass.config.language,
+            "data": {
+                "targets": [{"type": "area", "id": "kitchen", "name": "kitchen"}],
+                "success": [{"type": "entity", "id": "light.light1", "name": "light1"}],
+                "failed": [{"type": "entity", "id": "light.light2", "name": "light2"}],
+            },
+        },
+        "conversation_id": None,
+    }
+
+
 @pytest.mark.parametrize("sentence", ("turn on kitchen", "turn kitchen on"))
 async def test_turn_on_intent(hass, init_components, sentence):
     """Test calling the turn on intent."""

@@ -290,6 +290,9 @@ class IntentResponseType(Enum):
     ACTION_DONE = "action_done"
     """Intent caused an action to occur"""
 
+    PARTIAL_ACTION_DONE = "partial_action_done"
+    """Intent caused an action, but it could only be partially done"""
+
     QUERY_ANSWER = "query_answer"
     """Response is an answer to a query"""
 
@@ -349,6 +352,8 @@ class IntentResponse:
         self.card: dict[str, dict[str, str]] = {}
         self.error_code: IntentResponseErrorCode | None = None
         self.targets: list[IntentResponseTarget] = []
+        self.success_targets: list[IntentResponseTarget] = []
+        self.failed_targets: list[IntentResponseTarget] = []
 
         if (self.intent is not None) and (self.intent.category == IntentCategory.QUERY):
             # speech will be the answer to the query
@@ -404,6 +409,17 @@ class IntentResponse:
         self.targets = targets
 
     @callback
+    def async_set_partial_action_done(
+        self,
+        success_targets: list[IntentResponseTarget],
+        failed_targets: list[IntentResponseTarget],
+    ) -> None:
+        """Set response targets."""
+        self.response_type = IntentResponseType.PARTIAL_ACTION_DONE
+        self.success_targets = success_targets
+        self.failed_targets = failed_targets
+
+    @callback
     def as_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of an intent response."""
         response_dict: dict[str, Any] = {
@@ -426,6 +442,16 @@ class IntentResponse:
             response_data["targets"] = [
                 dataclasses.asdict(target) for target in self.targets
             ]
+
+            if self.response_type == IntentResponseType.PARTIAL_ACTION_DONE:
+                # Add success/failed targets
+                response_data["success"] = [
+                    dataclasses.asdict(target) for target in self.success_targets
+                ]
+
+                response_data["failed"] = [
+                    dataclasses.asdict(target) for target in self.failed_targets
+                ]
 
         response_dict["data"] = response_data
 
