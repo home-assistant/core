@@ -37,10 +37,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await ld2410_ble.initialise()
-    except BleakNotFoundError:
+    except BleakNotFoundError as exc:
         raise ConfigEntryNotReady(
             f"Could not initialise LD2410B device with address {address}"
-        )
+        ) from exc
 
     @callback
     def _async_update_ble(
@@ -48,7 +48,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         change: bluetooth.BluetoothChange,
     ) -> None:
         """Update from a ble callback."""
-        _LOGGER.warn("Update from a ble callback")
         ld2410_ble.set_ble_device_and_advertisement_data(
             service_info.device, service_info.advertisement
         )
@@ -98,7 +97,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class LD2410BLECoordinator(DataUpdateCoordinator):
     """Data coordinator for receiving LD2410B updates."""
 
-    def __init__(self, hass: HomeAssistant, ld2410_ble: LD2410BLE):
+    def __init__(self, hass: HomeAssistant, ld2410_ble: LD2410BLE) -> None:
         """Initialise the coordinator."""
         super().__init__(
             hass,
