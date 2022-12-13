@@ -22,10 +22,9 @@ from dbus_fast import InvalidMessageError
 
 from homeassistant.core import HomeAssistant, callback as hass_callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.dt import monotonic_time_coarse
 from homeassistant.util.package import is_docker_env
 
-from .base_scanner import BaseHaScanner
+from .base_scanner import MONOTONIC_TIME, BaseHaScanner
 from .const import (
     SCANNER_WATCHDOG_INTERVAL,
     SCANNER_WATCHDOG_TIMEOUT,
@@ -36,7 +35,6 @@ from .models import BluetoothScanningMode, BluetoothServiceInfoBleak
 from .util import async_reset_adapter
 
 OriginalBleakScanner = bleak.BleakScanner
-MONOTONIC_TIME = monotonic_time_coarse
 
 # or_patterns is a workaround for the fact that passive scanning
 # needs at least one matcher to be set. The below matcher
