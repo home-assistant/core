@@ -393,7 +393,7 @@ class PrometheusMetrics:
             position_metric = self._metric(
                 "cover_position",
                 self.prometheus_cli.Gauge,
-                "Position of the cover (0/100)",
+                "Position of the cover (0-100)",
             )
             position_metric.labels(**self._labels(state)).set(float(position))
 
@@ -402,7 +402,7 @@ class PrometheusMetrics:
             tilt_position_metric = self._metric(
                 "cover_tilt_position",
                 self.prometheus_cli.Gauge,
-                "Tilt Position of the cover (0/100)",
+                "Tilt Position of the cover (0-100)",
             )
             tilt_position_metric.labels(**self._labels(state)).set(float(tilt_position))
 
