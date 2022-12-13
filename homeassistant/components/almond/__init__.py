@@ -294,6 +294,7 @@ class AlmondAgent(conversation.AbstractConversationAgent):
     ) -> conversation.ConversationResult | None:
         """Process a sentence."""
         response = await self.api.async_converse_text(text, conversation_id)
+        language = language or self.hass.config.language
 
         first_choice = True
         buffer = ""
