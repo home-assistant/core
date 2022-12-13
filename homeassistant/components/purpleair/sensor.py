@@ -25,7 +25,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from . import PurpleAirEntity
 from .const import CONF_SENSOR_INDICES, DOMAIN
@@ -39,7 +38,7 @@ CONCENTRATION_PARTICLES_PER_100_MILLILITERS = f"particles/100{UnitOfVolume.MILLI
 class PurpleAirSensorEntityDescriptionMixin:
     """Define a description mixin for PurpleAir sensor entities."""
 
-    value_fn: Callable[[SensorModel], StateType]
+    value_fn: Callable[[SensorModel], float | str | None]
 
 
 @dataclass
