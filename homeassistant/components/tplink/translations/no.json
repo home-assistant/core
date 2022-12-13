@@ -10,7 +10,7 @@
         "flow_title": "{name} {model} ( {host} )",
         "step": {
             "discovery_confirm": {
-                "description": "Vil du konfigurere {name} {model} ( {host} )?"
+                "description": "Vil du sette opp {name} {model} ( {host} )?"
             },
             "pick_device": {
                 "data": {
