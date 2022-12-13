@@ -1,10 +1,10 @@
 """Config flow for Honeygain integration."""
 from __future__ import annotations
 
-from json import JSONDecodeError
 from typing import Any
 
 from pyHoneygain import HoneyGain
+from requests.exceptions import JSONDecodeError
 import voluptuous as vol
 
 from homeassistant import config_entries

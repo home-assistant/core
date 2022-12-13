@@ -1,8 +1,8 @@
 """Test the Honeygain config flow."""
-from json import JSONDecodeError
 from unittest.mock import patch
 
 import pytest
+from requests.exceptions import JSONDecodeError
 
 from homeassistant import config_entries
 from homeassistant.components.honeygain.config_flow import (
@@ -110,7 +110,7 @@ def test_authenticate_raises_cannot_connect_error(test_user, hass: HomeAssistant
     honeygain_hub = HoneygainHub()
     with patch(
         "pyHoneygain.HoneyGain.login",
-        side_effect=JSONDecodeError(msg="Error", doc="<error>", pos=1),
+        side_effect=JSONDecodeError("Error", "<error>", 0),
     ):
         with pytest.raises(CannotConnect):
             honeygain_hub.authenticate(test_user["email"], test_user["password"])
