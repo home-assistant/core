@@ -42,8 +42,10 @@ from .util import get_mqtt_data
 
 CONF_PAYLOAD_HOME = "payload_home"
 CONF_PAYLOAD_NOT_HOME = "payload_not_home"
+CONF_PAYLOAD_AUTO_ZONE = "payload_auto_zone"
 CONF_SOURCE_TYPE = "source_type"
 
+DEFAULT_PAYLOAD_AUTO_ZONE = "auto_zone"
 DEFAULT_SOURCE_TYPE = SourceType.GPS
 
 PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
@@ -51,6 +53,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_PAYLOAD_HOME, default=STATE_HOME): cv.string,
         vol.Optional(CONF_PAYLOAD_NOT_HOME, default=STATE_NOT_HOME): cv.string,
+        vol.Optional(CONF_PAYLOAD_AUTO_ZONE, default=DEFAULT_PAYLOAD_AUTO_ZONE): cv.string,
         vol.Optional(CONF_SOURCE_TYPE, default=DEFAULT_SOURCE_TYPE): vol.In(
             SOURCE_TYPES
         ),
@@ -127,6 +130,8 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
                 self._location_name = STATE_HOME
             elif payload == self._config[CONF_PAYLOAD_NOT_HOME]:
                 self._location_name = STATE_NOT_HOME
+            elif payload == self._config[CONF_PAYLOAD_AUTO_ZONE]:
+                self._location_name = None
             else:
                 assert isinstance(msg.payload, str)
                 self._location_name = msg.payload
