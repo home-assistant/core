@@ -61,7 +61,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
-class NextcloudMonitorCustom():
+class NextcloudMonitorWrapper():
     """An object containing a dictionary representation of dat returned by
     Nextcloud's monitoring api
 
@@ -72,17 +72,19 @@ class NextcloudMonitorCustom():
         verify_ssl (bool): Allow bypassing ssl verification, but verify by default
     """
 
-    def __init__(self, nextcloud_url, user, app_password, session, verify_ssl=True ):
+    def __init__(self, url, user, app_password, verify_ssl):
         self.data = dict()
-        self.url = nextcloud_url
-        self.api_url = (
-            f"{nextcloud_url}/ocs/v2.php/apps/serverinfo/api/v1/info?format=json"
-        )
+        self.url = url
         self.user = user
         self.password = app_password
         self.verify_ssl = verify_ssl
-        self.session = session
+        self.create_api()
     
+    def create_api(self):
+        self.api = NextcloudMonitor(self.url, self.user, self.password, self.verify_ssl)
+        self.data = self.get_data_points(self.api.data)
+    
+       
     def get_data_points(self, api_data, key_path="", leaf=False):
         """Use Recursion to discover data-points and values.
 
@@ -107,42 +109,9 @@ class NextcloudMonitorCustom():
                 leaf = False
         return result
     
-    async def async_update(self):
-        try:
-            response = await self.session.get(self.api_url, auth=BasicAuth(self.user, self.password))     
-            api_data = (await response.json())["ocs"]["data"]
-            self.data = self.get_data_points(api_data)
-        except Exception as e:
-            self.data = {}
-            raise NextcloudMonitorError(
-                f"{e},Could not fetch nextcloud api data. Check your url, username and password and try again"
-            )
-        
-def get_data_points(api_data, key_path="", leaf=False):
-    """Use Recursion to discover data-points and values.
-
-    Get dictionary of data-points by recursing through dict returned by api until
-    the dictionary value does not contain another dictionary and use the
-    resulting path of dictionary keys and resulting value as the name/value
-    for the data-point.
-
-    returns: dictionary of data-point/values
-    """
-    result = {}
-    for key, value in api_data.items():
-        if isinstance(value, dict):
-            if leaf:
-                key_path = f"{key}_"
-            if not leaf:
-                key_path += f"{key}_"
-            leaf = True
-            result.update(get_data_points(value, key_path, leaf))
-        else:
-            result[f"{key_path}{key}"] = value
-            leaf = False
-    return result    
-
-
+    def update(self):
+        self.api.update()
+        self.data = self.get_data_points(self.api.data)
         
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Pi-hole integration."""
@@ -164,7 +133,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         #session = async_get_clientsession(hass, verify_ssl)
         #ncm = NextcloudMonitorCustom(url, user, password, session=session)
         #await ncm.async_update()
-        ncm = hass.async_add_executor_job( NextcloudMonitor(url, user, password, verify_ssl) )
+        ncmw = await hass.async_add_executor_job(NextcloudMonitorWrapper,url, user, password, verify_ssl)
+        
         #await hass.async_add_executor_job( NextcloudMonitor(url, user, password) )
     except NextcloudMonitorError as ex:
         _LOGGER.warning("Nextcloud setup failed - Check configuration")
@@ -182,8 +152,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     async def async_update_data() -> None:
         """Update data from nextcloud api."""
         try:
-            ncm.update()
-            get_data_points(ncm.data)
+            await hass.async_add_executor_job(ncmw.update)
             _LOGGER.error("Updating NC API")
         except NextcloudMonitorError:
             _LOGGER.error("Nextcloud update failed")
@@ -198,14 +167,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
     
     hass.data[DOMAIN][name] = {
-        DATA_KEY_API: ncm,
+        DATA_KEY_API: ncmw,
         DATA_KEY_COORDINATOR: coordinator,
     }
 
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+       )
     return True
     
 class NextcloudEntity(CoordinatorEntity):
