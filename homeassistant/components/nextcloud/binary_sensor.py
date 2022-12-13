@@ -9,7 +9,7 @@ from homeassistant.const import (
     CONF_NAME,
 )
 
-from. import NextcloudEntity 
+from  . import NextcloudEntity
 
 from .const import (
     DATA_KEY_API,
@@ -27,7 +27,7 @@ async def async_setup_entry(
     
     instance_name = entry.data[CONF_NAME]
     ncm_data = hass.data[DOMAIN][instance_name]
-    
+       
     for name in ncm_data[DATA_KEY_API].data:
         if name in BINARY_SENSORS:
             binary_sensors.append(NextcloudBinarySensor(ncm_data[DATA_KEY_API],

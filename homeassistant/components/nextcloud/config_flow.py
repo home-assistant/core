@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import logging
 
+import asyncio
+
 from nextcloudmonitor import NextcloudMonitorError, NextcloudMonitor
 import voluptuous as vol
 
@@ -19,7 +21,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from aiohttp import BasicAuth
 
-from . import NextcloudMonitorCustom, _LOGGER
+from . import _LOGGER, NextcloudMonitorWrapper
 
 from .const import (
     DATA_KEY_API,
@@ -42,17 +44,25 @@ class Nextcloud2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         ]
         return endpoint in existing_endpoints
     
+    async def helper_create_api(self, url, user, password, verify_ssl):
+        return NextcloudMonitor(url, user, password, verify_ssl) 
+    
+    async def create_api(self, url, user, password, verify_ssl):
+        await helper_create_api(self, url, user, password, verify_ssl)
+    
     async def _async_try_connect(
         self, url: str, user: str, password: str, verify_ssl: bool
     ) -> bool:
         
-        session = async_get_clientsession(self.hass, verify_ssl)
+        #session = async_get_clientsession(self.hass, verify_ssl)
         try:
             #ncm = NextcloudMonitorCustom(url, user, password, session=session)
             #await ncm.async_update()
-            ncm = NextcloudMonitor(url, user, password)#, verify_ssl)
-            ncm.update()
-            get_data_points(ncm.data)
+            
+            #ncm = await hass.async_add_executor_job(self.create_api(url, user, password, verify_ssl))
+            loop = asyncio.get_running_loop()
+            await loop.run_in_executor(None, NextcloudMonitorWrapper,url, user, password, verify_ssl)
+            
         except Exception as e:
             _LOGGER.error(e)
             return False
