@@ -221,14 +221,8 @@ class ServiceIntentHandler(IntentHandler):
 
         response = intent_obj.create_response()
         response.async_set_speech(self.speech.format(state.name))
-
-        # Targets go from general to specific
         response.async_set_targets(
             [
-                IntentResponseTarget(
-                    type=IntentResponseTargetType.DOMAIN,
-                    name=state.domain,
-                ),
                 IntentResponseTarget(
                     type=IntentResponseTargetType.ENTITY,
                     name=state.name,
