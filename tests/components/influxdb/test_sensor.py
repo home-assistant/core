@@ -14,7 +14,6 @@ from voluptuous import Invalid
 from homeassistant.components.influxdb.const import (
     API_VERSION_2,
     DEFAULT_API_VERSION,
-    DEFAULT_BUCKET,
     DEFAULT_DATABASE,
     DOMAIN,
     TEST_QUERY_V1,
@@ -38,6 +37,7 @@ BASE_V2_CONFIG = {
     "api_version": API_VERSION_2,
     "organization": "org",
     "token": "token",
+    "bucket": "Home Assistant",
 }
 
 BASE_V1_QUERY = {
@@ -124,7 +124,7 @@ def _make_v2_resultset(*args):
 def _make_v2_buckets_resultset():
     """Create a mock V2 'buckets()' resultset."""
     records = []
-    for name in [DEFAULT_BUCKET, "bucket2"]:
+    for name in ["Home Assistant", "bucket2"]:
         records.append(Record({"name": name}))
 
     return [Table(records)]
@@ -588,43 +588,3 @@ async def test_connection_error_at_startup(
     async_fire_time_changed(hass, new_time)
     await hass.async_block_till_done()
     assert hass.states.get(expected_sensor) is not None
-
-
-@pytest.mark.parametrize(
-    "mock_client, config_ext, queries, set_query_mock",
-    [
-        (
-            DEFAULT_API_VERSION,
-            {"database": "bad_db"},
-            BASE_V1_QUERY,
-            _set_query_mock_v1,
-        ),
-        (
-            API_VERSION_2,
-            {
-                "api_version": API_VERSION_2,
-                "organization": "org",
-                "token": "token",
-                "bucket": "bad_bucket",
-            },
-            BASE_V2_QUERY,
-            _set_query_mock_v2,
-        ),
-    ],
-    indirect=["mock_client"],
-)
-async def test_data_repository_not_found(
-    hass,
-    caplog,
-    mock_client,
-    config_ext,
-    queries,
-    set_query_mock,
-):
-    """Test sensor is not setup when bucket not available."""
-    set_query_mock(mock_client)
-    await _setup(hass, config_ext, queries, [])
-    assert hass.states.get("sensor.test") is None
-    assert (
-        len([record for record in caplog.records if record.levelname == "ERROR"]) == 1
-    )
