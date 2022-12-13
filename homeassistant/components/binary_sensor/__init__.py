@@ -58,6 +58,9 @@ class BinarySensorDeviceClass(StrEnum):
     # On means hot, Off means normal
     HEAT = "heat"
 
+    # On means heating, Off means not heating
+    HEATER = "heater"
+
     # On means light detected, Off means no light
     LIGHT = "light"
 
@@ -130,6 +133,7 @@ DEVICE_CLASS_DOOR = BinarySensorDeviceClass.DOOR.value
 DEVICE_CLASS_GARAGE_DOOR = BinarySensorDeviceClass.GARAGE_DOOR.value
 DEVICE_CLASS_GAS = BinarySensorDeviceClass.GAS.value
 DEVICE_CLASS_HEAT = BinarySensorDeviceClass.HEAT.value
+DEVICE_CLASS_HEATER = BinarySensorDeviceClass.HEATER.value
 DEVICE_CLASS_LIGHT = BinarySensorDeviceClass.LIGHT.value
 DEVICE_CLASS_LOCK = BinarySensorDeviceClass.LOCK.value
 DEVICE_CLASS_MOISTURE = BinarySensorDeviceClass.MOISTURE.value
