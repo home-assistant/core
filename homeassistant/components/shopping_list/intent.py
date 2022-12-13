@@ -22,9 +22,7 @@ class AddItemIntent(intent.IntentHandler):
     intent_type = INTENT_ADD_ITEM
     slot_schema = {"item": cv.string}
 
-    async def async_handle(
-        self, intent_obj: intent.Intent, conversation_id: str | None = None
-    ):
+    async def async_handle(self, intent_obj: intent.Intent):
         """Handle the intent."""
         slots = self.async_validate_slots(intent_obj.slots)
         item = slots["item"]["value"]

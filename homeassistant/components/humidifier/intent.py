@@ -81,9 +81,7 @@ class SetModeHandler(intent.IntentHandler):
         vol.Required("mode"): cv.string,
     }
 
-    async def async_handle(
-        self, intent_obj: intent.Intent, conversation_id: str | None = None
-    ) -> intent.IntentResponse:
+    async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the hass intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)

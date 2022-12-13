@@ -367,7 +367,9 @@ async def test_custom_agent(hass, hass_client, hass_admin_user):
             calls.append((text, context, conversation_id, language))
             response = intent.IntentResponse(language=language)
             response.async_set_speech("Test response")
-            return response
+            return conversation.ConversationResult(
+                response=response, conversation_id=conversation_id
+            )
 
     conversation.async_set_agent(hass, MyAgent())
 
