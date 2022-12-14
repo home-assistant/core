@@ -41,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HatchRestCoordinator(
-        hass, entry.unique_id, await connect_async(ble_device)
+        hass, entry.unique_id, await connect_async(ble_device, scan_now=False)
     )
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
