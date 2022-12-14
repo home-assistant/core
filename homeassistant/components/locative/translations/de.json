@@ -6,7 +6,7 @@
             "webhook_not_internet_accessible": "Deine Home Assistant-Instanz muss \u00fcber das Internet erreichbar sein, um Webhook-Nachrichten empfangen zu k\u00f6nnen."
         },
         "create_entry": {
-            "default": "Um Standorte Home Assistant zu senden, muss das Webhook Feature in der Locative App konfiguriert werden.\n\n F\u00fcge die folgenden Informationen ein: \n\n - URL: ` {webhook_url} ` \n - Methode: POST \n \n Weitere Informationen finden sich in der [Dokumentation]({docs_url})."
+            "default": "Um Standorte an Home Assistant zu senden, muss das Webhook Feature in der Locative App konfiguriert werden.\n\nF\u00fcge die folgenden Informationen ein: \n\n- URL: `{webhook_url}` \n- Methode: POST \n \nWeitere Informationen finden sich in der [Dokumentation]({docs_url})."
         },
         "step": {
             "user": {

@@ -221,7 +221,6 @@ class ServiceIntentHandler(IntentHandler):
 
         response = intent_obj.create_response()
         response.async_set_speech(self.speech.format(state.name))
-
         response.async_set_targets(
             intent_targets=[],
             success_targets=[
@@ -229,7 +228,7 @@ class ServiceIntentHandler(IntentHandler):
                     type=IntentResponseTargetType.ENTITY,
                     name=state.name,
                     id=state.entity_id,
-                )
+                ),
             ],
         )
         return response
@@ -291,6 +290,9 @@ class IntentResponseType(Enum):
 
     ACTION_DONE = "action_done"
     """Intent caused an action to occur"""
+
+    PARTIAL_ACTION_DONE = "partial_action_done"
+    """Intent caused an action, but it could only be partially done"""
 
     QUERY_ANSWER = "query_answer"
     """Response is an answer to a query"""

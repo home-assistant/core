@@ -22,7 +22,7 @@
                 "description": "You must register for an Awair developer access token at: {url}"
             },
             "discovery_confirm": {
-                "description": "Do you want to setup {model} ({device_id})?"
+                "description": "Do you want to set up {model} ({device_id})?"
             },
             "local": {
                 "description": "Follow [these instructions]({url}) on how to enable the Awair Local API.\n\nClick submit when done."

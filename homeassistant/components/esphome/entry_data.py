@@ -102,8 +102,9 @@ class RuntimeEntryData:
     def async_update_ble_connection_limits(self, free: int, limit: int) -> None:
         """Update the BLE connection limits."""
         _LOGGER.debug(
-            "%s: BLE connection limits: used=%s free=%s limit=%s",
+            "%s [%s]: BLE connection limits: used=%s free=%s limit=%s",
             self.name,
+            self.device_info.mac_address if self.device_info else "unknown",
             limit - free,
             free,
             limit,
