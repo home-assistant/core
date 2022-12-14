@@ -17,7 +17,6 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
-    STATE_UNKNOWN,
     UnitOfDataRate,
     UnitOfFrequency,
     UnitOfInformation,
@@ -205,7 +204,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="mode",
                 name="Mode",
                 formatter=lambda x: (
-                    {"0": "2G", "2": "3G", "7": "4G"}.get(x, "Unknown"),
+                    {"0": "2G", "2": "3G", "7": "4G"}.get(x),
                     None,
                 ),
                 icon_fn=lambda x: (
@@ -522,7 +521,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="State",
                 name="Operator search mode",
                 formatter=lambda x: (
-                    {"0": "Auto", "1": "Manual"}.get(x, "Unknown"),
+                    {"0": "Auto", "1": "Manual"}.get(x),
                     None,
                 ),
                 entity_category=EntityCategory.CONFIG,
@@ -544,7 +543,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                         "0301": "4G/2G",
                         "0302": "4G/3G",
                         "0201": "3G/2G",
-                    }.get(x, "Unknown"),
+                    }.get(x),
                     None,
                 ),
                 entity_category=EntityCategory.CONFIG,
@@ -660,7 +659,7 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
     item: str
     entity_description: HuaweiSensorEntityDescription
 
-    _state: StateType = field(default=STATE_UNKNOWN, init=False)
+    _state: StateType = field(default=None, init=False)
     _unit: str | None = field(default=None, init=False)
 
     def __post_init__(self) -> None:
