@@ -210,6 +210,14 @@
           "good": "Good",
           "severe": "Severe"
         }
+      },
+      "weather_condition": {
+        "state": {
+          "sunny": "Sunny",
+          "cloudy": "Cloudy",
+          "rainy": "Rainy",
+          "snowy": "Snowy"
+        }
       }
     }
   }

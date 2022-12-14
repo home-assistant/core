@@ -24,6 +24,20 @@ from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
 # default instruction set of each category end up being a Switch.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
+    # Water Valve
+    # https://developer.tuya.com/en/docs/iot/fggq?id=a7sghmms
+    "ggq": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name="Switch",
+            icon="mdi:water-pump",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.START,
+            name="Start",
+            icon="mdi:water-pump",
+        ),
+    ),
     # Smart Kettle
     # https://developer.tuya.com/en/docs/iot/fbh?id=K9gf484m21yq7
     "bh": (
