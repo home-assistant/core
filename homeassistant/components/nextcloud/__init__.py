@@ -157,7 +157,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Update data from nextcloud api."""
         try:
             await hass.async_add_executor_job(ncmw.update)
-            _LOGGER.error("Updating NC API")
+            _LOGGER.info("Updating NC API")
         except NextcloudMonitorError:
             _LOGGER.error("Nextcloud update failed")
             return False
