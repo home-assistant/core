@@ -10,7 +10,6 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_URL,
     CONF_USERNAME,
-    CONF_VERIFY_SSL,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -33,7 +32,6 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
                 vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
-                vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
             }
         )
     },
@@ -99,12 +97,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf = config[DOMAIN]
 
     try:
-        ncm = NextcloudMonitor(
-            conf[CONF_URL],
-            conf[CONF_USERNAME],
-            conf[CONF_PASSWORD],
-            conf[CONF_VERIFY_SSL],
-        )
+        ncm = NextcloudMonitor(conf[CONF_URL], conf[CONF_USERNAME], conf[CONF_PASSWORD])
     except NextcloudMonitorError:
         _LOGGER.error("Nextcloud setup failed - Check configuration")
         return False
