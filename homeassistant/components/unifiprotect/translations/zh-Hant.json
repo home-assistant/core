@@ -41,6 +41,15 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "license_plate": {
+                "state": {
+                    "none": "\u672a\u5075\u6e2c"
+                }
+            }
+        }
+    },
     "issues": {
         "deprecate_smart_sensor": {
             "description": "\u7528\u65bc\u667a\u80fd\u5075\u6e2c\u7684\u7d71\u4e00 \"\u5075\u6e2c\u7269\u4ef6\" \u611f\u6e2c\u5668\u5df2\u68c4\u7528\uff0c\u6539\u4ee5\u500b\u5225\u667a\u80fd\u5075\u6e2c\u985e\u578b\u7684\u667a\u80fd\u5075\u6e2c\u4e8c\u9032\u4f4d\u611f\u6e2c\u5668\u4f86\u53d6\u4ee3\u3002\u8acb\u66f4\u65b0\u76f8\u5c0d\u61c9\u7684\u6a21\u677f\u6216\u81ea\u52d5\u5316\u3002",

@@ -71,8 +71,8 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.48.0
-grpcio-status==1.48.0
+grpcio==1.51.1
+grpcio-status==1.51.1
 
 # libcst >=0.4.0 requires a newer Rust than we currently have available,
 # thus our wheels builds fail. This pins it to the last working version,
@@ -144,10 +144,6 @@ pandas==1.4.3
 
 # uamqp 1.6.1, has 1 failing test during built on armv7/armhf
 uamqp==1.6.0
-
-# Required for pycomfoconnect
-# https://github.com/home-assistant/core/pull/83073#issuecomment-1334870513
-protobuf==3.20.3
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

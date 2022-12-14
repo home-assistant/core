@@ -15,13 +15,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     CONCENTRATION_PARTS_PER_MILLION,
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_MEGA_WATT_HOUR,
     PERCENTAGE,
-    POWER_WATT,
-    TEMP_CELSIUS,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTemperature,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
@@ -47,7 +45,7 @@ async def async_setup_platform(
                 15.6,
                 SensorDeviceClass.TEMPERATURE,
                 SensorStateClass.MEASUREMENT,
-                TEMP_CELSIUS,
+                UnitOfTemperature.CELSIUS,
                 12,
             ),
             DemoSensor(
@@ -83,7 +81,7 @@ async def async_setup_platform(
                 100,
                 SensorDeviceClass.POWER,
                 SensorStateClass.MEASUREMENT,
-                POWER_WATT,
+                UnitOfPower.WATT,
                 None,
             ),
             DemoSumSensor(
@@ -92,7 +90,7 @@ async def async_setup_platform(
                 0.5,  # 6kWh / h
                 SensorDeviceClass.ENERGY,
                 SensorStateClass.TOTAL,
-                ENERGY_KILO_WATT_HOUR,
+                UnitOfEnergy.KILO_WATT_HOUR,
                 None,
                 "total_energy_kwh",
             ),
@@ -102,7 +100,7 @@ async def async_setup_platform(
                 0.00025,  # 0.003 MWh/h (3 kWh / h)
                 SensorDeviceClass.ENERGY,
                 SensorStateClass.TOTAL,
-                ENERGY_MEGA_WATT_HOUR,
+                UnitOfEnergy.MEGA_WATT_HOUR,
                 None,
                 "total_energy_mwh",
             ),
@@ -112,7 +110,7 @@ async def async_setup_platform(
                 0.025,  # 0.30 m³/h (10.6 ft³ / h)
                 SensorDeviceClass.GAS,
                 SensorStateClass.TOTAL,
-                VOLUME_CUBIC_METERS,
+                UnitOfVolume.CUBIC_METERS,
                 None,
                 "total_gas_m3",
             ),
@@ -122,7 +120,7 @@ async def async_setup_platform(
                 1.0,  # 12 ft³/h (0.34 m³ / h)
                 SensorDeviceClass.GAS,
                 SensorStateClass.TOTAL,
-                VOLUME_CUBIC_FEET,
+                UnitOfVolume.CUBIC_FEET,
                 None,
                 "total_gas_ft3",
             ),
@@ -160,7 +158,7 @@ class DemoSensor(SensorEntity):
         unique_id: str,
         name: str,
         state: StateType,
-        device_class: SensorDeviceClass | str,
+        device_class: SensorDeviceClass,
         state_class: SensorStateClass | None,
         unit_of_measurement: str | None,
         battery: StateType,

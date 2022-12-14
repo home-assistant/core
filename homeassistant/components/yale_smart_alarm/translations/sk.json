@@ -34,6 +34,7 @@
         "step": {
             "init": {
                 "data": {
+                    "code": "Predvolen\u00fd k\u00f3d pre z\u00e1mky, ktor\u00fd sa pou\u017eije, ak nie je zadan\u00fd",
                     "lock_code_digits": "Po\u010det \u010d\u00edslic v PIN k\u00f3de pre z\u00e1mky"
                 }
             }

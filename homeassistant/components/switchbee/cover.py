@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from switchbee.api import SwitchBeeError, SwitchBeeTokenError
+from switchbee.api.central_unit import SwitchBeeError, SwitchBeeTokenError
 from switchbee.const import SomfyCommand
 from switchbee.device import SwitchBeeShutter, SwitchBeeSomfy
 

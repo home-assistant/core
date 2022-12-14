@@ -69,6 +69,12 @@ class NumberDeviceClass(StrEnum):
     Unit of measurement: `None`
     """
 
+    ATMOSPHERIC_PRESSURE = "atmospheric_pressure"
+    """Atmospheric pressure.
+
+    Unit of measurement: `UnitOfPressure` units
+    """
+
     BATTERY = "battery"
     """Percentage of battery that is left.
 
@@ -91,6 +97,18 @@ class NumberDeviceClass(StrEnum):
     """Current.
 
     Unit of measurement: `A`
+    """
+
+    DATA_RATE = "data_rate"
+    """Data rate.
+
+    Unit of measurement: UnitOfDataRate
+    """
+
+    DATA_SIZE = "data_size"
+    """Data size.
+
+    Unit of measurement: UnitOfInformation
     """
 
     DISTANCE = "distance"
@@ -129,6 +147,14 @@ class NumberDeviceClass(StrEnum):
     """Illuminance.
 
     Unit of measurement: `lx`, `lm`
+    """
+
+    IRRADIANCE = "irradiance"
+    """Irradiance.
+
+    Unit of measurement:
+    - SI / metric: `W/m²`
+    - USCS / imperial: `BTU/(h⋅ft²)`
     """
 
     MOISTURE = "moisture"
@@ -202,8 +228,8 @@ class NumberDeviceClass(StrEnum):
     PRECIPITATION = "precipitation"
     """Precipitation.
 
-    Unit of measurement:
-    - SI / metric: `mm`
+    Unit of measurement: UnitOfPrecipitationDepth
+    - SI / metric: `cm`, `mm`
     - USCS / imperial: `in`
     """
 
@@ -235,6 +261,12 @@ class NumberDeviceClass(StrEnum):
     """Signal strength.
 
     Unit of measurement: `dB`, `dBm`
+    """
+
+    SOUND_PRESSURE = "sound_pressure"
+    """Sound pressure.
+
+    Unit of measurement: `dB`, `dBA`
     """
 
     SPEED = "speed"
@@ -376,6 +408,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class NumberEntityDescription(EntityDescription):
     """A class that describes number entities."""
 
+    device_class: NumberDeviceClass | None = None
     max_value: None = None
     min_value: None = None
     native_max_value: float | None = None
@@ -437,6 +470,7 @@ class NumberEntity(Entity):
     """Representation of a Number entity."""
 
     entity_description: NumberEntityDescription
+    _attr_device_class: NumberDeviceClass | None
     _attr_max_value: None
     _attr_min_value: None
     _attr_mode: NumberMode = NumberMode.AUTO
@@ -500,6 +534,15 @@ class NumberEntity(Entity):
             ATTR_STEP: self.step,
             ATTR_MODE: self.mode,
         }
+
+    @property
+    def device_class(self) -> NumberDeviceClass | None:
+        """Return the class of this entity."""
+        if hasattr(self, "_attr_device_class"):
+            return self._attr_device_class
+        if hasattr(self, "entity_description"):
+            return self.entity_description.device_class
+        return None
 
     @property
     def native_min_value(self) -> float:

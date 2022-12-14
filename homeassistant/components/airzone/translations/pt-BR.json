@@ -10,7 +10,7 @@
         "step": {
             "discovered_connection": {
                 "data": {
-                    "host": "Host",
+                    "host": "Nome do host",
                     "id": "ID do sistema",
                     "port": "Porta"
                 }

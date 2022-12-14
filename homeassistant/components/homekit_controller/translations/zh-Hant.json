@@ -69,5 +69,39 @@
             "single_press": "\"{subtype}\" \u6309\u4e0b"
         }
     },
+    "entity": {
+        "select": {
+            "ecobee_mode": {
+                "state": {
+                    "away": "\u96e2\u5bb6",
+                    "home": "\u5728\u5bb6",
+                    "sleep": "\u7761\u7720"
+                }
+            }
+        },
+        "sensor": {
+            "thread_node_capabilities": {
+                "state": {
+                    "border_router_capable": "Border Router \u80fd\u529b",
+                    "full": "\u6240\u6709\u7d42\u7aef\u88dd\u7f6e",
+                    "minimal": "\u6700\u4f4e\u7d42\u7aef\u88dd\u7f6e",
+                    "none": "\u7121",
+                    "router_eligible": "Router \u7d42\u7aef\u88dd\u7f6e",
+                    "sleepy": "\u5f85\u547d\u7d42\u7aef\u88dd\u7f6e"
+                }
+            },
+            "thread_status": {
+                "state": {
+                    "border_router": "Border Router",
+                    "child": "Child",
+                    "detached": "Detached",
+                    "disabled": "\u5df2\u95dc\u9589",
+                    "joining": "\u52a0\u5165",
+                    "leader": "Leader",
+                    "router": "Router"
+                }
+            }
+        }
+    },
     "title": "HomeKit \u63a7\u5236\u5668"
 }

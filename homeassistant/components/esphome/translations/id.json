@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Perangkat sudah dikonfigurasi",
             "already_in_progress": "Alur konfigurasi sedang berlangsung",
+            "mdns_missing_mac": "Alamat MAC tidak ada dalam properti MDNS.",
             "reauth_successful": "Autentikasi ulang berhasil"
         },
         "error": {

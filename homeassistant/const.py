@@ -477,9 +477,17 @@ ATTR_TEMPERATURE: Final = "temperature"
 # Persons attribute
 ATTR_PERSONS: Final = "persons"
 
+
 # #### UNITS OF MEASUREMENT ####
 # Apparent power units
+class UnitOfApparentPower(StrEnum):
+    """Apparent power units."""
+
+    VOLT_AMPERE = "VA"
+
+
 POWER_VOLT_AMPERE: Final = "VA"
+"""Deprecated: please use UnitOfApparentPower.VOLT_AMPERE."""
 
 
 # Power units
@@ -519,13 +527,33 @@ ENERGY_MEGA_WATT_HOUR: Final = "MWh"
 ENERGY_WATT_HOUR: Final = "Wh"
 """Deprecated: please use UnitOfEnergy.WATT_HOUR."""
 
+
 # Electric_current units
+class UnitOfElectricCurrent(StrEnum):
+    """Electric current units."""
+
+    MILLIAMPERE = "mA"
+    AMPERE = "A"
+
+
 ELECTRIC_CURRENT_MILLIAMPERE: Final = "mA"
+"""Deprecated: please use UnitOfElectricCurrent.MILLIAMPERE."""
 ELECTRIC_CURRENT_AMPERE: Final = "A"
+"""Deprecated: please use UnitOfElectricCurrent.AMPERE."""
+
 
 # Electric_potential units
+class UnitOfElectricPotential(StrEnum):
+    """Electric potential units."""
+
+    MILLIVOLT = "mV"
+    VOLT = "V"
+
+
 ELECTRIC_POTENTIAL_MILLIVOLT: Final = "mV"
+"""Deprecated: please use UnitOfElectricPotential.MILLIVOLT."""
 ELECTRIC_POTENTIAL_VOLT: Final = "V"
+"""Deprecated: please use UnitOfElectricPotential.VOLT."""
 
 # Degree units
 DEGREE: Final = "°"
@@ -552,16 +580,40 @@ TEMP_FAHRENHEIT: Final = "°F"
 TEMP_KELVIN: Final = "K"
 """Deprecated: please use UnitOfTemperature.KELVIN"""
 
+
 # Time units
+class UnitOfTime(StrEnum):
+    """Time units."""
+
+    MICROSECONDS = "μs"
+    MILLISECONDS = "ms"
+    SECONDS = "s"
+    MINUTES = "min"
+    HOURS = "h"
+    DAYS = "d"
+    WEEKS = "w"
+    MONTHS = "m"
+    YEARS = "y"
+
+
 TIME_MICROSECONDS: Final = "μs"
+"""Deprecated: please use UnitOfTime.MICROSECONDS."""
 TIME_MILLISECONDS: Final = "ms"
+"""Deprecated: please use UnitOfTime.MILLISECONDS."""
 TIME_SECONDS: Final = "s"
+"""Deprecated: please use UnitOfTime.SECONDS."""
 TIME_MINUTES: Final = "min"
+"""Deprecated: please use UnitOfTime.MINUTES."""
 TIME_HOURS: Final = "h"
+"""Deprecated: please use UnitOfTime.HOURS."""
 TIME_DAYS: Final = "d"
+"""Deprecated: please use UnitOfTime.DAYS."""
 TIME_WEEKS: Final = "w"
+"""Deprecated: please use UnitOfTime.WEEKS."""
 TIME_MONTHS: Final = "m"
+"""Deprecated: please use UnitOfTime.MONTHS."""
 TIME_YEARS: Final = "y"
+"""Deprecated: please use UnitOfTime.YEARS."""
 
 
 # Length units
@@ -595,11 +647,25 @@ LENGTH_YARD: Final = "yd"
 LENGTH_MILES: Final = "mi"
 """Deprecated: please use UnitOfLength.MILES."""
 
+
 # Frequency units
+class UnitOfFrequency(StrEnum):
+    """Frequency units."""
+
+    HERTZ = "Hz"
+    KILOHERTZ = "kHz"
+    MEGAHERTZ = "MHz"
+    GIGAHERTZ = "GHz"
+
+
 FREQUENCY_HERTZ: Final = "Hz"
+"""Deprecated: please use UnitOfFrequency.HERTZ"""
 FREQUENCY_KILOHERTZ: Final = "kHz"
+"""Deprecated: please use UnitOfFrequency.KILOHERTZ"""
 FREQUENCY_MEGAHERTZ: Final = "MHz"
+"""Deprecated: please use UnitOfFrequency.MEGAHERTZ"""
 FREQUENCY_GIGAHERTZ: Final = "GHz"
+"""Deprecated: please use UnitOfFrequency.GIGAHERTZ"""
 
 
 # Pressure units
@@ -636,9 +702,19 @@ PRESSURE_INHG: Final = "inHg"
 PRESSURE_PSI: Final = "psi"
 """Deprecated: please use UnitOfPressure.PSI"""
 
+
 # Sound pressure units
+class UnitOfSoundPressure(StrEnum):
+    """Sound pressure units."""
+
+    DECIBEL = "dB"
+    WEIGHTED_DECIBEL_A = "dBA"
+
+
 SOUND_PRESSURE_DB: Final = "dB"
+"""Deprecated: please use UnitOfSoundPressure.DECIBEL"""
 SOUND_PRESSURE_WEIGHTED_DBA: Final = "dBa"
+"""Deprecated: please use UnitOfSoundPressure.WEIGHTED_DECIBEL_A"""
 
 
 # Volume units
@@ -691,6 +767,7 @@ class UnitOfMass(StrEnum):
     MICROGRAMS = "µg"
     OUNCES = "oz"
     POUNDS = "lb"
+    STONES = "st"
 
 
 MASS_GRAMS: Final = "g"
@@ -721,9 +798,20 @@ PERCENTAGE: Final = "%"
 # Rotational speed units
 REVOLUTIONS_PER_MINUTE: Final = "rpm"
 
+
+# Irradiance units
+class UnitOfIrradiance(StrEnum):
+    """Irradiance units."""
+
+    WATTS_PER_SQUARE_METER = "W/m²"
+    BTUS_PER_HOUR_SQUARE_FOOT = "BTU/(h⋅ft²)"
+
+
 # Irradiation units
 IRRADIATION_WATTS_PER_SQUARE_METER: Final = "W/m²"
+"""Deprecated: please use UnitOfIrradiance.WATTS_PER_SQUARE_METER"""
 IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT: Final = "BTU/(h×ft²)"
+"""Deprecated: please use UnitOfIrradiance.BTUS_PER_HOUR_SQUARE_FOOT"""
 
 
 class UnitOfVolumetricFlux(StrEnum):
@@ -734,16 +822,16 @@ class UnitOfVolumetricFlux(StrEnum):
     """
 
     INCHES_PER_DAY = "in/d"
-    """Derived from in³/(in².d)"""
+    """Derived from in³/(in²⋅d)"""
 
     INCHES_PER_HOUR = "in/h"
-    """Derived from in³/(in².h)"""
+    """Derived from in³/(in²⋅h)"""
 
     MILLIMETERS_PER_DAY = "mm/d"
-    """Derived from mm³/(mm².d)"""
+    """Derived from mm³/(mm²⋅d)"""
 
     MILLIMETERS_PER_HOUR = "mm/h"
-    """Derived from mm³/(mm².h)"""
+    """Derived from mm³/(mm²⋅h)"""
 
 
 class UnitOfPrecipitationDepth(StrEnum):
@@ -758,6 +846,9 @@ class UnitOfPrecipitationDepth(StrEnum):
 
     MILLIMETERS = "mm"
     """Derived from mm³/mm²"""
+
+    CENTIMETERS = "cm"
+    """Derived from cm³/cm²"""
 
 
 # Precipitation units
@@ -815,41 +906,117 @@ SPEED_INCHES_PER_HOUR: Final = "in/h"
 SIGNAL_STRENGTH_DECIBELS: Final = "dB"
 SIGNAL_STRENGTH_DECIBELS_MILLIWATT: Final = "dBm"
 
+
 # Data units
+class UnitOfInformation(StrEnum):
+    """Information units."""
+
+    BITS = "bit"
+    KILOBITS = "kbit"
+    MEGABITS = "Mbit"
+    GIGABITS = "Gbit"
+    BYTES = "B"
+    KILOBYTES = "kB"
+    MEGABYTES = "MB"
+    GIGABYTES = "GB"
+    TERABYTES = "TB"
+    PETABYTES = "PB"
+    EXABYTES = "EB"
+    ZETTABYTES = "ZB"
+    YOTTABYTES = "YB"
+    KIBIBYTES = "KiB"
+    MEBIBYTES = "MiB"
+    GIBIBYTES = "GiB"
+    TEBIBYTES = "TiB"
+    PEBIBYTES = "PiB"
+    EXBIBYTES = "EiB"
+    ZEBIBYTES = "ZiB"
+    YOBIBYTES = "YiB"
+
+
 DATA_BITS: Final = "bit"
+"""Deprecated: please use UnitOfInformation.BITS"""
 DATA_KILOBITS: Final = "kbit"
+"""Deprecated: please use UnitOfInformation.KILOBITS"""
 DATA_MEGABITS: Final = "Mbit"
+"""Deprecated: please use UnitOfInformation.MEGABITS"""
 DATA_GIGABITS: Final = "Gbit"
+"""Deprecated: please use UnitOfInformation.GIGABITS"""
 DATA_BYTES: Final = "B"
+"""Deprecated: please use UnitOfInformation.BYTES"""
 DATA_KILOBYTES: Final = "kB"
+"""Deprecated: please use UnitOfInformation.KILOBYTES"""
 DATA_MEGABYTES: Final = "MB"
+"""Deprecated: please use UnitOfInformation.MEGABYTES"""
 DATA_GIGABYTES: Final = "GB"
+"""Deprecated: please use UnitOfInformation.GIGABYTES"""
 DATA_TERABYTES: Final = "TB"
+"""Deprecated: please use UnitOfInformation.TERABYTES"""
 DATA_PETABYTES: Final = "PB"
+"""Deprecated: please use UnitOfInformation.PETABYTES"""
 DATA_EXABYTES: Final = "EB"
+"""Deprecated: please use UnitOfInformation.EXABYTES"""
 DATA_ZETTABYTES: Final = "ZB"
+"""Deprecated: please use UnitOfInformation.ZETTABYTES"""
 DATA_YOTTABYTES: Final = "YB"
+"""Deprecated: please use UnitOfInformation.YOTTABYTES"""
 DATA_KIBIBYTES: Final = "KiB"
+"""Deprecated: please use UnitOfInformation.KIBIBYTES"""
 DATA_MEBIBYTES: Final = "MiB"
+"""Deprecated: please use UnitOfInformation.MEBIBYTES"""
 DATA_GIBIBYTES: Final = "GiB"
+"""Deprecated: please use UnitOfInformation.GIBIBYTES"""
 DATA_TEBIBYTES: Final = "TiB"
+"""Deprecated: please use UnitOfInformation.TEBIBYTES"""
 DATA_PEBIBYTES: Final = "PiB"
+"""Deprecated: please use UnitOfInformation.PEBIBYTES"""
 DATA_EXBIBYTES: Final = "EiB"
+"""Deprecated: please use UnitOfInformation.EXBIBYTES"""
 DATA_ZEBIBYTES: Final = "ZiB"
+"""Deprecated: please use UnitOfInformation.ZEBIBYTES"""
 DATA_YOBIBYTES: Final = "YiB"
+"""Deprecated: please use UnitOfInformation.YOBIBYTES"""
+
 
 # Data_rate units
+class UnitOfDataRate(StrEnum):
+    """Data rate units."""
+
+    BITS_PER_SECOND = "bit/s"
+    KILOBITS_PER_SECOND = "kbit/s"
+    MEGABITS_PER_SECOND = "Mbit/s"
+    GIGABITS_PER_SECOND = "Gbit/s"
+    BYTES_PER_SECOND = "B/s"
+    KILOBYTES_PER_SECOND = "kB/s"
+    MEGABYTES_PER_SECOND = "MB/s"
+    GIGABYTES_PER_SECOND = "GB/s"
+    KIBIBYTES_PER_SECOND = "KiB/s"
+    MEBIBYTES_PER_SECOND = "MiB/s"
+    GIBIBYTES_PER_SECOND = "GiB/s"
+
+
 DATA_RATE_BITS_PER_SECOND: Final = "bit/s"
+"""Deprecated: please use UnitOfDataRate.BITS_PER_SECOND"""
 DATA_RATE_KILOBITS_PER_SECOND: Final = "kbit/s"
+"""Deprecated: please use UnitOfDataRate.KILOBITS_PER_SECOND"""
 DATA_RATE_MEGABITS_PER_SECOND: Final = "Mbit/s"
+"""Deprecated: please use UnitOfDataRate.MEGABITS_PER_SECOND"""
 DATA_RATE_GIGABITS_PER_SECOND: Final = "Gbit/s"
+"""Deprecated: please use UnitOfDataRate.GIGABITS_PER_SECOND"""
 DATA_RATE_BYTES_PER_SECOND: Final = "B/s"
+"""Deprecated: please use UnitOfDataRate.BYTES_PER_SECOND"""
 DATA_RATE_KILOBYTES_PER_SECOND: Final = "kB/s"
+"""Deprecated: please use UnitOfDataRate.KILOBYTES_PER_SECOND"""
 DATA_RATE_MEGABYTES_PER_SECOND: Final = "MB/s"
+"""Deprecated: please use UnitOfDataRate.MEGABYTES_PER_SECOND"""
 DATA_RATE_GIGABYTES_PER_SECOND: Final = "GB/s"
+"""Deprecated: please use UnitOfDataRate.GIGABYTES_PER_SECOND"""
 DATA_RATE_KIBIBYTES_PER_SECOND: Final = "KiB/s"
+"""Deprecated: please use UnitOfDataRate.KIBIBYTES_PER_SECOND"""
 DATA_RATE_MEBIBYTES_PER_SECOND: Final = "MiB/s"
+"""Deprecated: please use UnitOfDataRate.MEBIBYTES_PER_SECOND"""
 DATA_RATE_GIBIBYTES_PER_SECOND: Final = "GiB/s"
+"""Deprecated: please use UnitOfDataRate.GIBIBYTES_PER_SECOND"""
 
 
 # #### SERVICES ####

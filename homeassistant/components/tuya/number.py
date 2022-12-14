@@ -410,7 +410,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
             return None
 
         # Raw value
-        if not (value := self.device.status.get(self.entity_description.key)):
+        if (value := self.device.status.get(self.entity_description.key)) is None:
             return None
 
         return self._number.scale_value(value)

@@ -1,4 +1,25 @@
 {
+    "entity": {
+        "select": {
+            "speed": {
+                "state": {
+                    "light_speed": "Velocidade da luz",
+                    "ludicrous_speed": "Velocidade absurda",
+                    "ridiculous_speed": "Velocidade rid\u00edcula"
+                }
+            }
+        },
+        "sensor": {
+            "thermostat_mode": {
+                "state": {
+                    "away": "Fora",
+                    "comfort": "Conforto",
+                    "eco": "Eco",
+                    "sleep": "Sono"
+                }
+            }
+        }
+    },
     "issues": {
         "bad_psu": {
             "fix_flow": {

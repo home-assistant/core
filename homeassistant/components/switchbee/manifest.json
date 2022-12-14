@@ -3,7 +3,7 @@
   "name": "SwitchBee",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/switchbee",
-  "requirements": ["pyswitchbee==1.6.1"],
+  "requirements": ["pyswitchbee==1.7.3"],
   "codeowners": ["@jafar-atili"],
   "iot_class": "local_polling"
 }

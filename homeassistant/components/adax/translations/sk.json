@@ -20,7 +20,8 @@
                 "data": {
                     "wifi_pswd": "Heslo Wi-Fi",
                     "wifi_ssid": "Wi-Fi SSID"
-                }
+                },
+                "description": "Resetujte ohrieva\u010d stla\u010den\u00edm + a OK, dokia\u013e se nezobraz\u00ed \"Reset\". Potom stla\u010dte a podr\u017ete tla\u010didlo OK na ohrieva\u010di, dokia\u013e modr\u00e1 led di\u00f3da neza\u010dne blika\u0165, k\u00fdm stla\u010d\u00edte tla\u010didlo Odosla\u0165. Konfigur\u00e1cia ohrieva\u010da m\u00f4\u017ee trva\u0165 nieko\u013eko min\u00fat."
             },
             "user": {
                 "data": {

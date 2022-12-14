@@ -6,22 +6,25 @@ from collections.abc import Callable
 import contextlib
 from dataclasses import dataclass
 import logging
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from bleak import BleakClient, BleakError
 from bleak.backends.client import BaseBleakClient, get_platform_client_backend_type
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementDataCallback, BaseBleakScanner
-from bleak_retry_connector import NO_RSSI_VALUE
+from bleak_retry_connector import NO_RSSI_VALUE, ble_device_description, clear_cache
 
 from homeassistant.core import CALLBACK_TYPE, callback as hass_callback
 from homeassistant.helpers.frame import report
 
 from . import models
-from .models import HaBluetoothConnector
 
 FILTER_UUIDS: Final = "UUIDs"
 _LOGGER = logging.getLogger(__name__)
+
+
+if TYPE_CHECKING:
+    from .manager import BluetoothManager
 
 
 @dataclass
@@ -169,6 +172,12 @@ class HaBleakClientWrapper(BleakClient):
         """Return True if the client is connected to a device."""
         return self._backend is not None and self._backend.is_connected
 
+    async def clear_cache(self) -> bool:
+        """Clear the GATT cache."""
+        if self._backend is not None and hasattr(self._backend, "clear_cache"):
+            return await self._backend.clear_cache()  # type: ignore[no-any-return]
+        return await clear_cache(self.__address)
+
     def set_disconnected_callback(
         self,
         callback: Callable[[BleakClient], None] | None,
@@ -189,27 +198,39 @@ class HaBleakClientWrapper(BleakClient):
             timeout=self.__timeout,
             hass=models.MANAGER.hass,
         )
-        return await super().connect(**kwargs)
+        if debug_logging := _LOGGER.isEnabledFor(logging.DEBUG):
+            # Only lookup the description if we are going to log it
+            description = ble_device_description(wrapped_backend.device)
+            rssi = wrapped_backend.device.rssi
+            _LOGGER.debug("%s: Connecting (last rssi: %s)", description, rssi)
+        connected = await super().connect(**kwargs)
+        if debug_logging:
+            _LOGGER.debug("%s: Connected (last rssi: %s)", description, rssi)
+        return connected
 
     @hass_callback
     def _async_get_backend_for_ble_device(
-        self, ble_device: BLEDevice
+        self, manager: BluetoothManager, ble_device: BLEDevice
     ) -> _HaWrappedBleakBackend | None:
         """Get the backend for a BLEDevice."""
         details = ble_device.details
-        if not isinstance(details, dict) or "connector" not in details:
+        if not isinstance(details, dict) or "source" not in details:
             # If client is not defined in details
             # its the client for this platform
             cls = get_platform_client_backend_type()
             return _HaWrappedBleakBackend(ble_device, cls)
 
-        connector: HaBluetoothConnector = details["connector"]
+        source: str = details["source"]
         # Make sure the backend can connect to the device
         # as some backends have connection limits
-        if not connector.can_connect():
+        if (
+            not (scanner := manager.async_scanner_by_source(source))
+            or not scanner.connector
+            or not scanner.connector.can_connect()
+        ):
             return None
 
-        return _HaWrappedBleakBackend(ble_device, connector.client)
+        return _HaWrappedBleakBackend(ble_device, scanner.connector.client)
 
     @hass_callback
     def _async_get_best_available_backend_and_device(
@@ -232,7 +253,7 @@ class HaBleakClientWrapper(BleakClient):
             reverse=True,
         ):
             if backend := self._async_get_backend_for_ble_device(
-                device_advertisement_data[0]
+                models.MANAGER, device_advertisement_data[0]
             ):
                 return backend
 

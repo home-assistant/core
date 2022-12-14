@@ -4,12 +4,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DATA_BYTES, DATA_RATE_KIBIBYTES_PER_SECOND, TIME_SECONDS
+from homeassistant.const import TIME_SECONDS, UnitOfDataRate, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -43,18 +44,20 @@ class UpnpSensorEntityDescription(UpnpEntityDescription, SensorEntityDescription
 SENSOR_DESCRIPTIONS: tuple[UpnpSensorEntityDescription, ...] = (
     UpnpSensorEntityDescription(
         key=BYTES_RECEIVED,
-        name=f"{DATA_BYTES} received",
+        name=f"{UnitOfInformation.BYTES} received",
         icon="mdi:server-network",
-        native_unit_of_measurement=DATA_BYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
         format="d",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     UpnpSensorEntityDescription(
         key=BYTES_SENT,
-        name=f"{DATA_BYTES} sent",
+        name=f"{UnitOfInformation.BYTES} sent",
         icon="mdi:server-network",
-        native_unit_of_measurement=DATA_BYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
         format="d",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -103,9 +106,10 @@ SENSOR_DESCRIPTIONS: tuple[UpnpSensorEntityDescription, ...] = (
         key=BYTES_RECEIVED,
         value_key=KIBIBYTES_PER_SEC_RECEIVED,
         unique_id="KiB/sec_received",
-        name=f"{DATA_RATE_KIBIBYTES_PER_SECOND} received",
+        name=f"{UnitOfDataRate.KIBIBYTES_PER_SECOND} received",
         icon="mdi:server-network",
-        native_unit_of_measurement=DATA_RATE_KIBIBYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.KIBIBYTES_PER_SECOND,
         format=".1f",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -113,9 +117,10 @@ SENSOR_DESCRIPTIONS: tuple[UpnpSensorEntityDescription, ...] = (
         key=BYTES_SENT,
         value_key=KIBIBYTES_PER_SEC_SENT,
         unique_id="KiB/sec_sent",
-        name=f"{DATA_RATE_KIBIBYTES_PER_SECOND} sent",
+        name=f"{UnitOfDataRate.KIBIBYTES_PER_SECOND} sent",
         icon="mdi:server-network",
-        native_unit_of_measurement=DATA_RATE_KIBIBYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.KIBIBYTES_PER_SECOND,
         format=".1f",
         state_class=SensorStateClass.MEASUREMENT,
     ),

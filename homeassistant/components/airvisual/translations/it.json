@@ -50,6 +50,30 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "pollutant_label": {
+                "state": {
+                    "co": "Monossido di carbonio",
+                    "n2": "Biossido di azoto",
+                    "o3": "Ozono",
+                    "p1": "PM10",
+                    "p2": "PM2.5",
+                    "s2": "Biossido di zolfo"
+                }
+            },
+            "pollutant_level": {
+                "state": {
+                    "good": "Buono",
+                    "hazardous": "Pericoloso",
+                    "moderate": "Moderato",
+                    "unhealthy": "Malsano",
+                    "unhealthy_sensitive": "Malsano per i gruppi sensibili",
+                    "very_unhealthy": "Molto malsano"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {
