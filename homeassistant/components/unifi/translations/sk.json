@@ -67,8 +67,10 @@
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "Senzory vyu\u017eitia \u0161\u00edrky p\u00e1sma pre sie\u0165ov\u00fdch klientov"
+                    "allow_bandwidth_sensors": "Senzory vyu\u017eitia \u0161\u00edrky p\u00e1sma pre sie\u0165ov\u00fdch klientov",
+                    "allow_uptime_sensors": "Sn\u00edma\u010de dostupnosti pre sie\u0165ov\u00fdch klientov"
                 },
+                "description": "Konfigur\u00e1cia sn\u00edma\u010dov \u0161tatistiky",
                 "title": "Mo\u017enosti siete UniFi 3/3"
             }
         }

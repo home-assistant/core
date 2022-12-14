@@ -22,8 +22,6 @@ from homeassistant.const import (
     ENERGY_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_KILO_WATT,
-    POWER_WATT,
     PRESSURE_BAR,
     PRESSURE_HPA,
     PRESSURE_INHG,
@@ -37,6 +35,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
     Platform,
+    UnitOfPower,
 )
 
 DOMAIN = "tuya"
@@ -505,12 +504,12 @@ UNITS = (
         conversion_fn=lambda x: x * 1000,
     ),
     UnitOfMeasurement(
-        unit=POWER_WATT,
+        unit=UnitOfPower.WATT,
         aliases={"watt"},
         device_classes={SensorDeviceClass.POWER},
     ),
     UnitOfMeasurement(
-        unit=POWER_KILO_WATT,
+        unit=UnitOfPower.KILO_WATT,
         aliases={"kilowatt"},
         device_classes={SensorDeviceClass.POWER},
     ),

@@ -32,6 +32,12 @@
     },
     "entity": {
         "sensor": {
+            "sensitivity": {
+                "state": {
+                    "n": "Norm\u00e1lne",
+                    "s": "Citliv\u00e9"
+                }
+            },
             "smart_type": {
                 "state": {
                     "feelslike": "Pocitovo",

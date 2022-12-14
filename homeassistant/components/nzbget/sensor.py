@@ -10,11 +10,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_NAME,
-    DATA_MEGABYTES,
-    DATA_RATE_MEGABYTES_PER_SECOND,
-)
+from homeassistant.const import CONF_NAME, UnitOfDataRate, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
@@ -29,12 +25,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="ArticleCacheMB",
         name="Article Cache",
-        native_unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
     ),
     SensorEntityDescription(
         key="AverageDownloadRate",
         name="Average Speed",
-        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
     ),
     SensorEntityDescription(
         key="DownloadPaused",
@@ -43,17 +41,20 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="DownloadRate",
         name="Speed",
-        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
     ),
     SensorEntityDescription(
         key="DownloadedSizeMB",
         name="Size",
-        native_unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
     ),
     SensorEntityDescription(
         key="FreeDiskSpaceMB",
         name="Disk Free",
-        native_unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
     ),
     SensorEntityDescription(
         key="PostJobCount",
@@ -67,7 +68,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="RemainingSizeMB",
         name="Queue Size",
-        native_unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
     ),
     SensorEntityDescription(
         key="UpTimeSec",
@@ -77,7 +79,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="DownloadLimit",
         name="Speed Limit",
-        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
     ),
 )
 

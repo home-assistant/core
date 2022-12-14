@@ -30,6 +30,7 @@
             "zone_equalizer_mode": {
                 "state": {
                     "auto": "Auto",
+                    "bypass": "Bypass",
                     "manual": "Manu\u00e1lne"
                 }
             },
@@ -81,6 +82,7 @@
             "zone_tone_control_mode": {
                 "state": {
                     "auto": "Auto",
+                    "bypass": "Bypass",
                     "manual": "Manu\u00e1lne"
                 }
             }
