@@ -143,13 +143,13 @@ async def test_http_processing_intent(hass, hass_client, hass_admin_user):
                 }
             },
             "language": hass.config.language,
-            "data": {"targets": []},
+            "data": {"targets": [], "success": [], "failed": []},
         },
         "conversation_id": None,
     }
 
 
-async def test_http_partial_action(hass, hass_client, hass_admin_user):
+async def test_http_failed_action(hass, hass_client, hass_admin_user):
     """Test processing intent via HTTP API with a partial completion."""
 
     class TestIntentHandler(intent.IntentHandler):
@@ -161,16 +161,14 @@ async def test_http_partial_action(hass, hass_client, hass_admin_user):
             """Handle the intent."""
             response = handle_intent.create_response()
             area = handle_intent.slots["area"]["value"]
+
+            # Mark some targets as successful, others as failed
             response.async_set_targets(
-                [
+                intent_targets=[
                     intent.IntentResponseTarget(
                         type=intent.IntentResponseTargetType.AREA, name=area, id=area
                     )
-                ]
-            )
-
-            # Mark some targets as successful, others as failed
-            response.async_set_partial_action_done(
+                ],
                 success_targets=[
                     intent.IntentResponseTarget(
                         type=intent.IntentResponseTargetType.ENTITY,
@@ -186,6 +184,7 @@ async def test_http_partial_action(hass, hass_client, hass_admin_user):
                     )
                 ],
             )
+
             return response
 
     intent.async_register(hass, TestIntentHandler())
@@ -211,7 +210,7 @@ async def test_http_partial_action(hass, hass_client, hass_admin_user):
 
     assert data == {
         "response": {
-            "response_type": "partial_action_done",
+            "response_type": "action_done",
             "card": {},
             "speech": {},
             "language": hass.config.language,
@@ -298,13 +297,15 @@ async def test_http_api(hass, init_components, hass_client):
             "language": hass.config.language,
             "response_type": "action_done",
             "data": {
-                "targets": [
+                "targets": [],
+                "success": [
                     {
                         "type": "entity",
                         "name": "kitchen",
                         "id": "light.kitchen",
                     },
-                ]
+                ],
+                "failed": [],
             },
         },
         "conversation_id": None,
@@ -468,7 +469,7 @@ async def test_custom_agent(hass, hass_client, hass_admin_user):
                 }
             },
             "language": "test-language",
-            "data": {"targets": []},
+            "data": {"targets": [], "success": [], "failed": []},
         },
         "conversation_id": "test-conv-id",
     }
