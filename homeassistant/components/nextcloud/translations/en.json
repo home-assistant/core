@@ -15,7 +15,7 @@
     },
     "error": {
       "already_configured": "Device is already configured",
-	  "cannot_connect": "Cannot connect to Instance, Check URL, Username and Password"
+	    "cannot_connect": "Cannot connect to Instance, Check URL, Username and Password"
     },
     "abort": {
       "already_configured": "Device is already configured"

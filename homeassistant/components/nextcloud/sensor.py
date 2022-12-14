@@ -3,7 +3,11 @@ from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+)
 
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -14,7 +18,7 @@ from homeassistant.const import (
     CONF_LOCATION,
 )
 
-from . import NextcloudEntity
+from . import NextcloudEntity, NextcloudMonitorWrapper
 
 from .const import (
     DATA_KEY_API,
@@ -29,33 +33,38 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Nextcloud sensors."""
     sensors = []
-    
+
     instance_name = entry.data[CONF_NAME]
     ncm_data = hass.data[DOMAIN][instance_name]
-    
+
     for name in ncm_data[DATA_KEY_API].data:
         if name in SENSORS:
-            sensors.append(NextcloudSensor(ncm_data[DATA_KEY_API],
-                                                        ncm_data[DATA_KEY_COORDINATOR],
-                                                        instance_name,
-                                                        entry.entry_id,
-                                                        name))
+            sensors.append(
+                NextcloudSensor(
+                    ncm_data[DATA_KEY_API],
+                    ncm_data[DATA_KEY_COORDINATOR],
+                    instance_name,
+                    entry.entry_id,
+                    name,
+                )
+            )
     async_add_entities(sensors, True)
 
 
 class NextcloudSensor(NextcloudEntity, SensorEntity):
     """Represents a Nextcloud sensor."""
 
-    def __init__(self, 
-                api: NextcloudMonitorCustom,
-                coordinator: DataUpdateCoordinator,
-                name: str,
-                server_unique_id: str, 
-                item
-                ):
+    def __init__(
+        self,
+        api: NextcloudMonitorWrapper,
+        coordinator: DataUpdateCoordinator,
+        name: str,
+        server_unique_id: str,
+        item: str,
+    ):
         """Initialize the Nextcloud sensor."""
         super().__init__(api, coordinator, name, server_unique_id)
-        
+
         self._item = item
         self._state = None
         self._attr_unique_id = f"{DOMAIN}_{self._name}_{self._item}"
