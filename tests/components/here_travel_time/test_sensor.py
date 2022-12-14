@@ -1,8 +1,10 @@
 """The test for the HERE Travel Time sensor platform."""
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 from here_routing import (
     HERERoutingError,
+    HERERoutingTooManyRequestsError,
     Place,
     Return,
     RoutingMode,
@@ -27,6 +29,7 @@ from homeassistant.components.here_travel_time.const import (
     CONF_ORIGIN_LATITUDE,
     CONF_ORIGIN_LONGITUDE,
     CONF_ROUTE_MODE,
+    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     ICON_BICYCLE,
     ICON_CAR,
@@ -59,7 +62,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
+from .conftest import RESPONSE
 from .const import (
     API_KEY,
     DEFAULT_CONFIG,
@@ -69,7 +74,11 @@ from .const import (
     ORIGIN_LONGITUDE,
 )
 
-from tests.common import MockConfigEntry, mock_restore_cache_with_extra_data
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+)
 
 
 @pytest.mark.parametrize(
@@ -634,3 +643,47 @@ async def test_transit_errors(hass: HomeAssistant, caplog, exception, expected_m
         await hass.async_block_till_done()
 
         assert expected_message in caplog.text
+
+
+async def test_rate_limit(hass: HomeAssistant, caplog):
+    """Test that rate limiting is applied when encountering HTTP 429."""
+    with patch(
+        "here_routing.HERERoutingApi.route",
+        return_value=RESPONSE,
+    ):
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            unique_id="0123456789",
+            data=DEFAULT_CONFIG,
+            options=DEFAULT_OPTIONS,
+        )
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+
+        assert hass.states.get("sensor.test_distance").state == "13.682"
+
+    with patch(
+        "here_routing.HERERoutingApi.route",
+        side_effect=HERERoutingTooManyRequestsError(),
+    ):
+        async_fire_time_changed(
+            hass, utcnow() + timedelta(seconds=DEFAULT_SCAN_INTERVAL + 1)
+        )
+        await hass.async_block_till_done()
+
+        assert hass.states.get("sensor.test_distance").state == "unavailable"
+        assert "increasing update interval to" in caplog.text
+
+    with patch(
+        "here_routing.HERERoutingApi.route",
+        return_value=RESPONSE,
+    ):
+        async_fire_time_changed(
+            hass, utcnow() + timedelta(seconds=DEFAULT_SCAN_INTERVAL + 1)
+        )
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.test_distance").state == "13.682"
+        assert "resetting update interval to" in caplog.text

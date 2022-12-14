@@ -867,10 +867,10 @@ hdate==0.10.4
 heatmiserV3==1.1.18
 
 # homeassistant.components.here_travel_time
-here_routing==0.1.1
+here_routing==0.2.0
 
 # homeassistant.components.here_travel_time
-here_transit==1.1.1
+here_transit==1.2.0
 
 # homeassistant.components.hikvisioncam
 hikvision==0.4
