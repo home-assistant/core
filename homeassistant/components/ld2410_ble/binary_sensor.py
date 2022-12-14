@@ -1,6 +1,5 @@
 """LD2410 BLE integration light platform."""
 
-from typing import Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -21,12 +20,14 @@ from . import LD2410BLE
 from .const import DOMAIN
 from .models import LD2410BLEData
 
-IS_MOVING_DESCRIPTION = BinarySensorEntityDescription(
-    key="is_motion", device_class=BinarySensorDeviceClass.MOTION
-)
-IS_STATIC_DESCRIPTION = BinarySensorEntityDescription(
-    key="is_static", device_class=BinarySensorDeviceClass.PRESENCE
-)
+ENTITY_DESCRIPTIONS = {
+    "is_moving": BinarySensorEntityDescription(
+        key="is_moving", device_class=BinarySensorDeviceClass.MOTION
+    ),
+    "is_static": BinarySensorEntityDescription(
+        key="is_static", device_class=BinarySensorDeviceClass.PRESENCE
+    ),
+}
 
 
 async def async_setup_entry(
@@ -38,79 +39,37 @@ async def async_setup_entry(
     data: LD2410BLEData = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [
-            IsMovingSensor(data.coordinator, data.device, entry.title),
-            IsStaticSensor(data.coordinator, data.device, entry.title),
+            LD2410BLEBinarySensor(
+                data.coordinator, data.device, entry.title, "is_moving"
+            ),
+            LD2410BLEBinarySensor(
+                data.coordinator, data.device, entry.title, "is_static"
+            ),
         ]
     )
 
 
-class IsMovingSensor(CoordinatorEntity, BinarySensorEntity):
-    """Moving sensor for LD2410BLE."""
+class LD2410BLEBinarySensor(CoordinatorEntity, BinarySensorEntity):
+    """Moving/static sensor for LD2410BLE."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, device: LD2410BLE, name: str
+        self, coordinator: DataUpdateCoordinator, device: LD2410BLE, name: str, key: str
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._coordinator = coordinator
-        self._value = False
-
+        self._key = key
         self._device = device
-        self.entity_description = IS_MOVING_DESCRIPTION
-        self._attr_available = True
-        self._attr_unique_id = device.address + "_is_moving"
+        self.entity_description = ENTITY_DESCRIPTIONS[key]
+        self._attr_unique_id = device.address + f"_{key}"
         self._attr_device_info = DeviceInfo(
             name=name,
             connections={(dr.CONNECTION_BLUETOOTH, device.address)},
         )
+        self._attr_is_on = False
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._value = self._device.is_moving
+        self._attr_is_on = getattr(self._device, self._key)
         self.async_write_ha_state()
-
-    @property
-    def should_poll(self) -> bool:
-        """Don't poll."""
-        return False
-
-    @property
-    def is_on(self) -> bool:
-        """Is motion detected."""
-        return self._value
-
-
-class IsStaticSensor(CoordinatorEntity, BinarySensorEntity):
-    """Static sensor for LD2410BLE."""
-
-    def __init__(
-        self, coordinator: DataUpdateCoordinator, device: LD2410BLE, name: str
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-        self._value = False
-
-        self._device = device
-        self.entity_description = IS_STATIC_DESCRIPTION
-        self._attr_unique_id = device.address + "_is_static"
-        self._attr_device_info = DeviceInfo(
-            name=name,
-            connections={(dr.CONNECTION_BLUETOOTH, device.address)},
-        )
-
-    @callback
-    def _handle_coordinator_update(self, *args: Any) -> None:
-        """Handle updated data from the coordinator."""
-        self._value = self._device.is_static
-        self.async_write_ha_state()
-
-    @property
-    def should_poll(self) -> bool:
-        """Don't poll."""
-        return False
-
-    @property
-    def is_on(self) -> bool:
-        """Is occupancy detected."""
-        return self._value

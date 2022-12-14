@@ -2,7 +2,7 @@
 
 import logging
 
-from bleak_retry_connector import BleakNotFoundError
+from bleak_retry_connector import BleakError
 from ld2410_ble import LD2410BLE, LD2410BLEState, get_device
 
 from homeassistant.components import bluetooth
@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await ld2410_ble.initialise()
-    except BleakNotFoundError as exc:
+    except BleakError as exc:
         raise ConfigEntryNotReady(
             f"Could not initialise LD2410B device with address {address}"
         ) from exc
