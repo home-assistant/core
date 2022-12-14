@@ -66,37 +66,30 @@ def data_fixture(ecobee_fixture):
     return data
 
 
-@pytest.fixture(name="homeNumber")
+@pytest.fixture(name="number")
 def home_number_fixture(data):
     """Set up ecobee number min time home object."""
-    return ecobee.EcobeeVentilatorMinTimeHome(data, 1)
+    return ecobee.EcobeeVentilatorMinTime(
+        data,
+        1,
+        "home",
+        "ventilatorMinOnTimeHome",
+        data.ecobee.set_ventilator_min_on_time_home,
+    )
 
 
-async def test_name_home(homeNumber):
+async def test_name(number):
     """Test name property."""
-    assert homeNumber.name == "Ventilator min time home"
+    assert number.name == "Ventilator min time home"
 
 
-async def test_set_ventilator_min_on_time_home(homeNumber, data):
+async def test_value(number):
+    """Test value."""
+    assert number.native_value == 20
+
+
+async def test_set_ventilator_min_on_time(number, data):
     """Test set ventilator min time home."""
     data.reset_mock()
-    homeNumber.set_native_value(40)
+    number.set_native_value(40)
     data.ecobee.set_ventilator_min_on_time_home.assert_has_calls([mock.call(1, 40)])
-
-
-@pytest.fixture(name="awayNumber")
-def away_number_fixture(data):
-    """Set up ecobee number min time away object."""
-    return ecobee.EcobeeVentilatorMinTimeAway(data, 1)
-
-
-async def test_name_away(awayNumber):
-    """Test name property."""
-    assert awayNumber.name == "Ventilator min time away"
-
-
-async def test_set_ventilator_min_on_time_away(awayNumber, data):
-    """Test set ventilator min time away."""
-    data.reset_mock()
-    awayNumber.set_native_value(15)
-    data.ecobee.set_ventilator_min_on_time_away.assert_has_calls([mock.call(1, 15)])
