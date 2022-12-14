@@ -76,3 +76,29 @@ register_webhook:
 unregister_webhook:
   name: Unregister webhook
   description: Unregister the webhook from the Netatmo backend.
+
+set_preset_mode_until_date:
+  name: Set preset mode until date
+  description: Set the preset mode with an end date for Netatmo climate device.
+  target:
+    entity:
+      integration: netatmo
+      domain: climate
+  fields:
+    preset_mode:
+      description: Preset mode
+      example: "away"
+      required: true
+      selector:
+        select:
+          options:
+            - "away"
+            - "boost"
+            - "Schedule"
+            - "Frost Guard"
+    end_date:
+      description: End date
+      example: 2022-12-24T16:00
+      required: true
+      selector:
+        datetime:

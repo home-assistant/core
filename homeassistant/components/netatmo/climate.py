@@ -8,6 +8,7 @@ from pyatmo.modules import NATherm1
 import voluptuous as vol
 
 from homeassistant.components.climate import (
+    ATTR_PRESET_MODE,
     DEFAULT_MIN_TEMP,
     PRESET_AWAY,
     PRESET_BOOST,
@@ -32,6 +33,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
+    ATTR_END_DATE,
     ATTR_HEATING_POWER_REQUEST,
     ATTR_SCHEDULE_NAME,
     ATTR_SELECTED_SCHEDULE,
@@ -43,6 +45,7 @@ from .const import (
     EVENT_TYPE_SET_POINT,
     EVENT_TYPE_THERM_MODE,
     NETATMO_CREATE_CLIMATE,
+    SERVICE_SET_PRESET_MODE_UNTIL,
     SERVICE_SET_SCHEDULE,
 )
 from .data_handler import HOME, SIGNAL_NAME, NetatmoRoom
@@ -123,6 +126,14 @@ async def async_setup_entry(
         SERVICE_SET_SCHEDULE,
         {vol.Required(ATTR_SCHEDULE_NAME): cv.string},
         "_async_service_set_schedule",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_PRESET_MODE_UNTIL,
+        {
+            vol.Required(ATTR_PRESET_MODE): cv.string,
+            vol.Required(ATTR_END_DATE): cv.datetime,
+        },
+        "_async_service_set_preset_mode_until_date",
     )
 
 
@@ -290,36 +301,43 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         elif hvac_mode == HVACMode.HEAT:
             await self.async_set_preset_mode(PRESET_BOOST)
 
-    async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Set new preset mode."""
+    async def _async_set_preset_mode_internal(
+        self, preset_mode: str, end_date: int | None = None
+    ) -> None:
+        """Set new preset mode adding an optional end date."""
         if (
             preset_mode in (PRESET_BOOST, STATE_NETATMO_MAX)
             and self._model == NA_VALVE
             and self._attr_hvac_mode == HVACMode.HEAT
         ):
-            await self._room.async_therm_set(
-                STATE_NETATMO_HOME,
-            )
+            await self._room.async_therm_set(STATE_NETATMO_HOME, None, end_date)
         elif (
             preset_mode in (PRESET_BOOST, STATE_NETATMO_MAX) and self._model == NA_VALVE
         ):
             await self._room.async_therm_set(
-                STATE_NETATMO_MANUAL,
-                DEFAULT_MAX_TEMP,
+                STATE_NETATMO_MANUAL, DEFAULT_MAX_TEMP, end_date
             )
         elif (
             preset_mode in (PRESET_BOOST, STATE_NETATMO_MAX)
             and self._attr_hvac_mode == HVACMode.HEAT
         ):
-            await self._room.async_therm_set(STATE_NETATMO_HOME)
+            await self._room.async_therm_set(STATE_NETATMO_HOME, None, end_date)
         elif preset_mode in (PRESET_BOOST, STATE_NETATMO_MAX):
-            await self._room.async_therm_set(PRESET_MAP_NETATMO[preset_mode])
+            await self._room.async_therm_set(
+                PRESET_MAP_NETATMO[preset_mode], None, end_date
+            )
         elif preset_mode in (PRESET_SCHEDULE, PRESET_FROST_GUARD, PRESET_AWAY):
-            await self._room.home.async_set_thermmode(PRESET_MAP_NETATMO[preset_mode])
+            await self._room.home.async_set_thermmode(
+                PRESET_MAP_NETATMO[preset_mode], end_date
+            )
         else:
             _LOGGER.error("Preset mode '%s' not available", preset_mode)
 
         self.async_write_ha_state()
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
+        await self._async_set_preset_mode_internal(preset_mode)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature for 2 hours."""
@@ -409,6 +427,16 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             kwargs.get(ATTR_SCHEDULE_NAME),
             schedule_id,
         )
+
+    async def _async_service_set_preset_mode_until_date(self, **kwargs: Any) -> None:
+        preset_mode = cv.string(kwargs.get(ATTR_PRESET_MODE))
+        end_date = cv.datetime(kwargs.get(ATTR_END_DATE))
+        end_date_timestamp = int(round(end_date.timestamp()))
+        if not preset_mode:
+            _LOGGER.error("Preset mode is required")
+        if not end_date_timestamp:
+            _LOGGER.error("End date is required")
+        await self._async_set_preset_mode_internal(preset_mode, end_date_timestamp)
 
     @property
     def device_info(self) -> DeviceInfo:

@@ -82,11 +82,13 @@ ATTR_PSEUDO = "pseudo"
 ATTR_SCHEDULE_ID = "schedule_id"
 ATTR_SCHEDULE_NAME = "schedule_name"
 ATTR_SELECTED_SCHEDULE = "selected_schedule"
+ATTR_END_DATE = "end_date"
 
 SERVICE_SET_CAMERA_LIGHT = "set_camera_light"
 SERVICE_SET_PERSON_AWAY = "set_person_away"
 SERVICE_SET_PERSONS_HOME = "set_persons_home"
 SERVICE_SET_SCHEDULE = "set_schedule"
+SERVICE_SET_PRESET_MODE_UNTIL = "set_preset_mode_until"
 
 # Climate events
 EVENT_TYPE_CANCEL_SET_POINT = "cancel_set_point"
