@@ -271,6 +271,7 @@ class NestLegacyDevice:
         self.hass = hass
         self.nest = nest
         self.local_structure = conf.get(CONF_STRUCTURE)
+        self.conf = conf
 
     def initialize(self):
         """Initialize Nest."""
@@ -286,6 +287,11 @@ class NestLegacyDevice:
             return False
         return True
 
+    def get(self, item, default=None):
+        if item == DATA_NEST_CONFIG:
+            return self.conf
+        return default    
+    
     def structures(self):
         """Generate a list of structures."""
         try:
