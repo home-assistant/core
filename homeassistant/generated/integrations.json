@@ -3541,10 +3541,10 @@
       "iot_class": "local_polling"
     },
     "nextcloud": {
-      "name": "Nextcloud",
+      "name": "Nextcloud Monitor",
       "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "nextdns": {
       "name": "NextDNS",

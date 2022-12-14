@@ -272,6 +272,7 @@ FLOWS = {
         "netatmo",
         "netgear",
         "nexia",
+        "nextcloud",
         "nextdns",
         "nfandroidtv",
         "nibe_heatpump",

@@ -840,7 +840,10 @@ omit =
     homeassistant/components/nexia/climate.py
     homeassistant/components/nexia/entity.py
     homeassistant/components/nexia/switch.py
-    homeassistant/components/nextcloud/*
+    homeassistant/components/nextcloud/__init__.py
+    homeassistant/components/nextcloud/binary_sensor.py
+    homeassistant/components/nextcloud/const.py
+    homeassistant/components/nextcloud/sensor.py
     homeassistant/components/nfandroidtv/__init__.py
     homeassistant/components/nfandroidtv/notify.py
     homeassistant/components/nibe_heatpump/__init__.py
