@@ -172,7 +172,7 @@ class NestBasicSensor(NestSensorDevice, SensorEntity):
     
     @property
     def state_class(self):
-        """Return the device class of the sensor."""
+        """Return the state class of the sensor."""
         return SENSOR_STATE_CLASSES.get(self.variable)
 
     def update(self):
@@ -212,7 +212,7 @@ class NestTempSensor(NestSensorDevice, SensorEntity):
     
     @property
     def state_class(self):
-        """Return the device class of the sensor."""
+        """Return the state class of the sensor."""
         return SensorStateClass.MEASUREMENT
 
     def update(self):
