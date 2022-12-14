@@ -6,7 +6,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import BINARY_SENSORS, DOMAIN
+from .const import DOMAIN
+
+BINARY_SENSORS = (
+    "nextcloud_system_enable_avatars",
+    "nextcloud_system_enable_previews",
+    "nextcloud_system_filelocking.enabled",
+    "nextcloud_system_debug",
+)
 
 
 async def async_setup_entry(
