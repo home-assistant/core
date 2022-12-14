@@ -6,7 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from const import DOMAIN, SENSORS
+from .const import DOMAIN, SENSORS
 
 
 async def async_setup_entry(
@@ -24,7 +24,6 @@ async def async_setup_entry(
         sensors,
         update_before_add=True,
     )
-
 
 
 class NextcloudSensor(SensorEntity):

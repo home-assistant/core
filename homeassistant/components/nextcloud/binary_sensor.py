@@ -6,7 +6,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from const import BINARY_SENSORS, DOMAIN
+from .const import BINARY_SENSORS, DOMAIN
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -23,6 +24,7 @@ async def async_setup_entry(
         binary_sensors,
         update_before_add=True,
     )
+
 
 class NextcloudBinarySensor(BinarySensorEntity):
     """Represents a Nextcloud binary sensor."""
