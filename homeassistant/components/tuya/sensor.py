@@ -88,7 +88,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         TuyaSensorEntityDescription(
             key=DPCode.SMART_WEATHER,
             name="Smart Weather",
-            icon="mdi:sun-wireless",            
+            icon="mdi:sun-wireless",
             translation_key="weather_condition",
         ),
     ),
