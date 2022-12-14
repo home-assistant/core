@@ -221,8 +221,8 @@ class ServiceIntentHandler(IntentHandler):
 
         response = intent_obj.create_response()
         response.async_set_speech(self.speech.format(state.name))
-        response.async_set_targets(
-            [
+        response.async_set_results(
+            success_results=[
                 IntentResponseTarget(
                     type=IntentResponseTargetType.ENTITY,
                     name=state.name,
@@ -351,9 +351,9 @@ class IntentResponse:
         self.reprompt: dict[str, dict[str, Any]] = {}
         self.card: dict[str, dict[str, str]] = {}
         self.error_code: IntentResponseErrorCode | None = None
-        self.targets: list[IntentResponseTarget] = []
-        self.success_targets: list[IntentResponseTarget] = []
-        self.failed_targets: list[IntentResponseTarget] = []
+        self.intent_targets: list[IntentResponseTarget] = []
+        self.success_results: list[IntentResponseTarget] = []
+        self.failed_results: list[IntentResponseTarget] = []
 
         if (self.intent is not None) and (self.intent.category == IntentCategory.QUERY):
             # speech will be the answer to the query
@@ -404,20 +404,22 @@ class IntentResponse:
         self.async_set_speech(message)
 
     @callback
-    def async_set_targets(self, targets: list[IntentResponseTarget]) -> None:
-        """Set response targets."""
-        self.targets = targets
-
-    @callback
-    def async_set_partial_action_done(
+    def async_set_targets(
         self,
-        success_targets: list[IntentResponseTarget],
-        failed_targets: list[IntentResponseTarget],
+        intent_targets: list[IntentResponseTarget],
     ) -> None:
         """Set response targets."""
-        self.response_type = IntentResponseType.PARTIAL_ACTION_DONE
-        self.success_targets = success_targets
-        self.failed_targets = failed_targets
+        self.intent_targets = intent_targets
+
+    @callback
+    def async_set_results(
+        self,
+        success_results: list[IntentResponseTarget],
+        failed_results: list[IntentResponseTarget] | None = None,
+    ) -> None:
+        """Set response results."""
+        self.success_results = success_results
+        self.failed_results = failed_results if failed_results is not None else []
 
     @callback
     def as_dict(self) -> dict[str, Any]:
@@ -440,18 +442,17 @@ class IntentResponse:
         else:
             # action done or query answer
             response_data["targets"] = [
-                dataclasses.asdict(target) for target in self.targets
+                dataclasses.asdict(target) for target in self.intent_targets
             ]
 
-            if self.response_type == IntentResponseType.PARTIAL_ACTION_DONE:
-                # Add success/failed targets
-                response_data["success"] = [
-                    dataclasses.asdict(target) for target in self.success_targets
-                ]
+            # Add success/failed targets
+            response_data["success"] = [
+                dataclasses.asdict(target) for target in self.success_results
+            ]
 
-                response_data["failed"] = [
-                    dataclasses.asdict(target) for target in self.failed_targets
-                ]
+            response_data["failed"] = [
+                dataclasses.asdict(target) for target in self.failed_results
+            ]
 
         response_dict["data"] = response_data
 
