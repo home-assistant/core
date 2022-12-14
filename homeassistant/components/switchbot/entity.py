@@ -72,13 +72,19 @@ class SwitchbotSwitchedEntity(SwitchbotEntity, ToggleEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         _LOGGER.debug("Turn Switchbot device on %s", self._address)
+
         self._last_run_success = bool(await self._device.turn_on())
+        if self._last_run_success:
+            self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         _LOGGER.debug("Turn Switchbot device off %s", self._address)
+
         self._last_run_success = bool(await self._device.turn_off())
+        if self._last_run_success:
+            self._attr_is_on = False
         self.async_write_ha_state()
 
 
