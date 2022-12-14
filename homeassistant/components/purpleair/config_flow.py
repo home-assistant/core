@@ -10,6 +10,7 @@ from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
@@ -143,7 +144,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize."""
         self._flow_data: dict[str, Any] = {}
-        self._reauth_api_key: str | None = None
+        self._reauth_entry: ConfigEntry | None = None
 
     async def async_step_by_coordinates(
         self, user_input: dict[str, Any] | None = None
@@ -184,7 +185,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the step to check the API key."""
-        if self._reauth_api_key:
+        if self._reauth_entry:
             error_step_id = "reauth_confirm"
         else:
             error_step_id = "user"
@@ -200,26 +201,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors=validation.errors,
             )
 
-        try:
-            # Look for an existing config entry with the API key discovered during
-            # re-auth:
-            [existing_entry] = [
-                entry
-                for entry in self.hass.config_entries.async_entries(DOMAIN)
-                if entry.data[CONF_API_KEY] == self._reauth_api_key
-            ]
-        except ValueError:
-            # If it doesn't exist, this is a new entry and we should proceed:
-            return await self.async_step_by_coordinates()
-        else:
-            # ...otherwise, it's an entry to re-auth:
+        if self._reauth_entry:
             self.hass.config_entries.async_update_entry(
-                existing_entry, data=self._flow_data
+                self._reauth_entry, data=self._flow_data
             )
             self.hass.async_create_task(
-                self.hass.config_entries.async_reload(existing_entry.entry_id)
+                self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
             )
             return self.async_abort(reason="reauth_successful")
+
+        return await self.async_step_by_coordinates()
 
     async def async_step_choose_sensor(
         self, user_input: dict[str, Any] | None = None
@@ -242,7 +233,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
-        self._reauth_api_key = entry_data[CONF_API_KEY]
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(

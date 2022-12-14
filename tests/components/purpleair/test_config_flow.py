@@ -107,7 +107,13 @@ async def test_create_entry_by_coordinates(
 async def test_reauth(hass, config_entry, setup_purpleair):
     """Test re-auth."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_REAUTH}, data={"api_key": "abcde12345"}
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "entry_id": config_entry.entry_id,
+            "unique_id": config_entry.unique_id,
+        },
+        data={"api_key": "abcde12345"},
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
