@@ -47,10 +47,13 @@ class SpeedTestFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
 
 
-class SpeedTestOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
+class SpeedTestOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle SpeedTest options."""
 
-    _servers: dict = {}
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+        self._servers: dict = {}
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
