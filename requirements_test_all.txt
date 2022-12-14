@@ -1052,7 +1052,7 @@ pyairnow==1.1.0
 
 # homeassistant.components.airvisual
 # homeassistant.components.airvisual_pro
-pyairvisual==2022.11.1
+pyairvisual==2022.12.0
 
 # homeassistant.components.almond
 pyalmond==0.0.2
