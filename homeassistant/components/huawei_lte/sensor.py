@@ -4,6 +4,7 @@ from __future__ import annotations
 from bisect import bisect
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 import logging
 import re
 
@@ -63,6 +64,18 @@ def format_default(value: StateType) -> tuple[StateType, str | None]:
     return value, unit
 
 
+def last_reset_elapsed_seconds(value: str | None) -> datetime | None:
+    """Convert elapsed seconds to last reset datetime."""
+    if value is None:
+        return None
+    try:
+        last_reset = datetime.now() - timedelta(seconds=int(value))
+        last_reset.replace(microsecond=0)
+        return last_reset
+    except ValueError:
+        return None
+
+
 @dataclass
 class HuaweiSensorGroup:
     """Class describing Huawei LTE sensor groups."""
@@ -78,6 +91,8 @@ class HuaweiSensorEntityDescription(SensorEntityDescription):
 
     formatter: Callable[[str], tuple[StateType, str | None]] = format_default
     icon_fn: Callable[[StateType], str] | None = None
+    last_reset_item: str | None = None
+    last_reset_formatter: Callable[[str | None], datetime | None] | None = None
 
 
 SENSOR_META: dict[str, HuaweiSensorGroup] = {
@@ -400,7 +415,9 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 native_unit_of_measurement=UnitOfInformation.BYTES,
                 device_class=SensorDeviceClass.DATA_SIZE,
                 icon="mdi:download",
-                state_class=SensorStateClass.TOTAL_INCREASING,
+                state_class=SensorStateClass.TOTAL,
+                last_reset_item="MonthDuration",
+                last_reset_formatter=last_reset_elapsed_seconds,
             ),
             "CurrentMonthUpload": HuaweiSensorEntityDescription(
                 key="CurrentMonthUpload",
@@ -408,7 +425,9 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 native_unit_of_measurement=UnitOfInformation.BYTES,
                 device_class=SensorDeviceClass.DATA_SIZE,
                 icon="mdi:upload",
-                state_class=SensorStateClass.TOTAL_INCREASING,
+                state_class=SensorStateClass.TOTAL,
+                last_reset_item="MonthDuration",
+                last_reset_formatter=last_reset_elapsed_seconds,
             ),
         },
     ),
@@ -687,6 +706,7 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
 
     _state: StateType = field(default=None, init=False)
     _unit: str | None = field(default=None, init=False)
+    _last_reset: datetime | None = field(default=None, init=False)
 
     def __post_init__(self) -> None:
         """Initialize remaining attributes."""
@@ -696,11 +716,19 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
         """Subscribe to needed data on add."""
         await super().async_added_to_hass()
         self.router.subscriptions[self.key].add(f"{SENSOR_DOMAIN}/{self.item}")
+        if self.entity_description.last_reset_item:
+            self.router.subscriptions[self.key].add(
+                f"{SENSOR_DOMAIN}/{self.entity_description.last_reset_item}"
+            )
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from needed data on remove."""
         await super().async_will_remove_from_hass()
         self.router.subscriptions[self.key].remove(f"{SENSOR_DOMAIN}/{self.item}")
+        if self.entity_description.last_reset_item:
+            self.router.subscriptions[self.key].remove(
+                f"{SENSOR_DOMAIN}/{self.entity_description.last_reset_item}"
+            )
 
     @property
     def _device_unique_id(self) -> str:
@@ -723,6 +751,11 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
             return self.entity_description.icon_fn(self.state)
         return self.entity_description.icon
 
+    @property
+    def last_reset(self) -> datetime | None:
+        """Return the time when the sensor was last reset, if any."""
+        return self._last_reset
+
     async def async_update(self) -> None:
         """Update state."""
         try:
@@ -731,7 +764,26 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
             _LOGGER.debug("%s[%s] not in data", self.key, self.item)
             value = None
 
-        formatter = self.entity_description.formatter
+        last_reset = None
+        if (
+            self.entity_description.last_reset_item
+            and self.entity_description.last_reset_formatter
+        ):
+            try:
+                last_reset_value = self.router.data[self.key][
+                    self.entity_description.last_reset_item
+                ]
+            except KeyError:
+                _LOGGER.debug(
+                    "%s[%s] not in data",
+                    self.key,
+                    self.entity_description.last_reset_item,
+                )
+            else:
+                last_reset = self.entity_description.last_reset_formatter(
+                    last_reset_value
+                )
 
-        self._state, self._unit = formatter(value)
+        self._state, self._unit = self.entity_description.formatter(value)
+        self._last_reset = last_reset
         self._available = value is not None
