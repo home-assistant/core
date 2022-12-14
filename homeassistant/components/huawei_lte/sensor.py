@@ -115,9 +115,19 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
     #
     KEY_DEVICE_SIGNAL: HuaweiSensorGroup(
         descriptions={
+            "arfcn": HuaweiSensorEntityDescription(
+                key="arfcn",
+                name="ARFCN",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
             "band": HuaweiSensorEntityDescription(
                 key="band",
                 name="Band",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "bsic": HuaweiSensorEntityDescription(
+                key="bsic",
+                name="Base station identity code",
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "cell_id": HuaweiSensorEntityDescription(
@@ -152,6 +162,12 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 )[bisect((8, 15), x if x is not None else -1000)],
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
+            "dlfrequency": HuaweiSensorEntityDescription(
+                key="dlfrequency",
+                name="Downlink frequency",
+                device_class=SensorDeviceClass.FREQUENCY,
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
             "earfcn": HuaweiSensorEntityDescription(
                 key="earfcn",
                 name="EARFCN",
@@ -184,7 +200,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             ),
             "ltedlfreq": HuaweiSensorEntityDescription(
                 key="ltedlfreq",
-                name="Downlink frequency",
+                name="LTE downlink frequency",
                 formatter=lambda x: (
                     round(int(x) / 10) if x is not None else None,
                     UnitOfFrequency.MEGAHERTZ,
@@ -194,7 +210,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             ),
             "lteulfreq": HuaweiSensorEntityDescription(
                 key="lteulfreq",
-                name="Uplink frequency",
+                name="LTE uplink frequency",
                 formatter=lambda x: (
                     round(int(x) / 10) if x is not None else None,
                     UnitOfFrequency.MEGAHERTZ,
@@ -349,6 +365,12 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                     "mdi:speedometer-medium",
                     "mdi:speedometer",
                 )[bisect((8, 15), x if x is not None else -1000)],
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "ulfrequency": HuaweiSensorEntityDescription(
+                key="ulfrequency",
+                name="Uplink frequency",
+                device_class=SensorDeviceClass.FREQUENCY,
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
         }
