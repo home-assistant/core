@@ -1,6 +1,8 @@
 """The AirVisual Pro integration."""
 from __future__ import annotations
 
+import asyncio
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
@@ -48,12 +50,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except NodeProError as err:
         raise ConfigEntryNotReady() from err
 
+    reload_task: asyncio.Task | None = None
+
     async def async_get_data() -> dict[str, Any]:
         """Get data from the device."""
         try:
             data = await node.async_get_latest_measurements()
         except NodeConnectionError as err:
-            hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+            nonlocal reload_task
+            if not reload_task:
+                reload_task = hass.async_create_task(
+                    hass.config_entries.async_reload(entry.entry_id)
+                )
             raise UpdateFailed(f"Connection to Pro unit lost: {err}") from err
         except NodeProError as err:
             raise UpdateFailed(f"Error while retrieving data: {err}") from err
@@ -73,12 +81,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator=coordinator, node=node
     )
 
-    async def async_disconnect_pro(_: Event) -> None:
+    async def async_shutdown(_: Event) -> None:
         """Define an event handler to disconnect from the websocket."""
+        nonlocal reload_task
+        if reload_task:
+            with suppress(asyncio.CancelledError):
+                reload_task.cancel()
         await node.async_disconnect()
 
     entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_disconnect_pro)
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_shutdown)
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
