@@ -9,7 +9,7 @@ from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from . import AirVisualProData
-from .const import CONF_DATA, DOMAIN
+from .const import DOMAIN
 
 CONF_MAC_ADDRESS = "mac_address"
 CONF_SERIAL_NUMBER = "serial_number"
@@ -25,7 +25,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    data: AirVisualProData = hass.data[DOMAIN][entry.entry_id][CONF_DATA]
+    data: AirVisualProData = hass.data[DOMAIN][entry.entry_id]
 
     return async_redact_data(
         {

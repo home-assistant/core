@@ -4,5 +4,3 @@ import logging
 DOMAIN = "airvisual_pro"
 
 LOGGER = logging.getLogger(__package__)
-
-CONF_DATA = "data"

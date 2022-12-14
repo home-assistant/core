@@ -1,8 +1,6 @@
 """The AirVisual Pro integration."""
 from __future__ import annotations
 
-import asyncio
-from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
@@ -26,9 +24,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import CONF_DATA, DOMAIN, LOGGER
-
-CONF_RELOAD_TASK = "reload_task"
+from .const import DOMAIN, LOGGER
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -57,11 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             data = await node.async_get_latest_measurements()
         except NodeConnectionError as err:
-            data = hass.data[DOMAIN][entry.entry_id]
-            if CONF_RELOAD_TASK not in data:
-                data[CONF_RELOAD_TASK] = hass.async_create_task(
-                    hass.config_entries.async_reload(entry.entry_id)
-                )
+            hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
             raise UpdateFailed(f"Connection to Pro unit lost: {err}") from err
         except NodeProError as err:
             raise UpdateFailed(f"Error while retrieving data: {err}") from err
@@ -77,19 +69,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        CONF_DATA: AirVisualProData(coordinator=coordinator, node=node)
-    }
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = AirVisualProData(
+        coordinator=coordinator, node=node
+    )
 
-    async def async_shutdown(_: Event) -> None:
+    async def async_disconnect_pro(_: Event) -> None:
         """Define an event handler to disconnect from the websocket."""
         await node.async_disconnect()
-        if reload_task := hass.data[DOMAIN][entry.entry_id].get(CONF_RELOAD_TASK):
-            with suppress(asyncio.CancelledError):
-                reload_task.cancel()
 
     entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_shutdown)
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_disconnect_pro)
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -101,7 +90,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         data = hass.data[DOMAIN].pop(entry.entry_id)
-        await data[CONF_DATA].node.async_disconnect()
+        await data.node.async_disconnect()
 
     return unload_ok
 
