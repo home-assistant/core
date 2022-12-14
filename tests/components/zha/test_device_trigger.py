@@ -369,7 +369,7 @@ async def test_exception_bad_trigger(hass, mock_devices, calls, caplog):
         },
     )
     await hass.async_block_till_done()
-    assert "Invalid config for [automation]" in caplog.text
+    assert "Invalid trigger configuration" in caplog.text
 
 
 async def test_exception_no_device(hass, mock_devices, calls, caplog):
@@ -407,4 +407,4 @@ async def test_exception_no_device(hass, mock_devices, calls, caplog):
         },
     )
     await hass.async_block_till_done()
-    assert "Invalid config for [automation]" in caplog.text
+    assert "Invalid trigger configuration" in caplog.text
