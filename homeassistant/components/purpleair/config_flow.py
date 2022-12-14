@@ -200,17 +200,26 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors=validation.errors,
             )
 
-        if self._reauth_api_key:
-            if existing_entry := await self.async_set_unique_id(self._reauth_api_key):
-                self.hass.config_entries.async_update_entry(
-                    existing_entry, data=self._flow_data
-                )
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(existing_entry.entry_id)
-                )
-                return self.async_abort(reason="reauth_successful")
-
-        return await self.async_step_by_coordinates()
+        try:
+            # Look for an existing config entry with the API key discovered during
+            # re-auth:
+            [existing_entry] = [
+                entry
+                for entry in self.hass.config_entries.async_entries(DOMAIN)
+                if entry.data[CONF_API_KEY] == self._reauth_api_key
+            ]
+        except ValueError:
+            # If it doesn't exist, this is a new entry and we should proceed:
+            return await self.async_step_by_coordinates()
+        else:
+            # ...otherwise, it's an entry to re-auth:
+            self.hass.config_entries.async_update_entry(
+                existing_entry, data=self._flow_data
+            )
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(existing_entry.entry_id)
+            )
+            return self.async_abort(reason="reauth_successful")
 
     async def async_step_choose_sensor(
         self, user_input: dict[str, Any] | None = None
@@ -257,8 +266,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         api_key = user_input[CONF_API_KEY]
 
-        await self.async_set_unique_id(api_key)
-        self._abort_if_unique_id_configured()
+        self._async_abort_entries_match({CONF_API_KEY: api_key})
 
         self._flow_data = {CONF_API_KEY: api_key}
         return await self.async_step_check_api_key()
