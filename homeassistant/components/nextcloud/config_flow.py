@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Optional
 
 import asyncio
 
@@ -28,47 +29,46 @@ from .const import (
     DATA_KEY_COORDINATOR,
     DEFAULT_NAME,
     SCAN_INTERVAL,
-    DOMAIN,  
+    DOMAIN,
 )
+
 
 class Nextcloud2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Nextcloud config flow."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
-    
+
     async def _async_endpoint_existed(self, endpoint: str) -> bool:
         existing_endpoints = [
-            f"{entry.data.get(CONF_NAME)}"
-            for entry in self._async_current_entries()
+            f"{entry.data.get(CONF_NAME)}" for entry in self._async_current_entries()
         ]
         return endpoint in existing_endpoints
-    
-    async def helper_create_api(self, url, user, password, verify_ssl):
-        return NextcloudMonitor(url, user, password, verify_ssl) 
-    
-    async def create_api(self, url, user, password, verify_ssl):
-        await helper_create_api(self, url, user, password, verify_ssl)
-    
+
+    async def helper_create_api(
+        self, url: str, user: str, password: str, verify_ssl: bool
+    ):
+        return NextcloudMonitor(url, user, password, verify_ssl)
+
+    async def create_api(self, url: str, user: str, password: str, verify_ssl: bool):
+        await self.helper_create_api(url, user, password, verify_ssl)
+
     async def _async_try_connect(
         self, url: str, user: str, password: str, verify_ssl: bool
     ) -> bool:
-        
-        #session = async_get_clientsession(self.hass, verify_ssl)
+
         try:
-            #ncm = NextcloudMonitorCustom(url, user, password, session=session)
-            #await ncm.async_update()
-            
-            #ncm = await hass.async_add_executor_job(self.create_api(url, user, password, verify_ssl))
             loop = asyncio.get_running_loop()
-            await loop.run_in_executor(None, NextcloudMonitorWrapper,url, user, password, verify_ssl)
-            
+            await loop.run_in_executor(
+                None, NextcloudMonitorWrapper, url, user, password, verify_ssl
+            )
+
         except Exception as e:
             _LOGGER.error(e)
             return False
         return True
-            
-    async def async_step_user(self, user_input=None) -> FlowResult:
+
+    async def async_step_user(self, user_input: Optional[dict] = None) -> FlowResult:
         """Handle the initial step."""
         errors = {}
 
@@ -78,7 +78,7 @@ class Nextcloud2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             user = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
             verify_ssl = user_input[CONF_VERIFY_SSL]
-            
+
             if await self._async_endpoint_existed(name):
                 errors[CONF_URL] = "already_configured"
             elif not await self._async_try_connect(url, user, password, verify_ssl):
@@ -91,15 +91,23 @@ class Nextcloud2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
         user_input = user_input or {}
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema(
-                                        {
-                                            vol.Required(CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)): str,
-                                            vol.Required(CONF_URL, default=user_input.get(CONF_URL, "")): str,
-                                            vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")): str,
-                                            vol.Required(CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")): str,
-                                            vol.Optional(CONF_VERIFY_SSL, default=user_input.get(CONF_VERIFY_SSL, True)): bool,
-                                        }), 
-            errors=errors
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
+                    ): str,
+                    vol.Required(CONF_URL, default=user_input.get(CONF_URL, "")): str,
+                    vol.Required(
+                        CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
+                    ): str,
+                    vol.Required(
+                        CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
+                    ): str,
+                    vol.Optional(
+                        CONF_VERIFY_SSL, default=user_input.get(CONF_VERIFY_SSL, True)
+                    ): bool,
+                }
+            ),
+            errors=errors,
         )
-    
-

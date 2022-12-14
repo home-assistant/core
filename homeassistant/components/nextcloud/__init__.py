@@ -61,7 +61,8 @@ CONFIG_SCHEMA = vol.Schema(
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
-class NextcloudMonitorWrapper():
+
+class NextcloudMonitorWrapper:
     """An object containing a dictionary representation of dat returned by
     Nextcloud's monitoring api
 
@@ -72,20 +73,19 @@ class NextcloudMonitorWrapper():
         verify_ssl (bool): Allow bypassing ssl verification, but verify by default
     """
 
-    def __init__(self, url, user, app_password, verify_ssl):
+    def __init__(self, url: str, user: str, app_password: str, verify_ssl: bool):
         self.data = dict()
         self.url = url
         self.user = user
         self.password = app_password
         self.verify_ssl = verify_ssl
         self.create_api()
-    
-    def create_api(self):
+
+    def create_api(self) -> None:
         self.api = NextcloudMonitor(self.url, self.user, self.password, self.verify_ssl)
         self.data = self.get_data_points(self.api.data)
-    
-       
-    def get_data_points(self, api_data, key_path="", leaf=False):
+
+    def get_data_points(self, api_data: dict, key_path="", leaf=False) -> dict:
         """Use Recursion to discover data-points and values.
 
         Get dictionary of data-points by recursing through dict returned by api until
@@ -108,18 +108,20 @@ class NextcloudMonitorWrapper():
                 result[f"{key_path}{key}"] = value
                 leaf = False
         return result
-    
-    def update(self):
+
+    def update(self) -> None:
         self.api.update()
         self.data = self.get_data_points(self.api.data)
-        
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Pi-hole integration."""
 
     hass.data[DOMAIN] = {}
     return True
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up ABB Power-One PVI SunSpec"""
     url = entry.data[CONF_URL]
     name = entry.data[CONF_NAME]
@@ -128,19 +130,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     verify_ssl = entry.data[CONF_VERIFY_SSL]
 
     _LOGGER.debug("Setup %s.%s", DOMAIN, name)
-    
+
     try:
-        #session = async_get_clientsession(hass, verify_ssl)
-        #ncm = NextcloudMonitorCustom(url, user, password, session=session)
-        #await ncm.async_update()
-        ncmw = await hass.async_add_executor_job(NextcloudMonitorWrapper,url, user, password, verify_ssl)
-        
-        #await hass.async_add_executor_job( NextcloudMonitor(url, user, password) )
+        # session = async_get_clientsession(hass, verify_ssl)
+        # ncm = NextcloudMonitorCustom(url, user, password, session=session)
+        # await ncm.async_update()
+        ncmw = await hass.async_add_executor_job(
+            NextcloudMonitorWrapper, url, user, password, verify_ssl
+        )
+
+        # await hass.async_add_executor_job( NextcloudMonitor(url, user, password) )
     except NextcloudMonitorError as ex:
         _LOGGER.warning("Nextcloud setup failed - Check configuration")
         raise ConfigEntryNotReady from ex
-    
-    #async def async_update_data() -> None:
+
+    # async def async_update_data() -> None:
     #    """Update data from nextcloud api."""
     #    try:
     #        await ncm.async_update()
@@ -148,7 +152,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     #    except NextcloudMonitorError:
     #        _LOGGER.error("Nextcloud update failed")
     #        return False
-    
+
     async def async_update_data() -> None:
         """Update data from nextcloud api."""
         try:
@@ -157,7 +161,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         except NextcloudMonitorError:
             _LOGGER.error("Nextcloud update failed")
             return False
-    
+
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
@@ -165,7 +169,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         update_method=async_update_data,
         update_interval=SCAN_INTERVAL,
     )
-    
+
     hass.data[DOMAIN][name] = {
         DATA_KEY_API: ncmw,
         DATA_KEY_COORDINATOR: coordinator,
@@ -174,15 +178,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
-       )
+        )
     return True
-    
+
+
 class NextcloudEntity(CoordinatorEntity):
     """Representation of a Pi-hole entity."""
 
     def __init__(
         self,
-        api: NextcloudMonitorCustom,
+        api: NextcloudMonitorWrapper,
         coordinator: DataUpdateCoordinator,
         name: str,
         server_unique_id: str,
@@ -196,7 +201,7 @@ class NextcloudEntity(CoordinatorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information of the entity."""
-        
+
         return DeviceInfo(
             identifiers={(DOMAIN, self._server_unique_id)},
             name=self._name,
