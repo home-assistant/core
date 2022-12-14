@@ -1374,7 +1374,7 @@ pysmartapp==0.3.3
 pysmartthings==0.7.6
 
 # homeassistant.components.snmp
-pysnmplib==5.0.15
+pysnmplib==5.0.20
 
 # homeassistant.components.snooz
 pysnooz==0.8.3

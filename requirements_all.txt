@@ -1939,7 +1939,7 @@ pysmarty==0.8
 pysml==0.0.8
 
 # homeassistant.components.snmp
-pysnmplib==5.0.15
+pysnmplib==5.0.20
 
 # homeassistant.components.snooz
 pysnooz==0.8.3
