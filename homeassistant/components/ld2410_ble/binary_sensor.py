@@ -39,12 +39,8 @@ async def async_setup_entry(
     data: LD2410BLEData = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [
-            LD2410BLEBinarySensor(
-                data.coordinator, data.device, entry.title, "is_moving"
-            ),
-            LD2410BLEBinarySensor(
-                data.coordinator, data.device, entry.title, "is_static"
-            ),
+            LD2410BLEBinarySensor(data.coordinator, data.device, entry.title, k)
+            for k in ENTITY_DESCRIPTIONS
         ]
     )
 
@@ -61,12 +57,12 @@ class LD2410BLEBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._key = key
         self._device = device
         self.entity_description = ENTITY_DESCRIPTIONS[key]
-        self._attr_unique_id = device.address + f"_{key}"
+        self._attr_unique_id = f"{device.address}_{key}"
         self._attr_device_info = DeviceInfo(
             name=name,
             connections={(dr.CONNECTION_BLUETOOTH, device.address)},
         )
-        self._attr_is_on = False
+        self._attr_is_on = getattr(self._device, self._key)
 
     @callback
     def _handle_coordinator_update(self) -> None:
