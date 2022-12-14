@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect. Check configuration.",
+            "uninitialized": "Internal error. Some functions are called before setup.",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "url": "Url",
+                    "username": "Username",
+                    "password": "Password",
+                    "scan_interval": "Scan interval",
+                    "verify_ssl": "Verify SSL"
+                }
+            }
+        }
+    }
+}

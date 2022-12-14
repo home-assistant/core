@@ -1,28 +1,30 @@
-"""Summary data from Nextcoud."""
+"""Summary data from Nextcloud."""
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, SENSORS
+from const import DOMAIN, SENSORS
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Nextcloud sensors."""
-    if discovery_info is None:
-        return
     sensors = []
     for name in hass.data[DOMAIN]:
         if name in SENSORS:
             sensors.append(NextcloudSensor(name))
-    add_entities(sensors, True)
+
+    async_add_entities(
+        sensors,
+        update_before_add=True,
+    )
+
 
 
 class NextcloudSensor(SensorEntity):

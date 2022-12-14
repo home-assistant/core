@@ -1,29 +1,28 @@
-"""Summary binary data from Nextcoud."""
+"""Summary binary data from Nextcloud."""
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import BINARY_SENSORS, DOMAIN
+from const import BINARY_SENSORS, DOMAIN
 
-
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Nextcloud sensors."""
-    if discovery_info is None:
-        return
     binary_sensors = []
     for name in hass.data[DOMAIN]:
         if name in BINARY_SENSORS:
             binary_sensors.append(NextcloudBinarySensor(name))
-    add_entities(binary_sensors, True)
 
+    async_add_entities(
+        binary_sensors,
+        update_before_add=True,
+    )
 
 class NextcloudBinarySensor(BinarySensorEntity):
     """Represents a Nextcloud binary sensor."""
