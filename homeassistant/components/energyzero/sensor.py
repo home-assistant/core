@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -58,7 +58,7 @@ SENSORS_GAS: tuple[EnergyZeroSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
-        value_fn=lambda data: data[SERVICE_GAS_TODAY].current_hourprice
+        value_fn=lambda data: data[SERVICE_GAS_TODAY].current_price
         if data[SERVICE_GAS_TODAY]
         else None,
     ),
@@ -67,7 +67,9 @@ SENSORS_GAS: tuple[EnergyZeroSensorEntityDescription, ...] = (
         name="Next hour gas market price",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
-        value_fn=lambda data: data[SERVICE_GAS_TODAY].next_hourprice
+        value_fn=lambda data: data[SERVICE_GAS_TODAY].price_at_time(
+            data[SERVICE_GAS_TODAY].utcnow() + timedelta(hours=1)
+        )
         if data[SERVICE_GAS_TODAY]
         else None,
     ),
@@ -80,14 +82,16 @@ SENSORS_ENERGY: tuple[EnergyZeroSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
-        value_fn=lambda data: data[SERVICE_ENERGY_TODAY].current_hourprice,
+        value_fn=lambda data: data[SERVICE_ENERGY_TODAY].current_price,
     ),
     EnergyZeroSensorEntityDescription(
         key="next_hour_price",
         name="Next hour electricity market price",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
-        value_fn=lambda data: data[SERVICE_ENERGY_TODAY].next_hourprice,
+        value_fn=lambda data: data[SERVICE_ENERGY_TODAY].price_at_time(
+            data[SERVICE_ENERGY_TODAY].utcnow() + timedelta(hours=1)
+        ),
     ),
     EnergyZeroSensorEntityDescription(
         key="average_price",
@@ -101,14 +105,14 @@ SENSORS_ENERGY: tuple[EnergyZeroSensorEntityDescription, ...] = (
         name="Highest Price - Today",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
-        value_fn=lambda data: data[SERVICE_ENERGY_TODAY].max_price,
+        value_fn=lambda data: data[SERVICE_ENERGY_TODAY].extreme_prices[1],
     ),
     EnergyZeroSensorEntityDescription(
         key="min_price",
         name="Lowest Price - Today",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
-        value_fn=lambda data: data[SERVICE_ENERGY_TODAY].min_price,
+        value_fn=lambda data: data[SERVICE_ENERGY_TODAY].extreme_prices[0],
     ),
     EnergyZeroSensorEntityDescription(
         key="highest_price_time",
@@ -127,7 +131,7 @@ SENSORS_ENERGY: tuple[EnergyZeroSensorEntityDescription, ...] = (
         name="Current percentage of highest electricity price - Today",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:percent",
-        value_fn=lambda data: data[SERVICE_ENERGY_TODAY].percentage_of_max_price,
+        value_fn=lambda data: data[SERVICE_ENERGY_TODAY].pct_of_max_price,
     ),
 )
 
