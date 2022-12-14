@@ -168,15 +168,17 @@ async def test_http_failed_action(hass, hass_client, hass_admin_user):
                     intent.IntentResponseTarget(
                         type=intent.IntentResponseTargetType.AREA, name=area, id=area
                     )
-                ],
-                success_targets=[
+                ]
+            )
+            response.async_set_results(
+                success_results=[
                     intent.IntentResponseTarget(
                         type=intent.IntentResponseTargetType.ENTITY,
                         name="light1",
                         id="light.light1",
                     )
                 ],
-                failed_targets=[
+                failed_results=[
                     intent.IntentResponseTarget(
                         type=intent.IntentResponseTargetType.ENTITY,
                         name="light2",
