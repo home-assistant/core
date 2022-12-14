@@ -20,14 +20,20 @@ from . import LD2410BLE
 from .const import DOMAIN
 from .models import LD2410BLEData
 
-ENTITY_DESCRIPTIONS = {
-    "is_moving": BinarySensorEntityDescription(
-        key="is_moving", device_class=BinarySensorDeviceClass.MOTION
+ENTITY_DESCRIPTIONS = [
+    BinarySensorEntityDescription(
+        key="is_moving",
+        device_class=BinarySensorDeviceClass.MOTION,
+        has_entity_name=True,
+        name="Motion",
     ),
-    "is_static": BinarySensorEntityDescription(
-        key="is_static", device_class=BinarySensorDeviceClass.PRESENCE
+    BinarySensorEntityDescription(
+        key="is_static",
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
+        has_entity_name=True,
+        name="Occupancy",
     ),
-}
+]
 
 
 async def async_setup_entry(
@@ -38,10 +44,8 @@ async def async_setup_entry(
     """Set up the platform for LD2410BLE."""
     data: LD2410BLEData = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [
-            LD2410BLEBinarySensor(data.coordinator, data.device, entry.title, k)
-            for k in ENTITY_DESCRIPTIONS
-        ]
+        LD2410BLEBinarySensor(data.coordinator, data.device, entry.title, description)
+        for description in ENTITY_DESCRIPTIONS
     )
 
 
@@ -49,15 +53,19 @@ class LD2410BLEBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Moving/static sensor for LD2410BLE."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, device: LD2410BLE, name: str, key: str
+        self,
+        coordinator: DataUpdateCoordinator,
+        device: LD2410BLE,
+        name: str,
+        description: BinarySensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._coordinator = coordinator
-        self._key = key
+        self._key = description.key
         self._device = device
-        self.entity_description = ENTITY_DESCRIPTIONS[key]
-        self._attr_unique_id = f"{device.address}_{key}"
+        self.entity_description = description
+        self._attr_unique_id = f"{device.address}_{self._key}"
         self._attr_device_info = DeviceInfo(
             name=name,
             connections={(dr.CONNECTION_BLUETOOTH, device.address)},
