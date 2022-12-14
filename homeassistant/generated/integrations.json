@@ -154,7 +154,6 @@
       "iot_class": "local_push"
     },
     "alert": {
-      "name": "Alert",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_push"
@@ -6414,6 +6413,7 @@
     }
   },
   "translated_name": [
+    "alert",
     "aurora",
     "cert_expiry",
     "cpuspeed",
