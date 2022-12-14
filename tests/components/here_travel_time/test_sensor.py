@@ -43,6 +43,7 @@ from homeassistant.components.here_travel_time.const import (
     TRAVEL_MODE_PUBLIC,
     TRAVEL_MODE_TRUCK,
 )
+from homeassistant.components.here_travel_time.coordinator import BACKOFF_MULTIPLIER
 from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
     ATTR_STATE_CLASS,
@@ -668,7 +669,9 @@ async def test_routing_rate_limit(hass: HomeAssistant, caplog):
 
     with patch(
         "here_routing.HERERoutingApi.route",
-        side_effect=HERERoutingTooManyRequestsError(),
+        side_effect=HERERoutingTooManyRequestsError(
+            "Rate limit for this service has been reached"
+        ),
     ):
         async_fire_time_changed(
             hass, utcnow() + timedelta(seconds=DEFAULT_SCAN_INTERVAL + 1)
@@ -683,7 +686,9 @@ async def test_routing_rate_limit(hass: HomeAssistant, caplog):
         return_value=RESPONSE,
     ):
         async_fire_time_changed(
-            hass, utcnow() + timedelta(seconds=DEFAULT_SCAN_INTERVAL + 1)
+            hass,
+            utcnow()
+            + timedelta(seconds=DEFAULT_SCAN_INTERVAL * BACKOFF_MULTIPLIER + 1),
         )
         await hass.async_block_till_done()
         assert hass.states.get("sensor.test_distance").state == "13.682"
@@ -720,7 +725,9 @@ async def test_transit_rate_limit(hass: HomeAssistant, caplog):
 
     with patch(
         "here_transit.HERETransitApi.route",
-        side_effect=HERETransitTooManyRequestsError(),
+        side_effect=HERETransitTooManyRequestsError(
+            "Rate limit for this service has been reached"
+        ),
     ):
         async_fire_time_changed(
             hass, utcnow() + timedelta(seconds=DEFAULT_SCAN_INTERVAL + 1)
@@ -735,7 +742,9 @@ async def test_transit_rate_limit(hass: HomeAssistant, caplog):
         return_value=TRANSIT_RESPONSE,
     ):
         async_fire_time_changed(
-            hass, utcnow() + timedelta(seconds=DEFAULT_SCAN_INTERVAL + 1)
+            hass,
+            utcnow()
+            + timedelta(seconds=DEFAULT_SCAN_INTERVAL * BACKOFF_MULTIPLIER + 1),
         )
         await hass.async_block_till_done()
         assert hass.states.get("sensor.test_distance").state == "1.883"

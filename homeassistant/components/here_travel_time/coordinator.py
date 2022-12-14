@@ -35,6 +35,8 @@ from homeassistant.util.unit_conversion import DistanceConverter
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, ROUTE_MODE_FASTEST
 from .model import HERETravelTimeConfig, HERETravelTimeData
 
+BACKOFF_MULTIPLIER = 1.1
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -102,13 +104,13 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator):
         except HERERoutingTooManyRequestsError as error:
             assert self.update_interval is not None
             _LOGGER.debug(
-                "API reported too many requests. Increasing update interval to %s",
-                self.update_interval.total_seconds() * 1.1,
+                "Rate limit has been reached. Increasing update interval to %s",
+                self.update_interval.total_seconds() * BACKOFF_MULTIPLIER,
             )
             self.update_interval = timedelta(
-                seconds=self.update_interval.total_seconds() * 1.1
+                seconds=self.update_interval.total_seconds() * BACKOFF_MULTIPLIER
             )
-            raise UpdateFailed from error
+            raise UpdateFailed("Rate limit has been reached") from error
 
     def _parse_routing_response(self, response: dict[str, Any]) -> HERETravelTimeData:
         """Parse the routing response dict to a HERETravelTimeData."""
@@ -197,13 +199,13 @@ class HERETransitDataUpdateCoordinator(DataUpdateCoordinator):
         except HERETransitTooManyRequestsError as error:
             assert self.update_interval is not None
             _LOGGER.debug(
-                "API reported too many requests. Increasing update interval to %s",
-                self.update_interval.total_seconds() * 1.1,
+                "Rate limit has been reached. Increasing update interval to %s",
+                self.update_interval.total_seconds() * BACKOFF_MULTIPLIER,
             )
             self.update_interval = timedelta(
-                seconds=self.update_interval.total_seconds() * 1.1
+                seconds=self.update_interval.total_seconds() * BACKOFF_MULTIPLIER
             )
-            raise UpdateFailed from error
+            raise UpdateFailed("Rate limit has been reached") from error
         except HERETransitDepartureArrivalTooCloseError:
             _LOGGER.debug("Ignoring HERETransitDepartureArrivalTooCloseError")
             return None
