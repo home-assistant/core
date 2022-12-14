@@ -15,6 +15,7 @@ from here_transit import (
     HERETransitDepartureArrivalTooCloseError,
     HERETransitNoRouteFoundError,
     HERETransitNoTransitRouteFoundError,
+    HERETransitTooManyRequestsError,
 )
 import pytest
 
@@ -64,7 +65,7 @@ from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from .conftest import RESPONSE
+from .conftest import RESPONSE, TRANSIT_RESPONSE
 from .const import (
     API_KEY,
     DEFAULT_CONFIG,
@@ -645,7 +646,7 @@ async def test_transit_errors(hass: HomeAssistant, caplog, exception, expected_m
         assert expected_message in caplog.text
 
 
-async def test_rate_limit(hass: HomeAssistant, caplog):
+async def test_routing_rate_limit(hass: HomeAssistant, caplog):
     """Test that rate limiting is applied when encountering HTTP 429."""
     with patch(
         "here_routing.HERERoutingApi.route",
@@ -675,7 +676,7 @@ async def test_rate_limit(hass: HomeAssistant, caplog):
         await hass.async_block_till_done()
 
         assert hass.states.get("sensor.test_distance").state == "unavailable"
-        assert "increasing update interval to" in caplog.text
+        assert "Increasing update interval to" in caplog.text
 
     with patch(
         "here_routing.HERERoutingApi.route",
@@ -686,4 +687,56 @@ async def test_rate_limit(hass: HomeAssistant, caplog):
         )
         await hass.async_block_till_done()
         assert hass.states.get("sensor.test_distance").state == "13.682"
-        assert "resetting update interval to" in caplog.text
+        assert "Resetting update interval to" in caplog.text
+
+
+async def test_transit_rate_limit(hass: HomeAssistant, caplog):
+    """Test that rate limiting is applied when encountering HTTP 429."""
+    with patch(
+        "here_transit.HERETransitApi.route",
+        return_value=TRANSIT_RESPONSE,
+    ):
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            unique_id="0123456789",
+            data={
+                CONF_ORIGIN_LATITUDE: float(ORIGIN_LATITUDE),
+                CONF_ORIGIN_LONGITUDE: float(ORIGIN_LONGITUDE),
+                CONF_DESTINATION_LATITUDE: float(DESTINATION_LATITUDE),
+                CONF_DESTINATION_LONGITUDE: float(DESTINATION_LONGITUDE),
+                CONF_API_KEY: API_KEY,
+                CONF_MODE: TRAVEL_MODE_PUBLIC,
+                CONF_NAME: "test",
+            },
+            options=DEFAULT_OPTIONS,
+        )
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+
+        assert hass.states.get("sensor.test_distance").state == "1.883"
+
+    with patch(
+        "here_transit.HERETransitApi.route",
+        side_effect=HERETransitTooManyRequestsError(),
+    ):
+        async_fire_time_changed(
+            hass, utcnow() + timedelta(seconds=DEFAULT_SCAN_INTERVAL + 1)
+        )
+        await hass.async_block_till_done()
+
+        assert hass.states.get("sensor.test_distance").state == "unavailable"
+        assert "Increasing update interval to" in caplog.text
+
+    with patch(
+        "here_transit.HERETransitApi.route",
+        return_value=TRANSIT_RESPONSE,
+    ):
+        async_fire_time_changed(
+            hass, utcnow() + timedelta(seconds=DEFAULT_SCAN_INTERVAL + 1)
+        )
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.test_distance").state == "1.883"
+        assert "Resetting update interval to" in caplog.text
