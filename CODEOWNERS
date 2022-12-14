@@ -765,8 +765,8 @@ build.json @home-assistant/supervisor
 /tests/components/nexia/ @bdraco
 /homeassistant/components/nextbus/ @vividboarder
 /tests/components/nextbus/ @vividboarder
-/homeassistant/components/nextcloud/ @meichthys
-/tests/components/nextcloud/ @meichthys
+/homeassistant/components/nextcloud/ @devPeete @Hadatko
+/tests/components/nextcloud/ @devPeete @Hadatko
 /homeassistant/components/nextdns/ @bieniu
 /tests/components/nextdns/ @bieniu
 /homeassistant/components/nfandroidtv/ @tkdrob

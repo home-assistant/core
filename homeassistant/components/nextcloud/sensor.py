@@ -4,81 +4,71 @@ from __future__ import annotations
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+)
 
-from .const import DOMAIN
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    CONF_URL,
+    CONF_USERNAME,
+    CONF_NAME,
+    CONF_LOCATION,
+)
 
-SENSORS = (
-    "nextcloud_system_version",
-    "nextcloud_system_theme",
-    "nextcloud_system_memcache.local",
-    "nextcloud_system_memcache.distributed",
-    "nextcloud_system_memcache.locking",
-    "nextcloud_system_freespace",
-    "nextcloud_system_cpuload",
-    "nextcloud_system_mem_total",
-    "nextcloud_system_mem_free",
-    "nextcloud_system_swap_total",
-    "nextcloud_system_swap_free",
-    "nextcloud_system_apps_num_installed",
-    "nextcloud_system_apps_num_updates_available",
-    "nextcloud_system_apps_app_updates_calendar",
-    "nextcloud_system_apps_app_updates_contacts",
-    "nextcloud_system_apps_app_updates_tasks",
-    "nextcloud_system_apps_app_updates_twofactor_totp",
-    "nextcloud_storage_num_users",
-    "nextcloud_storage_num_files",
-    "nextcloud_storage_num_storages",
-    "nextcloud_storage_num_storages_local",
-    "nextcloud_storage_num_storages_home",
-    "nextcloud_storage_num_storages_other",
-    "nextcloud_shares_num_shares",
-    "nextcloud_shares_num_shares_user",
-    "nextcloud_shares_num_shares_groups",
-    "nextcloud_shares_num_shares_link",
-    "nextcloud_shares_num_shares_mail",
-    "nextcloud_shares_num_shares_room",
-    "nextcloud_shares_num_shares_link_no_password",
-    "nextcloud_shares_num_fed_shares_sent",
-    "nextcloud_shares_num_fed_shares_received",
-    "nextcloud_shares_permissions_3_1",
-    "nextcloud_server_webserver",
-    "nextcloud_server_php_version",
-    "nextcloud_server_php_memory_limit",
-    "nextcloud_server_php_max_execution_time",
-    "nextcloud_server_php_upload_max_filesize",
-    "nextcloud_database_type",
-    "nextcloud_database_version",
-    "nextcloud_activeUsers_last5minutes",
-    "nextcloud_activeUsers_last1hour",
-    "nextcloud_activeUsers_last24hours",
+from . import NextcloudEntity, NextcloudMonitorWrapper
+
+from .const import (
+    DATA_KEY_API,
+    DOMAIN,
+    DATA_KEY_COORDINATOR,
+    SENSORS,
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Nextcloud sensors."""
     sensors = []
-    for name in hass.data[DOMAIN]:
+
+    instance_name = entry.data[CONF_NAME]
+    ncm_data = hass.data[DOMAIN][instance_name]
+
+    for name in ncm_data[DATA_KEY_API].data:
         if name in SENSORS:
-            sensors.append(NextcloudSensor(name))
+            sensors.append(
+                NextcloudSensor(
+                    ncm_data[DATA_KEY_API],
+                    ncm_data[DATA_KEY_COORDINATOR],
+                    instance_name,
+                    entry.entry_id,
+                    name,
+                )
+            )
+    async_add_entities(sensors, True)
 
-    async_add_entities(
-        sensors,
-        update_before_add=True,
-    )
 
-
-class NextcloudSensor(SensorEntity):
+class NextcloudSensor(NextcloudEntity, SensorEntity):
     """Represents a Nextcloud sensor."""
 
-    def __init__(self, item):
+    def __init__(
+        self,
+        api: NextcloudMonitorWrapper,
+        coordinator: DataUpdateCoordinator,
+        name: str,
+        server_unique_id: str,
+        item: str,
+    ):
         """Initialize the Nextcloud sensor."""
-        self._name = item
+        super().__init__(api, coordinator, name, server_unique_id)
+
+        self._item = item
         self._state = None
+        self._attr_unique_id = f"{DOMAIN}_{self._name}_{self._item}"
 
     @property
     def icon(self):
@@ -88,18 +78,9 @@ class NextcloudSensor(SensorEntity):
     @property
     def name(self):
         """Return the name for this sensor."""
-        return self._name
+        return f"{DOMAIN}_{self._name}_{self._item}"
 
     @property
     def native_value(self):
         """Return the state for this sensor."""
-        return self._state
-
-    @property
-    def unique_id(self):
-        """Return the unique ID for this sensor."""
-        return f"{self.hass.data[DOMAIN]['instance']}#{self._name}"
-
-    def update(self) -> None:
-        """Update the sensor."""
-        self._state = self.hass.data[DOMAIN][self._name]
+        return self.api.data[self._item]

@@ -4,42 +4,68 @@ from __future__ import annotations
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+)
 
-from .const import DOMAIN
+from homeassistant.const import (
+    CONF_NAME,
+)
 
-BINARY_SENSORS = (
-    "nextcloud_system_enable_avatars",
-    "nextcloud_system_enable_previews",
-    "nextcloud_system_filelocking.enabled",
-    "nextcloud_system_debug",
+from . import NextcloudEntity, NextcloudMonitorWrapper
+
+from .const import (
+    DATA_KEY_API,
+    DOMAIN,
+    DATA_KEY_COORDINATOR,
+    BINARY_SENSORS,
+    DOMAIN,
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Nextcloud sensors."""
     binary_sensors = []
-    for name in hass.data[DOMAIN]:
+
+    instance_name = entry.data[CONF_NAME]
+    ncm_data = hass.data[DOMAIN][instance_name]
+
+    for name in ncm_data[DATA_KEY_API].data:
         if name in BINARY_SENSORS:
-            binary_sensors.append(NextcloudBinarySensor(name))
+            binary_sensors.append(
+                NextcloudBinarySensor(
+                    ncm_data[DATA_KEY_API],
+                    ncm_data[DATA_KEY_COORDINATOR],
+                    instance_name,
+                    entry.entry_id,
+                    name,
+                )
+            )
+    async_add_entities(binary_sensors, True)
 
-    async_add_entities(
-        binary_sensors,
-        update_before_add=True,
-    )
 
-
-class NextcloudBinarySensor(BinarySensorEntity):
+class NextcloudBinarySensor(NextcloudEntity, BinarySensorEntity):
     """Represents a Nextcloud binary sensor."""
 
-    def __init__(self, item):
+    def __init__(
+        self,
+        api: NextcloudMonitorWrapper,
+        coordinator: DataUpdateCoordinator,
+        name: str,
+        server_unique_id: str,
+        item: str,
+    ):
         """Initialize the Nextcloud binary sensor."""
-        self._name = item
+
+        super().__init__(api, coordinator, name, server_unique_id)
+
+        self._item = item
         self._is_on = None
+        self._attr_unique_id = f"{DOMAIN}_{self._name}_{self._item}"
 
     @property
     def icon(self):
@@ -49,18 +75,9 @@ class NextcloudBinarySensor(BinarySensorEntity):
     @property
     def name(self):
         """Return the name for this binary sensor."""
-        return self._name
+        return f"{DOMAIN}_{self._name}_{self._item}"
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return self._is_on == "yes"
-
-    @property
-    def unique_id(self):
-        """Return the unique ID for this binary sensor."""
-        return f"{self.hass.data[DOMAIN]['instance']}#{self._name}"
-
-    def update(self) -> None:
-        """Update the binary sensor."""
-        self._is_on = self.hass.data[DOMAIN][self._name]
+        return self.api.data[self._item] == "yes"
