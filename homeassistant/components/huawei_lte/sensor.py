@@ -390,7 +390,9 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
         },
     ),
     KEY_MONITORING_MONTH_STATISTICS: HuaweiSensorGroup(
-        exclude=re.compile(r"^month(duration|lastcleartime)$", re.IGNORECASE),
+        exclude=re.compile(
+            r"^(currentday|month)(duration|lastcleartime)$", re.IGNORECASE
+        ),
         descriptions={
             "CurrentMonthDownload": HuaweiSensorEntityDescription(
                 key="CurrentMonthDownload",
