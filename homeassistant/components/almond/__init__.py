@@ -291,9 +291,10 @@ class AlmondAgent(conversation.AbstractConversationAgent):
         context: Context,
         conversation_id: str | None = None,
         language: str | None = None,
-    ) -> intent.IntentResponse:
+    ) -> conversation.ConversationResult | None:
         """Process a sentence."""
         response = await self.api.async_converse_text(text, conversation_id)
+        language = language or self.hass.config.language
 
         first_choice = True
         buffer = ""
@@ -314,6 +315,8 @@ class AlmondAgent(conversation.AbstractConversationAgent):
                     buffer += ","
                 buffer += f" {message['title']}"
 
-        intent_result = intent.IntentResponse(language=language)
-        intent_result.async_set_speech(buffer.strip())
-        return intent_result
+        intent_response = intent.IntentResponse(language=language)
+        intent_response.async_set_speech(buffer.strip())
+        return conversation.ConversationResult(
+            response=intent_response, conversation_id=conversation_id
+        )

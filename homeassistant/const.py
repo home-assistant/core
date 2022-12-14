@@ -767,6 +767,7 @@ class UnitOfMass(StrEnum):
     MICROGRAMS = "µg"
     OUNCES = "oz"
     POUNDS = "lb"
+    STONES = "st"
 
 
 MASS_GRAMS: Final = "g"
