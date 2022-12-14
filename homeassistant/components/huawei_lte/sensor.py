@@ -7,6 +7,8 @@ from dataclasses import dataclass, field
 import logging
 import re
 
+from huawei_lte_api.enums.net import NetworkModeEnum
+
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
@@ -536,13 +538,13 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 name="Preferred mode",
                 formatter=lambda x: (
                     {
-                        "00": "4G/3G/2G",
-                        "01": "2G",
-                        "02": "3G",
-                        "03": "4G",
-                        "0301": "4G/2G",
-                        "0302": "4G/3G",
-                        "0201": "3G/2G",
+                        NetworkModeEnum.MODE_AUTO.value: "4G/3G/2G",
+                        NetworkModeEnum.MODE_4G_3G_AUTO.value: "4G/3G",
+                        NetworkModeEnum.MODE_4G_2G_AUTO.value: "4G/2G",
+                        NetworkModeEnum.MODE_4G_ONLY.value: "4G",
+                        NetworkModeEnum.MODE_3G_2G_AUTO.value: "3G/2G",
+                        NetworkModeEnum.MODE_3G_ONLY.value: "3G",
+                        NetworkModeEnum.MODE_2G_ONLY.value: "2G",
                     }.get(x),
                     None,
                 ),
