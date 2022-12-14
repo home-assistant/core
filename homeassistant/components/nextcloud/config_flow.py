@@ -1,44 +1,44 @@
 """Config flow for Nextcloud integration."""
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 from typing import Any
-from datetime import timedelta
 
+from nextcloudmonitor import NextcloudMonitor, NextcloudMonitorError
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.event import track_time_interval
 
 from .const import DOMAIN
-from nextcloudmonitor import NextcloudMonitor, NextcloudMonitorError
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO adjust the data schema to the data that you need
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("url"): cv.url,
+        vol.Required("url"): str,
         vol.Required("username"): str,
         vol.Required("password"): str,
-        vol.Optional("scan_interval", default=timedelta(seconds=60)): cv.time_period,
-        vol.Optional("verify_ssl", default=True): cv.boolean,
+        vol.Optional("scan_interval", default=timedelta(seconds=60)): timedelta,
+        vol.Optional("verify_ssl", default=True): bool,
     }
 )
 
 
 class NextCloud:
+    """Nextcloud class handler."""
+
     def __init__(
         self,
         hass: HomeAssistant,
-        url: cv.url,
+        url: str,
         username: str,
         password: str,
-        verify_ssl: cv.boolean,
+        verify_ssl: bool,
     ) -> None:
         """Initialize."""
         self.hass = hass
@@ -49,30 +49,40 @@ class NextCloud:
         self.ncm = None
 
     def setup(self):
+        """Call setup functions first to create connection with nextcloud server.
+
+        Raises:
+            NextcloudMonitorError: Connection was not established
+        """
         self.ncm = NextcloudMonitor(
             self.url, self.username, self.password, self.verify_ssl
         )
-        self.setDataPointsToHass()
+        self.__set_data_points_to_hass()
 
     def update(self):
-        if self.ncm == None:
+        """Update download actual nextcloud data.
+
+        Raises:
+            UninitializedObject: Setup function was not called, or it failed
+        """
+        if self.ncm is None:
             raise UninitializedObject()
 
         self.ncm.update()
-        self.setDataPointsToHass()
+        self.__set_data_points_to_hass()
 
-    def setDataPointsToHass(self):
-        self.hass.data[DOMAIN] = self.getDataPoints()
+    def __set_data_points_to_hass(self):
+        self.hass.data[DOMAIN] = self.__get_ncm_data_points()
         self.hass.data[DOMAIN]["instance"] = self.url
 
-    def getDataPoints(self, key_path="", leaf=False):
-        if self.ncm == None:
+    def __get_ncm_data_points(self, key_path="", leaf=False):
+        if self.ncm is None:
             raise UninitializedObject()
 
-        return self.__getDataPoints(self.ncm.data, key_path, leaf)
+        return self.__get_data_points(self.ncm.data, key_path, leaf)
 
     # Use recursion to create list of sensors & values based on nextcloud api data
-    def __getDataPoints(self, api_data, key_path="", leaf=False):
+    def __get_data_points(self, api_data, key_path="", leaf=False):
         """Use Recursion to discover data-points and values.
 
         Get dictionary of data-points by recursing through dict returned by api until
@@ -90,7 +100,7 @@ class NextCloud:
                 if not leaf:
                     key_path += f"{key}_"
                 leaf = True
-                result.update(self.__getDataPoints(value, key_path, leaf))
+                result.update(self.__get_data_points(value, key_path, leaf))
             else:
                 result[f"{DOMAIN}_{key_path}{key}"] = value
                 leaf = False
@@ -103,17 +113,17 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
-    nextCloudVar = NextCloud(
+    next_cloud_var = NextCloud(
         hass, data["url"], data["username"], data["password"], data["verify_ssl"]
     )
 
-    await hass.async_add_executor_job(nextCloudVar.setup)
+    await hass.async_add_executor_job(next_cloud_var.setup)
 
-    def update():
+    def update(datetime):
         """Update data from nextcloud api."""
         try:
-            nextCloudVar.update()
-        except:
+            next_cloud_var.update()
+        except UninitializedObject:
             return False
 
     track_time_interval(hass, update, data["scan_interval"])
@@ -156,4 +166,4 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class UninitializedObject(HomeAssistantError):
-    """Error to indicate we didn't initialize object"""
+    """Error to indicate we didn't initialize object."""
