@@ -10,7 +10,6 @@ from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
@@ -144,7 +143,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize."""
         self._flow_data: dict[str, Any] = {}
-        self._reauth_entry: ConfigEntry | None = None
 
     async def async_step_by_coordinates(
         self, user_input: dict[str, Any] | None = None
@@ -163,7 +161,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user_input[CONF_LONGITUDE],
             user_input[CONF_DISTANCE],
         )
-
         if validation.errors:
             return self.async_show_form(
                 step_id="by_coordinates",
@@ -180,37 +177,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         ]
 
         return await self.async_step_choose_sensor()
-
-    async def async_step_check_api_key(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle the step to check the API key."""
-        if self._reauth_entry:
-            error_step_id = "reauth_confirm"
-        else:
-            error_step_id = "user"
-
-        api_key = self._flow_data[CONF_API_KEY]
-
-        validation = await async_validate_api_key(self.hass, api_key)
-
-        if validation.errors:
-            return self.async_show_form(
-                step_id=error_step_id,
-                data_schema=API_KEY_SCHEMA,
-                errors=validation.errors,
-            )
-
-        if self._reauth_entry:
-            self.hass.config_entries.async_update_entry(
-                self._reauth_entry, data=self._flow_data
-            )
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-            )
-            return self.async_abort(reason="reauth_successful")
-
-        return await self.async_step_by_coordinates()
 
     async def async_step_choose_sensor(
         self, user_input: dict[str, Any] | None = None
@@ -233,9 +199,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -247,8 +210,27 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="reauth_confirm", data_schema=API_KEY_SCHEMA
             )
 
-        self._flow_data = {CONF_API_KEY: user_input[CONF_API_KEY]}
-        return await self.async_step_check_api_key()
+        api_key = user_input[CONF_API_KEY]
+
+        validation = await async_validate_api_key(self.hass, api_key)
+        if validation.errors:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=API_KEY_SCHEMA,
+                errors=validation.errors,
+            )
+
+        reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        assert reauth_entry
+        self.hass.config_entries.async_update_entry(
+            reauth_entry, data={CONF_API_KEY: api_key}
+        )
+        self.hass.async_create_task(
+            self.hass.config_entries.async_reload(reauth_entry.entry_id)
+        )
+        return self.async_abort(reason="reauth_successful")
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -261,5 +243,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._async_abort_entries_match({CONF_API_KEY: api_key})
 
+        validation = await async_validate_api_key(self.hass, api_key)
+        if validation.errors:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=API_KEY_SCHEMA,
+                errors=validation.errors,
+            )
+
         self._flow_data = {CONF_API_KEY: api_key}
-        return await self.async_step_check_api_key()
+        return await self.async_step_by_coordinates()
