@@ -14,6 +14,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_SUPPORTED_MODES, DATA_COORDINATOR, DATA_INFO, DOMAIN
@@ -148,7 +149,10 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new swing mode."""
         _LOGGER.debug("Setting swing mode of %s to %s", self.unique_id, swing_mode)
-        self._unit = await self._unit.set_swing(swing_mode)
+        try:
+            self._unit = await self._unit.set_swing(swing_mode)
+        except Exception as error:
+            raise HomeAssistantError(error) from error
         self.async_write_ha_state()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
