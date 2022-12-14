@@ -161,7 +161,7 @@ async def test_http_failed_action(hass, hass_client, hass_admin_user):
             """Handle the intent."""
             response = handle_intent.create_response()
             area = handle_intent.slots["area"]["value"]
-            
+
             # Mark some targets as successful, others as failed
             response.async_set_targets(
                 intent_targets=[
