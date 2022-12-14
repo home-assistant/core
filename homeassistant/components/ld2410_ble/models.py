@@ -1,11 +1,11 @@
-"""The led ble integration models."""
+"""The ld2410 ble integration models."""
 from __future__ import annotations
 
 from dataclasses import dataclass
 
 from ld2410_ble import LD2410BLE
 
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from .coordinator import LD2410BLECoordinator
 
 
 @dataclass
@@ -14,4 +14,4 @@ class LD2410BLEData:
 
     title: str
     device: LD2410BLE
-    coordinator: DataUpdateCoordinator
+    coordinator: LD2410BLECoordinator

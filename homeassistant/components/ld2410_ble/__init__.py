@@ -2,8 +2,8 @@
 
 import logging
 
-from bleak_retry_connector import BleakError
-from ld2410_ble import LD2410BLE, LD2410BLEState, get_device
+from bleak_retry_connector import BleakError, get_device
+from ld2410_ble import LD2410BLE
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import ADDRESS, BluetoothCallbackMatcher
@@ -11,9 +11,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
+from .coordinator import LD2410BLECoordinator
 from .models import LD2410BLEData
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR]
@@ -92,28 +92,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await data.device.stop()
 
     return unload_ok
-
-
-class LD2410BLECoordinator(DataUpdateCoordinator):
-    """Data coordinator for receiving LD2410B updates."""
-
-    def __init__(self, hass: HomeAssistant, ld2410_ble: LD2410BLE) -> None:
-        """Initialise the coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=DOMAIN,
-        )
-        self._ld2410_ble = ld2410_ble
-        ld2410_ble.register_callback(self._async_handle_update)
-        ld2410_ble.register_disconnected_callback(self._async_handle_disconnect)
-
-    def _async_handle_update(self, state: LD2410BLEState) -> None:
-        """Just trigger the callbacks."""
-        self.async_set_updated_data(True)
-
-    def _async_handle_disconnect(self) -> None:
-        """Trigger the callbacks with False for disconnected."""
-        self.async_set_update_error(
-            Exception(f"Disconnected from {self._ld2410_ble.name}")
-        )
