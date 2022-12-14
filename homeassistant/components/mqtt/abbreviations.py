@@ -126,7 +126,7 @@ ABBREVIATIONS = {
     "pl_arm_nite": "payload_arm_night",
     "pl_arm_vacation": "payload_arm_vacation",
     "pl_arm_custom_b": "payload_arm_custom_bypass",
-    "pl_auto_zone": "payload_auto_zone",
+    "pl_aut_zn": "payload_auto_zone",
     "pl_avail": "payload_available",
     "pl_cln_sp": "payload_clean_spot",
     "pl_cls": "payload_close",
