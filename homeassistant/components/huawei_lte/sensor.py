@@ -409,6 +409,16 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             r"^(currentday|month)(duration|lastcleartime)$", re.IGNORECASE
         ),
         descriptions={
+            "CurrentDayUsed": HuaweiSensorEntityDescription(
+                key="CurrentDayUsed",
+                name="Current day transfer",
+                native_unit_of_measurement=UnitOfInformation.BYTES,
+                device_class=SensorDeviceClass.DATA_SIZE,
+                icon="mdi:arrow-up-down-bold",
+                state_class=SensorStateClass.TOTAL,
+                last_reset_item="CurrentDayDuration",
+                last_reset_formatter=last_reset_elapsed_seconds,
+            ),
             "CurrentMonthDownload": HuaweiSensorEntityDescription(
                 key="CurrentMonthDownload",
                 name="Current month download",
