@@ -62,6 +62,7 @@ ATTR_DISABLE_NOTIF = "disable_notification"
 ATTR_DISABLE_WEB_PREV = "disable_web_page_preview"
 ATTR_EDITED_MSG = "edited_message"
 ATTR_FILE = "file"
+ATTR_FILE_MIME_TYPE = "mime_type"
 ATTR_FROM_FIRST = "from_first"
 ATTR_FROM_LAST = "from_last"
 ATTR_KEYBOARD = "keyboard"
@@ -981,6 +982,7 @@ class BaseTelegramBotEntity:
                 mime_type=message.voice.mime_type,
                 bot_platform=self.bot_platform,
             )
+            event_data[ATTR_FILE_MIME_TYPE] = message.voice.mime_type
         else:
             event_type = EVENT_TELEGRAM_TEXT
             event_data[ATTR_TEXT] = message.text
