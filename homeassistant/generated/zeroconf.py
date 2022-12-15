@@ -366,8 +366,16 @@ ZEROCONF = {
             "domain": "octoprint",
         },
     ],
-    "_pjlink._tcp.local.": [{"domain": "pjlink"}],
-    "_pjlink._udp.local.": [{"domain": "pjlink"}],
+    "_pjlink._tcp.local.": [
+        {
+            "domain": "pjlink",
+        },
+    ],
+    "_pjlink._udp.local.": [
+        {
+            "domain": "pjlink",
+        },
+    ],
     "_plexmediasvr._tcp.local.": [
         {
             "domain": "plex",
