@@ -105,7 +105,7 @@ set_daynight:
 
 set_backlight:
   name: Set backlight
-  description:  >-
+  description: >-
     Optimizing brightness and contrast levels to compensate for differences
     between dark and bright objects using either BLC or WDR mode.
     This may improve image clarity in high contrast situations,
