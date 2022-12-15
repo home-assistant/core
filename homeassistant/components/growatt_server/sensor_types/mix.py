@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
-    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
+    UnitOfElectricPotential,
     UnitOfPower,
 )
 
@@ -76,21 +76,21 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="mix_battery_voltage",
         name="Battery voltage",
         api_key="vbat",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
     ),
     GrowattSensorEntityDescription(
         key="mix_pv1_voltage",
         name="PV1 voltage",
         api_key="vpv1",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
     ),
     GrowattSensorEntityDescription(
         key="mix_pv2_voltage",
         name="PV2 voltage",
         api_key="vpv2",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
     ),
     # Values from 'mix_totals' API call
@@ -185,7 +185,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="mix_grid_voltage",
         name="Grid voltage",
         api_key="vAc1",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
     ),
     # Values from 'mix_detail' API call

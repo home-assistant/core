@@ -1,10 +1,5 @@
 """Const file for the MyBMW integration."""
-from homeassistant.const import (
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
-    VOLUME_GALLONS,
-    VOLUME_LITERS,
-)
+from homeassistant.const import VOLUME_GALLONS, VOLUME_LITERS, UnitOfLength
 
 DOMAIN = "bmw_connected_drive"
 ATTRIBUTION = "Data provided by MyBMW"
@@ -20,8 +15,8 @@ CONF_REFRESH_TOKEN = "refresh_token"
 DATA_HASS_CONFIG = "hass_config"
 
 UNIT_MAP = {
-    "KILOMETERS": LENGTH_KILOMETERS,
-    "MILES": LENGTH_MILES,
+    "KILOMETERS": UnitOfLength.KILOMETERS,
+    "MILES": UnitOfLength.MILES,
     "LITERS": VOLUME_LITERS,
     "GALLONS": VOLUME_GALLONS,
 }

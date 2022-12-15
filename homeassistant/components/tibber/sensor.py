@@ -27,11 +27,11 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
+    UnitOfElectricPotential,
     UnitOfPower,
 )
 from homeassistant.core import Event, HomeAssistant, callback
@@ -141,21 +141,21 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         key="voltagePhase1",
         name="voltage phase1",
         device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="voltagePhase2",
         name="voltage phase2",
         device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="voltagePhase3",
         name="voltage phase3",
         device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(

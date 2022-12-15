@@ -6,10 +6,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     ELECTRIC_POTENTIAL_MILLIVOLT,
-    MASS_GRAMS,
     PERCENTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    UnitOfMass,
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
@@ -174,7 +174,7 @@ class OmniLogicSaltLevelSensor(OmnilogicSensor):
 
         if self._unit_type == "Metric":
             salt_return = round(int(salt_return) / 1000, 2)
-            unit_of_measurement = f"{MASS_GRAMS}/{UnitOfVolume.LITERS}"
+            unit_of_measurement = f"{UnitOfMass.GRAMS}/{UnitOfVolume.LITERS}"
 
         self._unit = unit_of_measurement
 

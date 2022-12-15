@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "invalid_api_key": "Invalid API key",
@@ -30,6 +31,14 @@
                     "sensor_index": "The sensor to track"
                 },
                 "description": "Which of the nearby sensors would you like to track?"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API Key"
+                },
+                "data_description": {
+                    "api_key": "Your PurpleAir API key (if you have both read and write keys, use the read key)"
+                }
             },
             "user": {
                 "data": {

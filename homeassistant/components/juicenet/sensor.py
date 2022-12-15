@@ -9,11 +9,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
     TEMP_CELSIUS,
     TIME_SECONDS,
     UnitOfElectricCurrent,
+    UnitOfElectricPotential,
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
@@ -37,7 +37,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="voltage",
         name="Voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
     ),
     SensorEntityDescription(

@@ -14,9 +14,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CURRENCY_EURO,
-    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     UnitOfElectricCurrent,
+    UnitOfElectricPotential,
     UnitOfPower,
     UnitOfVolume,
 )
@@ -98,21 +98,21 @@ SENSORS_PHASES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="voltage_phase_l1",
         name="Voltage Phase L1",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="voltage_phase_l2",
         name="Voltage Phase L2",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="voltage_phase_l3",
         name="Voltage Phase L3",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
