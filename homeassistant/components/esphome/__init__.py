@@ -66,8 +66,12 @@ CONF_NOISE_PSK = "noise_psk"
 _LOGGER = logging.getLogger(__name__)
 _R = TypeVar("_R")
 
-STABLE_BLE_VERSION_STR = "2022.11.0"
+STABLE_BLE_VERSION_STR = "2022.12.0"
 STABLE_BLE_VERSION = AwesomeVersion(STABLE_BLE_VERSION_STR)
+PROJECT_URLS = {
+    "esphome.bluetooth-proxy": "https://esphome.github.io/bluetooth-proxies/",
+}
+DEFAULT_URL = f"https://esphome.io/changelog/{STABLE_BLE_VERSION_STR}.html"
 
 
 @callback
@@ -75,13 +79,13 @@ def _async_check_firmware_version(
     hass: HomeAssistant, device_info: EsphomeDeviceInfo
 ) -> None:
     """Create or delete an the ble_firmware_outdated issue."""
-    # ESPHome device_info.name is the unique_id
-    issue = f"ble_firmware_outdated-{device_info.name}"
+    # ESPHome device_info.mac_address is the unique_id
+    issue = f"ble_firmware_outdated-{device_info.mac_address}"
     if (
         not device_info.bluetooth_proxy_version
         # If the device has a project name its up to that project
         # to tell them about the firmware version update so we don't notify here
-        or device_info.project_name
+        or (device_info.project_name and device_info.project_name not in PROJECT_URLS)
         or AwesomeVersion(device_info.esphome_version) >= STABLE_BLE_VERSION
     ):
         async_delete_issue(hass, DOMAIN, issue)
@@ -92,9 +96,12 @@ def _async_check_firmware_version(
         issue,
         is_fixable=False,
         severity=IssueSeverity.WARNING,
-        learn_more_url=f"https://esphome.io/changelog/{STABLE_BLE_VERSION_STR}.html",
+        learn_more_url=PROJECT_URLS.get(device_info.project_name, DEFAULT_URL),
         translation_key="ble_firmware_outdated",
-        translation_placeholders={"name": device_info.name},
+        translation_placeholders={
+            "name": device_info.name,
+            "version": STABLE_BLE_VERSION_STR,
+        },
     )
 
 
