@@ -10,7 +10,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 
-from .const import DOMAIN
+from .const import CONF_LANGUAGE_CODE, DEFAULT_LANGUAGE_CODE, DOMAIN
 
 
 async def async_send_text_commands(commands: list[str], hass: HomeAssistant) -> None:
@@ -27,6 +27,7 @@ async def async_send_text_commands(commands: list[str], hass: HomeAssistant) -> 
         raise err
 
     credentials = Credentials(session.token[CONF_ACCESS_TOKEN])
-    with TextAssistant(credentials) as assistant:
+    language_code = entry.options.get(CONF_LANGUAGE_CODE, DEFAULT_LANGUAGE_CODE)
+    with TextAssistant(credentials, language_code) as assistant:
         for command in commands:
             assistant.assist(command)
