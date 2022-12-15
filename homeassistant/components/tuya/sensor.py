@@ -82,7 +82,7 @@ BATTERY_SENSORS: tuple[TuyaSensorEntityDescription, ...] = (
 # end up being a sensor.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
-    # Water Valve
+    # Irrigation
     # https://developer.tuya.com/en/docs/iot/categorydgnbj?id=Kaiuz3yorvzg3
     "ggq": (
         TuyaSensorEntityDescription(
@@ -1070,6 +1070,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             self._type = DPType.ENUM
         else:
             self._type = self.get_dptype(DPCode(description.key))
+            
 
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.

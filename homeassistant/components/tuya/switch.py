@@ -24,7 +24,7 @@ from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
 # default instruction set of each category end up being a Switch.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
-    # Water Valve
+    # Irrigation
     # https://developer.tuya.com/en/docs/iot/fggq?id=a7sghmms
     "ggq": (
         SwitchEntityDescription(

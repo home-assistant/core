@@ -129,7 +129,7 @@
             "wall_follow": "Follow Wall",
             "zone": "Zone"
         },
-        "tuya__switch_mode": {
+        "tuya__irrigation_mode": {
           "true": "Capacity",
           "false": "Duration"
         }

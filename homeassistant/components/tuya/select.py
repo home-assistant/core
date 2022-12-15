@@ -18,15 +18,15 @@ from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
 # default instructions set of each category end up being a select.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
-    # Water Valve
+    # Irrigation
     # https://developer.tuya.com/en/docs/iot/fggq?id=a7sghmms
     "ggq": (
         SelectEntityDescription(
             key=DPCode.SWITCH,
-            name="Switch Mode",
+            name="Irrigation Mode",
             icon="mdi:water-pump",
             entity_category=EntityCategory.CONFIG,
-            translation_key="switch_mode",
+            translation_key="irrigation_mode",
         )
     ),
     # Multi-functional Sensor

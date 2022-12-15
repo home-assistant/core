@@ -188,7 +188,7 @@
           "5": "Mood 5"
         }
       },
-      "switch_mode": {
+      "irrigation_mode": {
         "state": {
           "true": "Capacity",
           "false": "Duration"

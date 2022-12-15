@@ -188,7 +188,7 @@
                     "zone": "Zone"
                 }
             },
-            "switch_mode": {
+            "irrigation_mode": {
                 "state": {
                     "true": "Capacity",
                     "false": "Duration"
