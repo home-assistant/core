@@ -102,6 +102,15 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         exists_fn=lambda device: sku_supported(device, PM25_SUPPORTED),
     ),
     VeSyncSensorEntityDescription(
+        key="humidity",
+        name="Humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: device.details["humidity"],
+        exists_fn=lambda device: "humidity" in device.details,
+    ),
+    VeSyncSensorEntityDescription(
         key="power",
         name="current power",
         device_class=SensorDeviceClass.POWER,
