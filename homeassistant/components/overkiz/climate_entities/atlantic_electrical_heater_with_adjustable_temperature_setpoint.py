@@ -104,7 +104,6 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
 
         if (
             (operating_mode := states[OverkizState.CORE_OPERATING_MODE])
-            and operating_mode.value_as_str
             and operating_mode.value_as_str == OverkizCommandParam.EXTERNAL
         ):
             return PRESET_EXTERNAL
