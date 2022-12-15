@@ -15,10 +15,10 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PORT,
-    ELECTRIC_POTENTIAL_VOLT,
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
     TEMP_CELSIUS,
+    UnitOfElectricPotential,
     UnitOfFrequency,
     UnitOfInformation,
     UnitOfPower,
@@ -156,7 +156,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         value=lambda data: data.cpu.voltage,
     ),
     SystemBridgeSensorEntityDescription(

@@ -18,10 +18,10 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONF_NAME,
     DEGREE,
-    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
     UnitOfElectricCurrent,
+    UnitOfElectricPotential,
     UnitOfFrequency,
     UnitOfPower,
 )
@@ -259,7 +259,7 @@ SENSOR_UNIT_MAPPING = {
     "kWh": ENERGY_KILO_WATT_HOUR,
     "W": UnitOfPower.WATT,
     "A": UnitOfElectricCurrent.AMPERE,
-    "V": ELECTRIC_POTENTIAL_VOLT,
+    "V": UnitOfElectricPotential.VOLT,
     "°": DEGREE,
     "Hz": UnitOfFrequency.HERTZ,
 }
