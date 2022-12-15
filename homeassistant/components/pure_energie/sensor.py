@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, ENERGY_KILO_WATT_HOUR, POWER_WATT
+from homeassistant.const import CONF_HOST, ENERGY_KILO_WATT_HOUR, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -40,7 +40,7 @@ SENSORS: tuple[PureEnergieSensorEntityDescription, ...] = (
     PureEnergieSensorEntityDescription(
         key="power_flow",
         name="Power Flow",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.smartbridge.power_flow,

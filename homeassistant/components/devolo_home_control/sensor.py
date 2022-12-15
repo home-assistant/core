@@ -169,9 +169,6 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
             device_instance.consumption_property[element_uid], f"{consumption}_unit"
         )
 
-        if consumption == "total":
-            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-
         self._value = getattr(
             device_instance.consumption_property[element_uid], consumption
         )

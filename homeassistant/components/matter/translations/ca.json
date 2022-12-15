@@ -17,7 +17,8 @@
         },
         "flow_title": "{name}",
         "progress": {
-            "install_addon": "Espera mentre finalitza la instal\u00b7laci\u00f3 del complement Servidor Matter. Pot tardar uns minuts."
+            "install_addon": "Espera mentre finalitza la instal\u00b7laci\u00f3 del complement Servidor Matter. Pot tardar uns minuts.",
+            "start_addon": "Espera mentre es completa la inicialitzaci\u00f3 del complement Servidor Matter. Aquest complement \u00e9s el que permet utilitzar Matter dins Home Assistant. Espera uns segons."
         },
         "step": {
             "hassio_confirm": {
@@ -35,6 +36,7 @@
                 "data": {
                     "use_addon": "Utilitza el complement oficial del Supervisor, Servidor Matter"
                 },
+                "description": "Vols utilitzar el complement oficial Servidor Matter Supervisor? \n\nSi ja est\u00e0s executant el Servidor Matter en un altre complement, contenidor personalitzat, o de manera nativa, etc. NO seleccionis aquesta opci\u00f3.",
                 "title": "Selecci\u00f3 del m\u00e8tode de connexi\u00f3"
             },
             "start_addon": {

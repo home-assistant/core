@@ -12,11 +12,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CURRENCY_EURO,
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
-    POWER_KILO_WATT,
     VOLUME_CUBIC_METERS,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfPower,
 )
 from homeassistant.util import dt as dt_util
 
@@ -78,14 +78,14 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         key="dsmr/reading/electricity_currently_delivered",
         name="Current power usage",
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_KILO_WATT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/reading/electricity_currently_returned",
         name="Current power return",
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_KILO_WATT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
@@ -93,7 +93,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         name="Current power usage L1",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_KILO_WATT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
@@ -101,7 +101,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         name="Current power usage L2",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_KILO_WATT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
@@ -109,7 +109,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         name="Current power usage L3",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_KILO_WATT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
@@ -117,7 +117,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         name="Current power return L1",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_KILO_WATT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
@@ -125,7 +125,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         name="Current power return L2",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_KILO_WATT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
@@ -133,7 +133,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         name="Current power return L3",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_KILO_WATT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
@@ -149,7 +149,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         name="Current voltage L1",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
@@ -157,7 +157,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         name="Current voltage L2",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
@@ -165,7 +165,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         name="Current voltage L3",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
@@ -173,7 +173,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         name="Phase power current L1",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
@@ -181,7 +181,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         name="Phase power current L2",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
@@ -189,7 +189,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         name="Phase power current L3",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(

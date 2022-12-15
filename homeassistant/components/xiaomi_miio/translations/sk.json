@@ -51,6 +51,31 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "display_orientation": {
+                "state": {
+                    "forward": "Dopredu",
+                    "left": "V\u013eavo",
+                    "right": "Vpravo"
+                }
+            },
+            "led_brightness": {
+                "state": {
+                    "bright": "Jas",
+                    "dim": "Dim",
+                    "off": "Vypnut\u00e9"
+                }
+            },
+            "ptc_level": {
+                "state": {
+                    "high": "Vysok\u00e9",
+                    "low": "N\u00edzke",
+                    "medium": "Stredn\u00e9"
+                }
+            }
+        }
+    },
     "options": {
         "error": {
             "cloud_credentials_incomplete": "Poverenia cloudu nie s\u00fa \u00fapln\u00e9, vypl\u0148te pou\u017e\u00edvate\u013esk\u00e9 meno, heslo a krajinu"

@@ -301,8 +301,14 @@ async def mock_rpc_device():
                 {}, UpdateType.EVENT
             )
 
+        def disconnected():
+            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, UpdateType.DISCONNECTED
+            )
+
         device = _mock_rpc_device("0.12.0")
         rpc_device_mock.return_value = device
+        rpc_device_mock.return_value.mock_disconnected = Mock(side_effect=disconnected)
         rpc_device_mock.return_value.mock_update = Mock(side_effect=update)
         rpc_device_mock.return_value.mock_event = Mock(side_effect=event)
 

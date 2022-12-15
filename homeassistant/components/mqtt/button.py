@@ -6,7 +6,7 @@ import functools
 import voluptuous as vol
 
 from homeassistant.components import button
-from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
+from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -104,17 +104,13 @@ class MqttButton(MqttEntity, ButtonEntity):
         self._command_template = MqttCommandTemplate(
             config.get(CONF_COMMAND_TEMPLATE), entity=self
         ).async_render
+        self._attr_device_class = self._config.get(CONF_DEVICE_CLASS)
 
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-
-    @property
-    def device_class(self) -> ButtonDeviceClass | None:
-        """Return the device class of the sensor."""
-        return self._config.get(CONF_DEVICE_CLASS)
 
     async def async_press(self) -> None:
         """Turn the device on.

@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
             "already_in_progress": "Konfiguracja jest ju\u017c w toku",
+            "mdns_missing_mac": "Brak adresu MAC we w\u0142a\u015bciwo\u015bciach MDNS.",
             "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {

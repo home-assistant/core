@@ -25,5 +25,82 @@
       "dry": "Dry",
       "fan_only": "Fan only"
     }
+  },
+  "state_attributes": {
+    "_": {
+      "aux_heat": { "name": "Aux heat" },
+      "current_humidity": { "name": "Current humidity" },
+      "current_temperature": { "name": "Current temperature" },
+      "fan_mode": {
+        "name": "Fan mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "auto": "Auto",
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High",
+          "top": "Top",
+          "middle": "Middle",
+          "focus": "Focus",
+          "diffuse": "Diffuse"
+        }
+      },
+      "fan_modes": {
+        "name": "Fan modes"
+      },
+      "humidity": { "name": "Target humidity" },
+      "hvac_action": {
+        "name": "Current action",
+        "state": {
+          "off": "Off",
+          "heating": "Heating",
+          "cooling": "Cooling",
+          "drying": "Drying",
+          "idle": "Idle",
+          "fan": "Fan"
+        }
+      },
+      "hvac_modes": {
+        "name": "HVAC modes"
+      },
+      "max_humidity": { "name": "Max target humidity" },
+      "max_temp": { "name": "Max target temperature" },
+      "min_humidity": { "name": "Min target humidity" },
+      "min_temp": { "name": "Min target temperature" },
+      "preset_mode": {
+        "name": "Preset",
+        "state": {
+          "none": "None",
+          "eco": "Eco",
+          "away": "Away",
+          "boost": "Boost",
+          "comfort": "Comfort",
+          "home": "Home",
+          "sleep": "Sleep",
+          "activity": "Activity"
+        }
+      },
+      "preset_modes": {
+        "name": "Presets"
+      },
+      "swing_mode": {
+        "name": "Swing mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "both": "Both",
+          "vertical": "Vertical",
+          "horizontal": "Horizontal"
+        }
+      },
+      "swing_modes": {
+        "name": "Swing modes"
+      },
+      "target_temp_high": { "name": "Upper target temperature" },
+      "target_temp_low": { "name": "Lower target temperature" },
+      "target_temp_step": { "name": "Target temperature step" },
+      "temperature": { "name": "Target temperature" }
+    }
   }
 }

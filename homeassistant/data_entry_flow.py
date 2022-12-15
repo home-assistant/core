@@ -84,27 +84,27 @@ class AbortFlow(FlowError):
 class FlowResult(TypedDict, total=False):
     """Typed result dict."""
 
-    version: int
-    type: FlowResultType
+    context: dict[str, Any]
+    data_schema: vol.Schema | None
+    data: Mapping[str, Any]
+    description_placeholders: Mapping[str, str | None] | None
+    description: str | None
+    errors: dict[str, str] | None
+    extra: str
     flow_id: str
     handler: str
-    title: str
-    data: Mapping[str, Any]
-    step_id: str
-    data_schema: vol.Schema | None
-    extra: str
-    required: bool
-    errors: dict[str, str] | None
-    description: str | None
-    description_placeholders: Mapping[str, str | None] | None
-    progress_action: str
-    url: str
-    reason: str
-    context: dict[str, Any]
-    result: Any
     last_step: bool | None
-    options: Mapping[str, Any]
     menu_options: list[str] | dict[str, str]
+    options: Mapping[str, Any]
+    progress_action: str
+    reason: str
+    required: bool
+    result: Any
+    step_id: str
+    title: str
+    type: FlowResultType
+    url: str
+    version: int
 
 
 @callback
@@ -112,16 +112,19 @@ def _async_flow_handler_to_flow_result(
     flows: Iterable[FlowHandler], include_uninitialized: bool
 ) -> list[FlowResult]:
     """Convert a list of FlowHandler to a partial FlowResult that can be serialized."""
-    return [
-        FlowResult(
+    results = []
+    for flow in flows:
+        if not include_uninitialized and flow.cur_step is None:
+            continue
+        result = FlowResult(
             flow_id=flow.flow_id,
             handler=flow.handler,
             context=flow.context,
-            step_id=flow.cur_step["step_id"] if flow.cur_step else None,
         )
-        for flow in flows
-        if include_uninitialized or flow.cur_step is not None
-    ]
+        if flow.cur_step:
+            result["step_id"] = flow.cur_step["step_id"]
+        results.append(result)
+    return results
 
 
 class FlowManager(abc.ABC):
@@ -148,7 +151,7 @@ class FlowManager(abc.ABC):
     @abc.abstractmethod
     async def async_create_flow(
         self,
-        handler_key: Any,
+        handler_key: str,
         *,
         context: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
@@ -269,8 +272,10 @@ class FlowManager(abc.ABC):
         cur_step = flow.cur_step
         assert cur_step is not None
 
-        if cur_step.get("data_schema") is not None and user_input is not None:
-            user_input = cur_step["data_schema"](user_input)
+        if (
+            data_schema := cur_step.get("data_schema")
+        ) is not None and user_input is not None:
+            user_input = data_schema(user_input)
 
         # Handle a menu navigation choice
         if cur_step["type"] == FlowResultType.MENU and user_input:
@@ -348,7 +353,7 @@ class FlowManager(abc.ABC):
 
     async def _async_handle_step(
         self,
-        flow: Any,
+        flow: FlowHandler,
         step_id: str,
         user_input: dict | BaseServiceInfo | None,
         step_done: asyncio.Future | None = None,
@@ -415,7 +420,7 @@ class FlowHandler:
     """Handle the configuration flow of a component."""
 
     # Set by flow manager
-    cur_step: dict[str, Any] | None = None
+    cur_step: FlowResult | None = None
 
     # While not purely typed, it makes typehinting more useful for us
     # and removes the need for constant None checks or asserts.
@@ -498,23 +503,25 @@ class FlowHandler:
     def async_create_entry(
         self,
         *,
-        title: str,
+        title: str | None = None,
         data: Mapping[str, Any],
         description: str | None = None,
         description_placeholders: Mapping[str, str] | None = None,
     ) -> FlowResult:
         """Finish config flow and create a config entry."""
-        return FlowResult(
+        flow_result = FlowResult(
             version=self.VERSION,
             type=FlowResultType.CREATE_ENTRY,
             flow_id=self.flow_id,
             handler=self.handler,
-            title=title,
             data=data,
             description=description,
             description_placeholders=description_placeholders,
             context=self.context,
         )
+        if title is not None:
+            flow_result["title"] = title
+        return flow_result
 
     @callback
     def async_abort(

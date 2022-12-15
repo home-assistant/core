@@ -10,12 +10,14 @@
         "flow_title": "{name} ({host})",
         "step": {
             "link": {
-                "description": "Chcete nastavi\u0165 {name} ({host})?"
+                "description": "Chcete nastavi\u0165 {name} ({host})?",
+                "title": "Pripojte sa k hubu PowerView"
             },
             "user": {
                 "data": {
                     "host": "IP adresa"
-                }
+                },
+                "title": "Pripojte sa k hubu PowerView"
             }
         }
     }

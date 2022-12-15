@@ -10,11 +10,11 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SENSORS,
     CONF_TEMPERATURE_UNIT,
-    ELECTRIC_POTENTIAL_VOLT,
-    POWER_WATT,
     TIME_HOURS,
     TIME_MINUTES,
     TIME_SECONDS,
+    UnitOfElectricPotential,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -37,8 +37,6 @@ from .const import (
 
 DATA_PULSES = "pulses"
 DATA_WATT_SECONDS = "watt_seconds"
-
-UNIT_WATTS = POWER_WATT
 
 COUNTER_ICON = "mdi:counter"
 
@@ -165,7 +163,7 @@ class GEMSensor(SensorEntity):
 class CurrentSensor(GEMSensor):
     """Entity showing power usage on one channel of the monitor."""
 
-    _attr_native_unit_of_measurement = UNIT_WATTS
+    _attr_native_unit_of_measurement = UnitOfPower.WATT
     _attr_device_class = SensorDeviceClass.POWER
 
     def __init__(
@@ -277,7 +275,7 @@ class TemperatureSensor(GEMSensor):
 class VoltageSensor(GEMSensor):
     """Entity showing voltage."""
 
-    _attr_native_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
+    _attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
     _attr_device_class = SensorDeviceClass.VOLTAGE
 
     def __init__(

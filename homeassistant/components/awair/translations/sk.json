@@ -37,7 +37,8 @@
                 "data": {
                     "access_token": "Pr\u00edstupov\u00fd token",
                     "email": "Email"
-                }
+                },
+                "description": "Znova zadajte svoj pr\u00edstupov\u00fd token pre v\u00fdvoj\u00e1rov Awair."
             },
             "user": {
                 "description": "Pro pr\u00edstupov\u00fd token v\u00fdvoj\u00e1ra Awair se mus\u00edte zaregistrova\u0165 na: https://developer.getawair.com/onboard/login",

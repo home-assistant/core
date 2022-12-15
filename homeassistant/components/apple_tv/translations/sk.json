@@ -22,6 +22,7 @@
         "flow_title": "{name} ({type})",
         "step": {
             "confirm": {
+                "description": "Chyst\u00e1te sa prida\u0165 `{name}` typu `{type}` do Home Assistant. \n\n **Na dokon\u010denie procesu mo\u017eno budete musie\u0165 zada\u0165 viacero k\u00f3dov PIN.** \n\nUpozor\u0148ujeme, \u017ee pomocou tejto integr\u00e1cie *nebudete* m\u00f4c\u0165 vypn\u00fa\u0165 v\u00e1\u0161 Apple TV. Vypne sa iba prehr\u00e1va\u010d m\u00e9di\u00ed v aplik\u00e1cii Home Assistant!",
                 "title": "Potvr\u010fte pridanie Apple TV"
             },
             "pair_no_pin": {
@@ -40,6 +41,7 @@
                 "title": "Vy\u017eaduje sa heslo"
             },
             "protocol_disabled": {
+                "description": "P\u00e1rovanie sa vy\u017eaduje pre `{protocol}`, ale na zariaden\u00ed je zak\u00e1zan\u00e9. Skontrolujte potenci\u00e1lne obmedzenia pr\u00edstupu (napr. povo\u013ete pripojenie v\u0161etk\u00fdch zariaden\u00ed v lok\u00e1lnej sieti) na zariaden\u00ed. \n\nM\u00f4\u017eete pokra\u010dova\u0165 bez sp\u00e1rovania tohto protokolu, ale niektor\u00e9 funkcie bud\u00fa obmedzen\u00e9.",
                 "title": "P\u00e1rovanie nie je mo\u017en\u00e9"
             },
             "reconfigure": {

@@ -15,6 +15,7 @@
                     "file_path": "Cesta a n\u00e1zov exportn\u00e9ho s\u00faboru UPSstart UPB.",
                     "protocol": "Protokol"
                 },
+                "description": "Pripojte modul rozhrania Universal Powerline Bus Powerline Interface Module (UPB PIM). Re\u0165azec adresy mus\u00ed by\u0165 v tvare 'adresa[:port]' pre 'tcp'. Port je volite\u013en\u00fd a \u0161tandardne je nastaven\u00fd na 2101. Pr\u00edklad: '192.168.1.42'. Pre s\u00e9riov\u00fd protokol mus\u00ed by\u0165 adresa v tvare 'tty[:baud]'. Prenosov\u00e1 r\u00fdchlos\u0165 je volite\u013en\u00e1 a predvolen\u00e1 je 4800. Pr\u00edklad: '/dev/ttyS1'.",
                 "title": "Pripojte sa k UPB PIM"
             }
         }
