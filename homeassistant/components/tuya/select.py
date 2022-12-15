@@ -411,7 +411,7 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
         self._attr_unique_id = f"{super().unique_id}{description_key}"
 
         self._attr_options: list[str] = []
-        self._dptype: DPCode | None = None
+        self._dptype: DPType | None = None
 
         if enum_type := self.find_dpcode(
             description_key, dptype=DPType.ENUM, prefer_function=True
@@ -442,7 +442,7 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
     def select_option(self, option: str) -> None:
         """Change the selected option."""
         key = self.entity_description.key
-        value = option
+        value: str | bool | None = option
 
         if self._dptype == DPType.BOOLEAN:
             value = option == self.to_value(True)
