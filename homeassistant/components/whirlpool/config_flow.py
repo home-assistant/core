@@ -76,7 +76,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             assert self.entry is not None
             password = user_input[CONF_PASSWORD]
             data = {
-                CONF_USERNAME: self.entry.data[CONF_USERNAME],
+                **self.entry.data,
                 CONF_PASSWORD: password,
             }
 
