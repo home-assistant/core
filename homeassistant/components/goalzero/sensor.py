@@ -11,7 +11,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
@@ -19,6 +18,7 @@ from homeassistant.const import (
     TIME_MINUTES,
     TIME_SECONDS,
     UnitOfElectricCurrent,
+    UnitOfElectricPotential,
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
@@ -79,7 +79,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="volts",
         name="Volts",
         device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
