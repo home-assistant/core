@@ -272,6 +272,13 @@ class HaScanner(BaseHaScanner):
                         needs_reset_error in error_str
                         for needs_reset_error in NEED_RESET_ERRORS
                     ):
+                        _LOGGER.debug(
+                            "%s: Resetting adapter on attempt (%s/%s) because of %s",
+                            self.name,
+                            attempt + 1,
+                            START_ATTEMPTS,
+                            error_str,
+                        )
                         await self._async_reset_adapter()
                     continue
                 if attempt != START_ATTEMPTS - 1:
@@ -305,6 +312,7 @@ class HaScanner(BaseHaScanner):
             # Everything is fine, break out of the loop
             break
 
+        _LOGGER.debug("%s: Bluetooth discovery started successfully", self.name)
         self.scanning = True
         self._async_setup_scanner_watchdog()
         await restore_discoveries(self.scanner, self.adapter)
