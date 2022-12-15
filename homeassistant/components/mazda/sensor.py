@@ -12,12 +12,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
-    PERCENTAGE,
-    PRESSURE_PSI,
-)
+from homeassistant.const import PERCENTAGE, PRESSURE_PSI, UnitOfLength
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -52,8 +47,8 @@ class MazdaSensorEntityDescription(
 def _get_distance_unit(unit_system: UnitSystem) -> str:
     """Return the distance unit for the given unit system."""
     if unit_system is US_CUSTOMARY_SYSTEM:
-        return LENGTH_MILES
-    return LENGTH_KILOMETERS
+        return UnitOfLength.MILES
+    return UnitOfLength.KILOMETERS
 
 
 def _fuel_remaining_percentage_supported(data):
@@ -109,14 +104,18 @@ def _ev_remaining_range_supported(data):
 def _fuel_distance_remaining_value(data, unit_system):
     """Get the fuel distance remaining value."""
     return round(
-        unit_system.length(data["status"]["fuelDistanceRemainingKm"], LENGTH_KILOMETERS)
+        unit_system.length(
+            data["status"]["fuelDistanceRemainingKm"], UnitOfLength.KILOMETERS
+        )
     )
 
 
 def _odometer_value(data, unit_system):
     """Get the odometer value."""
     # In order to match the behavior of the Mazda mobile app, we always round down
-    return int(unit_system.length(data["status"]["odometerKm"], LENGTH_KILOMETERS))
+    return int(
+        unit_system.length(data["status"]["odometerKm"], UnitOfLength.KILOMETERS)
+    )
 
 
 def _front_left_tire_pressure_value(data, unit_system):
@@ -148,7 +147,7 @@ def _ev_remaining_range_value(data, unit_system):
     """Get the remaining range value."""
     return round(
         unit_system.length(
-            data["evStatus"]["chargeInfo"]["drivingRangeKm"], LENGTH_KILOMETERS
+            data["evStatus"]["chargeInfo"]["drivingRangeKm"], UnitOfLength.KILOMETERS
         )
     )
 
