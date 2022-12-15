@@ -157,7 +157,7 @@ async def test_reauth_flow(hass: HomeAssistant, region) -> None:
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONFIG_INPUT | {"region": region[0]}},
+        data=CONFIG_INPUT | {"region": region[0]},
         unique_id="test-username",
     )
     mock_entry.add_to_hass(hass)
