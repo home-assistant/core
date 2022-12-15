@@ -12,10 +12,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CURRENCY_EURO,
-    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     VOLUME_CUBIC_METERS,
     UnitOfElectricCurrent,
+    UnitOfElectricPotential,
     UnitOfPower,
 )
 from homeassistant.util import dt as dt_util
@@ -149,7 +149,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         name="Current voltage L1",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
@@ -157,7 +157,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         name="Current voltage L2",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
@@ -165,7 +165,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         name="Current voltage L3",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
