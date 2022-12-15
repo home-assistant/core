@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 
 from aiohomekit.model import Accessory, Transport
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
@@ -29,12 +28,12 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_WATT,
     PRESSURE_HPA,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    SOUND_PRESSURE_DB,
     TEMP_CELSIUS,
     Platform,
+    UnitOfPower,
+    UnitOfSoundPressure,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
@@ -45,8 +44,6 @@ from . import KNOWN_DEVICES
 from .connection import HKDevice
 from .entity import CharacteristicEntity, HomeKitEntity
 from .utils import folded_name
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -149,7 +146,7 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         name="Power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
     ),
     CharacteristicsTypes.VENDOR_CONNECTSENSE_ENERGY_AMPS: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.VENDOR_CONNECTSENSE_ENERGY_AMPS,
@@ -177,7 +174,7 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         name="Power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
     ),
     CharacteristicsTypes.VENDOR_EVE_ENERGY_KW_HOUR: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.VENDOR_EVE_ENERGY_KW_HOUR,
@@ -205,14 +202,14 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         name="Power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
     ),
     CharacteristicsTypes.VENDOR_KOOGEEK_REALTIME_ENERGY_2: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.VENDOR_KOOGEEK_REALTIME_ENERGY_2,
         name="Power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
     ),
     CharacteristicsTypes.VENDOR_EVE_DEGREE_AIR_PRESSURE: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.VENDOR_EVE_DEGREE_AIR_PRESSURE,
@@ -226,7 +223,7 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         name="Power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
     ),
     CharacteristicsTypes.TEMPERATURE_CURRENT: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.TEMPERATURE_CURRENT,
@@ -299,22 +296,42 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
     CharacteristicsTypes.THREAD_NODE_CAPABILITIES: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.THREAD_NODE_CAPABILITIES,
         name="Thread Capabilities",
-        device_class="homekit_controller__thread_node_capabilities",
         entity_category=EntityCategory.DIAGNOSTIC,
         format=thread_node_capability_to_str,
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "border_router_capable",
+            "full",
+            "minimal",
+            "none",
+            "router_eligible",
+            "sleepy",
+        ],
+        translation_key="thread_node_capabilities",
     ),
     CharacteristicsTypes.THREAD_STATUS: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.THREAD_STATUS,
         name="Thread Status",
-        device_class="homekit_controller__thread_status",
         entity_category=EntityCategory.DIAGNOSTIC,
         format=thread_status_to_str,
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "border_router",
+            "child",
+            "detached",
+            "disabled",
+            "joining",
+            "leader",
+            "router",
+        ],
+        translation_key="thread_status",
     ),
     CharacteristicsTypes.VENDOR_NETATMO_NOISE: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.VENDOR_NETATMO_NOISE,
         name="Noise",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=SOUND_PRESSURE_DB,
+        native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
+        device_class=SensorDeviceClass.SOUND_PRESSURE,
     ),
 }
 

@@ -9,7 +9,11 @@ from typing import Any
 from androidtv import state_detection_rules_validator
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    OptionsFlowWithConfigEntry,
+)
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
@@ -168,22 +172,22 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithConfigEntry):
     """Handle an option flow for Android TV."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
+        super().__init__(config_entry)
 
-        apps = config_entry.options.get(CONF_APPS, {})
-        det_rules = config_entry.options.get(CONF_STATE_DETECTION_RULES, {})
-        self._apps: dict[str, Any] = apps.copy()
-        self._state_det_rules: dict[str, Any] = det_rules.copy()
+        self._apps: dict[str, Any] = self.options.setdefault(CONF_APPS, {})
+        self._state_det_rules: dict[str, Any] = self.options.setdefault(
+            CONF_STATE_DETECTION_RULES, {}
+        )
         self._conf_app_id: str | None = None
         self._conf_rule_id: str | None = None
 
@@ -222,7 +226,7 @@ class OptionsFlowHandler(OptionsFlow):
         apps_list = {k: f"{v} ({k})" if v else k for k, v in self._apps.items()}
         apps = {APPS_NEW_ID: "Add new", **apps_list}
         rules = [RULES_NEW_ID] + list(self._state_det_rules)
-        options = self.config_entry.options
+        options = self.options
 
         data_schema = vol.Schema(
             {

@@ -82,9 +82,8 @@ from homeassistant.const import (
     ENTITY_MATCH_NONE,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
     WEEKDAYS,
+    UnitOfTemperature,
 )
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
@@ -579,13 +578,13 @@ def string_with_no_html(value: Any) -> str:
     return str(value)
 
 
-def temperature_unit(value: Any) -> str:
+def temperature_unit(value: Any) -> UnitOfTemperature:
     """Validate and transform temperature unit."""
     value = str(value).upper()
     if value == "C":
-        return TEMP_CELSIUS
+        return UnitOfTemperature.CELSIUS
     if value == "F":
-        return TEMP_FAHRENHEIT
+        return UnitOfTemperature.FAHRENHEIT
     raise vol.Invalid("invalid temperature unit (expected C or F)")
 
 

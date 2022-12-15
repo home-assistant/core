@@ -31,8 +31,8 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
-    POWER_WATT,
     SIGNAL_STRENGTH_DECIBELS,
+    UnitOfPower,
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
@@ -61,33 +61,33 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         key="averagePower",
         name="average power",
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
     ),
     SensorEntityDescription(
         key="power",
         name="power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
     ),
     SensorEntityDescription(
         key="powerProduction",
         name="power production",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
     ),
     SensorEntityDescription(
         key="minPower",
         name="min power",
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
     ),
     SensorEntityDescription(
         key="maxPower",
         name="max power",
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
     ),
     SensorEntityDescription(
         key="accumulatedConsumption",
@@ -613,7 +613,7 @@ class TibberDataCoordinator(DataUpdateCoordinator):
                         else home.hourly_consumption_data
                     )
 
-                    from_time = hourly_data[0]["from"]
+                    from_time = dt_util.parse_datetime(hourly_data[0]["from"])
                     if from_time is None:
                         continue
                     start = from_time - timedelta(hours=1)

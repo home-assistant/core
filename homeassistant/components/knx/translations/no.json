@@ -7,11 +7,13 @@
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
             "file_not_found": "Den angitte `.knxkeys`-filen ble ikke funnet i banen config/.storage/knx/",
+            "invalid_backbone_key": "Ugyldig ryggradsn\u00f8kkel. 32 heksadesimale tall forventet.",
             "invalid_individual_address": "Verdien samsvarer ikke med m\u00f8nsteret for individuelle KNX-adresser.\n 'area.line.device'",
             "invalid_ip_address": "Ugyldig IPv4-adresse.",
             "invalid_signature": "Passordet for \u00e5 dekryptere `.knxkeys`-filen er feil.",
             "no_router_discovered": "Ingen KNXnet/IP-ruter ble oppdaget p\u00e5 nettverket.",
-            "no_tunnel_discovered": "Kunne ikke finne en KNX-tunnelserver p\u00e5 nettverket ditt."
+            "no_tunnel_discovered": "Kunne ikke finne en KNX-tunnelserver p\u00e5 nettverket ditt.",
+            "unsupported_tunnel_type": "Den valgte tunneltypen st\u00f8ttes ikke av gatewayen."
         },
         "step": {
             "connection_type": {
@@ -41,13 +43,22 @@
                     "individual_address": "Individuell adresse",
                     "local_ip": "Lokal IP for hjemmeassistent",
                     "multicast_group": "Multicast gruppe",
-                    "multicast_port": "Multicast port"
+                    "multicast_port": "Multicast port",
+                    "routing_secure": "Bruk KNX IP Secure"
                 },
                 "data_description": {
                     "individual_address": "KNX-adresse som skal brukes av Home Assistant, f.eks. `0.0.4`",
                     "local_ip": "La st\u00e5 tomt for \u00e5 bruke automatisk oppdagelse."
                 },
                 "description": "Vennligst konfigurer rutealternativene."
+            },
+            "secure_key_source": {
+                "description": "Velg hvordan du vil konfigurere KNX/IP Secure.",
+                "menu_options": {
+                    "secure_knxkeys": "Bruk en `.knxkeys`-fil som inneholder sikre IP-n\u00f8kler",
+                    "secure_routing_manual": "Konfigurer IP sikker ryggradsn\u00f8kkel manuelt",
+                    "secure_tunnel_manual": "Konfigurer IP sikker legitimasjon manuelt"
+                }
             },
             "secure_knxkeys": {
                 "data": {
@@ -59,6 +70,17 @@
                     "knxkeys_password": "Dette ble satt ved eksport av filen fra ETS."
                 },
                 "description": "Vennligst skriv inn informasjonen for `.knxkeys`-filen."
+            },
+            "secure_routing_manual": {
+                "data": {
+                    "backbone_key": "Ryggraden n\u00f8kkel",
+                    "sync_latency_tolerance": "Toleranse for nettverksventetid"
+                },
+                "data_description": {
+                    "backbone_key": "Kan sees i 'Sikkerhet'-rapporten til et ETS-prosjekt. F.eks. '00112233445566778899AABBCCDDEEFF'",
+                    "sync_latency_tolerance": "Standard er 1000."
+                },
+                "description": "Vennligst skriv inn din sikre IP-informasjon."
             },
             "secure_tunnel_manual": {
                 "data": {
@@ -73,13 +95,6 @@
                 },
                 "description": "Vennligst skriv inn din sikre IP-informasjon."
             },
-            "secure_tunneling": {
-                "description": "Velg hvordan du vil konfigurere KNX/IP Secure.",
-                "menu_options": {
-                    "secure_knxkeys": "Bruk en `.knxkeys`-fil som inneholder IP-sikre n\u00f8kler",
-                    "secure_tunnel_manual": "Konfigurer IP-sikre n\u00f8kler manuelt"
-                }
-            },
             "tunnel": {
                 "data": {
                     "gateway": "KNX Tunneltilkobling"
@@ -92,11 +107,13 @@
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
             "file_not_found": "Den angitte `.knxkeys`-filen ble ikke funnet i banen config/.storage/knx/",
+            "invalid_backbone_key": "Ugyldig ryggradsn\u00f8kkel. 32 heksadesimale tall forventet.",
             "invalid_individual_address": "Verdien samsvarer ikke med m\u00f8nsteret for individuelle KNX-adresser.\n 'area.line.device'",
             "invalid_ip_address": "Ugyldig IPv4-adresse.",
             "invalid_signature": "Passordet for \u00e5 dekryptere `.knxkeys`-filen er feil.",
             "no_router_discovered": "Ingen KNXnet/IP-ruter ble oppdaget p\u00e5 nettverket.",
-            "no_tunnel_discovered": "Kunne ikke finne en KNX-tunnelserver p\u00e5 nettverket ditt."
+            "no_tunnel_discovered": "Kunne ikke finne en KNX-tunnelserver p\u00e5 nettverket ditt.",
+            "unsupported_tunnel_type": "Den valgte tunneltypen st\u00f8ttes ikke av gatewayen."
         },
         "step": {
             "communication_settings": {
@@ -142,13 +159,22 @@
                     "individual_address": "Individuell adresse",
                     "local_ip": "Lokal IP for hjemmeassistent",
                     "multicast_group": "Multicast gruppe",
-                    "multicast_port": "Multicast port"
+                    "multicast_port": "Multicast port",
+                    "routing_secure": "Bruk KNX IP Secure"
                 },
                 "data_description": {
                     "individual_address": "KNX-adresse som skal brukes av Home Assistant, f.eks. `0.0.4`",
                     "local_ip": "La st\u00e5 tomt for \u00e5 bruke automatisk oppdagelse."
                 },
                 "description": "Vennligst konfigurer rutealternativene."
+            },
+            "secure_key_source": {
+                "description": "Velg hvordan du vil konfigurere KNX/IP Secure.",
+                "menu_options": {
+                    "secure_knxkeys": "Bruk en `.knxkeys`-fil som inneholder sikre IP-n\u00f8kler",
+                    "secure_routing_manual": "Konfigurer IP sikker ryggradsn\u00f8kkel manuelt",
+                    "secure_tunnel_manual": "Konfigurer IP sikker legitimasjon manuelt"
+                }
             },
             "secure_knxkeys": {
                 "data": {
@@ -160,6 +186,17 @@
                     "knxkeys_password": "Dette ble satt ved eksport av filen fra ETS."
                 },
                 "description": "Vennligst skriv inn informasjonen for `.knxkeys`-filen."
+            },
+            "secure_routing_manual": {
+                "data": {
+                    "backbone_key": "Ryggraden n\u00f8kkel",
+                    "sync_latency_tolerance": "Toleranse for nettverksventetid"
+                },
+                "data_description": {
+                    "backbone_key": "Kan sees i 'Sikkerhet'-rapporten til et ETS-prosjekt. F.eks. '00112233445566778899AABBCCDDEEFF'",
+                    "sync_latency_tolerance": "Standard er 1000."
+                },
+                "description": "Vennligst skriv inn din sikre IP-informasjon."
             },
             "secure_tunnel_manual": {
                 "data": {
@@ -173,13 +210,6 @@
                     "user_password": "Passord for den spesifikke tunnelforbindelsen satt i 'Egenskaper'-panelet i tunnelen i ETS."
                 },
                 "description": "Vennligst skriv inn din sikre IP-informasjon."
-            },
-            "secure_tunneling": {
-                "description": "Velg hvordan du vil konfigurere KNX/IP Secure.",
-                "menu_options": {
-                    "secure_knxkeys": "Bruk en `.knxkeys`-fil som inneholder IP-sikre n\u00f8kler",
-                    "secure_tunnel_manual": "Konfigurer IP-sikre n\u00f8kler manuelt"
-                }
             },
             "tunnel": {
                 "data": {

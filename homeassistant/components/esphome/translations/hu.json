@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
             "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve",
+            "mdns_missing_mac": "Hi\u00e1nyz\u00f3 MAC-c\u00edm az MDNS-tulajdons\u00e1gokban.",
             "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."
         },
         "error": {

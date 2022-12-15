@@ -25,7 +25,7 @@
                 "description": "M\u00f6chtest du {model} ({device_id}) einrichten?"
             },
             "local": {
-                "description": "Befolge [diese Anweisungen]({url}), um die Awair Local API zu aktivieren. \n\nDr\u00fccke abschlie\u00dfend auf Senden."
+                "description": "Befolge [diese Anweisungen]({url}), um die Awair Lokal API zu aktivieren. \n\nDr\u00fccke abschlie\u00dfend auf Senden."
             },
             "local_pick": {
                 "data": {

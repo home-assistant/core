@@ -17,7 +17,7 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     LENGTH_KILOMETERS,
     PERCENTAGE,
-    POWER_KILO_WATT,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -62,7 +62,7 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
         key=CHARGER_CHARGING_POWER_KEY,
         name="Charging Power",
         precision=2,
-        native_unit_of_measurement=POWER_KILO_WATT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),

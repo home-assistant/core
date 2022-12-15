@@ -35,6 +35,8 @@ CAMERA_SWITCHES_BASIC = [
     for d in CAMERA_SWITCHES
     if d.name != "Detections: Face"
     and d.name != "Detections: Package"
+    and d.name != "Detections: License Plate"
+    and d.name != "Detections: Smoke/CO"
     and d.name != "SSH Enabled"
 ]
 CAMERA_SWITCHES_NO_EXTRA = [

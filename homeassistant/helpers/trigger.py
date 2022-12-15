@@ -78,7 +78,13 @@ class PluggableActionsEntry:
     """Holder to keep track of all plugs and actions for a given trigger."""
 
     plugs: set[PluggableAction] = field(default_factory=set)
-    actions: dict[object, tuple[HassJob, dict[str, Any]]] = field(default_factory=dict)
+    actions: dict[
+        object,
+        tuple[
+            HassJob[[dict[str, Any], Context | None], Coroutine[Any, Any, None]],
+            dict[str, Any],
+        ],
+    ] = field(default_factory=dict)
 
 
 class PluggableAction:

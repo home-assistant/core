@@ -9,6 +9,22 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "phase": {
+                "state": {
+                    "first_quarter": "Erstes Viertel",
+                    "full_moon": "Vollmond",
+                    "last_quarter": "Letztes Viertel",
+                    "new_moon": "Neumond",
+                    "waning_crescent": "Abnehmende Sichel",
+                    "waning_gibbous": "Drittes Viertel",
+                    "waxing_crescent": "Zunehmende Sichel",
+                    "waxing_gibbous": "Zweites Viertel"
+                }
+            }
+        }
+    },
     "issues": {
         "removed_yaml": {
             "description": "Das Konfigurieren von Mond mit YAML wurde entfernt. \n\nDeine vorhandene YAML-Konfiguration wird von Home Assistant nicht verwendet. \n\nEntferne die YAML-Konfiguration aus deiner configuration.yaml-Datei und starte Home Assistant neu, um dieses Problem zu beheben.",

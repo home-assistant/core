@@ -18,11 +18,10 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DISKS,
-    DATA_MEGABYTES,
-    DATA_RATE_KILOBYTES_PER_SECOND,
-    DATA_TERABYTES,
     PERCENTAGE,
     TEMP_CELSIUS,
+    UnitOfDataRate,
+    UnitOfInformation,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -116,7 +115,8 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoCoreUtilization.API_KEY,
         key="memory_size",
         name="Memory Size",
-        native_unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:memory",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -125,7 +125,8 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoCoreUtilization.API_KEY,
         key="memory_cached",
         name="Memory Cached",
-        native_unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:memory",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -134,7 +135,8 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoCoreUtilization.API_KEY,
         key="memory_available_swap",
         name="Memory Available (Swap)",
-        native_unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:memory",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -142,7 +144,8 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoCoreUtilization.API_KEY,
         key="memory_available_real",
         name="Memory Available (Real)",
-        native_unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:memory",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -150,7 +153,8 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoCoreUtilization.API_KEY,
         key="memory_total_swap",
         name="Memory Total (Swap)",
-        native_unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:memory",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -158,7 +162,8 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoCoreUtilization.API_KEY,
         key="memory_total_real",
         name="Memory Total (Real)",
-        native_unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:memory",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -166,7 +171,8 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoCoreUtilization.API_KEY,
         key="network_up",
         name="Upload Throughput",
-        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:upload",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -174,7 +180,8 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoCoreUtilization.API_KEY,
         key="network_down",
         name="Download Throughput",
-        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:download",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -190,7 +197,8 @@ STORAGE_VOL_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoStorage.API_KEY,
         key="volume_size_total",
         name="Total Size",
-        native_unit_of_measurement=DATA_TERABYTES,
+        native_unit_of_measurement=UnitOfInformation.TERABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:chart-pie",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -199,7 +207,8 @@ STORAGE_VOL_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoStorage.API_KEY,
         key="volume_size_used",
         name="Used Space",
-        native_unit_of_measurement=DATA_TERABYTES,
+        native_unit_of_measurement=UnitOfInformation.TERABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:chart-pie",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -347,11 +356,11 @@ class SynoDSMUtilSensor(SynoDSMSensor):
             return None
 
         # Data (RAM)
-        if self.native_unit_of_measurement == DATA_MEGABYTES:
+        if self.native_unit_of_measurement == UnitOfInformation.MEGABYTES:
             return round(attr / 1024.0**2, 1)
 
         # Network
-        if self.native_unit_of_measurement == DATA_RATE_KILOBYTES_PER_SECOND:
+        if self.native_unit_of_measurement == UnitOfDataRate.KILOBYTES_PER_SECOND:
             return round(attr / 1024.0, 1)
 
         # CPU load average
@@ -389,7 +398,7 @@ class SynoDSMStorageSensor(SynologyDSMDeviceEntity, SynoDSMSensor):
             return None
 
         # Data (disk space)
-        if self.native_unit_of_measurement == DATA_TERABYTES:
+        if self.native_unit_of_measurement == UnitOfInformation.TERABYTES:
             return round(attr / 1024.0**4, 2)
 
         return attr

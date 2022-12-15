@@ -25,5 +25,26 @@
             "off": "Uit"
         }
     },
+    "state_attributes": {
+        "_": {
+            "fan_mode": {
+                "state": {
+                    "off": "Uit",
+                    "on": "Aan"
+                }
+            },
+            "hvac_action": {
+                "state": {
+                    "off": "Uit"
+                }
+            },
+            "swing_mode": {
+                "state": {
+                    "off": "Uit",
+                    "on": "Aan"
+                }
+            }
+        }
+    },
     "title": "Klimaat"
 }

@@ -8,10 +8,10 @@
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
-        "flow_title": "{label} ({host}) {serial}",
+        "flow_title": "{label} ({group})",
         "step": {
             "discovery_confirm": {
-                "description": "Czy chcesz skonfigurowa\u0107 {label} ({host}) {serial}?"
+                "description": "Czy chcesz skonfigurowa\u0107 {label} ({group})?"
             },
             "pick_device": {
                 "data": {

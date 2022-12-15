@@ -591,16 +591,14 @@ class Recorder(threading.Thread):
             self.hass.add_job(self.async_connection_failed)
             return
 
-        schema_status = migration.validate_db_schema(self.hass, self.get_session)
+        schema_status = migration.validate_db_schema(self.hass, self, self.get_session)
         if schema_status is None:
             # Give up if we could not validate the schema
             self.hass.add_job(self.async_connection_failed)
             return
         self.schema_version = schema_status.current_version
 
-        schema_is_valid = migration.schema_is_valid(schema_status)
-
-        if schema_is_valid:
+        if schema_status.valid:
             self._setup_run()
         else:
             self.migration_in_progress = True
@@ -608,8 +606,8 @@ class Recorder(threading.Thread):
 
         self.hass.add_job(self.async_connection_success)
 
-        if self.migration_is_live or schema_is_valid:
-            # If the migrate is live or the schema is current, we need to
+        if self.migration_is_live or schema_status.valid:
+            # If the migrate is live or the schema is valid, we need to
             # wait for startup to complete. If its not live, we need to continue
             # on.
             self.hass.add_job(self.async_set_db_ready)
@@ -626,7 +624,7 @@ class Recorder(threading.Thread):
                 self.hass.add_job(self.async_set_db_ready)
                 return
 
-        if not schema_is_valid:
+        if not schema_status.valid:
             if self._migrate_schema_and_setup_run(schema_status):
                 self.schema_version = SCHEMA_VERSION
                 if not self._event_listener:

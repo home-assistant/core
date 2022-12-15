@@ -1620,7 +1620,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         return await self._async_step_discovery_without_unique_id()
 
     @callback
-    def async_create_entry(
+    def async_create_entry(  # type: ignore[override]
         self,
         *,
         title: str,
@@ -1778,7 +1778,7 @@ class EntityRegistryDisabledHandler:
 
         _LOGGER.info(
             "Reloading configuration entries because disabled_by changed in entity registry: %s",
-            ", ".join(self.changed),
+            ", ".join(to_reload),
         )
 
         await asyncio.gather(

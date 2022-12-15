@@ -25,7 +25,4 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
         return
 
     for integration in integrations.values():
-        if not integration.manifest:
-            continue
-
         validate_json_files(integration)

@@ -16,7 +16,7 @@
                     "password": "Password",
                     "username": "Nome utente"
                 },
-                "description": "Vuoi configurare {name} ({ip_address})? Avrai bisogno di un utente locale creato nella tua console UniFi OS con cui accedere. Gli utenti Ubiquiti Cloud non funzioneranno. Per ulteriori informazioni: {local_user_documentation_url}",
+                "description": "Vuoi configurare {name} ({ip_address})? \u00c8 necessario un utente locale creato nella console UniFi OS per accedere. Gli utenti di Ubiquiti Cloud non funzioneranno. Per maggiori informazioni: {local_user_documentation_url}",
                 "title": "Rilevato UniFi Protect"
             },
             "reauth_confirm": {
@@ -36,12 +36,25 @@
                     "username": "Nome utente",
                     "verify_ssl": "Verifica il certificato SSL"
                 },
-                "description": "Avrai bisogno di un utente locale creato nella tua console UniFi OS con cui accedere. Gli utenti Ubiquiti Cloud non funzioneranno. Per ulteriori informazioni: {local_user_documentation_url}",
+                "description": "\u00c8 necessario un utente locale creato nella console UniFi OS per accedere. Gli utenti di Ubiquiti Cloud non funzioneranno. Per maggiori informazioni: {local_user_documentation_url}",
                 "title": "Configurazione UniFi Protect"
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "license_plate": {
+                "state": {
+                    "none": "Libero"
+                }
+            }
+        }
+    },
     "issues": {
+        "deprecate_smart_sensor": {
+            "description": "Il sensore unificato \"Oggetto rilevato\" per i rilevamenti intelligenti \u00e8 ora deprecato. \u00c8 stato sostituito con singoli sensori binari di rilevamento intelligente per ogni tipo di rilevamento intelligente. Si prega di aggiornare eventuali modelli o automazioni di conseguenza.",
+            "title": "Sensore di rilevamento intelligente deprecato"
+        },
         "ea_setup_failed": {
             "description": "Stai utilizzando v{version} di UniFi Protect che \u00e8 una versione ad accesso anticipato. Si \u00e8 verificato un errore irreversibile durante il tentativo di caricare l'integrazione. [Esegui la retrocessione ad una versione stabile](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) di UniFi Protect per continuare ad utilizzare l'integrazione. \n\nErrore: {error}",
             "title": "Errore di configurazione durante l'utilizzo della versione ad accesso anticipato"

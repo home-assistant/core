@@ -1,5 +1,9 @@
 {
     "issues": {
+        "country_not_configured": {
+            "description": "Nenhum pa\u00eds foi configurado, atualize a configura\u00e7\u00e3o clicando no bot\u00e3o \"saiba mais\" abaixo.",
+            "title": "O pa\u00eds n\u00e3o foi configurado"
+        },
         "historic_currency": {
             "description": "A moeda {currency} n\u00e3o est\u00e1 mais em uso, reconfigure a configura\u00e7\u00e3o da moeda.",
             "title": "A moeda configurada n\u00e3o est\u00e1 mais em uso"

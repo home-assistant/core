@@ -1,5 +1,9 @@
 {
     "issues": {
+        "country_not_configured": {
+            "description": "\u00dchtegi riiki pole m\u00e4\u00e4ratud, v\u00e4rskenda s\u00e4tteid kl\u00f5psates alloleval nupul \"Lisateave\".",
+            "title": "Riik pole m\u00e4\u00e4ratud"
+        },
         "historic_currency": {
             "description": "Valuuta {currency} ei ole enam kasutusel, seadista valuuta uuesti.",
             "title": "Seadistatud valuutat enam ei kasutata"

@@ -1,11 +1,11 @@
 {
   "domain": "airvisual",
-  "name": "AirVisual",
+  "name": "AirVisual Cloud",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/airvisual",
-  "requirements": ["pyairvisual==2022.11.1"],
+  "requirements": ["pyairvisual==2022.12.1"],
   "codeowners": ["@bachya"],
   "iot_class": "cloud_polling",
   "loggers": ["pyairvisual", "pysmb"],
-  "integration_type": "device"
+  "integration_type": "service"
 }

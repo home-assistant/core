@@ -7,11 +7,13 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "file_not_found": "The specified `.knxkeys` file was not found in the path config/.storage/knx/",
+            "invalid_backbone_key": "Invalid backbone key. 32 hexadecimal numbers expected.",
             "invalid_individual_address": "Value does not match pattern for KNX individual address.\n'area.line.device'",
             "invalid_ip_address": "Invalid IPv4 address.",
             "invalid_signature": "The password to decrypt the `.knxkeys` file is wrong.",
             "no_router_discovered": "No KNXnet/IP router was discovered on the network.",
-            "no_tunnel_discovered": "Could not find a KNX tunneling server on your network."
+            "no_tunnel_discovered": "Could not find a KNX tunneling server on your network.",
+            "unsupported_tunnel_type": "Selected tunnelling type not supported by gateway."
         },
         "step": {
             "connection_type": {
@@ -41,13 +43,22 @@
                     "individual_address": "Individual address",
                     "local_ip": "Local IP of Home Assistant",
                     "multicast_group": "Multicast group",
-                    "multicast_port": "Multicast port"
+                    "multicast_port": "Multicast port",
+                    "routing_secure": "Use KNX IP Secure"
                 },
                 "data_description": {
                     "individual_address": "KNX address to be used by Home Assistant, e.g. `0.0.4`",
                     "local_ip": "Leave blank to use auto-discovery."
                 },
                 "description": "Please configure the routing options."
+            },
+            "secure_key_source": {
+                "description": "Select how you want to configure KNX/IP Secure.",
+                "menu_options": {
+                    "secure_knxkeys": "Use a `.knxkeys` file containing IP secure keys",
+                    "secure_routing_manual": "Configure IP secure backbone key manually",
+                    "secure_tunnel_manual": "Configure IP secure credentials manually"
+                }
             },
             "secure_knxkeys": {
                 "data": {
@@ -59,6 +70,17 @@
                     "knxkeys_password": "This was set when exporting the file from ETS."
                 },
                 "description": "Please enter the information for your `.knxkeys` file."
+            },
+            "secure_routing_manual": {
+                "data": {
+                    "backbone_key": "Backbone key",
+                    "sync_latency_tolerance": "Network latency tolerance"
+                },
+                "data_description": {
+                    "backbone_key": "Can be seen in the 'Security' report of an ETS project. Eg. '00112233445566778899AABBCCDDEEFF'",
+                    "sync_latency_tolerance": "Default is 1000."
+                },
+                "description": "Please enter your IP secure information."
             },
             "secure_tunnel_manual": {
                 "data": {
@@ -73,13 +95,6 @@
                 },
                 "description": "Please enter your IP secure information."
             },
-            "secure_tunneling": {
-                "description": "Select how you want to configure KNX/IP Secure.",
-                "menu_options": {
-                    "secure_knxkeys": "Use a `.knxkeys` file containing IP secure keys",
-                    "secure_tunnel_manual": "Configure IP secure keys manually"
-                }
-            },
             "tunnel": {
                 "data": {
                     "gateway": "KNX Tunnel Connection"
@@ -92,11 +107,13 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "file_not_found": "The specified `.knxkeys` file was not found in the path config/.storage/knx/",
+            "invalid_backbone_key": "Invalid backbone key. 32 hexadecimal numbers expected.",
             "invalid_individual_address": "Value does not match pattern for KNX individual address.\n'area.line.device'",
             "invalid_ip_address": "Invalid IPv4 address.",
             "invalid_signature": "The password to decrypt the `.knxkeys` file is wrong.",
             "no_router_discovered": "No KNXnet/IP router was discovered on the network.",
-            "no_tunnel_discovered": "Could not find a KNX tunneling server on your network."
+            "no_tunnel_discovered": "Could not find a KNX tunneling server on your network.",
+            "unsupported_tunnel_type": "Selected tunnelling type not supported by gateway."
         },
         "step": {
             "communication_settings": {
@@ -142,13 +159,22 @@
                     "individual_address": "Individual address",
                     "local_ip": "Local IP of Home Assistant",
                     "multicast_group": "Multicast group",
-                    "multicast_port": "Multicast port"
+                    "multicast_port": "Multicast port",
+                    "routing_secure": "Use KNX IP Secure"
                 },
                 "data_description": {
                     "individual_address": "KNX address to be used by Home Assistant, e.g. `0.0.4`",
                     "local_ip": "Leave blank to use auto-discovery."
                 },
                 "description": "Please configure the routing options."
+            },
+            "secure_key_source": {
+                "description": "Select how you want to configure KNX/IP Secure.",
+                "menu_options": {
+                    "secure_knxkeys": "Use a `.knxkeys` file containing IP secure keys",
+                    "secure_routing_manual": "Configure IP secure backbone key manually",
+                    "secure_tunnel_manual": "Configure IP secure credentials manually"
+                }
             },
             "secure_knxkeys": {
                 "data": {
@@ -160,6 +186,17 @@
                     "knxkeys_password": "This was set when exporting the file from ETS."
                 },
                 "description": "Please enter the information for your `.knxkeys` file."
+            },
+            "secure_routing_manual": {
+                "data": {
+                    "backbone_key": "Backbone key",
+                    "sync_latency_tolerance": "Network latency tolerance"
+                },
+                "data_description": {
+                    "backbone_key": "Can be seen in the 'Security' report of an ETS project. Eg. '00112233445566778899AABBCCDDEEFF'",
+                    "sync_latency_tolerance": "Default is 1000."
+                },
+                "description": "Please enter your IP secure information."
             },
             "secure_tunnel_manual": {
                 "data": {
@@ -173,13 +210,6 @@
                     "user_password": "Password for the specific tunnel connection set in the 'Properties' panel of the tunnel in ETS."
                 },
                 "description": "Please enter your IP secure information."
-            },
-            "secure_tunneling": {
-                "description": "Select how you want to configure KNX/IP Secure.",
-                "menu_options": {
-                    "secure_knxkeys": "Use a `.knxkeys` file containing IP secure keys",
-                    "secure_tunnel_manual": "Configure IP secure keys manually"
-                }
             },
             "tunnel": {
                 "data": {

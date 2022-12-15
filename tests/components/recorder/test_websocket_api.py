@@ -1350,6 +1350,7 @@ async def test_list_statistic_ids(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "display_unit_of_measurement": display_unit,
             "has_mean": has_mean,
             "has_sum": has_sum,
             "name": None,
@@ -1371,6 +1372,7 @@ async def test_list_statistic_ids(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "display_unit_of_measurement": display_unit,
             "has_mean": has_mean,
             "has_sum": has_sum,
             "name": None,
@@ -1395,6 +1397,7 @@ async def test_list_statistic_ids(
         assert response["result"] == [
             {
                 "statistic_id": "sensor.test",
+                "display_unit_of_measurement": display_unit,
                 "has_mean": has_mean,
                 "has_sum": has_sum,
                 "name": None,
@@ -1415,6 +1418,7 @@ async def test_list_statistic_ids(
         assert response["result"] == [
             {
                 "statistic_id": "sensor.test",
+                "display_unit_of_measurement": display_unit,
                 "has_mean": has_mean,
                 "has_sum": has_sum,
                 "name": None,
@@ -1425,6 +1429,121 @@ async def test_list_statistic_ids(
         ]
     else:
         assert response["result"] == []
+
+
+@pytest.mark.parametrize(
+    "attributes, attributes2, display_unit, statistics_unit, unit_class",
+    [
+        (
+            DISTANCE_SENSOR_M_ATTRIBUTES,
+            DISTANCE_SENSOR_FT_ATTRIBUTES,
+            "ft",
+            "m",
+            "distance",
+        ),
+        (
+            ENERGY_SENSOR_WH_ATTRIBUTES,
+            ENERGY_SENSOR_KWH_ATTRIBUTES,
+            "kWh",
+            "Wh",
+            "energy",
+        ),
+        (GAS_SENSOR_FT3_ATTRIBUTES, GAS_SENSOR_M3_ATTRIBUTES, "m³", "ft³", "volume"),
+        (POWER_SENSOR_KW_ATTRIBUTES, POWER_SENSOR_W_ATTRIBUTES, "W", "kW", "power"),
+        (
+            PRESSURE_SENSOR_HPA_ATTRIBUTES,
+            PRESSURE_SENSOR_PA_ATTRIBUTES,
+            "Pa",
+            "hPa",
+            "pressure",
+        ),
+        (
+            SPEED_SENSOR_KPH_ATTRIBUTES,
+            SPEED_SENSOR_MPH_ATTRIBUTES,
+            "mph",
+            "km/h",
+            "speed",
+        ),
+        (
+            TEMPERATURE_SENSOR_C_ATTRIBUTES,
+            TEMPERATURE_SENSOR_F_ATTRIBUTES,
+            "°F",
+            "°C",
+            "temperature",
+        ),
+        (
+            VOLUME_SENSOR_FT3_ATTRIBUTES,
+            VOLUME_SENSOR_M3_ATTRIBUTES,
+            "m³",
+            "ft³",
+            "volume",
+        ),
+    ],
+)
+async def test_list_statistic_ids_unit_change(
+    recorder_mock,
+    hass,
+    hass_ws_client,
+    attributes,
+    attributes2,
+    display_unit,
+    statistics_unit,
+    unit_class,
+):
+    """Test list_statistic_ids."""
+    now = dt_util.utcnow()
+    has_mean = attributes["state_class"] == "measurement"
+    has_sum = not has_mean
+
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json({"id": 1, "type": "recorder/list_statistic_ids"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == []
+
+    hass.states.async_set("sensor.test", 10, attributes=attributes)
+    await async_wait_recording_done(hass)
+
+    do_adhoc_statistics(hass, start=now)
+    await async_recorder_block_till_done(hass)
+
+    await client.send_json({"id": 2, "type": "recorder/list_statistic_ids"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == [
+        {
+            "statistic_id": "sensor.test",
+            "display_unit_of_measurement": statistics_unit,
+            "has_mean": has_mean,
+            "has_sum": has_sum,
+            "name": None,
+            "source": "recorder",
+            "statistics_unit_of_measurement": statistics_unit,
+            "unit_class": unit_class,
+        }
+    ]
+
+    # Change the state unit
+    hass.states.async_set("sensor.test", 10, attributes=attributes2)
+
+    await client.send_json({"id": 3, "type": "recorder/list_statistic_ids"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == [
+        {
+            "statistic_id": "sensor.test",
+            "display_unit_of_measurement": display_unit,
+            "has_mean": has_mean,
+            "has_sum": has_sum,
+            "name": None,
+            "source": "recorder",
+            "statistics_unit_of_measurement": statistics_unit,
+            "unit_class": unit_class,
+        }
+    ]
 
 
 async def test_validate_statistics(recorder_mock, hass, hass_ws_client):
@@ -1570,10 +1689,11 @@ async def test_clear_statistics(recorder_mock, hass, hass_ws_client):
 
 
 @pytest.mark.parametrize(
-    "new_unit, new_unit_class", [("dogs", None), (None, None), ("W", "power")]
+    "new_unit, new_unit_class, new_display_unit",
+    [("dogs", None, "dogs"), (None, None, None), ("W", "power", "kW")],
 )
 async def test_update_statistics_metadata(
-    recorder_mock, hass, hass_ws_client, new_unit, new_unit_class
+    recorder_mock, hass, hass_ws_client, new_unit, new_unit_class, new_display_unit
 ):
     """Test removing statistics."""
     now = dt_util.utcnow()
@@ -1599,6 +1719,7 @@ async def test_update_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "display_unit_of_measurement": "kW",
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -1626,6 +1747,7 @@ async def test_update_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "display_unit_of_measurement": new_display_unit,
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -1688,6 +1810,7 @@ async def test_change_statistics_unit(recorder_mock, hass, hass_ws_client):
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "display_unit_of_measurement": "kW",
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -1742,6 +1865,7 @@ async def test_change_statistics_unit(recorder_mock, hass, hass_ws_client):
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "display_unit_of_measurement": "kW",
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -1793,6 +1917,7 @@ async def test_change_statistics_unit_errors(
     expected_statistic_ids = [
         {
             "statistic_id": "sensor.test",
+            "display_unit_of_measurement": "kW",
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -2177,6 +2302,7 @@ async def test_get_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "test:total_gas",
+            "display_unit_of_measurement": unit,
             "has_mean": has_mean,
             "has_sum": has_sum,
             "name": "Total imported energy",
@@ -2204,6 +2330,7 @@ async def test_get_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "display_unit_of_measurement": attributes["unit_of_measurement"],
             "has_mean": has_mean,
             "has_sum": has_sum,
             "name": None,
@@ -2231,6 +2358,7 @@ async def test_get_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "display_unit_of_measurement": attributes["unit_of_measurement"],
             "has_mean": has_mean,
             "has_sum": has_sum,
             "name": None,
@@ -2324,6 +2452,7 @@ async def test_import_statistics(
     statistic_ids = list_statistic_ids(hass)  # TODO
     assert statistic_ids == [
         {
+            "display_unit_of_measurement": "kWh",
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,
@@ -2550,6 +2679,7 @@ async def test_adjust_sum_statistics_energy(
     statistic_ids = list_statistic_ids(hass)  # TODO
     assert statistic_ids == [
         {
+            "display_unit_of_measurement": "kWh",
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,
@@ -2740,6 +2870,7 @@ async def test_adjust_sum_statistics_gas(
     statistic_ids = list_statistic_ids(hass)  # TODO
     assert statistic_ids == [
         {
+            "display_unit_of_measurement": "m³",
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,
@@ -2946,6 +3077,7 @@ async def test_adjust_sum_statistics_errors(
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
+            "display_unit_of_measurement": state_unit,
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,

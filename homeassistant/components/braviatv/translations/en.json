@@ -23,7 +23,7 @@
                 "title": "Authorize Sony Bravia TV"
             },
             "confirm": {
-                "description": "Do you want to start set up?"
+                "description": "Do you want to start setup?"
             },
             "reauth_confirm": {
                 "data": {

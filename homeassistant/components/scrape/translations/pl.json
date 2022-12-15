@@ -57,16 +57,64 @@
     },
     "options": {
         "step": {
+            "add_sensor": {
+                "data": {
+                    "attribute": "Atrybut",
+                    "device_class": "Klasa urz\u0105dzenia",
+                    "index": "Indeks",
+                    "name": "Nazwa",
+                    "select": "Wybierz",
+                    "state_class": "Klasa stanu",
+                    "unit_of_measurement": "Jednostka miary",
+                    "value_template": "Szablon warto\u015bci"
+                },
+                "data_description": {
+                    "attribute": "Pobierz warto\u015b\u0107 atrybutu w wybranym tagu",
+                    "device_class": "Typ/klasa sensora do ustawienia ikony w interfejsie u\u017cytkownika",
+                    "index": "Okre\u015bla, kt\u00f3rego z element\u00f3w zwracanych przez selektor CSS nale\u017cy u\u017cy\u0107",
+                    "select": "Okre\u015bla jakiego taga szuka\u0107. Sprawd\u017a selektory CSS Beautifulsoup, aby uzyska\u0107 szczeg\u00f3\u0142owe informacje.",
+                    "state_class": "state_class sensora",
+                    "unit_of_measurement": "Wybierz pomiar temperatury lub stw\u00f3rz w\u0142asny",
+                    "value_template": "Szablon, kt\u00f3ry pozwala uzyska\u0107 stan czujnika"
+                }
+            },
+            "edit_sensor": {
+                "data": {
+                    "attribute": "Atrybut",
+                    "device_class": "Klasa urz\u0105dzenia",
+                    "index": "Indeks",
+                    "name": "Nazwa",
+                    "select": "Wybierz",
+                    "state_class": "Klasa stanu",
+                    "unit_of_measurement": "Jednostka miary",
+                    "value_template": "Szablon warto\u015bci"
+                },
+                "data_description": {
+                    "attribute": "Pobierz warto\u015b\u0107 atrybutu w wybranym tagu",
+                    "device_class": "Typ/klasa sensora do ustawienia ikony w interfejsie u\u017cytkownika",
+                    "index": "Okre\u015bla, kt\u00f3rego z element\u00f3w zwracanych przez selektor CSS nale\u017cy u\u017cy\u0107",
+                    "select": "Okre\u015bla jakiego taga szuka\u0107. Sprawd\u017a selektory CSS Beautifulsoup, aby uzyska\u0107 szczeg\u00f3\u0142owe informacje.",
+                    "state_class": "state_class sensora",
+                    "unit_of_measurement": "Wybierz pomiar temperatury lub stw\u00f3rz w\u0142asny",
+                    "value_template": "Szablon, kt\u00f3ry pozwala uzyska\u0107 stan czujnika"
+                }
+            },
             "init": {
+                "menu_options": {
+                    "add_sensor": "Dodaj sensor",
+                    "remove_sensor": "Usu\u0144 sensor",
+                    "resource": "Konfiguracja zasobu",
+                    "select_edit_sensor": "Konfiguracja sensora"
+                }
+            },
+            "resource": {
                 "data": {
                     "authentication": "Wybierz metod\u0119 uwierzytelniania",
                     "headers": "Nag\u0142\u00f3wki",
                     "method": "Metoda",
                     "password": "Has\u0142o",
                     "resource": "Zas\u00f3b",
-                    "timeout": "Limit czasu",
-                    "username": "Nazwa u\u017cytkownika",
-                    "verify_ssl": "Weryfikacja certyfikatu SSL"
+                    "timeout": "Limit czasu"
                 },
                 "data_description": {
                     "authentication": "Typ uwierzytelniania HTTP. Podstawowy lub digest.",

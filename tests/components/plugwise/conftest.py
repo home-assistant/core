@@ -75,7 +75,7 @@ def mock_smile_adam() -> Generator[None, MagicMock, None]:
     chosen_env = "adam_multiple_devices_per_zone"
 
     with patch(
-        "homeassistant.components.plugwise.gateway.Smile", autospec=True
+        "homeassistant.components.plugwise.coordinator.Smile", autospec=True
     ) as smile_mock:
         smile = smile_mock.return_value
 
@@ -101,7 +101,7 @@ def mock_smile_adam_2() -> Generator[None, MagicMock, None]:
     chosen_env = "m_adam_heating"
 
     with patch(
-        "homeassistant.components.plugwise.gateway.Smile", autospec=True
+        "homeassistant.components.plugwise.coordinator.Smile", autospec=True
     ) as smile_mock:
         smile = smile_mock.return_value
 
@@ -127,7 +127,7 @@ def mock_smile_adam_3() -> Generator[None, MagicMock, None]:
     chosen_env = "m_adam_cooling"
 
     with patch(
-        "homeassistant.components.plugwise.gateway.Smile", autospec=True
+        "homeassistant.components.plugwise.coordinator.Smile", autospec=True
     ) as smile_mock:
         smile = smile_mock.return_value
 
@@ -152,7 +152,7 @@ def mock_smile_anna() -> Generator[None, MagicMock, None]:
     """Create a Mock Anna environment for testing exceptions."""
     chosen_env = "anna_heatpump_heating"
     with patch(
-        "homeassistant.components.plugwise.gateway.Smile", autospec=True
+        "homeassistant.components.plugwise.coordinator.Smile", autospec=True
     ) as smile_mock:
         smile = smile_mock.return_value
 
@@ -177,7 +177,7 @@ def mock_smile_anna_2() -> Generator[None, MagicMock, None]:
     """Create a 2nd Mock Anna environment for testing exceptions."""
     chosen_env = "m_anna_heatpump_cooling"
     with patch(
-        "homeassistant.components.plugwise.gateway.Smile", autospec=True
+        "homeassistant.components.plugwise.coordinator.Smile", autospec=True
     ) as smile_mock:
         smile = smile_mock.return_value
 
@@ -202,7 +202,7 @@ def mock_smile_anna_3() -> Generator[None, MagicMock, None]:
     """Create a 3rd Mock Anna environment for testing exceptions."""
     chosen_env = "m_anna_heatpump_idle"
     with patch(
-        "homeassistant.components.plugwise.gateway.Smile", autospec=True
+        "homeassistant.components.plugwise.coordinator.Smile", autospec=True
     ) as smile_mock:
         smile = smile_mock.return_value
 
@@ -227,7 +227,7 @@ def mock_smile_p1() -> Generator[None, MagicMock, None]:
     """Create a Mock P1 DSMR environment for testing exceptions."""
     chosen_env = "p1v3_full_option"
     with patch(
-        "homeassistant.components.plugwise.gateway.Smile", autospec=True
+        "homeassistant.components.plugwise.coordinator.Smile", autospec=True
     ) as smile_mock:
         smile = smile_mock.return_value
 
@@ -252,7 +252,7 @@ def mock_stretch() -> Generator[None, MagicMock, None]:
     """Create a Mock Stretch environment for testing exceptions."""
     chosen_env = "stretch_v31"
     with patch(
-        "homeassistant.components.plugwise.gateway.Smile", autospec=True
+        "homeassistant.components.plugwise.coordinator.Smile", autospec=True
     ) as smile_mock:
         smile = smile_mock.return_value
 

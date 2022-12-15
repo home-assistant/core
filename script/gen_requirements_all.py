@@ -71,8 +71,8 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.48.0
-grpcio-status==1.48.0
+grpcio==1.51.1
+grpcio-status==1.51.1
 
 # libcst >=0.4.0 requires a newer Rust than we currently have available,
 # thus our wheels builds fail. This pins it to the last working version,
@@ -99,9 +99,9 @@ regex==2021.8.28
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==3.6.1
-h11==0.12.0
-httpcore==0.15.0
+anyio==3.6.2
+h11==0.14.0
+httpcore==0.16.2
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
@@ -109,9 +109,6 @@ hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
 numpy==1.23.2
-
-# pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
-pytest_asyncio==1000000000.0.0
 
 # Prevent dependency conflicts between sisyphus-control and aioambient
 # until upper bounds for sisyphus-control have been updated
@@ -261,10 +258,6 @@ def gather_requirements_from_manifests(
     integrations = Integration.load_dir(Path("homeassistant/components"))
     for domain in sorted(integrations):
         integration = integrations[domain]
-
-        if not integration.manifest:
-            errors.append(f"The manifest for integration {domain} is invalid.")
-            continue
 
         if integration.disabled:
             continue

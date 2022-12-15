@@ -10,10 +10,12 @@ from awesomeversion import AwesomeVersion
 from bluetooth_adapters import (
     ADAPTER_ADDRESS,
     ADAPTER_HW_VERSION,
+    ADAPTER_MANUFACTURER,
     ADAPTER_SW_VERSION,
     DEFAULT_ADDRESS,
     AdapterDetails,
     adapter_human_name,
+    adapter_model,
     adapter_unique_name,
     get_adapters,
 )
@@ -69,9 +71,14 @@ from .const import (
 )
 from .manager import BluetoothManager
 from .match import BluetoothCallbackMatcher, IntegrationMatcher
-from .models import BluetoothCallback, BluetoothChange, BluetoothScanningMode
+from .models import (
+    BluetoothCallback,
+    BluetoothChange,
+    BluetoothScanningMode,
+    HaBluetoothConnector,
+)
 from .scanner import HaScanner, ScannerStartError
-from .wrappers import HaBluetoothConnector
+from .storage import BluetoothStorage
 
 if TYPE_CHECKING:
     from homeassistant.helpers.typing import ConfigType
@@ -156,7 +163,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     integration_matcher = IntegrationMatcher(await async_get_bluetooth(hass))
     integration_matcher.async_setup()
     bluetooth_adapters = get_adapters()
-    manager = BluetoothManager(hass, integration_matcher, bluetooth_adapters)
+    bluetooth_storage = BluetoothStorage(hass)
+    await bluetooth_storage.async_setup()
+    manager = BluetoothManager(
+        hass, integration_matcher, bluetooth_adapters, bluetooth_storage
+    )
     await manager.async_setup()
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, manager.async_stop)
     hass.data[DATA_MANAGER] = models.MANAGER = manager
@@ -276,6 +287,8 @@ async def async_update_device(
         config_entry_id=entry.entry_id,
         name=adapter_human_name(adapter, details[ADAPTER_ADDRESS]),
         connections={(dr.CONNECTION_BLUETOOTH, details[ADAPTER_ADDRESS])},
+        manufacturer=details[ADAPTER_MANUFACTURER],
+        model=adapter_model(details),
         sw_version=details.get(ADAPTER_SW_VERSION),
         hw_version=details.get(ADAPTER_HW_VERSION),
     )

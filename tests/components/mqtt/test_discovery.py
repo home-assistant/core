@@ -1238,7 +1238,6 @@ async def test_no_implicit_state_topic_switch(
 
     async_fire_mqtt_message(hass, "homeassistant/switch/bla/config", data)
     await hass.async_block_till_done()
-    assert "implicit state_topic is deprecated" not in caplog.text
 
     state = hass.states.get("switch.Test1")
     assert state is not None

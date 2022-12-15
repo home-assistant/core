@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "calendar_name": "Kalendri nimi"
+                },
+                "description": "Vali oma uuele kalendrile nimi"
+            }
+        }
+    }
+}
