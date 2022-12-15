@@ -447,16 +447,12 @@ async def test_setting_device_tracker_location_via_auto_zone_message(
     hass.states.async_set(
         "zone.school",
         "zoning",
-        {"latitude": 30.0, "longitude": -100.0, "radius": 100, "friendly_name": "School"},
-    )
-
-    assert await async_setup_component(
-        hass, "zone", {"zone": [{
-            "name": "School",
+        {
             "latitude": 30.0,
             "longitude": -100.0,
-            "radius": 100
-        }]}
+            "radius": 100,
+            "friendly_name": "School",
+        },
     )
 
     await hass.async_block_till_done()
