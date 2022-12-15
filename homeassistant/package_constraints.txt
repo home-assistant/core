@@ -13,7 +13,7 @@ bcrypt==3.1.7
 bleak-retry-connector==2.10.2
 bleak==0.19.2
 bluetooth-adapters==0.14.1
-bluetooth-auto-recovery==1.0.1
+bluetooth-auto-recovery==1.0.2
 bluetooth-data-tools==0.3.0
 certifi>=2021.5.30
 ciso8601==2.2.0
