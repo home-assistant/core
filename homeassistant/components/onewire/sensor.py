@@ -17,12 +17,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_POTENTIAL_VOLT,
     LIGHT_LUX,
     PERCENTAGE,
     PRESSURE_CBAR,
     PRESSURE_MBAR,
     TEMP_CELSIUS,
+    UnitOfElectricPotential,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -171,7 +171,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.VOLTAGE,
             entity_registry_enabled_default=False,
             name="Voltage VAD",
-            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -180,7 +180,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.VOLTAGE,
             entity_registry_enabled_default=False,
             name="Voltage VDD",
-            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -189,7 +189,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.VOLTAGE,
             entity_registry_enabled_default=False,
             name="vis",
-            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -222,7 +222,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.VOLTAGE,
             entity_registry_enabled_default=False,
             name="Voltage",
-            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -231,7 +231,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.VOLTAGE,
             entity_registry_enabled_default=False,
             name="vis",
-            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
         ),

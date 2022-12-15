@@ -3,10 +3,10 @@ from __future__ import annotations
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
-    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     TEMP_CELSIUS,
     UnitOfElectricCurrent,
+    UnitOfElectricPotential,
     UnitOfFrequency,
     UnitOfPower,
 )
@@ -54,7 +54,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="tlx_voltage_input_1",
         name="Input 1 voltage",
         api_key="vpv1",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         precision=1,
     ),
@@ -96,7 +96,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="tlx_voltage_input_2",
         name="Input 2 voltage",
         api_key="vpv2",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         precision=1,
     ),
@@ -128,7 +128,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="tlx_reactive_voltage",
         name="Reactive voltage",
         api_key="vacrs",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         precision=1,
     ),

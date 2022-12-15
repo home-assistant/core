@@ -20,9 +20,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
-    LENGTH_CENTIMETERS,
     LIGHT_LUX,
     PERCENTAGE,
     PRESSURE_HPA,
@@ -35,7 +33,9 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     TEMP_KELVIN,
     UnitOfApparentPower,
+    UnitOfElectricPotential,
     UnitOfFrequency,
+    UnitOfLength,
     UnitOfMass,
     UnitOfPower,
 )
@@ -217,7 +217,7 @@ SENSOR_UNIT_MAP = {
     hc.ELECTRICAL_VOLT_AMPERE: UnitOfApparentPower.VOLT_AMPERE,
     hc.ENERGY_KILO_WATT_HOUR: ENERGY_KILO_WATT_HOUR,
     hc.FREQUENCY_HERTZ: UnitOfFrequency.HERTZ,
-    hc.LENGTH_CENTIMETERS: LENGTH_CENTIMETERS,
+    hc.LENGTH_CENTIMETERS: UnitOfLength.CENTIMETERS,
     hc.LIGHT_LUX: LIGHT_LUX,
     hc.MASS_KILOGRAMS: UnitOfMass.KILOGRAMS,
     hc.PERCENTAGE: PERCENTAGE,
@@ -231,7 +231,7 @@ SENSOR_UNIT_MAP = {
     hc.TEMP_CELSIUS: TEMP_CELSIUS,
     hc.TEMP_FAHRENHEIT: TEMP_FAHRENHEIT,
     hc.TEMP_KELVIN: TEMP_KELVIN,
-    hc.VOLT: ELECTRIC_POTENTIAL_VOLT,
+    hc.VOLT: UnitOfElectricPotential.VOLT,
 }
 
 

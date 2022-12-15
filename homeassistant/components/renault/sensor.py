@@ -24,10 +24,10 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
-    LENGTH_KILOMETERS,
     PERCENTAGE,
     TEMP_CELSIUS,
     TIME_MINUTES,
+    UnitOfLength,
     UnitOfPower,
     UnitOfVolume,
 )
@@ -246,7 +246,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         entity_class=RenaultSensor[KamereonVehicleBatteryStatusData],
         icon="mdi:ev-station",
         name="Battery autonomy",
-        native_unit_of_measurement=LENGTH_KILOMETERS,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     RenaultSensorEntityDescription(
@@ -287,7 +287,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         entity_class=RenaultSensor[KamereonVehicleCockpitData],
         icon="mdi:sign-direction",
         name="Mileage",
-        native_unit_of_measurement=LENGTH_KILOMETERS,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_lambda=_get_rounded_value,
     ),
@@ -299,7 +299,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         entity_class=RenaultSensor[KamereonVehicleCockpitData],
         icon="mdi:gas-station",
         name="Fuel autonomy",
-        native_unit_of_measurement=LENGTH_KILOMETERS,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
         requires_fuel=True,
         value_lambda=_get_rounded_value,

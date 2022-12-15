@@ -18,9 +18,9 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
+    UnitOfElectricPotential,
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -155,7 +155,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         key="voltage",
         name="current voltage",
         device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.details["voltage"],
         update_fn=update_energy,
