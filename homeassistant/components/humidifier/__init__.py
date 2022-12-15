@@ -41,6 +41,7 @@ from .const import (  # noqa: F401
     MODE_AUTO,
     MODE_AWAY,
     MODE_NORMAL,
+    MODE_SLEEP,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
     SUPPORT_MODES,
