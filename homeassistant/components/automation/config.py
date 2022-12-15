@@ -69,51 +69,10 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-def _log_invalid_blueprint(
-    err: Exception, blueprint_inputs: blueprint.BlueprintInputs, config: ConfigType
-) -> None:
-    """Log an error about invalid blueprint."""
-    if isinstance(err, vol.Invalid):
-        LOGGER.error(
-            "Blueprint '%s' generated invalid automation with inputs %s: %s",
-            blueprint_inputs.blueprint.name,
-            blueprint_inputs.inputs,
-            humanize_error(config, err),
-        )
-        return
-
-    LOGGER.error(
-        "Blueprint '%s' generated invalid automation with inputs %s: %s",
-        blueprint_inputs.blueprint.name,
-        blueprint_inputs.inputs,
-        err,
-    )
-
-
-def _log_invalid_automation(
-    err: Exception, automation_name: str, problem: str, config: ConfigType
-) -> None:
-    """Log an error about invalid automation."""
-    if isinstance(err, vol.Invalid):
-        LOGGER.error(
-            "%s %s and has been disabled: %s",
-            automation_name,
-            problem,
-            humanize_error(config, err),
-        )
-        return
-
-    LOGGER.error(
-        "%s %s and has been disabled: %s",
-        automation_name,
-        problem,
-        err,
-    )
-
-
 async def _async_validate_config_item(
     hass: HomeAssistant,
     config: ConfigType,
+    warn_on_errors: bool,
 ) -> AutomationConfig:
     """Validate config item."""
     raw_config = None
@@ -122,22 +81,59 @@ async def _async_validate_config_item(
     with suppress(ValueError):
         raw_config = dict(config)
 
+    def _log_invalid_automation(
+        err: Exception,
+        automation_name: str,
+        problem: str,
+        config: ConfigType,
+    ) -> None:
+        """Log an error about invalid automation."""
+        if not warn_on_errors:
+            return
+
+        if uses_blueprint:
+            LOGGER.error(
+                "Blueprint '%s' generated invalid automation with inputs %s: %s",
+                blueprint_inputs.blueprint.name,
+                blueprint_inputs.inputs,
+                humanize_error(config, err) if isinstance(err, vol.Invalid) else err,
+            )
+            return
+
+        LOGGER.error(
+            "%s %s and has been disabled: %s",
+            automation_name,
+            problem,
+            humanize_error(config, err) if isinstance(err, vol.Invalid) else err,
+        )
+        return
+
     if blueprint.is_blueprint_instance_config(config):
         uses_blueprint = True
         blueprints = async_get_blueprints(hass)
-        blueprint_inputs = await blueprints.async_inputs_from_config(config)
+        try:
+            blueprint_inputs = await blueprints.async_inputs_from_config(config)
+        except blueprint.BlueprintException as err:
+            if warn_on_errors:
+                LOGGER.error(
+                    "Failed to generate automation from blueprint: %s",
+                    err,
+                )
+            raise
+
         raw_blueprint_inputs = blueprint_inputs.config_with_inputs
 
         try:
             config = blueprint_inputs.async_substitute()
             raw_config = dict(config)
         except UndefinedSubstitution as err:
-            LOGGER.error(
-                "Blueprint '%s' failed to generate automation with inputs %s: %s",
-                blueprint_inputs.blueprint.name,
-                blueprint_inputs.inputs,
-                err,
-            )
+            if warn_on_errors:
+                LOGGER.error(
+                    "Blueprint '%s' failed to generate automation with inputs %s: %s",
+                    blueprint_inputs.blueprint.name,
+                    blueprint_inputs.inputs,
+                    err,
+                )
             raise
 
     automation_name = "Unnamed automation"
@@ -150,9 +146,6 @@ async def _async_validate_config_item(
     try:
         validated_config = PLATFORM_SCHEMA(config)
     except vol.Invalid as err:
-        if uses_blueprint:
-            _log_invalid_blueprint(err, blueprint_inputs, config)
-            raise
         _log_invalid_automation(err, automation_name, "could not be validated", config)
         raise
 
@@ -166,9 +159,6 @@ async def _async_validate_config_item(
         IntegrationNotFound,
         InvalidDeviceAutomationConfig,
     ) as err:
-        if uses_blueprint:
-            _log_invalid_blueprint(err, blueprint_inputs, validated_config)
-            raise
         _log_invalid_automation(
             err, automation_name, "failed to setup triggers", validated_config
         )
@@ -185,9 +175,6 @@ async def _async_validate_config_item(
             IntegrationNotFound,
             InvalidDeviceAutomationConfig,
         ) as err:
-            if uses_blueprint:
-                _log_invalid_blueprint(err, blueprint_inputs, validated_config)
-                raise
             _log_invalid_automation(
                 err, automation_name, "failed to setup conditions", validated_config
             )
@@ -203,9 +190,6 @@ async def _async_validate_config_item(
         IntegrationNotFound,
         InvalidDeviceAutomationConfig,
     ) as err:
-        if uses_blueprint:
-            _log_invalid_blueprint(err, blueprint_inputs, validated_config)
-            raise
         _log_invalid_automation(
             err, automation_name, "failed to setup actions", validated_config
         )
@@ -230,7 +214,7 @@ async def _try_async_validate_config_item(
 ) -> AutomationConfig | None:
     """Validate config item."""
     try:
-        return await _async_validate_config_item(hass, config)
+        return await _async_validate_config_item(hass, config, True)
     except (
         vol.Invalid,
         HomeAssistantError,
@@ -246,10 +230,11 @@ async def async_validate_config_item(
 ) -> AutomationConfig | None:
     """Validate config item, called by EditAutomationConfigView."""
     try:
-        return await _async_validate_config_item(hass, config)
+        return await _async_validate_config_item(hass, config, False)
     except (
         IntegrationNotFound,
         InvalidDeviceAutomationConfig,
+        UndefinedSubstitution,
     ) as err:
         # Convert errors for EditAutomationConfigView
         raise HomeAssistantError from err
