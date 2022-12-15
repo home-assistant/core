@@ -432,7 +432,7 @@ async def test_setting_device_tracker_location_via_lat_lon_message(
 async def test_setting_device_tracker_location_via_auto_zone_message(
     hass, mqtt_mock_entry_no_yaml_config, caplog
 ):
-    """Test the setting of the latitude and longitude via MQTT."""
+    """Test the automatic inference of zones via MQTT."""
     await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(
         hass,
@@ -501,6 +501,48 @@ async def test_setting_device_tracker_location_via_auto_zone_message(
 
     state = hass.states.get("device_tracker.test")
     assert state.state == "School"
+
+
+async def test_setting_device_tracker_location_via_abbr_auto_zone_message(
+    hass, mqtt_mock_entry_no_yaml_config, caplog
+):
+    """Test the setting of auto_zone via abbreviated names and custom payloads via MQTT."""
+    await mqtt_mock_entry_no_yaml_config()
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/device_tracker/bla/config",
+        "{ "
+        '"name": "test", '
+        '"state_topic": "test-topic", '
+        '"json_attributes_topic": "attributes-topic", '
+        '"pl_aut_zn": "auto" '
+        "}",
+    )
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("device_tracker.test")
+    assert state.attributes["source_type"] == "gps"
+
+    assert state.state == STATE_UNKNOWN
+
+    hass.config.latitude = 32.87336
+    hass.config.longitude = -117.22743
+
+    # test custom auto zone payload and gps attributes
+    async_fire_mqtt_message(
+        hass,
+        "attributes-topic",
+        '{"latitude":32.87336,"longitude": -117.22743, "gps_accuracy":1.5}',
+    )
+    async_fire_mqtt_message(hass, "test-topic", "auto")
+
+    state = hass.states.get("device_tracker.test")
+    assert state.attributes["latitude"] == 32.87336
+    assert state.attributes["longitude"] == -117.22743
+    assert state.attributes["gps_accuracy"] == 1.5
+    assert state.attributes["source_type"] == "gps"
+    assert state.state == STATE_HOME
 
 
 async def test_setting_blocked_attribute_via_mqtt_json_message(
