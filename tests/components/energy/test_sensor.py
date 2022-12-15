@@ -3,6 +3,7 @@ import copy
 from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.energy import data
@@ -39,6 +40,13 @@ async def setup_integration(recorder_mock):
         await hass.async_block_till_done()
 
     return setup_integration
+
+
+@pytest.fixture(autouse=True)
+@freeze_time("2022-04-19 07:53:05")
+def frozen_time():
+    """Freeze clock for tests."""
+    yield
 
 
 def get_statistics_for_entity(statistics_results, entity_id):

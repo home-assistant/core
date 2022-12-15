@@ -19,6 +19,7 @@
     },
     "issues": {
         "topic_duplicated": {
+            "description": "Plusieurs appareils Tasmota partagent le sujet {topic}.\n\nAppareils Tasmota avec ce probl\u00e8me : {offenders}.",
             "title": "Plusieurs appareils Tasmota partagent le m\u00eame sujet"
         },
         "topic_no_prefix": {

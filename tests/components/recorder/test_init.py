@@ -26,8 +26,13 @@ from homeassistant.components.recorder import (
     Recorder,
     get_instance,
     pool,
+    statistics,
 )
-from homeassistant.components.recorder.const import KEEPALIVE_TIME
+from homeassistant.components.recorder.const import (
+    EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
+    EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,
+    KEEPALIVE_TIME,
+)
 from homeassistant.components.recorder.db_schema import (
     SCHEMA_VERSION,
     EventData,
@@ -933,7 +938,7 @@ def test_auto_purge_disabled(hass_recorder):
 
 
 @pytest.mark.parametrize("enable_statistics", [True])
-def test_auto_statistics(hass_recorder):
+def test_auto_statistics(hass_recorder, freezer):
     """Test periodic statistics scheduling."""
     hass = hass_recorder()
 
@@ -942,43 +947,82 @@ def test_auto_statistics(hass_recorder):
     tz = dt_util.get_time_zone("Europe/Copenhagen")
     dt_util.set_default_time_zone(tz)
 
+    stats_5min = []
+    stats_hourly = []
+
+    @callback
+    def async_5min_stats_updated_listener(event: Event) -> None:
+        """Handle recorder 5 min stat updated."""
+        stats_5min.append(event)
+
+    def async_hourly_stats_updated_listener(event: Event) -> None:
+        """Handle recorder 5 min stat updated."""
+        stats_hourly.append(event)
+
     # Statistics is scheduled to happen every 5 minutes. Exercise this behavior by
     # firing time changed events and advancing the clock around this time. Pick an
     # arbitrary year in the future to avoid boundary conditions relative to the current
     # date.
     #
-    # The clock is started at 4:16am then advanced forward below
+    # The clock is started at 4:51am then advanced forward below
     now = dt_util.utcnow()
-    test_time = datetime(now.year + 2, 1, 1, 4, 16, 0, tzinfo=tz)
+    test_time = datetime(now.year + 2, 1, 1, 4, 51, 0, tzinfo=tz)
+    freezer.move_to(test_time.isoformat())
     run_tasks_at_time(hass, test_time)
+    hass.block_till_done()
 
+    hass.bus.listen(
+        EVENT_RECORDER_5MIN_STATISTICS_GENERATED, async_5min_stats_updated_listener
+    )
+    hass.bus.listen(
+        EVENT_RECORDER_HOURLY_STATISTICS_GENERATED, async_hourly_stats_updated_listener
+    )
+
+    real_compile_statistics = statistics.compile_statistics
     with patch(
         "homeassistant.components.recorder.statistics.compile_statistics",
-        return_value=True,
+        side_effect=real_compile_statistics,
+        autospec=True,
     ) as compile_statistics:
         # Advance 5 minutes, and the statistics task should run
         test_time = test_time + timedelta(minutes=5)
+        freezer.move_to(test_time.isoformat())
         run_tasks_at_time(hass, test_time)
         assert len(compile_statistics.mock_calls) == 1
+        hass.block_till_done()
+        assert len(stats_5min) == 1
+        assert len(stats_hourly) == 0
 
         compile_statistics.reset_mock()
 
         # Advance 5 minutes, and the statistics task should run again
         test_time = test_time + timedelta(minutes=5)
+        freezer.move_to(test_time.isoformat())
         run_tasks_at_time(hass, test_time)
         assert len(compile_statistics.mock_calls) == 1
+        hass.block_till_done()
+        assert len(stats_5min) == 2
+        assert len(stats_hourly) == 1
 
         compile_statistics.reset_mock()
 
         # Advance less than 5 minutes. The task should not run.
         test_time = test_time + timedelta(minutes=3)
+        freezer.move_to(test_time.isoformat())
         run_tasks_at_time(hass, test_time)
         assert len(compile_statistics.mock_calls) == 0
+        hass.block_till_done()
+        assert len(stats_5min) == 2
+        assert len(stats_hourly) == 1
 
         # Advance 5 minutes, and the statistics task should run again
         test_time = test_time + timedelta(minutes=5)
+        freezer.move_to(test_time.isoformat())
         run_tasks_at_time(hass, test_time)
         assert len(compile_statistics.mock_calls) == 1
+        hass.block_till_done()
+        assert len(stats_5min) == 3
+        assert len(stats_hourly) == 1
 
     dt_util.set_default_time_zone(original_tz)
 
@@ -1027,8 +1071,27 @@ def test_compile_missing_statistics(tmpdir, freezer):
     hass.stop()
 
     # Start Home Assistant one hour later
+    stats_5min = []
+    stats_hourly = []
+
+    @callback
+    def async_5min_stats_updated_listener(event: Event) -> None:
+        """Handle recorder 5 min stat updated."""
+        stats_5min.append(event)
+
+    def async_hourly_stats_updated_listener(event: Event) -> None:
+        """Handle recorder 5 min stat updated."""
+        stats_hourly.append(event)
+
     freezer.tick(timedelta(hours=1))
     hass = get_test_home_assistant()
+    hass.bus.listen(
+        EVENT_RECORDER_5MIN_STATISTICS_GENERATED, async_5min_stats_updated_listener
+    )
+    hass.bus.listen(
+        EVENT_RECORDER_HOURLY_STATISTICS_GENERATED, async_hourly_stats_updated_listener
+    )
+
     recorder_helper.async_initialize_recorder(hass)
     setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
     hass.start()
@@ -1040,6 +1103,9 @@ def test_compile_missing_statistics(tmpdir, freezer):
         assert len(statistics_runs) == 13  # 12 5-minute runs
         last_run = process_timestamp(statistics_runs[1].start)
         assert last_run == now
+
+    assert len(stats_5min) == 1
+    assert len(stats_hourly) == 1
 
     wait_recording_done(hass)
     wait_recording_done(hass)

@@ -23,5 +23,17 @@
                 "title": "WOLF SmartSet-verbinding"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "state": {
+                "state": {
+                    "aktiviert": "Geactiveerd",
+                    "aus": "Uitgeschakeld",
+                    "deaktiviert": "Inactief",
+                    "ein": "Ingeschakeld"
+                }
+            }
+        }
     }
 }

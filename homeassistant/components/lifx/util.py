@@ -16,6 +16,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
     ATTR_COLOR_NAME,
+    ATTR_COLOR_TEMP,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ATTR_KELVIN,
@@ -112,6 +113,12 @@ def find_hsbk(hass: HomeAssistant, **kwargs: Any) -> list[float | int | None] | 
             "The 'kelvin' parameter is deprecated. Please use 'color_temp_kelvin' for all service calls"
         )
         kelvin = kwargs.pop(ATTR_KELVIN)
+        saturation = 0
+
+    if ATTR_COLOR_TEMP in kwargs:
+        kelvin = color_util.color_temperature_mired_to_kelvin(
+            kwargs.pop(ATTR_COLOR_TEMP)
+        )
         saturation = 0
 
     if ATTR_COLOR_TEMP_KELVIN in kwargs:

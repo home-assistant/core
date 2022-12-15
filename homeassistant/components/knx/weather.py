@@ -9,10 +9,10 @@ from homeassistant.components.weather import WeatherEntity
 from homeassistant.const import (
     CONF_ENTITY_CATEGORY,
     CONF_NAME,
-    PRESSURE_PA,
-    SPEED_METERS_PER_SECOND,
-    TEMP_CELSIUS,
     Platform,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -75,9 +75,9 @@ class KNXWeather(KnxEntity, WeatherEntity):
     """Representation of a KNX weather device."""
 
     _device: XknxWeather
-    _attr_native_pressure_unit = PRESSURE_PA
-    _attr_native_temperature_unit = TEMP_CELSIUS
-    _attr_native_wind_speed_unit = SPEED_METERS_PER_SECOND
+    _attr_native_pressure_unit = UnitOfPressure.PA
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
 
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of a KNX sensor."""

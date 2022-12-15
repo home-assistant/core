@@ -5,7 +5,8 @@ from decimal import Decimal
 import pytest
 from pytest import approx
 
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.number import NumberDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     LENGTH_CENTIMETERS,
@@ -31,8 +32,9 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
     VOLUME_FLUID_OUNCE,
     VOLUME_LITERS,
+    UnitOfTemperature,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
@@ -887,6 +889,14 @@ async def test_unit_conversion_priority_suggested_unit_change(
             621,
             SensorDeviceClass.DISTANCE,
         ),
+        (
+            US_CUSTOMARY_SYSTEM,
+            LENGTH_METERS,
+            LENGTH_MILES,
+            1000000,
+            621.371,
+            SensorDeviceClass.DISTANCE,
+        ),
     ],
 )
 async def test_unit_conversion_priority_legacy_conversion_removed(
@@ -927,3 +937,150 @@ async def test_unit_conversion_priority_legacy_conversion_removed(
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == approx(float(original_value))
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == original_unit
+
+
+def test_device_classes_aligned():
+    """Make sure all number device classes are also available in SensorDeviceClass."""
+
+    for device_class in NumberDeviceClass:
+        assert hasattr(SensorDeviceClass, device_class.name)
+        assert getattr(SensorDeviceClass, device_class.name).value == device_class.value
+
+
+async def test_value_unknown_in_enumeration(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+):
+    """Test warning on invalid enum value."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value="invalid_option",
+        device_class=SensorDeviceClass.ENUM,
+        options=["option1", "option2"],
+    )
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    assert (
+        "Sensor sensor.test provides state value 'invalid_option', "
+        "which is not in the list of options provided"
+    ) in caplog.text
+
+
+async def test_invalid_enumeration_entity_with_device_class(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+):
+    """Test warning on entities that provide an enum with a device class."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=21,
+        device_class=SensorDeviceClass.POWER,
+        options=["option1", "option2"],
+    )
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    assert (
+        "Sensor sensor.test is providing enum options, but has device class 'power' "
+        "instead of 'enum'"
+    ) in caplog.text
+
+
+async def test_invalid_enumeration_entity_without_device_class(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+):
+    """Test warning on entities that provide an enum without a device class."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=21,
+        options=["option1", "option2"],
+    )
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    assert (
+        "Sensor sensor.test is providing enum options, but is missing "
+        "the enum device class"
+    ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    "device_class",
+    (
+        SensorDeviceClass.DATE,
+        SensorDeviceClass.ENUM,
+        SensorDeviceClass.TIMESTAMP,
+    ),
+)
+async def test_non_numeric_device_class_with_state_class(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+    device_class: SensorDeviceClass,
+):
+    """Test error on numeric entities that provide an state class."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=None,
+        device_class=device_class,
+        state_class=SensorStateClass.MEASUREMENT,
+        options=["option1", "option2"],
+    )
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    assert (
+        "Sensor sensor.test has a state class and thus indicating it has a numeric "
+        f"value; however, it has the non-numeric device class: {device_class}"
+    ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    "device_class",
+    (
+        SensorDeviceClass.DATE,
+        SensorDeviceClass.ENUM,
+        SensorDeviceClass.TIMESTAMP,
+    ),
+)
+async def test_non_numeric_device_class_with_unit_of_measurement(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+    device_class: SensorDeviceClass,
+):
+    """Test error on numeric entities that provide an unit of measurement."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=None,
+        device_class=device_class,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        options=["option1", "option2"],
+    )
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    assert (
+        "Sensor sensor.test has a unit of measurement and thus indicating it has "
+        f"a numeric value; however, it has the non-numeric device class: {device_class}"
+    ) in caplog.text

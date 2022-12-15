@@ -28,15 +28,5 @@
                 "description": "La clau API es pot recuperar autom\u00e0ticament si les credencials d'inici de sessi\u00f3 no s'han establert a l'aplicaci\u00f3.\nLa teva clau API es pot trobar a Configuraci\u00f3 ('Settings') > General, a la interf\u00edcie web de Lidarr."
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "max_records": "Nombre m\u00e0xim de registres a mostrar a la cua i a desitjats",
-                    "upcoming_days": "Nombre dies propers a mostrar al calendari"
-                }
-            }
-        }
     }
 }

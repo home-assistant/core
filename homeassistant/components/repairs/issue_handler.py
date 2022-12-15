@@ -53,7 +53,7 @@ class RepairsFlowManager(data_entry_flow.FlowManager):
 
     async def async_create_flow(
         self,
-        handler_key: Any,
+        handler_key: str,
         *,
         context: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
@@ -85,7 +85,8 @@ class RepairsFlowManager(data_entry_flow.FlowManager):
         self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
     ) -> data_entry_flow.FlowResult:
         """Complete a fix flow."""
-        async_delete_issue(self.hass, flow.handler, flow.init_data["issue_id"])
+        if result.get("type") != data_entry_flow.FlowResultType.ABORT:
+            async_delete_issue(self.hass, flow.handler, flow.init_data["issue_id"])
         if "result" not in result:
             result["result"] = None
         return result

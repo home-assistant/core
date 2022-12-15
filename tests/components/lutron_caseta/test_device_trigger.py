@@ -13,6 +13,7 @@ from homeassistant.components.lutron_caseta import (
     ATTR_TYPE,
 )
 from homeassistant.components.lutron_caseta.const import (
+    ATTR_BUTTON_TYPE,
     ATTR_LEAP_BUTTON_NUMBER,
     CONF_CA_CERTS,
     CONF_CERTFILE,
@@ -23,6 +24,7 @@ from homeassistant.components.lutron_caseta.const import (
 from homeassistant.components.lutron_caseta.device_trigger import CONF_SUBTYPE
 from homeassistant.components.lutron_caseta.models import LutronCasetaData
 from homeassistant.const import (
+    ATTR_DEVICE_ID,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_HOST,
@@ -254,6 +256,8 @@ async def test_if_fires_on_button_event(hass, calls, device_reg):
         ATTR_DEVICE_NAME: device["Name"],
         ATTR_AREA_NAME: device.get("Area", {}).get("Name"),
         ATTR_ACTION: "press",
+        ATTR_DEVICE_ID: device_id,
+        ATTR_BUTTON_TYPE: "on",
     }
     hass.bus.async_fire(LUTRON_CASETA_BUTTON_EVENT, message)
     await hass.async_block_till_done()
@@ -298,6 +302,8 @@ async def test_if_fires_on_button_event_without_lip(hass, calls, device_reg):
         ATTR_DEVICE_NAME: device["Name"],
         ATTR_AREA_NAME: device.get("Area", {}).get("Name"),
         ATTR_ACTION: "press",
+        ATTR_DEVICE_ID: device_id,
+        ATTR_BUTTON_TYPE: "Kitchen Pendants",
     }
     hass.bus.async_fire(LUTRON_CASETA_BUTTON_EVENT, message)
     await hass.async_block_till_done()
@@ -420,3 +426,56 @@ async def test_validate_trigger_invalid_triggers(hass, device_reg):
             ]
         },
     )
+
+
+async def test_if_fires_on_button_event_late_setup(hass, calls):
+    """Test for press trigger firing with integration getting setup late."""
+    config_entry_id = await _async_setup_lutron_with_picos(hass)
+    await hass.config_entries.async_unload(config_entry_id)
+    await hass.async_block_till_done()
+
+    device = MOCK_BUTTON_DEVICES[0]
+    dr = device_registry.async_get(hass)
+    dr_device = dr.async_get_device(identifiers={(DOMAIN, device["serial"])})
+    device_id = dr_device.id
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        CONF_PLATFORM: "device",
+                        CONF_DOMAIN: DOMAIN,
+                        CONF_DEVICE_ID: device_id,
+                        CONF_TYPE: "press",
+                        CONF_SUBTYPE: "on",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": "test_trigger_button_press"},
+                    },
+                },
+            ]
+        },
+    )
+
+    await hass.config_entries.async_setup(config_entry_id)
+    await hass.async_block_till_done()
+
+    message = {
+        ATTR_SERIAL: device.get("serial"),
+        ATTR_TYPE: device.get("type"),
+        ATTR_LEAP_BUTTON_NUMBER: 0,
+        ATTR_DEVICE_NAME: device["Name"],
+        ATTR_AREA_NAME: device.get("Area", {}).get("Name"),
+        ATTR_ACTION: "press",
+        ATTR_DEVICE_ID: device_id,
+        ATTR_BUTTON_TYPE: "on",
+    }
+    hass.bus.async_fire(LUTRON_CASETA_BUTTON_EVENT, message)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "test_trigger_button_press"

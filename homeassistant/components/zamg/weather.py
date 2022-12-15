@@ -9,10 +9,10 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
-    LENGTH_MILLIMETERS,
-    PRESSURE_HPA,
-    SPEED_METERS_PER_SECOND,
-    TEMP_CELSIUS,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -83,10 +83,10 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
             name=coordinator.name,
         )
         # set units of ZAMG API
-        self._attr_native_temperature_unit = TEMP_CELSIUS
-        self._attr_native_pressure_unit = PRESSURE_HPA
-        self._attr_native_wind_speed_unit = SPEED_METERS_PER_SECOND
-        self._attr_native_precipitation_unit = LENGTH_MILLIMETERS
+        self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+        self._attr_native_pressure_unit = UnitOfPressure.HPA
+        self._attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
+        self._attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
 
     @property
     def condition(self) -> str | None:

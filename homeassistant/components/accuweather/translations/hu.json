@@ -22,13 +22,24 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "pressure_tendency": {
+                "state": {
+                    "falling": "Cs\u00f6kken\u0151",
+                    "rising": "Emelked\u0151",
+                    "steady": "\u00c1lland\u00f3"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
-            "user": {
+            "init": {
                 "data": {
                     "forecast": "Id\u0151j\u00e1r\u00e1s el\u0151rejelz\u00e9s"
                 },
-                "description": "Az AccuWeather API kulcs ingyenes verzi\u00f3j\u00e1nak korl\u00e1tai miatt, amikor enged\u00e9lyezi az id\u0151j\u00e1r\u00e1s -el\u0151rejelz\u00e9st, az adatfriss\u00edt\u00e9seket 40 percenk\u00e9nt 80 percenk\u00e9nt hajtj\u00e1k v\u00e9gre."
+                "description": "Az AccuWeather API-kulcs ingyenes verzi\u00f3j\u00e1nak korl\u00e1tai miatt az id\u0151j\u00e1r\u00e1s-el\u0151rejelz\u00e9s enged\u00e9lyez\u00e9sekor az adatok friss\u00edt\u00e9se 40 perc helyett 80 percenk\u00e9nt t\u00f6rt\u00e9nik."
             }
         }
     },

@@ -612,7 +612,7 @@ class TimeSMAFilter(Filter, SensorEntity):
 
         moving_sum = 0
         start = new_state.timestamp - self._time_window
-        prev_state = self.last_leak or self.queue[0]
+        prev_state = self.last_leak if self.last_leak is not None else self.queue[0]
         for state in self.queue:
             moving_sum += (state.timestamp - start).total_seconds() * prev_state.state
             start = state.timestamp

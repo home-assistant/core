@@ -1,6 +1,5 @@
 """Constants for the homekit_controller component."""
 import asyncio
-from typing import Final
 
 from aiohomekit.exceptions import (
     AccessoryDisconnectedError,
@@ -97,13 +96,16 @@ CHARACTERISTIC_PLATFORMS = {
     CharacteristicsTypes.THREAD_NODE_CAPABILITIES: "sensor",
 }
 
-
-# Device classes
-DEVICE_CLASS_ECOBEE_MODE: Final = "homekit_controller__ecobee_mode"
-
 STARTUP_EXCEPTIONS = (
     asyncio.TimeoutError,
     AccessoryNotFoundError,
     EncryptionError,
     AccessoryDisconnectedError,
 )
+
+# 10 seconds was chosen because it is soon enough
+# for most state changes to happen but not too
+# long that the BLE connection is dropped. It
+# also happens to be the same value used by
+# the update coordinator.
+DEBOUNCE_COOLDOWN = 10  # seconds

@@ -870,7 +870,7 @@ async def test_v1_sensors(
             "54:48:E6:8F:80:A5",
             make_bthome_v2_adv(
                 "54:48:E6:8F:80:A5",
-                b"\x41\xa4\x72\x66\xc9\x5f\x73\x00\x11\x22\x33\xb7\xce\xd8\xe5",
+                b"\x41\xa4\x72\x66\xc9\x5f\x73\x00\x11\x22\x33\x78\x23\x72\x14",
             ),
             "231d39c1d7cc1ab1aee224cd096db932",
             [

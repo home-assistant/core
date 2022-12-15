@@ -14,12 +14,6 @@
                 "data": {
                     "password": "Heslo"
                 }
-            },
-            "user": {
-                "data": {
-                    "name": "Jm\u00e9no",
-                    "password": "Heslo"
-                }
             }
         }
     }

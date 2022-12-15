@@ -49,6 +49,8 @@ class CheckConfigView(HomeAssistantView):
         vol.Optional("external_url"): vol.Any(cv.url_no_path, None),
         vol.Optional("internal_url"): vol.Any(cv.url_no_path, None),
         vol.Optional("currency"): cv.currency,
+        vol.Optional("country"): cv.country,
+        vol.Optional("language"): cv.language,
     }
 )
 @websocket_api.async_response
@@ -107,5 +109,8 @@ async def websocket_detect_config(
 
     if location_info.currency:
         info["currency"] = location_info.currency
+
+    if location_info.country_code:
+        info["country"] = location_info.country_code
 
     connection.send_result(msg["id"], info)

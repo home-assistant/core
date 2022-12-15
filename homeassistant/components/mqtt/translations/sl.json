@@ -10,7 +10,6 @@
             "broker": {
                 "data": {
                     "broker": "Posrednik",
-                    "discovery": "Omogo\u010di odkrivanje",
                     "password": "Geslo",
                     "port": "port",
                     "username": "Uporabni\u0161ko ime"

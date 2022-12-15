@@ -64,35 +64,12 @@
                 "description": "Cadangan Anda memiliki alamat IEEE yang berbeda dari radio Anda. Agar jaringan berfungsi dengan baik, alamat IEEE radio Anda juga harus diubah.\n\nOperasi ini bersifat permanen.",
                 "title": "Timpa Alamat IEEE Radio"
             },
-            "pick_radio": {
-                "data": {
-                    "radio_type": "Jenis Radio"
-                },
-                "description": "Pilih jenis radio Zigbee Anda",
-                "title": "Jenis Radio"
-            },
-            "port_config": {
-                "data": {
-                    "baudrate": "kecepatan port",
-                    "flow_control": "kontrol data flow",
-                    "path": "Jalur perangkat serial"
-                },
-                "description": "Masukkan pengaturan khusus port",
-                "title": "Setelan"
-            },
             "upload_manual_backup": {
                 "data": {
                     "uploaded_backup_file": "Unggah file"
                 },
                 "description": "Pulihkan pengaturan jaringan Anda dari file JSON cadangan yang diunggah. Anda dapat mengunduhnya dari instalasi ZHA yang berbeda dari **Pengaturan Jaringan**, atau menggunakan file Zigbee2MQTT 'coordinator_backup.json'.",
                 "title": "Unggah Cadangan Manual"
-            },
-            "user": {
-                "data": {
-                    "path": "Jalur Perangkat Serial"
-                },
-                "description": "Pilih port serial untuk radio Zigbee",
-                "title": "ZHA"
             }
         }
     },

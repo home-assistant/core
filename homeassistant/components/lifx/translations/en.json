@@ -3,19 +3,15 @@
         "abort": {
             "already_configured": "Device is already configured",
             "already_in_progress": "Configuration flow is already in progress",
-            "no_devices_found": "No devices found on the network",
-            "single_instance_allowed": "Already configured. Only a single configuration possible."
+            "no_devices_found": "No devices found on the network"
         },
         "error": {
             "cannot_connect": "Failed to connect"
         },
-        "flow_title": "{label} ({host}) {serial}",
+        "flow_title": "{label} ({group})",
         "step": {
-            "confirm": {
-                "description": "Do you want to set up LIFX?"
-            },
             "discovery_confirm": {
-                "description": "Do you want to setup {label} ({host}) {serial}?"
+                "description": "Do you want to set up {label} ({group})?"
             },
             "pick_device": {
                 "data": {

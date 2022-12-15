@@ -1,6 +1,10 @@
 """Services for the Fully Kiosk Browser integration."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from typing import Any
+
+from fullykiosk import FullyKiosk
 import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID
@@ -12,6 +16,7 @@ from .const import (
     ATTR_APPLICATION,
     ATTR_URL,
     DOMAIN,
+    LOGGER,
     SERVICE_LOAD_URL,
     SERVICE_START_APPLICATION,
 )
@@ -20,54 +25,59 @@ from .const import (
 async def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Fully Kiosk Browser integration."""
 
-    async def async_load_url(call: ServiceCall) -> None:
-        """Load a URL on the Fully Kiosk Browser."""
+    async def execute_service(
+        call: ServiceCall,
+        fully_method: Callable,
+        *args: list[str],
+        **kwargs: dict[str, Any],
+    ) -> None:
+        """
+        Execute a Fully service call.
+
+        :param call: {ServiceCall} HA service call.
+        :param fully_method: {Callable} A method of the FullyKiosk class.
+        :param args: Arguments for fully_method.
+        :param kwargs: Key-word arguments for fully_method.
+        :return: None
+        """
+        LOGGER.debug(
+            "Calling Fully service %s with args: %s, %s", ServiceCall, args, kwargs
+        )
         registry = dr.async_get(hass)
         for target in call.data[ATTR_DEVICE_ID]:
-
             device = registry.async_get(target)
             if device:
                 coordinator = hass.data[DOMAIN][list(device.config_entries)[0]]
-                await coordinator.fully.loadUrl(call.data[ATTR_URL])
+                # fully_method(coordinator.fully, *args, **kwargs) would make
+                # test_services.py fail.
+                await getattr(coordinator.fully, fully_method.__name__)(*args, **kwargs)
+
+    async def async_load_url(call: ServiceCall) -> None:
+        """Load a URL on the Fully Kiosk Browser."""
+        await execute_service(call, FullyKiosk.loadUrl, call.data[ATTR_URL])
 
     async def async_start_app(call: ServiceCall) -> None:
         """Start an app on the device."""
-        registry = dr.async_get(hass)
-        for target in call.data[ATTR_DEVICE_ID]:
+        await execute_service(
+            call, FullyKiosk.startApplication, call.data[ATTR_APPLICATION]
+        )
 
-            device = registry.async_get(target)
-            if device:
-                coordinator = hass.data[DOMAIN][list(device.config_entries)[0]]
-                await coordinator.fully.startApplication(call.data[ATTR_APPLICATION])
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_LOAD_URL,
-        async_load_url,
-        schema=vol.Schema(
-            vol.All(
-                {
-                    vol.Required(ATTR_DEVICE_ID): cv.ensure_list,
-                    vol.Required(
-                        ATTR_URL,
-                    ): cv.string,
-                },
-            )
-        ),
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_START_APPLICATION,
-        async_start_app,
-        schema=vol.Schema(
-            vol.All(
-                {
-                    vol.Required(ATTR_DEVICE_ID): cv.ensure_list,
-                    vol.Required(
-                        ATTR_APPLICATION,
-                    ): cv.string,
-                },
-            )
-        ),
-    )
+    # Register all the above services
+    service_mapping = [
+        (async_load_url, SERVICE_LOAD_URL, ATTR_URL),
+        (async_start_app, SERVICE_START_APPLICATION, ATTR_APPLICATION),
+    ]
+    for service_handler, service_name, attrib in service_mapping:
+        hass.services.async_register(
+            DOMAIN,
+            service_name,
+            service_handler,
+            schema=vol.Schema(
+                vol.All(
+                    {
+                        vol.Required(ATTR_DEVICE_ID): cv.ensure_list,
+                        vol.Required(attrib): cv.string,
+                    }
+                )
+            ),
+        )

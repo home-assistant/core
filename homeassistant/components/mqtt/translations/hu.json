@@ -8,10 +8,11 @@
             "bad_birth": "\u00c9rv\u00e9nytelen 'birth' topik",
             "bad_certificate": "A CA-tan\u00fas\u00edtv\u00e1ny \u00e9rv\u00e9nytelen",
             "bad_client_cert": "\u00c9rv\u00e9nytelen \u00fcgyf\u00e9ltan\u00fas\u00edtv\u00e1ny. Gy\u0151z\u0151dj\u00f6n meg r\u00f3la, hogy PEM k\u00f3dolt f\u00e1jl van megadva",
-            "bad_client_cert_key": "Az \u00fcgyf\u00e9ltan\u00fas\u00edtv\u00e1ny \u00e9s a priv\u00e1t tan\u00fas\u00edtv\u00e1ny nem \u00e9rv\u00e9nyes p\u00e1r",
+            "bad_client_cert_key": "Az \u00fcgyf\u00e9ltan\u00fas\u00edtv\u00e1ny \u00e9s a priv\u00e1t kulcs nem \u00e9rv\u00e9nyes p\u00e1r",
             "bad_client_key": "\u00c9rv\u00e9nytelen priv\u00e1t kulcs, gy\u0151z\u0151dj\u00f6n meg r\u00f3la, hogy PEM k\u00f3dol\u00e1s\u00fa f\u00e1jlt k\u00fcld\u00f6tt jelsz\u00f3 n\u00e9lk\u00fcl",
             "bad_discovery_prefix": "\u00c9rv\u00e9nytelen felfedez\u00e9si el\u0151tag",
             "bad_will": "\u00c9rv\u00e9nytelen 'will' topik",
+            "bad_ws_headers": "\u00c9rv\u00e9nyes HTTP-fejl\u00e9cek megad\u00e1sa JSON-objektumk\u00e9nt",
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "invalid_inclusion": "Az \u00fcgyf\u00e9ltan\u00fas\u00edtv\u00e1nyt \u00e9s a mag\u00e1nkulcsot egy\u00fctt kell konfigur\u00e1lni"
         },
@@ -24,7 +25,6 @@
                     "client_cert": "\u00dcgyf\u00e9ltan\u00fas\u00edtv\u00e1ny f\u00e1jl felt\u00f6lt\u00e9se",
                     "client_id": "\u00dcgyf\u00e9l azonos\u00edt\u00f3 (hagyja \u00fcresen a v\u00e9letlenszer\u0171en gener\u00e1lt azonos\u00edt\u00f3hoz)",
                     "client_key": "Priv\u00e1t kulcsf\u00e1jl felt\u00f6lt\u00e9se",
-                    "discovery": "Felfedez\u00e9s enged\u00e9lyez\u00e9se",
                     "keepalive": "A keep alive \u00fczenetek k\u00fcld\u00e9se k\u00f6z\u00f6tti id\u0151",
                     "password": "Jelsz\u00f3",
                     "port": "Port",
@@ -32,7 +32,10 @@
                     "set_ca_cert": "Br\u00f3kertan\u00fas\u00edtv\u00e1ny \u00e9rv\u00e9nyes\u00edt\u00e9s",
                     "set_client_cert": "\u00dcgyf\u00e9ltan\u00fas\u00edtv\u00e1ny haszn\u00e1lata",
                     "tls_insecure": "A br\u00f3kertan\u00fas\u00edtv\u00e1ny \u00e9rv\u00e9nyes\u00edt\u00e9s\u00e9nek figyelmen k\u00edv\u00fcl hagy\u00e1sa",
-                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                    "transport": "MQTT adat\u00e1tvitel",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v",
+                    "ws_headers": "WebSocket fejl\u00e9cek JSON form\u00e1tumban",
+                    "ws_path": "WebSocket el\u00e9r\u00e9si \u00fat"
                 },
                 "description": "K\u00e9rem, adja meg az MQTT br\u00f3ker kapcsol\u00f3d\u00e1si adatait."
             },
@@ -82,10 +85,11 @@
             "bad_birth": "\u00c9rv\u00e9nytelen 'birth' topik",
             "bad_certificate": "A CA-tan\u00fas\u00edtv\u00e1ny \u00e9rv\u00e9nytelen",
             "bad_client_cert": "\u00c9rv\u00e9nytelen \u00fcgyf\u00e9ltan\u00fas\u00edtv\u00e1ny. Gy\u0151z\u0151dj\u00f6n meg r\u00f3la, hogy PEM k\u00f3dolt f\u00e1jl van megadva",
-            "bad_client_cert_key": "Az \u00fcgyf\u00e9ltan\u00fas\u00edtv\u00e1ny \u00e9s a priv\u00e1t tan\u00fas\u00edtv\u00e1ny nem \u00e9rv\u00e9nyes p\u00e1r",
+            "bad_client_cert_key": "Az \u00fcgyf\u00e9ltan\u00fas\u00edtv\u00e1ny \u00e9s a priv\u00e1t kulcs nem \u00e9rv\u00e9nyes p\u00e1r",
             "bad_client_key": "\u00c9rv\u00e9nytelen priv\u00e1t kulcs, gy\u0151z\u0151dj\u00f6n meg r\u00f3la, hogy PEM k\u00f3dol\u00e1s\u00fa f\u00e1jlt k\u00fcld\u00f6tt jelsz\u00f3 n\u00e9lk\u00fcl",
             "bad_discovery_prefix": "\u00c9rv\u00e9nytelen felfedez\u00e9si el\u0151tag",
             "bad_will": "\u00c9rv\u00e9nytelen 'will' topik",
+            "bad_ws_headers": "\u00c9rv\u00e9nyes HTTP-fejl\u00e9cek megad\u00e1sa JSON-objektumk\u00e9nt",
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "invalid_inclusion": "Az \u00fcgyf\u00e9ltan\u00fas\u00edtv\u00e1nyt \u00e9s a mag\u00e1nkulcsot egy\u00fctt kell konfigur\u00e1lni"
         },
@@ -105,7 +109,10 @@
                     "set_ca_cert": "Br\u00f3kertan\u00fas\u00edtv\u00e1ny \u00e9rv\u00e9nyes\u00edt\u00e9s",
                     "set_client_cert": "\u00dcgyf\u00e9ltan\u00fas\u00edtv\u00e1ny haszn\u00e1lata",
                     "tls_insecure": "A br\u00f3kertan\u00fas\u00edtv\u00e1ny \u00e9rv\u00e9nyes\u00edt\u00e9s\u00e9nek figyelmen k\u00edv\u00fcl hagy\u00e1sa",
-                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                    "transport": "MQTT adat\u00e1tvitel",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v",
+                    "ws_headers": "WebSocket fejl\u00e9cek JSON form\u00e1tumban",
+                    "ws_path": "WebSocket el\u00e9r\u00e9si \u00fat"
                 },
                 "description": "K\u00e9rem, adja meg az MQTT br\u00f3ker kapcsol\u00f3d\u00e1si adatait.",
                 "title": "Br\u00f3ker opci\u00f3k"
@@ -115,14 +122,14 @@
                     "birth_enable": "Sz\u00fclet\u00e9si \u00fczenet enged\u00e9lyez\u00e9se",
                     "birth_payload": "Sz\u00fclet\u00e9si \u00fczenet",
                     "birth_qos": "Sz\u00fclet\u00e9si \u00fczenet QoS",
-                    "birth_retain": "A sz\u00fclet\u00e9si \u00fczenet meg\u0151rz\u00e9se",
+                    "birth_retain": "Birth (sz\u00fclet\u00e9si) \u00fczenet tart\u00e1sa",
                     "birth_topic": "Sz\u00fclet\u00e9si \u00fczenet t\u00e9m\u00e1ja",
                     "discovery": "Felfedez\u00e9s enged\u00e9lyez\u00e9se",
                     "discovery_prefix": "Felfedez\u00e9s el\u0151tag",
                     "will_enable": "Enged\u00e9lyez\u00e9si \u00fczenet",
                     "will_payload": "\u00dczenet",
                     "will_qos": "QoS \u00fczenet",
-                    "will_retain": "\u00dczenet megtart\u00e1sa",
+                    "will_retain": "Will (b\u00facs\u00fa) \u00fctzenet tart\u00e1sa",
                     "will_topic": "\u00dczenet t\u00e9m\u00e1ja"
                 },
                 "description": "Discovery - Ha a felfedez\u00e9s enged\u00e9lyezve van (aj\u00e1nlott), akkor Home Assistant automatikusan felfedezi azokat az eszk\u00f6z\u00f6ket \u00e9s entit\u00e1sokat, amelyek k\u00f6zz\u00e9teszik konfigur\u00e1ci\u00f3jukat az MQTT br\u00f3keren. Ha a felfedez\u00e9s le van tiltva, minden konfigur\u00e1ci\u00f3t manu\u00e1lisan kell elv\u00e9gezni.\nBirth \u00fczenet - A sz\u00fclet\u00e9si \u00fczenet minden alkalommal el lesz k\u00fcldve, amikor Home Assistant (\u00fajra) csatlakozik az MQTT br\u00f3kerhez.\nWill \u00fczenet - Az akarat\u00fczenet minden alkalommal el lesz k\u00fcldve, amikor Home Assistant elvesz\u00edti a kapcsolatot a k\u00f6zvet\u00edt\u0151vel, mind tiszta esetben (pl. Home Assistant le\u00e1ll\u00edt\u00e1sa), mind rendelenes helyzetben (pl. Home Assistant lefagy vagy megszakad a h\u00e1l\u00f3zati kapcsolata).",

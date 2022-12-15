@@ -62,12 +62,12 @@ class NINAMessage(CoordinatorEntity[NINADataUpdateCoordinator], BinarySensorEnti
         """Initialize."""
         super().__init__(coordinator)
 
-        self._region: str = region
-        self._warning_index: int = slot_id - 1
+        self._region = region
+        self._warning_index = slot_id - 1
 
-        self._attr_name: str = f"Warning: {region_name} {slot_id}"
-        self._attr_unique_id: str = f"{region}-{slot_id}"
-        self._attr_device_class: str = BinarySensorDeviceClass.SAFETY
+        self._attr_name = f"Warning: {region_name} {slot_id}"
+        self._attr_unique_id = f"{region}-{slot_id}"
+        self._attr_device_class = BinarySensorDeviceClass.SAFETY
 
     @property
     def is_on(self) -> bool:

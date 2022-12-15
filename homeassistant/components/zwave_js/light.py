@@ -150,7 +150,6 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             self._supported_color_modes.add(ColorMode.BRIGHTNESS)
 
         # Entity class attributes
-        self._attr_supported_features = 0
         self.supports_brightness_transition = bool(
             self._target_brightness is not None
             and TRANSITION_DURATION_OPTION
@@ -178,7 +177,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         """
         if self.info.primary_value.value is None:
             return None
-        return round((self.info.primary_value.value / 99) * 255)
+        return round((cast(int, self.info.primary_value.value) / 99) * 255)
 
     @property
     def color_mode(self) -> str | None:

@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "\u0533\u0561\u0572\u057f\u0576\u0561\u0562\u0561\u057c"
+                }
+            }
+        }
+    }
+}

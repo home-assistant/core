@@ -13,16 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ELECTRIC_POTENTIAL_VOLT,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
-    PERCENTAGE,
-    PRESSURE_HPA,
-    TEMP_CELSIUS,
-    VOLUME_GALLONS,
-    VOLUME_LITERS,
-)
+from homeassistant.const import PERCENTAGE, PRESSURE_HPA, UnitOfLength, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -57,8 +48,8 @@ _LOGGER = logging.getLogger(__name__)
 FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS = "L/100km"
 FUEL_CONSUMPTION_MILES_PER_GALLON = "mi/gal"
 
-L_PER_GAL = VolumeConverter.convert(1, VOLUME_GALLONS, VOLUME_LITERS)
-KM_PER_MI = DistanceConverter.convert(1, LENGTH_MILES, LENGTH_KILOMETERS)
+L_PER_GAL = VolumeConverter.convert(1, UnitOfVolume.GALLONS, UnitOfVolume.LITERS)
+KM_PER_MI = DistanceConverter.convert(1, UnitOfLength.MILES, UnitOfLength.KILOMETERS)
 
 # Sensor available to "Subaru Safety Plus" subscribers with Gen1 or Gen2 vehicles
 SAFETY_SENSORS = [
@@ -67,7 +58,7 @@ SAFETY_SENSORS = [
         device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:road-variant",
         name="Odometer",
-        native_unit_of_measurement=LENGTH_KILOMETERS,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 ]
@@ -86,7 +77,7 @@ API_GEN_2_SENSORS = [
         device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:gas-station",
         name="Range",
-        native_unit_of_measurement=LENGTH_KILOMETERS,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -117,20 +108,6 @@ API_GEN_2_SENSORS = [
         native_unit_of_measurement=PRESSURE_HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
-        key=sc.EXTERNAL_TEMP,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        name="External temp",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key=sc.BATTERY_VOLTAGE,
-        device_class=SensorDeviceClass.VOLTAGE,
-        name="12V battery voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
 ]
 
 # Sensors available to "Subaru Safety Plus" subscribers with PHEV vehicles
@@ -140,7 +117,7 @@ EV_SENSORS = [
         device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:ev-station",
         name="EV range",
-        native_unit_of_measurement=LENGTH_MILES,
+        native_unit_of_measurement=UnitOfLength.MILES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(

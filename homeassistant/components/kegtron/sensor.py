@@ -22,13 +22,14 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT, VOLUME_LITERS
+from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from .const import DOMAIN
-from .device import device_key_to_bluetooth_entity_key, sensor_device_info_to_hass
+from .device import device_key_to_bluetooth_entity_key
 
 SENSOR_DESCRIPTIONS = {
     KegtronSensorDeviceClass.PORT_COUNT: SensorEntityDescription(
@@ -38,7 +39,7 @@ SENSOR_DESCRIPTIONS = {
     KegtronSensorDeviceClass.KEG_SIZE: SensorEntityDescription(
         key=KegtronSensorDeviceClass.KEG_SIZE,
         icon="mdi:keg",
-        native_unit_of_measurement=VOLUME_LITERS,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
         device_class=SensorDeviceClass.VOLUME,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -49,14 +50,14 @@ SENSOR_DESCRIPTIONS = {
     KegtronSensorDeviceClass.VOLUME_START: SensorEntityDescription(
         key=KegtronSensorDeviceClass.VOLUME_START,
         icon="mdi:keg",
-        native_unit_of_measurement=VOLUME_LITERS,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
         device_class=SensorDeviceClass.VOLUME,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     KegtronSensorDeviceClass.VOLUME_DISPENSED: SensorEntityDescription(
         key=KegtronSensorDeviceClass.VOLUME_DISPENSED,
         icon="mdi:keg",
-        native_unit_of_measurement=VOLUME_LITERS,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
         device_class=SensorDeviceClass.VOLUME,
         state_class=SensorStateClass.TOTAL,
     ),
@@ -85,7 +86,7 @@ def sensor_update_to_bluetooth_data_update(
     """Convert a sensor update to a bluetooth data update."""
     return PassiveBluetoothDataUpdate(
         devices={
-            device_id: sensor_device_info_to_hass(device_info)
+            device_id: sensor_device_info_to_hass_device_info(device_info)
             for device_id, device_info in sensor_update.devices.items()
         },
         entity_descriptions={

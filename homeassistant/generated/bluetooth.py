@@ -274,6 +274,16 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     },
     {
         "connectable": False,
+        "domain": "sensirion_ble",
+        "manufacturer_id": 1749,
+    },
+    {
+        "connectable": False,
+        "domain": "sensirion_ble",
+        "local_name": "MyCO2*",
+    },
+    {
+        "connectable": False,
         "domain": "sensorpro",
         "manufacturer_data_start": [
             1,
@@ -383,6 +393,11 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
             187,
         ],
         "manufacturer_id": 76,
+    },
+    {
+        "connectable": False,
+        "domain": "xiaomi_ble",
+        "service_data_uuid": "0000fd50-0000-1000-8000-00805f9b34fb",
     },
     {
         "connectable": False,

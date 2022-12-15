@@ -64,35 +64,12 @@
                 "description": "Seu backup tem um endere\u00e7o IEEE diferente do seu r\u00e1dio. Para que sua rede funcione corretamente, o endere\u00e7o IEEE do seu r\u00e1dio tamb\u00e9m deve ser alterado. \n\n Esta \u00e9 uma opera\u00e7\u00e3o permanente.",
                 "title": "Sobrescrever o endere\u00e7o IEEE do r\u00e1dio"
             },
-            "pick_radio": {
-                "data": {
-                    "radio_type": "Tipo de hub zigbee"
-                },
-                "description": "Escolha o tipo de seu hub Zigbee",
-                "title": "Tipo de hub zigbee"
-            },
-            "port_config": {
-                "data": {
-                    "baudrate": "velocidade da porta",
-                    "flow_control": "controle de fluxo de dados",
-                    "path": "Caminho do dispositivo serial"
-                },
-                "description": "Digite configura\u00e7\u00f5es espec\u00edficas da porta",
-                "title": "Configura\u00e7\u00f5es"
-            },
             "upload_manual_backup": {
                 "data": {
                     "uploaded_backup_file": "Carregar um arquivo"
                 },
                 "description": "Restaure suas configura\u00e7\u00f5es de rede de um arquivo JSON de backup carregado. Voc\u00ea pode baixar um de uma instala\u00e7\u00e3o ZHA diferente em **Network Settings**, ou usar um arquivo Zigbee2MQTT `coordinator_backup.json`.",
                 "title": "Carregar um backup manualmente"
-            },
-            "user": {
-                "data": {
-                    "path": "Caminho do dispositivo serial"
-                },
-                "description": "Selecione a porta serial para o hub Zigbee",
-                "title": "ZHA"
             }
         }
     },

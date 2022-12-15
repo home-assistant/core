@@ -2140,12 +2140,12 @@ async def test_recursive_automation_starting_script(
         hass.bus.async_listen("automation_triggered", async_automation_triggered)
 
         hass.bus.async_fire("trigger_automation")
-        await asyncio.wait_for(script_done_event.wait(), 1)
+        await asyncio.wait_for(script_done_event.wait(), 10)
 
         # Trigger 1st stage script shutdown
         hass.state = CoreState.stopping
         hass.bus.async_fire("homeassistant_stop")
-        await asyncio.wait_for(stop_scripts_at_shutdown_called.wait(), 1)
+        await asyncio.wait_for(stop_scripts_at_shutdown_called.wait(), 10)
 
         # Trigger 2nd stage script shutdown
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))

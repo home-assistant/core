@@ -97,10 +97,7 @@ def _merge_resources(
     # Build response
     resources: dict[str, dict[str, Any]] = {}
     for component in components:
-        if "." not in component:
-            domain = component
-        else:
-            domain = component.split(".", 1)[0]
+        domain = component.partition(".")[0]
 
         domain_resources = resources.setdefault(domain, {})
 
@@ -148,7 +145,7 @@ async def async_get_component_strings(
     hass: HomeAssistant, language: str, components: set[str]
 ) -> dict[str, Any]:
     """Load translations."""
-    domains = list({loaded.split(".")[-1] for loaded in components})
+    domains = list({loaded.rpartition(".")[-1] for loaded in components})
 
     integrations: dict[str, Integration] = {}
     ints_or_excs = await async_get_integrations(hass, domains)
