@@ -117,7 +117,7 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
         """Set new preset mode."""
 
         if preset_mode == PRESET_EXTERNAL:
-            command = "setSchedulingType"
+            command = OverkizCommand.SET_SCHEDULING_TYPE
         elif preset_mode in [PRESET_AUTO, PRESET_PROG]:
             command = OverkizCommand.SET_OPERATING_MODE
         else:
