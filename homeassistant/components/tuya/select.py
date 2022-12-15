@@ -18,6 +18,17 @@ from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
 # default instructions set of each category end up being a select.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
+    # Water Valve
+    # https://developer.tuya.com/en/docs/iot/fggq?id=a7sghmms
+    "ggq": (
+        SelectEntityDescription(
+            key=DPCode.SWITCH,
+            name="Switch Mode",
+            icon="mdi:water-pump",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="switch_mode",
+        )
+    ),
     # Multi-functional Sensor
     # https://developer.tuya.com/en/docs/iot/categorydgnbj?id=Kaiuz3yorvzg3
     "dgnbj": (
@@ -394,20 +405,35 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
     ) -> None:
         """Init Tuya sensor."""
         super().__init__(device, device_manager)
+
+        description_key = description.key
         self.entity_description = description
-        self._attr_unique_id = f"{super().unique_id}{description.key}"
+        self._attr_unique_id = f"{super().unique_id}{description_key}"
 
         self._attr_options: list[str] = []
+        self._dptype: DPCode | None = None
+
         if enum_type := self.find_dpcode(
-            description.key, dptype=DPType.ENUM, prefer_function=True
+            description_key, dptype=DPType.ENUM, prefer_function=True
         ):
             self._attr_options = enum_type.range
+            self._dptype = DPType.ENUM
+
+        elif self.find_dpcode(
+            description_key, dptype=DPType.BOOLEAN, prefer_function=True
+        ):
+            self._attr_options = [self._toValue(True), self._toValue(False)]
+            self._dptype = DPType.BOOLEAN
 
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         # Raw value
         value = self.device.status.get(self.entity_description.key)
+
+        if value is not None and self._dptype == DPCode.BOOLEAN:
+            value = self._toValue(value)
+
         if value is None or value not in self._attr_options:
             return None
 
@@ -415,11 +441,23 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
 
     def select_option(self, option: str) -> None:
         """Change the selected option."""
+        key = self.entity_description.key
+        value = option
+
+        if self._dptype == DPCode.BOOLEAN:
+            value = option == self._toValue(True)
+
         self._send_command(
             [
                 {
-                    "code": self.entity_description.key,
-                    "value": option,
+                    "code": key,
+                    "value": value,
                 }
             ]
         )
+
+    @staticmethod
+    def _toValue(value) -> str:
+        result = str(value).lower()
+
+        return result

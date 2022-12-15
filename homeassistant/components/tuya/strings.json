@@ -187,6 +187,12 @@
           "4": "Mood 4",
           "5": "Mood 5"
         }
+      },
+      "switch_mode": {
+        "state": {
+          "true": "Capacity",
+          "false": "Duration"
+        }
       }
     },
     "sensor": {
