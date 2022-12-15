@@ -120,7 +120,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             user_input = {}
         else:
-            return self.async_create_entry(title="", data={}, options=user_input)
+            return self.async_create_entry(title=DOMAIN, data=user_input)
 
         return self.async_show_form(
             step_id="user",
