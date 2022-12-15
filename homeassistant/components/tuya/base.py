@@ -161,6 +161,16 @@ class TuyaEntity(Entity):
         dpcodes: str | DPCode | tuple[DPCode, ...] | None,
         *,
         prefer_function: bool = False,
+        dptype: Literal[DPType.BOOLEAN],
+    ) -> None:
+        ...
+
+    @overload
+    def find_dpcode(
+        self,
+        dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+        *,
+        prefer_function: bool = False,
         dptype: Literal[DPType.ENUM],
     ) -> EnumTypeData | None:
         ...

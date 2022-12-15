@@ -27,7 +27,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             icon="mdi:water-pump",
             entity_category=EntityCategory.CONFIG,
             translation_key="irrigation_mode",
-        )
+        ),
     ),
     # Multi-functional Sensor
     # https://developer.tuya.com/en/docs/iot/categorydgnbj?id=Kaiuz3yorvzg3
@@ -422,7 +422,7 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
         elif self.find_dpcode(
             description_key, dptype=DPType.BOOLEAN, prefer_function=True
         ):
-            self._attr_options = [self._toValue(True), self._toValue(False)]
+            self._attr_options = [self.to_value(True), self.to_value(False)]
             self._dptype = DPType.BOOLEAN
 
     @property
@@ -431,8 +431,8 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
         # Raw value
         value = self.device.status.get(self.entity_description.key)
 
-        if value is not None and self._dptype == DPCode.BOOLEAN:
-            value = self._toValue(value)
+        if value is not None and self._dptype == DPType.BOOLEAN:
+            value = self.to_value(value)
 
         if value is None or value not in self._attr_options:
             return None
@@ -444,8 +444,8 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
         key = self.entity_description.key
         value = option
 
-        if self._dptype == DPCode.BOOLEAN:
-            value = option == self._toValue(True)
+        if self._dptype == DPType.BOOLEAN:
+            value = option == self.to_value(True)
 
         self._send_command(
             [
@@ -457,7 +457,8 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
         )
 
     @staticmethod
-    def _toValue(value) -> str:
+    def to_value(value) -> str:
+        """Return value as lower case string."""
         result = str(value).lower()
 
         return result
