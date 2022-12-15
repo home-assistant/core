@@ -136,6 +136,7 @@ class FlowManager(abc.ABC):
     ) -> None:
         """Initialize the flow manager."""
         self.hass = hass
+        self._preview: set[type[FlowHandler]] = set()
         self._progress: dict[str, FlowHandler] = {}
         self._handler_progress_index: dict[str, set[str]] = {}
         self._init_data_process_index: dict[type, set[str]] = {}
@@ -396,6 +397,11 @@ class FlowManager(abc.ABC):
                 flow.flow_id, flow.handler, err.reason, err.description_placeholders
             )
 
+        # Setup the flow handler's preview if needed
+        if result.get("preview") is not None and flow.__class__ not in self._preview:
+            self._preview.add(flow.__class__)
+            flow.async_setup_preview(self.hass)
+
         if not isinstance(result["type"], FlowResultType):
             result["type"] = FlowResultType(result["type"])  # type: ignore[unreachable]
             report(
@@ -508,11 +514,6 @@ class FlowHandler:
         preview: str | None = None,
     ) -> FlowResult:
         """Return the definition of a form to gather user input."""
-
-        # Setup the flow handler's preview if needed
-        if preview is not None:
-            self.async_setup_preview(self.hass)
-
         return FlowResult(
             type=FlowResultType.FORM,
             flow_id=self.flow_id,

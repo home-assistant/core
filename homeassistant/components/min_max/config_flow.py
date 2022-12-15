@@ -83,11 +83,7 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     @staticmethod
     def async_setup_preview(hass: HomeAssistant) -> None:
         """Set up preview WS API."""
-        data_preview = f"{DOMAIN}_preview"
-        if data_preview in hass.data:
-            return
         websocket_api.async_register_command(hass, ws_preview_min_max)
-        hass.data[data_preview] = None
 
 
 @callback
