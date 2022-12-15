@@ -65,8 +65,7 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
             # or allow all if no mode definition found
             if (
                 not state_mode_definition
-                or state_mode_definition
-                and state_mode_definition.values
+                or state_mode_definition.values
                 and param in state_mode_definition.values
             ):
                 self.operation_mode_to_overkiz[mode] = param
