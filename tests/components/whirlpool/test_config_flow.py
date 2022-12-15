@@ -83,7 +83,6 @@ async def test_form_cannot_connect(hass, region):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             CONFIG_INPUT | {"region": region[0]},
-
         )
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
@@ -146,7 +145,7 @@ async def test_form_already_configured(hass, region):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             CONFIG_INPUT | {"region": region[0]},
-    )
+        )
         await hass.async_block_till_done()
 
     assert result2["type"] == "abort"
