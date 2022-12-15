@@ -1070,7 +1070,6 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             self._type = DPType.ENUM
         else:
             self._type = self.get_dptype(DPCode(description.key))
-            
 
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.
