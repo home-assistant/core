@@ -9,7 +9,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import BaseWithingsSensor, async_create_entities
+from .common import (
+    BaseWithingsSensor,
+    WithingsBinarySensorEntityDescription,
+    async_create_entities,
+)
 
 
 async def async_setup_entry(
@@ -27,6 +31,8 @@ async def async_setup_entry(
 
 class WithingsHealthBinarySensor(BaseWithingsSensor, BinarySensorEntity):
     """Implementation of a Withings sensor."""
+
+    entity_description: WithingsBinarySensorEntityDescription
 
     @property
     def is_on(self) -> bool | None:

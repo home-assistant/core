@@ -10,7 +10,7 @@ from enum import Enum, IntEnum
 from http import HTTPStatus
 import logging
 import re
-from typing import Any, Union
+from typing import Any, Generic, TypeVar, Union
 
 from aiohttp.web import Response
 import requests
@@ -92,22 +92,34 @@ class UpdateType(Enum):
 
 
 @dataclass
-class WithingsAttribute:
-    """Immutable class for describing withings sensor data."""
+class WithingsEntityDescriptionMixin:
+    """Immutable class for describing withings data."""
 
     measurement: Measurement
     measure_type: MeasureType | NotifyAppli | GetSleepSummaryField
-    friendly_name: str
     platform: str
     update_type: UpdateType
-    entity_description: EntityDescription
+
+
+@dataclass
+class WithingsSensorEntityDescription(
+    SensorEntityDescription, WithingsEntityDescriptionMixin
+):
+    """Immutable class for describing withings sensor data."""
+
+
+@dataclass
+class WithingsBinarySensorEntityDescription(
+    BinarySensorEntityDescription, WithingsEntityDescriptionMixin
+):
+    """Immutable class for describing withings binary sensor data."""
 
 
 @dataclass
 class WithingsData:
     """Represents value and meta-data from the withings service."""
 
-    attribute: WithingsAttribute
+    attribute: EntityDescription
     value: Any
 
 
@@ -128,470 +140,405 @@ class StateData:
     state: Any
 
 
-WITHINGS_ATTRIBUTES = [
-    WithingsAttribute(
-        Measurement.WEIGHT_KG,
-        MeasureType.WEIGHT,
-        "Weight",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Weight",
-            native_unit_of_measurement=UnitOfMass.KILOGRAMS,
-            device_class=SensorDeviceClass.WEIGHT,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+WITHINGS_ATTRIBUTES: list[
+    WithingsSensorEntityDescription | WithingsBinarySensorEntityDescription
+] = [
+    WithingsSensorEntityDescription(
+        measurement=Measurement.WEIGHT_KG,
+        measure_type=MeasureType.WEIGHT,
+        name="Weight",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Weight",
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.FAT_MASS_KG,
-        MeasureType.FAT_MASS_WEIGHT,
-        "Fat Mass",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Fat Mass",
-            native_unit_of_measurement=UnitOfMass.KILOGRAMS,
-            device_class=SensorDeviceClass.WEIGHT,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.FAT_MASS_KG,
+        measure_type=MeasureType.FAT_MASS_WEIGHT,
+        name="Fat Mass",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Fat Mass",
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.FAT_FREE_MASS_KG,
-        MeasureType.FAT_FREE_MASS,
-        "Fat Free Mass",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Fat Free Mass",
-            native_unit_of_measurement=UnitOfMass.KILOGRAMS,
-            device_class=SensorDeviceClass.WEIGHT,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.FAT_FREE_MASS_KG,
+        measure_type=MeasureType.FAT_FREE_MASS,
+        name="Fat Free Mass",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Fat Free Mass",
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.MUSCLE_MASS_KG,
-        MeasureType.MUSCLE_MASS,
-        "Muscle Mass",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Muscle Mass",
-            native_unit_of_measurement=UnitOfMass.KILOGRAMS,
-            device_class=SensorDeviceClass.WEIGHT,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.MUSCLE_MASS_KG,
+        measure_type=MeasureType.MUSCLE_MASS,
+        name="Muscle Mass",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Muscle Mass",
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.BONE_MASS_KG,
-        MeasureType.BONE_MASS,
-        "Bone Mass",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Bone Mass",
-            native_unit_of_measurement=UnitOfMass.KILOGRAMS,
-            device_class=SensorDeviceClass.WEIGHT,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.BONE_MASS_KG,
+        measure_type=MeasureType.BONE_MASS,
+        name="Bone Mass",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Bone Mass",
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.HEIGHT_M,
-        MeasureType.HEIGHT,
-        "Height",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Height",
-            native_unit_of_measurement=UnitOfLength.METERS,
-            device_class=SensorDeviceClass.DISTANCE,
-            entity_registry_enabled_default=False,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.HEIGHT_M,
+        measure_type=MeasureType.HEIGHT,
+        name="Height",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Height",
+        native_unit_of_measurement=UnitOfLength.METERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.TEMP_C,
-        MeasureType.TEMPERATURE,
-        "Temperature",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Temperature",
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.TEMP_C,
+        measure_type=MeasureType.TEMPERATURE,
+        name="Temperature",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.BODY_TEMP_C,
-        MeasureType.BODY_TEMPERATURE,
-        "Body Temperature",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Body Temperature",
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.BODY_TEMP_C,
+        measure_type=MeasureType.BODY_TEMPERATURE,
+        name="Body Temperature",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Body Temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.SKIN_TEMP_C,
-        MeasureType.SKIN_TEMPERATURE,
-        "Skin Temperature",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Skin Temperature",
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.SKIN_TEMP_C,
+        measure_type=MeasureType.SKIN_TEMPERATURE,
+        name="Skin Temperature",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Skin Temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.FAT_RATIO_PCT,
-        MeasureType.FAT_RATIO,
-        "Fat Ratio",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Fat Ratio",
-            native_unit_of_measurement=PERCENTAGE,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.FAT_RATIO_PCT,
+        measure_type=MeasureType.FAT_RATIO,
+        name="Fat Ratio",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Fat Ratio",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.DIASTOLIC_MMHG,
-        MeasureType.DIASTOLIC_BLOOD_PRESSURE,
-        "Diastolic Blood Pressure",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Diastolic Blood Pressure",
-            native_unit_of_measurement=const.UOM_MMHG,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.DIASTOLIC_MMHG,
+        measure_type=MeasureType.DIASTOLIC_BLOOD_PRESSURE,
+        name="Diastolic Blood Pressure",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Diastolic Blood Pressure",
+        native_unit_of_measurement=const.UOM_MMHG,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.SYSTOLIC_MMGH,
-        MeasureType.SYSTOLIC_BLOOD_PRESSURE,
-        "Systolic Blood Pressure",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Systolic Blood Pressure",
-            native_unit_of_measurement=const.UOM_MMHG,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.SYSTOLIC_MMGH,
+        measure_type=MeasureType.SYSTOLIC_BLOOD_PRESSURE,
+        name="Systolic Blood Pressure",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Systolic Blood Pressure",
+        native_unit_of_measurement=const.UOM_MMHG,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.HEART_PULSE_BPM,
-        MeasureType.HEART_RATE,
-        "Heart Pulse",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Heart Pulse",
-            native_unit_of_measurement=const.UOM_BEATS_PER_MINUTE,
-            icon="mdi:heart-pulse",
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.HEART_PULSE_BPM,
+        measure_type=MeasureType.HEART_RATE,
+        name="Heart Pulse",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Heart Pulse",
+        native_unit_of_measurement=const.UOM_BEATS_PER_MINUTE,
+        icon="mdi:heart-pulse",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.SPO2_PCT,
-        MeasureType.SP02,
-        "SP02",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="SP02",
-            native_unit_of_measurement=PERCENTAGE,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.SPO2_PCT,
+        measure_type=MeasureType.SP02,
+        name="SP02",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="SP02",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.HYDRATION,
-        MeasureType.HYDRATION,
-        "Hydration",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Hydration",
-            native_unit_of_measurement=UnitOfMass.KILOGRAMS,
-            device_class=SensorDeviceClass.WEIGHT,
-            icon="mdi:water",
-            entity_registry_enabled_default=False,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.HYDRATION,
+        measure_type=MeasureType.HYDRATION,
+        name="Hydration",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Hydration",
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        device_class=SensorDeviceClass.WEIGHT,
+        icon="mdi:water",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.PWV,
-        MeasureType.PULSE_WAVE_VELOCITY,
-        "Pulse Wave Velocity",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Pulse Wave Velocity",
-            native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
-            device_class=SensorDeviceClass.SPEED,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.PWV,
+        measure_type=MeasureType.PULSE_WAVE_VELOCITY,
+        name="Pulse Wave Velocity",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Pulse Wave Velocity",
+        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+        device_class=SensorDeviceClass.SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.SLEEP_BREATHING_DISTURBANCES_INTENSITY,
-        GetSleepSummaryField.BREATHING_DISTURBANCES_INTENSITY,
-        "Breathing disturbances intensity",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Breathing disturbances intensity",
-            entity_registry_enabled_default=False,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.SLEEP_BREATHING_DISTURBANCES_INTENSITY,
+        measure_type=GetSleepSummaryField.BREATHING_DISTURBANCES_INTENSITY,
+        name="Breathing disturbances intensity",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Breathing disturbances intensity",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.SLEEP_DEEP_DURATION_SECONDS,
-        GetSleepSummaryField.DEEP_SLEEP_DURATION,
-        "Deep sleep",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Deep sleep",
-            native_unit_of_measurement=UnitOfTime.SECONDS,
-            icon="mdi:sleep",
-            device_class=SensorDeviceClass.DURATION,
-            entity_registry_enabled_default=False,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.SLEEP_DEEP_DURATION_SECONDS,
+        measure_type=GetSleepSummaryField.DEEP_SLEEP_DURATION,
+        name="Deep sleep",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Deep sleep",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        icon="mdi:sleep",
+        device_class=SensorDeviceClass.DURATION,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.SLEEP_TOSLEEP_DURATION_SECONDS,
-        GetSleepSummaryField.DURATION_TO_SLEEP,
-        "Time to sleep",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Time to sleep",
-            native_unit_of_measurement=UnitOfTime.SECONDS,
-            icon="mdi:sleep",
-            device_class=SensorDeviceClass.DURATION,
-            entity_registry_enabled_default=False,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.SLEEP_TOSLEEP_DURATION_SECONDS,
+        measure_type=GetSleepSummaryField.DURATION_TO_SLEEP,
+        name="Time to sleep",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Time to sleep",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        icon="mdi:sleep",
+        device_class=SensorDeviceClass.DURATION,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.SLEEP_TOWAKEUP_DURATION_SECONDS,
-        GetSleepSummaryField.DURATION_TO_WAKEUP,
-        "Time to wakeup",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Time to wakeup",
-            native_unit_of_measurement=UnitOfTime.SECONDS,
-            icon="mdi:sleep-off",
-            device_class=SensorDeviceClass.DURATION,
-            entity_registry_enabled_default=False,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.SLEEP_TOWAKEUP_DURATION_SECONDS,
+        measure_type=GetSleepSummaryField.DURATION_TO_WAKEUP,
+        name="Time to wakeup",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Time to wakeup",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        icon="mdi:sleep-off",
+        device_class=SensorDeviceClass.DURATION,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.SLEEP_HEART_RATE_AVERAGE,
-        GetSleepSummaryField.HR_AVERAGE,
-        "Average heart rate",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Average heart rate",
-            native_unit_of_measurement=const.UOM_BEATS_PER_MINUTE,
-            icon="mdi:heart-pulse",
-            entity_registry_enabled_default=False,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.SLEEP_HEART_RATE_AVERAGE,
+        measure_type=GetSleepSummaryField.HR_AVERAGE,
+        name="Average heart rate",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Average heart rate",
+        native_unit_of_measurement=const.UOM_BEATS_PER_MINUTE,
+        icon="mdi:heart-pulse",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.SLEEP_HEART_RATE_MAX,
-        GetSleepSummaryField.HR_MAX,
-        "Maximum heart rate",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Maximum heart rate",
-            native_unit_of_measurement=const.UOM_BEATS_PER_MINUTE,
-            icon="mdi:heart-pulse",
-            entity_registry_enabled_default=False,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.SLEEP_HEART_RATE_MAX,
+        measure_type=GetSleepSummaryField.HR_MAX,
+        name="Maximum heart rate",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Maximum heart rate",
+        native_unit_of_measurement=const.UOM_BEATS_PER_MINUTE,
+        icon="mdi:heart-pulse",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.SLEEP_HEART_RATE_MIN,
-        GetSleepSummaryField.HR_MIN,
-        "Minimum heart rate",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Minimum heart rate",
-            native_unit_of_measurement=const.UOM_BEATS_PER_MINUTE,
-            icon="mdi:heart-pulse",
-            entity_registry_enabled_default=False,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.SLEEP_HEART_RATE_MIN,
+        measure_type=GetSleepSummaryField.HR_MIN,
+        name="Minimum heart rate",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Minimum heart rate",
+        native_unit_of_measurement=const.UOM_BEATS_PER_MINUTE,
+        icon="mdi:heart-pulse",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.SLEEP_LIGHT_DURATION_SECONDS,
-        GetSleepSummaryField.LIGHT_SLEEP_DURATION,
-        "Light sleep",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Light sleep",
-            native_unit_of_measurement=UnitOfTime.SECONDS,
-            icon="mdi:sleep",
-            device_class=SensorDeviceClass.DURATION,
-            entity_registry_enabled_default=False,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.SLEEP_LIGHT_DURATION_SECONDS,
+        measure_type=GetSleepSummaryField.LIGHT_SLEEP_DURATION,
+        name="Light sleep",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Light sleep",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        icon="mdi:sleep",
+        device_class=SensorDeviceClass.DURATION,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.SLEEP_REM_DURATION_SECONDS,
-        GetSleepSummaryField.REM_SLEEP_DURATION,
-        "REM sleep",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="REM sleep",
-            native_unit_of_measurement=UnitOfTime.SECONDS,
-            icon="mdi:sleep",
-            device_class=SensorDeviceClass.DURATION,
-            entity_registry_enabled_default=False,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.SLEEP_REM_DURATION_SECONDS,
+        measure_type=GetSleepSummaryField.REM_SLEEP_DURATION,
+        name="REM sleep",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="REM sleep",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        icon="mdi:sleep",
+        device_class=SensorDeviceClass.DURATION,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.SLEEP_RESPIRATORY_RATE_AVERAGE,
-        GetSleepSummaryField.RR_AVERAGE,
-        "Average respiratory rate",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Average respiratory rate",
-            native_unit_of_measurement=const.UOM_BREATHS_PER_MINUTE,
-            entity_registry_enabled_default=False,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.SLEEP_RESPIRATORY_RATE_AVERAGE,
+        measure_type=GetSleepSummaryField.RR_AVERAGE,
+        name="Average respiratory rate",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Average respiratory rate",
+        native_unit_of_measurement=const.UOM_BREATHS_PER_MINUTE,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.SLEEP_RESPIRATORY_RATE_MAX,
-        GetSleepSummaryField.RR_MAX,
-        "Maximum respiratory rate",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Maximum respiratory rate",
-            native_unit_of_measurement=const.UOM_BREATHS_PER_MINUTE,
-            entity_registry_enabled_default=False,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.SLEEP_RESPIRATORY_RATE_MAX,
+        measure_type=GetSleepSummaryField.RR_MAX,
+        name="Maximum respiratory rate",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Maximum respiratory rate",
+        native_unit_of_measurement=const.UOM_BREATHS_PER_MINUTE,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.SLEEP_RESPIRATORY_RATE_MIN,
-        GetSleepSummaryField.RR_MIN,
-        "Minimum respiratory rate",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Minimum respiratory rate",
-            native_unit_of_measurement=const.UOM_BREATHS_PER_MINUTE,
-            entity_registry_enabled_default=False,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.SLEEP_RESPIRATORY_RATE_MIN,
+        measure_type=GetSleepSummaryField.RR_MIN,
+        name="Minimum respiratory rate",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Minimum respiratory rate",
+        native_unit_of_measurement=const.UOM_BREATHS_PER_MINUTE,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.SLEEP_SCORE,
-        GetSleepSummaryField.SLEEP_SCORE,
-        "Sleep score",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Sleep score",
-            native_unit_of_measurement=const.SCORE_POINTS,
-            icon="mdi:medal",
-            entity_registry_enabled_default=False,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.SLEEP_SCORE,
+        measure_type=GetSleepSummaryField.SLEEP_SCORE,
+        name="Sleep score",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Sleep score",
+        native_unit_of_measurement=const.SCORE_POINTS,
+        icon="mdi:medal",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.SLEEP_SNORING,
-        GetSleepSummaryField.SNORING,
-        "Snoring",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Snoring",
-            entity_registry_enabled_default=False,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.SLEEP_SNORING,
+        measure_type=GetSleepSummaryField.SNORING,
+        name="Snoring",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Snoring",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.SLEEP_SNORING_EPISODE_COUNT,
-        GetSleepSummaryField.SNORING_EPISODE_COUNT,
-        "Snoring episode count",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Snoring episode count",
-            entity_registry_enabled_default=False,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.SLEEP_SNORING_EPISODE_COUNT,
+        measure_type=GetSleepSummaryField.SNORING_EPISODE_COUNT,
+        name="Snoring episode count",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Snoring episode count",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.SLEEP_WAKEUP_COUNT,
-        GetSleepSummaryField.WAKEUP_COUNT,
-        "Wakeup count",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Wakeup count",
-            native_unit_of_measurement=const.UOM_FREQUENCY,
-            icon="mdi:sleep-off",
-            entity_registry_enabled_default=False,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.SLEEP_WAKEUP_COUNT,
+        measure_type=GetSleepSummaryField.WAKEUP_COUNT,
+        name="Wakeup count",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Wakeup count",
+        native_unit_of_measurement=const.UOM_FREQUENCY,
+        icon="mdi:sleep-off",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    WithingsAttribute(
-        Measurement.SLEEP_WAKEUP_DURATION_SECONDS,
-        GetSleepSummaryField.WAKEUP_DURATION,
-        "Wakeup time",
-        SENSOR_DOMAIN,
-        UpdateType.POLL,
-        entity_description=SensorEntityDescription(
-            key="Wakeup time",
-            native_unit_of_measurement=UnitOfTime.SECONDS,
-            icon="mdi:sleep-off",
-            device_class=SensorDeviceClass.DURATION,
-            entity_registry_enabled_default=False,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    WithingsSensorEntityDescription(
+        measurement=Measurement.SLEEP_WAKEUP_DURATION_SECONDS,
+        measure_type=GetSleepSummaryField.WAKEUP_DURATION,
+        name="Wakeup time",
+        platform=SENSOR_DOMAIN,
+        update_type=UpdateType.POLL,
+        key="Wakeup time",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        icon="mdi:sleep-off",
+        device_class=SensorDeviceClass.DURATION,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     # Webhook measurements.
-    WithingsAttribute(
-        Measurement.IN_BED,
-        NotifyAppli.BED_IN,
-        "In bed",
-        BINARY_SENSOR_DOMAIN,
-        UpdateType.WEBHOOK,
-        entity_description=BinarySensorEntityDescription(
-            key="In bed",
-            icon="mdi:bed",
-            device_class=BinarySensorDeviceClass.OCCUPANCY,
-        ),
+    WithingsBinarySensorEntityDescription(
+        measurement=Measurement.IN_BED,
+        measure_type=NotifyAppli.BED_IN,
+        name="In bed",
+        platform=BINARY_SENSOR_DOMAIN,
+        update_type=UpdateType.WEBHOOK,
+        key="In bed",
+        icon="mdi:bed",
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
     ),
 ]
 
-WITHINGS_MEASUREMENTS_MAP: dict[Measurement, WithingsAttribute] = {
-    attr.measurement: attr for attr in WITHINGS_ATTRIBUTES
-}
+WITHINGS_MEASUREMENTS_MAP: dict[
+    Measurement, WithingsSensorEntityDescription | WithingsBinarySensorEntityDescription
+] = {attr.measurement: attr for attr in WITHINGS_ATTRIBUTES}
 
 WITHINGS_MEASURE_TYPE_MAP: dict[
-    NotifyAppli | GetSleepSummaryField | MeasureType, WithingsAttribute
+    NotifyAppli | GetSleepSummaryField | MeasureType,
+    WithingsSensorEntityDescription | WithingsBinarySensorEntityDescription,
 ] = {attr.measure_type: attr for attr in WITHINGS_ATTRIBUTES}
 
 
@@ -1007,13 +954,18 @@ class DataManager:
             )
 
 
-def get_attribute_unique_id(attribute: WithingsAttribute, user_id: int) -> str:
+def get_attribute_unique_id(
+    attribute: WithingsSensorEntityDescription | WithingsBinarySensorEntityDescription,
+    user_id: int,
+) -> str:
     """Get a entity unique id for a user's attribute."""
     return f"withings_{user_id}_{attribute.measurement.value}"
 
 
 async def async_get_entity_id(
-    hass: HomeAssistant, attribute: WithingsAttribute, user_id: int
+    hass: HomeAssistant,
+    attribute: WithingsSensorEntityDescription | WithingsBinarySensorEntityDescription,
+    user_id: int,
 ) -> str | None:
     """Get an entity id for a user's attribute."""
     entity_registry = er.async_get(hass)
@@ -1030,20 +982,31 @@ async def async_get_entity_id(
     return entity_id
 
 
-class BaseWithingsSensor(Entity):
+_EntityDescriptionT = TypeVar(
+    "_EntityDescriptionT",
+    WithingsSensorEntityDescription,
+    WithingsBinarySensorEntityDescription,
+)
+
+
+class BaseWithingsSensor(Entity, Generic[_EntityDescriptionT]):
     """Base class for withings sensors."""
 
     _attr_should_poll = False
+    entity_description: _EntityDescriptionT
 
-    def __init__(self, data_manager: DataManager, attribute: WithingsAttribute) -> None:
+    def __init__(
+        self,
+        data_manager: DataManager,
+        description: _EntityDescriptionT,
+    ) -> None:
         """Initialize the Withings sensor."""
-        self.entity_description = attribute.entity_description
+        self.entity_description = description
         self._data_manager = data_manager
-        self._attribute = attribute
         self._profile = self._data_manager.profile
         self._user_id = self._data_manager.user_id
-        self._name = f"Withings {self._attribute.measurement.value} {self._profile}"
-        self._unique_id = get_attribute_unique_id(self._attribute, self._user_id)
+        self._name = f"Withings {description.measurement.value} {self._profile}"
+        self._unique_id = get_attribute_unique_id(description, self._user_id)
         self._state_data: Any | None = None
 
     @property
@@ -1054,12 +1017,12 @@ class BaseWithingsSensor(Entity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        if self._attribute.update_type == UpdateType.POLL:
+        if self.entity_description.update_type == UpdateType.POLL:
             return self._data_manager.poll_data_update_coordinator.last_update_success
 
-        if self._attribute.update_type == UpdateType.WEBHOOK:
+        if self.entity_description.update_type == UpdateType.WEBHOOK:
             return self._data_manager.webhook_config.enabled and (
-                self._attribute.measurement
+                self.entity_description.measurement
                 in self._data_manager.webhook_update_coordinator.data
             )
 
@@ -1084,12 +1047,12 @@ class BaseWithingsSensor(Entity):
 
     def _update_state_data(self, data: MeasurementData) -> None:
         """Update the state data."""
-        self._state_data = data.get(self._attribute.measurement)
+        self._state_data = data.get(self.entity_description.measurement)
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Register update dispatcher."""
-        if self._attribute.update_type == UpdateType.POLL:
+        if self.entity_description.update_type == UpdateType.POLL:
             self.async_on_remove(
                 self._data_manager.poll_data_update_coordinator.async_add_listener(
                     self._on_poll_data_updated
@@ -1097,7 +1060,7 @@ class BaseWithingsSensor(Entity):
             )
             self._on_poll_data_updated()
 
-        elif self._attribute.update_type == UpdateType.WEBHOOK:
+        elif self.entity_description.update_type == UpdateType.WEBHOOK:
             self.async_on_remove(
                 self._data_manager.webhook_update_coordinator.async_add_listener(
                     self._on_webhook_data_updated
@@ -1174,7 +1137,10 @@ def async_remove_data_manager(hass: HomeAssistant, config_entry: ConfigEntry) ->
 async def async_create_entities(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    create_func: Callable[[DataManager, WithingsAttribute], Entity],
+    create_func: Callable[
+        [DataManager, EntityDescription],
+        Entity,
+    ],
     platform: str,
 ) -> list[Entity]:
     """Create withings entities from config entry."""
@@ -1186,7 +1152,9 @@ async def async_create_entities(
     ]
 
 
-def get_platform_attributes(platform: str) -> tuple[WithingsAttribute, ...]:
+def get_platform_attributes(
+    platform: str,
+) -> tuple[EntityDescription, ...]:
     """Get withings attributes used for a specific platform."""
     return tuple(
         attribute for attribute in WITHINGS_ATTRIBUTES if attribute.platform == platform

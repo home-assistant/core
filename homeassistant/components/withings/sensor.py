@@ -6,7 +6,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import BaseWithingsSensor, async_create_entities
+from .common import (
+    BaseWithingsSensor,
+    WithingsSensorEntityDescription,
+    async_create_entities,
+)
 
 
 async def async_setup_entry(
@@ -27,6 +31,8 @@ async def async_setup_entry(
 
 class WithingsHealthSensor(BaseWithingsSensor, SensorEntity):
     """Implementation of a Withings sensor."""
+
+    entity_description: WithingsSensorEntityDescription
 
     @property
     def native_value(self) -> None | str | int | float:
