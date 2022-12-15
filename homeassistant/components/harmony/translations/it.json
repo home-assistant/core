@@ -10,8 +10,8 @@
         "flow_title": "{name}",
         "step": {
             "link": {
-                "description": "Vuoi impostare {name} ({host})?",
-                "title": "Impostazione di Logitech Harmony Hub"
+                "description": "Vuoi configurare {name} ({host})?",
+                "title": "Configura Logitech Harmony Hub"
             },
             "user": {
                 "data": {
