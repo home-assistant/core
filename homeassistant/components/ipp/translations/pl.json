@@ -20,7 +20,7 @@
                     "base_path": "\u015acie\u017cka wzgl\u0119dna do drukarki",
                     "host": "Nazwa hosta lub adres IP",
                     "port": "Port",
-                    "ssl": "U\u017cywa certyfikatu SSL",
+                    "ssl": "Certyfikat SSL",
                     "verify_ssl": "Weryfikacja certyfikatu SSL"
                 },
                 "description": "Skonfiguruj drukark\u0119 za pomoc\u0105 protoko\u0142u IPP (Internet Printing Protocol), aby zintegrowa\u0107 j\u0105 z Home Assistantem.",

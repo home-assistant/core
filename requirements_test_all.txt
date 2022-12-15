@@ -36,7 +36,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.23.1
+PySwitchbot==0.23.2
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -1052,7 +1052,7 @@ pyairnow==1.1.0
 
 # homeassistant.components.airvisual
 # homeassistant.components.airvisual_pro
-pyairvisual==2022.12.0
+pyairvisual==2022.12.1
 
 # homeassistant.components.almond
 pyalmond==0.0.2
@@ -1708,7 +1708,7 @@ toonapi==0.2.1
 total_connect_client==2022.10
 
 # homeassistant.components.transmission
-transmissionrpc==0.11
+transmission-rpc==3.4.0
 
 # homeassistant.components.twinkly
 ttls==1.5.1
@@ -1824,13 +1824,13 @@ xmltodict==0.13.0
 yalesmartalarmclient==0.3.9
 
 # homeassistant.components.yalexs_ble
-yalexs-ble==1.11.4
+yalexs-ble==1.12.0
 
 # homeassistant.components.august
 yalexs==1.2.6
 
 # homeassistant.components.august
-yalexs_ble==1.11.4
+yalexs_ble==1.12.0
 
 # homeassistant.components.yeelight
 yeelight==0.7.10

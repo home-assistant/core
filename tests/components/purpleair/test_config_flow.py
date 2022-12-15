@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.purpleair import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 
 
 async def test_duplicate_error(hass, config_entry, setup_purpleair):
@@ -102,3 +102,44 @@ async def test_create_entry_by_coordinates(
     assert result["options"] == {
         "sensor_indices": [123456],
     }
+
+
+@pytest.mark.parametrize(
+    "check_api_key_mock,check_api_key_errors",
+    [
+        (AsyncMock(side_effect=Exception), {"base": "unknown"}),
+        (AsyncMock(side_effect=InvalidApiKeyError), {"base": "invalid_api_key"}),
+        (AsyncMock(side_effect=PurpleAirError), {"base": "unknown"}),
+    ],
+)
+async def test_reauth(
+    hass, api, check_api_key_errors, check_api_key_mock, config_entry, setup_purpleair
+):
+    """Test re-auth (including errors)."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "entry_id": config_entry.entry_id,
+            "unique_id": config_entry.unique_id,
+        },
+        data={"api_key": "abcde12345"},
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    # Test errors that can arise when checking the API key:
+    with patch.object(api, "async_check_api_key", check_api_key_mock):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"api_key": "new_api_key"}
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["errors"] == check_api_key_errors
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"api_key": "new_api_key"},
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert len(hass.config_entries.async_entries()) == 1
