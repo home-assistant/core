@@ -7,7 +7,7 @@ import async_timeout
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import LENGTH_METERS
+from homeassistant.const import UnitOfLength
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -23,7 +23,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 UNIT_MAPPING = {
-    "http://qudt.org/1.1/vocab/unit#Meter": LENGTH_METERS,
+    "http://qudt.org/1.1/vocab/unit#Meter": UnitOfLength.METERS,
 }
 
 

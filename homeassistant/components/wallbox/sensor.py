@@ -15,8 +15,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
-    LENGTH_KILOMETERS,
     PERCENTAGE,
+    UnitOfLength,
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
@@ -86,7 +86,7 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
         icon="mdi:map-marker-distance",
         name="Added Range",
         precision=0,
-        native_unit_of_measurement=LENGTH_KILOMETERS,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
