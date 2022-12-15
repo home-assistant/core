@@ -17,6 +17,7 @@ from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
     PERCENTAGE,
     TIME_MINUTES,
+    TIME_SECONDS,
     UnitOfElectricCurrent,
     UnitOfPower,
 )
@@ -544,6 +545,34 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             entity_category=EntityCategory.DIAGNOSTIC,
             state_class=SensorStateClass.MEASUREMENT,
         ),
+    ),
+    # Smart Water Timer
+    "sfkzq": (
+        TuyaSensorEntityDescription(
+            key=DPCode.WORK_STATE,
+            name="Status",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TIME_USE,
+            name="Total runtime",
+            native_unit_of_measurement=TIME_SECONDS,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            icon="mdi:clock-outline",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.SMART_WEATHER,
+            name="Weather forecast",
+            state_class=SensorStateClass.MEASUREMENT,
+            icon="mdi:weather-partly-cloudy",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.USE_TIME_ONE,
+            name="Last runtime",
+            native_unit_of_measurement=TIME_SECONDS,
+            state_class=SensorStateClass.MEASUREMENT,
+            icon="mdi:timer",
+        ),
+        *BATTERY_SENSORS,
     ),
     # Fingerbot
     "szjqr": BATTERY_SENSORS,

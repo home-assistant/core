@@ -48,6 +48,13 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Smart Water Timer
+    "sfkzq": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name="Switch",
+        ),
+    ),
     # Pet Water Feeder
     # https://developer.tuya.com/en/docs/iot/f?id=K9gf46aewxem5
     "cwysj": (

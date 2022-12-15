@@ -156,6 +156,14 @@
           "6h": "6 hours"
         }
       },
+      "weather_delay": {
+        "state": {
+          "cancel": "[%key:common::state::off%]",
+          "24h": "24 hours",
+          "48h": "48 hours",
+          "72h": "72 hours"
+        }
+      },
       "humidifier_spray_mode": {
         "state": {
           "auto": "Auto",
@@ -201,6 +209,20 @@
           "reserve_3": "Reserve 3",
           "standby": "Standby",
           "warm": "Heat preservation"
+        }
+      },
+      "work_state": {
+        "state": {
+          "auto": "Auto",
+          "manual": "Manual",
+          "idle": "Idle"
+        }
+      },
+      "smart_weather": {
+        "state": {
+          "sunny": "Sunny",
+          "cloudy": "Cloudy",
+          "rainy": "Rainy"
         }
       },
       "air_quality": {

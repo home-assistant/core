@@ -136,6 +136,15 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             translation_key="motion_sensitivity",
         ),
     ),
+    # Smart Water Timer
+    "sfkzq": (
+        SelectEntityDescription(
+            key=DPCode.WEATHER_DELAY,
+            name="Weather delay",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="weather_delay",
+        ),
+    ),
     # IoT Switch?
     # Note: Undocumented
     "tdq": (
