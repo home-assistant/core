@@ -103,9 +103,8 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
         states = self.device.states
 
         if (
-            (operating_mode := states[OverkizState.CORE_OPERATING_MODE])
-            and operating_mode.value_as_str == OverkizCommandParam.EXTERNAL
-        ):
+            operating_mode := states[OverkizState.CORE_OPERATING_MODE]
+        ) and operating_mode.value_as_str == OverkizCommandParam.EXTERNAL:
             return PRESET_EXTERNAL
 
         if (
