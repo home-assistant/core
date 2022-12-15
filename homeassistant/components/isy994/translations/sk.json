@@ -50,7 +50,8 @@
         "info": {
             "device_connected": "ISY pripojen\u00e9",
             "host_reachable": "Hostite\u013e je dostupn\u00fd",
-            "last_heartbeat": "Posledn\u00e1 aktualiz\u00e1cia"
+            "last_heartbeat": "Posledn\u00e1 aktualiz\u00e1cia",
+            "websocket_status": "Stav socketu udalosti"
         }
     }
 }
