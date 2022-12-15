@@ -3,12 +3,10 @@ from itertools import product
 
 from homeassistant.const import (
     DEGREE,
-    ELECTRIC_POTENTIAL_VOLT,
     PERCENTAGE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    TEMP_KELVIN,
     Platform,
+    UnitOfElectricPotential,
+    UnitOfTemperature,
 )
 
 PLATFORMS = [
@@ -166,9 +164,9 @@ VAR_UNITS = [
     "",
     "LCN",
     "NATIVE",
-    TEMP_CELSIUS,
-    TEMP_KELVIN,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature.CELSIUS,
+    UnitOfTemperature.KELVIN,
+    UnitOfTemperature.FAHRENHEIT,
     "LUX_T",
     "LX_T",
     "LUX_I",
@@ -180,7 +178,7 @@ VAR_UNITS = [
     "PERCENT",
     "PPM",
     "VOLT",
-    ELECTRIC_POTENTIAL_VOLT,
+    UnitOfElectricPotential.VOLT,
     "AMPERE",
     "AMP",
     "A",
