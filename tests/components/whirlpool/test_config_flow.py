@@ -14,8 +14,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 CONFIG_INPUT = {
-    "username": "test-username",
-    "password": "test-password",
+    CONF_USERNAME: "test-username",
+    CONF_PASSWORD: "test-password",
 }
 
 
@@ -152,12 +152,12 @@ async def test_form_already_configured(hass, region):
     assert result2["reason"] == "already_configured"
 
 
-async def test_reauth_flow(hass: HomeAssistant) -> None:
+async def test_reauth_flow(hass: HomeAssistant, region) -> None:
     """Test a successful reauth flow."""
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"},
+        data={CONFIG_INPUT | {"region": region[0]}},
         unique_id="test-username",
     )
     mock_entry.add_to_hass(hass)
@@ -169,7 +169,11 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
             "unique_id": mock_entry.unique_id,
             "entry_id": mock_entry.entry_id,
         },
-        data={"username": "test-username", "password": "new-password"},
+        data={
+            "username": "test-username",
+            "password": "new-password",
+            "region": region[0],
+        },
     )
 
     assert result["step_id"] == "reauth_confirm"
@@ -194,15 +198,16 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     assert mock_entry.data == {
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "new-password",
+        "region": region[0],
     }
 
 
-async def test_reauth_flow_auth_error(hass: HomeAssistant) -> None:
+async def test_reauth_flow_auth_error(hass: HomeAssistant, region) -> None:
     """Test an authorization error reauth flow."""
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"username": "test-username", "password": "test-password"},
+        data=CONFIG_INPUT | {"region": region[0]},
         unique_id="test-username",
     )
     mock_entry.add_to_hass(hass)
@@ -214,7 +219,11 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant) -> None:
             "unique_id": mock_entry.unique_id,
             "entry_id": mock_entry.entry_id,
         },
-        data={"username": "test-username", "password": "new-password"},
+        data={
+            "username": "test-username",
+            "password": "new-password",
+            "region": region[0],
+        },
     )
 
     assert result["step_id"] == "reauth_confirm"
@@ -237,12 +246,12 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_reauth_flow_connnection_error(hass: HomeAssistant) -> None:
+async def test_reauth_flow_connection_error(hass: HomeAssistant, region) -> None:
     """Test a connection error reauth flow."""
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"username": "test-username", "password": "test-password"},
+        data=CONFIG_INPUT | {"region": region[0]},
         unique_id="test-username",
     )
     mock_entry.add_to_hass(hass)
@@ -254,7 +263,11 @@ async def test_reauth_flow_connnection_error(hass: HomeAssistant) -> None:
             "unique_id": mock_entry.unique_id,
             "entry_id": mock_entry.entry_id,
         },
-        data={CONF_USERNAME: "test-username", CONF_PASSWORD: "new-password"},
+        data={
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "new-password",
+            "region": region[0],
+        },
     )
 
     assert result["step_id"] == "reauth_confirm"
