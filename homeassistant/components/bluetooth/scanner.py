@@ -260,6 +260,12 @@ class HaScanner(BaseHaScanner):
                 ) from ex
             except asyncio.TimeoutError as ex:
                 if attempt == 0:
+                    _LOGGER.debug(
+                        "%s: Resetting adapter on attempt (%s/%s) because of timeout",
+                        self.name,
+                        attempt + 1,
+                        START_ATTEMPTS,
+                    )
                     await self._async_reset_adapter()
                     continue
                 raise ScannerStartError(
