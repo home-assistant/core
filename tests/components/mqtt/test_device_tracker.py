@@ -481,10 +481,10 @@ async def test_setting_device_tracker_location_via_auto_zone_message(
     assert state.state == STATE_HOME
 
     # test manual state override
-    async_fire_mqtt_message(hass, "test-topic", STATE_UNKNOWN)
+    async_fire_mqtt_message(hass, "test-topic", "Work")
 
     state = hass.states.get("device_tracker.test")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == "Work"
 
     # test auto_zone
     async_fire_mqtt_message(hass, "test-topic", "auto_zone")
