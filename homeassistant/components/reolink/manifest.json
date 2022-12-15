@@ -4,17 +4,10 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/reolink",
   "requirements": ["reolink-ip==0.0.40"],
-  "dependencies": [
-    "webhook"
-  ],
-  "after_dependencies": [
-    "http"
-  ],
+  "dependencies": ["webhook"],
+  "after_dependencies": ["http"],
   "dhcp": [],
-  "codeowners": [
-    "@starkillerOG",
-    "@JimStar"
-  ],
+  "codeowners": ["@starkillerOG", "@JimStar"],
   "iot_class": "local_polling",
   "loggers": ["motionblinds"]
 }
