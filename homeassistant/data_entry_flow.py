@@ -136,7 +136,7 @@ class FlowManager(abc.ABC):
     ) -> None:
         """Initialize the flow manager."""
         self.hass = hass
-        self._preview: set[type[FlowHandler]] = set()
+        self._preview: set[str] = set()
         self._progress: dict[str, FlowHandler] = {}
         self._handler_progress_index: dict[str, set[str]] = {}
         self._init_data_process_index: dict[type, set[str]] = {}
@@ -398,9 +398,8 @@ class FlowManager(abc.ABC):
             )
 
         # Setup the flow handler's preview if needed
-        if result.get("preview") is not None and flow.__class__ not in self._preview:
-            self._preview.add(flow.__class__)
-            flow.async_setup_preview(self.hass)
+        if result.get("preview") is not None:
+            await self._async_setup_preview(flow)
 
         if not isinstance(result["type"], FlowResultType):
             result["type"] = FlowResultType(result["type"])  # type: ignore[unreachable]
@@ -435,6 +434,12 @@ class FlowManager(abc.ABC):
         self._async_remove_flow_progress(flow.flow_id)
 
         return result
+
+    async def _async_setup_preview(self, flow: FlowHandler) -> None:
+        """Set up preview for a flow handler."""
+        if flow.handler not in self._preview:
+            self._preview.add(flow.handler)
+            flow.async_setup_preview(self.hass)
 
 
 class FlowHandler:
