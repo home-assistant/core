@@ -19,7 +19,7 @@
                     "target_sensor": "Humidity sensor",
                     "wet_tolerance": "Wet tolerance"
                 },
-                "description": "TODO"
+                "description": "Configure a generic hygrostat"
             }
         }
     }
