@@ -17,7 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import VeSyncDevice
-from .const import DOMAIN, VS_DISCOVERY, VS_HUMIDIFIERS
+from .const import DOMAIN, SKU_TO_BASE_DEVICE, VS_DISCOVERY, VS_HUMIDIFIERS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +26,11 @@ DEV_TYPE_TO_HA = {
 }
 
 PRESET_MODES = {
+    "Classic200S": [MODE_NORMAL, MODE_AUTO],
     "Classic300S": [MODE_NORMAL, MODE_AUTO, MODE_SLEEP],
+    "Dual200S": [MODE_NORMAL, MODE_AUTO],
+    "LV600S": [MODE_NORMAL, MODE_AUTO, MODE_SLEEP],
+    "OASISMIST": [MODE_NORMAL, MODE_AUTO, MODE_SLEEP],
 }
 
 MODE_MAP = {
@@ -82,7 +86,7 @@ class VeSyncHumidifierHA(VeSyncDevice, HumidifierEntity):
     @property
     def available_modes(self) -> list[str]:
         """Get the list of available preset modes."""
-        return PRESET_MODES[self.device.device_type]
+        return PRESET_MODES[SKU_TO_BASE_DEVICE[self.device.device_type]]
 
     @property
     def mode(self) -> str:
