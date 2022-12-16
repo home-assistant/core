@@ -42,7 +42,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_entry_oauth2_flow, entity_registry as er
+from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.config_entry_oauth2_flow import (
     AbstractOAuth2Implementation,
     OAuth2Session,
@@ -85,7 +85,7 @@ class WithingsAttribute:
     """Immutable class for describing withings sensor data."""
 
     measurement: Measurement
-    measute_type: Enum
+    measure_type: NotifyAppli | GetSleepSummaryField | MeasureType
     friendly_name: str
     unit_of_measurement: str
     icon: str | None
@@ -463,13 +463,10 @@ WITHINGS_ATTRIBUTES = [
     ),
 ]
 
-WITHINGS_MEASUREMENTS_MAP: dict[Measurement, WithingsAttribute] = {
-    attr.measurement: attr for attr in WITHINGS_ATTRIBUTES
-}
 
 WITHINGS_MEASURE_TYPE_MAP: dict[
     NotifyAppli | GetSleepSummaryField | MeasureType, WithingsAttribute
-] = {attr.measute_type: attr for attr in WITHINGS_ATTRIBUTES}
+] = {attr.measure_type: attr for attr in WITHINGS_ATTRIBUTES}
 
 
 class ConfigEntryWithingsApi(AbstractWithingsApi):
@@ -887,24 +884,6 @@ class DataManager:
 def get_attribute_unique_id(attribute: WithingsAttribute, user_id: int) -> str:
     """Get a entity unique id for a user's attribute."""
     return f"withings_{user_id}_{attribute.measurement.value}"
-
-
-async def async_get_entity_id(
-    hass: HomeAssistant, attribute: WithingsAttribute, user_id: int
-) -> str | None:
-    """Get an entity id for a user's attribute."""
-    entity_registry = er.async_get(hass)
-    unique_id = get_attribute_unique_id(attribute, user_id)
-
-    entity_id = entity_registry.async_get_entity_id(
-        attribute.platform, const.DOMAIN, unique_id
-    )
-
-    if entity_id is None:
-        _LOGGER.error("Cannot find entity id for unique_id: %s", unique_id)
-        return None
-
-    return entity_id
 
 
 class BaseWithingsSensor(Entity):
