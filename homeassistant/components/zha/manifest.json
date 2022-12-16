@@ -95,6 +95,10 @@
     {
       "type": "_zigstar_gw._tcp.local.",
       "name": "*zigstar*"
+    },
+	{
+      "type": "_smlight-tech._tcp.local.",
+      "name": "smlight*"
     }
   ],
   "dependencies": ["file_upload"],
