@@ -19,7 +19,7 @@ from withings_api.common import (
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.withings.common import (
-    WITHINGS_MEASUREMENTS_MAP,
+    WITHINGS_ATTRIBUTES,
     WithingsAttribute,
     get_platform_attributes,
 )
@@ -31,6 +31,12 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import dt as dt_util
 
 from .common import ComponentFactory, async_get_entity_id, new_profile_config
+
+WITHINGS_MEASUREMENTS_MAP: dict[Measurement, WithingsAttribute] = {
+    attr.measurement: attr
+    for attr in WITHINGS_ATTRIBUTES
+    if attr.platform == SENSOR_DOMAIN
+}
 
 PERSON0 = new_profile_config(
     "person0",

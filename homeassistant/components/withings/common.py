@@ -463,9 +463,6 @@ WITHINGS_ATTRIBUTES = [
     ),
 ]
 
-WITHINGS_MEASUREMENTS_MAP: dict[Measurement, WithingsAttribute] = {
-    attr.measurement: attr for attr in WITHINGS_ATTRIBUTES
-}
 
 WITHINGS_MEASURE_TYPE_MAP: dict[
     NotifyAppli | GetSleepSummaryField | MeasureType, WithingsAttribute
