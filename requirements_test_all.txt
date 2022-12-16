@@ -383,7 +383,7 @@ bond-async==0.1.22
 boschshcpy==0.2.35
 
 # homeassistant.components.bouncie
-bounciepy==0.1.0
+bounciepy==0.1.1
 
 # homeassistant.components.broadlink
 broadlink==0.18.3
