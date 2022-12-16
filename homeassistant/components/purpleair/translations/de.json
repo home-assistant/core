@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
             "invalid_api_key": "Ung\u00fcltiger API-Schl\u00fcssel",
@@ -30,6 +31,14 @@
                     "sensor_index": "Der zu verfolgende Sensor"
                 },
                 "description": "Welche der Sensoren in der N\u00e4he m\u00f6chtest  du verfolgen?"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel"
+                },
+                "data_description": {
+                    "api_key": "Dein PurpleAir-API-Schl\u00fcssel (wenn du sowohl Lese- als auch Schreibschl\u00fcssel hast, verwende den Leseschl\u00fcssel)"
+                }
             },
             "user": {
                 "data": {
