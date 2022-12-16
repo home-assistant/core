@@ -325,15 +325,13 @@ def get_data_manager_by_user_id(
 
 
 async def async_get_entity_id(
-    hass: HomeAssistant, attribute: WithingsAttribute, user_id: int
+    hass: HomeAssistant, attribute: WithingsAttribute, user_id: int, platform: str
 ) -> str | None:
     """Get an entity id for a user's attribute."""
     entity_registry = er.async_get(hass)
     unique_id = get_attribute_unique_id(attribute, user_id)
 
-    entity_id = entity_registry.async_get_entity_id(
-        attribute.platform, const.DOMAIN, unique_id
-    )
+    entity_id = entity_registry.async_get_entity_id(platform, const.DOMAIN, unique_id)
 
     if entity_id is None:
         return None

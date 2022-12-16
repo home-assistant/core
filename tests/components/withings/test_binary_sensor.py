@@ -1,6 +1,7 @@
 """Tests for the Withings component."""
 from withings_api.common import NotifyAppli
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.withings.common import WITHINGS_MEASUREMENTS_MAP
 from homeassistant.components.withings.const import Measurement
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
@@ -22,15 +23,23 @@ async def test_binary_sensor(
     entity_registry: EntityRegistry = er.async_get(hass)
 
     await component_factory.configure_component(profile_configs=(person0, person1))
-    assert not await async_get_entity_id(hass, in_bed_attribute, person0.user_id)
-    assert not await async_get_entity_id(hass, in_bed_attribute, person1.user_id)
+    assert not await async_get_entity_id(
+        hass, in_bed_attribute, person0.user_id, BINARY_SENSOR_DOMAIN
+    )
+    assert not await async_get_entity_id(
+        hass, in_bed_attribute, person1.user_id, BINARY_SENSOR_DOMAIN
+    )
 
     # person 0
     await component_factory.setup_profile(person0.user_id)
     await component_factory.setup_profile(person1.user_id)
 
-    entity_id0 = await async_get_entity_id(hass, in_bed_attribute, person0.user_id)
-    entity_id1 = await async_get_entity_id(hass, in_bed_attribute, person1.user_id)
+    entity_id0 = await async_get_entity_id(
+        hass, in_bed_attribute, person0.user_id, BINARY_SENSOR_DOMAIN
+    )
+    entity_id1 = await async_get_entity_id(
+        hass, in_bed_attribute, person1.user_id, BINARY_SENSOR_DOMAIN
+    )
     assert entity_id0
     assert entity_id1
 
