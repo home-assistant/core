@@ -2,10 +2,8 @@
 from withings_api.common import NotifyAppli
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.withings.common import (
-    WITHINGS_ATTRIBUTES,
-    WithingsAttribute,
-)
+from homeassistant.components.withings.binary_sensor import BINARY_SENSORS
+from homeassistant.components.withings.common import WithingsAttribute
 from homeassistant.components.withings.const import Measurement
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -15,9 +13,7 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from .common import ComponentFactory, async_get_entity_id, new_profile_config
 
 WITHINGS_MEASUREMENTS_MAP: dict[Measurement, WithingsAttribute] = {
-    attr.measurement: attr
-    for attr in WITHINGS_ATTRIBUTES
-    if attr.platform == BINARY_SENSOR_DOMAIN
+    attr.measurement: attr for attr in BINARY_SENSORS
 }
 
 

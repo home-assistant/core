@@ -18,13 +18,9 @@ from withings_api.common import (
 )
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.withings.common import (
-    WITHINGS_ATTRIBUTES,
-    WithingsAttribute,
-    get_platform_attributes,
-)
+from homeassistant.components.withings.common import WithingsAttribute
 from homeassistant.components.withings.const import Measurement
-from homeassistant.const import Platform
+from homeassistant.components.withings.sensor import SENSORS
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
@@ -33,9 +29,7 @@ from homeassistant.util import dt as dt_util
 from .common import ComponentFactory, async_get_entity_id, new_profile_config
 
 WITHINGS_MEASUREMENTS_MAP: dict[Measurement, WithingsAttribute] = {
-    attr.measurement: attr
-    for attr in WITHINGS_ATTRIBUTES
-    if attr.platform == SENSOR_DOMAIN
+    attr.measurement: attr for attr in SENSORS
 }
 
 PERSON0 = new_profile_config(
@@ -296,7 +290,10 @@ EXPECTED_DATA = (
 
 
 def async_assert_state_equals(
-    entity_id: str, state_obj: State, expected: Any, attribute: WithingsAttribute
+    entity_id: str,
+    state_obj: State,
+    expected: Any,
+    attribute: WithingsAttribute,
 ) -> None:
     """Assert at given state matches what is expected."""
     assert state_obj, f"Expected entity {entity_id} to exist but it did not"
@@ -316,7 +313,7 @@ async def test_sensor_default_enabled_entities(
     await component_factory.configure_component(profile_configs=(PERSON0,))
 
     # Assert entities should not exist yet.
-    for attribute in get_platform_attributes(Platform.SENSOR):
+    for attribute in SENSORS:
         assert not await async_get_entity_id(
             hass, attribute, PERSON0.user_id, SENSOR_DOMAIN
         )
@@ -325,7 +322,7 @@ async def test_sensor_default_enabled_entities(
     await component_factory.setup_profile(PERSON0.user_id)
 
     # Assert entities should exist.
-    for attribute in get_platform_attributes(Platform.SENSOR):
+    for attribute in SENSORS:
         entity_id = await async_get_entity_id(
             hass, attribute, PERSON0.user_id, SENSOR_DOMAIN
         )
@@ -368,7 +365,7 @@ async def test_all_entities(
         await component_factory.configure_component(profile_configs=(PERSON0,))
 
         # Assert entities should not exist yet.
-        for attribute in get_platform_attributes(Platform.SENSOR):
+        for attribute in SENSORS:
             assert not await async_get_entity_id(
                 hass, attribute, PERSON0.user_id, SENSOR_DOMAIN
             )
@@ -377,7 +374,7 @@ async def test_all_entities(
         await component_factory.setup_profile(PERSON0.user_id)
 
         # Assert entities should exist.
-        for attribute in get_platform_attributes(Platform.SENSOR):
+        for attribute in SENSORS:
             entity_id = await async_get_entity_id(
                 hass, attribute, PERSON0.user_id, SENSOR_DOMAIN
             )

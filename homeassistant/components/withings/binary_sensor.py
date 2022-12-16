@@ -1,8 +1,9 @@
 """Sensors flow for Withings."""
 from __future__ import annotations
 
+from withings_api.common import NotifyAppli
+
 from homeassistant.components.binary_sensor import (
-    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
@@ -10,7 +11,26 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import BaseWithingsSensor, async_create_entities
+from .common import (
+    BaseWithingsSensor,
+    UpdateType,
+    WithingsAttribute,
+    async_get_data_manager,
+)
+from .const import Measurement
+
+BINARY_SENSORS = [
+    # Webhook measurements.
+    WithingsAttribute(
+        Measurement.IN_BED,
+        NotifyAppli.BED_IN,
+        "In bed",
+        "",
+        "mdi:bed",
+        True,
+        UpdateType.WEBHOOK,
+    ),
+]
 
 
 async def async_setup_entry(
@@ -19,9 +39,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
-    entities = await async_create_entities(
-        hass, entry, WithingsHealthBinarySensor, BINARY_SENSOR_DOMAIN
-    )
+    data_manager = await async_get_data_manager(hass, entry)
+
+    entities = [
+        WithingsHealthBinarySensor(data_manager, attribute)
+        for attribute in BINARY_SENSORS
+    ]
 
     async_add_entities(entities, True)
 
