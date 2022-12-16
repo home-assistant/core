@@ -348,7 +348,7 @@ SENSOR_TYPES: dict[tuple[int, str], list[dict[str, Any]]] = {
             "entity_classes": {"orp": OmniLogicORPSensor},
             "name": "ORP",
             "kind": "csad_orp",
-            "device_class": SensorDeviceClass.VOLTAGE,
+            "device_class": None,
             "icon": "mdi:gauge",
             "unit": UnitOfElectricPotential.MILLIVOLT,
             "guard_condition": [

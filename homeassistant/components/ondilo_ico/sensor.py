@@ -43,7 +43,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Oxydo Reduction Potential",
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
         icon="mdi:pool",
-        device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(

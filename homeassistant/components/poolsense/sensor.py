@@ -23,7 +23,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="Chlorine",
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
-        device_class=SensorDeviceClass.VOLTAGE,
         icon="mdi:pool",
         name="Chlorine",
     ),
@@ -54,14 +53,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="Chlorine High",
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
-        device_class=SensorDeviceClass.VOLTAGE,
         icon="mdi:pool",
         name="Chlorine High",
     ),
     SensorEntityDescription(
         key="Chlorine Low",
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
-        device_class=SensorDeviceClass.VOLTAGE,
         icon="mdi:pool",
         name="Chlorine Low",
     ),
