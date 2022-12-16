@@ -4,15 +4,19 @@ from __future__ import annotations
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.components import ffmpeg
-from homeassistant.components.camera import Camera as CameraEntity, CameraEntityFeature
+from homeassistant.components.camera import Camera as CameraEntity, CameraEntityFeature, CAMERA_STREAM_SOURCE_TIMEOUT
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.components.stream import Stream
 
 from . import HomeAssistantTuyaData
 from .base import TuyaEntity
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
+
+import asyncio
+import async_timeout
 
 # All descriptions can be found here:
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
@@ -80,6 +84,23 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
             self.device.id,
             "rtsp",
         )
+
+    async def async_create_stream(self) -> Stream | None:
+        """Create a Stream for stream_source."""
+        if not self.stream:
+            return await super().async_create_stream()
+
+        # Tuya streams urls are one time urls. Updating source of existing stream.
+        if not self._create_stream_lock:
+            self._create_stream_lock = asyncio.Lock()
+        async with self._create_stream_lock:
+            async with async_timeout.timeout(CAMERA_STREAM_SOURCE_TIMEOUT):
+                source = await self.stream_source()
+            if not source:
+                return None
+            self.stream.update_source(source)
+
+        return self.stream
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
