@@ -34,7 +34,6 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.config_entry_oauth2_flow import (
     AbstractOAuth2Implementation,
@@ -54,16 +53,6 @@ NOT_AUTHENTICATED_ERROR = re.compile(
     re.IGNORECASE,
 )
 DATA_UPDATED_SIGNAL = "withings_entity_state_updated"
-
-MeasurementData = dict[Measurement, Any]
-
-
-class NotAuthenticatedError(HomeAssistantError):
-    """Raise when not authenticated with the service."""
-
-
-class ServiceError(HomeAssistantError):
-    """Raise when the service has an error."""
 
 
 class UpdateType(StrEnum):
@@ -94,14 +83,6 @@ class WebhookConfig:
     id: str
     url: str
     enabled: bool
-
-
-@dataclass
-class StateData:
-    """State data held by data manager for retrieval by entities."""
-
-    unique_id: str
-    state: Any
 
 
 WITHINGS_MEASURE_TYPE_MAP: dict[
@@ -200,7 +181,7 @@ class WebhookUpdateCoordinator:
         self._hass = hass
         self._user_id = user_id
         self._listeners: list[CALLBACK_TYPE] = []
-        self.data: MeasurementData = {}
+        self.data: dict[Measurement, Any] = {}
 
     def async_add_listener(self, listener: CALLBACK_TYPE) -> Callable[[], None]:
         """Add a listener."""
@@ -575,10 +556,12 @@ class BaseWithingsSensor(Entity):
         """Initialize the Withings sensor."""
         self._data_manager = data_manager
         self.entity_description = description
-        self._profile = self._data_manager.profile
-        self._user_id = self._data_manager.user_id
-        self._attr_name = f"Withings {description.measurement.value} {self._profile}"
-        self._attr_unique_id = get_attribute_unique_id(description, self._user_id)
+        self._attr_name = (
+            f"Withings {description.measurement.value} {data_manager.profile}"
+        )
+        self._attr_unique_id = get_attribute_unique_id(
+            description, data_manager.user_id
+        )
         self._state_data: Any | None = None
 
     @property
@@ -607,7 +590,7 @@ class BaseWithingsSensor(Entity):
             self._data_manager.webhook_update_coordinator.data or {}
         )
 
-    def _update_state_data(self, data: MeasurementData) -> None:
+    def _update_state_data(self, data: dict[Measurement, Any]) -> None:
         """Update the state data."""
         self._state_data = data.get(self.entity_description.measurement)
         self.async_write_ha_state()
