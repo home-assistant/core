@@ -1,22 +1,26 @@
 """Support for Tuya cameras."""
 from __future__ import annotations
 
+import asyncio
+import async_timeout
+
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.components import ffmpeg
-from homeassistant.components.camera import Camera as CameraEntity, CameraEntityFeature, CAMERA_STREAM_SOURCE_TIMEOUT
+from homeassistant.components.camera import (
+    Camera as CameraEntity,
+    CameraEntityFeature,
+    CAMERA_STREAM_SOURCE_TIMEOUT,
+)
+from homeassistant.components.stream import Stream
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.components.stream import Stream
 
 from . import HomeAssistantTuyaData
 from .base import TuyaEntity
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
-
-import asyncio
-import async_timeout
 
 # All descriptions can be found here:
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
