@@ -120,9 +120,20 @@
     },
     "airvisual": {
       "name": "AirVisual",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
+      "integrations": {
+        "airvisual": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "AirVisual Cloud"
+        },
+        "airvisual_pro": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "AirVisual Pro"
+        }
+      }
     },
     "airzone": {
       "name": "Airzone",
@@ -143,7 +154,6 @@
       "iot_class": "local_push"
     },
     "alert": {
-      "name": "Alert",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_push"
@@ -232,7 +242,7 @@
     },
     "androidtv": {
       "name": "Android TV",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -4177,6 +4187,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "purpleair": {
+      "name": "PurpleAir",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "push": {
       "name": "Push",
       "integration_type": "hub",
@@ -6403,6 +6419,7 @@
     }
   },
   "translated_name": [
+    "alert",
     "aurora",
     "cert_expiry",
     "cpuspeed",

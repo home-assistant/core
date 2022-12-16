@@ -3,11 +3,11 @@ from __future__ import annotations
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
-    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
-    FREQUENCY_HERTZ,
     PERCENTAGE,
     UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfFrequency,
     UnitOfPower,
 )
 
@@ -133,7 +133,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="storage_grid_voltage",
         name="AC input voltage",
         api_key="vGrid",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         precision=2,
     ),
@@ -141,7 +141,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="storage_pv_charging_voltage",
         name="PV charging voltage",
         api_key="vpv",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         precision=2,
     ),
@@ -149,14 +149,15 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="storage_ac_input_frequency_out",
         name="AC input frequency",
         api_key="freqOutPut",
-        native_unit_of_measurement=FREQUENCY_HERTZ,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        device_class=SensorDeviceClass.FREQUENCY,
         precision=2,
     ),
     GrowattSensorEntityDescription(
         key="storage_output_voltage",
         name="Output voltage",
         api_key="outPutVolt",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         precision=2,
     ),
@@ -164,7 +165,8 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="storage_ac_output_frequency",
         name="Ac output frequency",
         api_key="freqGrid",
-        native_unit_of_measurement=FREQUENCY_HERTZ,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        device_class=SensorDeviceClass.FREQUENCY,
         precision=2,
     ),
     GrowattSensorEntityDescription(
@@ -203,7 +205,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="storage_battery_voltage",
         name="Battery voltage",
         api_key="vBat",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         precision=2,
     ),

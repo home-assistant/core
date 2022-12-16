@@ -118,6 +118,7 @@
         "step": {
             "communication_settings": {
                 "data": {
+                    "rate_limit": "Limit",
                     "state_updater": "Aktualiz\u00e1tor stavu"
                 },
                 "data_description": {

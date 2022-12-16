@@ -46,6 +46,8 @@ omit =
     homeassistant/components/airtouch4/const.py
     homeassistant/components/airvisual/__init__.py
     homeassistant/components/airvisual/sensor.py
+    homeassistant/components/airvisual_pro/__init__.py
+    homeassistant/components/airvisual_pro/sensor.py
     homeassistant/components/alarmdecoder/__init__.py
     homeassistant/components/alarmdecoder/alarm_control_panel.py
     homeassistant/components/alarmdecoder/binary_sensor.py
@@ -473,7 +475,9 @@ omit =
     homeassistant/components/greenwave/light.py
     homeassistant/components/group/notify.py
     homeassistant/components/growatt_server/__init__.py
+    homeassistant/components/growatt_server/const.py
     homeassistant/components/growatt_server/sensor.py
+    homeassistant/components/growatt_server/sensor_types/*
     homeassistant/components/gstreamer/media_player.py
     homeassistant/components/gtfs/sensor.py
     homeassistant/components/guardian/__init__.py
@@ -1004,6 +1008,9 @@ omit =
     homeassistant/components/proxmoxve/*
     homeassistant/components/proxy/camera.py
     homeassistant/components/pulseaudio_loopback/switch.py
+    homeassistant/components/purpleair/__init__.py
+    homeassistant/components/purpleair/coordinator.py
+    homeassistant/components/purpleair/sensor.py
     homeassistant/components/pushbullet/api.py
     homeassistant/components/pushbullet/notify.py
     homeassistant/components/pushbullet/sensor.py

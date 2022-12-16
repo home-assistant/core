@@ -345,6 +345,11 @@ def test_energy_convert(
         (16, UnitOfMass.OUNCES, 453592.37, UnitOfMass.MILLIGRAMS),
         (16, UnitOfMass.OUNCES, 453592370, UnitOfMass.MICROGRAMS),
         (16, UnitOfMass.OUNCES, 1, UnitOfMass.POUNDS),
+        (1, UnitOfMass.STONES, pytest.approx(6.350293), UnitOfMass.KILOGRAMS),
+        (1, UnitOfMass.STONES, pytest.approx(6350.293), UnitOfMass.GRAMS),
+        (1, UnitOfMass.STONES, pytest.approx(6350293), UnitOfMass.MILLIGRAMS),
+        (1, UnitOfMass.STONES, pytest.approx(14), UnitOfMass.POUNDS),
+        (1, UnitOfMass.STONES, pytest.approx(224), UnitOfMass.OUNCES),
     ],
 )
 def test_mass_convert(
