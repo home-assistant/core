@@ -85,7 +85,7 @@ class WithingsAttribute:
     """Immutable class for describing withings sensor data."""
 
     measurement: Measurement
-    measute_type: Enum
+    measure_type: NotifyAppli | GetSleepSummaryField | MeasureType
     friendly_name: str
     unit_of_measurement: str
     icon: str | None
@@ -466,7 +466,7 @@ WITHINGS_ATTRIBUTES = [
 
 WITHINGS_MEASURE_TYPE_MAP: dict[
     NotifyAppli | GetSleepSummaryField | MeasureType, WithingsAttribute
-] = {attr.measute_type: attr for attr in WITHINGS_ATTRIBUTES}
+] = {attr.measure_type: attr for attr in WITHINGS_ATTRIBUTES}
 
 
 class ConfigEntryWithingsApi(AbstractWithingsApi):
