@@ -7,12 +7,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    PERCENTAGE,
-    PRESSURE_PSI,
-    TEMP_FAHRENHEIT,
-    VOLUME_GALLONS,
-)
+from homeassistant.const import PERCENTAGE, PRESSURE_PSI, TEMP_FAHRENHEIT, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -68,7 +63,7 @@ class FloDailyUsageSensor(FloEntity, SensorEntity):
     """Monitors the daily water usage."""
 
     _attr_icon = WATER_ICON
-    _attr_native_unit_of_measurement = VOLUME_GALLONS
+    _attr_native_unit_of_measurement = UnitOfVolume.GALLONS
     _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
     _attr_device_class = SensorDeviceClass.WATER
 

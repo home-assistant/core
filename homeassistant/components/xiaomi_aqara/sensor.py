@@ -14,9 +14,9 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_WATT,
     PRESSURE_HPA,
     TEMP_CELSIUS,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -65,7 +65,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     ),
     "load_power": SensorEntityDescription(
         key="load_power",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),

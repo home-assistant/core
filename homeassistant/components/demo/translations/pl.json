@@ -1,4 +1,25 @@
 {
+    "entity": {
+        "select": {
+            "speed": {
+                "state": {
+                    "light_speed": "pr\u0119dko\u015b\u0107 \u015bwiat\u0142a",
+                    "ludicrous_speed": "absurdalna pr\u0119dko\u015b\u0107",
+                    "ridiculous_speed": "niewiarygodna pr\u0119dko\u015b\u0107"
+                }
+            }
+        },
+        "sensor": {
+            "thermostat_mode": {
+                "state": {
+                    "away": "poza domem",
+                    "comfort": "komfortowo",
+                    "eco": "Eco",
+                    "sleep": "noc"
+                }
+            }
+        }
+    },
     "issues": {
         "bad_psu": {
             "fix_flow": {

@@ -12,7 +12,8 @@
             "invalid_ip_address": "IPv4 \u4f4d\u5740\u7121\u6548\u3002",
             "invalid_signature": "\u52a0\u5bc6 `.knxkeys` \u6a94\u6848\u5bc6\u78bc\u932f\u8aa4\u3002",
             "no_router_discovered": "\u7db2\u8def\u4e0a\u627e\u4e0d\u5230 KNXnet/IP \u8def\u7531\u5668\u3002",
-            "no_tunnel_discovered": "\u7db2\u8def\u4e0a\u627e\u4e0d\u5230 KNX \u901a\u9053\u4f3a\u670d\u5668\u3002"
+            "no_tunnel_discovered": "\u7db2\u8def\u4e0a\u627e\u4e0d\u5230 KNX \u901a\u9053\u4f3a\u670d\u5668\u3002",
+            "unsupported_tunnel_type": "\u9598\u9053\u5668\u4e0d\u652f\u63f4\u6240\u9078\u64c7\u7684\u901a\u9053\u985e\u578b\u3002"
         },
         "step": {
             "connection_type": {
@@ -111,7 +112,8 @@
             "invalid_ip_address": "IPv4 \u4f4d\u5740\u7121\u6548\u3002",
             "invalid_signature": "\u52a0\u5bc6 `.knxkeys` \u6a94\u6848\u5bc6\u78bc\u932f\u8aa4\u3002",
             "no_router_discovered": "\u7db2\u8def\u4e0a\u627e\u4e0d\u5230 KNXnet/IP \u8def\u7531\u5668\u3002",
-            "no_tunnel_discovered": "\u7db2\u8def\u4e0a\u627e\u4e0d\u5230 KNX \u901a\u9053\u4f3a\u670d\u5668\u3002"
+            "no_tunnel_discovered": "\u7db2\u8def\u4e0a\u627e\u4e0d\u5230 KNX \u901a\u9053\u4f3a\u670d\u5668\u3002",
+            "unsupported_tunnel_type": "\u9598\u9053\u5668\u4e0d\u652f\u63f4\u6240\u9078\u64c7\u7684\u901a\u9053\u985e\u578b\u3002"
         },
         "step": {
             "communication_settings": {

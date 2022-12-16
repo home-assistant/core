@@ -20,5 +20,10 @@
                 }
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Dosiahnu\u0165 server"
+        }
     }
 }

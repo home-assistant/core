@@ -11,12 +11,28 @@
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "step": {
+            "hassio_confirm": {
+                "description": "Chcete nakonfigurova\u0165 Home Assistant na pripojenie k slu\u017ebe motionEye poskytovanej doplnkom: {addon}?",
+                "title": "motionEye cez doplnok Home Assistant"
+            },
             "user": {
                 "data": {
                     "admin_password": "Spr\u00e1vca Heslo",
                     "admin_username": "Admin Pou\u017e\u00edvate\u013esk\u00e9 meno",
                     "surveillance_password": "Doh\u013ead Heslo",
+                    "surveillance_username": "Pou\u017e\u00edvate\u013esk\u00e9 meno pre doh\u013ead",
                     "url": "URL"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "stream_url_template": "\u0160abl\u00f3na webovej adresy streamu",
+                    "webhook_set": "Nakonfigurujte webhooky motionEye na hl\u00e1senie udalost\u00ed dom\u00e1cemu asistentovi",
+                    "webhook_set_overwrite": "Prep\u00ed\u0161te nerozpoznan\u00e9 webhooky"
                 }
             }
         }

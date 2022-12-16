@@ -237,11 +237,12 @@ def _async_get_system_for_service_call(
     ) is None:
         raise ValueError("No base station registered for alarm control panel")
 
-    [system_id] = [
+    [system_id_str] = [
         identity[1]
         for identity in base_station_device_entry.identifiers
         if identity[0] == DOMAIN
     ]
+    system_id = int(system_id_str)
 
     for entry_id in base_station_device_entry.config_entries:
         if (simplisafe := hass.data[DOMAIN].get(entry_id)) is None:

@@ -2,7 +2,7 @@
 from unittest.mock import patch
 
 import pytest
-from xknx.exceptions.exception import InvalidSecureConfiguration
+from xknx.exceptions.exception import CommunicationError, InvalidSecureConfiguration
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.io.gateway_scanner import GatewayDescriptor
 
@@ -45,7 +45,7 @@ from homeassistant.data_entry_flow import FlowResult, FlowResultType
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture(name="knx_setup", autouse=True)
+@pytest.fixture(name="knx_setup")
 def fixture_knx_setup():
     """Mock KNX entry setup."""
     with patch("homeassistant.components.knx.async_setup", return_value=True), patch(
@@ -441,7 +441,11 @@ async def test_routing_secure_keyfile(
     return_value=GatewayScannerMock(),
 )
 async def test_tunneling_setup_manual(
-    gateway_scanner_mock, hass: HomeAssistant, knx_setup, user_input, config_entry_data
+    _gateway_scanner_mock,
+    hass: HomeAssistant,
+    knx_setup,
+    user_input,
+    config_entry_data,
 ) -> None:
     """Test tunneling if no gateway was found found (or `manual` option was chosen)."""
     result = await hass.config_entries.flow.async_init(
@@ -460,11 +464,21 @@ async def test_tunneling_setup_manual(
     assert result2["step_id"] == "manual_tunnel"
     assert result2["errors"] == {"base": "no_tunnel_discovered"}
 
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
-        user_input,
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.knx.config_flow.request_description",
+        return_value=_gateway_descriptor(
+            user_input[CONF_HOST],
+            user_input[CONF_PORT],
+            supports_tunnelling_tcp=(
+                user_input[CONF_KNX_TUNNELING_TYPE] == CONF_KNX_TUNNELING_TCP
+            ),
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            user_input,
+        )
+        await hass.async_block_till_done()
     assert result3["type"] == FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Tunneling @ 192.168.0.1"
     assert result3["data"] == config_entry_data
@@ -475,8 +489,146 @@ async def test_tunneling_setup_manual(
     "homeassistant.components.knx.config_flow.GatewayScanner",
     return_value=GatewayScannerMock(),
 )
+async def test_tunneling_setup_manual_request_description_error(
+    _gateway_scanner_mock,
+    hass: HomeAssistant,
+    knx_setup,
+) -> None:
+    """Test tunneling if no gateway was found found (or `manual` option was chosen)."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
+        },
+    )
+    assert result["step_id"] == "manual_tunnel"
+    assert result["errors"] == {"base": "no_tunnel_discovered"}
+
+    # TCP configured but not supported by gateway
+    with patch(
+        "homeassistant.components.knx.config_flow.request_description",
+        return_value=_gateway_descriptor(
+            "192.168.0.1",
+            3671,
+            supports_tunnelling_tcp=False,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KNX_TUNNELING_TYPE: CONF_KNX_TUNNELING_TCP,
+                CONF_HOST: "192.168.0.1",
+                CONF_PORT: 3671,
+            },
+        )
+        assert result["step_id"] == "manual_tunnel"
+        assert result["errors"] == {
+            "base": "no_tunnel_discovered",
+            "tunneling_type": "unsupported_tunnel_type",
+        }
+    # TCP configured but Secure required by gateway
+    with patch(
+        "homeassistant.components.knx.config_flow.request_description",
+        return_value=_gateway_descriptor(
+            "192.168.0.1",
+            3671,
+            supports_tunnelling_tcp=True,
+            requires_secure=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KNX_TUNNELING_TYPE: CONF_KNX_TUNNELING_TCP,
+                CONF_HOST: "192.168.0.1",
+                CONF_PORT: 3671,
+            },
+        )
+        assert result["step_id"] == "manual_tunnel"
+        assert result["errors"] == {
+            "base": "no_tunnel_discovered",
+            "tunneling_type": "unsupported_tunnel_type",
+        }
+    # Secure configured but not enabled on gateway
+    with patch(
+        "homeassistant.components.knx.config_flow.request_description",
+        return_value=_gateway_descriptor(
+            "192.168.0.1",
+            3671,
+            supports_tunnelling_tcp=True,
+            requires_secure=False,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KNX_TUNNELING_TYPE: CONF_KNX_TUNNELING_TCP_SECURE,
+                CONF_HOST: "192.168.0.1",
+                CONF_PORT: 3671,
+            },
+        )
+        assert result["step_id"] == "manual_tunnel"
+        assert result["errors"] == {
+            "base": "no_tunnel_discovered",
+            "tunneling_type": "unsupported_tunnel_type",
+        }
+    # No connection to gateway
+    with patch(
+        "homeassistant.components.knx.config_flow.request_description",
+        side_effect=CommunicationError(""),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KNX_TUNNELING_TYPE: CONF_KNX_TUNNELING_TCP,
+                CONF_HOST: "192.168.0.1",
+                CONF_PORT: 3671,
+            },
+        )
+        assert result["step_id"] == "manual_tunnel"
+        assert result["errors"] == {"base": "cannot_connect"}
+    # OK configuration
+    with patch(
+        "homeassistant.components.knx.config_flow.request_description",
+        return_value=_gateway_descriptor(
+            "192.168.0.1",
+            3671,
+            supports_tunnelling_tcp=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KNX_TUNNELING_TYPE: CONF_KNX_TUNNELING_TCP,
+                CONF_HOST: "192.168.0.1",
+                CONF_PORT: 3671,
+            },
+        )
+        await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Tunneling @ 192.168.0.1"
+    assert result["data"] == {
+        **DEFAULT_ENTRY_DATA,
+        CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP,
+        CONF_HOST: "192.168.0.1",
+        CONF_PORT: 3671,
+    }
+    knx_setup.assert_called_once()
+
+
+@patch(
+    "homeassistant.components.knx.config_flow.GatewayScanner",
+    return_value=GatewayScannerMock(),
+)
+@patch(
+    "homeassistant.components.knx.config_flow.request_description",
+    return_value=_gateway_descriptor("192.168.0.2", 3675),
+)
 async def test_tunneling_setup_for_local_ip(
-    gateway_scanner_mock, hass: HomeAssistant, knx_setup
+    _request_description_mock, _gateway_scanner_mock, hass: HomeAssistant, knx_setup
 ) -> None:
     """Test tunneling if only one gateway is found."""
     result = await hass.config_entries.flow.async_init(
@@ -715,7 +867,17 @@ async def _get_menu_step(hass: HomeAssistant) -> FlowResult:
     return result3
 
 
+@patch(
+    "homeassistant.components.knx.config_flow.request_description",
+    return_value=_gateway_descriptor(
+        "192.168.0.1",
+        3675,
+        supports_tunnelling_tcp=True,
+        requires_secure=True,
+    ),
+)
 async def test_get_secure_menu_step_manual_tunnelling(
+    _request_description_mock,
     hass: HomeAssistant,
 ):
     """Test flow reaches secure_tunnellinn menu step from manual tunnelling configuration."""
@@ -901,13 +1063,15 @@ async def test_configure_secure_knxkeys_invalid_signature(hass: HomeAssistant):
 
 
 async def test_options_flow_connection_type(
-    hass: HomeAssistant, knx_setup, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, knx, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test options flow changing interface."""
-    mock_config_entry.add_to_hass(hass)
+    # run one option flow test with a set up integration (knx fixture)
+    # instead of mocking async_setup_entry (knx_setup fixture) to test
+    # usage of the already running XKNX instance for gateway scanner
     gateway = _gateway_descriptor("192.168.0.1", 3675)
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await knx.setup_integration({})
     menu_step = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
     with patch(
@@ -951,7 +1115,6 @@ async def test_options_flow_connection_type(
             CONF_KNX_STATE_UPDATER: CONF_KNX_DEFAULT_STATE_UPDATER,
             CONF_KNX_ROUTE_BACK: False,
         }
-        knx_setup.assert_called_once()
 
 
 async def test_options_flow_secure_manual_to_keyfile(

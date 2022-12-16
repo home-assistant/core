@@ -24,7 +24,7 @@ classifiers = [
 ]
 requires-python = ">=3.9.0"
 dependencies    = [
-    "aiohttp==3.8.3",
+    "aiohttp==3.8.1",
     "astral==2.2",
     "async_timeout==4.0.2",
     "attrs==21.2.0",
@@ -36,7 +36,7 @@ dependencies    = [
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
     "httpx==0.23.1",
-    "home-assistant-bluetooth==1.8.1",
+    "home-assistant-bluetooth==1.9.0",
     "ifaddr==0.1.7",
     "jinja2==3.1.2",
     "lru-dict==1.1.8",
@@ -74,7 +74,7 @@ include = ["homeassistant*"]
 
 [tool.black]
 target-version = ["py39", "py310"]
-exclude = 'generated'
+extend-exclude = "/generated/"
 
 [tool.isort]
 # https://github.com/PyCQA/isort/wiki/isort-Settings

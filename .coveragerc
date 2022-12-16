@@ -46,6 +46,8 @@ omit =
     homeassistant/components/airtouch4/const.py
     homeassistant/components/airvisual/__init__.py
     homeassistant/components/airvisual/sensor.py
+    homeassistant/components/airvisual_pro/__init__.py
+    homeassistant/components/airvisual_pro/sensor.py
     homeassistant/components/alarmdecoder/__init__.py
     homeassistant/components/alarmdecoder/alarm_control_panel.py
     homeassistant/components/alarmdecoder/binary_sensor.py
@@ -225,7 +227,6 @@ omit =
     homeassistant/components/denonavr/media_player.py
     homeassistant/components/denonavr/receiver.py
     homeassistant/components/deutsche_bahn/sensor.py
-    homeassistant/components/devolo_home_control/sensor.py
     homeassistant/components/devolo_home_control/switch.py
     homeassistant/components/digital_ocean/*
     homeassistant/components/discogs/sensor.py
@@ -471,7 +472,9 @@ omit =
     homeassistant/components/greenwave/light.py
     homeassistant/components/group/notify.py
     homeassistant/components/growatt_server/__init__.py
+    homeassistant/components/growatt_server/const.py
     homeassistant/components/growatt_server/sensor.py
+    homeassistant/components/growatt_server/sensor_types/*
     homeassistant/components/gstreamer/media_player.py
     homeassistant/components/gtfs/sensor.py
     homeassistant/components/guardian/__init__.py
@@ -920,6 +923,7 @@ omit =
     homeassistant/components/opentherm_gw/sensor.py
     homeassistant/components/openuv/__init__.py
     homeassistant/components/openuv/binary_sensor.py
+    homeassistant/components/openuv/coordinator.py
     homeassistant/components/openuv/sensor.py
     homeassistant/components/openweathermap/sensor.py
     homeassistant/components/openweathermap/weather.py
@@ -1001,6 +1005,9 @@ omit =
     homeassistant/components/proxmoxve/*
     homeassistant/components/proxy/camera.py
     homeassistant/components/pulseaudio_loopback/switch.py
+    homeassistant/components/purpleair/__init__.py
+    homeassistant/components/purpleair/coordinator.py
+    homeassistant/components/purpleair/sensor.py
     homeassistant/components/pushbullet/api.py
     homeassistant/components/pushbullet/notify.py
     homeassistant/components/pushbullet/sensor.py
@@ -1245,6 +1252,7 @@ omit =
     homeassistant/components/switchbot/coordinator.py
     homeassistant/components/switchbot/cover.py
     homeassistant/components/switchbot/entity.py
+    homeassistant/components/switchbot/humidifier.py
     homeassistant/components/switchbot/light.py
     homeassistant/components/switchbot/sensor.py
     homeassistant/components/switchbot/switch.py
@@ -1415,9 +1423,6 @@ omit =
     homeassistant/components/upnp/__init__.py
     homeassistant/components/upnp/device.py
     homeassistant/components/upnp/sensor.py
-    homeassistant/components/vallox/__init__.py
-    homeassistant/components/vallox/fan.py
-    homeassistant/components/vallox/sensor.py
     homeassistant/components/vasttrafik/sensor.py
     homeassistant/components/velbus/__init__.py
     homeassistant/components/velbus/binary_sensor.py

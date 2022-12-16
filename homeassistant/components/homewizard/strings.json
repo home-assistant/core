@@ -10,7 +10,7 @@
       },
       "discovery_confirm": {
         "title": "Confirm",
-        "description": "Do you want to setup {product_type} ({serial}) at {ip_address}?"
+        "description": "Do you want to set up {product_type} ({serial}) at {ip_address}?"
       },
       "reauth_confirm": {
         "description": "The local API is disabled. Go to the HomeWizard Energy app and enable the API in the device settings."

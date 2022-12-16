@@ -26,15 +26,14 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    DATA_BYTES,
-    DATA_RATE_BYTES_PER_SECOND,
-    DATA_RATE_MEGABITS_PER_SECOND,
-    ELECTRIC_POTENTIAL_VOLT,
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_CELSIUS,
     TIME_SECONDS,
+    UnitOfDataRate,
+    UnitOfElectricPotential,
+    UnitOfInformation,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -55,7 +54,6 @@ from .utils import async_dispatch_id as _ufpd, async_get_light_motion_current
 _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
 DEVICE_CLASS_DETECTION = "unifiprotect__detection"
-DEVICE_CLASS_LICENSE_PLATE = "unifiprotect__license_plate"
 
 
 @dataclass
@@ -141,7 +139,8 @@ ALL_DEVICES_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key="phy_rate",
         name="Link Speed",
-        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -173,7 +172,8 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key="storage_used",
         name="Storage Used",
-        native_unit_of_measurement=DATA_BYTES,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="stats.storage.used",
@@ -181,7 +181,8 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key="write_rate",
         name="Disk Write Rate",
-        native_unit_of_measurement=DATA_RATE_BYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="stats.storage.rate_per_second",
@@ -191,7 +192,7 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key="voltage",
         name="Voltage",
         device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="voltage",
@@ -269,7 +270,8 @@ CAMERA_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key="stats_rx",
         name="Received Data",
-        native_unit_of_measurement=DATA_BYTES,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -278,7 +280,8 @@ CAMERA_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key="stats_tx",
         name="Transferred Data",
-        native_unit_of_measurement=DATA_BYTES,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -521,7 +524,7 @@ NVR_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ),
 )
 
-MOTION_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
+EVENT_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
     ProtectSensorEventEntityDescription(
         key="detected_object",
         name="Detected Object",
@@ -534,11 +537,11 @@ MOTION_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
         key="smart_obj_licenseplate",
         name="License Plate Detected",
         icon="mdi:car",
-        device_class=DEVICE_CLASS_LICENSE_PLATE,
+        translation_key="license_plate",
+        ufp_smart_type=SmartDetectObjectType.LICENSE_PLATE,
         ufp_value="is_smart_detected",
         ufp_required_field="can_detect_license_plate",
         ufp_event_obj="last_smart_detect_event",
-        ufp_smart_type=SmartDetectObjectType.LICENSE_PLATE,
     ),
 )
 
@@ -641,7 +644,7 @@ async def async_setup_entry(
             ufp_device=device,
         )
         if device.is_adopted_by_us and isinstance(device, Camera):
-            entities += _async_motion_entities(data, ufp_device=device)
+            entities += _async_event_entities(data, ufp_device=device)
         async_add_entities(entities)
 
     entry.async_on_unload(
@@ -659,14 +662,14 @@ async def async_setup_entry(
         chime_descs=CHIME_SENSORS,
         viewer_descs=VIEWER_SENSORS,
     )
-    entities += _async_motion_entities(data)
+    entities += _async_event_entities(data)
     entities += _async_nvr_entities(data)
 
     async_add_entities(entities)
 
 
 @callback
-def _async_motion_entities(
+def _async_event_entities(
     data: ProtectData,
     ufp_device: Camera | None = None,
 ) -> list[ProtectDeviceEntity]:
@@ -687,7 +690,7 @@ def _async_motion_entities(
         if not device.feature_flags.has_smart_detect:
             continue
 
-        for event_desc in MOTION_SENSORS:
+        for event_desc in EVENT_SENSORS:
             if not event_desc.has_required(device):
                 continue
 
@@ -772,20 +775,29 @@ class ProtectEventSensor(EventEntityMixin, SensorEntity):
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         # do not call ProtectDeviceSensor method since we want event to get value here
         EventEntityMixin._async_update_device_from_protect(self, device)
-        if (
+        is_on = self.entity_description.get_is_on(device)
+        is_license_plate = (
             self.entity_description.ufp_smart_type
             == SmartDetectObjectType.LICENSE_PLATE
+        )
+        if (
+            not is_on
+            or self._event is None
+            or (
+                is_license_plate
+                and (
+                    self._event.metadata is None
+                    or self._event.metadata.license_plate is None
+                )
+            )
         ):
-            if (
-                self._event is None
-                or self._event.metadata is None
-                or self._event.metadata.license_plate is None
-            ):
-                self._attr_native_value = OBJECT_TYPE_NONE
-            else:
-                self._attr_native_value = self._event.metadata.license_plate.name
+            self._attr_native_value = OBJECT_TYPE_NONE
+            self._event = None
+            self._attr_extra_state_attributes = {}
+            return
+
+        if is_license_plate:
+            # type verified above
+            self._attr_native_value = self._event.metadata.license_plate.name  # type: ignore[union-attr]
         else:
-            if self._event is None:
-                self._attr_native_value = OBJECT_TYPE_NONE
-            else:
-                self._attr_native_value = self._event.smart_detect_types[0].value
+            self._attr_native_value = self._event.smart_detect_types[0].value

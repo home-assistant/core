@@ -13,6 +13,7 @@
             "user": {
                 "data": {
                     "id": "ID \u00fa\u010dtu",
+                    "is_tou": "Je \u010das pou\u017e\u00edvania pl\u00e1nu",
                     "password": "Heslo",
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
                 }

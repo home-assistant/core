@@ -15,7 +15,7 @@
             "user": {
                 "data": {
                     "password": "Palavra-passe",
-                    "username": "Email"
+                    "username": ""
                 },
                 "title": "Configurar Tile"
             }

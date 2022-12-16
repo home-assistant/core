@@ -31,7 +31,9 @@
             "simple_options": {
                 "data": {
                     "scan_interval": "Interval skenovania (sekundy)"
-                }
+                },
+                "description": "Nastavenie integr\u00e1cie Blink",
+                "title": "Mo\u017enosti Blink"
             }
         }
     }

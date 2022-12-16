@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, MutableMapping
+from collections.abc import Callable
 from dataclasses import dataclass, field
 import logging
 from typing import Any, cast
@@ -30,8 +30,6 @@ from aioesphomeapi import (
     UserService,
 )
 from aioesphomeapi.model import ButtonInfo
-from bleak.backends.service import BleakGATTServiceCollection
-from lru import LRU  # pylint: disable=no-name-in-module
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -59,7 +57,6 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], str] = {
     SwitchInfo: Platform.SWITCH,
     TextSensorInfo: Platform.SENSOR,
 }
-MAX_CACHED_SERVICES = 128
 
 
 @dataclass
@@ -95,44 +92,19 @@ class RuntimeEntryData:
     _ble_connection_free_futures: list[asyncio.Future[int]] = field(
         default_factory=list
     )
-    _gatt_services_cache: MutableMapping[int, BleakGATTServiceCollection] = field(
-        default_factory=lambda: LRU(MAX_CACHED_SERVICES)  # type: ignore[no-any-return]
-    )
-    _gatt_mtu_cache: MutableMapping[int, int] = field(
-        default_factory=lambda: LRU(MAX_CACHED_SERVICES)  # type: ignore[no-any-return]
-    )
 
     @property
     def name(self) -> str:
         """Return the name of the device."""
         return self.device_info.name if self.device_info else self.entry_id
 
-    def get_gatt_services_cache(
-        self, address: int
-    ) -> BleakGATTServiceCollection | None:
-        """Get the BleakGATTServiceCollection for the given address."""
-        return self._gatt_services_cache.get(address)
-
-    def set_gatt_services_cache(
-        self, address: int, services: BleakGATTServiceCollection
-    ) -> None:
-        """Set the BleakGATTServiceCollection for the given address."""
-        self._gatt_services_cache[address] = services
-
-    def get_gatt_mtu_cache(self, address: int) -> int | None:
-        """Get the mtu cache for the given address."""
-        return self._gatt_mtu_cache.get(address)
-
-    def set_gatt_mtu_cache(self, address: int, mtu: int) -> None:
-        """Set the mtu cache for the given address."""
-        self._gatt_mtu_cache[address] = mtu
-
     @callback
     def async_update_ble_connection_limits(self, free: int, limit: int) -> None:
         """Update the BLE connection limits."""
         _LOGGER.debug(
-            "%s: BLE connection limits: used=%s free=%s limit=%s",
+            "%s [%s]: BLE connection limits: used=%s free=%s limit=%s",
             self.name,
+            self.device_info.mac_address if self.device_info else "unknown",
             limit - free,
             free,
             limit,

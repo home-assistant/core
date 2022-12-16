@@ -24,5 +24,26 @@
                 "title": "Koble til Smile"
             }
         }
+    },
+    "entity": {
+        "select": {
+            "dhw_mode": {
+                "state": {
+                    "auto": "Auto",
+                    "boost": "\u00d8ke",
+                    "comfort": "Komfort",
+                    "off": "Av"
+                }
+            },
+            "regulation_mode": {
+                "state": {
+                    "bleeding_cold": "Bl\u00f8dende forkj\u00f8lelse",
+                    "bleeding_hot": "Bl\u00f8dende varmt",
+                    "cooling": "Kj\u00f8ling",
+                    "heating": "Oppvarming",
+                    "off": "Av"
+                }
+            }
+        }
     }
 }

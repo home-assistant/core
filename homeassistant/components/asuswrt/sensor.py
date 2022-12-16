@@ -10,11 +10,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    DATA_GIGABYTES,
-    DATA_RATE_MEGABITS_PER_SECOND,
-    TEMP_CELSIUS,
-)
+from homeassistant.const import UnitOfDataRate, UnitOfInformation, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -57,8 +53,9 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         key=SENSORS_RATES[0],
         name="Download Speed",
         icon="mdi:download-network",
+        device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         entity_registry_enabled_default=False,
         factor=125000,
     ),
@@ -66,8 +63,9 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         key=SENSORS_RATES[1],
         name="Upload Speed",
         icon="mdi:upload-network",
+        device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         entity_registry_enabled_default=False,
         factor=125000,
     ),
@@ -76,7 +74,8 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         name="Download",
         icon="mdi:download",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=DATA_GIGABYTES,
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         entity_registry_enabled_default=False,
         factor=1000000000,
     ),
@@ -85,7 +84,8 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         name="Upload",
         icon="mdi:upload",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=DATA_GIGABYTES,
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         entity_registry_enabled_default=False,
         factor=1000000000,
     ),
@@ -124,7 +124,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         name="2.4GHz Temperature",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         factor=1,
@@ -135,7 +135,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         name="5GHz Temperature",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         factor=1,
@@ -146,7 +146,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         name="CPU Temperature",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         factor=1,

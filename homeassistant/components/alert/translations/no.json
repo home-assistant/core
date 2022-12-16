@@ -1,0 +1,10 @@
+{
+    "state": {
+        "_": {
+            "idle": "Inaktiv",
+            "off": "Anerkjent",
+            "on": "Aktiv"
+        }
+    },
+    "title": "Varsling"
+}

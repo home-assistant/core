@@ -180,6 +180,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_VACUUM_ATTRIBUTES_BLOCKED
 
+    _command_topic: str | None
     _set_fan_speed_topic: str | None
     _send_command_topic: str | None
     _payloads: dict[str, str | None]

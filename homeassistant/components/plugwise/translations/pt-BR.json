@@ -24,5 +24,26 @@
                 "title": "Conecte-se ao Smile"
             }
         }
+    },
+    "entity": {
+        "select": {
+            "dhw_mode": {
+                "state": {
+                    "auto": "Auto",
+                    "boost": "Impulso",
+                    "comfort": "Conforto",
+                    "off": "Desligado"
+                }
+            },
+            "regulation_mode": {
+                "state": {
+                    "bleeding_cold": "Sangramento frio",
+                    "bleeding_hot": "Sangramento quente",
+                    "cooling": "Resfriamento",
+                    "heating": "Aquecimento",
+                    "off": "Desligado"
+                }
+            }
+        }
     }
 }

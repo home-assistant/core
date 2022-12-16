@@ -8,10 +8,10 @@
         "error": {
             "cannot_connect": "Tilkobling mislyktes"
         },
-        "flow_title": "{label} ( {host} ) {serial}",
+        "flow_title": "{label} ( {group} )",
         "step": {
             "discovery_confirm": {
-                "description": "Vil du sette opp {label} ( {host} ) {serial} ?"
+                "description": "Vil du sette opp {label} ( {group} )?"
             },
             "pick_device": {
                 "data": {

@@ -15,13 +15,13 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_WATT,
     PRESSURE_KPA,
     TEMP_CELSIUS,
+    UnitOfElectricPotential,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -91,13 +91,13 @@ SENSORS_MAP: dict[str, ZWaveMeSensorEntityDescription] = {
     "meterElectric_voltage": ZWaveMeSensorEntityDescription(
         key="meterElectric_voltage",
         device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "meterElectric_watt": ZWaveMeSensorEntityDescription(
         key="meterElectric_watt",
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "temperature": ZWaveMeSensorEntityDescription(
