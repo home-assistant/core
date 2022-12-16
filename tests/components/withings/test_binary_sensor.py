@@ -1,17 +1,14 @@
 """Tests for the Withings component."""
 from withings_api.common import NotifyAppli
 
-from homeassistant.components.withings.common import (
-    WITHINGS_MEASUREMENTS_MAP,
-    async_get_entity_id,
-)
+from homeassistant.components.withings.common import WITHINGS_MEASUREMENTS_MAP
 from homeassistant.components.withings.const import Measurement
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from .common import ComponentFactory, new_profile_config
+from .common import ComponentFactory, async_get_entity_id, new_profile_config
 
 
 async def test_binary_sensor(

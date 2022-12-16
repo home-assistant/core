@@ -20,7 +20,6 @@ from withings_api.common import (
 from homeassistant.components.withings.common import (
     WITHINGS_MEASUREMENTS_MAP,
     WithingsAttribute,
-    async_get_entity_id,
     get_platform_attributes,
 )
 from homeassistant.components.withings.const import Measurement
@@ -30,7 +29,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import dt as dt_util
 
-from .common import ComponentFactory, new_profile_config
+from .common import ComponentFactory, async_get_entity_id, new_profile_config
 
 PERSON0 = new_profile_config(
     "person0",
