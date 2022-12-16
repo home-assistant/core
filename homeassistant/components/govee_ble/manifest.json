@@ -73,7 +73,7 @@
       "connectable": false
     }
   ],
-  "requirements": ["govee-ble==0.19.1"],
+  "requirements": ["govee-ble==0.19.3"],
   "dependencies": ["bluetooth"],
   "codeowners": ["@bdraco"],
   "iot_class": "local_push"
