@@ -1,0 +1,110 @@
+{
+  "code": 0,
+  "result": {
+    "list": [
+      {
+        "cid": "300s-humidifier",
+        "deviceType": "LUH-A601S-WUSB",
+        "deviceName": "Humidifier 300s",
+        "deviceStatus": "on"
+      },
+      {
+        "cid": "air-purifier",
+        "deviceType": "LV-PUR131S",
+        "deviceName": "Air Purifier 131s",
+        "deviceStatus": "on"
+      },
+      {
+        "cid": "asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55",
+        "deviceType": "Core200S",
+        "deviceName": "Air Purifier 200s",
+        "deviceStatus": "on",
+        "type": "wifi-air"
+      },
+      {
+        "cid": "400s-purifier",
+        "deviceType": "LAP-C401S-WJP",
+        "deviceName": "Air Purifier 400s",
+        "deviceStatus": "on",
+        "type": "wifi-air"
+      },
+      {
+        "cid": "600s-purifier",
+        "deviceType": "LAP-C601S-WUS",
+        "deviceName": "Air Purifier 600s",
+        "type": "wifi-air",
+        "deviceStatus": "on"
+      },
+      {
+        "cid": "dimmable-bulb",
+        "deviceType": "ESL100",
+        "deviceName": "Dimmable Light",
+        "deviceStatus": "on",
+        "Active Time": "1",
+        "Energy": "2.4",
+        "Power": "12",
+        "Voltage": "120",
+        "Energy Week": "12",
+        "Energy Month": "50",
+        "Energy Year": "89",
+        "Brightness": "50"
+      },
+      {
+        "cid": "tunable-bulb",
+        "deviceType": "ESL100CW",
+        "deviceName": "Temperature Light",
+        "deviceStatus": "on",
+        "Active Time": "1",
+        "Energy": "2.4",
+        "Power": "12",
+        "Voltage": "120",
+        "Energy Week": "12",
+        "Energy Month": "50",
+        "Energy Year": "89",
+        "Brightness": "50",
+        "Kelvin": "5400"
+      },
+      {
+        "cid": "multicolor-bulb",
+        "deviceType": "ESL100MC",
+        "deviceName": "Multicolor Light",
+        "deviceStatus": "on",
+        "Active Time": "1",
+        "Energy": "2.4",
+        "Power": "12",
+        "Voltage": "120",
+        "Energy Week": "12",
+        "Energy Month": "50",
+        "Energy Year": "89",
+        "brightNess": "50",
+        "WhiteTemperaturePct": "0",
+        "WhiteTemperatureKelvin": "2700",
+        "ColorHSV": "hsv(hue=79.99, saturation=90.0, value=100)",
+        "ColorRGB": "rgb(red=178.5, green=255.0, blue=25.5)",
+        "ColorMode": "hsv"
+      },
+      {
+        "cid": "outlet",
+        "deviceType": "wifi-switch-1.3",
+        "deviceName": "Outlet",
+        "deviceStatus": "on",
+        "Active Time": "1",
+        "Energy": "2.4",
+        "Power": "12",
+        "Voltage": "120",
+        "Energy Week": "12",
+        "Energy Month": "50",
+        "Energy Year": "89"
+      },
+      {
+        "cid": "dimmable-switch",
+        "deviceType": "ESWD16",
+        "deviceName": "Dimmer Switch",
+        "deviceStatus": "on",
+        "indicatorlightStatus": "on",
+        "brightness": "50",
+        "rgbStatus": "on"
+      }
+    ]
+  }
+}
