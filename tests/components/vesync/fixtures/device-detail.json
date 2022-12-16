@@ -21,6 +21,7 @@
       "automatic_stop_reach_target": true,
       "night_light_brightness": 10,
 
+      "enabled": true,
       "filter_life": 99,
       "level": 1,
       "display": true,

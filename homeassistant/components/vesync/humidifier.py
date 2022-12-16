@@ -8,6 +8,7 @@ from homeassistant.components.humidifier import (
     MODE_AUTO,
     MODE_NORMAL,
     MODE_SLEEP,
+    HumidifierDeviceClass,
     HumidifierEntity,
     HumidifierEntityFeature,
 )
@@ -22,7 +23,11 @@ from .const import DOMAIN, SKU_TO_BASE_DEVICE, VS_DISCOVERY, VS_HUMIDIFIERS
 _LOGGER = logging.getLogger(__name__)
 
 DEV_TYPE_TO_HA = {
+    "Classic200S": "humidifier",
     "Classic300S": "humidifier",
+    "Dual200S": "humidifier",
+    "LV600S": "humidifier",
+    "OASISMIST": "humidifier",
 }
 
 PRESET_MODES = {
@@ -65,7 +70,7 @@ def _setup_entities(devices, async_add_entities):
     """Check if device is online and add entity."""
     entities = []
     for dev in devices:
-        if DEV_TYPE_TO_HA.get(dev.device_type) == "humidifier":
+        if DEV_TYPE_TO_HA.get(SKU_TO_BASE_DEVICE.get(dev.device_type)) == "humidifier":
             entities.append(VeSyncHumidifierHA(dev))
         else:
             _LOGGER.warning(
@@ -79,6 +84,7 @@ def _setup_entities(devices, async_add_entities):
 class VeSyncHumidifierHA(VeSyncDevice, HumidifierEntity):
     """Representation of a VeSync humidifier."""
 
+    _attr_device_class = HumidifierDeviceClass.HUMIDIFIER
     _attr_min_humidity = 30
     _attr_max_humidity = 80
     _attr_supported_features = HumidifierEntityFeature.MODES

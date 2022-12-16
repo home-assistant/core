@@ -10,14 +10,14 @@
         "connectionStatus": "online"
       },
       {
-        "acid": "air-purifier",
+        "cid": "air-purifier",
         "deviceType": "LV-PUR131S",
         "deviceName": "Air Purifier 131s",
         "deviceStatus": "on",
         "connectionStatus": "online"
       },
       {
-        "acid": "asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55",
+        "cid": "asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55",
         "deviceType": "Core200S",
         "deviceName": "Air Purifier 200s",
         "deviceStatus": "on",
@@ -25,7 +25,7 @@
         "connectionStatus": "online"
       },
       {
-        "acid": "400s-purifier",
+        "cid": "400s-purifier",
         "deviceType": "LAP-C401S-WJP",
         "deviceName": "Air Purifier 400s",
         "deviceStatus": "on",
@@ -33,7 +33,7 @@
         "connectionStatus": "online"
       },
       {
-        "acid": "600s-purifier",
+        "cid": "600s-purifier",
         "deviceType": "LAP-C601S-WUS",
         "deviceName": "Air Purifier 600s",
         "type": "wifi-air",
@@ -41,35 +41,35 @@
         "connectionStatus": "online"
       },
       {
-        "acid": "dimmable-bulb",
+        "cid": "dimmable-bulb",
         "deviceType": "ESL100",
         "deviceName": "Dimmable Light",
         "deviceStatus": "on",
         "connectionStatus": "online"
       },
       {
-        "acid": "tunable-bulb",
+        "cid": "tunable-bulb",
         "deviceType": "ESL100CW",
         "deviceName": "Temperature Light",
         "deviceStatus": "on",
         "connectionStatus": "online"
       },
       {
-        "acid": "multicolor-bulb",
+        "cid": "multicolor-bulb",
         "deviceType": "ESL100MC",
         "deviceName": "Multicolor Light",
         "deviceStatus": "on",
         "connectionStatus": "online"
       },
       {
-        "acid": "outlet",
+        "cid": "outlet",
         "deviceType": "wifi-switch-1.3",
         "deviceName": "Outlet",
         "deviceStatus": "on",
         "connectionStatus": "online"
       },
       {
-        "acid": "dimmable-switch",
+        "cid": "dimmable-switch",
         "deviceType": "ESWD16",
         "deviceName": "Dimmer Switch",
         "deviceStatus": "on",
