@@ -9,7 +9,7 @@ from homeassistant.components import file_upload
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.components.image import TEST_IMAGE
+from tests.components.image_upload import TEST_IMAGE
 
 
 @pytest.fixture

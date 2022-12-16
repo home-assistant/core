@@ -1,8 +1,8 @@
 {
-  "domain": "image",
-  "name": "Image",
+  "domain": "image_upload",
+  "name": "Image Upload",
   "config_flow": false,
-  "documentation": "https://www.home-assistant.io/integrations/image",
+  "documentation": "https://www.home-assistant.io/integrations/image_upload",
   "requirements": ["pillow==9.3.0"],
   "dependencies": ["http"],
   "codeowners": ["@home-assistant/core"],
