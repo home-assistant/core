@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
 from datetime import timedelta
-from enum import Enum, IntEnum
+from enum import IntEnum
 from http import HTTPStatus
 import logging
 import re
@@ -27,6 +27,7 @@ from withings_api.common import (
     query_measure_groups,
 )
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.components import webhook
 from homeassistant.components.application_credentials import AuthImplementation
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -73,7 +74,7 @@ class ServiceError(HomeAssistantError):
     """Raise when the service has an error."""
 
 
-class UpdateType(Enum):
+class UpdateType(StrEnum):
     """Data update type."""
 
     POLL = "poll"
@@ -465,8 +466,43 @@ WITHINGS_ATTRIBUTES = [
 
 
 WITHINGS_MEASURE_TYPE_MAP: dict[
-    NotifyAppli | GetSleepSummaryField | MeasureType, WithingsAttribute
-] = {attr.measure_type: attr for attr in WITHINGS_ATTRIBUTES}
+    NotifyAppli | GetSleepSummaryField | MeasureType, Measurement
+] = {
+    MeasureType.WEIGHT: Measurement.WEIGHT_KG,
+    MeasureType.FAT_MASS_WEIGHT: Measurement.FAT_MASS_KG,
+    MeasureType.FAT_FREE_MASS: Measurement.FAT_FREE_MASS_KG,
+    MeasureType.MUSCLE_MASS: Measurement.MUSCLE_MASS_KG,
+    MeasureType.BONE_MASS: Measurement.BONE_MASS_KG,
+    MeasureType.HEIGHT: Measurement.HEIGHT_M,
+    MeasureType.TEMPERATURE: Measurement.TEMP_C,
+    MeasureType.BODY_TEMPERATURE: Measurement.BODY_TEMP_C,
+    MeasureType.SKIN_TEMPERATURE: Measurement.SKIN_TEMP_C,
+    MeasureType.FAT_RATIO: Measurement.FAT_RATIO_PCT,
+    MeasureType.DIASTOLIC_BLOOD_PRESSURE: Measurement.DIASTOLIC_MMHG,
+    MeasureType.SYSTOLIC_BLOOD_PRESSURE: Measurement.SYSTOLIC_MMGH,
+    MeasureType.HEART_RATE: Measurement.HEART_PULSE_BPM,
+    MeasureType.SP02: Measurement.SPO2_PCT,
+    MeasureType.HYDRATION: Measurement.HYDRATION,
+    MeasureType.PULSE_WAVE_VELOCITY: Measurement.PWV,
+    GetSleepSummaryField.BREATHING_DISTURBANCES_INTENSITY: Measurement.SLEEP_BREATHING_DISTURBANCES_INTENSITY,
+    GetSleepSummaryField.DEEP_SLEEP_DURATION: Measurement.SLEEP_DEEP_DURATION_SECONDS,
+    GetSleepSummaryField.DURATION_TO_SLEEP: Measurement.SLEEP_TOSLEEP_DURATION_SECONDS,
+    GetSleepSummaryField.DURATION_TO_WAKEUP: Measurement.SLEEP_TOWAKEUP_DURATION_SECONDS,
+    GetSleepSummaryField.HR_AVERAGE: Measurement.SLEEP_HEART_RATE_AVERAGE,
+    GetSleepSummaryField.HR_MAX: Measurement.SLEEP_HEART_RATE_MAX,
+    GetSleepSummaryField.HR_MIN: Measurement.SLEEP_HEART_RATE_MIN,
+    GetSleepSummaryField.LIGHT_SLEEP_DURATION: Measurement.SLEEP_LIGHT_DURATION_SECONDS,
+    GetSleepSummaryField.REM_SLEEP_DURATION: Measurement.SLEEP_REM_DURATION_SECONDS,
+    GetSleepSummaryField.RR_AVERAGE: Measurement.SLEEP_RESPIRATORY_RATE_AVERAGE,
+    GetSleepSummaryField.RR_MAX: Measurement.SLEEP_RESPIRATORY_RATE_MAX,
+    GetSleepSummaryField.RR_MIN: Measurement.SLEEP_RESPIRATORY_RATE_MIN,
+    GetSleepSummaryField.SLEEP_SCORE: Measurement.SLEEP_SCORE,
+    GetSleepSummaryField.SNORING: Measurement.SLEEP_SNORING,
+    GetSleepSummaryField.SNORING_EPISODE_COUNT: Measurement.SLEEP_SNORING_EPISODE_COUNT,
+    GetSleepSummaryField.WAKEUP_COUNT: Measurement.SLEEP_WAKEUP_COUNT,
+    GetSleepSummaryField.WAKEUP_DURATION: Measurement.SLEEP_WAKEUP_DURATION_SECONDS,
+    NotifyAppli.BED_IN: Measurement.IN_BED,
+}
 
 
 class ConfigEntryWithingsApi(AbstractWithingsApi):
@@ -747,7 +783,7 @@ class DataManager:
             **await self.async_get_sleep_summary(),
         }
 
-    async def async_get_measures(self) -> dict[MeasureType, Any]:
+    async def async_get_measures(self) -> dict[Measurement, Any]:
         """Get the measures data."""
         _LOGGER.debug("Updating withings measures")
         now = dt.utcnow()
@@ -767,7 +803,7 @@ class DataManager:
         )
 
         return {
-            WITHINGS_MEASURE_TYPE_MAP[measure.type].measurement: round(
+            WITHINGS_MEASURE_TYPE_MAP[measure.type]: round(
                 float(measure.value * pow(10, measure.unit)), 2
             )
             for group in groups
@@ -775,7 +811,7 @@ class DataManager:
             if measure.type in WITHINGS_MEASURE_TYPE_MAP
         }
 
-    async def async_get_sleep_summary(self) -> dict[MeasureType, Any]:
+    async def async_get_sleep_summary(self) -> dict[Measurement, Any]:
         """Get the sleep summary data."""
         _LOGGER.debug("Updating withing sleep summary")
         now = dt.utcnow()
@@ -859,7 +895,7 @@ class DataManager:
         set_value(GetSleepSummaryField.WAKEUP_DURATION, average)
 
         return {
-            WITHINGS_MEASURE_TYPE_MAP[field].measurement: round(value, 4)
+            WITHINGS_MEASURE_TYPE_MAP[field]: round(value, 4)
             if value is not None
             else None
             for field, value in values.items()
