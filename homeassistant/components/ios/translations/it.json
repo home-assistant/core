@@ -5,7 +5,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Vuoi iniziare la configurazione?"
+                "description": "Vuoi avviare la configurazione?"
             }
         }
     }

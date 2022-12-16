@@ -1,4 +1,25 @@
 {
+    "entity": {
+        "select": {
+            "speed": {
+                "state": {
+                    "light_speed": "Kecepatan Cahaya",
+                    "ludicrous_speed": "Kecepatan Menggelikan",
+                    "ridiculous_speed": "Kecepatan Konyol"
+                }
+            }
+        },
+        "sensor": {
+            "thermostat_mode": {
+                "state": {
+                    "away": "Keluar",
+                    "comfort": "Nyaman",
+                    "eco": "Eco",
+                    "sleep": "Tidur"
+                }
+            }
+        }
+    },
     "issues": {
         "bad_psu": {
             "fix_flow": {
@@ -10,6 +31,14 @@
                 }
             },
             "title": "Catu daya tidak stabil"
+        },
+        "cold_tea": {
+            "fix_flow": {
+                "abort": {
+                    "not_tea_time": "Tidak bisa memanaskan kembali teh saat ini"
+                }
+            },
+            "title": "Tehnya dingin"
         },
         "out_of_blinker_fluid": {
             "fix_flow": {

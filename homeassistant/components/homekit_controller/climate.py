@@ -32,7 +32,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, Platform
+from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -114,7 +114,7 @@ async def async_setup_entry(
 class HomeKitBaseClimateEntity(HomeKitEntity, ClimateEntity):
     """The base HomeKit Controller climate entity."""
 
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
@@ -148,9 +148,9 @@ class HomeKitBaseClimateEntity(HomeKitEntity, ClimateEntity):
         )
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
-        features = 0
+        features = ClimateEntityFeature(0)
 
         if self.service.has(CharacteristicsTypes.FAN_STATE_TARGET):
             features |= ClimateEntityFeature.FAN_MODE
@@ -209,6 +209,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
             )
         await self.async_put_characteristics(
             {
+                CharacteristicsTypes.ACTIVE: ActivationStateValues.ACTIVE,
                 CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: TARGET_HEATER_COOLER_STATE_HASS_TO_HOMEKIT[
                     hvac_mode
                 ],
@@ -367,7 +368,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
         )
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         features = super().supported_features
 
@@ -601,7 +602,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
         return [MODE_HOMEKIT_TO_HASS[mode] for mode in valid_values]
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         features = super().supported_features
 

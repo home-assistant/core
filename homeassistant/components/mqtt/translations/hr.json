@@ -18,7 +18,6 @@
                     "client_cert": "Put do datoteke klijentskog certifikata",
                     "client_id": "ID klijenta (ostavite prazno za nasumi\u010dno generiran)",
                     "client_key": "Put do datoteke privatnog klju\u010da",
-                    "discovery": "Omogu\u0107i otkrivanje",
                     "keepalive": "Vrijeme izme\u0111u slanja poruka keep alive",
                     "password": "Lozinka",
                     "port": "Port",

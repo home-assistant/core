@@ -20,12 +20,13 @@ from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.data_entry_flow import BaseServiceInfo, FlowResult, FlowResultType
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
+    ConfigEntryError,
     ConfigEntryNotReady,
     HomeAssistantError,
 )
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.setup import async_setup_component
+from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
 from homeassistant.util import dt
 
 from tests.common import (
@@ -2866,6 +2867,96 @@ async def test_entry_reload_calls_on_unload_listeners(hass, manager):
     assert entry.state is config_entries.ConfigEntryState.LOADED
 
 
+async def test_setup_raise_entry_error(hass, caplog):
+    """Test a setup raising ConfigEntryError."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+
+    mock_setup_entry = AsyncMock(
+        side_effect=ConfigEntryError("Incompatible firmware version")
+    )
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    await entry.async_setup(hass)
+    await hass.async_block_till_done()
+    assert (
+        "Error setting up entry test_title for test: Incompatible firmware version"
+        in caplog.text
+    )
+
+    assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
+    assert entry.reason == "Incompatible firmware version"
+
+
+async def test_setup_raise_entry_error_from_first_coordinator_update(hass, caplog):
+    """Test async_config_entry_first_refresh raises ConfigEntryError."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+
+    async def async_setup_entry(hass, entry):
+        """Mock setup entry with a simple coordinator."""
+
+        async def _async_update_data():
+            raise ConfigEntryError("Incompatible firmware version")
+
+        coordinator = DataUpdateCoordinator(
+            hass,
+            logging.getLogger(__name__),
+            name="any",
+            update_method=_async_update_data,
+            update_interval=timedelta(seconds=1000),
+        )
+
+        await coordinator.async_config_entry_first_refresh()
+        return True
+
+    mock_integration(hass, MockModule("test", async_setup_entry=async_setup_entry))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    await entry.async_setup(hass)
+    await hass.async_block_till_done()
+    assert (
+        "Error setting up entry test_title for test: Incompatible firmware version"
+        in caplog.text
+    )
+
+    assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
+    assert entry.reason == "Incompatible firmware version"
+
+
+async def test_setup_not_raise_entry_error_from_future_coordinator_update(hass, caplog):
+    """Test a coordinator not raises ConfigEntryError in the future."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+
+    async def async_setup_entry(hass, entry):
+        """Mock setup entry with a simple coordinator."""
+
+        async def _async_update_data():
+            raise ConfigEntryError("Incompatible firmware version")
+
+        coordinator = DataUpdateCoordinator(
+            hass,
+            logging.getLogger(__name__),
+            name="any",
+            update_method=_async_update_data,
+            update_interval=timedelta(seconds=1000),
+        )
+
+        await coordinator.async_refresh()
+        return True
+
+    mock_integration(hass, MockModule("test", async_setup_entry=async_setup_entry))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    await entry.async_setup(hass)
+    await hass.async_block_till_done()
+    assert (
+        "Config entry setup failed while fetching any data: Incompatible firmware version"
+        in caplog.text
+    )
+
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+
+
 async def test_setup_raise_auth_failed(hass, caplog):
     """Test a setup raising ConfigEntryAuthFailed."""
     entry = MockConfigEntry(title="test_title", domain="test")
@@ -3287,6 +3378,7 @@ async def test_disallow_entry_reload_with_setup_in_progresss(hass, manager):
 async def test_reauth(hass):
     """Test the async_reauth_helper."""
     entry = MockConfigEntry(title="test_title", domain="test")
+    entry2 = MockConfigEntry(title="test_title", domain="test")
 
     mock_setup_entry = AsyncMock(return_value=True)
     mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
@@ -3313,7 +3405,135 @@ async def test_reauth(hass):
 
     assert mock_init.call_args.kwargs["data"]["extra_data"] == 1234
 
-    # Check we can't start duplicate flows
+    assert entry.entry_id != entry2.entry_id
+
+    # Check that we can't start duplicate reauth flows
     entry.async_start_reauth(hass, {"extra_context": "some_extra_context"})
     await hass.async_block_till_done()
-    assert len(flows) == 1
+    assert len(hass.config_entries.flow.async_progress()) == 1
+
+    # Check that we can't start duplicate reauth flows when the context is different
+    entry.async_start_reauth(hass, {"diff": "diff"})
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.flow.async_progress()) == 1
+
+    # Check that we can start a reauth flow for a different entry
+    entry2.async_start_reauth(hass, {"extra_context": "some_extra_context"})
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.flow.async_progress()) == 2
+
+
+async def test_get_active_flows(hass):
+    """Test the async_get_active_flows helper."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+    mock_setup_entry = AsyncMock(return_value=True)
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    await entry.async_setup(hass)
+    await hass.async_block_till_done()
+
+    flow = hass.config_entries.flow
+    with patch.object(flow, "async_init", wraps=flow.async_init):
+        entry.async_start_reauth(
+            hass,
+            context={"extra_context": "some_extra_context"},
+            data={"extra_data": 1234},
+        )
+        await hass.async_block_till_done()
+
+    # Check that there's an active reauth flow:
+    active_reauth_flow = next(
+        iter(entry.async_get_active_flows(hass, {config_entries.SOURCE_REAUTH})), None
+    )
+    assert active_reauth_flow is not None
+
+    # Check that there isn't any other flow (in this case, a user flow):
+    active_user_flow = next(
+        iter(entry.async_get_active_flows(hass, {config_entries.SOURCE_USER})), None
+    )
+    assert active_user_flow is None
+
+
+async def test_async_wait_component_dynamic(hass: HomeAssistant):
+    """Test async_wait_component for a config entry which is dynamically loaded."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+
+    mock_setup_entry = AsyncMock(return_value=True)
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    entry.add_to_hass(hass)
+
+    # The config entry is not loaded, and is also not scheduled to load
+    assert await hass.config_entries.async_wait_component(entry) is False
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The config entry is loaded
+    assert await hass.config_entries.async_wait_component(entry) is True
+
+
+async def test_async_wait_component_startup(hass: HomeAssistant):
+    """Test async_wait_component for a config entry which is loaded at startup."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+
+    setup_stall = asyncio.Event()
+    setup_started = asyncio.Event()
+
+    async def mock_setup(hass: HomeAssistant, _) -> bool:
+        setup_started.set()
+        await setup_stall.wait()
+        return True
+
+    mock_setup_entry = AsyncMock(return_value=True)
+    mock_integration(
+        hass,
+        MockModule("test", async_setup=mock_setup, async_setup_entry=mock_setup_entry),
+    )
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    entry.add_to_hass(hass)
+
+    # The config entry is not loaded, and is also not scheduled to load
+    assert await hass.config_entries.async_wait_component(entry) is False
+
+    # Mark the component as scheduled to be loaded
+    async_set_domains_to_be_loaded(hass, {"test"})
+
+    # Start loading the component, including its config entries
+    hass.async_create_task(async_setup_component(hass, "test", {}))
+    await setup_started.wait()
+
+    # The component is not yet loaded
+    assert "test" not in hass.config.components
+
+    # Allow setup to proceed
+    setup_stall.set()
+
+    # The component is scheduled to load, this will block until the config entry is loaded
+    assert await hass.config_entries.async_wait_component(entry) is True
+
+    # The component has been loaded
+    assert "test" in hass.config.components
+
+
+async def test_options_flow_options_not_mutated() -> None:
+    """Test that OptionsFlowWithConfigEntry doesn't mutate entry options."""
+    entry = MockConfigEntry(
+        domain="test",
+        data={"first": True},
+        options={"sub_dict": {"1": "one"}, "sub_list": ["one"]},
+    )
+
+    options_flow = config_entries.OptionsFlowWithConfigEntry(entry)
+
+    options_flow._options["sub_dict"]["2"] = "two"
+    options_flow._options["sub_list"].append("two")
+
+    assert options_flow._options == {
+        "sub_dict": {"1": "one", "2": "two"},
+        "sub_list": ["one", "two"],
+    }
+    assert entry.options == {"sub_dict": {"1": "one"}, "sub_list": ["one"]}

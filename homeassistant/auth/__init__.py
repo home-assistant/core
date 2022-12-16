@@ -87,7 +87,7 @@ class AuthManagerFlowManager(data_entry_flow.FlowManager):
 
     async def async_create_flow(
         self,
-        handler_key: Any,
+        handler_key: str,
         *,
         context: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
@@ -356,8 +356,7 @@ class AuthManager:
         provider = self._async_get_auth_provider(credentials)
 
         if provider is not None and hasattr(provider, "async_will_remove_credentials"):
-            # https://github.com/python/mypy/issues/1424
-            await provider.async_will_remove_credentials(credentials)  # type: ignore[attr-defined]
+            await provider.async_will_remove_credentials(credentials)
 
         await self._store.async_remove_credentials(credentials)
 

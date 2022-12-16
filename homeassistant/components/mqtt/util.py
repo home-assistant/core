@@ -9,7 +9,6 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_PAYLOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.typing import ConfigType
@@ -31,6 +30,8 @@ from .const import (
 from .models import MqttData
 
 TEMP_DIR_NAME = f"home-assistant-{DOMAIN}"
+
+_VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
 
 
 def mqtt_config_entry_enabled(hass: HomeAssistant) -> bool | None:
@@ -96,7 +97,7 @@ def valid_subscribe_topic(topic: Any) -> str:
 
 def valid_subscribe_topic_template(value: Any) -> template.Template:
     """Validate either a jinja2 template or a valid MQTT subscription topic."""
-    tpl = template.Template(value)
+    tpl = cv.template(value)
 
     if tpl.is_static:
         valid_subscribe_topic(value)
@@ -112,24 +113,38 @@ def valid_publish_topic(topic: Any) -> str:
     return validated_topic
 
 
-_VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
+def valid_qos_schema(qos: Any) -> int:
+    """Validate that QOS value is valid."""
+    validated_qos: int = _VALID_QOS_SCHEMA(qos)
+    return validated_qos
 
-MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
+
+_MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_TOPIC): valid_publish_topic,
-        vol.Required(ATTR_PAYLOAD, CONF_PAYLOAD): cv.string,
-        vol.Optional(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
+        vol.Required(ATTR_PAYLOAD): cv.string,
+        vol.Optional(ATTR_QOS, default=DEFAULT_QOS): valid_qos_schema,
         vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
     },
     required=True,
 )
 
 
+def valid_birth_will(config: ConfigType) -> ConfigType:
+    """Validate a birth or will configuration and required topic/payload."""
+    if config:
+        config = _MQTT_WILL_BIRTH_SCHEMA(config)
+    return config
+
+
 def get_mqtt_data(hass: HomeAssistant, ensure_exists: bool = False) -> MqttData:
     """Return typed MqttData from hass.data[DATA_MQTT]."""
+    mqtt_data: MqttData
     if ensure_exists:
-        return hass.data.setdefault(DATA_MQTT, MqttData())
-    return hass.data[DATA_MQTT]
+        mqtt_data = hass.data.setdefault(DATA_MQTT, MqttData())
+        return mqtt_data
+    mqtt_data = hass.data[DATA_MQTT]
+    return mqtt_data
 
 
 async def async_create_certificate_temp_files(
@@ -162,7 +177,7 @@ async def async_create_certificate_temp_files(
     await hass.async_add_executor_job(_create_temp_dir_and_files)
 
 
-def get_file_path(option: str, default: str | None = None) -> Path | str | None:
+def get_file_path(option: str, default: str | None = None) -> str | None:
     """Get file path of a certificate file."""
     temp_dir = Path(tempfile.gettempdir()) / TEMP_DIR_NAME
     if not temp_dir.exists():
@@ -172,7 +187,7 @@ def get_file_path(option: str, default: str | None = None) -> Path | str | None:
     if not file_path.exists():
         return default
 
-    return temp_dir / option
+    return str(temp_dir / option)
 
 
 def migrate_certificate_file_to_content(file_name_or_auto: str) -> str | None:
@@ -180,7 +195,7 @@ def migrate_certificate_file_to_content(file_name_or_auto: str) -> str | None:
     if file_name_or_auto == "auto":
         return "auto"
     try:
-        with open(file_name_or_auto, encoding=DEFAULT_ENCODING) as certiticate_file:
-            return certiticate_file.read()
+        with open(file_name_or_auto, encoding=DEFAULT_ENCODING) as certificate_file:
+            return certificate_file.read()
     except OSError:
         return None

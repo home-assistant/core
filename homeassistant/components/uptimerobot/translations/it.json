@@ -28,5 +28,18 @@
                 "description": "Devi fornire la chiave API 'principale' da UptimeRobot"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "monitor_status": {
+                "state": {
+                    "down": "Spento",
+                    "not_checked_yet": "Non ancora controllato",
+                    "pause": "Pausa",
+                    "seems_down": "Sembra spento",
+                    "up": "Acceso"
+                }
+            }
+        }
     }
 }

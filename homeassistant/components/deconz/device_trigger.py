@@ -28,6 +28,7 @@ from .deconz_event import (
     DeconzAlarmEvent,
     DeconzEvent,
     DeconzPresenceEvent,
+    DeconzRelativeRotaryEvent,
 )
 from .gateway import DeconzGateway
 
@@ -125,6 +126,18 @@ HUE_TAP_REMOTE = {
     (CONF_SHORT_PRESS, CONF_BUTTON_2): {CONF_EVENT: 16},
     (CONF_SHORT_PRESS, CONF_BUTTON_3): {CONF_EVENT: 17},
     (CONF_SHORT_PRESS, CONF_BUTTON_4): {CONF_EVENT: 18},
+}
+
+HUE_WALL_REMOTE_MODEL = "RDM001"  # Hue wall switch
+HUE_WALL_REMOTE = {
+    (CONF_SHORT_PRESS, CONF_BUTTON_1): {CONF_EVENT: 1000},
+    (CONF_SHORT_RELEASE, CONF_BUTTON_1): {CONF_EVENT: 1002},
+    (CONF_LONG_PRESS, CONF_BUTTON_1): {CONF_EVENT: 1001},
+    (CONF_LONG_RELEASE, CONF_BUTTON_1): {CONF_EVENT: 1003},
+    (CONF_SHORT_PRESS, CONF_BUTTON_2): {CONF_EVENT: 2000},
+    (CONF_SHORT_RELEASE, CONF_BUTTON_2): {CONF_EVENT: 2002},
+    (CONF_LONG_PRESS, CONF_BUTTON_2): {CONF_EVENT: 2001},
+    (CONF_LONG_RELEASE, CONF_BUTTON_2): {CONF_EVENT: 2003},
 }
 
 FRIENDS_OF_HUE_SWITCH_MODEL = "FOHSWITCH"
@@ -581,6 +594,7 @@ REMOTES = {
     HUE_DIMMER_REMOTE_MODEL_GEN3: HUE_DIMMER_REMOTE,
     HUE_BUTTON_REMOTE_MODEL: HUE_BUTTON_REMOTE,
     HUE_TAP_REMOTE_MODEL: HUE_TAP_REMOTE,
+    HUE_WALL_REMOTE_MODEL: HUE_WALL_REMOTE,
     FRIENDS_OF_HUE_SWITCH_MODEL: FRIENDS_OF_HUE_SWITCH,
     STYRBAR_REMOTE_MODEL: STYRBAR_REMOTE,
     SYMFONISK_SOUND_CONTROLLER_MODEL: SYMFONISK_SOUND_CONTROLLER,
@@ -635,7 +649,7 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 def _get_deconz_event_from_device(
     hass: HomeAssistant,
     device: dr.DeviceEntry,
-) -> DeconzAlarmEvent | DeconzEvent | DeconzPresenceEvent:
+) -> DeconzAlarmEvent | DeconzEvent | DeconzPresenceEvent | DeconzRelativeRotaryEvent:
     """Resolve deconz event from device."""
     gateways: dict[str, DeconzGateway] = hass.data.get(DOMAIN, {})
     for gateway in gateways.values():

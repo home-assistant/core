@@ -41,16 +41,47 @@
             }
         }
     },
-    "options": {
-        "error": {
-            "invalid_mac_list": "Egy list\u00e1ra van sz\u00fcks\u00e9g, melyben a MAC-c\u00edmek vessz\u0151vel vannak elv\u00e1lasztva"
+    "entity": {
+        "sensor": {
+            "license_plate": {
+                "state": {
+                    "none": "Nincs"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecate_smart_sensor": {
+            "description": "Az intelligens \u00e9szlel\u00e9sek egys\u00e9ges \"Detected Object\" \u00e9rz\u00e9kel\u0151je elavult. Hely\u00e9t az egyes intelligens \u00e9szlel\u00e9si t\u00edpusokhoz tartoz\u00f3 egyedi intelligens \u00e9szlel\u00e9si bin\u00e1ris \u00e9rz\u00e9kel\u0151k vett\u00e9k \u00e1t. K\u00e9rj\u00fck, ennek megfelel\u0151en friss\u00edtse a sablonokat \u00e9s automatiz\u00e1l\u00e1sokat.",
+            "title": "Az intelligens \u00e9rz\u00e9kel\u00e9si \u00e9rz\u00e9kel\u0151 elavult"
         },
+        "ea_setup_failed": {
+            "description": "Az UniFi Protect {version}. verzi\u00f3j\u00e1t haszn\u00e1lja, amely egy korai hozz\u00e1f\u00e9r\u00e9s\u0171 verzi\u00f3. Helyrehozhatatlan hiba t\u00f6rt\u00e9nt az integr\u00e1ci\u00f3 bet\u00f6lt\u00e9se k\u00f6zben. K\u00e9rem, [haszn\u00e1ljon stabil verzi\u00f3t](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) az integr\u00e1ci\u00f3 tov\u00e1bbi haszn\u00e1lat\u00e1hoz.\n\nHiba: {error}",
+            "title": "Be\u00e1ll\u00edt\u00e1si hiba a korai hozz\u00e1f\u00e9r\u00e9s\u0171 verzi\u00f3 haszn\u00e1lat\u00e1val"
+        },
+        "ea_warning": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Biztos, hogy az UniFi Protect nem t\u00e1mogatott verzi\u00f3it szeretn\u00e9 futtatni? Ez a Home Assistant integr\u00e1ci\u00f3j\u00e1nak meghib\u00e1sod\u00e1s\u00e1t okozhatja.",
+                        "title": "{version}. verzi\u00f3 egy korai hozz\u00e1f\u00e9r\u00e9s\u0171 verzi\u00f3"
+                    },
+                    "start": {
+                        "description": "Az UniFi Protect {version}. verzi\u00f3j\u00e1t haszn\u00e1lja, amely egy korai hozz\u00e1f\u00e9r\u00e9s\u0171 verzi\u00f3. [A korai hozz\u00e1f\u00e9r\u00e9s\u0171 verzi\u00f3kat a Home Assistant nem t\u00e1mogatja] (https://www.home-assistant.io/integrations/unifiprotect#about-unifi-early-access) \u00e9s aj\u00e1nlott a lehet\u0151 leghamarabb visszat\u00e9rni a stabil verzi\u00f3j\u00e1hoz.",
+                        "title": "{version}. verzi\u00f3 egy korai hozz\u00e1f\u00e9r\u00e9s\u0171 verzi\u00f3"
+                    }
+                }
+            },
+            "title": "{version} UniFi Protect korai hozz\u00e1f\u00e9r\u00e9si verzi\u00f3"
+        }
+    },
+    "options": {
         "step": {
             "init": {
                 "data": {
                     "all_updates": "Val\u00f3s idej\u0171 m\u00e9r\u0151sz\u00e1mok (FIGYELEM: nagym\u00e9rt\u00e9kben n\u00f6veli a CPU terhel\u00e9st)",
+                    "allow_ea": "A Protect korai hozz\u00e1f\u00e9r\u00e9s\u0171 verzi\u00f3inak enged\u00e9lyez\u00e9se (FIGYELMEZTET\u00c9S: Az integr\u00e1ci\u00f3t nem t\u00e1mogatottk\u00e9nt jel\u00f6li meg)",
                     "disable_rtsp": "Az RTSP adatfolyam letilt\u00e1sa",
-                    "ignored_devices": "A figyelmen k\u00edv\u00fcl hagyand\u00f3 eszk\u00f6z\u00f6k MAC-c\u00edm\u00e9nek vessz\u0151vel elv\u00e1lasztott list\u00e1ja",
                     "max_media": "A m\u00e9diab\u00f6ng\u00e9sz\u0151be bet\u00f6ltend\u0151 esem\u00e9nyek maxim\u00e1lis sz\u00e1ma (n\u00f6veli a RAM-haszn\u00e1latot)",
                     "override_connection_host": "Kapcsolat c\u00edm\u00e9nek fel\u00fclb\u00edr\u00e1l\u00e1sa"
                 },

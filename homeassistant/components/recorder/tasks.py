@@ -133,13 +133,14 @@ class StatisticsTask(RecorderTask):
     """An object to insert into the recorder queue to run a statistics task."""
 
     start: datetime
+    fire_events: bool
 
     def run(self, instance: Recorder) -> None:
         """Run statistics task."""
-        if statistics.compile_statistics(instance, self.start):
+        if statistics.compile_statistics(instance, self.start, self.fire_events):
             return
         # Schedule a new statistics task if this one didn't finish
-        instance.queue_task(StatisticsTask(self.start))
+        instance.queue_task(StatisticsTask(self.start, self.fire_events))
 
 
 @dataclass

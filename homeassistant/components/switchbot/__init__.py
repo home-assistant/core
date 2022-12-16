@@ -42,6 +42,7 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.HYGROMETER.value: [Platform.SENSOR],
     SupportedModels.CONTACT.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
     SupportedModels.MOTION.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
+    SupportedModels.HUMIDIFIER.value: [Platform.HUMIDIFIER, Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
@@ -50,6 +51,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.PLUG.value: switchbot.SwitchbotPlugMini,
     SupportedModels.BULB.value: switchbot.SwitchbotBulb,
     SupportedModels.LIGHT_STRIP.value: switchbot.SwitchbotLightStrip,
+    SupportedModels.HUMIDIFIER.value: switchbot.SwitchbotHumidifier,
 }
 
 
@@ -84,7 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     address: str = entry.data[CONF_ADDRESS]
     ble_device = bluetooth.async_ble_device_from_address(
         hass, address.upper(), connectable
-    ) or await switchbot.get_device(address)
+    )
     if not ble_device:
         raise ConfigEntryNotReady(
             f"Could not find Switchbot {sensor_type} with address {address}"

@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
-from datetime import timedelta
+from collections.abc import Callable, Iterable
+from datetime import datetime, timedelta
 import logging
 from types import MappingProxyType
 from typing import Any
@@ -20,8 +20,9 @@ from aiohomekit.model.services import Service
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_VIA_DEVICE, EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
+from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
@@ -29,6 +30,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from .const import (
     CHARACTERISTIC_PLATFORMS,
     CONTROLLER,
+    DEBOUNCE_COOLDOWN,
     DOMAIN,
     HOMEKIT_ACCESSORY_DISPATCH,
     IDENTIFIER_ACCESSORY_ID,
@@ -41,6 +43,8 @@ from .device_trigger import async_fire_triggers, async_setup_triggers_for_entry
 
 RETRY_INTERVAL = 60  # seconds
 MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE = 3
+
+
 BLE_AVAILABILITY_CHECK_INTERVAL = 1800  # seconds
 
 _LOGGER = logging.getLogger(__name__)
@@ -110,16 +114,7 @@ class HKDevice:
 
         self.signal_state_updated = "_".join((DOMAIN, self.unique_id, "state_updated"))
 
-        # Current values of all characteristics homekit_controller is tracking.
-        # Key is a (accessory_id, characteristic_id) tuple.
-        self.current_state: dict[tuple[int, int], Any] = {}
-
         self.pollable_characteristics: list[tuple[int, int]] = []
-
-        # If this is set polling is active and can be disabled by calling
-        # this method.
-        self._polling_interval_remover: CALLBACK_TYPE | None = None
-        self._ble_available_interval_remover: CALLBACK_TYPE | None = None
 
         # Never allow concurrent polling of the same accessory or bridge
         self._polling_lock = asyncio.Lock()
@@ -130,6 +125,14 @@ class HKDevice:
         self.unreliable_serial_numbers = False
 
         self.watchable_characteristics: list[tuple[int, int]] = []
+
+        self._debounced_update = Debouncer(
+            hass,
+            _LOGGER,
+            cooldown=DEBOUNCE_COOLDOWN,
+            immediate=False,
+            function=self.async_update,
+        )
 
     @property
     def entity_map(self) -> Accessories:
@@ -177,8 +180,8 @@ class HKDevice:
         self.available = available
         async_dispatcher_send(self.hass, self.signal_state_updated)
 
-    async def _async_retry_populate_ble_accessory_state(self, event: Event) -> None:
-        """Try again to populate the BLE accessory state.
+    async def _async_populate_ble_accessory_state(self, event: Event) -> None:
+        """Populate the BLE accessory state without blocking startup.
 
         If the accessory was asleep at startup we need to retry
         since we continued on to allow startup to proceed.
@@ -186,6 +189,7 @@ class HKDevice:
         If this fails the state may be inconsistent, but will
         get corrected as soon as the accessory advertises again.
         """
+        self._async_start_polling()
         try:
             await self.pairing.async_populate_accessories_state(force_update=True)
         except STARTUP_EXCEPTIONS as ex:
@@ -213,20 +217,28 @@ class HKDevice:
         # so we only poll those chars but that is not possible
         # yet.
         attempts = None if self.hass.state == CoreState.running else 1
-        try:
-            await self.pairing.async_populate_accessories_state(
-                force_update=True, attempts=attempts
-            )
-        except AccessoryNotFoundError:
-            if transport != Transport.BLE or not pairing.accessories:
-                # BLE devices may sleep and we can't force a connection
-                raise
+        if (
+            transport == Transport.BLE
+            and pairing.accessories
+            and pairing.accessories.has_aid(1)
+        ):
+            # The GSN gets restored and a catch up poll will be
+            # triggered via disconnected events automatically
+            # if we are out of sync. To be sure we are in sync;
+            # If for some reason the BLE connection failed
+            # previously we force an update after startup
+            # is complete.
             entry.async_on_unload(
                 self.hass.bus.async_listen(
                     EVENT_HOMEASSISTANT_STARTED,
-                    self._async_retry_populate_ble_accessory_state,
+                    self._async_populate_ble_accessory_state,
                 )
             )
+        else:
+            await self.pairing.async_populate_accessories_state(
+                force_update=True, attempts=attempts
+            )
+            self._async_start_polling()
 
         entry.async_on_unload(pairing.dispatcher_connect(self.process_new_events))
         entry.async_on_unload(
@@ -244,23 +256,33 @@ class HKDevice:
 
         self.async_set_available_state(self.pairing.is_available)
 
-        self._polling_interval_remover = async_track_time_interval(
-            self.hass, self.async_update, self.pairing.poll_interval
-        )
-
         if transport == Transport.BLE:
             # If we are using BLE, we need to periodically check of the
             # BLE device is available since we won't get callbacks
             # when it goes away since we HomeKit supports disconnected
             # notifications and we cannot treat a disconnect as unavailability.
-            self._ble_available_interval_remover = async_track_time_interval(
-                self.hass,
-                self.async_update_available_state,
-                timedelta(seconds=BLE_AVAILABILITY_CHECK_INTERVAL),
+            entry.async_on_unload(
+                async_track_time_interval(
+                    self.hass,
+                    self.async_update_available_state,
+                    timedelta(seconds=BLE_AVAILABILITY_CHECK_INTERVAL),
+                )
             )
             # BLE devices always get an RSSI sensor as well
             if "sensor" not in self.platforms:
                 await self.async_load_platform("sensor")
+
+    @callback
+    def _async_start_polling(self) -> None:
+        """Start polling for updates."""
+        # We use async_request_update to avoid multiple updates
+        # at the same time which would generate a spurious warning
+        # in the log about concurrent polling.
+        self.config_entry.async_on_unload(
+            async_track_time_interval(
+                self.hass, self.async_request_update, self.pairing.poll_interval
+            )
+        )
 
     async def async_add_new_entities(self) -> None:
         """Add new entities to Home Assistant."""
@@ -518,9 +540,6 @@ class HKDevice:
 
     async def async_unload(self) -> None:
         """Stop interacting with device and prepare for removal from hass."""
-        if self._polling_interval_remover:
-            self._polling_interval_remover()
-
         await self.pairing.shutdown()
 
         await self.hass.config_entries.async_unload_platforms(
@@ -635,6 +654,10 @@ class HKDevice:
         """Update the available state of the device."""
         self.async_set_available_state(self.pairing.is_available)
 
+    async def async_request_update(self, now: datetime | None = None) -> None:
+        """Request an debounced update from the accessory."""
+        await self._debounced_update.async_call()
+
     async def async_update(self, now=None):
         """Poll state of all entities attached to this bridge/accessory."""
         if not self.pollable_characteristics:
@@ -685,50 +708,28 @@ class HKDevice:
 
             _LOGGER.debug("Finished HomeKit controller update: %s", self.unique_id)
 
-    def process_new_events(self, new_values_dict) -> None:
+    def process_new_events(
+        self, new_values_dict: dict[tuple[int, int], dict[str, Any]]
+    ) -> None:
         """Process events from accessory into HA state."""
         self.async_set_available_state(True)
 
         # Process any stateless events (via device_triggers)
         async_fire_triggers(self, new_values_dict)
 
-        for (aid, cid), value in new_values_dict.items():
-            accessory = self.current_state.setdefault(aid, {})
-            accessory[cid] = value
-
-        # self.current_state will be replaced by entity_map in a future PR
-        # For now we update both
         self.entity_map.process_changes(new_values_dict)
 
         async_dispatcher_send(self.hass, self.signal_state_updated)
 
-    async def get_characteristics(self, *args, **kwargs) -> dict[str, Any]:
+    async def get_characteristics(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
         """Read latest state from homekit accessory."""
         return await self.pairing.get_characteristics(*args, **kwargs)
 
-    async def put_characteristics(self, characteristics) -> None:
+    async def put_characteristics(
+        self, characteristics: Iterable[tuple[int, int, Any]]
+    ) -> None:
         """Control a HomeKit device state from Home Assistant."""
-        results = await self.pairing.put_characteristics(characteristics)
-
-        # Feed characteristics back into HA and update the current state
-        # results will only contain failures, so anythin in characteristics
-        # but not in results was applied successfully - we can just have HA
-        # reflect the change immediately.
-
-        new_entity_state = {}
-        for aid, iid, value in characteristics:
-            key = (aid, iid)
-
-            # If the key was returned by put_characteristics() then the
-            # change didn't work
-            if key in results:
-                continue
-
-            # Otherwise it was accepted and we can apply the change to
-            # our state
-            new_entity_state[key] = {"value": value}
-
-        self.process_new_events(new_entity_state)
+        await self.pairing.put_characteristics(characteristics)
 
     @property
     def unique_id(self) -> str:

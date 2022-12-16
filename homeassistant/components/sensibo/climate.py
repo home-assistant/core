@@ -19,8 +19,7 @@ from homeassistant.const import (
     ATTR_STATE,
     ATTR_TEMPERATURE,
     PRECISION_TENTHS,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -171,14 +170,16 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         super().__init__(coordinator, device_id)
         self._attr_unique_id = device_id
         self._attr_temperature_unit = (
-            TEMP_CELSIUS if self.device_data.temp_unit == "C" else TEMP_FAHRENHEIT
+            UnitOfTemperature.CELSIUS
+            if self.device_data.temp_unit == "C"
+            else UnitOfTemperature.FAHRENHEIT
         )
         self._attr_supported_features = self.get_features()
         self._attr_precision = PRECISION_TENTHS
 
-    def get_features(self) -> int:
+    def get_features(self) -> ClimateEntityFeature:
         """Get supported features."""
-        features = 0
+        features = ClimateEntityFeature(0)
         for key in self.device_data.full_features:
             if key in FIELD_TO_FLAG:
                 features |= FIELD_TO_FLAG[key]
@@ -212,7 +213,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         if self.device_data.temp:
             return TemperatureConverter.convert(
                 self.device_data.temp,
-                TEMP_CELSIUS,
+                UnitOfTemperature.CELSIUS,
                 self.temperature_unit,
             )
         return None
@@ -220,7 +221,11 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     @property
     def temperature_unit(self) -> str:
         """Return temperature unit."""
-        return TEMP_CELSIUS if self.device_data.temp_unit == "C" else TEMP_FAHRENHEIT
+        return (
+            UnitOfTemperature.CELSIUS
+            if self.device_data.temp_unit == "C"
+            else UnitOfTemperature.FAHRENHEIT
+        )
 
     @property
     def target_temperature(self) -> float | None:
@@ -464,10 +469,14 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
 
         if high_temperature_state.get("temperatureUnit") == "F":
             high_temp = TemperatureConverter.convert(
-                high_temperature_threshold, TEMP_FAHRENHEIT, TEMP_CELSIUS
+                high_temperature_threshold,
+                UnitOfTemperature.FAHRENHEIT,
+                UnitOfTemperature.CELSIUS,
             )
             low_temp = TemperatureConverter.convert(
-                low_temperature_threshold, TEMP_FAHRENHEIT, TEMP_CELSIUS
+                low_temperature_threshold,
+                UnitOfTemperature.FAHRENHEIT,
+                UnitOfTemperature.CELSIUS,
             )
 
         params: dict[str, str | bool | float | dict] = {

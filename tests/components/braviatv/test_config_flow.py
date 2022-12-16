@@ -21,6 +21,7 @@ from homeassistant.components.braviatv.const import (
 )
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import instance_id
 
 from tests.common import MockConfigEntry
@@ -381,7 +382,7 @@ async def test_create_entry_psk(hass):
         }
 
 
-async def test_options_flow(hass):
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test config flow options."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -420,6 +421,56 @@ async def test_options_flow(hass):
 
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert config_entry.options == {CONF_IGNORED_SOURCES: ["HDMI 1", "HDMI 2"]}
+
+        # Test that saving with missing sources is ok
+        with patch(
+            "pybravia.BraviaTV.get_external_status",
+            return_value=BRAVIA_SOURCES[1:],
+        ):
+            result = await hass.config_entries.options.async_init(config_entry.entry_id)
+            result = await hass.config_entries.options.async_configure(
+                result["flow_id"], user_input={CONF_IGNORED_SOURCES: ["HDMI 1"]}
+            )
+            await hass.async_block_till_done()
+            assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+            assert config_entry.options == {CONF_IGNORED_SOURCES: ["HDMI 1"]}
+
+
+async def test_options_flow_error(hass: HomeAssistant) -> None:
+    """Test config flow options."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="very_unique_string",
+        data={
+            CONF_HOST: "bravia-host",
+            CONF_PIN: "1234",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
+        },
+        title="TV-Model",
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch("pybravia.BraviaTV.connect"), patch(
+        "pybravia.BraviaTV.get_power_status",
+        return_value="active",
+    ), patch(
+        "pybravia.BraviaTV.get_external_status",
+        return_value=BRAVIA_SOURCES,
+    ), patch(
+        "pybravia.BraviaTV.send_rest_req",
+        return_value={},
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    with patch(
+        "pybravia.BraviaTV.send_rest_req",
+        side_effect=BraviaTVError,
+    ):
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "failed_update"
 
 
 @pytest.mark.parametrize(

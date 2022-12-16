@@ -1,12 +1,20 @@
 {
     "config": {
         "abort": {
-            "already_configured": "La ubicaci\u00f3 ja est\u00e0 configurada"
+            "already_configured": "La ubicaci\u00f3 ja est\u00e0 configurada",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {
             "invalid_api_key": "Clau API inv\u00e0lida"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Clau API"
+                },
+                "description": "Si us plau, torna a introduir la clau API de {latitude}, {longitude}.",
+                "title": "Reautenticaci\u00f3 de la integraci\u00f3"
+            },
             "user": {
                 "data": {
                     "api_key": "Clau API",

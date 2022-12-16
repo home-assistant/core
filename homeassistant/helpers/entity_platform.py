@@ -616,6 +616,7 @@ class EntityPlatform:
                 original_name=entity.name,
                 suggested_object_id=suggested_object_id,
                 supported_features=entity.supported_features,
+                translation_key=entity.translation_key,
                 unit_of_measurement=entity.unit_of_measurement,
             )
 

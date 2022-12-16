@@ -14,12 +14,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
-    POWER_KILO_WATT,
-    POWER_WATT,
     TEMP_CELSIUS,
+    UnitOfElectricPotential,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -64,14 +63,14 @@ SENSORS: tuple[PVOutputSensorEntityDescription, ...] = (
     PVOutputSensorEntityDescription(
         key="normalized_output",
         name="Efficiency",
-        native_unit_of_measurement=f"{ENERGY_KILO_WATT_HOUR}/{POWER_KILO_WATT}",
+        native_unit_of_measurement=f"{ENERGY_KILO_WATT_HOUR}/{UnitOfPower.KILO_WATT}",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.normalized_output,
     ),
     PVOutputSensorEntityDescription(
         key="power_consumption",
         name="Power consumed",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.power_consumption,
@@ -79,7 +78,7 @@ SENSORS: tuple[PVOutputSensorEntityDescription, ...] = (
     PVOutputSensorEntityDescription(
         key="power_generation",
         name="Power generated",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.power_generation,
@@ -95,7 +94,7 @@ SENSORS: tuple[PVOutputSensorEntityDescription, ...] = (
     PVOutputSensorEntityDescription(
         key="voltage",
         name="Voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.voltage,

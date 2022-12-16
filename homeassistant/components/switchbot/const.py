@@ -23,6 +23,7 @@ class SupportedModels(StrEnum):
     CONTACT = "contact"
     PLUG = "plug"
     MOTION = "motion"
+    HUMIDIFIER = "humidifier"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -32,6 +33,7 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.COLOR_BULB: SupportedModels.BULB,
     SwitchbotModel.LIGHT_STRIP: SupportedModels.LIGHT_STRIP,
     SwitchbotModel.CEILING_LIGHT: SupportedModels.CEILING_LIGHT,
+    SwitchbotModel.HUMIDIFIER: SupportedModels.HUMIDIFIER,
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {

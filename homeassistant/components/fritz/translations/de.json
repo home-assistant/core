@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
-            "ignore_ip6_link_local": "IPv6 link local address wird nicht unterst\u00fctzt.",
+            "ignore_ip6_link_local": "IPv6 Link-Local-Adresse wird nicht unterst\u00fctzt.",
             "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
@@ -39,7 +39,7 @@
                     "username": "Benutzername"
                 },
                 "description": "FRITZ!Box Tools einrichten, um deine FRITZ!Box zu steuern.\nMindestens erforderlich: Benutzername, Passwort.",
-                "title": "Setup FRITZ!Box Tools"
+                "title": "FRITZ!Box Tools einrichten"
             }
         }
     },

@@ -7,7 +7,11 @@ from typing import Any
 from pyeight.eight import EightSleep
 import voluptuous as vol
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
@@ -179,6 +183,9 @@ class EightUserSensor(EightSleepBaseEntity, SensorEntity):
         elif self._sensor in ("current_sleep", "last_sleep", "current_sleep_fitness"):
             self._attr_native_unit_of_measurement = "Score"
 
+        if self._sensor != "sleep_stage":
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+
         _LOGGER.debug(
             "User Sensor: %s, Side: %s, User: %s",
             self._sensor,
@@ -272,6 +279,7 @@ class EightRoomSensor(EightSleepBaseEntity, SensorEntity):
 
     _attr_icon = "mdi:thermometer"
     _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     def __init__(

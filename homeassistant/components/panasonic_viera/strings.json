@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Setup your TV",
+        "title": "Set up your TV",
         "description": "Enter your Panasonic Viera TV's [%key:common::config_flow::data::ip%]",
         "data": {
           "host": "[%key:common::config_flow::data::ip%]",

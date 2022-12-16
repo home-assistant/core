@@ -34,11 +34,10 @@ from homeassistant.core import (
     Event,
     HomeAssistant,
     State,
-    async_get_hass,
     callback,
     split_entity_id,
 )
-from homeassistant.helpers import config_validation as cv, issue_registry
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
@@ -78,7 +77,7 @@ STAT_DISTANCE_ABSOLUTE = "distance_absolute"
 STAT_MEAN = "mean"
 STAT_MEDIAN = "median"
 STAT_NOISINESS = "noisiness"
-STAT_QUANTILES = "quantiles"
+STAT_PERCENTILE = "percentile"
 STAT_STANDARD_DEVIATION = "standard_deviation"
 STAT_SUM = "sum"
 STAT_SUM_DIFFERENCES = "sum_differences"
@@ -107,7 +106,7 @@ STATS_NUMERIC_SUPPORT = {
     STAT_MEAN,
     STAT_MEDIAN,
     STAT_NOISINESS,
-    STAT_QUANTILES,
+    STAT_PERCENTILE,
     STAT_STANDARD_DEVIATION,
     STAT_SUM,
     STAT_SUM_DIFFERENCES,
@@ -135,7 +134,6 @@ STATS_NOT_A_NUMBER = {
     STAT_DATETIME_OLDEST,
     STAT_DATETIME_VALUE_MAX,
     STAT_DATETIME_VALUE_MIN,
-    STAT_QUANTILES,
 }
 
 STATS_DATETIME = {
@@ -157,6 +155,7 @@ STAT_NUMERIC_RETAIN_UNIT = {
     STAT_MEAN,
     STAT_MEDIAN,
     STAT_NOISINESS,
+    STAT_PERCENTILE,
     STAT_STANDARD_DEVIATION,
     STAT_SUM,
     STAT_SUM_DIFFERENCES,
@@ -177,37 +176,16 @@ CONF_STATE_CHARACTERISTIC = "state_characteristic"
 CONF_SAMPLES_MAX_BUFFER_SIZE = "sampling_size"
 CONF_MAX_AGE = "max_age"
 CONF_PRECISION = "precision"
-CONF_QUANTILE_INTERVALS = "quantile_intervals"
-CONF_QUANTILE_METHOD = "quantile_method"
+CONF_PERCENTILE = "percentile"
 
-DEFAULT_NAME = "Stats"
+DEFAULT_NAME = "Statistical characteristic"
 DEFAULT_PRECISION = 2
-DEFAULT_QUANTILE_INTERVALS = 4
-DEFAULT_QUANTILE_METHOD = "exclusive"
 ICON = "mdi:calculator"
 
 
 def valid_state_characteristic_configuration(config: dict[str, Any]) -> dict[str, Any]:
     """Validate that the characteristic selected is valid for the source sensor type, throw if it isn't."""
     is_binary = split_entity_id(config[CONF_ENTITY_ID])[0] == BINARY_SENSOR_DOMAIN
-
-    if config.get(CONF_STATE_CHARACTERISTIC) is None:
-        config[CONF_STATE_CHARACTERISTIC] = STAT_COUNT if is_binary else STAT_MEAN
-        issue_registry.async_create_issue(
-            hass=async_get_hass(),
-            domain=DOMAIN,
-            issue_id=f"{config[CONF_ENTITY_ID]}_default_characteristic",
-            breaks_in_ha_version="2022.12.0",
-            is_fixable=False,
-            severity=issue_registry.IssueSeverity.WARNING,
-            translation_key="deprecation_warning_characteristic",
-            translation_placeholders={
-                "entity": config[CONF_NAME],
-                "characteristic": config[CONF_STATE_CHARACTERISTIC],
-            },
-            learn_more_url="https://github.com/home-assistant/core/pull/60402",
-        )
-
     characteristic = cast(str, config[CONF_STATE_CHARACTERISTIC])
     if (is_binary and characteristic not in STATS_BINARY_SUPPORT) or (
         not is_binary and characteristic not in STATS_NUMERIC_SUPPORT
@@ -221,20 +199,14 @@ def valid_state_characteristic_configuration(config: dict[str, Any]) -> dict[str
 
 
 def valid_boundary_configuration(config: dict[str, Any]) -> dict[str, Any]:
-    """Validate that sampling_size, max_age, or both are provided."""
+    """Validate that max_age, sampling_size, or both are provided."""
 
-    if config.get(CONF_SAMPLES_MAX_BUFFER_SIZE) is None:
-        config[CONF_SAMPLES_MAX_BUFFER_SIZE] = 20
-        issue_registry.async_create_issue(
-            hass=async_get_hass(),
-            domain=DOMAIN,
-            issue_id=f"{config[CONF_ENTITY_ID]}_invalid_boundary_config",
-            breaks_in_ha_version="2022.12.0",
-            is_fixable=False,
-            severity=issue_registry.IssueSeverity.WARNING,
-            translation_key="deprecation_warning_size",
-            translation_placeholders={"entity": config[CONF_NAME]},
-            learn_more_url="https://github.com/home-assistant/core/pull/69700",
+    if (
+        config.get(CONF_SAMPLES_MAX_BUFFER_SIZE) is None
+        and config.get(CONF_MAX_AGE) is None
+    ):
+        raise vol.RequiredFieldInvalid(
+            "The sensor configuration must provide 'max_age' and/or 'sampling_size'"
         )
     return config
 
@@ -244,15 +216,14 @@ _PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_STATE_CHARACTERISTIC): cv.string,
-        vol.Optional(CONF_SAMPLES_MAX_BUFFER_SIZE): vol.Coerce(int),
+        vol.Required(CONF_STATE_CHARACTERISTIC): cv.string,
+        vol.Optional(CONF_SAMPLES_MAX_BUFFER_SIZE): vol.All(
+            vol.Coerce(int), vol.Range(min=1)
+        ),
         vol.Optional(CONF_MAX_AGE): cv.time_period,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
-        vol.Optional(
-            CONF_QUANTILE_INTERVALS, default=DEFAULT_QUANTILE_INTERVALS
-        ): vol.All(vol.Coerce(int), vol.Range(min=2)),
-        vol.Optional(CONF_QUANTILE_METHOD, default=DEFAULT_QUANTILE_METHOD): vol.In(
-            ["exclusive", "inclusive"]
+        vol.Optional(CONF_PERCENTILE, default=50): vol.All(
+            vol.Coerce(int), vol.Range(min=1, max=99)
         ),
     }
 )
@@ -280,11 +251,10 @@ async def async_setup_platform(
                 name=config[CONF_NAME],
                 unique_id=config.get(CONF_UNIQUE_ID),
                 state_characteristic=config[CONF_STATE_CHARACTERISTIC],
-                samples_max_buffer_size=config[CONF_SAMPLES_MAX_BUFFER_SIZE],
+                samples_max_buffer_size=config.get(CONF_SAMPLES_MAX_BUFFER_SIZE),
                 samples_max_age=config.get(CONF_MAX_AGE),
                 precision=config[CONF_PRECISION],
-                quantile_intervals=config[CONF_QUANTILE_INTERVALS],
-                quantile_method=config[CONF_QUANTILE_METHOD],
+                percentile=config[CONF_PERCENTILE],
             )
         ],
         update_before_add=True,
@@ -300,11 +270,10 @@ class StatisticsSensor(SensorEntity):
         name: str,
         unique_id: str | None,
         state_characteristic: str,
-        samples_max_buffer_size: int,
+        samples_max_buffer_size: int | None,
         samples_max_age: timedelta | None,
         precision: int,
-        quantile_intervals: int,
-        quantile_method: Literal["exclusive", "inclusive"],
+        percentile: int,
     ) -> None:
         """Initialize the Statistics sensor."""
         self._attr_icon: str = ICON
@@ -316,21 +285,17 @@ class StatisticsSensor(SensorEntity):
             split_entity_id(self._source_entity_id)[0] == BINARY_SENSOR_DOMAIN
         )
         self._state_characteristic: str = state_characteristic
-        self._samples_max_buffer_size: int = samples_max_buffer_size
+        self._samples_max_buffer_size: int | None = samples_max_buffer_size
         self._samples_max_age: timedelta | None = samples_max_age
         self._precision: int = precision
-        self._quantile_intervals: int = quantile_intervals
-        self._quantile_method: Literal["exclusive", "inclusive"] = quantile_method
+        self._percentile: int = percentile
         self._value: StateType | datetime = None
         self._unit_of_measurement: str | None = None
         self._available: bool = False
+
         self.states: deque[float | bool] = deque(maxlen=self._samples_max_buffer_size)
         self.ages: deque[datetime] = deque(maxlen=self._samples_max_buffer_size)
-        self.attributes: dict[str, StateType] = {
-            STAT_AGE_COVERAGE_RATIO: None,
-            STAT_BUFFER_USAGE_RATIO: None,
-            STAT_SOURCE_VALUE_VALID: None,
-        }
+        self.attributes: dict[str, StateType] = {}
 
         self._state_characteristic_fn: Callable[[], StateType | datetime]
         if self.is_binary:
@@ -505,11 +470,8 @@ class StatisticsSensor(SensorEntity):
         self._update_value()
 
         # If max_age is set, ensure to update again after the defined interval.
-        next_to_purge_timestamp = self._next_to_purge_timestamp()
-        if next_to_purge_timestamp:
-            _LOGGER.debug(
-                "%s: scheduling update at %s", self.entity_id, next_to_purge_timestamp
-            )
+        if timestamp := self._next_to_purge_timestamp():
+            _LOGGER.debug("%s: scheduling update at %s", self.entity_id, timestamp)
             if self._update_listener:
                 self._update_listener()
                 self._update_listener = None
@@ -522,7 +484,7 @@ class StatisticsSensor(SensorEntity):
                 self._update_listener = None
 
             self._update_listener = async_track_point_in_utc_time(
-                self.hass, _scheduled_update, next_to_purge_timestamp
+                self.hass, _scheduled_update, timestamp
             )
 
     def _fetch_states_from_database(self) -> list[State]:
@@ -572,18 +534,20 @@ class StatisticsSensor(SensorEntity):
 
     def _update_attributes(self) -> None:
         """Calculate and update the various attributes."""
-        self.attributes[STAT_BUFFER_USAGE_RATIO] = round(
-            len(self.states) / self._samples_max_buffer_size, 2
-        )
-
-        if len(self.states) >= 1 and self._samples_max_age is not None:
-            self.attributes[STAT_AGE_COVERAGE_RATIO] = round(
-                (self.ages[-1] - self.ages[0]).total_seconds()
-                / self._samples_max_age.total_seconds(),
-                2,
+        if self._samples_max_buffer_size is not None:
+            self.attributes[STAT_BUFFER_USAGE_RATIO] = round(
+                len(self.states) / self._samples_max_buffer_size, 2
             )
-        else:
-            self.attributes[STAT_AGE_COVERAGE_RATIO] = None
+
+        if self._samples_max_age is not None:
+            if len(self.states) >= 1:
+                self.attributes[STAT_AGE_COVERAGE_RATIO] = round(
+                    (self.ages[-1] - self.ages[0]).total_seconds()
+                    / self._samples_max_age.total_seconds(),
+                    2,
+                )
+            else:
+                self.attributes[STAT_AGE_COVERAGE_RATIO] = None
 
     def _update_value(self) -> None:
         """Front to call the right statistical characteristics functions.
@@ -700,18 +664,10 @@ class StatisticsSensor(SensorEntity):
             return cast(float, self._stat_sum_differences()) / (len(self.states) - 1)
         return None
 
-    def _stat_quantiles(self) -> StateType:
-        if len(self.states) > self._quantile_intervals:
-            return str(
-                [
-                    round(quantile, self._precision)
-                    for quantile in statistics.quantiles(
-                        self.states,
-                        n=self._quantile_intervals,
-                        method=self._quantile_method,
-                    )
-                ]
-            )
+    def _stat_percentile(self) -> StateType:
+        if len(self.states) >= 2:
+            percentiles = statistics.quantiles(self.states, n=100, method="exclusive")
+            return percentiles[self._percentile - 1]
         return None
 
     def _stat_standard_deviation(self) -> StateType:

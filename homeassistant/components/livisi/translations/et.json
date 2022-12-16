@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "wrong_ip_address": "IP-aadress on vale v\u00f5i SHC-d ei ole v\u00f5imalik kohtv\u00f5rgus k\u00e4tte saada.",
+            "wrong_password": "Salas\u00f5na on vale."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "IP aadress",
+                    "password": "Salas\u00f5na"
+                },
+                "description": "Sisesta SHC IP-aadress ja (kohalik) parool."
+            }
+        }
+    }
+}

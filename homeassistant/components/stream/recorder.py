@@ -21,6 +21,8 @@ from .fmp4utils import read_init, transform_init
 if TYPE_CHECKING:
     import deque
 
+    from homeassistant.components.camera import DynamicStreamSettings
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -38,9 +40,10 @@ class RecorderOutput(StreamOutput):
         hass: HomeAssistant,
         idle_timer: IdleTimer,
         stream_settings: StreamSettings,
+        dynamic_stream_settings: DynamicStreamSettings,
     ) -> None:
         """Initialize recorder output."""
-        super().__init__(hass, idle_timer, stream_settings)
+        super().__init__(hass, idle_timer, stream_settings, dynamic_stream_settings)
         self.video_path: str
 
     @property
@@ -154,7 +157,7 @@ class RecorderOutput(StreamOutput):
                 video_path, mode="wb"
             ) as out_file:
                 init = transform_init(
-                    read_init(in_file), self.stream_settings.orientation
+                    read_init(in_file), self.dynamic_stream_settings.orientation
                 )
                 out_file.write(init)
                 in_file.seek(len(init))

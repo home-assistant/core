@@ -23,10 +23,6 @@
                 },
                 "description": "G\u00ebff een eenzegartegen Profil Numm un. Typescherweise ass dat den Numm vum Profil deens du am viirechte Schr\u00ebtt ausgewielt hues.",
                 "title": "Benotzer Profil."
-            },
-            "reauth": {
-                "description": "De Profil \"{profile}\" muss fr\u00ebsch authentifi\u00e9iert ginn fir weiderhinn Donn\u00e9e\u00eb vun Withing z'empf\u00e4nken.",
-                "title": "Integratioun re-authentifiz\u00e9ieren"
             }
         }
     }

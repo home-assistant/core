@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any, TypedDict, Union
 
 import attr
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import template
@@ -26,7 +27,13 @@ if TYPE_CHECKING:
     from .discovery import MQTTDiscoveryPayload
     from .tag import MQTTTagScanner
 
-_SENTINEL = object()
+
+class PayloadSentinel(StrEnum):
+    """Sentinel for `async_render_with_possible_json_value`."""
+
+    NONE = "none"
+    DEFAULT = "default"
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -143,9 +150,9 @@ class MqttCommandTemplate:
         if self._entity:
             values[ATTR_ENTITY_ID] = self._entity.entity_id
             values[ATTR_NAME] = self._entity.name
-            if not self._template_state:
+            if not self._template_state and self._command_template.hass is not None:
                 self._template_state = template.TemplateStateFromEntityId(
-                    self._command_template.hass, self._entity.entity_id
+                    self._entity.hass, self._entity.entity_id
                 )
             values[ATTR_THIS] = self._template_state
 
@@ -189,10 +196,12 @@ class MqttValueTemplate:
     def async_render_with_possible_json_value(
         self,
         payload: ReceivePayloadType,
-        default: ReceivePayloadType | object = _SENTINEL,
+        default: ReceivePayloadType | PayloadSentinel = PayloadSentinel.NONE,
         variables: TemplateVarsType = None,
     ) -> ReceivePayloadType:
         """Render with possible json value or pass-though a received MQTT value."""
+        rendered_payload: ReceivePayloadType
+
         if self._value_template is None:
             return payload
 
@@ -213,16 +222,19 @@ class MqttValueTemplate:
                 )
             values[ATTR_THIS] = self._template_state
 
-        if default == _SENTINEL:
+        if default is PayloadSentinel.NONE:
             _LOGGER.debug(
                 "Rendering incoming payload '%s' with variables %s and %s",
                 payload,
                 values,
                 self._value_template,
             )
-            return self._value_template.async_render_with_possible_json_value(
-                payload, variables=values
+            rendered_payload = (
+                self._value_template.async_render_with_possible_json_value(
+                    payload, variables=values
+                )
             )
+            return rendered_payload
 
         _LOGGER.debug(
             "Rendering incoming payload '%s' with variables %s with default value '%s' and %s",
@@ -231,9 +243,10 @@ class MqttValueTemplate:
             default,
             self._value_template,
         )
-        return self._value_template.async_render_with_possible_json_value(
+        rendered_payload = self._value_template.async_render_with_possible_json_value(
             payload, default, variables=values
         )
+        return rendered_payload
 
 
 class EntityTopicState:

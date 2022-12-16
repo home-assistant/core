@@ -8,9 +8,9 @@ from typing import TYPE_CHECKING, Any, TypeVar
 import zigpy.exceptions
 from zigpy.zcl.foundation import Status
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import Platform, UnitOfMass
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
@@ -19,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .core import discovery
 from .core.const import (
     CHANNEL_ANALOG_OUTPUT,
+    CHANNEL_BASIC,
     CHANNEL_COLOR,
     CHANNEL_INOVELLI,
     CHANNEL_LEVEL,
@@ -447,7 +448,9 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
             _LOGGER.debug("read value=%s", value)
 
 
-@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.motion.ac02"})
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="opple_cluster", models={"lumi.motion.ac02", "lumi.motion.agl04"}
+)
 class AqaraMotionDetectionInterval(
     ZHANumberConfigurationEntity, id_suffix="detection_interval"
 ):
@@ -583,6 +586,20 @@ class FilterLifeTime(ZHANumberConfigurationEntity, id_suffix="filter_life_time")
     _attr_native_unit_of_measurement: str | None = UNITS[72]
     _zcl_attribute: str = "filter_life_time"
     _attr_name = "Filter life time"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_BASIC,
+    manufacturers={"TexasInstruments"},
+    models={"ti.router"},
+)
+class TiRouterTransmitPower(ZHANumberConfigurationEntity, id_suffix="transmit_power"):
+    """Representation of a ZHA TI transmit power configuration entity."""
+
+    _attr_native_min_value: float = -20
+    _attr_native_max_value: float = 20
+    _zcl_attribute: str = "transmit_power"
+    _attr_name = "Transmit power"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_INOVELLI)
@@ -819,3 +836,32 @@ class InovelliDefaultAllLEDOffIntensity(
     _attr_native_max_value: float = 100
     _zcl_attribute: str = "led_intensity_when_off"
     _attr_name: str = "Default all LED off intensity"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederServingSize(ZHANumberConfigurationEntity, id_suffix="serving_size"):
+    """Aqara pet feeder serving size configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_min_value: float = 1
+    _attr_native_max_value: float = 10
+    _zcl_attribute: str = "serving_size"
+    _attr_name: str = "Serving to dispense"
+    _attr_mode: NumberMode = NumberMode.BOX
+    _attr_icon: str = "mdi:counter"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederPortionWeight(
+    ZHANumberConfigurationEntity, id_suffix="portion_weight"
+):
+    """Aqara pet feeder portion weight configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_min_value: float = 1
+    _attr_native_max_value: float = 100
+    _zcl_attribute: str = "portion_weight"
+    _attr_name: str = "Portion weight"
+    _attr_mode: NumberMode = NumberMode.BOX
+    _attr_native_unit_of_measurement: str = UnitOfMass.GRAMS
+    _attr_icon: str = "mdi:weight-gram"

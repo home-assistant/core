@@ -58,7 +58,7 @@
                 "title": "Il componente aggiuntivo Z-Wave JS si sta avviando."
             },
             "usb_confirm": {
-                "description": "Vuoi configurare {name} con il componente aggiuntivo JS Z-Wave?"
+                "description": "Vuoi configurare {name} con il componente aggiuntivo Z-Wave JS?"
             },
             "zeroconf_confirm": {
                 "description": "Vuoi aggiungere il server Z-Wave JS con l'ID casa {home_id} trovato in {url} a Home Assistant?",

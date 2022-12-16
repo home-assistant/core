@@ -64,35 +64,12 @@
                 "description": "Il tuo backup ha un indirizzo IEEE diverso dalla tua radio. Affinch\u00e9 la rete funzioni correttamente, \u00e8 necessario modificare anche l'indirizzo IEEE della radio. \n\nQuesta \u00e8 un'operazione permanente.",
                 "title": "Sovrascrivi indirizzo IEEE radio"
             },
-            "pick_radio": {
-                "data": {
-                    "radio_type": "Tipo di radio"
-                },
-                "description": "Scegli un tipo di radio Zigbee",
-                "title": "Tipo di radio"
-            },
-            "port_config": {
-                "data": {
-                    "baudrate": "velocit\u00e0 della porta",
-                    "flow_control": "controllo del flusso di dati",
-                    "path": "Percorso del dispositivo seriale"
-                },
-                "description": "Inserire le impostazioni specifiche della porta",
-                "title": "Impostazioni"
-            },
             "upload_manual_backup": {
                 "data": {
                     "uploaded_backup_file": "Carica un file"
                 },
                 "description": "Ripristina le impostazioni di rete da un file JSON di backup caricato. Puoi scaricarne uno da un'installazione ZHA diversa da **Impostazioni di rete** o utilizzare un file Zigbee2MQTT `coordinator_backup.json`.",
                 "title": "Carica un backup manuale"
-            },
-            "user": {
-                "data": {
-                    "path": "Percorso del dispositivo seriale"
-                },
-                "description": "Seleziona la porta seriale per la radio Zigbee",
-                "title": "ZHA"
             }
         }
     },

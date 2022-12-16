@@ -34,7 +34,6 @@
             "invalid_serial": "\u00c9rv\u00e9nytelen soros port",
             "invalid_subscribe_topic": "\u00c9rv\u00e9nytelen feliratkoz\u00e1si (subscribe) topik",
             "invalid_version": "\u00c9rv\u00e9nytelen MySensors verzi\u00f3",
-            "mqtt_required": "Az MQTT integr\u00e1ci\u00f3 nincs be\u00e1ll\u00edtva",
             "not_a_number": "K\u00e9rem, sz\u00e1mot adjon meg",
             "port_out_of_range": "A portsz\u00e1mnak legal\u00e1bb 1-nek \u00e9s legfeljebb 65535-nek kell lennie",
             "same_topic": "A feliratkoz\u00e1s \u00e9s a k\u00f6zz\u00e9t\u00e9tel t\u00e9m\u00e1i ugyanazok",
@@ -44,7 +43,7 @@
             "gw_mqtt": {
                 "data": {
                     "persistence_file": "perzisztencia f\u00e1jl (hagyja \u00fcresen az automatikus gener\u00e1l\u00e1shoz)",
-                    "retain": "mqtt megtart\u00e1sa",
+                    "retain": "mqtt tart\u00e1s (retain)",
                     "topic_in_prefix": "el\u0151tag a beviteli t\u00e9m\u00e1khoz (topic_in_prefix)",
                     "topic_out_prefix": "el\u0151tag a kimeneti t\u00e9m\u00e1khoz (topic_out_prefix)",
                     "version": "MySensors verzi\u00f3"

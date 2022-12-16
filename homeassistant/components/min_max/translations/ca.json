@@ -9,10 +9,10 @@
                     "type": "Caracter\u00edstica estad\u00edstica"
                 },
                 "data_description": {
-                    "round_digits": "Controla el nombre de d\u00edgits decimals quan la caracter\u00edstica estad\u00edstica \u00e9s la mitjana o la mediana."
+                    "round_digits": "Controla el nombre de d\u00edgits decimals quan la caracter\u00edstica estad\u00edstica \u00e9s la mitjana, la mediana o la suma."
                 },
-                "description": "Crea un sensor que calcula el m\u00ednim, m\u00e0xim, la mitjana o la mediana d'una llista de sensors d'entrada.",
-                "title": "Afegeix sensor m\u00edn / m\u00e0x / mitjana / mediana"
+                "description": "Crea un sensor que calcula el m\u00ednim, m\u00e0xim, la mitjana, la mediana o la suma d'una llista de sensors d'entrada.",
+                "title": "Combina l'estat de diversos sensors"
             }
         }
     },
@@ -25,10 +25,10 @@
                     "type": "Caracter\u00edstica estad\u00edstica"
                 },
                 "data_description": {
-                    "round_digits": "Controla el nombre de d\u00edgits decimals quan la caracter\u00edstica estad\u00edstica \u00e9s la mitjana o la mediana."
+                    "round_digits": "Controla el nombre de d\u00edgits decimals quan la caracter\u00edstica estad\u00edstica \u00e9s la mitjana, la mediana o la suma."
                 }
             }
         }
     },
-    "title": "Sensor m\u00edn / m\u00e0x / mitjana / mediana"
+    "title": "Combina l'estat de diversos sensors"
 }

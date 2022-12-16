@@ -1,9 +1,9 @@
 """Support for Rheem EcoNet water heaters."""
 from pyeconet.equipment import EquipmentType
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, PERCENTAGE, VOLUME_GALLONS
+from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -39,10 +39,10 @@ SENSOR_NAMES_TO_UNIT_OF_MEASUREMENT = {
     AVAILABLE_HOT_WATER: PERCENTAGE,
     COMPRESSOR_HEALTH: PERCENTAGE,
     OVERRIDE_STATUS: None,
-    WATER_USAGE_TODAY: VOLUME_GALLONS,
+    WATER_USAGE_TODAY: UnitOfVolume.GALLONS,
     POWER_USAGE_TODAY: None,  # Depends on unit type
     ALERT_COUNT: None,
-    WIFI_SIGNAL: SensorDeviceClass.SIGNAL_STRENGTH,
+    WIFI_SIGNAL: None,
     RUNNING_STATE: None,  # This is just a string
 }
 
@@ -97,16 +97,16 @@ class EcoNetSensor(EcoNetEntity, SensorEntity):
             if self._econet.energy_type == ENERGY_KILO_BRITISH_THERMAL_UNIT.upper():
                 unit_of_measurement = ENERGY_KILO_BRITISH_THERMAL_UNIT
             else:
-                unit_of_measurement = ENERGY_KILO_WATT_HOUR
+                unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
         return unit_of_measurement
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the entity."""
         return f"{self._econet.device_name}_{self._device_name}"
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the unique ID of the entity."""
         return (
             f"{self._econet.device_id}_{self._econet.device_name}_{self._device_name}"

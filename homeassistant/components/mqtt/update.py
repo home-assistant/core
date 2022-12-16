@@ -172,14 +172,22 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
                 )
                 return
 
-            json_payload = {}
+            json_payload: Any | dict = {}
             try:
                 json_payload = json_loads(payload)
-                _LOGGER.debug(
-                    "JSON payload detected after processing payload '%s' on topic %s",
-                    json_payload,
-                    msg.topic,
-                )
+                if isinstance(json_payload, dict):
+                    _LOGGER.debug(
+                        "JSON payload detected after processing payload '%s' on topic %s",
+                        json_payload,
+                        msg.topic,
+                    )
+                else:
+                    _LOGGER.debug(
+                        "Non-dictionary JSON payload detected after processing payload '%s' on topic %s",
+                        payload,
+                        msg.topic,
+                    )
+                    json_payload = {"installed_version": payload}
             except JSON_DECODE_EXCEPTIONS:
                 _LOGGER.debug(
                     "No valid (JSON) payload detected after processing payload '%s' on topic %s",
@@ -196,19 +204,19 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
                 self._attr_latest_version = json_payload["latest_version"]
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
-            if CONF_TITLE in json_payload and not self._attr_title:
+            if CONF_TITLE in json_payload:
                 self._attr_title = json_payload[CONF_TITLE]
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
-            if CONF_RELEASE_SUMMARY in json_payload and not self._attr_release_summary:
+            if CONF_RELEASE_SUMMARY in json_payload:
                 self._attr_release_summary = json_payload[CONF_RELEASE_SUMMARY]
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
-            if CONF_RELEASE_URL in json_payload and not self._attr_release_url:
+            if CONF_RELEASE_URL in json_payload:
                 self._attr_release_url = json_payload[CONF_RELEASE_URL]
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
-            if CONF_ENTITY_PICTURE in json_payload and not self._entity_picture:
+            if CONF_ENTITY_PICTURE in json_payload:
                 self._entity_picture = json_payload[CONF_ENTITY_PICTURE]
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
@@ -253,9 +261,9 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
         get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> UpdateEntityFeature:
         """Return the list of supported features."""
-        support = 0
+        support = UpdateEntityFeature(0)
 
         if self._config.get(CONF_COMMAND_TOPIC) is not None:
             support |= UpdateEntityFeature.INSTALL

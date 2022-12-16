@@ -17,8 +17,8 @@ from homeassistant.const import (
     CONF_USERNAME,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
-    POWER_WATT,
     TEMP_CELSIUS,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -105,7 +105,7 @@ LOCAL_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="current_power",
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         name="Current power",
         state_class=SensorStateClass.MEASUREMENT,
     ),

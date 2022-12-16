@@ -28,5 +28,18 @@
                 "description": "Anda perlu menyediakan kunci API 'main' dari UptimeRobot"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "monitor_status": {
+                "state": {
+                    "down": "Mati",
+                    "not_checked_yet": "Belum diperiksa",
+                    "pause": "Jeda",
+                    "seems_down": "Sepertinya mati",
+                    "up": "Nyala"
+                }
+            }
+        }
     }
 }

@@ -32,6 +32,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.trigger import PluggableAction
 
 from . import WebOsClientWrapper
 from .const import (
@@ -43,6 +44,7 @@ from .const import (
     LIVE_TV_APP_ID,
     WEBOSTV_EXCEPTIONS,
 )
+from .triggers.turn_on import async_get_turn_on_trigger
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -133,16 +135,23 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
 
         # Assume that the TV is not paused
         self._paused = False
-
+        self._turn_on = PluggableAction(self.async_write_ha_state)
         self._current_source = None
         self._source_list: dict = {}
 
-        self._supported_features: int = 0
+        self._supported_features = MediaPlayerEntityFeature(0)
         self._update_states()
 
     async def async_added_to_hass(self) -> None:
         """Connect and subscribe to dispatcher signals and state updates."""
         await super().async_added_to_hass()
+
+        if (entry := self.registry_entry) and entry.device_id:
+            self.async_on_remove(
+                self._turn_on.async_register(
+                    self.hass, async_get_turn_on_trigger(entry.device_id)
+                )
+            )
 
         self.async_on_remove(
             async_dispatcher_connect(self.hass, DOMAIN, self.async_signal_handler)
@@ -157,7 +166,9 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             and (state := await self.async_get_last_state()) is not None
         ):
             self._supported_features = (
-                state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+                state.attributes.get(
+                    ATTR_SUPPORTED_FEATURES, MediaPlayerEntityFeature(0)
+                )
                 & ~MediaPlayerEntityFeature.TURN_ON
             )
 
@@ -314,9 +325,9 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             await self._client.connect()
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
-        if self._wrapper.turn_on:
+        if self._turn_on:
             return self._supported_features | MediaPlayerEntityFeature.TURN_ON
 
         return self._supported_features
@@ -328,7 +339,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
 
     async def async_turn_on(self) -> None:
         """Turn on media player."""
-        self._wrapper.turn_on.async_run(self.hass, self._context)
+        await self._turn_on.async_run(self.hass, self._context)
 
     @cmd
     async def async_volume_up(self) -> None:

@@ -26,16 +26,18 @@ from homeassistant.components.recorder.models import (
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     REVOLUTIONS_PER_MINUTE,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
+    UnitOfIrradiance,
+    UnitOfSoundPressure,
+    UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant, State, split_entity_id
+from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import entity_sources
 from homeassistant.util import dt as dt_util
 
 from . import (
     ATTR_LAST_RESET,
+    ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     DOMAIN,
     STATE_CLASS_MEASUREMENT,
@@ -53,9 +55,11 @@ DEFAULT_STATISTICS = {
 }
 
 EQUIVALENT_UNITS = {
+    "BTU/(h×ft²)": UnitOfIrradiance.BTUS_PER_HOUR_SQUARE_FOOT,
+    "dBa": UnitOfSoundPressure.WEIGHTED_DECIBEL_A,
     "RPM": REVOLUTIONS_PER_MINUTE,
-    "ft3": VOLUME_CUBIC_FEET,
-    "m3": VOLUME_CUBIC_METERS,
+    "ft3": UnitOfVolume.CUBIC_FEET,
+    "m3": UnitOfVolume.CUBIC_METERS,
 }
 
 # Keep track of entities for which a warning about decreasing value has been logged
@@ -450,7 +454,7 @@ def _compile_statistics(  # noqa: C901
             to_query.append(entity_id)
 
     last_stats = statistics.get_latest_short_term_statistics(
-        hass, to_query, metadata=old_metadatas
+        hass, to_query, {"last_reset", "state", "sum"}, metadata=old_metadatas
     )
     for (  # pylint: disable=too-many-nested-blocks
         entity_id,
@@ -508,6 +512,8 @@ def _compile_statistics(  # noqa: C901
             if entity_id in last_stats:
                 # We have compiled history for this sensor before, use that as a starting point
                 last_reset = old_last_reset = last_stats[entity_id][0]["last_reset"]
+                if old_last_reset is not None:
+                    last_reset = old_last_reset = old_last_reset.isoformat()
                 new_state = old_state = last_stats[entity_id][0]["state"]
                 _sum = last_stats[entity_id][0]["sum"] or 0.0
 
@@ -722,3 +728,9 @@ def validate_statistics(
         )
 
     return validation_result
+
+
+@callback
+def exclude_attributes(hass: HomeAssistant) -> set[str]:
+    """Exclude attributes from being recorded in the database."""
+    return {ATTR_OPTIONS}

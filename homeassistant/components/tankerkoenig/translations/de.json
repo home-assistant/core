@@ -6,7 +6,7 @@
         },
         "error": {
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
-            "no_stations": "Konnte keine Station in Reichweite finden."
+            "no_stations": "Es konnte keine Station in Reichweite gefunden werden"
         },
         "step": {
             "reauth_confirm": {
@@ -37,7 +37,6 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "Update-Intervall",
                     "show_on_map": "Stationen auf der Karte anzeigen",
                     "stations": "Stationen"
                 },

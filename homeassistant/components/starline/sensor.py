@@ -11,10 +11,10 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
-    LENGTH_KILOMETERS,
     PERCENTAGE,
     TEMP_CELSIUS,
-    VOLUME_LITERS,
+    UnitOfLength,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -80,7 +80,7 @@ SENSOR_TYPES: tuple[StarlineSensorEntityDescription, ...] = (
     StarlineSensorEntityDescription(
         key="mileage",
         name_="Mileage",
-        native_unit_of_measurement=LENGTH_KILOMETERS,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:counter",
     ),
@@ -160,7 +160,7 @@ class StarlineSensor(StarlineEntity, SensorEntity):
             if type_value == "percents":
                 return PERCENTAGE
             if type_value == "litres":
-                return VOLUME_LITERS
+                return UnitOfVolume.LITERS
         return self.entity_description.native_unit_of_measurement
 
     @property

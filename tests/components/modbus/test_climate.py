@@ -10,6 +10,13 @@ from homeassistant.components.climate.const import (
 from homeassistant.components.modbus.const import (
     CONF_CLIMATES,
     CONF_DATA_TYPE,
+    CONF_HVAC_MODE_AUTO,
+    CONF_HVAC_MODE_COOL,
+    CONF_HVAC_MODE_DRY,
+    CONF_HVAC_MODE_FAN_ONLY,
+    CONF_HVAC_MODE_HEAT,
+    CONF_HVAC_MODE_HEAT_COOL,
+    CONF_HVAC_MODE_OFF,
     CONF_HVAC_MODE_REGISTER,
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
@@ -82,13 +89,13 @@ ENTITY_ID = f"{CLIMATE_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
                     CONF_HVAC_MODE_REGISTER: {
                         CONF_ADDRESS: 11,
                         CONF_HVAC_MODE_VALUES: {
-                            HVACMode.OFF.value: 0,
-                            HVACMode.HEAT.value: 1,
-                            HVACMode.COOL.value: 2,
-                            HVACMode.HEAT_COOL.value: 3,
-                            HVACMode.DRY.value: 4,
-                            HVACMode.FAN_ONLY.value: 5,
-                            HVACMode.AUTO.value: 6,
+                            "state_off": 0,
+                            "state_heat": 1,
+                            "state_cool": 2,
+                            "state_heat_cool": 3,
+                            "state_dry": 4,
+                            "state_fan_only": 5,
+                            "state_auto": 6,
                         },
                     },
                 }
@@ -114,10 +121,12 @@ async def test_config_climate(hass, mock_modbus):
                     CONF_HVAC_MODE_REGISTER: {
                         CONF_ADDRESS: 11,
                         CONF_HVAC_MODE_VALUES: {
-                            HVACMode.OFF.value: 0,
-                            HVACMode.HEAT.value: 1,
-                            HVACMode.COOL.value: 2,
-                            HVACMode.HEAT_COOL.value: 3,
+                            CONF_HVAC_MODE_OFF: 0,
+                            CONF_HVAC_MODE_HEAT: 1,
+                            CONF_HVAC_MODE_COOL: 2,
+                            CONF_HVAC_MODE_HEAT_COOL: 3,
+                            CONF_HVAC_MODE_AUTO: 4,
+                            CONF_HVAC_MODE_FAN_ONLY: 5,
                         },
                     },
                 }
@@ -132,6 +141,8 @@ async def test_config_hvac_mode_register(hass, mock_modbus):
     assert HVACMode.HEAT in state.attributes[ATTR_HVAC_MODES]
     assert HVACMode.COOL in state.attributes[ATTR_HVAC_MODES]
     assert HVACMode.HEAT_COOL in state.attributes[ATTR_HVAC_MODES]
+    assert HVACMode.AUTO in state.attributes[ATTR_HVAC_MODES]
+    assert HVACMode.FAN_ONLY in state.attributes[ATTR_HVAC_MODES]
 
 
 @pytest.mark.parametrize(
@@ -203,9 +214,9 @@ async def test_temperature_climate(hass, expected, mock_do_cycle):
                         CONF_HVAC_MODE_REGISTER: {
                             CONF_ADDRESS: 118,
                             CONF_HVAC_MODE_VALUES: {
-                                HVACMode.COOL.value: 0,
-                                HVACMode.HEAT.value: 1,
-                                HVACMode.DRY.value: 2,
+                                CONF_HVAC_MODE_COOL: 0,
+                                CONF_HVAC_MODE_HEAT: 1,
+                                CONF_HVAC_MODE_DRY: 2,
                             },
                         },
                     },
@@ -227,9 +238,9 @@ async def test_temperature_climate(hass, expected, mock_do_cycle):
                         CONF_HVAC_MODE_REGISTER: {
                             CONF_ADDRESS: 118,
                             CONF_HVAC_MODE_VALUES: {
-                                HVACMode.COOL.value: 0,
-                                HVACMode.HEAT.value: 1,
-                                HVACMode.DRY.value: 2,
+                                CONF_HVAC_MODE_COOL: 0,
+                                CONF_HVAC_MODE_HEAT: 1,
+                                CONF_HVAC_MODE_DRY: 2,
                             },
                         },
                     },
@@ -251,9 +262,9 @@ async def test_temperature_climate(hass, expected, mock_do_cycle):
                         CONF_HVAC_MODE_REGISTER: {
                             CONF_ADDRESS: 118,
                             CONF_HVAC_MODE_VALUES: {
-                                HVACMode.COOL.value: 0,
-                                HVACMode.HEAT.value: 2,
-                                HVACMode.DRY.value: 3,
+                                CONF_HVAC_MODE_COOL: 0,
+                                CONF_HVAC_MODE_HEAT: 2,
+                                CONF_HVAC_MODE_DRY: 3,
                             },
                         },
                         CONF_HVAC_ONOFF_REGISTER: 119,
@@ -374,8 +385,8 @@ async def test_service_climate_set_temperature(
                         CONF_HVAC_MODE_REGISTER: {
                             CONF_ADDRESS: 118,
                             CONF_HVAC_MODE_VALUES: {
-                                HVACMode.COOL.value: 1,
-                                HVACMode.HEAT.value: 2,
+                                CONF_HVAC_MODE_COOL: 1,
+                                CONF_HVAC_MODE_HEAT: 2,
                             },
                         },
                     }
@@ -395,8 +406,8 @@ async def test_service_climate_set_temperature(
                         CONF_HVAC_MODE_REGISTER: {
                             CONF_ADDRESS: 118,
                             CONF_HVAC_MODE_VALUES: {
-                                HVACMode.COOL.value: 1,
-                                HVACMode.HEAT.value: 2,
+                                CONF_HVAC_MODE_COOL: 1,
+                                CONF_HVAC_MODE_HEAT: 2,
                             },
                         },
                         CONF_HVAC_ONOFF_REGISTER: 119,

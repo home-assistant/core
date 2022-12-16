@@ -34,7 +34,6 @@
             "invalid_serial": "Ung\u00fcltiger Serieller Port",
             "invalid_subscribe_topic": "Ung\u00fcltiges Abonnementthema",
             "invalid_version": "Ung\u00fcltige MySensors Version",
-            "mqtt_required": "Die MQTT-Integration ist nicht eingerichtet",
             "not_a_number": "Bitte eine Nummer eingeben",
             "port_out_of_range": "Die Portnummer muss mindestens 1 und darf h\u00f6chstens 65535 sein",
             "same_topic": "Themen zum Abonnieren und Ver\u00f6ffentlichen sind gleich",

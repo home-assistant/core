@@ -7,6 +7,7 @@ from homeassistant.components.deconz.deconz_event import (
     CONF_DECONZ_ALARM_EVENT,
     CONF_DECONZ_EVENT,
 )
+from homeassistant.components.deconz.util import serial_from_unique_id
 from homeassistant.const import (
     CONF_CODE,
     CONF_DEVICE_ID,
@@ -60,7 +61,7 @@ async def test_humanifying_deconz_alarm_event(hass, aioclient_mock):
     device_registry = dr.async_get(hass)
 
     keypad_event_id = slugify(data["sensors"]["1"]["name"])
-    keypad_serial = data["sensors"]["1"]["uniqueid"].split("-", 1)[0]
+    keypad_serial = serial_from_unique_id(data["sensors"]["1"]["uniqueid"])
     keypad_entry = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, keypad_serial)}
     )
@@ -131,25 +132,25 @@ async def test_humanifying_deconz_event(hass, aioclient_mock):
     device_registry = dr.async_get(hass)
 
     switch_event_id = slugify(data["sensors"]["1"]["name"])
-    switch_serial = data["sensors"]["1"]["uniqueid"].split("-", 1)[0]
+    switch_serial = serial_from_unique_id(data["sensors"]["1"]["uniqueid"])
     switch_entry = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, switch_serial)}
     )
 
     hue_remote_event_id = slugify(data["sensors"]["2"]["name"])
-    hue_remote_serial = data["sensors"]["2"]["uniqueid"].split("-", 1)[0]
+    hue_remote_serial = serial_from_unique_id(data["sensors"]["2"]["uniqueid"])
     hue_remote_entry = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, hue_remote_serial)}
     )
 
     xiaomi_cube_event_id = slugify(data["sensors"]["3"]["name"])
-    xiaomi_cube_serial = data["sensors"]["3"]["uniqueid"].split("-", 1)[0]
+    xiaomi_cube_serial = serial_from_unique_id(data["sensors"]["3"]["uniqueid"])
     xiaomi_cube_entry = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, xiaomi_cube_serial)}
     )
 
     faulty_event_id = slugify(data["sensors"]["4"]["name"])
-    faulty_serial = data["sensors"]["4"]["uniqueid"].split("-", 1)[0]
+    faulty_serial = serial_from_unique_id(data["sensors"]["4"]["uniqueid"])
     faulty_entry = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, faulty_serial)}
     )

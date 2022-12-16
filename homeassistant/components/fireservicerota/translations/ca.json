@@ -11,12 +11,6 @@
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "password": "Contrasenya"
-                },
-                "description": "Els tokens d'autenticaci\u00f3 ja no s\u00f3n v\u00e0lids, inicia sessi\u00f3 per tornar-los a generar."
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Contrasenya"
