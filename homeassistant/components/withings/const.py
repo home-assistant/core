@@ -1,7 +1,6 @@
 """Constants used by the Withings component."""
-from enum import Enum
-
 from homeassistant import const
+from homeassistant.backports.enum import StrEnum
 
 CONF_PROFILES = "profiles"
 CONF_USE_WEBHOOK = "use_webhook"
@@ -15,7 +14,7 @@ PROFILE = "profile"
 PUSH_HANDLER = "push_handler"
 
 
-class Measurement(Enum):
+class Measurement(StrEnum):
     """Measurement supported by the withings integration."""
 
     BODY_TEMP_C = "body_temperature_c"
