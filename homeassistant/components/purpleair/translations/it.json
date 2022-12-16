@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
             "invalid_api_key": "Chiave API non valida",
@@ -30,6 +31,14 @@
                     "sensor_index": "Il sensore da monitorare"
                 },
                 "description": "Quale dei sensori nelle vicinanze vorresti monitorare?"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Chiave API"
+                },
+                "data_description": {
+                    "api_key": "La tua chiave API PurpleAir (se hai sia la chiave di lettura che quella di scrittura, usa la chiave di lettura)"
+                }
             },
             "user": {
                 "data": {

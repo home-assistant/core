@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Perangkat sudah dikonfigurasi"
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "reauth_successful": "Autentikasi ulang berhasil"
         },
         "error": {
             "invalid_api_key": "Kunci API tidak valid",
@@ -30,6 +31,14 @@
                     "sensor_index": "Sensor yang dilacak"
                 },
                 "description": "Manakah dari sensor terdekat yang ingin dilacak?"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Kunci API"
+                },
+                "data_description": {
+                    "api_key": "Kunci API PurpleAir Anda (jika tersedia kunci baca dan tulis, gunakan kunci baca)"
+                }
             },
             "user": {
                 "data": {

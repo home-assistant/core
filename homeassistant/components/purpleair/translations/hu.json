@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."
         },
         "error": {
             "invalid_api_key": "\u00c9rv\u00e9nytelen API kulcs",
@@ -30,6 +31,14 @@
                     "sensor_index": "A nyomon k\u00f6vetni k\u00edv\u00e1nt \u00e9rz\u00e9kel\u0151"
                 },
                 "description": "Melyik k\u00f6zeli \u00e9rz\u00e9kel\u0151t szeretn\u00e9 nyomon k\u00f6vetni?"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API kulcs"
+                },
+                "data_description": {
+                    "api_key": "A PurpleAir API-kulcs (ha olvas\u00e1si \u00e9s \u00edr\u00e1si kulcsokkal is rendelkezik, haszn\u00e1lja az olvas\u00e1si kulcsot)"
+                }
             },
             "user": {
                 "data": {
