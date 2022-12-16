@@ -13,7 +13,7 @@
       "blue": 25.5,
       "colorMode": "rgb",
 
-      "humidity": 20,
+      "humidity": 35,
       "mist_virtual_level": 6,
       "mode": "manual",
       "water_lacks": true,
@@ -31,7 +31,7 @@
       "air_quality_value": 1,
 
       "configuration": {
-        "auto_target_humidity": true,
+        "auto_target_humidity": 40,
         "display": true,
         "automatic_stop": true
       }
