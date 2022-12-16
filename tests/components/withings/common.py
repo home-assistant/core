@@ -331,9 +331,4 @@ async def async_get_entity_id(
     entity_registry = er.async_get(hass)
     unique_id = get_attribute_unique_id(attribute, user_id)
 
-    entity_id = entity_registry.async_get_entity_id(platform, const.DOMAIN, unique_id)
-
-    if entity_id is None:
-        return None
-
-    return entity_id
+    return entity_registry.async_get_entity_id(platform, const.DOMAIN, unique_id)
