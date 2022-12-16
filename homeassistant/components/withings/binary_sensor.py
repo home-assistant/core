@@ -1,11 +1,14 @@
 """Sensors flow for Withings."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from withings_api.common import NotifyAppli
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -14,21 +17,29 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .common import (
     BaseWithingsSensor,
     UpdateType,
-    WithingsAttribute,
+    WithingsEntityDescription,
     async_get_data_manager,
 )
 from .const import Measurement
 
+
+@dataclass
+class WithingsBinarySensorEntityDescription(
+    BinarySensorEntityDescription, WithingsEntityDescription
+):
+    """Immutable class for describing withings binary sensor data."""
+
+
 BINARY_SENSORS = [
     # Webhook measurements.
-    WithingsAttribute(
-        Measurement.IN_BED,
-        NotifyAppli.BED_IN,
-        "In bed",
-        "",
-        "mdi:bed",
-        True,
-        UpdateType.WEBHOOK,
+    WithingsBinarySensorEntityDescription(
+        key=Measurement.IN_BED.value,
+        measurement=Measurement.IN_BED,
+        measure_type=NotifyAppli.BED_IN,
+        name="In bed",
+        icon="mdi:bed",
+        update_type=UpdateType.WEBHOOK,
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
     ),
 ]
 
@@ -52,7 +63,7 @@ async def async_setup_entry(
 class WithingsHealthBinarySensor(BaseWithingsSensor, BinarySensorEntity):
     """Implementation of a Withings sensor."""
 
-    _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
+    entity_description: WithingsBinarySensorEntityDescription
 
     @property
     def is_on(self) -> bool | None:
