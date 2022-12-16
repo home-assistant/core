@@ -201,7 +201,7 @@ async def async_setup_platform(
         # Create the custom project and add it to the devices array.
         project_devices.append(
             TodoistProjectEntity(
-                {"id": extra_project["name"], "name": extra_project["name"]},
+                {"id": None, "name": extra_project["name"]},
                 labels,
                 api,
                 utc_offset_hours=utc_offset_hours,
