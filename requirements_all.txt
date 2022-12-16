@@ -1321,7 +1321,7 @@ pilight==0.1.1
 
 # homeassistant.components.doods
 # homeassistant.components.generic
-# homeassistant.components.image
+# homeassistant.components.image_upload
 # homeassistant.components.proxy
 # homeassistant.components.qrcode
 # homeassistant.components.seven_segments
