@@ -327,12 +327,7 @@ class GrowattData:
         #        - Previous value will not exist meaning 0 will be returned
         #        - This is an edge case that would be better handled by looking up the previous
         #          value of the entity from the recorder
-        if (
-            entity_description.never_resets
-            and api_value == 0
-            and previous_value is not None
-            and previous_value != 0
-        ):
+        if entity_description.never_resets and api_value == 0 and previous_value:
             _LOGGER.debug(
                 "API value is 0, but this value should never reset, returning previous value (%s) instead",
                 previous_value,
