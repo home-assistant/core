@@ -17,10 +17,10 @@ from withings_api.common import (
     SleepModel,
 )
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.withings.common import (
-    WITHINGS_MEASUREMENTS_MAP,
+    WITHINGS_ATTRIBUTES,
     WithingsAttribute,
-    async_get_entity_id,
     get_platform_attributes,
 )
 from homeassistant.components.withings.const import Measurement
@@ -30,7 +30,13 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import dt as dt_util
 
-from .common import ComponentFactory, new_profile_config
+from .common import ComponentFactory, async_get_entity_id, new_profile_config
+
+WITHINGS_MEASUREMENTS_MAP: dict[Measurement, WithingsAttribute] = {
+    attr.measurement: attr
+    for attr in WITHINGS_ATTRIBUTES
+    if attr.platform == SENSOR_DOMAIN
+}
 
 PERSON0 = new_profile_config(
     "person0",
@@ -311,14 +317,18 @@ async def test_sensor_default_enabled_entities(
 
     # Assert entities should not exist yet.
     for attribute in get_platform_attributes(Platform.SENSOR):
-        assert not await async_get_entity_id(hass, attribute, PERSON0.user_id)
+        assert not await async_get_entity_id(
+            hass, attribute, PERSON0.user_id, SENSOR_DOMAIN
+        )
 
     # person 0
     await component_factory.setup_profile(PERSON0.user_id)
 
     # Assert entities should exist.
     for attribute in get_platform_attributes(Platform.SENSOR):
-        entity_id = await async_get_entity_id(hass, attribute, PERSON0.user_id)
+        entity_id = await async_get_entity_id(
+            hass, attribute, PERSON0.user_id, SENSOR_DOMAIN
+        )
         assert entity_id
         assert entity_registry.async_is_registered(entity_id)
 
@@ -330,7 +340,9 @@ async def test_sensor_default_enabled_entities(
 
     for person, measurement, expected in EXPECTED_DATA:
         attribute = WITHINGS_MEASUREMENTS_MAP[measurement]
-        entity_id = await async_get_entity_id(hass, attribute, person.user_id)
+        entity_id = await async_get_entity_id(
+            hass, attribute, person.user_id, SENSOR_DOMAIN
+        )
         state_obj = hass.states.get(entity_id)
 
         if attribute.enabled_by_default:
@@ -357,14 +369,18 @@ async def test_all_entities(
 
         # Assert entities should not exist yet.
         for attribute in get_platform_attributes(Platform.SENSOR):
-            assert not await async_get_entity_id(hass, attribute, PERSON0.user_id)
+            assert not await async_get_entity_id(
+                hass, attribute, PERSON0.user_id, SENSOR_DOMAIN
+            )
 
         # person 0
         await component_factory.setup_profile(PERSON0.user_id)
 
         # Assert entities should exist.
         for attribute in get_platform_attributes(Platform.SENSOR):
-            entity_id = await async_get_entity_id(hass, attribute, PERSON0.user_id)
+            entity_id = await async_get_entity_id(
+                hass, attribute, PERSON0.user_id, SENSOR_DOMAIN
+            )
             assert entity_id
             assert entity_registry.async_is_registered(entity_id)
 
@@ -376,7 +392,9 @@ async def test_all_entities(
 
         for person, measurement, expected in EXPECTED_DATA:
             attribute = WITHINGS_MEASUREMENTS_MAP[measurement]
-            entity_id = await async_get_entity_id(hass, attribute, person.user_id)
+            entity_id = await async_get_entity_id(
+                hass, attribute, person.user_id, SENSOR_DOMAIN
+            )
             state_obj = hass.states.get(entity_id)
 
             async_assert_state_equals(entity_id, state_obj, expected, attribute)
