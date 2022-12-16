@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Enheten er allerede konfigurert"
+            "already_configured": "Enheten er allerede konfigurert",
+            "reauth_successful": "Re-autentisering var vellykket"
         },
         "error": {
             "invalid_api_key": "Ugyldig API-n\u00f8kkel",
@@ -30,6 +31,14 @@
                     "sensor_index": "Sensoren \u00e5 spore"
                 },
                 "description": "Hvilken av sensorene i n\u00e6rheten vil du spore?"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel"
+                },
+                "data_description": {
+                    "api_key": "PurpleAir API-n\u00f8kkelen din (hvis du har b\u00e5de lese- og skriven\u00f8kler, bruk lesen\u00f8kkelen)"
+                }
             },
             "user": {
                 "data": {
