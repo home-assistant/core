@@ -97,8 +97,8 @@
       "name": "*zigstar*"
     },
 	{
-      "type": "_smlight-tech._tcp.local.",
-      "name": "smlight*"
+      "type": "_slzb-06._tcp.local.",
+      "name": "slzb-06*"
     }
   ],
   "dependencies": ["file_upload"],

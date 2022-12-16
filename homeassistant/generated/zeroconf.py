@@ -426,10 +426,10 @@ ZEROCONF = {
             "domain": "apple_tv",
         },
     ],
-    "_smlight-tech._tcp.local.": [
+    "_slzb-06._tcp.local.": [
         {
             "domain": "zha",
-            "name": "smlight*",
+            "name": "slzb-06*",
         },
     ],
     "_sonos._tcp.local.": [
