@@ -144,6 +144,11 @@ pandas==1.4.3
 
 # uamqp 1.6.1, has 1 failing test during built on armv7/armhf
 uamqp==1.6.0
+
+# Prevent dependency conflicts between bleak and pyobjc-framework-Cocoa
+# bleak-0.19.2.dist-info/METADATA:Requires-Dist: pyobjc-core (>=8.5.1,<9.0.0)
+# pyobjc_framework_Cocoa-9.0.dist-info/METADATA:Requires-Dist: pyobjc-core (>=9.0)
+pyobjc-framework-Cocoa==8.5.1
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
