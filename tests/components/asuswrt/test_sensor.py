@@ -32,7 +32,7 @@ from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
-ASUSWRT_LIB = "homeassistant.components.asuswrt.router.AsusWrt"
+ASUSWRT_LIB = "homeassistant.components.asuswrt.bridge.AsusWrtLegacy"
 
 HOST = "myrouter.asuswrt.com"
 IP_ADDRESS = "192.168.1.1"
