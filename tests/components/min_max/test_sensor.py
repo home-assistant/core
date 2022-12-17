@@ -2,6 +2,7 @@
 import statistics
 from unittest.mock import patch
 
+import pytest
 from pytest import LogCaptureFixture
 
 from homeassistant import config as hass_config
@@ -24,6 +25,7 @@ from tests.common import get_fixture_path
 
 VALUES = [17, 20, 15.3]
 VALUES_ERROR = [17, "string", 15.3]
+VALUES_ERROR_2 = [17, 20, "string"]
 COUNT = len(VALUES)
 MIN_VALUE = min(VALUES)
 MAX_VALUE = max(VALUES)
@@ -523,3 +525,106 @@ async def test_sum_sensor_no_state(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.test_sum")
 
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    "values",
+    [
+        ([10, STATE_UNKNOWN, 10]),
+        ([10, STATE_UNAVAILABLE, 10]),
+        ([10, None, 10]),
+        ([10, STATE_UNAVAILABLE, None]),
+    ],
+)
+async def test_sensor_states_no_logging(
+    hass: HomeAssistant, values: list, caplog: LogCaptureFixture
+) -> None:
+    """Test no logging with input sensors unknown, unavailable or none."""
+
+    config = {
+        "sensor": {
+            "platform": "min_max",
+            "name": "test_sum_fail",
+            "type": "sum",
+            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "unique_id": "very_unique_id_sum_sensor",
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    entity_ids = config["sensor"]["entity_ids"]
+
+    for entity_id, value in dict(zip(entity_ids, values)).items():
+        hass.states.async_set(entity_id, value)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sum_fail")
+
+    assert state.state == STATE_UNKNOWN
+    assert "Unable to store state for entity" not in caplog.text
+
+
+async def test_sensor_logging(hass: HomeAssistant, caplog: LogCaptureFixture) -> None:
+    """Test the sensor logging for incorrect states."""
+    config = {
+        "sensor": {
+            "platform": "min_max",
+            "name": "test_sum",
+            "type": "sum",
+            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "unique_id": "very_unique_id_sum_sensor",
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    entity_ids = config["sensor"]["entity_ids"]
+
+    for entity_id, value in dict(zip(entity_ids, VALUES_ERROR)).items():
+        hass.states.async_set(entity_id, value)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sum")
+
+    assert state.state == STATE_UNKNOWN
+    assert (
+        "Unable to store state for entity sensor.test_2 with state string. Only numerical states are supported"
+        in caplog.text
+    )
+
+    # Check we only log once
+    caplog.clear()
+    assert hass.states.get("sensor.test_2").state == "string"
+    hass.states.async_set(entity_ids[1], "string2")
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.test_2").state == "string2"
+
+    assert (
+        "Unable to store state for entity sensor.test_2 with state string. Only numerical states are supported"
+        not in caplog.text
+    )
+
+    for entity_id, value in dict(zip(entity_ids, VALUES)).items():
+        hass.states.async_set(entity_id, value)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sum")
+
+    assert state.state == str(round(sum(VALUES), 1))
+    caplog.clear()
+
+    for entity_id, value in dict(zip(entity_ids, VALUES_ERROR_2)).items():
+        hass.states.async_set(entity_id, value)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sum")
+
+    assert state.state == STATE_UNKNOWN
+
+    assert (
+        "Unable to store state for entity sensor.test_3 with state string. Only numerical states are supported"
+        in caplog.text
+    )
