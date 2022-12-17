@@ -333,10 +333,12 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b",
     },
     {
+        "connectable": False,
         "domain": "switchbot",
         "manufacturer_id": 2409,
     },
     {
+        "connectable": True,
         "domain": "switchbot",
         "manufacturer_id": 89,
     },
