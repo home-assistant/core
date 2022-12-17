@@ -7,6 +7,7 @@ from typing import Any, cast
 
 from homewizard_energy import HomeWizardEnergy
 from homewizard_energy.errors import DisabledError, RequestError, UnsupportedError
+from homewizard_energy.models import Device
 from voluptuous import Required, Schema
 
 from homeassistant import config_entries
@@ -72,7 +73,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors=None,
             )
 
-        error = await self._async_try_connect(user_input[CONF_IP_ADDRESS])
+        # Fetch device information
+        device_info, error = await self._async_try_connect(user_input[CONF_IP_ADDRESS])
         if error is not None:
             return self.async_show_form(
                 step_id="user",
@@ -80,10 +82,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors={"base": error},
             )
 
-        # Fetch device information
-        api = HomeWizardEnergy(user_input[CONF_IP_ADDRESS])
-        device_info = await api.device()
-        await api.close()
+        # Should not happen, but catch anyway
+        if device_info is None:
+            raise AbortFlow("unknown_error")
 
         # Sets unique ID and aborts if it is already exists
         await self._async_set_and_check_unique_id(
@@ -153,7 +154,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
 
             # Check connection
-            error = await self._async_try_connect(str(self.config[CONF_IP_ADDRESS]))
+            _, error = await self._async_try_connect(str(self.config[CONF_IP_ADDRESS]))
             if error is not None:
                 return self.async_show_form(
                     step_id="discovery_confirm",
@@ -196,7 +197,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             assert self.entry is not None
 
-            error = await self._async_try_connect(self.entry.data[CONF_IP_ADDRESS])
+            _, error = await self._async_try_connect(self.entry.data[CONF_IP_ADDRESS])
             if error is not None:
                 return self.async_show_form(
                     step_id="reauth_confirm",
@@ -211,21 +212,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     @staticmethod
-    async def _async_try_connect(ip_address: str) -> str | None:
+    async def _async_try_connect(ip_address: str) -> tuple[Device | None, str | None]:
         """Try to connect."""
 
         _LOGGER.debug("config_flow _async_try_connect")
+
+        # Default return values
+        device_info: Device = None
+        error: str | None = None
 
         # Make connection with device
         # This is to test the connection and to get info for unique_id
         energy_api = HomeWizardEnergy(ip_address)
 
         try:
-            await energy_api.device()
+            device_info = await energy_api.device()
 
         except DisabledError:
             _LOGGER.error("API disabled, API must be enabled in the app")
-            return "api_not_enabled"
+            error = "api_not_enabled"
 
         except UnsupportedError as ex:
             _LOGGER.error("API version unsuppored")
@@ -233,7 +238,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         except RequestError as ex:
             _LOGGER.exception(ex)
-            return "network_error"
+            error = "network_error"
 
         except Exception as ex:
             _LOGGER.exception(ex)
@@ -242,7 +247,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         finally:
             await energy_api.close()
 
-        return None
+        return (device_info, error)
 
     async def _async_set_and_check_unique_id(self, entry_info: dict[str, Any]) -> None:
         """Validate if entry exists."""
