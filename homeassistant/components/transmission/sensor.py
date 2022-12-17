@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from contextlib import suppress
 
-from transmissionrpc.torrent import Torrent
+from transmission_rpc.torrent import Torrent
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry

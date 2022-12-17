@@ -41,6 +41,8 @@
             },
             "device_tracker": {
                 "data": {
+                    "detection_time": "\u010cas v sekund\u00e1ch od posledn\u00e9ho videnia a\u017e po zv\u00e1\u017eenie pre\u010d",
+                    "ignore_wired_bug": "Zak\u00e1zanie logiky chyby k\u00e1blovej siete UniFi",
                     "ssid_filter": "Vyberte SSID na sledovanie bezdr\u00f4tov\u00fdch klientov",
                     "track_clients": "Sledovanie klientov siete",
                     "track_devices": "Sledovanie sie\u0165ov\u00fdch zariaden\u00ed (zariadenia Ubiquiti)",

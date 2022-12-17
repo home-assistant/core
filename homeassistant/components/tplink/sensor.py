@@ -16,8 +16,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_VOLTAGE,
     ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
+    UnitOfElectricPotential,
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
@@ -72,7 +72,7 @@ ENERGY_SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
     ),
     TPLinkSensorEntityDescription(
         key=ATTR_VOLTAGE,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         name="Voltage",

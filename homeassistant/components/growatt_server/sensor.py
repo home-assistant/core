@@ -315,6 +315,25 @@ class GrowattData:
                     "%s - No drop detected, using API value", entity_description.name
                 )
 
+        # Lifetime total values should always be increasing, they will never reset, however
+        # the API sometimes returns 0 values when the clock turns to 00:00 local time
+        # in that scenario we should just return the previous value
+        # Scenarios:
+        # 1 - System has a genuine 0 value when it it first commissioned:
+        #        - will return 0 until a non-zero value is registered
+        # 2 - System has been running fine but temporarily resets to 0 briefly at midnight:
+        #        - will return the previous value
+        # 3 - HA is restarted during the midnight 'outage' - Not handled:
+        #        - Previous value will not exist meaning 0 will be returned
+        #        - This is an edge case that would be better handled by looking up the previous
+        #          value of the entity from the recorder
+        if entity_description.never_resets and api_value == 0 and previous_value:
+            _LOGGER.debug(
+                "API value is 0, but this value should never reset, returning previous value (%s) instead",
+                previous_value,
+            )
+            return_value = previous_value
+
         self.previous_values[variable] = return_value
 
         return return_value
