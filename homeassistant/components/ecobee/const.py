@@ -44,7 +44,6 @@ ECOBEE_MODEL_TO_NAME = {
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
-    Platform.FAN,
     Platform.HUMIDIFIER,
     Platform.NUMBER,
     Platform.SENSOR,
