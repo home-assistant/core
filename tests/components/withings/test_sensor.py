@@ -18,7 +18,7 @@ from withings_api.common import (
 )
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.withings.common import WithingsAttribute
+from homeassistant.components.withings.common import WithingsEntityDescription
 from homeassistant.components.withings.const import Measurement
 from homeassistant.components.withings.sensor import SENSORS
 from homeassistant.core import HomeAssistant, State
@@ -28,7 +28,7 @@ from homeassistant.util import dt as dt_util
 
 from .common import ComponentFactory, async_get_entity_id, new_profile_config
 
-WITHINGS_MEASUREMENTS_MAP: dict[Measurement, WithingsAttribute] = {
+WITHINGS_MEASUREMENTS_MAP: dict[Measurement, WithingsEntityDescription] = {
     attr.measurement: attr for attr in SENSORS
 }
 
@@ -293,14 +293,14 @@ def async_assert_state_equals(
     entity_id: str,
     state_obj: State,
     expected: Any,
-    attribute: WithingsAttribute,
+    description: WithingsEntityDescription,
 ) -> None:
     """Assert at given state matches what is expected."""
     assert state_obj, f"Expected entity {entity_id} to exist but it did not"
 
     assert state_obj.state == str(expected), (
         f"Expected {expected} but was {state_obj.state} "
-        f"for measure {attribute.measurement}, {entity_id}"
+        f"for measure {description.measurement}, {entity_id}"
     )
 
 
@@ -342,7 +342,7 @@ async def test_sensor_default_enabled_entities(
         )
         state_obj = hass.states.get(entity_id)
 
-        if attribute.enabled_by_default:
+        if attribute.entity_registry_enabled_default:
             async_assert_state_equals(entity_id, state_obj, expected, attribute)
         else:
             assert state_obj is None

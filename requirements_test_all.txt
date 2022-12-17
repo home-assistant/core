@@ -386,7 +386,7 @@ boschshcpy==0.2.35
 broadlink==0.18.3
 
 # homeassistant.components.brother
-brother==2.0.0
+brother==2.1.1
 
 # homeassistant.components.brunt
 brunt==1.2.0
@@ -1042,7 +1042,7 @@ pyMetno==0.9.0
 pyRFXtrx==0.30.0
 
 # homeassistant.components.tibber
-pyTibber==0.26.4
+pyTibber==0.26.5
 
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.5
@@ -1377,7 +1377,7 @@ pysmartapp==0.3.3
 pysmartthings==0.7.6
 
 # homeassistant.components.snmp
-pysnmplib==5.0.15
+pysnmplib==5.0.20
 
 # homeassistant.components.snooz
 pysnooz==0.8.3
