@@ -55,34 +55,33 @@ class EcobeeVentilatorMinTime(NumberEntity):
     """A number class, representing min time  for an ecobee thermostat with ventilator attached."""
 
     _attr_has_entity_name = True
-    
-    def __init__(self, data, thermostat_index, name, ecobee_setting_name, set_func):
+
+    def __init__(self, data, thermostat_index, mode, ecobee_setting_key, set_func):
         """Initialize ecobee ventilator platform."""
         self.data = data
         self.thermostat_index = thermostat_index
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
-        self.ecobee_setting_name = ecobee_setting_name
+        self.ecobee_setting_key = ecobee_setting_key
         self.set_func = set_func
-        self._attr_has_entity_name = True
-        self._attr_name = f"Ventilator min time {name}"
+        self._attr_name = f"Ventilator min time {mode}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.thermostat["identifier"])},
             manufacturer=MANUFACTURER,
             model=ECOBEE_MODEL_TO_NAME.get(self.thermostat["modelNumber"]),
             name=self.thermostat["name"],
         )
-        self._attr_unique_id = f'{self.thermostat["identifier"]}_{name}'
+        self._attr_unique_id = f'{self.thermostat["identifier"]}_{mode}'
         self._attr_native_min_value = 0
         self._attr_native_max_value = 60
         self._attr_native_step = 5
-        self._attr_native_value = self.thermostat["settings"][ecobee_setting_name]
+        self._attr_native_value = self.thermostat["settings"][ecobee_setting_key]
         self._attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
     async def async_update(self):
         """Get the latest state from the thermostat."""
         await self.data.update()
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
-        self._attr_native_value = self.thermostat["settings"][self.ecobee_setting_name]
+        self._attr_native_value = self.thermostat["settings"][self.ecobee_setting_key]
 
     @property
     def available(self):
