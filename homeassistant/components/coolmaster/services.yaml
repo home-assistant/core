@@ -1,0 +1,18 @@
+suggest_ambient_temperature:
+  name: Suggest ambient temperature
+  description: Sends the provided value as the ambient temperature to the HVAC device.
+  target:
+    entity:
+      integration: coolmaster
+      domain: climate
+  fields:
+    temperature:
+      name: Ambient temperature
+      description: The ambient temperature value to send to the unit.
+      selector:
+        number:
+          min: -70
+          max: 122
+          step: 0.1
+          mode: box
+          unit_of_measurement: '°'
