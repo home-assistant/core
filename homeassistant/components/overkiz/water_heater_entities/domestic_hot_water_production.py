@@ -251,19 +251,21 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
             )
 
     @property
-    def current_operation(self) -> str:
+    def current_operation(self) -> str | None:
         """Return current operation ie. eco, electric, performance, ..."""
         if self._is_boost_mode_on:
             return OVERKIZ_TO_OPERATION_MODE[OverkizCommandParam.BOOST]
 
-        return OVERKIZ_TO_OPERATION_MODE[
-            cast(
-                str,
-                self.executor.select_state(
-                    OverkizState.IO_DHW_MODE, OverkizState.MODBUSLINK_DHW_MODE
-                ),
-            )
-        ]
+        current_dwh_mode = cast(
+            str,
+            self.executor.select_state(
+                OverkizState.IO_DHW_MODE, OverkizState.MODBUSLINK_DHW_MODE
+            ),
+        )
+        if current_dwh_mode in OVERKIZ_TO_OPERATION_MODE:
+            return OVERKIZ_TO_OPERATION_MODE[current_dwh_mode]
+
+        return None
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
