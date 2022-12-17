@@ -29,6 +29,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
+    MockConfigEntry,
     assert_setup_component,
     async_fire_time_changed,
     mock_restore_cache,
@@ -69,6 +70,22 @@ async def test_valid_conf(hass):
             }
         },
     )
+    await hass.async_block_till_done()
+
+
+async def test_valid_config_entry(hass):
+    """Test setting up a generic hygrostat with a valid config entry."""
+
+    entry = MockConfigEntry(
+        domain="generic_hygrostat",
+        data={
+            "name": "test",
+            "humidifier": ENT_SWITCH,
+            "target_sensor": ENT_SENSOR,
+        },
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
 
