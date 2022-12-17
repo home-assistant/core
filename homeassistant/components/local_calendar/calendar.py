@@ -102,13 +102,7 @@ class LocalCalendarEntity(CalendarEntity):
 
     async def async_create_event(self, **kwargs: Any) -> None:
         """Add a new event to calendar."""
-        if rrule := kwargs.get(EVENT_RRULE):
-            kwargs[EVENT_RRULE] = Recur.from_rrule(rrule)
-        try:
-            event = Event.parse_obj(kwargs)
-        except ValidationError as err:
-            _LOGGER.debug("Error parsing event input fields: %s (%s)", kwargs, str(err))
-            raise vol.Invalid("Error parsing event input fields") from err
+        event = _parse_event(kwargs)
         EventStore(self._calendar).add(event)
         await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
@@ -139,14 +133,7 @@ class LocalCalendarEntity(CalendarEntity):
         recurrence_range: str | None = None,
     ) -> None:
         """Update an existing event on the calendar."""
-        if rrule := event.get(EVENT_RRULE):
-            event[EVENT_RRULE] = Recur.from_rrule(rrule)
-        try:
-            new_event = Event.parse_obj(event)
-        except ValidationError as err:
-            _LOGGER.debug("Error parsing event input fields: %s (%s)", event, str(err))
-            raise vol.Invalid("Error parsing event input fields") from err
-        _LOGGER.debug(new_event)
+        new_event = _parse_event(event)
         range_value: Range = Range.NONE
         if recurrence_range == Range.THIS_AND_FUTURE:
             range_value = Range.THIS_AND_FUTURE
@@ -158,6 +145,17 @@ class LocalCalendarEntity(CalendarEntity):
         )
         await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
+
+
+def _parse_event(event: dict[str, Any]) -> Event:
+    """Parse an ical event from a home assistant event dictionary."""
+    if rrule := event.get(EVENT_RRULE):
+        event[EVENT_RRULE] = Recur.from_rrule(rrule)
+    try:
+        return Event.parse_obj(event)
+    except ValidationError as err:
+        _LOGGER.debug("Error parsing event input fields: %s (%s)", event, str(err))
+        raise vol.Invalid("Error parsing event input fields") from err
 
 
 def _get_calendar_event(event: Event) -> CalendarEvent:
