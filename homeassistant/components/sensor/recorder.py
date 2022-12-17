@@ -26,16 +26,18 @@ from homeassistant.components.recorder.models import (
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     REVOLUTIONS_PER_MINUTE,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
+    UnitOfIrradiance,
+    UnitOfSoundPressure,
+    UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant, State, split_entity_id
+from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import entity_sources
 from homeassistant.util import dt as dt_util
 
 from . import (
     ATTR_LAST_RESET,
+    ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     DOMAIN,
     STATE_CLASS_MEASUREMENT,
@@ -53,9 +55,11 @@ DEFAULT_STATISTICS = {
 }
 
 EQUIVALENT_UNITS = {
+    "BTU/(h×ft²)": UnitOfIrradiance.BTUS_PER_HOUR_SQUARE_FOOT,
+    "dBa": UnitOfSoundPressure.WEIGHTED_DECIBEL_A,
     "RPM": REVOLUTIONS_PER_MINUTE,
-    "ft3": VOLUME_CUBIC_FEET,
-    "m3": VOLUME_CUBIC_METERS,
+    "ft3": UnitOfVolume.CUBIC_FEET,
+    "m3": UnitOfVolume.CUBIC_METERS,
 }
 
 # Keep track of entities for which a warning about decreasing value has been logged
@@ -724,3 +728,9 @@ def validate_statistics(
         )
 
     return validation_result
+
+
+@callback
+def exclude_attributes(hass: HomeAssistant) -> set[str]:
+    """Exclude attributes from being recorded in the database."""
+    return {ATTR_OPTIONS}

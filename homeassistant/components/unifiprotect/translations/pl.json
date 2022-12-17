@@ -41,7 +41,20 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "license_plate": {
+                "state": {
+                    "none": "brak"
+                }
+            }
+        }
+    },
     "issues": {
+        "deprecate_smart_sensor": {
+            "description": "Ujednolicony sensor \u201eWykryty obiekt\u201d do inteligentnego wykrywania jest teraz przestarza\u0142y. Zosta\u0142 on zast\u0105piony indywidualnymi sensorami binarnymi dla ka\u017cdego typu inteligentnej detekcji. Zaktualizuj odpowiednio wszystkie szablony lub automatyzacje.",
+            "title": "Przestarza\u0142y inteligentny sensor wykrywania"
+        },
         "ea_setup_failed": {
             "description": "U\u017cywasz wersji {version} UniFi Protect, kt\u00f3ra jest wersj\u0105 Early Access. Wyst\u0105pi\u0142 nienaprawialny b\u0142\u0105d podczas pr\u00f3by za\u0142adowania integracji. Aby kontynuowa\u0107 korzystanie z integracji, [zmie\u0144 wersj\u0119 na stabiln\u0105](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) UniFi Protect. \n\nB\u0142\u0105d: {error}",
             "title": "B\u0142\u0105d konfiguracji w wersji Early Access"

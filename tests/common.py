@@ -1114,6 +1114,11 @@ class MockEntity(entity.Entity):
         return self._handle("supported_features")
 
     @property
+    def translation_key(self):
+        """Return the translation key."""
+        return self._handle("translation_key")
+
+    @property
     def unique_id(self):
         """Return the unique ID of the entity."""
         return self._handle("unique_id")

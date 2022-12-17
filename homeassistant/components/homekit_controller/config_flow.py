@@ -583,6 +583,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             accessories_state.config_num,
             accessories_state.accessories.serialize(),
             serialize_broadcast_key(accessories_state.broadcast_key),
+            accessories_state.state_num,
         )
 
         return self.async_create_entry(title=name, data=pairing_data)

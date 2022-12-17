@@ -19,5 +19,39 @@
                 "description": "Stel MusicCast in om te integreren met Home Assistant."
             }
         }
+    },
+    "entity": {
+        "select": {
+            "zone_equalizer_mode": {
+                "state": {
+                    "manual": "Handmatig"
+                }
+            },
+            "zone_link_control": {
+                "state": {
+                    "speed": "Snelheid"
+                }
+            },
+            "zone_sleep": {
+                "state": {
+                    "120 min": "120 minuten",
+                    "30 min": "30 minuten",
+                    "60 min": "60 minuten",
+                    "90 min": "90 minuten",
+                    "off": "Uit"
+                }
+            },
+            "zone_surr_decoder_type": {
+                "state": {
+                    "dolby_pl": "Dolby ProLogic",
+                    "dolby_surround": "Dolby Surround"
+                }
+            },
+            "zone_tone_control_mode": {
+                "state": {
+                    "manual": "Handmatig"
+                }
+            }
+        }
     }
 }

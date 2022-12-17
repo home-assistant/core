@@ -50,10 +50,9 @@
                 },
                 "description": "Voer de informatie voor uw `.knxkeys` bestand in."
             },
-            "secure_tunneling": {
-                "description": "Kies hoe u KNX/IP Secure wilt configureren.",
-                "menu_options": {
-                    "secure_knxkeys": "Gebruik een `.knxkeys` bestand met IP beveiligde sleutels"
+            "secure_routing_manual": {
+                "data_description": {
+                    "sync_latency_tolerance": "Standaard is 1000"
                 }
             },
             "tunnel": {
@@ -68,7 +67,9 @@
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
             "file_not_found": "Het opgegeven `.knxkeys`-bestand is niet gevonden in het pad config/.storage/knx/",
-            "invalid_individual_address": "Waarde komt niet overeen met patroon voor KNX individueel adres.\n\"area.line.device"
+            "invalid_individual_address": "Waarde komt niet overeen met patroon voor KNX individueel adres.\n\"area.line.device",
+            "invalid_ip_address": "Ongeldig IPv4-adres.",
+            "invalid_signature": "Het wachtwoord om het `.knxkeys`-bestand te decoderen is verkeerd."
         },
         "step": {
             "manual_tunnel": {
@@ -102,10 +103,9 @@
                 },
                 "description": "Voer de informatie voor uw `.knxkeys` bestand in."
             },
-            "secure_tunneling": {
-                "description": "Kies hoe u KNX/IP Secure wilt configureren.",
-                "menu_options": {
-                    "secure_knxkeys": "Gebruik een `.knxkeys` bestand met IP beveiligde sleutels"
+            "secure_routing_manual": {
+                "data_description": {
+                    "sync_latency_tolerance": "Standaard is 1000"
                 }
             },
             "tunnel": {

@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     PRECISION_HALVES,
     PRECISION_WHOLE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
@@ -92,7 +92,7 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
     _attr_fan_modes = [FAN_ON, FAN_OFF]
     _attr_max_temp = MAX_TEMP
     _attr_min_temp = MIN_TEMP
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, coordinator, heater):
         """Initialize the thermostat."""
@@ -205,7 +205,7 @@ class LocalMillHeater(CoordinatorEntity, ClimateEntity):
     _attr_min_temp = MIN_TEMP
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_target_temperature_step = PRECISION_HALVES
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, coordinator):
         """Initialize the thermostat."""

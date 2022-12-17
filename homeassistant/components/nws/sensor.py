@@ -1,17 +1,24 @@
 """Sensors for National Weather Service (NWS)."""
-from homeassistant.components.sensor import SensorEntity
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    LENGTH_METERS,
-    LENGTH_MILES,
+    DEGREE,
     PERCENTAGE,
-    PRESSURE_INHG,
-    PRESSURE_PA,
-    SPEED_KILOMETERS_PER_HOUR,
-    SPEED_MILES_PER_HOUR,
-    TEMP_CELSIUS,
+    UnitOfLength,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -33,11 +40,108 @@ from .const import (
     DOMAIN,
     NWS_DATA,
     OBSERVATION_VALID_TIME,
-    SENSOR_TYPES,
-    NWSSensorEntityDescription,
 )
 
 PARALLEL_UPDATES = 0
+
+
+@dataclass
+class NWSSensorEntityDescription(SensorEntityDescription):
+    """Class describing NWSSensor entities."""
+
+    unit_convert: str | None = None
+
+
+SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
+    NWSSensorEntityDescription(
+        key="dewpoint",
+        name="Dew Point",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        unit_convert=UnitOfTemperature.CELSIUS,
+    ),
+    NWSSensorEntityDescription(
+        key="temperature",
+        name="Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        unit_convert=UnitOfTemperature.CELSIUS,
+    ),
+    NWSSensorEntityDescription(
+        key="windChill",
+        name="Wind Chill",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        unit_convert=UnitOfTemperature.CELSIUS,
+    ),
+    NWSSensorEntityDescription(
+        key="heatIndex",
+        name="Heat Index",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        unit_convert=UnitOfTemperature.CELSIUS,
+    ),
+    NWSSensorEntityDescription(
+        key="relativeHumidity",
+        name="Relative Humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        unit_convert=PERCENTAGE,
+    ),
+    NWSSensorEntityDescription(
+        key="windSpeed",
+        name="Wind Speed",
+        device_class=SensorDeviceClass.WIND_SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        unit_convert=UnitOfSpeed.MILES_PER_HOUR,
+    ),
+    NWSSensorEntityDescription(
+        key="windGust",
+        name="Wind Gust",
+        device_class=SensorDeviceClass.WIND_SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        unit_convert=UnitOfSpeed.MILES_PER_HOUR,
+    ),
+    # statistics currently doesn't handle circular statistics
+    NWSSensorEntityDescription(
+        key="windDirection",
+        name="Wind Direction",
+        icon="mdi:compass-rose",
+        native_unit_of_measurement=DEGREE,
+        unit_convert=DEGREE,
+    ),
+    NWSSensorEntityDescription(
+        key="barometricPressure",
+        name="Barometric Pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPressure.PA,
+        unit_convert=UnitOfPressure.INHG,
+    ),
+    NWSSensorEntityDescription(
+        key="seaLevelPressure",
+        name="Sea Level Pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPressure.PA,
+        unit_convert=UnitOfPressure.INHG,
+    ),
+    NWSSensorEntityDescription(
+        key="visibility",
+        name="Visibility",
+        icon="mdi:eye",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfLength.METERS,
+        unit_convert=UnitOfLength.MILES,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -92,19 +196,26 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
             return None
         # Set alias to unit property -> prevent unnecessary hasattr calls
         unit_of_measurement = self.native_unit_of_measurement
-        if unit_of_measurement == SPEED_MILES_PER_HOUR:
+        if unit_of_measurement == UnitOfSpeed.MILES_PER_HOUR:
             return round(
                 SpeedConverter.convert(
-                    value, SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR
+                    value, UnitOfSpeed.KILOMETERS_PER_HOUR, UnitOfSpeed.MILES_PER_HOUR
                 )
             )
-        if unit_of_measurement == LENGTH_MILES:
-            return round(DistanceConverter.convert(value, LENGTH_METERS, LENGTH_MILES))
-        if unit_of_measurement == PRESSURE_INHG:
+        if unit_of_measurement == UnitOfLength.MILES:
             return round(
-                PressureConverter.convert(value, PRESSURE_PA, PRESSURE_INHG), 2
+                DistanceConverter.convert(
+                    value, UnitOfLength.METERS, UnitOfLength.MILES
+                )
             )
-        if unit_of_measurement == TEMP_CELSIUS:
+        if unit_of_measurement == UnitOfPressure.INHG:
+            return round(
+                PressureConverter.convert(
+                    value, UnitOfPressure.PA, UnitOfPressure.INHG
+                ),
+                2,
+            )
+        if unit_of_measurement == UnitOfTemperature.CELSIUS:
             return round(value, 1)
         if unit_of_measurement == PERCENTAGE:
             return round(value)

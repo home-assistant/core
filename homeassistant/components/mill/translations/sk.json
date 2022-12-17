@@ -22,7 +22,8 @@
             "user": {
                 "data": {
                     "connection_type": "Vyberte typ pripojenia"
-                }
+                },
+                "description": "Vyberte typ pripojenia. Miestne vy\u017eaduje ohrieva\u010de gener\u00e1cie 3"
             }
         }
     }

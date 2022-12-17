@@ -11,8 +11,8 @@ from pyunifiprotect.data.nvr import EventMetadata
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.unifiprotect.binary_sensor import (
     CAMERA_SENSORS,
+    EVENT_SENSORS,
     LIGHT_SENSORS,
-    MOTION_SENSORS,
     SENSE_SENSORS,
 )
 from homeassistant.components.unifiprotect.const import (
@@ -124,7 +124,7 @@ async def test_binary_sensor_setup_camera_all(
 
     entity_registry = er.async_get(hass)
 
-    description = CAMERA_SENSORS[0]
+    description = EVENT_SENSORS[0]
     unique_id, entity_id = ids_from_device_description(
         Platform.BINARY_SENSOR, doorbell, description
     )
@@ -139,7 +139,7 @@ async def test_binary_sensor_setup_camera_all(
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
     # Is Dark
-    description = CAMERA_SENSORS[1]
+    description = CAMERA_SENSORS[0]
     unique_id, entity_id = ids_from_device_description(
         Platform.BINARY_SENSOR, doorbell, description
     )
@@ -154,7 +154,7 @@ async def test_binary_sensor_setup_camera_all(
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
     # Motion
-    description = MOTION_SENSORS[0]
+    description = EVENT_SENSORS[1]
     unique_id, entity_id = ids_from_device_description(
         Platform.BINARY_SENSOR, doorbell, description
     )
@@ -179,7 +179,7 @@ async def test_binary_sensor_setup_camera_none(
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 2, 2)
 
     entity_registry = er.async_get(hass)
-    description = CAMERA_SENSORS[1]
+    description = CAMERA_SENSORS[0]
 
     unique_id, entity_id = ids_from_device_description(
         Platform.BINARY_SENSOR, camera, description
@@ -265,7 +265,7 @@ async def test_binary_sensor_update_motion(
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 13, 13)
 
     _, entity_id = ids_from_device_description(
-        Platform.BINARY_SENSOR, doorbell, MOTION_SENSORS[0]
+        Platform.BINARY_SENSOR, doorbell, EVENT_SENSORS[1]
     )
 
     event = Event(

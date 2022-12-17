@@ -9,7 +9,7 @@ from surepy.enums import EntityType
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_VOLTAGE, PERCENTAGE, VOLUME_MILLILITERS
+from homeassistant.const import ATTR_VOLTAGE, PERCENTAGE, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -88,7 +88,7 @@ class Felaqua(SurePetcareEntity, SensorEntity):
     """Sure Petcare Felaqua."""
 
     _attr_device_class = SensorDeviceClass.VOLUME
-    _attr_native_unit_of_measurement = VOLUME_MILLILITERS
+    _attr_native_unit_of_measurement = UnitOfVolume.MILLILITERS
 
     def __init__(
         self, surepetcare_id: int, coordinator: SurePetcareDataCoordinator

@@ -323,7 +323,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @property
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
-        return int(self.media.position) if self.media.position else None
+        return self.media.position
 
     @property
     def media_position_updated_at(self) -> datetime.datetime | None:

@@ -243,7 +243,6 @@ async def test_setup_timestamp(
                 "method": "GET",
                 "value_template": "{{ value_json.key }}",
                 "device_class": SensorDeviceClass.TIMESTAMP,
-                "state_class": SensorStateClass.MEASUREMENT,
             }
         },
     )
@@ -255,7 +254,6 @@ async def test_setup_timestamp(
     state = hass.states.get("sensor.rest_sensor")
     assert state.state == "2021-11-11T11:39:00+00:00"
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TIMESTAMP
-    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.MEASUREMENT
     assert "sensor.rest_sensor rendered invalid timestamp" not in caplog.text
     assert "sensor.rest_sensor rendered timestamp without timezone" not in caplog.text
 

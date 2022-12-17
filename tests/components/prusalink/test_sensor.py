@@ -6,6 +6,7 @@ from unittest.mock import PropertyMock, patch
 import pytest
 
 from homeassistant.components.sensor import (
+    ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
@@ -39,6 +40,14 @@ async def test_sensors_no_job(hass: HomeAssistant, mock_config_entry, mock_api):
     state = hass.states.get("sensor.mock_title")
     assert state is not None
     assert state.state == "idle"
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
+    assert state.attributes[ATTR_OPTIONS] == [
+        "cancelling",
+        "idle",
+        "paused",
+        "pausing",
+        "printing",
+    ]
 
     state = hass.states.get("sensor.mock_title_heatbed")
     assert state is not None

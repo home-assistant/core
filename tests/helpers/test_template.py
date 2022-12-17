@@ -1389,6 +1389,14 @@ def test_is_state(hass: HomeAssistant) -> None:
     )
     assert tpl.async_render() == "test.object"
 
+    tpl = template.Template(
+        """
+{{ is_state("test.object", ["on", "off", "available"]) }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is True
+
 
 def test_is_state_attr(hass: HomeAssistant) -> None:
     """Test is_state_attr method."""

@@ -813,7 +813,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         return result
 
     async def async_create_flow(
-        self, handler_key: Any, *, context: dict | None = None, data: Any = None
+        self, handler_key: str, *, context: dict | None = None, data: Any = None
     ) -> ConfigFlow:
         """Create a flow for specified handler.
 
@@ -1620,7 +1620,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         return await self._async_step_discovery_without_unique_id()
 
     @callback
-    def async_create_entry(
+    def async_create_entry(  # type: ignore[override]
         self,
         *,
         title: str,
@@ -1647,7 +1647,7 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
 
     async def async_create_flow(
         self,
-        handler_key: Any,
+        handler_key: str,
         *,
         context: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,

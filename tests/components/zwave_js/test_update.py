@@ -72,7 +72,6 @@ async def test_update_entity_states(
     hass,
     client,
     climate_radio_thermostat_ct100_plus_different_endpoints,
-    controller_node,
     integration,
     caplog,
     hass_ws_client,

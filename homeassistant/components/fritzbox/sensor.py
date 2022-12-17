@@ -17,12 +17,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
-    POWER_WATT,
     TEMP_CELSIUS,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -131,7 +131,7 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
     FritzSensorEntityDescription(
         key="power_consumption",
         name="Power Consumption",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         suitable=lambda device: device.has_powermeter,  # type: ignore[no-any-return]
@@ -140,7 +140,7 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
     FritzSensorEntityDescription(
         key="voltage",
         name="Voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         suitable=lambda device: device.has_powermeter,  # type: ignore[no-any-return]
@@ -149,7 +149,7 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
     FritzSensorEntityDescription(
         key="electric_current",
         name="Electric Current",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         suitable=lambda device: device.has_powermeter,  # type: ignore[no-any-return]

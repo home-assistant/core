@@ -87,6 +87,26 @@ def get_device(hass, node):
     return dev_reg.async_get_device({device_id})
 
 
+async def test_no_driver(
+    hass, client, multisensor_6, controller_state, integration, hass_ws_client
+):
+    """Test driver missing results in error."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+    client.driver = None
+
+    # Try API call with entry ID
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/network_status",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+
+
 async def test_network_status(
     hass, multisensor_6, controller_state, integration, hass_ws_client
 ):

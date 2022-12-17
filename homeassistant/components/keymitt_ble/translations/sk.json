@@ -15,9 +15,11 @@
                 "data": {
                     "address": "Adresa zariadenia",
                     "name": "N\u00e1zov"
-                }
+                },
+                "title": "Nastavte zariadenie MicroBot"
             },
             "link": {
+                "description": "Stla\u010dte tla\u010didlo na MicroBot Push, ke\u010f LED svieti ru\u017eovo alebo nazeleno, aby ste sa zaregistrovali do Home Assistant.",
                 "title": "P\u00e1rovanie"
             }
         }

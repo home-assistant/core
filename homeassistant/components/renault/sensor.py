@@ -24,19 +24,19 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
-    LENGTH_KILOMETERS,
     PERCENTAGE,
-    POWER_KILO_WATT,
     TEMP_CELSIUS,
     TIME_MINUTES,
-    VOLUME_LITERS,
+    UnitOfLength,
+    UnitOfPower,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import as_utc, parse_datetime
 
-from .const import DEVICE_CLASS_CHARGE_STATE, DEVICE_CLASS_PLUG_STATE, DOMAIN
+from .const import DOMAIN
 from .renault_coordinator import T
 from .renault_entities import RenaultDataEntity, RenaultDataEntityDescription
 from .renault_hub import RenaultHub
@@ -171,10 +171,21 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         key="charge_state",
         coordinator="battery",
         data_key="chargingStatus",
-        device_class=DEVICE_CLASS_CHARGE_STATE,
+        translation_key="charge_state",
+        device_class=SensorDeviceClass.ENUM,
         entity_class=RenaultSensor[KamereonVehicleBatteryStatusData],
         icon_lambda=_get_charge_state_icon,
         name="Charge state",
+        options=[
+            "not_in_charge",
+            "waiting_for_a_planned_charge",
+            "charge_ended",
+            "waiting_for_current_charge",
+            "energy_flap_opened",
+            "charge_in_progress",
+            "charge_error",
+            "unavailable",
+        ],
         value_lambda=_get_charge_state_formatted,
     ),
     RenaultSensorEntityDescription(
@@ -198,7 +209,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         device_class=SensorDeviceClass.POWER,
         entity_class=RenaultSensor[KamereonVehicleBatteryStatusData],
         name="Admissible charging power",
-        native_unit_of_measurement=POWER_KILO_WATT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     RenaultSensorEntityDescription(
@@ -211,7 +222,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         device_class=SensorDeviceClass.POWER,
         entity_class=RenaultSensor[KamereonVehicleBatteryStatusData],
         name="Charging power",
-        native_unit_of_measurement=POWER_KILO_WATT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
         value_lambda=_get_charging_power,
     ),
@@ -219,10 +230,12 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         key="plug_state",
         coordinator="battery",
         data_key="plugStatus",
-        device_class=DEVICE_CLASS_PLUG_STATE,
+        translation_key="plug_state",
+        device_class=SensorDeviceClass.ENUM,
         entity_class=RenaultSensor[KamereonVehicleBatteryStatusData],
         icon_lambda=_get_plug_state_icon,
         name="Plug state",
+        options=["unplugged", "plugged", "plug_error", "plug_unknown"],
         value_lambda=_get_plug_state_formatted,
     ),
     RenaultSensorEntityDescription(
@@ -233,7 +246,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         entity_class=RenaultSensor[KamereonVehicleBatteryStatusData],
         icon="mdi:ev-station",
         name="Battery autonomy",
-        native_unit_of_measurement=LENGTH_KILOMETERS,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     RenaultSensorEntityDescription(
@@ -274,7 +287,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         entity_class=RenaultSensor[KamereonVehicleCockpitData],
         icon="mdi:sign-direction",
         name="Mileage",
-        native_unit_of_measurement=LENGTH_KILOMETERS,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_lambda=_get_rounded_value,
     ),
@@ -286,7 +299,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         entity_class=RenaultSensor[KamereonVehicleCockpitData],
         icon="mdi:gas-station",
         name="Fuel autonomy",
-        native_unit_of_measurement=LENGTH_KILOMETERS,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
         requires_fuel=True,
         value_lambda=_get_rounded_value,
@@ -299,7 +312,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         entity_class=RenaultSensor[KamereonVehicleCockpitData],
         icon="mdi:fuel",
         name="Fuel quantity",
-        native_unit_of_measurement=VOLUME_LITERS,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
         state_class=SensorStateClass.MEASUREMENT,
         requires_fuel=True,
         value_lambda=_get_rounded_value,

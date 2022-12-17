@@ -375,10 +375,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_publish_service(call: ServiceCall) -> None:
         """Handle MQTT publish service calls."""
-        msg_topic = call.data.get(ATTR_TOPIC)
-        msg_topic_template = call.data.get(ATTR_TOPIC_TEMPLATE)
-        payload = call.data.get(ATTR_PAYLOAD)
-        payload_template = call.data.get(ATTR_PAYLOAD_TEMPLATE)
+        msg_topic: str | None = call.data.get(ATTR_TOPIC)
+        msg_topic_template: str | None = call.data.get(ATTR_TOPIC_TEMPLATE)
+        payload: PublishPayloadType = call.data.get(ATTR_PAYLOAD)
+        payload_template: str | None = call.data.get(ATTR_PAYLOAD_TEMPLATE)
         qos: int = call.data[ATTR_QOS]
         retain: bool = call.data[ATTR_RETAIN]
         if msg_topic_template is not None:
@@ -573,6 +573,7 @@ def websocket_mqtt_info(
     {
         vol.Required("type"): "mqtt/subscribe",
         vol.Required("topic"): valid_subscribe_topic,
+        vol.Optional("qos"): valid_qos_schema,
     }
 )
 @websocket_api.async_response
@@ -606,8 +607,9 @@ async def websocket_subscribe(
         )
 
     # Perform UTF-8 decoding directly in callback routine
+    qos: int = msg["qos"] if "qos" in msg else DEFAULT_QOS
     connection.subscriptions[msg["id"]] = await async_subscribe(
-        hass, msg["topic"], forward_messages, encoding=None
+        hass, msg["topic"], forward_messages, encoding=None, qos=qos
     )
 
     connection.send_message(websocket_api.result_message(msg["id"]))

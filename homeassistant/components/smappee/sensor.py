@@ -11,10 +11,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
-    POWER_WATT,
+    UnitOfElectricPotential,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -53,7 +53,7 @@ TREND_SENSORS: tuple[SmappeePollingSensorEntityDescription, ...] = (
     SmappeePollingSensorEntityDescription(
         key="total_power",
         name="Total consumption - Active power",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         sensor_id="total_power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -62,7 +62,7 @@ TREND_SENSORS: tuple[SmappeePollingSensorEntityDescription, ...] = (
     SmappeePollingSensorEntityDescription(
         key="alwayson",
         name="Always on - Active power",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         sensor_id="alwayson",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -104,7 +104,7 @@ REACTIVE_SENSORS: tuple[SmappeeSensorEntityDescription, ...] = (
     SmappeeSensorEntityDescription(
         key="total_reactive_power",
         name="Total consumption - Reactive power",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         sensor_id="total_reactive_power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -114,7 +114,7 @@ SOLAR_SENSORS: tuple[SmappeePollingSensorEntityDescription, ...] = (
     SmappeePollingSensorEntityDescription(
         key="solar_power",
         name="Total production - Active power",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         sensor_id="solar_power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -141,7 +141,7 @@ VOLTAGE_SENSORS: tuple[SmappeeVoltageSensorEntityDescription, ...] = (
     SmappeeVoltageSensorEntityDescription(
         key="phase_voltages_a",
         name="Phase voltages - A",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         sensor_id="phase_voltage_a",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -150,7 +150,7 @@ VOLTAGE_SENSORS: tuple[SmappeeVoltageSensorEntityDescription, ...] = (
     SmappeeVoltageSensorEntityDescription(
         key="phase_voltages_b",
         name="Phase voltages - B",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         sensor_id="phase_voltage_b",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -159,7 +159,7 @@ VOLTAGE_SENSORS: tuple[SmappeeVoltageSensorEntityDescription, ...] = (
     SmappeeVoltageSensorEntityDescription(
         key="phase_voltages_c",
         name="Phase voltages - C",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         sensor_id="phase_voltage_c",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -168,7 +168,7 @@ VOLTAGE_SENSORS: tuple[SmappeeVoltageSensorEntityDescription, ...] = (
     SmappeeVoltageSensorEntityDescription(
         key="line_voltages_a",
         name="Line voltages - A",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         sensor_id="line_voltage_a",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -177,7 +177,7 @@ VOLTAGE_SENSORS: tuple[SmappeeVoltageSensorEntityDescription, ...] = (
     SmappeeVoltageSensorEntityDescription(
         key="line_voltages_b",
         name="Line voltages - B",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         sensor_id="line_voltage_b",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -186,7 +186,7 @@ VOLTAGE_SENSORS: tuple[SmappeeVoltageSensorEntityDescription, ...] = (
     SmappeeVoltageSensorEntityDescription(
         key="line_voltages_c",
         name="Line voltages - C",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         sensor_id="line_voltage_c",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -254,7 +254,7 @@ async def async_setup_entry(
                     description=SmappeeSensorEntityDescription(
                         key="load",
                         name=measurement.name,
-                        native_unit_of_measurement=POWER_WATT,
+                        native_unit_of_measurement=UnitOfPower.WATT,
                         sensor_id=measurement_id,
                         device_class=SensorDeviceClass.POWER,
                         state_class=SensorStateClass.MEASUREMENT,

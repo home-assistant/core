@@ -36,22 +36,23 @@ from homeassistant.util.aiohttp import MockRequest
 from . import account_link, http_api
 from .client import CloudClient
 from .const import (
-    CONF_ACCOUNT_LINK_URL,
-    CONF_ACME_DIRECTORY_SERVER,
+    CONF_ACCOUNT_LINK_SERVER,
+    CONF_ACCOUNTS_SERVER,
+    CONF_ACME_SERVER,
     CONF_ALEXA,
-    CONF_ALEXA_ACCESS_TOKEN_URL,
+    CONF_ALEXA_SERVER,
     CONF_ALIASES,
-    CONF_CLOUDHOOK_CREATE_URL,
+    CONF_CLOUDHOOK_SERVER,
     CONF_COGNITO_CLIENT_ID,
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
     CONF_GOOGLE_ACTIONS,
-    CONF_GOOGLE_ACTIONS_REPORT_STATE_URL,
-    CONF_RELAYER,
-    CONF_REMOTE_API_URL,
-    CONF_SUBSCRIPTION_INFO_URL,
+    CONF_RELAYER_SERVER,
+    CONF_REMOTE_SNI_SERVER,
+    CONF_REMOTESTATE_SERVER,
+    CONF_THINGTALK_SERVER,
     CONF_USER_POOL_ID,
-    CONF_VOICE_API_URL,
+    CONF_VOICE_SERVER,
     DOMAIN,
     MODE_DEV,
     MODE_PROD,
@@ -96,7 +97,6 @@ GACTIONS_SCHEMA = ASSISTANT_SCHEMA.extend(
     {vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: GOOGLE_ENTITY_SCHEMA}}
 )
 
-# pylint: disable=no-value-for-parameter
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -107,17 +107,18 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_COGNITO_CLIENT_ID): str,
                 vol.Optional(CONF_USER_POOL_ID): str,
                 vol.Optional(CONF_REGION): str,
-                vol.Optional(CONF_RELAYER): str,
-                vol.Optional(CONF_SUBSCRIPTION_INFO_URL): vol.Url(),
-                vol.Optional(CONF_CLOUDHOOK_CREATE_URL): vol.Url(),
-                vol.Optional(CONF_REMOTE_API_URL): vol.Url(),
-                vol.Optional(CONF_ACME_DIRECTORY_SERVER): vol.Url(),
                 vol.Optional(CONF_ALEXA): ALEXA_SCHEMA,
                 vol.Optional(CONF_GOOGLE_ACTIONS): GACTIONS_SCHEMA,
-                vol.Optional(CONF_ALEXA_ACCESS_TOKEN_URL): vol.Url(),
-                vol.Optional(CONF_GOOGLE_ACTIONS_REPORT_STATE_URL): vol.Url(),
-                vol.Optional(CONF_ACCOUNT_LINK_URL): vol.Url(),
-                vol.Optional(CONF_VOICE_API_URL): vol.Url(),
+                vol.Optional(CONF_ACCOUNT_LINK_SERVER): str,
+                vol.Optional(CONF_ACCOUNTS_SERVER): str,
+                vol.Optional(CONF_ACME_SERVER): str,
+                vol.Optional(CONF_ALEXA_SERVER): str,
+                vol.Optional(CONF_CLOUDHOOK_SERVER): str,
+                vol.Optional(CONF_RELAYER_SERVER): str,
+                vol.Optional(CONF_REMOTE_SNI_SERVER): str,
+                vol.Optional(CONF_REMOTESTATE_SERVER): str,
+                vol.Optional(CONF_THINGTALK_SERVER): str,
+                vol.Optional(CONF_VOICE_SERVER): str,
             }
         )
     },

@@ -15,13 +15,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
-    FREQUENCY_HERTZ,
     PERCENTAGE,
-    POWER_VOLT_AMPERE,
-    POWER_WATT,
+    UnitOfApparentPower,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfFrequency,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity, entity_registry
@@ -53,15 +53,16 @@ class IotaWattSensorEntityDescription(SensorEntityDescription):
 ENTITY_DESCRIPTION_KEY_MAP: dict[str, IotaWattSensorEntityDescription] = {
     "Amps": IotaWattSensorEntityDescription(
         "Amps",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CURRENT,
         entity_registry_enabled_default=False,
     ),
     "Hz": IotaWattSensorEntityDescription(
         "Hz",
-        native_unit_of_measurement=FREQUENCY_HERTZ,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.FREQUENCY,
         icon="mdi:flash",
         entity_registry_enabled_default=False,
     ),
@@ -75,7 +76,7 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, IotaWattSensorEntityDescription] = {
     ),
     "Watts": IotaWattSensorEntityDescription(
         "Watts",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
     ),
@@ -87,9 +88,9 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, IotaWattSensorEntityDescription] = {
     ),
     "VA": IotaWattSensorEntityDescription(
         "VA",
-        native_unit_of_measurement=POWER_VOLT_AMPERE,
+        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:flash",
+        device_class=SensorDeviceClass.APPARENT_POWER,
         entity_registry_enabled_default=False,
     ),
     "VAR": IotaWattSensorEntityDescription(
@@ -108,7 +109,7 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, IotaWattSensorEntityDescription] = {
     ),
     "Volts": IotaWattSensorEntityDescription(
         "Volts",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLTAGE,
         entity_registry_enabled_default=False,

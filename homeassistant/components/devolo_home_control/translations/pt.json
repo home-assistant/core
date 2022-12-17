@@ -12,7 +12,7 @@
                 "data": {
                     "mydevolo_url": "mydevolo [VOID]",
                     "password": "Palavra-passe",
-                    "username": "Email / devolo ID"
+                    "username": "[VOID] / devolo ID"
                 }
             },
             "zeroconf_confirm": {

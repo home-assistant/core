@@ -2,6 +2,13 @@
     "config": {
         "abort": {
             "already_configured": "Conta j\u00e1 configurada"
+        },
+        "step": {
+            "sensor": {
+                "data": {
+                    "name": "Nome"
+                }
+            }
         }
     }
 }
