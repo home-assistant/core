@@ -54,6 +54,8 @@ async def async_setup_entry(
 class EcobeeVentilatorMinTime(NumberEntity):
     """A number class, representing min time  for an ecobee thermostat with ventilator attached."""
 
+    _attr_has_entity_name = True
+    
     def __init__(self, data, thermostat_index, name, ecobee_setting_name, set_func):
         """Initialize ecobee ventilator platform."""
         self.data = data
