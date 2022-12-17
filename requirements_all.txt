@@ -476,7 +476,7 @@ boto3==1.20.24
 broadlink==0.18.3
 
 # homeassistant.components.brother
-brother==2.0.0
+brother==2.1.1
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==0.0.1
@@ -1939,7 +1939,7 @@ pysmarty==0.8
 pysml==0.0.8
 
 # homeassistant.components.snmp
-pysnmplib==5.0.15
+pysnmplib==5.0.20
 
 # homeassistant.components.snooz
 pysnooz==0.8.3

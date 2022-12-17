@@ -1,5 +1,6 @@
 """SNMP sensor tests."""
 
+import asyncio
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -15,9 +16,11 @@ def hlapi_mock():
     """Mock out 3rd party API."""
     mock_data = MagicMock()
     mock_data.prettyPrint = Mock(return_value="hello")
+    future = asyncio.get_event_loop().create_future()
+    future.set_result((None, None, None, [[mock_data]]))
     with patch(
         "homeassistant.components.snmp.sensor.getCmd",
-        return_value=(None, None, None, [[mock_data]]),
+        return_value=future,
     ):
         yield
 
