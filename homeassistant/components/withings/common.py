@@ -34,13 +34,12 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.config_entry_oauth2_flow import (
     AbstractOAuth2Implementation,
     OAuth2Session,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt
 
@@ -55,16 +54,6 @@ NOT_AUTHENTICATED_ERROR = re.compile(
 )
 DATA_UPDATED_SIGNAL = "withings_entity_state_updated"
 
-MeasurementData = dict[Measurement, Any]
-
-
-class NotAuthenticatedError(HomeAssistantError):
-    """Raise when not authenticated with the service."""
-
-
-class ServiceError(HomeAssistantError):
-    """Raise when the service has an error."""
-
 
 class UpdateType(StrEnum):
     """Data update type."""
@@ -74,16 +63,17 @@ class UpdateType(StrEnum):
 
 
 @dataclass
-class WithingsAttribute:
-    """Immutable class for describing withings sensor data."""
+class WithingsEntityDescriptionMixin:
+    """Mixin for describing withings data."""
 
     measurement: Measurement
     measure_type: NotifyAppli | GetSleepSummaryField | MeasureType
-    friendly_name: str
-    unit_of_measurement: str
-    icon: str | None
-    enabled_by_default: bool
     update_type: UpdateType
+
+
+@dataclass
+class WithingsEntityDescription(EntityDescription, WithingsEntityDescriptionMixin):
+    """Immutable class for describing withings data."""
 
 
 @dataclass
@@ -93,14 +83,6 @@ class WebhookConfig:
     id: str
     url: str
     enabled: bool
-
-
-@dataclass
-class StateData:
-    """State data held by data manager for retrieval by entities."""
-
-    unique_id: str
-    state: Any
 
 
 WITHINGS_MEASURE_TYPE_MAP: dict[
@@ -199,7 +181,7 @@ class WebhookUpdateCoordinator:
         self._hass = hass
         self._user_id = user_id
         self._listeners: list[CALLBACK_TYPE] = []
-        self.data: MeasurementData = {}
+        self.data: dict[Measurement, Any] = {}
 
     def async_add_listener(self, listener: CALLBACK_TYPE) -> Callable[[], None]:
         """Add a listener."""
@@ -555,59 +537,46 @@ class DataManager:
             )
 
 
-def get_attribute_unique_id(attribute: WithingsAttribute, user_id: int) -> str:
+def get_attribute_unique_id(
+    description: WithingsEntityDescription, user_id: int
+) -> str:
     """Get a entity unique id for a user's attribute."""
-    return f"withings_{user_id}_{attribute.measurement.value}"
+    return f"withings_{user_id}_{description.measurement.value}"
 
 
 class BaseWithingsSensor(Entity):
     """Base class for withings sensors."""
 
     _attr_should_poll = False
+    entity_description: WithingsEntityDescription
 
-    def __init__(self, data_manager: DataManager, attribute: WithingsAttribute) -> None:
+    def __init__(
+        self, data_manager: DataManager, description: WithingsEntityDescription
+    ) -> None:
         """Initialize the Withings sensor."""
         self._data_manager = data_manager
-        self._attribute = attribute
-        self._profile = self._data_manager.profile
-        self._user_id = self._data_manager.user_id
-        self._name = f"Withings {self._attribute.measurement.value} {self._profile}"
-        self._unique_id = get_attribute_unique_id(self._attribute, self._user_id)
+        self.entity_description = description
+        self._attr_name = (
+            f"Withings {description.measurement.value} {data_manager.profile}"
+        )
+        self._attr_unique_id = get_attribute_unique_id(
+            description, data_manager.user_id
+        )
         self._state_data: Any | None = None
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        if self._attribute.update_type == UpdateType.POLL:
+        if self.entity_description.update_type == UpdateType.POLL:
             return self._data_manager.poll_data_update_coordinator.last_update_success
 
-        if self._attribute.update_type == UpdateType.WEBHOOK:
+        if self.entity_description.update_type == UpdateType.WEBHOOK:
             return self._data_manager.webhook_config.enabled and (
-                self._attribute.measurement
+                self.entity_description.measurement
                 in self._data_manager.webhook_update_coordinator.data
             )
 
         return True
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return self._unique_id
-
-    @property
-    def icon(self) -> str | None:
-        """Icon to use in the frontend, if any."""
-        return self._attribute.icon
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._attribute.enabled_by_default
 
     @callback
     def _on_poll_data_updated(self) -> None:
@@ -621,14 +590,14 @@ class BaseWithingsSensor(Entity):
             self._data_manager.webhook_update_coordinator.data or {}
         )
 
-    def _update_state_data(self, data: MeasurementData) -> None:
+    def _update_state_data(self, data: dict[Measurement, Any]) -> None:
         """Update the state data."""
-        self._state_data = data.get(self._attribute.measurement)
+        self._state_data = data.get(self.entity_description.measurement)
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Register update dispatcher."""
-        if self._attribute.update_type == UpdateType.POLL:
+        if self.entity_description.update_type == UpdateType.POLL:
             self.async_on_remove(
                 self._data_manager.poll_data_update_coordinator.async_add_listener(
                     self._on_poll_data_updated
@@ -636,7 +605,7 @@ class BaseWithingsSensor(Entity):
             )
             self._on_poll_data_updated()
 
-        elif self._attribute.update_type == UpdateType.WEBHOOK:
+        elif self.entity_description.update_type == UpdateType.WEBHOOK:
             self.async_on_remove(
                 self._data_manager.webhook_update_coordinator.async_add_listener(
                     self._on_webhook_data_updated
