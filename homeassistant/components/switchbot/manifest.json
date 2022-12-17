@@ -27,6 +27,9 @@
     },
     {
       "manufacturer_id": 2409
+    },
+    {
+      "manufacturer_id": 89
     }
   ],
   "iot_class": "local_push",
