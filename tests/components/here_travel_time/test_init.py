@@ -32,6 +32,9 @@ from tests.common import MockConfigEntry
             CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
             CONF_ARRIVAL_TIME: datetime.now(),
         },
+        {
+            CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
+        },
     ],
 )
 async def test_unload_entry(hass: HomeAssistant, options) -> None:
