@@ -298,19 +298,16 @@ class MinMaxSensor(SensorEntity):
             if (state := self.hass.states.get(entity_id))
         ]
         for entity_id, state in states:
-            if (
-                state is None
-                or state.state is None
-                or state.state
-                in [
-                    STATE_UNKNOWN,
-                    STATE_UNAVAILABLE,
-                ]
+            if state is None or state.state in (
+                None,
+                STATE_UNKNOWN,
+                STATE_UNAVAILABLE,
             ):
                 calc_states[entity_id] = STATE_UNKNOWN
                 if not update_state:
                     self._calc_values(calc_states)
                     return
+                continue
             try:
                 calc_states[entity_id] = float(state.state)
                 if entity_id in self._state_incorrect:
