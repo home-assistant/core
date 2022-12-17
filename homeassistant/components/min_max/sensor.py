@@ -297,9 +297,10 @@ class MinMaxSensor(SensorEntity):
             for entity_id in self._entity_ids
             if (state := self.hass.states.get(entity_id))
         ]
+        _LOGGER.debug("states %s", states)
         for entity_id, state in states:
             if state is None or state.state in (
-                None,
+                "None",
                 STATE_UNKNOWN,
                 STATE_UNAVAILABLE,
             ):
