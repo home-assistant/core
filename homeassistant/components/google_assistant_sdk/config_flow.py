@@ -13,23 +13,8 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import CONF_LANGUAGE_CODE, DEFAULT_LANGUAGE_CODE, DEFAULT_NAME, DOMAIN
-
-# https://developers.google.com/assistant/sdk/reference/rpc/languages
-SUPPORTED_LANGUAGE_CODES = [
-    "de-DE",
-    "en-AU",
-    "en-CA",
-    "en-GB",
-    "en-IN",
-    "en-US",
-    "es-ES",
-    "es-MX",
-    "fr-CA",
-    "fr-FR",
-    "it-IT",
-    "pt-BR",
-]
+from .const import CONF_LANGUAGE_CODE, DEFAULT_NAME, DOMAIN, SUPPORTED_LANGUAGE_CODES
+from .helpers import default_language_code
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,7 +73,7 @@ class OAuth2FlowHandler(
             title=DEFAULT_NAME,
             data=data,
             options={
-                CONF_LANGUAGE_CODE: DEFAULT_LANGUAGE_CODE,
+                CONF_LANGUAGE_CODE: default_language_code(self.hass),
             },
         )
 

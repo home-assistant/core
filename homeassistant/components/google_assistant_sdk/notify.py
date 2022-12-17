@@ -8,8 +8,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_LANGUAGE_CODE, DEFAULT_LANGUAGE_CODE, DOMAIN
-from .helpers import async_send_text_commands
+from .const import CONF_LANGUAGE_CODE, DOMAIN
+from .helpers import async_send_text_commands, default_language_code
 
 # https://support.google.com/assistant/answer/9071582?hl=en
 LANG_TO_BROADCAST_COMMAND = {
@@ -55,7 +55,9 @@ class BroadcastNotificationService(BaseNotificationService):
 
         # There can only be 1 entry (config_flow has single_instance_allowed)
         entry: ConfigEntry = self.hass.config_entries.async_entries(DOMAIN)[0]
-        language_code = entry.options.get(CONF_LANGUAGE_CODE, DEFAULT_LANGUAGE_CODE)
+        language_code = entry.options.get(
+            CONF_LANGUAGE_CODE, default_language_code(self.hass)
+        )
 
         commands = []
         targets = kwargs.get(ATTR_TARGET)

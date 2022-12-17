@@ -3,9 +3,7 @@ from unittest.mock import call, patch
 
 from homeassistant.components import notify
 from homeassistant.components.google_assistant_sdk import DOMAIN
-from homeassistant.components.google_assistant_sdk.config_flow import (
-    SUPPORTED_LANGUAGE_CODES,
-)
+from homeassistant.components.google_assistant_sdk.const import SUPPORTED_LANGUAGE_CODES
 from homeassistant.components.google_assistant_sdk.notify import broadcast_commands
 from homeassistant.core import HomeAssistant
 
