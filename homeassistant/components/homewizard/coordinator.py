@@ -70,7 +70,6 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
 
             raise UpdateFailed(ex) from ex
 
-        else:
-            self.api_disabled = False
+        self.api_disabled = False
 
         return data
