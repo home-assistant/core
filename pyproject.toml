@@ -109,7 +109,6 @@ init-hook = """\
 load-plugins = [
     "pylint.extensions.code_style",
     "pylint.extensions.typing",
-    "pylint_strict_informational",
     "hass_constructor",
     "hass_enforce_type_hints",
     "hass_imports",
@@ -122,6 +121,9 @@ extension-pkg-allow-list = [
     "ciso8601",
     "orjson",
     "cv2",
+]
+fail-on = [
+    "I",
 ]
 
 [tool.pylint.BASIC]

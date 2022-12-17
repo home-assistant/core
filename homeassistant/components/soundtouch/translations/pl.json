@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP"
+                }
+            },
+            "zeroconf_confirm": {
+                "description": "Zamierzasz doda\u0107 urz\u0105dzenie SoundTouch o nazwie `{name}` do Home Assistanta.",
+                "title": "Potwierd\u017a dodanie urz\u0105dzenia Bose SoundTouch"
+            }
+        }
+    }
+}

@@ -7,7 +7,9 @@
         "error": {
             "already_exists": "Kamera z tymi ustawieniami adresu URL ju\u017c istnieje.",
             "invalid_still_image": "Adres URL nie zwr\u00f3ci\u0142 prawid\u0142owego obrazu nieruchomego (still image)",
+            "malformed_url": "Nieprawid\u0142owy adres URL",
             "no_still_image_or_stream_url": "Musisz poda\u0107 przynajmniej nieruchomy obraz (still image) lub adres URL strumienia",
+            "relative_url": "Wzgl\u0119dne adresy URL s\u0105 niedozwolone",
             "stream_file_not_found": "Nie znaleziono pliku podczas pr\u00f3by po\u0142\u0105czenia ze strumieniem (czy ffmpeg jest zainstalowany?)",
             "stream_http_not_found": "\"HTTP 404 Nie znaleziono\" podczas pr\u00f3by po\u0142\u0105czenia ze strumieniem",
             "stream_io_error": "B\u0142\u0105d wej\u015bcia/wyj\u015bcia podczas pr\u00f3by po\u0142\u0105czenia ze strumieniem. Z\u0142y protok\u00f3\u0142 transportowy RTSP?",
@@ -50,7 +52,9 @@
         "error": {
             "already_exists": "Kamera z tymi ustawieniami adresu URL ju\u017c istnieje.",
             "invalid_still_image": "Adres URL nie zwr\u00f3ci\u0142 prawid\u0142owego obrazu nieruchomego (still image)",
+            "malformed_url": "Nieprawid\u0142owy adres URL",
             "no_still_image_or_stream_url": "Musisz poda\u0107 przynajmniej nieruchomy obraz (still image) lub adres URL strumienia",
+            "relative_url": "Wzgl\u0119dne adresy URL s\u0105 niedozwolone",
             "stream_file_not_found": "Nie znaleziono pliku podczas pr\u00f3by po\u0142\u0105czenia ze strumieniem (czy ffmpeg jest zainstalowany?)",
             "stream_http_not_found": "\"HTTP 404 Nie znaleziono\" podczas pr\u00f3by po\u0142\u0105czenia ze strumieniem",
             "stream_io_error": "B\u0142\u0105d wej\u015bcia/wyj\u015bcia podczas pr\u00f3by po\u0142\u0105czenia ze strumieniem. Z\u0142y protok\u00f3\u0142 transportowy RTSP?",

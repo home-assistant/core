@@ -101,9 +101,7 @@ def upcoming_event_url(entity: str = TEST_ENTITY) -> str:
     return f"/api/calendars/{entity}?start={urllib.parse.quote(start)}&end={urllib.parse.quote(end)}"
 
 
-async def test_all_day_event(
-    hass, mock_events_list_items, mock_token_read, component_setup
-):
+async def test_all_day_event(hass, mock_events_list_items, component_setup):
     """Test that we can create an event trigger on device."""
     week_from_today = dt_util.now().date() + datetime.timedelta(days=7)
     end_event = week_from_today + datetime.timedelta(days=1)
@@ -672,7 +670,6 @@ async def test_future_event_offset_update_behavior(
 async def test_unique_id(
     hass,
     mock_events_list_items,
-    mock_token_read,
     component_setup,
     config_entry,
 ):
@@ -695,7 +692,6 @@ async def test_unique_id(
 async def test_unique_id_migration(
     hass,
     mock_events_list_items,
-    mock_token_read,
     component_setup,
     config_entry,
     old_unique_id,
@@ -751,7 +747,6 @@ async def test_unique_id_migration(
 async def test_invalid_unique_id_cleanup(
     hass,
     mock_events_list_items,
-    mock_token_read,
     component_setup,
     config_entry,
     mock_calendars_yaml,

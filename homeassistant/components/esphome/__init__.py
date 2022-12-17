@@ -558,7 +558,7 @@ async def platform_async_setup_entry(
     entry_data: RuntimeEntryData = DomainData.get(hass).get_entry_data(entry)
     entry_data.info[component_key] = {}
     entry_data.old_info[component_key] = {}
-    entry_data.state[component_key] = {}
+    entry_data.state.setdefault(state_type, {})
 
     @callback
     def async_list_entities(infos: list[EntityInfo]) -> None:
@@ -578,7 +578,7 @@ async def platform_async_setup_entry(
                 old_infos.pop(info.key)
             else:
                 # Create new entity
-                entity = entity_type(entry_data, component_key, info.key)
+                entity = entity_type(entry_data, component_key, info.key, state_type)
                 add_entities.append(entity)
             new_infos[info.key] = info
 
@@ -677,12 +677,17 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     """Define a base esphome entity."""
 
     def __init__(
-        self, entry_data: RuntimeEntryData, component_key: str, key: int
+        self,
+        entry_data: RuntimeEntryData,
+        component_key: str,
+        key: int,
+        state_type: type[_StateT],
     ) -> None:
         """Initialize."""
         self._entry_data = entry_data
         self._component_key = component_key
         self._key = key
+        self._state_type = state_type
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -707,7 +712,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
 
         self.async_on_remove(
             self._entry_data.async_subscribe_state_update(
-                self._component_key, self._key, self._on_state_update
+                self._state_type, self._key, self._on_state_update
             )
         )
 
@@ -755,11 +760,11 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
 
     @property
     def _state(self) -> _StateT:
-        return cast(_StateT, self._entry_data.state[self._component_key][self._key])
+        return cast(_StateT, self._entry_data.state[self._state_type][self._key])
 
     @property
     def _has_state(self) -> bool:
-        return self._key in self._entry_data.state[self._component_key]
+        return self._key in self._entry_data.state[self._state_type]
 
     @property
     def available(self) -> bool:

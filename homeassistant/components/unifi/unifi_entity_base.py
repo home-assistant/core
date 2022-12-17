@@ -1,11 +1,17 @@
 """Base class for UniFi Network entities."""
+from __future__ import annotations
+
+from collections.abc import Callable
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+
+if TYPE_CHECKING:
+    from .controller import UniFiController
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,7 +22,7 @@ class UniFiBase(Entity):
     DOMAIN = ""
     TYPE = ""
 
-    def __init__(self, item, controller) -> None:
+    def __init__(self, item, controller: UniFiController) -> None:
         """Set up UniFi Network entity base.
 
         Register mac to controller entities to cover disabled entities.
@@ -38,11 +44,12 @@ class UniFiBase(Entity):
             self.entity_id,
             self.key,
         )
-        for signal, method in (
+        signals: tuple[tuple[str, Callable[..., Any]], ...] = (
             (self.controller.signal_reachable, self.async_signal_reachable_callback),
             (self.controller.signal_options_update, self.options_updated),
             (self.controller.signal_remove, self.remove_item),
-        ):
+        )
+        for signal, method in signals:
             self.async_on_remove(async_dispatcher_connect(self.hass, signal, method))
         self._item.register_callback(self.async_update_callback)
 

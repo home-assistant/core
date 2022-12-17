@@ -9,7 +9,7 @@
             "connection_error": "Impossibile connettersi a ESP. Assicurati che il tuo file YAML contenga una riga \"api:\".",
             "invalid_auth": "Autenticazione non valida",
             "invalid_psk": "La chiave di cifratura del trasporto non \u00e8 valida. Assicurati che corrisponda a ci\u00f2 che hai nella tua configurazione",
-            "resolve_error": "Impossibile risolvere l'indirizzo dell'ESP. Se questo errore persiste, imposta un indirizzo IP statico: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
+            "resolve_error": "Impossibile risolvere l'indirizzo dell'ESP. Se l'errore persiste, impostare un indirizzo IP statico"
         },
         "flow_title": "{name}",
         "step": {
@@ -40,7 +40,7 @@
                     "host": "Host",
                     "port": "Porta"
                 },
-                "description": "Inserisci le impostazioni di connessione del tuo nodo [ESPHome](https://esphomelib.com/)."
+                "description": "Inserisci le impostazioni di connessione del tuo nodo [ESPHome]({esphome_url})."
             }
         }
     }

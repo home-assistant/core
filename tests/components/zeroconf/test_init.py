@@ -530,7 +530,8 @@ async def test_homekit_match_partial_space(hass, mock_async_zeroconf):
         await hass.async_block_till_done()
 
     assert len(mock_service_browser.mock_calls) == 1
-    assert len(mock_config_flow.mock_calls) == 1
+    # One for HKC, and one for LIFX since lifx is local polling
+    assert len(mock_config_flow.mock_calls) == 2
     assert mock_config_flow.mock_calls[0][1][0] == "lifx"
 
 
@@ -738,6 +739,44 @@ async def test_homekit_controller_still_discovered_unpaired_for_cloud(
     assert len(mock_service_browser.mock_calls) == 1
     assert len(mock_config_flow.mock_calls) == 2
     assert mock_config_flow.mock_calls[0][1][0] == "rachio"
+    assert mock_config_flow.mock_calls[1][1][0] == "homekit_controller"
+
+
+async def test_homekit_controller_still_discovered_unpaired_for_polling(
+    hass, mock_async_zeroconf
+):
+    """Test discovery is still passed to homekit controller when unpaired and discovered by polling integration.
+
+    Since we prefer local push, if the integration that is being discovered
+    is polling AND the homekit device is unpaired we still want to discovery it
+    """
+    with patch.dict(
+        zc_gen.ZEROCONF,
+        {"_hap._udp.local.": [{"domain": "homekit_controller"}]},
+        clear=True,
+    ), patch.dict(
+        zc_gen.HOMEKIT,
+        {"iSmartGate": "gogogate2"},
+        clear=True,
+    ), patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_config_flow, patch.object(
+        zeroconf,
+        "HaAsyncServiceBrowser",
+        side_effect=lambda *args, **kwargs: service_update_mock(
+            *args, **kwargs, limit_service="_hap._udp.local."
+        ),
+    ) as mock_service_browser, patch(
+        "homeassistant.components.zeroconf.AsyncServiceInfo",
+        side_effect=get_homekit_info_mock("iSmartGate", HOMEKIT_STATUS_UNPAIRED),
+    ):
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert len(mock_service_browser.mock_calls) == 1
+    assert len(mock_config_flow.mock_calls) == 2
+    assert mock_config_flow.mock_calls[0][1][0] == "gogogate2"
     assert mock_config_flow.mock_calls[1][1][0] == "homekit_controller"
 
 

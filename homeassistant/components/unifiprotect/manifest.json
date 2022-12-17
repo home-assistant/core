@@ -3,7 +3,7 @@
   "name": "UniFi Protect",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/unifiprotect",
-  "requirements": ["pyunifiprotect==4.0.8", "unifi-discovery==1.1.4"],
+  "requirements": ["pyunifiprotect==4.0.9", "unifi-discovery==1.1.4"],
   "dependencies": ["http"],
   "codeowners": ["@briis", "@AngellusMortis", "@bdraco"],
   "quality_scale": "platinum",

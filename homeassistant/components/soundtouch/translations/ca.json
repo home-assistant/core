@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3"
+                }
+            },
+            "zeroconf_confirm": {
+                "description": "Est\u00e0s a punt d'afegir el dispositiu SoundTouch amb nom `{name}` a Home Assistant.",
+                "title": "Confirma l'addici\u00f3 del dispositiu Bose SoundTouch"
+            }
+        }
+    }
+}

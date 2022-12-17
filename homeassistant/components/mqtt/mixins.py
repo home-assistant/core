@@ -355,7 +355,7 @@ class MqttAttributes(Entity):
 
     def __init__(self, config: dict) -> None:
         """Initialize the JSON attributes mixin."""
-        self._attributes: dict | None = None
+        self._attributes: dict[str, Any] | None = None
         self._attributes_sub_state = None
         self._attributes_config = config
 
@@ -426,7 +426,7 @@ class MqttAttributes(Entity):
         )
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         return self._attributes
 

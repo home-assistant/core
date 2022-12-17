@@ -12,6 +12,7 @@ from homeassistant.components.number import (
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
     DEVICE_CLASSES_SCHEMA,
+    NumberDeviceClass,
     RestoreNumber,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -292,11 +293,11 @@ class MqttNumber(MqttEntity, RestoreNumber):
         )
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._optimistic
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> NumberDeviceClass | None:
         """Return the device class of the sensor."""
         return self._config.get(CONF_DEVICE_CLASS)

@@ -52,6 +52,8 @@ TEMP_FREEDOM_ATTRS = {
         ("12.1", "12.2", TEMP_CELSIUS_ATTRS, False),
         ("70", "71", TEMP_FREEDOM_ATTRS, True),
         ("70", "70.5", TEMP_FREEDOM_ATTRS, False),
+        ("fail", "70", TEMP_FREEDOM_ATTRS, True),
+        ("70", "fail", TEMP_FREEDOM_ATTRS, False),
     ],
 )
 async def test_significant_change_temperature(old_state, new_state, attrs, result):

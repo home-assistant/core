@@ -41,7 +41,7 @@ async def test_hue_bridge_setup(hass):
                     entities=[
                         EntityTestInfo(
                             entity_id="sensor.hue_dimmer_switch_battery",
-                            friendly_name="Hue dimmer switch Battery",
+                            friendly_name="Hue dimmer switch battery",
                             unique_id="homekit-6623462389072572-644245094400",
                             unit_of_measurement=PERCENTAGE,
                             state="100",

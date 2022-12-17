@@ -37,6 +37,7 @@
                 "data": {
                     "cloud_project_id": "Google Cloud\u30d7\u30ed\u30b8\u30a7\u30af\u30c8ID"
                 },
+                "description": "\u4ee5\u4e0b\u306bCloud Project ID\u3092\u5165\u529b\u3057\u307e\u3059\u3002\u4f8b:  *example-project-12345*\u3002[Google Cloud Console]({cloud_console_url}) \u307e\u305f\u306f[\u8a73\u7d30]({more_info_url})\u306e\u30c9\u30ad\u30e5\u30e1\u30f3\u30c8\u3092\u53c2\u7167\u3057\u3066\u304f\u3060\u3055\u3044\u3002",
                 "title": "\u30cd\u30b9\u30c8: \u30af\u30e9\u30a6\u30c9\u30d7\u30ed\u30b8\u30a7\u30af\u30c8ID\u3092\u5165\u529b"
             },
             "create_cloud_project": {

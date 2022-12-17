@@ -204,12 +204,14 @@ class DenonDevice(MediaPlayerEntity):
                     )
                     self._available = False
             except AvrCommandError as err:
+                available = False
                 _LOGGER.error(
                     "Command %s failed with error: %s",
                     func.__name__,
                     err,
                 )
             except DenonAvrError as err:
+                available = False
                 _LOGGER.error(
                     "Error %s occurred in method %s for Denon AVR receiver",
                     err,

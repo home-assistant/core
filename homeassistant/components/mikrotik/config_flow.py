@@ -1,6 +1,8 @@
 """Config flow for Mikrotik."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -13,6 +15,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_ARP_PING,
@@ -40,7 +43,9 @@ class MikrotikFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return MikrotikOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
@@ -52,7 +57,7 @@ class MikrotikFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     break
 
             try:
-                await self.hass.async_add_executor_job(get_api, self.hass, user_input)
+                await self.hass.async_add_executor_job(get_api, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except LoginError:
@@ -86,11 +91,15 @@ class MikrotikOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize Mikrotik options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the Mikrotik options."""
         return await self.async_step_device_tracker()
 
-    async def async_step_device_tracker(self, user_input=None):
+    async def async_step_device_tracker(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the device tracker options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

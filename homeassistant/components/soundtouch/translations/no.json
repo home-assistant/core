@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Vert"
+                }
+            },
+            "zeroconf_confirm": {
+                "description": "Du er i ferd med \u00e5 legge til SoundTouch-enheten med navnet ` {name} ` til Home Assistant.",
+                "title": "Bekreft \u00e5 legge til Bose SoundTouch-enhet"
+            }
+        }
+    }
+}

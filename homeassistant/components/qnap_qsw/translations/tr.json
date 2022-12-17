@@ -9,6 +9,12 @@
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
         },
         "step": {
+            "discovered_connection": {
+                "data": {
+                    "password": "Parola",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Parola",

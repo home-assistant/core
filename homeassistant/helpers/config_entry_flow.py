@@ -6,7 +6,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Generic, TypeVar, Union, cast
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp, mqtt, onboarding, ssdp, zeroconf
+from homeassistant.components import dhcp, onboarding, ssdp, zeroconf
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
@@ -14,6 +14,9 @@ from .typing import UNDEFINED, DiscoveryInfoType, UndefinedType
 
 if TYPE_CHECKING:
     import asyncio
+
+    from homeassistant.components import mqtt
+
 
 _R = TypeVar("_R", bound="Awaitable[bool] | bool")
 DiscoveryFunctionType = Callable[[HomeAssistant], _R]

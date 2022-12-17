@@ -5,8 +5,8 @@ from homeassistant.helpers.entity import DeviceInfo
 from .unifi_entity_base import UniFiBase
 
 
-class UniFiClient(UniFiBase):
-    """Base class for UniFi clients."""
+class UniFiClientBase(UniFiBase):
+    """Base class for UniFi clients (without device info)."""
 
     def __init__(self, client, controller) -> None:
         """Set up client."""
@@ -43,6 +43,10 @@ class UniFiClient(UniFiBase):
     def available(self) -> bool:
         """Return if controller is available."""
         return self.controller.available
+
+
+class UniFiClient(UniFiClientBase):
+    """Base class for UniFi clients (with device info)."""
 
     @property
     def device_info(self) -> DeviceInfo:

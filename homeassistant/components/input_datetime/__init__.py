@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import datetime as py_datetime
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -84,23 +85,32 @@ def has_date_or_time(conf):
     raise vol.Invalid("Entity needs at least a date or a time")
 
 
-def valid_initial(conf):
+def valid_initial(conf: dict[str, Any]) -> dict[str, Any]:
     """Check the initial value is valid."""
-    if not (initial := conf.get(CONF_INITIAL)):
+    if not (conf.get(CONF_INITIAL)):
         return conf
 
+    # Ensure we can parse the initial value, raise vol.Invalid on failure
+    parse_initial_datetime(conf)
+    return conf
+
+
+def parse_initial_datetime(conf: dict[str, Any]) -> py_datetime.datetime:
+    """Check the initial value is valid."""
+    initial: str = conf[CONF_INITIAL]
+
     if conf[CONF_HAS_DATE] and conf[CONF_HAS_TIME]:
-        if dt_util.parse_datetime(initial) is not None:
-            return conf
+        if (datetime := dt_util.parse_datetime(initial)) is not None:
+            return datetime
         raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a datetime")
 
     if conf[CONF_HAS_DATE]:
-        if dt_util.parse_date(initial) is not None:
-            return conf
+        if (date := dt_util.parse_date(initial)) is not None:
+            return py_datetime.datetime.combine(date, DEFAULT_TIME)
         raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a date")
 
-    if dt_util.parse_time(initial) is not None:
-        return conf
+    if (time := dt_util.parse_time(initial)) is not None:
+        return py_datetime.datetime.combine(py_datetime.date.today(), time)
     raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a time")
 
 
@@ -230,21 +240,10 @@ class InputDatetime(RestoreEntity):
         self.editable = True
         self._current_datetime = None
 
-        if not (initial := config.get(CONF_INITIAL)):
+        if not config.get(CONF_INITIAL):
             return
 
-        if self.has_date and self.has_time:
-            current_datetime = dt_util.parse_datetime(initial)
-
-        elif self.has_date:
-            date = dt_util.parse_date(initial)
-            current_datetime = py_datetime.datetime.combine(date, DEFAULT_TIME)
-
-        else:
-            time = dt_util.parse_time(initial)
-            current_datetime = py_datetime.datetime.combine(
-                py_datetime.date.today(), time
-            )
+        current_datetime = parse_initial_datetime(config)
 
         # If the user passed in an initial value with a timezone, convert it to right tz
         if current_datetime.tzinfo is not None:

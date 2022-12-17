@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "cannot_receive_deviceinfo": "MAC Adresi al\u0131namad\u0131. Cihaz\u0131n a\u00e7\u0131k oldu\u011fundan emin olun"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Sunucu",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

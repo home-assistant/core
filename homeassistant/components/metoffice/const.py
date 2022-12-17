@@ -37,7 +37,7 @@ MODE_3HOURLY_LABEL = "3-Hourly"
 MODE_DAILY = "daily"
 MODE_DAILY_LABEL = "Daily"
 
-CONDITION_CLASSES = {
+CONDITION_CLASSES: dict[str, list[str]] = {
     ATTR_CONDITION_CLEAR_NIGHT: ["0"],
     ATTR_CONDITION_CLOUDY: ["7", "8"],
     ATTR_CONDITION_FOG: ["5", "6"],

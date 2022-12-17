@@ -27,7 +27,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN as UNIFI_DOMAIN
-from .unifi_client import UniFiClient
+from .controller import UniFiController
+from .unifi_client import UniFiClientBase
 from .unifi_entity_base import UniFiBase
 
 LOGGER = logging.getLogger(__name__)
@@ -79,7 +80,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up device tracker for UniFi Network integration."""
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     controller.entities[DOMAIN] = {CLIENT_TRACKER: set(), DEVICE_TRACKER: set()}
 
     @callback
@@ -144,7 +145,7 @@ def add_device_entities(controller, async_add_entities, devices):
         async_add_entities(trackers)
 
 
-class UniFiClientTracker(UniFiClient, ScannerEntity):
+class UniFiClientTracker(UniFiClientBase, ScannerEntity):
     """Representation of a network client."""
 
     DOMAIN = DOMAIN
@@ -260,11 +261,6 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         self._is_connected = False
         self.async_write_ha_state()
         self._async_log_debug_data("make_disconnected")
-
-    @property
-    def device_info(self) -> None:
-        """Return no device info."""
-        return None
 
     @property
     def is_connected(self):

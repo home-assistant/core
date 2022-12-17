@@ -10,13 +10,13 @@ from pyclimacell.const import CURRENT, DAILY, FORECASTS, HOURLY, NOWCAST
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_NATIVE_PRECIPITATION,
+    ATTR_FORECAST_NATIVE_TEMP,
+    ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_WIND_SPEED,
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -135,12 +135,12 @@ class BaseClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
         data = {
             ATTR_FORECAST_TIME: forecast_dt.isoformat(),
             ATTR_FORECAST_CONDITION: translated_condition,
-            ATTR_FORECAST_PRECIPITATION: precipitation,
+            ATTR_FORECAST_NATIVE_PRECIPITATION: precipitation,
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: precipitation_probability,
-            ATTR_FORECAST_TEMP: temp,
-            ATTR_FORECAST_TEMP_LOW: temp_low,
+            ATTR_FORECAST_NATIVE_TEMP: temp,
+            ATTR_FORECAST_NATIVE_TEMP_LOW: temp_low,
             ATTR_FORECAST_WIND_BEARING: wind_direction,
-            ATTR_FORECAST_WIND_SPEED: wind_speed,
+            ATTR_FORECAST_NATIVE_WIND_SPEED: wind_speed,
         }
 
         return {k: v for k, v in data.items() if v is not None}
@@ -224,7 +224,7 @@ class ClimaCellV3WeatherEntity(BaseClimaCellWeatherEntity):
         return CONDITIONS_V3[condition]
 
     @property
-    def temperature(self):
+    def native_temperature(self):
         """Return the platform temperature."""
         return self._get_cc_value(
             self.coordinator.data[CURRENT], CC_V3_ATTR_TEMPERATURE

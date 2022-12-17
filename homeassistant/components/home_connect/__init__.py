@@ -103,15 +103,14 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.LIGHT, Platform.SENSOR, Platform.S
 
 def _get_appliance_by_device_id(
     hass: HomeAssistant, device_id: str
-) -> api.HomeConnectDevice | None:
+) -> api.HomeConnectDevice:
     """Return a Home Connect appliance instance given an device_id."""
     for hc_api in hass.data[DOMAIN].values():
         for dev_dict in hc_api.devices:
             device = dev_dict[CONF_DEVICE]
             if device.device_id == device_id:
                 return device.appliance
-    _LOGGER.error("Appliance for device id %s not found", device_id)
-    return None
+    raise ValueError(f"Appliance for device id {device_id} not found")
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -148,18 +147,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         }
 
         appliance = _get_appliance_by_device_id(hass, device_id)
-        if appliance is not None:
-            await hass.async_add_executor_job(
-                getattr(appliance, method), program, options
-            )
+        await hass.async_add_executor_job(getattr(appliance, method), program, options)
 
     async def _async_service_command(call, command):
         """Execute calls to services executing a command."""
         device_id = call.data[ATTR_DEVICE_ID]
 
         appliance = _get_appliance_by_device_id(hass, device_id)
-        if appliance is not None:
-            await hass.async_add_executor_job(appliance.execute_command, command)
+        await hass.async_add_executor_job(appliance.execute_command, command)
 
     async def _async_service_key_value(call, method):
         """Execute calls to services taking a key and value."""
@@ -169,20 +164,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         device_id = call.data[ATTR_DEVICE_ID]
 
         appliance = _get_appliance_by_device_id(hass, device_id)
-        if appliance is not None:
-            if unit is not None:
-                await hass.async_add_executor_job(
-                    getattr(appliance, method),
-                    key,
-                    value,
-                    unit,
-                )
-            else:
-                await hass.async_add_executor_job(
-                    getattr(appliance, method),
-                    key,
-                    value,
-                )
+        if unit is not None:
+            await hass.async_add_executor_job(
+                getattr(appliance, method),
+                key,
+                value,
+                unit,
+            )
+        else:
+            await hass.async_add_executor_job(
+                getattr(appliance, method),
+                key,
+                value,
+            )
 
     async def async_service_option_active(call):
         """Service for setting an option for an active program."""

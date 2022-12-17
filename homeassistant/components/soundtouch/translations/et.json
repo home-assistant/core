@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            },
+            "zeroconf_confirm": {
+                "description": "Oled lisamas SoundTouchi seadet nimega `{name}` Home Assistantisse.",
+                "title": "Kinnita Bose SoundTouchi seadme lisamine"
+            }
+        }
+    }
+}

@@ -211,6 +211,6 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
         )
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._optimistic

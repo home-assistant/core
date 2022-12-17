@@ -32,8 +32,8 @@ async def test_mysa_living_setup(hass):
             devices=[],
             entities=[
                 EntityTestInfo(
-                    entity_id="climate.mysa_85dda9",
-                    friendly_name="Mysa-85dda9",
+                    entity_id="climate.mysa_85dda9_thermostat",
+                    friendly_name="Mysa-85dda9 Thermostat",
                     unique_id="homekit-AAAAAAA000-20",
                     supported_features=SUPPORT_TARGET_TEMPERATURE,
                     capabilities={
@@ -60,8 +60,8 @@ async def test_mysa_living_setup(hass):
                     state="24.1",
                 ),
                 EntityTestInfo(
-                    entity_id="light.mysa_85dda9",
-                    friendly_name="Mysa-85dda9",
+                    entity_id="light.mysa_85dda9_display",
+                    friendly_name="Mysa-85dda9 Display",
                     unique_id="homekit-AAAAAAA000-40",
                     supported_features=0,
                     capabilities={"supported_color_modes": ["brightness"]},
