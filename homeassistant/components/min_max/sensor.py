@@ -304,9 +304,6 @@ class MinMaxSensor(SensorEntity):
                 STATE_UNAVAILABLE,
             ):
                 calc_states[entity_id] = STATE_UNKNOWN
-                if not update_state:
-                    self._calc_values(calc_states)
-                    return
                 continue
             try:
                 calc_states[entity_id] = float(state.state)
