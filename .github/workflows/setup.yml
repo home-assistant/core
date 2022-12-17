@@ -1,0 +1,29 @@
+name: Development environment setup
+
+# yamllint disable-line rule:truthy
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * *"
+  push:
+    branches:
+      - dev
+      - rc
+    paths:
+      - "requirements.txt"
+      - "requirements_all.txt"
+
+jobs:
+  setup:
+    name: Initialize wheels builder
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3.2.0
+
+      - name: Run setup
+        run: script/setup
