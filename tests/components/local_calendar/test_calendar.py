@@ -937,3 +937,27 @@ async def test_invalid_date_formats(
     assert "error" in result
     assert "code" in result.get("error")
     assert result["error"]["code"] == "invalid_format"
+
+
+async def test_update_invalid_event_id(
+    ws_client: ClientFixture,
+    setup_integration: None,
+    hass: HomeAssistant,
+):
+    """Test updating an event with an invalid event uid."""
+    client = await ws_client()
+    resp = await client.cmd(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "uid-does-not-exist",
+            "event": {
+                "summary": "Bastille Day Party [To be rescheduled]",
+                "dtstart": "1997-07-14",
+                "dtend": "1997-07-15",
+            },
+        },
+    )
+    assert not resp.get("success")
+    assert "error" in resp
+    assert resp.get("error").get("code") == "failed"
