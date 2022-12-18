@@ -1,9 +1,9 @@
 """Support for Rheem EcoNet water heaters."""
 from pyeconet.equipment import EquipmentType
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorDeviceClass, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfVolume
+from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS, UnitOfEnergy, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -42,8 +42,32 @@ SENSOR_NAMES_TO_UNIT_OF_MEASUREMENT = {
     WATER_USAGE_TODAY: UnitOfVolume.GALLONS,
     POWER_USAGE_TODAY: None,  # Depends on unit type
     ALERT_COUNT: None,
-    WIFI_SIGNAL: None,
+    WIFI_SIGNAL: SIGNAL_STRENGTH_DECIBELS,
     RUNNING_STATE: None,  # This is just a string
+}
+
+SENSOR_NAMES_TO_STATE_CLASS = {
+    TANK_HEALTH: SensorStateClass.MEASUREMENT,
+    AVAILABLE_HOT_WATER: SensorStateClass.MEASUREMENT,
+    COMPRESSOR_HEALTH: SensorStateClass.MEASUREMENT,
+    OVERRIDE_STATUS: None,
+    WATER_USAGE_TODAY: SensorStateClass.TOTAL_INCREASING,
+    POWER_USAGE_TODAY: SensorStateClass.TOTAL_INCREASING,
+    ALERT_COUNT: None,
+    WIFI_SIGNAL: SensorStateClass.MEASUREMENT,
+    RUNNING_STATE: None,
+}
+
+SENSOR_NAMES_TO_DEVICE_CLASS = {
+    TANK_HEALTH: None,
+    AVAILABLE_HOT_WATER: None,
+    COMPRESSOR_HEALTH: None,
+    OVERRIDE_STATUS: None,
+    WATER_USAGE_TODAY: SensorDeviceClass.WATER,
+    POWER_USAGE_TODAY: SensorDeviceClass.ENERGY,
+    ALERT_COUNT: None,
+    WIFI_SIGNAL: SensorDeviceClass.SIGNAL_STRENGTH,
+    RUNNING_STATE: None,
 }
 
 
@@ -111,3 +135,13 @@ class EcoNetSensor(EcoNetEntity, SensorEntity):
         return (
             f"{self._econet.device_id}_{self._econet.device_name}_{self._device_name}"
         )
+    
+    @property
+    def state_class(self):
+        '''Return the state class'''
+        return SENSOR_NAMES_TO_STATE_CLASS[self._device_name]
+    
+    @property
+    def device_class(self):
+        '''Return the device class'''
+        return SENSOR_NAMES_TO_DEVICE_CLASS[self._device_name]
