@@ -90,7 +90,7 @@ async def async_setup_entry(
     coordinator: SwitchbotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     entities = [
         SwitchBotSensor(coordinator, sensor)
-        for sensor in coordinator.device.data
+        for sensor in coordinator.device.parsed_data
         if sensor in SENSOR_TYPES
     ]
     entities.append(SwitchbotRSSISensor(coordinator, "rssi"))
@@ -114,7 +114,7 @@ class SwitchBotSensor(SwitchbotEntity, SensorEntity):
     @property
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
-        return self.data["data"][self._sensor]
+        return self.parsed_data[self._sensor]
 
 
 class SwitchbotRSSISensor(SwitchBotSensor):
