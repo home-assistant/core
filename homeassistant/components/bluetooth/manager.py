@@ -369,6 +369,7 @@ class BluetoothManager:
         all_history = self._all_history
         connectable = service_info.connectable
         connectable_history = self._connectable_history
+        old_connectable_service_info = None
 
         source = service_info.source
         debug = _LOGGER.isEnabledFor(logging.DEBUG)
@@ -442,12 +443,20 @@ class BluetoothManager:
             tracker.async_collect(service_info)
 
         # If the advertisement data is the same as the last time we saw it, we
-        # don't need to do anything else.
-        if old_service_info and not (
-            service_info.manufacturer_data != old_service_info.manufacturer_data
-            or service_info.service_data != old_service_info.service_data
-            or service_info.service_uuids != old_service_info.service_uuids
-            or service_info.name != old_service_info.name
+        # don't need to do anything else unless its connectable and we are missing
+        # connectable history for the device so we can make it available again
+        # after unavailable callbacks.
+        if (
+            # Ensure its not a connectable device missing from connectable history
+            not (connectable and not old_connectable_service_info)
+            # Than check if advertisement data is the same
+            and old_service_info
+            and not (
+                service_info.manufacturer_data != old_service_info.manufacturer_data
+                or service_info.service_data != old_service_info.service_data
+                or service_info.service_uuids != old_service_info.service_uuids
+                or service_info.name != old_service_info.name
+            )
         ):
             return
 
