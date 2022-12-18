@@ -133,6 +133,30 @@ async def test_set_mode(hass, setup_platform):
             )
 
 
+async def test_set_mode_when_off(hass, setup_platform):
+    """Test the humidifer can set the mode when off."""
+    with patch(
+        "pyvesync.vesyncfan.VeSyncHumid200300S.set_humidity_mode"
+    ) as mock_set_mode, patch(
+        "pyvesync.vesyncfan.VeSyncHumid200300S.is_on", new_callable=PropertyMock
+    ) as mock_is_on, patch(
+        "pyvesync.vesyncfan.VeSyncHumid200300S.turn_on"
+    ) as mock_turn_on:
+        mock_is_on.return_value = False
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_MODE,
+            {ATTR_ENTITY_ID: TEST_HUMIDIFIER_ENTITIY, ATTR_MODE: MODE_AUTO},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+        mock_set_mode.assert_called_with(MODE_AUTO)
+        mock_is_on.assert_called_once()
+        mock_turn_on.assert_called_once()
+
+
 async def test_set_humidity(hass, setup_platform):
     """Test the humidifier can set humidity level."""
     with patch(
