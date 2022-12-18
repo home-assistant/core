@@ -1,6 +1,6 @@
 """Tests for VeSync humidifiers."""
 
-from unittest.mock import patch
+from unittest.mock import Mock, PropertyMock, patch
 
 import pytest
 
@@ -28,8 +28,20 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     STATE_ON,
 )
+from homeassistant.setup import async_setup_component
 
 TEST_HUMIDIFIER_ENTITIY = "humidifier.humidifier_300s"
+
+
+async def test_discovered_unsupported_humidifier(hass):
+    """Test the discovery mechanism can handle unsupported humidifiers."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    mock_humidifier = Mock()
+    mock_humidifier.device_type = "invalid_sku"
+
+    hass.bus.async_fire("vesync_discovery_humidifiers", [mock_humidifier])
 
 
 async def test_attributes_humidifier(hass, setup_platform):
@@ -133,4 +145,29 @@ async def test_set_humidity(hass, setup_platform):
             blocking=True,
         )
         await hass.async_block_till_done()
+        mock_set_humidity.assert_called_once_with(60)
+
+
+async def test_set_humidity_when_off(hass, setup_platform):
+    """Test the humidifier will turn on before it sets the humidity."""
+
+    with patch(
+        "pyvesync.vesyncfan.VeSyncHumid200300S.set_humidity"
+    ) as mock_set_humidity, patch(
+        "pyvesync.vesyncfan.VeSyncHumid200300S.is_on", new_callable=PropertyMock
+    ) as mock_is_on, patch(
+        "pyvesync.vesyncfan.VeSyncHumid200300S.turn_on"
+    ) as mock_turn_on:
+        mock_is_on.return_value = False
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_HUMIDITY,
+            {ATTR_ENTITY_ID: TEST_HUMIDIFIER_ENTITIY, ATTR_HUMIDITY: 60},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+        mock_is_on.assert_called_once()
+        mock_turn_on.assert_called_once()
         mock_set_humidity.assert_called_once_with(60)
