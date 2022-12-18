@@ -386,7 +386,7 @@ boschshcpy==0.2.35
 broadlink==0.18.3
 
 # homeassistant.components.brother
-brother==2.0.0
+brother==2.1.1
 
 # homeassistant.components.brunt
 brunt==1.2.0
@@ -695,7 +695,7 @@ iaqualink==0.5.0
 ibeacon_ble==1.0.1
 
 # homeassistant.components.local_calendar
-ical==4.2.2
+ical==4.2.3
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -1374,7 +1374,7 @@ pysmartapp==0.3.3
 pysmartthings==0.7.6
 
 # homeassistant.components.snmp
-pysnmplib==5.0.15
+pysnmplib==5.0.20
 
 # homeassistant.components.snooz
 pysnooz==0.8.3
@@ -1845,7 +1845,7 @@ youless-api==0.16
 zamg==0.1.1
 
 # homeassistant.components.zeroconf
-zeroconf==0.42.0
+zeroconf==0.44.0
 
 # homeassistant.components.zha
 zha-quirks==0.0.89

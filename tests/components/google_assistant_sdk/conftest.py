@@ -2,6 +2,7 @@
 from collections.abc import Awaitable, Callable, Generator
 import time
 
+from google.oauth2.credentials import Credentials
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -18,6 +19,7 @@ ComponentSetup = Callable[[], Awaitable[None]]
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
+ACCESS_TOKEN = "mock-access-token"
 
 
 @pytest.fixture
@@ -51,7 +53,7 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
         data={
             "auth_implementation": DOMAIN,
             "token": {
-                "access_token": "mock-access-token",
+                "access_token": ACCESS_TOKEN,
                 "refresh_token": "mock-refresh-token",
                 "expires_at": expires_at,
                 "scope": " ".join(scopes),
@@ -80,3 +82,11 @@ async def mock_setup_integration(
         await hass.async_block_till_done()
 
     yield func
+
+
+class ExpectedCredentials:
+    """Assert credentials have the expected access token."""
+
+    def __eq__(self, other: Credentials):
+        """Return true if credentials have the expected access token."""
+        return other.token == ACCESS_TOKEN
