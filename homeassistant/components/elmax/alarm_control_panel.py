@@ -37,18 +37,16 @@ async def async_setup_entry(
             return
 
         # Otherwise, add all the entities we found
-        entities = []
-        for area in panel_status.areas:
-            # Skip already handled devices
-            if area.endpoint_id in known_devices:
-                continue
-            entity = ElmaxArea(
+        entities = [
+            ElmaxArea(
                 panel=coordinator.panel_entry,
                 elmax_device=area,
                 panel_version=panel_status.release,
                 coordinator=coordinator,
             )
-            entities.append(entity)
+            for area in panel_status.areas
+            if area.endpoint_id not in known_devices
+        ]
 
         if entities:
             async_add_entities(entities)
