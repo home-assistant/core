@@ -89,11 +89,8 @@ async def async_setup_entry(
     """Set up Switchbot sensor based on a config entry."""
     coordinator: SwitchbotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     entities = [
-        SwitchBotSensor(
-            coordinator,
-            sensor,
-        )
-        for sensor in coordinator.data["data"]
+        SwitchBotSensor(coordinator, sensor)
+        for sensor in coordinator.device.data
         if sensor in SENSOR_TYPES
     ]
     entities.append(SwitchbotRSSISensor(coordinator, "rssi"))
