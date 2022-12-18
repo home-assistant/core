@@ -18,6 +18,14 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+_COMMAND_BY_MOTION_STATUS = (
+    {  # Maps the stop command to use for every cover motion status
+        CoverStatus.DOWN: CoverCommand.DOWN,
+        CoverStatus.UP: CoverCommand.UP,
+        CoverStatus.IDLE: None,
+    }
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -125,11 +133,3 @@ class ElmaxCover(ElmaxEntity, CoverEntity):
         await self.coordinator.http_client.execute_command(
             endpoint_id=self._device.endpoint_id, command=CoverCommand.DOWN
         )
-
-
-# Maps the stop command to use for every cover motion status
-_COMMAND_BY_MOTION_STATUS = {
-    CoverStatus.DOWN: CoverCommand.DOWN,
-    CoverStatus.UP: CoverCommand.UP,
-    CoverStatus.IDLE: None,
-}
