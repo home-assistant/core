@@ -10,10 +10,10 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SENSORS,
     CONF_TEMPERATURE_UNIT,
-    ELECTRIC_POTENTIAL_VOLT,
     TIME_HOURS,
     TIME_MINUTES,
     TIME_SECONDS,
+    UnitOfElectricPotential,
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
@@ -275,7 +275,7 @@ class TemperatureSensor(GEMSensor):
 class VoltageSensor(GEMSensor):
     """Entity showing voltage."""
 
-    _attr_native_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
+    _attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
     _attr_device_class = SensorDeviceClass.VOLTAGE
 
     def __init__(

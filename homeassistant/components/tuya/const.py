@@ -16,8 +16,6 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_CURRENT_MILLIAMPERE,
-    ELECTRIC_POTENTIAL_MILLIVOLT,
-    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
     LIGHT_LUX,
@@ -35,6 +33,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
     Platform,
+    UnitOfElectricPotential,
     UnitOfPower,
 )
 
@@ -561,15 +560,15 @@ UNITS = (
         device_classes={SensorDeviceClass.TEMPERATURE},
     ),
     UnitOfMeasurement(
-        unit=ELECTRIC_POTENTIAL_VOLT,
+        unit=UnitOfElectricPotential.VOLT,
         aliases={"volt"},
         device_classes={SensorDeviceClass.VOLTAGE},
     ),
     UnitOfMeasurement(
-        unit=ELECTRIC_POTENTIAL_MILLIVOLT,
+        unit=UnitOfElectricPotential.MILLIVOLT,
         aliases={"mv", "millivolt"},
         device_classes={SensorDeviceClass.VOLTAGE},
-        conversion_unit=ELECTRIC_POTENTIAL_VOLT,
+        conversion_unit=UnitOfElectricPotential.VOLT,
         conversion_fn=lambda x: x / 1000,
     ),
 )

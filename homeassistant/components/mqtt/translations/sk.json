@@ -5,11 +5,13 @@
             "single_instance_allowed": "U\u017e je nakonfigurovan\u00fd. Mo\u017en\u00e1 len jedna konfigur\u00e1cia."
         },
         "error": {
+            "bad_birth": "Neplatn\u00e1 t\u00e9ma birth",
             "bad_certificate": "Certifik\u00e1t CA je neplatn\u00fd",
             "bad_client_cert": "Neplatn\u00fd certifik\u00e1t klienta, uistite sa, \u017ee je dodan\u00fd s\u00fabor s k\u00f3dom PEM",
             "bad_client_cert_key": "Certifik\u00e1t klienta a s\u00fakromn\u00fd k\u013e\u00fa\u010d nie s\u00fa platn\u00fdm p\u00e1rom",
             "bad_client_key": "Neplatn\u00fd s\u00fakromn\u00fd k\u013e\u00fa\u010d, uistite sa, \u017ee s\u00fabor s k\u00f3dom PEM je dodan\u00fd bez hesla",
             "bad_discovery_prefix": "Neplatn\u00fd prefix zis\u0165ovania",
+            "bad_will": "Neplatn\u00e1 t\u00e9ma will",
             "bad_ws_headers": "Zadajte platn\u00e9 hlavi\u010dky HTTP ako objekt JSON",
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
             "invalid_inclusion": "Certifik\u00e1t klienta a s\u00fakromn\u00fd k\u013e\u00fa\u010d musia by\u0165 nakonfigurovan\u00e9 spolo\u010dne"
@@ -80,11 +82,13 @@
     },
     "options": {
         "error": {
+            "bad_birth": "Neplatn\u00e1 t\u00e9ma birth",
             "bad_certificate": "Certifik\u00e1t CA je neplatn\u00fd",
             "bad_client_cert": "Neplatn\u00fd certifik\u00e1t klienta, uistite sa, \u017ee je dodan\u00fd s\u00fabor s k\u00f3dom PEM",
             "bad_client_cert_key": "Certifik\u00e1t klienta a s\u00fakromn\u00fd k\u013e\u00fa\u010d nie s\u00fa platn\u00fdm p\u00e1rom",
             "bad_client_key": "Neplatn\u00fd s\u00fakromn\u00fd k\u013e\u00fa\u010d, uistite sa, \u017ee s\u00fabor s k\u00f3dom PEM je dodan\u00fd bez hesla",
             "bad_discovery_prefix": "Neplatn\u00fd prefix zis\u0165ovania",
+            "bad_will": "Neplatn\u00e1 t\u00e9ma will",
             "bad_ws_headers": "Zadajte platn\u00e9 hlavi\u010dky HTTP ako objekt JSON",
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
             "invalid_inclusion": "Certifik\u00e1t klienta a s\u00fakromn\u00fd k\u013e\u00fa\u010d musia by\u0165 nakonfigurovan\u00e9 spolo\u010dne"
@@ -115,13 +119,20 @@
             },
             "options": {
                 "data": {
-                    "birth_enable": "Povoli\u0165 spr\u00e1vu pri pripojen\u00ed",
+                    "birth_enable": "Povoli\u0165 spr\u00e1vu birth",
+                    "birth_payload": "Birth spr\u00e1va vy\u0165a\u017eenie",
+                    "birth_qos": "QoS spr\u00e1vy birth",
+                    "birth_retain": "Zachova\u0165 spr\u00e1vu birth",
+                    "birth_topic": "T\u00e9ma spr\u00e1vy birth",
                     "discovery": "Povoli\u0165 zis\u0165ovanie",
                     "discovery_prefix": "Discovery prefix",
-                    "will_payload": "Odo\u0161le z\u00e1\u0165a\u017e",
-                    "will_qos": "Odo\u0161le QoS"
+                    "will_enable": "Povolenie spr\u00e1v \"will\"",
+                    "will_payload": "Will spr\u00e1va za\u0165a\u017eenie",
+                    "will_qos": "Will spr\u00e1va QoS",
+                    "will_retain": "Will spr\u00e1va sa zachov\u00e1",
+                    "will_topic": "T\u00e9ma spr\u00e1v \"will\""
                 },
-                "description": "Zis\u0165ovanie \u2013 ak je zis\u0165ovanie povolen\u00e9 (odpor\u00fa\u010da sa), Home Assistant automaticky objav\u00ed zariadenia a entity, ktor\u00e9 zverej\u0148uj\u00fa svoju konfigur\u00e1ciu na brokerovi MQTT. Ak je zis\u0165ovanie zak\u00e1zan\u00e9, v\u0161etky konfigur\u00e1cie sa musia vykona\u0165 manu\u00e1lne.\nPredpona zis\u0165ovania \u2013 Predpona, ktorou mus\u00ed za\u010d\u00edna\u0165 t\u00e9ma konfigur\u00e1cie automatick\u00e9ho zis\u0165ovania.\nSpr\u00e1va o naroden\u00ed \u2013 Spr\u00e1va o naroden\u00ed sa odo\u0161le pri ka\u017edom (op\u00e4tovnom) pripojen\u00ed dom\u00e1ceho asistenta k makl\u00e9rovi MQTT.\nWill message - Spr\u00e1va will bude odoslan\u00e1 v\u017edy, ke\u010f Home Assistant strat\u00ed spojenie s brokerom, a to ako v pr\u00edpade vy\u010distenia (napr. vypnutie Home Assistant), tak aj v pr\u00edpade ne\u010dist\u00e9ho stavu (napr. Home Assistant zlyh\u00e1 alebo strat\u00ed pripojenie k sieti) odpoji\u0165.",
+                "description": "Zis\u0165ovanie \u2013 ak je zis\u0165ovanie povolen\u00e9 (odpor\u00fa\u010da sa), Home Assistant automaticky objav\u00ed zariadenia a entity, ktor\u00e9 zverej\u0148uj\u00fa svoju konfigur\u00e1ciu na brokerovi MQTT. Ak je zis\u0165ovanie zak\u00e1zan\u00e9, v\u0161etky konfigur\u00e1cie sa musia vykona\u0165 manu\u00e1lne.\nPredpona zis\u0165ovania \u2013 Predpona, ktorou mus\u00ed za\u010d\u00edna\u0165 t\u00e9ma konfigur\u00e1cie automatick\u00e9ho zis\u0165ovania.\nSpr\u00e1va birth \u2013 Spr\u00e1va birth sa odo\u0161le pri ka\u017edom (op\u00e4tovnom) pripojen\u00ed dom\u00e1ceho asistenta k makl\u00e9rovi MQTT.\nWill message - Spr\u00e1va will bude odoslan\u00e1 v\u017edy, ke\u010f Home Assistant strat\u00ed spojenie s brokerom, a to ako v pr\u00edpade vy\u010distenia (napr. vypnutie Home Assistant), tak aj v pr\u00edpade ne\u010dist\u00e9ho stavu (napr. Home Assistant zlyh\u00e1 alebo strat\u00ed pripojenie k sieti) odpoji\u0165.",
                 "title": "MQTT mo\u017enosti"
             }
         }

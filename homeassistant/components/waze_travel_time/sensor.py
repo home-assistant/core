@@ -16,9 +16,8 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_REGION,
     EVENT_HOMEASSISTANT_STARTED,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
     TIME_MINUTES,
+    UnitOfLength,
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -210,7 +209,7 @@ class WazeTravelTimeData:
                 if units == IMPERIAL_UNITS:
                     # Convert to miles.
                     self.distance = DistanceConverter.convert(
-                        distance, LENGTH_KILOMETERS, LENGTH_MILES
+                        distance, UnitOfLength.KILOMETERS, UnitOfLength.MILES
                     )
                 else:
                     self.distance = distance

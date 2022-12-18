@@ -40,7 +40,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.23.1
+PySwitchbot==0.23.2
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -456,7 +456,7 @@ bluemaestro-ble==0.2.0
 bluetooth-adapters==0.14.1
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==1.0.0
+bluetooth-auto-recovery==1.0.3
 
 # homeassistant.components.bluetooth
 # homeassistant.components.led_ble
@@ -476,7 +476,7 @@ boto3==1.20.24
 broadlink==0.18.3
 
 # homeassistant.components.brother
-brother==2.0.0
+brother==2.1.1
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==0.0.1
@@ -803,7 +803,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.19.1
+govee-ble==0.19.3
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -888,13 +888,13 @@ hole==0.7.0
 holidays==0.17.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20221213.0
+home-assistant-frontend==20221213.1
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.0.11
+homematicip==1.0.13
 
 # homeassistant.components.home_plus_control
 homepluscontrol==0.0.5
@@ -930,7 +930,7 @@ ibm-watson==5.2.2
 ibmiotf==0.3.4
 
 # homeassistant.components.local_calendar
-ical==4.2.2
+ical==4.2.3
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -1321,7 +1321,7 @@ pilight==0.1.1
 
 # homeassistant.components.doods
 # homeassistant.components.generic
-# homeassistant.components.image
+# homeassistant.components.image_upload
 # homeassistant.components.proxy
 # homeassistant.components.qrcode
 # homeassistant.components.seven_segments
@@ -1439,7 +1439,7 @@ pyRFXtrx==0.30.0
 pySwitchmate==0.5.1
 
 # homeassistant.components.tibber
-pyTibber==0.26.4
+pyTibber==0.26.5
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1464,7 +1464,7 @@ pyairnow==1.1.0
 
 # homeassistant.components.airvisual
 # homeassistant.components.airvisual_pro
-pyairvisual==2022.12.0
+pyairvisual==2022.12.1
 
 # homeassistant.components.almond
 pyalmond==0.0.2
@@ -1939,7 +1939,7 @@ pysmarty==0.8
 pysml==0.0.8
 
 # homeassistant.components.snmp
-pysnmplib==5.0.15
+pysnmplib==5.0.20
 
 # homeassistant.components.snooz
 pysnooz==0.8.3
@@ -2275,7 +2275,7 @@ sense_energy==0.11.0
 sensirion-ble==0.0.1
 
 # homeassistant.components.sensorpro
-sensorpro-ble==0.5.0
+sensorpro-ble==0.5.1
 
 # homeassistant.components.sensorpush
 sensorpush-ble==1.5.2
@@ -2614,13 +2614,13 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.3.9
 
 # homeassistant.components.yalexs_ble
-yalexs-ble==1.11.4
+yalexs-ble==1.12.2
 
 # homeassistant.components.august
 yalexs==1.2.6
 
 # homeassistant.components.august
-yalexs_ble==1.11.4
+yalexs_ble==1.12.2
 
 # homeassistant.components.yeelight
 yeelight==0.7.10

@@ -3,10 +3,10 @@ from __future__ import annotations
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
-    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     TEMP_CELSIUS,
     UnitOfElectricCurrent,
+    UnitOfElectricPotential,
     UnitOfFrequency,
     UnitOfPower,
 )
@@ -35,7 +35,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="inverter_voltage_input_1",
         name="Input 1 voltage",
         api_key="vpv1",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         precision=2,
     ),
@@ -59,7 +59,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="inverter_voltage_input_2",
         name="Input 2 voltage",
         api_key="vpv2",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         precision=1,
     ),
@@ -83,7 +83,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="inverter_voltage_input_3",
         name="Input 3 voltage",
         api_key="vpv3",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         precision=1,
     ),
@@ -115,7 +115,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="inverter_reactive_voltage",
         name="Reactive voltage",
         api_key="vacr",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         precision=1,
     ),

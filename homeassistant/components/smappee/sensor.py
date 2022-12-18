@@ -11,9 +11,9 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
+    UnitOfElectricPotential,
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
@@ -141,7 +141,7 @@ VOLTAGE_SENSORS: tuple[SmappeeVoltageSensorEntityDescription, ...] = (
     SmappeeVoltageSensorEntityDescription(
         key="phase_voltages_a",
         name="Phase voltages - A",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         sensor_id="phase_voltage_a",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -150,7 +150,7 @@ VOLTAGE_SENSORS: tuple[SmappeeVoltageSensorEntityDescription, ...] = (
     SmappeeVoltageSensorEntityDescription(
         key="phase_voltages_b",
         name="Phase voltages - B",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         sensor_id="phase_voltage_b",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -159,7 +159,7 @@ VOLTAGE_SENSORS: tuple[SmappeeVoltageSensorEntityDescription, ...] = (
     SmappeeVoltageSensorEntityDescription(
         key="phase_voltages_c",
         name="Phase voltages - C",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         sensor_id="phase_voltage_c",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -168,7 +168,7 @@ VOLTAGE_SENSORS: tuple[SmappeeVoltageSensorEntityDescription, ...] = (
     SmappeeVoltageSensorEntityDescription(
         key="line_voltages_a",
         name="Line voltages - A",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         sensor_id="line_voltage_a",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -177,7 +177,7 @@ VOLTAGE_SENSORS: tuple[SmappeeVoltageSensorEntityDescription, ...] = (
     SmappeeVoltageSensorEntityDescription(
         key="line_voltages_b",
         name="Line voltages - B",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         sensor_id="line_voltage_b",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -186,7 +186,7 @@ VOLTAGE_SENSORS: tuple[SmappeeVoltageSensorEntityDescription, ...] = (
     SmappeeVoltageSensorEntityDescription(
         key="line_voltages_c",
         name="Line voltages - C",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         sensor_id="line_voltage_c",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
