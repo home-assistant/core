@@ -111,9 +111,6 @@ class ElmaxCover(ElmaxEntity, CoverEntity):
         motion_status = self.coordinator.get_cover_state(
             self._device.endpoint_id
         ).status
-        if motion_status is None:
-            _LOGGER.warning("Could not retrieve motion_status for elmax cover")
-            return
         command = _COMMAND_BY_MOTION_STATUS[motion_status]
         if command:
             await self.coordinator.http_client.execute_command(

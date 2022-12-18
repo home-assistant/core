@@ -82,7 +82,7 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
     def get_cover_state(self, cover_id: str) -> Cover:
         """Return state of a specific cover."""
         if self._state_by_endpoint is not None:
-            return self._state_by_endpoint.get(cover_id)
+            return self._state_by_endpoint[cover_id]
         raise HomeAssistantError("Unknown cover")
 
     @property
