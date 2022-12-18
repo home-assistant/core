@@ -10,6 +10,7 @@ from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
@@ -143,6 +144,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize."""
         self._flow_data: dict[str, Any] = {}
+        self._reauth_entry: ConfigEntry | None = None
 
     async def async_step_by_coordinates(
         self, user_input: dict[str, Any] | None = None
@@ -199,6 +201,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -220,15 +225,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors=validation.errors,
             )
 
-        reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-        assert reauth_entry
+        assert self._reauth_entry
+
         self.hass.config_entries.async_update_entry(
-            reauth_entry, data={CONF_API_KEY: api_key}
+            self._reauth_entry, data={CONF_API_KEY: api_key}
         )
         self.hass.async_create_task(
-            self.hass.config_entries.async_reload(reauth_entry.entry_id)
+            self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
         )
         return self.async_abort(reason="reauth_successful")
 
