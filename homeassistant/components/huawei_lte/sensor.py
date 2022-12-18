@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from bisect import bisect
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import logging
@@ -64,6 +64,14 @@ def format_default(value: StateType) -> tuple[StateType, str | None]:
     return value, unit
 
 
+def format_freq_mhz(value: StateType) -> tuple[StateType, UnitOfFrequency]:
+    """Format a frequency value for which source is in tens of MHz."""
+    return (
+        round(int(value) / 10) if value is not None else None,
+        UnitOfFrequency.MEGAHERTZ,
+    )
+
+
 def last_reset_elapsed_seconds(value: str | None) -> datetime | None:
     """Convert elapsed seconds to last reset datetime."""
     if value is None:
@@ -74,6 +82,25 @@ def last_reset_elapsed_seconds(value: str | None) -> datetime | None:
         return last_reset
     except ValueError:
         return None
+
+
+def signal_icon(limits: Sequence[int], value: StateType) -> str:
+    """Get signal icon."""
+    return (
+        "mdi:signal-cellular-outline",
+        "mdi:signal-cellular-1",
+        "mdi:signal-cellular-2",
+        "mdi:signal-cellular-3",
+    )[bisect(limits, value if value is not None else -1000)]
+
+
+def bandwidth_icon(limits: Sequence[int], value: StateType) -> str:
+    """Get bandwidth icon."""
+    return (
+        "mdi:speedometer-slow",
+        "mdi:speedometer-medium",
+        "mdi:speedometer",
+    )[bisect(limits, value if value is not None else -1000)]
 
 
 @dataclass
@@ -170,11 +197,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "dlbandwidth": HuaweiSensorEntityDescription(
                 key="dlbandwidth",
                 name="Downlink bandwidth",
-                icon_fn=lambda x: (
-                    "mdi:speedometer-slow",
-                    "mdi:speedometer-medium",
-                    "mdi:speedometer",
-                )[bisect((8, 15), x if x is not None else -1000)],
+                icon_fn=lambda x: bandwidth_icon((8, 15), x),
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "dlfrequency": HuaweiSensorEntityDescription(
@@ -193,12 +216,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 name="EC/IO",
                 device_class=SensorDeviceClass.SIGNAL_STRENGTH,
                 # https://wiki.teltonika.lt/view/EC/IO
-                icon_fn=lambda x: (
-                    "mdi:signal-cellular-outline",
-                    "mdi:signal-cellular-1",
-                    "mdi:signal-cellular-2",
-                    "mdi:signal-cellular-3",
-                )[bisect((-20, -10, -6), x if x is not None else -1000)],
+                icon_fn=lambda x: signal_icon((-20, -10, -6), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
@@ -216,20 +234,14 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "ltedlfreq": HuaweiSensorEntityDescription(
                 key="ltedlfreq",
                 name="LTE downlink frequency",
-                formatter=lambda x: (
-                    round(int(x) / 10) if x is not None else None,
-                    UnitOfFrequency.MEGAHERTZ,
-                ),
+                formatter=format_freq_mhz,
                 device_class=SensorDeviceClass.FREQUENCY,
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "lteulfreq": HuaweiSensorEntityDescription(
                 key="lteulfreq",
                 name="LTE uplink frequency",
-                formatter=lambda x: (
-                    round(int(x) / 10) if x is not None else None,
-                    UnitOfFrequency.MEGAHERTZ,
-                ),
+                formatter=format_freq_mhz,
                 device_class=SensorDeviceClass.FREQUENCY,
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
@@ -276,12 +288,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 name="RSCP",
                 device_class=SensorDeviceClass.SIGNAL_STRENGTH,
                 # https://wiki.teltonika.lt/view/RSCP
-                icon_fn=lambda x: (
-                    "mdi:signal-cellular-outline",
-                    "mdi:signal-cellular-1",
-                    "mdi:signal-cellular-2",
-                    "mdi:signal-cellular-3",
-                )[bisect((-95, -85, -75), x if x is not None else -1000)],
+                icon_fn=lambda x: signal_icon((-95, -85, -75), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
@@ -290,12 +297,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 name="RSRP",
                 device_class=SensorDeviceClass.SIGNAL_STRENGTH,
                 # http://www.lte-anbieter.info/technik/rsrp.php
-                icon_fn=lambda x: (
-                    "mdi:signal-cellular-outline",
-                    "mdi:signal-cellular-1",
-                    "mdi:signal-cellular-2",
-                    "mdi:signal-cellular-3",
-                )[bisect((-110, -95, -80), x if x is not None else -1000)],
+                icon_fn=lambda x: signal_icon((-110, -95, -80), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 entity_registry_enabled_default=True,
@@ -305,12 +307,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 name="RSRQ",
                 device_class=SensorDeviceClass.SIGNAL_STRENGTH,
                 # http://www.lte-anbieter.info/technik/rsrq.php
-                icon_fn=lambda x: (
-                    "mdi:signal-cellular-outline",
-                    "mdi:signal-cellular-1",
-                    "mdi:signal-cellular-2",
-                    "mdi:signal-cellular-3",
-                )[bisect((-11, -8, -5), x if x is not None else -1000)],
+                icon_fn=lambda x: signal_icon((-11, -8, -5), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 entity_registry_enabled_default=True,
@@ -320,12 +317,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 name="RSSI",
                 device_class=SensorDeviceClass.SIGNAL_STRENGTH,
                 # https://eyesaas.com/wi-fi-signal-strength/
-                icon_fn=lambda x: (
-                    "mdi:signal-cellular-outline",
-                    "mdi:signal-cellular-1",
-                    "mdi:signal-cellular-2",
-                    "mdi:signal-cellular-3",
-                )[bisect((-80, -70, -60), x if x is not None else -1000)],
+                icon_fn=lambda x: signal_icon((-80, -70, -60), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 entity_registry_enabled_default=True,
@@ -335,12 +327,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 name="SINR",
                 device_class=SensorDeviceClass.SIGNAL_STRENGTH,
                 # http://www.lte-anbieter.info/technik/sinr.php
-                icon_fn=lambda x: (
-                    "mdi:signal-cellular-outline",
-                    "mdi:signal-cellular-1",
-                    "mdi:signal-cellular-2",
-                    "mdi:signal-cellular-3",
-                )[bisect((0, 5, 10), x if x is not None else -1000)],
+                icon_fn=lambda x: signal_icon((0, 5, 10), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 entity_registry_enabled_default=True,
@@ -375,11 +362,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "ulbandwidth": HuaweiSensorEntityDescription(
                 key="ulbandwidth",
                 name="Uplink bandwidth",
-                icon_fn=lambda x: (
-                    "mdi:speedometer-slow",
-                    "mdi:speedometer-medium",
-                    "mdi:speedometer",
-                )[bisect((8, 15), x if x is not None else -1000)],
+                icon_fn=lambda x: bandwidth_icon((8, 15), x),
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "ulfrequency": HuaweiSensorEntityDescription(
