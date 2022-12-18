@@ -70,6 +70,7 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
         super().__init__(device, device_manager)
         CameraEntity.__init__(self)
         self._attr_model = device.product_name
+        self._update_stream_lock: asyncio.Lock | None = None
 
     @property
     def is_recording(self) -> bool:
@@ -95,9 +96,9 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
             return await super().async_create_stream()
 
         # Tuya streams urls are one time urls. Updating source of existing stream.
-        if not self._create_stream_lock:
-            self._create_stream_lock = asyncio.Lock()
-        async with self._create_stream_lock:
+        if not self._update_stream_lock:
+            self._update_stream_lock = asyncio.Lock()
+        async with self._update_stream_lock:
             async with async_timeout.timeout(CAMERA_STREAM_SOURCE_TIMEOUT):
                 source = await self.stream_source()
             if not source:
