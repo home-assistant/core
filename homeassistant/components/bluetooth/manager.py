@@ -369,7 +369,7 @@ class BluetoothManager:
         all_history = self._all_history
         connectable = service_info.connectable
         connectable_history = self._connectable_history
-        old_connectable_service_info = None
+        old_connectable_service_info = connectable and connectable_history.get(address)
 
         source = service_info.source
         debug = _LOGGER.isEnabledFor(logging.DEBUG)
@@ -400,7 +400,6 @@ class BluetoothManager:
             # but not in the connectable history or the connectable source is the same
             # as the new source, we need to add it to the connectable history
             if connectable:
-                old_connectable_service_info = connectable_history.get(address)
                 if old_connectable_service_info and (
                     # If its the same as the preferred source, we are done
                     # as we know we prefer the old advertisement
