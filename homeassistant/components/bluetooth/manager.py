@@ -459,8 +459,7 @@ class BluetoothManager:
         ):
             return
 
-        is_connectable_by_any_source = address in self._connectable_history
-        if not connectable and is_connectable_by_any_source:
+        if not connectable and old_connectable_service_info:
             # Since we have a connectable path and our BleakClient will
             # route any connection attempts to the connectable path, we
             # mark the service_info as connectable so that the callbacks
@@ -489,7 +488,7 @@ class BluetoothManager:
                 matched_domains,
             )
 
-        if is_connectable_by_any_source:
+        if connectable or old_connectable_service_info:
             # Bleak callbacks must get a connectable device
             for callback_filters in self._bleak_callbacks:
                 _dispatch_bleak_callback(*callback_filters, device, advertisement_data)
