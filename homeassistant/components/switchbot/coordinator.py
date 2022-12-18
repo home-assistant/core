@@ -102,7 +102,7 @@ class SwitchbotDataUpdateCoordinator(
         self.ble_device = service_info.device
         if not (
             adv := switchbot.parse_advertisement_data(
-                service_info.device, service_info.advertisement
+                service_info.device, service_info.advertisement, self.model
             )
         ):
             return
