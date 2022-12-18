@@ -674,7 +674,7 @@ home-assistant-frontend==20221213.1
 homeconnect==0.7.2
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.0.11
+homematicip==1.0.13
 
 # homeassistant.components.home_plus_control
 homepluscontrol==0.0.5
@@ -1578,7 +1578,7 @@ sense_energy==0.11.0
 sensirion-ble==0.0.1
 
 # homeassistant.components.sensorpro
-sensorpro-ble==0.5.0
+sensorpro-ble==0.5.1
 
 # homeassistant.components.sensorpush
 sensorpush-ble==1.5.2
