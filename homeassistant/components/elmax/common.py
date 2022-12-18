@@ -63,19 +63,19 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
     def get_actuator_state(self, actuator_id: str) -> Actuator:
         """Return state of a specific actuator."""
         if self._state_by_endpoint is not None:
-            return self._state_by_endpoint.get(actuator_id)
+            return self._state_by_endpoint[actuator_id]
         raise HomeAssistantError("Unknown actuator")
 
     def get_zone_state(self, zone_id: str) -> Actuator:
         """Return state of a specific zone."""
         if self._state_by_endpoint is not None:
-            return self._state_by_endpoint.get(zone_id)
+            return self._state_by_endpoint[zone_id]
         raise HomeAssistantError("Unknown zone")
 
     def get_area_state(self, area_id: str) -> Area:
         """Return state of a specific area."""
-        if self._state_by_endpoint is not None:
-            return self._state_by_endpoint.get(area_id)
+        if self._state_by_endpoint is not None and area_id:
+            return self._state_by_endpoint[area_id]
         raise HomeAssistantError("Unknown area")
 
     @property
