@@ -28,7 +28,7 @@ from homeassistant.core import DOMAIN as HASS_DOMAIN, CoreState, State, callback
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed, mock_restore_cache
+from tests.common import MockConfigEntry, async_fire_time_changed, mock_restore_cache
 
 ENTITY = "humidifier.test"
 ENT_SENSOR = "sensor.test"
@@ -182,6 +182,29 @@ async def setup_comp_2(hass):
     await hass.async_block_till_done()
 
 
+@pytest.fixture
+async def setup_comp_config_entry(hass):
+    """Initialize components from config entry."""
+    _setup_sensor(hass, 45)
+    hass.states.async_set(ENT_SWITCH, STATE_OFF)
+    await hass.async_block_till_done()
+    entry = MockConfigEntry(
+        domain="generic_hygrostat",
+        options={
+            "name": "test",
+            "dry_tolerance": 2,
+            "wet_tolerance": 4,
+            "humidifier": ENT_SWITCH,
+            "target_sensor": ENT_SENSOR,
+            "away_humidity": 35,
+            "initial_state": True,
+        },
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+
 async def test_unavailable_state(hass):
     """Test the setting of defaults to unknown."""
     await async_setup_component(
@@ -228,6 +251,14 @@ async def test_setup_defaults_to_unknown(hass):
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY).state == STATE_UNAVAILABLE
+
+
+async def test_default_setup_from_entry(hass, setup_comp_config_entry):
+    """Test setting up a generic hygrostat with a valid config entry."""
+    state = hass.states.get(ENTITY)
+    assert state.attributes.get("min_humidity") == 0
+    assert state.attributes.get("max_humidity") == 100
+    assert state.attributes.get("humidity") == 0
 
 
 async def test_default_setup_params(hass, setup_comp_2):

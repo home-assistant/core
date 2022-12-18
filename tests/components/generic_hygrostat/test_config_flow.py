@@ -48,7 +48,7 @@ async def test_create_entry_slim(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}, data=EXAMPLE_SLIM_CONFIG
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["data"] == EXAMPLE_SLIM_CONFIG
+    assert result["options"] == EXAMPLE_SLIM_CONFIG
 
 
 async def test_create_entry_full(hass: HomeAssistant) -> None:
@@ -57,4 +57,4 @@ async def test_create_entry_full(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}, data=EXAMPLE_FULL_CONFIG
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["data"] == EXAMPLE_FULL_CONFIG
+    assert result["options"] == EXAMPLE_FULL_CONFIG
