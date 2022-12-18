@@ -12,6 +12,11 @@ DHCP: list[dict[str, str | bool]] = [
     },
     {
         "domain": "august",
+        "hostname": "yale-connect-plus",
+        "macaddress": "00177A*",
+    },
+    {
+        "domain": "august",
         "hostname": "connect",
         "macaddress": "D86162*",
     },
