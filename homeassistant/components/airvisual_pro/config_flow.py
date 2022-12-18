@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, cast
+from typing import Any
 
 from pyairvisual.node import (
     InvalidAuthenticationError,
@@ -63,8 +63,15 @@ class AirVisualProFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        """Initialize."""
+        self._reauth_entry: ConfigEntry | None = None
+
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -76,23 +83,20 @@ class AirVisualProFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="reauth_confirm", data_schema=STEP_REAUTH_SCHEMA
             )
 
-        reauth_entry = cast(
-            ConfigEntry,
-            self.hass.config_entries.async_get_entry(self.context["entry_id"]),
-        )
+        assert self._reauth_entry
 
         if errors := await async_validate_credentials(
-            reauth_entry.data[CONF_IP_ADDRESS], user_input[CONF_PASSWORD]
+            self._reauth_entry.data[CONF_IP_ADDRESS], user_input[CONF_PASSWORD]
         ):
             return self.async_show_form(
                 step_id="reauth_confirm", data_schema=STEP_REAUTH_SCHEMA, errors=errors
             )
 
         self.hass.config_entries.async_update_entry(
-            reauth_entry, data=reauth_entry.data | user_input
+            self._reauth_entry, data=self._reauth_entry.data | user_input
         )
         self.hass.async_create_task(
-            self.hass.config_entries.async_reload(reauth_entry.entry_id)
+            self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
         )
         return self.async_abort(reason="reauth_successful")
 
