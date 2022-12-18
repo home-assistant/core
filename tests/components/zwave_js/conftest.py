@@ -583,7 +583,9 @@ def lock_home_connect_620_state_fixture():
 
 
 @pytest.fixture(name="client")
-def mock_client_fixture(controller_state, version_state, log_config_state):
+def mock_client_fixture(
+    controller_state, controller_node_state, version_state, log_config_state
+):
     """Mock a client."""
 
     with patch(
@@ -608,19 +610,13 @@ def mock_client_fixture(controller_state, version_state, log_config_state):
         client.listen = AsyncMock(side_effect=listen)
         client.disconnect = AsyncMock(side_effect=disconnect)
         client.driver = Driver(client, controller_state, log_config_state)
+        node = Node(client, copy.deepcopy(controller_node_state))
+        client.driver.controller.nodes[node.node_id] = node
 
         client.version = VersionInfo.from_message(version_state)
         client.ws_server_url = "ws://test:3000/zjs"
 
         yield client
-
-
-@pytest.fixture(name="controller_node")
-def controller_node_fixture(client, controller_node_state):
-    """Mock a controller node."""
-    node = Node(client, copy.deepcopy(controller_node_state))
-    client.driver.controller.nodes[node.node_id] = node
-    return node
 
 
 @pytest.fixture(name="multisensor_6")

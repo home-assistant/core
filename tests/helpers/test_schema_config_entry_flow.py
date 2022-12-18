@@ -1,6 +1,7 @@
 """Tests for the schema based data entry flows."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 from unittest.mock import patch
 
@@ -8,7 +9,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -25,6 +26,17 @@ from homeassistant.util.decorator import Registry
 from tests.common import MockConfigEntry, mock_platform
 
 TEST_DOMAIN = "test"
+
+
+class TestSchemaConfigFlowHandler(SchemaConfigFlowHandler):
+    """Bare minimum SchemaConfigFlowHandler."""
+
+    config_flow = {}
+
+    @callback
+    def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
+        """Return config entry title."""
+        return "title"
 
 
 @pytest.fixture(name="manager")
@@ -116,7 +128,7 @@ async def test_config_flow_advanced_option(
     }
 
     @manager.mock_reg_handler("test")
-    class TestFlow(SchemaConfigFlowHandler):
+    class TestFlow(TestSchemaConfigFlowHandler):
         config_flow = CONFIG_FLOW
 
     # Start flow in basic mode
@@ -210,7 +222,7 @@ async def test_options_flow_advanced_option(
         "init": SchemaFlowFormStep(OPTIONS_SCHEMA)
     }
 
-    class TestFlow(SchemaConfigFlowHandler, domain="test"):
+    class TestFlow(TestSchemaConfigFlowHandler, domain="test"):
         config_flow = {}
         options_flow = OPTIONS_FLOW
 
@@ -314,7 +326,7 @@ async def test_menu_step(hass: HomeAssistant) -> None:
         "option4": SchemaFlowFormStep(vol.Schema({})),
     }
 
-    class TestConfigFlow(SchemaConfigFlowHandler, domain=TEST_DOMAIN):
+    class TestConfigFlow(TestSchemaConfigFlowHandler, domain=TEST_DOMAIN):
         """Handle a config or options flow for Derivative."""
 
         config_flow = CONFIG_FLOW
@@ -363,7 +375,7 @@ async def test_schema_none(hass: HomeAssistant) -> None:
         "option3": SchemaFlowFormStep(vol.Schema({})),
     }
 
-    class TestConfigFlow(SchemaConfigFlowHandler, domain=TEST_DOMAIN):
+    class TestConfigFlow(TestSchemaConfigFlowHandler, domain=TEST_DOMAIN):
         """Handle a config or options flow for Derivative."""
 
         config_flow = CONFIG_FLOW
@@ -397,7 +409,7 @@ async def test_last_step(hass: HomeAssistant) -> None:
         "step3": SchemaFlowFormStep(vol.Schema({}), next_step=None),
     }
 
-    class TestConfigFlow(SchemaConfigFlowHandler, domain=TEST_DOMAIN):
+    class TestConfigFlow(TestSchemaConfigFlowHandler, domain=TEST_DOMAIN):
         """Handle a config or options flow for Derivative."""
 
         config_flow = CONFIG_FLOW
@@ -440,7 +452,7 @@ async def test_next_step_function(hass: HomeAssistant) -> None:
         "step2": SchemaFlowFormStep(vol.Schema({}), next_step=_step2_next_step),
     }
 
-    class TestConfigFlow(SchemaConfigFlowHandler, domain=TEST_DOMAIN):
+    class TestConfigFlow(TestSchemaConfigFlowHandler, domain=TEST_DOMAIN):
         """Handle a config or options flow for Derivative."""
 
         config_flow = CONFIG_FLOW
@@ -497,7 +509,7 @@ async def test_suggested_values(
         ),
     }
 
-    class TestFlow(SchemaConfigFlowHandler, domain="test"):
+    class TestFlow(TestSchemaConfigFlowHandler, domain="test"):
         config_flow = {}
         options_flow = OPTIONS_FLOW
 
@@ -608,7 +620,7 @@ async def test_options_flow_state(hass: HomeAssistant) -> None:
         ),
     }
 
-    class TestFlow(SchemaConfigFlowHandler, domain="test"):
+    class TestFlow(TestSchemaConfigFlowHandler, domain="test"):
         config_flow = {}
         options_flow = OPTIONS_FLOW
 

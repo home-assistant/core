@@ -147,6 +147,7 @@ SHTRV_01_TEMPERATURE_SETTINGS: Final = {
     "min": 4,
     "max": 31,
     "step": 0.5,
+    "default": 20.0,
 }
 
 # Kelvin value for colorTemp

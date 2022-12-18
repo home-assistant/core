@@ -8,7 +8,8 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "Chcete nakonfigurova\u0165 dom\u00e1ceho asistenta na pripojenie k Almond poskytovan\u00e9mu doplnkom: {addon}?"
+                "description": "Chcete nakonfigurova\u0165 dom\u00e1ceho asistenta na pripojenie k Almond poskytovan\u00e9mu doplnkom: {addon}?",
+                "title": "Doplnok Almond cez Home Assistant"
             },
             "pick_implementation": {
                 "title": "Vyberte met\u00f3du overenia"

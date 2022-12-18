@@ -28,10 +28,10 @@ def airsensor_fixture() -> tuple[AsyncMock, str]:
     return feature, "binary_sensor.windrainsensor_0_rain"
 
 
-async def test_init(rainsensor: AsyncMock, hass: HomeAssistant, config: dict):
+async def test_init(rainsensor: AsyncMock, hass: HomeAssistant):
     """Test binary_sensor initialisation."""
     _, entity_id = rainsensor
-    entry = await async_setup_entity(hass, config, entity_id)
+    entry = await async_setup_entity(hass, entity_id)
     assert entry.unique_id == "BleBox-windRainSensor-ea68e74f4f49-0.rain"
 
     state = hass.states.get(entity_id)

@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured_account": "\u00da\u010det je u\u017e nakonfigurovan\u00fd",
+            "ezviz_cloud_account_missing": "Ch\u00fdba cloudov\u00fd \u00fa\u010det EZVIZ. Prekonfigurujte cloudov\u00fd \u00fa\u010det EZVIZ",
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "error": {
@@ -15,7 +16,9 @@
                 "data": {
                     "password": "Heslo",
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
-                }
+                },
+                "description": "Zadajte prihlasovacie \u00fadaje RTSP pre kameru EZVIZ {serial} s IP {ip_address}",
+                "title": "Objaven\u00e1 kamera EZVIZ"
             },
             "user": {
                 "data": {
@@ -33,6 +36,16 @@
                 },
                 "description": "Ru\u010dne zadajte adresu URL v\u00e1\u0161ho regi\u00f3nu",
                 "title": "Pripojenie k vlastnej adrese URL EZVIZ"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ffmpeg_arguments": "Argumenty odovzdan\u00e9 ffmpeg pre kamery",
+                    "timeout": "\u010casov\u00fd limit po\u017eiadavky (sekundy)"
+                }
             }
         }
     }

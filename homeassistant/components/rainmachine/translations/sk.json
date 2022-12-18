@@ -17,5 +17,16 @@
                 "title": "Vypl\u0148te svoje \u00fadaje"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "use_app_run_times": "Pou\u017eite \u010dasy chodu z\u00f3ny z aplik\u00e1cie RainMachine",
+                    "zone_run_time": "Predvolen\u00fd \u010das chodu z\u00f3ny (v sekund\u00e1ch)"
+                },
+                "title": "Konfigur\u00e1cia RainMachine"
+            }
+        }
     }
 }

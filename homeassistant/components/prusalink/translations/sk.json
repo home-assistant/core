@@ -14,5 +14,18 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "printer_state": {
+                "state": {
+                    "cancelling": "Prebieha ru\u0161enie",
+                    "idle": "Ne\u010dinn\u00fd",
+                    "paused": "Pozastaven\u00fd",
+                    "pausing": "Pozastavenie",
+                    "printing": "Tla\u010d"
+                }
+            }
+        }
     }
 }

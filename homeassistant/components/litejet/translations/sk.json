@@ -11,6 +11,7 @@
                 "data": {
                     "port": "Port"
                 },
+                "description": "Pripojte port RS232-2 LiteJet k po\u010d\u00edta\u010du a zadajte cestu k zariadeniu so s\u00e9riov\u00fdm portom. \n\n LiteJet MCP mus\u00ed by\u0165 nakonfigurovan\u00fd na 19,2 K baud, 8 d\u00e1tov\u00fdch bitov, 1 stop bit, bez parity a na prenos 'CR' po ka\u017edej odpovedi.",
                 "title": "Pripoji\u0165 sa k LiteJet"
             }
         }
@@ -18,6 +19,9 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "default_transition": "Predvolen\u00fd prechod (sekundy)"
+                },
                 "title": "Nakonfigurujte LiteJet"
             }
         }

@@ -1,5 +1,6 @@
 """The tests for the Conversation component."""
 from http import HTTPStatus
+from unittest.mock import patch
 
 import pytest
 
@@ -9,6 +10,14 @@ from homeassistant.helpers import intent
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_intent, async_mock_service
+
+
+@pytest.fixture
+async def init_components(hass):
+    """Initialize relevant components with empty configs."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "conversation", {})
+    assert await async_setup_component(hass, "intent", {})
 
 
 async def test_calling_intent(hass):
@@ -122,22 +131,104 @@ async def test_http_processing_intent(hass, hass_client, hass_admin_user):
     data = await resp.json()
 
     assert data == {
-        "card": {
-            "simple": {"content": "You chose a Grolsch.", "title": "Beer ordered"}
+        "response": {
+            "response_type": "action_done",
+            "card": {
+                "simple": {"content": "You chose a Grolsch.", "title": "Beer ordered"}
+            },
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "I've ordered a Grolsch!",
+                }
+            },
+            "language": hass.config.language,
+            "data": {"targets": [], "success": [], "failed": []},
         },
-        "speech": {"plain": {"extra_data": None, "speech": "I've ordered a Grolsch!"}},
+        "conversation_id": None,
+    }
+
+
+async def test_http_failed_action(hass, hass_client, hass_admin_user):
+    """Test processing intent via HTTP API with a partial completion."""
+
+    class TestIntentHandler(intent.IntentHandler):
+        """Test Intent Handler."""
+
+        intent_type = "TurnOffLights"
+
+        async def async_handle(self, handle_intent: intent.Intent):
+            """Handle the intent."""
+            response = handle_intent.create_response()
+            area = handle_intent.slots["area"]["value"]
+
+            # Mark some targets as successful, others as failed
+            response.async_set_targets(
+                intent_targets=[
+                    intent.IntentResponseTarget(
+                        type=intent.IntentResponseTargetType.AREA, name=area, id=area
+                    )
+                ]
+            )
+            response.async_set_results(
+                success_results=[
+                    intent.IntentResponseTarget(
+                        type=intent.IntentResponseTargetType.ENTITY,
+                        name="light1",
+                        id="light.light1",
+                    )
+                ],
+                failed_results=[
+                    intent.IntentResponseTarget(
+                        type=intent.IntentResponseTargetType.ENTITY,
+                        name="light2",
+                        id="light.light2",
+                    )
+                ],
+            )
+
+            return response
+
+    intent.async_register(hass, TestIntentHandler())
+
+    result = await async_setup_component(
+        hass,
+        "conversation",
+        {
+            "conversation": {
+                "intents": {"TurnOffLights": ["turn off the lights in the {area}"]}
+            }
+        },
+    )
+    assert result
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "Turn off the lights in the kitchen"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data == {
+        "response": {
+            "response_type": "action_done",
+            "card": {},
+            "speech": {},
+            "language": hass.config.language,
+            "data": {
+                "targets": [{"type": "area", "id": "kitchen", "name": "kitchen"}],
+                "success": [{"type": "entity", "id": "light.light1", "name": "light1"}],
+                "failed": [{"type": "entity", "id": "light.light2", "name": "light2"}],
+            },
+        },
+        "conversation_id": None,
     }
 
 
 @pytest.mark.parametrize("sentence", ("turn on kitchen", "turn kitchen on"))
-async def test_turn_on_intent(hass, sentence):
+async def test_turn_on_intent(hass, init_components, sentence):
     """Test calling the turn on intent."""
-    result = await async_setup_component(hass, "homeassistant", {})
-    assert result
-
-    result = await async_setup_component(hass, "conversation", {})
-    assert result
-
     hass.states.async_set("light.kitchen", "off")
     calls = async_mock_service(hass, HASS_DOMAIN, "turn_on")
 
@@ -154,14 +245,8 @@ async def test_turn_on_intent(hass, sentence):
 
 
 @pytest.mark.parametrize("sentence", ("turn off kitchen", "turn kitchen off"))
-async def test_turn_off_intent(hass, sentence):
+async def test_turn_off_intent(hass, init_components, sentence):
     """Test calling the turn on intent."""
-    result = await async_setup_component(hass, "homeassistant", {})
-    assert result
-
-    result = await async_setup_component(hass, "conversation", {})
-    assert result
-
     hass.states.async_set("light.kitchen", "on")
     calls = async_mock_service(hass, HASS_DOMAIN, "turn_off")
 
@@ -178,14 +263,8 @@ async def test_turn_off_intent(hass, sentence):
 
 
 @pytest.mark.parametrize("sentence", ("toggle kitchen", "kitchen toggle"))
-async def test_toggle_intent(hass, sentence):
+async def test_toggle_intent(hass, init_components, sentence):
     """Test calling the turn on intent."""
-    result = await async_setup_component(hass, "homeassistant", {})
-    assert result
-
-    result = await async_setup_component(hass, "conversation", {})
-    assert result
-
     hass.states.async_set("light.kitchen", "on")
     calls = async_mock_service(hass, HASS_DOMAIN, "toggle")
 
@@ -201,12 +280,8 @@ async def test_toggle_intent(hass, sentence):
     assert call.data == {"entity_id": "light.kitchen"}
 
 
-async def test_http_api(hass, hass_client):
+async def test_http_api(hass, init_components, hass_client):
     """Test the HTTP conversation API."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
-    assert await async_setup_component(hass, "intent", {})
-
     client = await hass_client()
     hass.states.async_set("light.kitchen", "off")
     calls = async_mock_service(hass, HASS_DOMAIN, "turn_on")
@@ -215,6 +290,28 @@ async def test_http_api(hass, hass_client):
         "/api/conversation/process", json={"text": "Turn the kitchen on"}
     )
     assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data == {
+        "response": {
+            "card": {},
+            "speech": {"plain": {"extra_data": None, "speech": "Turned kitchen on"}},
+            "language": hass.config.language,
+            "response_type": "action_done",
+            "data": {
+                "targets": [],
+                "success": [
+                    {
+                        "type": "entity",
+                        "name": "kitchen",
+                        "id": "light.kitchen",
+                    },
+                ],
+                "failed": [],
+            },
+        },
+        "conversation_id": None,
+    }
 
     assert len(calls) == 1
     call = calls[0]
@@ -223,14 +320,105 @@ async def test_http_api(hass, hass_client):
     assert call.data == {"entity_id": "light.kitchen"}
 
 
-async def test_http_api_wrong_data(hass, hass_client):
+async def test_http_api_no_match(hass, init_components, hass_client):
+    """Test the HTTP conversation API with an intent match failure."""
+    client = await hass_client()
+
+    # Sentence should not match any intents
+    resp = await client.post("/api/conversation/process", json={"text": "do something"})
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data == {
+        "response": {
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Sorry, I didn't understand that",
+                },
+            },
+            "language": hass.config.language,
+            "response_type": "error",
+            "data": {
+                "code": "no_intent_match",
+            },
+        },
+        "conversation_id": None,
+    }
+
+
+async def test_http_api_no_valid_targets(hass, init_components, hass_client):
+    """Test the HTTP conversation API with no valid targets."""
+    client = await hass_client()
+
+    # No kitchen light
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on the kitchen"}
+    )
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data == {
+        "response": {
+            "response_type": "error",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Unable to find an entity called kitchen",
+                },
+            },
+            "language": hass.config.language,
+            "data": {
+                "code": "no_valid_targets",
+            },
+        },
+        "conversation_id": None,
+    }
+
+
+async def test_http_api_handle_failure(hass, init_components, hass_client):
+    """Test the HTTP conversation API with an error during handling."""
+    client = await hass_client()
+
+    hass.states.async_set("light.kitchen", "off")
+
+    # Raise an "unexpected" error during intent handling
+    def async_handle_error(*args, **kwargs):
+        raise intent.IntentUnexpectedError(
+            "Unexpected error turning on the kitchen light"
+        )
+
+    with patch("homeassistant.helpers.intent.async_handle", new=async_handle_error):
+        resp = await client.post(
+            "/api/conversation/process", json={"text": "turn on the kitchen"}
+        )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data == {
+        "response": {
+            "response_type": "error",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Unexpected error turning on the kitchen light",
+                }
+            },
+            "language": hass.config.language,
+            "data": {
+                "code": "failed_to_handle",
+            },
+        },
+        "conversation_id": None,
+    }
+
+
+async def test_http_api_wrong_data(hass, init_components, hass_client):
     """Test the HTTP conversation API."""
-    result = await async_setup_component(hass, "homeassistant", {})
-    assert result
-
-    result = await async_setup_component(hass, "conversation", {})
-    assert result
-
     client = await hass_client()
 
     resp = await client.post("/api/conversation/process", json={"text": 123})
@@ -248,12 +436,14 @@ async def test_custom_agent(hass, hass_client, hass_admin_user):
     class MyAgent(conversation.AbstractConversationAgent):
         """Test Agent."""
 
-        async def async_process(self, text, context, conversation_id):
+        async def async_process(self, text, context, conversation_id, language):
             """Process some text."""
-            calls.append((text, context, conversation_id))
-            response = intent.IntentResponse()
+            calls.append((text, context, conversation_id, language))
+            response = intent.IntentResponse(language=language)
             response.async_set_speech("Test response")
-            return response
+            return conversation.ConversationResult(
+                response=response, conversation_id=conversation_id
+            )
 
     conversation.async_set_agent(hass, MyAgent())
 
@@ -263,15 +453,31 @@ async def test_custom_agent(hass, hass_client, hass_admin_user):
 
     resp = await client.post(
         "/api/conversation/process",
-        json={"text": "Test Text", "conversation_id": "test-conv-id"},
+        json={
+            "text": "Test Text",
+            "conversation_id": "test-conv-id",
+            "language": "test-language",
+        },
     )
     assert resp.status == HTTPStatus.OK
     assert await resp.json() == {
-        "card": {},
-        "speech": {"plain": {"extra_data": None, "speech": "Test response"}},
+        "response": {
+            "response_type": "action_done",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Test response",
+                }
+            },
+            "language": "test-language",
+            "data": {"targets": [], "success": [], "failed": []},
+        },
+        "conversation_id": "test-conv-id",
     }
 
     assert len(calls) == 1
     assert calls[0][0] == "Test Text"
     assert calls[0][1].user_id == hass_admin_user.id
     assert calls[0][2] == "test-conv-id"
+    assert calls[0][3] == "test-language"

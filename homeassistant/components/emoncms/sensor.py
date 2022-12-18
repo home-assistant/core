@@ -21,8 +21,8 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
     CONF_VALUE_TEMPLATE,
-    POWER_WATT,
     STATE_UNKNOWN,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import template
@@ -46,7 +46,7 @@ CONF_ONLY_INCLUDE_FEEDID = "include_only_feed_id"
 CONF_SENSOR_NAMES = "sensor_names"
 
 DECIMALS = 2
-DEFAULT_UNIT = POWER_WATT
+DEFAULT_UNIT = UnitOfPower.WATT
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 ONLY_INCL_EXCL_NONE = "only_include_exclude_or_none"

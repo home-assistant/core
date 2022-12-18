@@ -8,10 +8,10 @@
         "error": {
             "cannot_connect": "Falha ao conectar"
         },
-        "flow_title": "{label} ( {host} ) {serial}",
+        "flow_title": "{label} ({host})",
         "step": {
             "discovery_confirm": {
-                "description": "Deseja configurar {label} ( {host} ) {serial}?"
+                "description": "Deseja configurar {label} ({group})?"
             },
             "pick_device": {
                 "data": {

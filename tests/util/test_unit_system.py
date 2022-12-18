@@ -380,6 +380,24 @@ def test_get_unit_system_invalid(key: str) -> None:
 @pytest.mark.parametrize(
     "device_class, original_unit, state_unit",
     (
+        # Test atmospheric pressure
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.PSI,
+            UnitOfPressure.HPA,
+        ),
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.BAR,
+            UnitOfPressure.HPA,
+        ),
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.INHG,
+            UnitOfPressure.HPA,
+        ),
+        (SensorDeviceClass.ATMOSPHERIC_PRESSURE, UnitOfPressure.HPA, None),
+        (SensorDeviceClass.ATMOSPHERIC_PRESSURE, "very_much", None),
         # Test distance conversion
         (SensorDeviceClass.DISTANCE, UnitOfLength.FEET, UnitOfLength.METERS),
         (SensorDeviceClass.DISTANCE, UnitOfLength.INCHES, UnitOfLength.MILLIMETERS),
@@ -391,6 +409,10 @@ def test_get_unit_system_invalid(key: str) -> None:
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS),
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_METERS, None),
         (SensorDeviceClass.GAS, "very_much", None),
+        # Test pressure conversion
+        (SensorDeviceClass.PRESSURE, UnitOfPressure.PSI, UnitOfPressure.KPA),
+        (SensorDeviceClass.PRESSURE, UnitOfPressure.BAR, None),
+        (SensorDeviceClass.PRESSURE, "very_much", None),
         # Test speed conversion
         (
             SensorDeviceClass.SPEED,
@@ -435,6 +457,24 @@ def test_get_metric_converted_unit_(
 @pytest.mark.parametrize(
     "device_class, original_unit, state_unit",
     (
+        # Test atmospheric pressure
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.PSI,
+            UnitOfPressure.INHG,
+        ),
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.BAR,
+            UnitOfPressure.INHG,
+        ),
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.HPA,
+            UnitOfPressure.INHG,
+        ),
+        (SensorDeviceClass.ATMOSPHERIC_PRESSURE, UnitOfPressure.INHG, None),
+        (SensorDeviceClass.ATMOSPHERIC_PRESSURE, "very_much", None),
         # Test distance conversion
         (SensorDeviceClass.DISTANCE, UnitOfLength.CENTIMETERS, UnitOfLength.INCHES),
         (SensorDeviceClass.DISTANCE, UnitOfLength.KILOMETERS, UnitOfLength.MILES),
@@ -446,6 +486,10 @@ def test_get_metric_converted_unit_(
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_METERS, UnitOfVolume.CUBIC_FEET),
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_FEET, None),
         (SensorDeviceClass.GAS, "very_much", None),
+        # Test pressure conversion
+        (SensorDeviceClass.PRESSURE, UnitOfPressure.BAR, UnitOfPressure.PSI),
+        (SensorDeviceClass.PRESSURE, UnitOfPressure.PSI, None),
+        (SensorDeviceClass.PRESSURE, "very_much", None),
         # Test speed conversion
         (
             SensorDeviceClass.SPEED,

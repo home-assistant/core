@@ -3,7 +3,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "mdns_missing_mac": "Missing MAC address in MDNS properties."
     },
     "error": {
       "resolve_error": "Can't resolve address of the ESP. If this error persists, please set a static IP address",
@@ -46,8 +47,8 @@
   },
   "issues": {
     "ble_firmware_outdated": {
-      "title": "Update {name} with ESPHome 2022.11.0 or later",
-      "description": "To improve Bluetooth reliability and performance, we highly recommend updating {name} with ESPHome 2022.11.0 or later."
+      "title": "Update {name} with ESPHome {version} or later",
+      "description": "To improve Bluetooth reliability and performance, we highly recommend updating {name} with ESPHome {version} or later. When updating the device to ESPHome {version}, it is recommended to use a serial cable instead of an over-the-air update to take advantage of the new partition scheme."
     }
   }
 }

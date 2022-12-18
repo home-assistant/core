@@ -5,11 +5,15 @@ import asyncio
 from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from matter_server.common.models.server_information import ServerInfo
 import pytest
 
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+MOCK_FABRIC_ID = 12341234
+MOCK_COMPR_FABRIC_ID = 1234
 
 
 @pytest.fixture(name="matter_client")
@@ -32,6 +36,14 @@ async def matter_client_fixture() -> AsyncGenerator[MagicMock, None]:
 
         client.connect = AsyncMock(side_effect=connect)
         client.start_listening = AsyncMock(side_effect=listen)
+        client.server_info = ServerInfo(
+            fabric_id=MOCK_FABRIC_ID,
+            compressed_fabric_id=MOCK_COMPR_FABRIC_ID,
+            schema_version=1,
+            sdk_version="2022.11.1",
+            wifi_credentials_set=True,
+            thread_credentials_set=True,
+        )
 
         yield client
 

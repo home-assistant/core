@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "\u00da\u010det je u\u017e nakonfigurovan\u00fd",
+            "no_device": "\u017diadne z va\u0161ich zariaden\u00ed nem\u00e1 aktivovan\u00fa funkciu \u201eN\u00e1js\u0165 m\u00f4j iPhone\u201c.",
             "reauth_successful": "Op\u00e4tovn\u00e9 overenie bolo \u00faspe\u0161n\u00e9"
         },
         "error": {
@@ -14,6 +15,7 @@
                 "data": {
                     "password": "Heslo"
                 },
+                "description": "Va\u0161e predt\u00fdm zadan\u00e9 heslo pre {username} u\u017e nefunguje. Ak chcete na\u010falej pou\u017e\u00edva\u0165 t\u00fato integr\u00e1ciu, aktualizujte svoje heslo.",
                 "title": "Znova overi\u0165 integr\u00e1ciu"
             },
             "trusted_device": {
@@ -26,8 +28,10 @@
             "user": {
                 "data": {
                     "password": "Heslo",
-                    "username": "Email"
+                    "username": "Email",
+                    "with_family": "S rodinou"
                 },
+                "description": "Zadajte svoje poverenia",
                 "title": "iCloud poverenia"
             },
             "verification_code": {

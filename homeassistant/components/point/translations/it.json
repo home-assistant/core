@@ -23,7 +23,7 @@
                 "data": {
                     "flow_impl": "Provider"
                 },
-                "description": "Vuoi iniziare la configurazione?",
+                "description": "Vuoi avviare la configurazione?",
                 "title": "Scegli il metodo di autenticazione"
             }
         }

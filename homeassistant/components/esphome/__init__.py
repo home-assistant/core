@@ -43,6 +43,7 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -65,8 +66,12 @@ CONF_NOISE_PSK = "noise_psk"
 _LOGGER = logging.getLogger(__name__)
 _R = TypeVar("_R")
 
-STABLE_BLE_VERSION_STR = "2022.11.0"
+STABLE_BLE_VERSION_STR = "2022.12.0"
 STABLE_BLE_VERSION = AwesomeVersion(STABLE_BLE_VERSION_STR)
+PROJECT_URLS = {
+    "esphome.bluetooth-proxy": "https://esphome.github.io/bluetooth-proxies/",
+}
+DEFAULT_URL = f"https://esphome.io/changelog/{STABLE_BLE_VERSION_STR}.html"
 
 
 @callback
@@ -74,13 +79,13 @@ def _async_check_firmware_version(
     hass: HomeAssistant, device_info: EsphomeDeviceInfo
 ) -> None:
     """Create or delete an the ble_firmware_outdated issue."""
-    # ESPHome device_info.name is the unique_id
-    issue = f"ble_firmware_outdated-{device_info.name}"
+    # ESPHome device_info.mac_address is the unique_id
+    issue = f"ble_firmware_outdated-{device_info.mac_address}"
     if (
         not device_info.bluetooth_proxy_version
         # If the device has a project name its up to that project
         # to tell them about the firmware version update so we don't notify here
-        or device_info.project_name
+        or (device_info.project_name and device_info.project_name not in PROJECT_URLS)
         or AwesomeVersion(device_info.esphome_version) >= STABLE_BLE_VERSION
     ):
         async_delete_issue(hass, DOMAIN, issue)
@@ -91,9 +96,12 @@ def _async_check_firmware_version(
         issue,
         is_fixable=False,
         severity=IssueSeverity.WARNING,
-        learn_more_url=f"https://esphome.io/changelog/{STABLE_BLE_VERSION_STR}.html",
+        learn_more_url=PROJECT_URLS.get(device_info.project_name, DEFAULT_URL),
         translation_key="ble_firmware_outdated",
-        translation_placeholders={"name": device_info.name},
+        translation_placeholders={
+            "name": device_info.name,
+            "version": STABLE_BLE_VERSION_STR,
+        },
     )
 
 
@@ -252,6 +260,14 @@ async def async_setup_entry(  # noqa: C901
         nonlocal device_id
         try:
             device_info = await cli.device_info()
+
+            # Migrate config entry to new unique ID if necessary
+            # This was changed in 2023.1
+            if entry.unique_id != format_mac(device_info.mac_address):
+                hass.config_entries.async_update_entry(
+                    entry, unique_id=format_mac(device_info.mac_address)
+                )
+
             entry_data.device_info = device_info
             assert cli.api_version is not None
             entry_data.api_version = cli.api_version
@@ -259,6 +275,12 @@ async def async_setup_entry(  # noqa: C901
             if entry_data.device_info.name:
                 cli.expected_name = entry_data.device_info.name
                 reconnect_logic.name = entry_data.device_info.name
+
+            if device_info.bluetooth_proxy_version:
+                entry_data.disconnect_callbacks.append(
+                    await async_connect_scanner(hass, entry, cli, entry_data)
+                )
+
             device_id = _async_setup_device_registry(
                 hass, entry, entry_data.device_info
             )
@@ -270,10 +292,6 @@ async def async_setup_entry(  # noqa: C901
             await cli.subscribe_states(entry_data.async_update_state)
             await cli.subscribe_service_calls(async_on_service_call)
             await cli.subscribe_home_assistant_states(async_on_state_subscription)
-            if entry_data.device_info.bluetooth_proxy_version:
-                entry_data.disconnect_callbacks.append(
-                    await async_connect_scanner(hass, entry, cli, entry_data)
-                )
 
             hass.async_create_task(entry_data.async_save_to_store())
         except APIConnectionError as err:

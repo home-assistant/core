@@ -34,8 +34,8 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
     DEGREE,
-    IRRADIATION_WATTS_PER_SQUARE_METER,
     PERCENTAGE,
+    UnitOfIrradiance,
     UnitOfLength,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
@@ -188,8 +188,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="irradiance",
         name="Irradiance",
-        native_unit_of_measurement=IRRADIATION_WATTS_PER_SQUARE_METER,
-        icon="mdi:sunglasses",
+        device_class=SensorDeviceClass.IRRADIANCE,
+        native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(

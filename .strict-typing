@@ -130,6 +130,7 @@ homeassistant.components.group.*
 homeassistant.components.guardian.*
 homeassistant.components.hardkernel.*
 homeassistant.components.hardware.*
+homeassistant.components.here_travel_time.*
 homeassistant.components.history.*
 homeassistant.components.homeassistant.triggers.event
 homeassistant.components.homeassistant_alerts.*
@@ -159,8 +160,8 @@ homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
 homeassistant.components.hyperion.*
 homeassistant.components.ibeacon.*
-homeassistant.components.image.*
 homeassistant.components.image_processing.*
+homeassistant.components.image_upload.*
 homeassistant.components.input_button.*
 homeassistant.components.input_select.*
 homeassistant.components.integration.*
@@ -225,6 +226,7 @@ homeassistant.components.powerwall.*
 homeassistant.components.proximity.*
 homeassistant.components.prusalink.*
 homeassistant.components.pure_energie.*
+homeassistant.components.purpleair.*
 homeassistant.components.pvoutput.*
 homeassistant.components.qnap_qsw.*
 homeassistant.components.radarr.*
