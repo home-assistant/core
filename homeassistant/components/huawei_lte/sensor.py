@@ -72,7 +72,7 @@ def format_freq_mhz(value: StateType) -> tuple[StateType, UnitOfFrequency]:
     )
 
 
-def last_reset_elapsed_seconds(value: str | None) -> datetime | None:
+def format_last_reset_elapsed_seconds(value: str | None) -> datetime | None:
     """Convert elapsed seconds to last reset datetime."""
     if value is None:
         return None
@@ -116,10 +116,10 @@ class HuaweiSensorGroup:
 class HuaweiSensorEntityDescription(SensorEntityDescription):
     """Class describing Huawei LTE sensor entities."""
 
-    formatter: Callable[[str], tuple[StateType, str | None]] = format_default
+    format_fn: Callable[[str], tuple[StateType, str | None]] = format_default
     icon_fn: Callable[[StateType], str] | None = None
     last_reset_item: str | None = None
-    last_reset_formatter: Callable[[str | None], datetime | None] | None = None
+    last_reset_format_fn: Callable[[str | None], datetime | None] | None = None
 
 
 SENSOR_META: dict[str, HuaweiSensorGroup] = {
@@ -234,21 +234,21 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "ltedlfreq": HuaweiSensorEntityDescription(
                 key="ltedlfreq",
                 name="LTE downlink frequency",
-                formatter=format_freq_mhz,
+                format_fn=format_freq_mhz,
                 device_class=SensorDeviceClass.FREQUENCY,
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "lteulfreq": HuaweiSensorEntityDescription(
                 key="lteulfreq",
                 name="LTE uplink frequency",
-                formatter=format_freq_mhz,
+                format_fn=format_freq_mhz,
                 device_class=SensorDeviceClass.FREQUENCY,
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "mode": HuaweiSensorEntityDescription(
                 key="mode",
                 name="Mode",
-                formatter=lambda x: (
+                format_fn=lambda x: (
                     {"0": "2G", "2": "3G", "7": "4G"}.get(x),
                     None,
                 ),
@@ -400,7 +400,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 icon="mdi:arrow-up-down-bold",
                 state_class=SensorStateClass.TOTAL,
                 last_reset_item="CurrentDayDuration",
-                last_reset_formatter=last_reset_elapsed_seconds,
+                last_reset_format_fn=format_last_reset_elapsed_seconds,
             ),
             "CurrentMonthDownload": HuaweiSensorEntityDescription(
                 key="CurrentMonthDownload",
@@ -410,7 +410,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 icon="mdi:download",
                 state_class=SensorStateClass.TOTAL,
                 last_reset_item="MonthDuration",
-                last_reset_formatter=last_reset_elapsed_seconds,
+                last_reset_format_fn=format_last_reset_elapsed_seconds,
             ),
             "CurrentMonthUpload": HuaweiSensorEntityDescription(
                 key="CurrentMonthUpload",
@@ -420,7 +420,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 icon="mdi:upload",
                 state_class=SensorStateClass.TOTAL,
                 last_reset_item="MonthDuration",
-                last_reset_formatter=last_reset_elapsed_seconds,
+                last_reset_format_fn=format_last_reset_elapsed_seconds,
             ),
         },
     ),
@@ -558,7 +558,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "State": HuaweiSensorEntityDescription(
                 key="State",
                 name="Operator search mode",
-                formatter=lambda x: (
+                format_fn=lambda x: (
                     {"0": "Auto", "1": "Manual"}.get(x),
                     None,
                 ),
@@ -572,7 +572,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "NetworkMode": HuaweiSensorEntityDescription(
                 key="NetworkMode",
                 name="Preferred mode",
-                formatter=lambda x: (
+                format_fn=lambda x: (
                     {
                         NetworkModeEnum.MODE_AUTO.value: "4G/3G/2G",
                         NetworkModeEnum.MODE_4G_3G_AUTO.value: "4G/3G",
@@ -760,7 +760,7 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
         last_reset = None
         if (
             self.entity_description.last_reset_item
-            and self.entity_description.last_reset_formatter
+            and self.entity_description.last_reset_format_fn
         ):
             try:
                 last_reset_value = self.router.data[self.key][
@@ -773,10 +773,10 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
                     self.entity_description.last_reset_item,
                 )
             else:
-                last_reset = self.entity_description.last_reset_formatter(
+                last_reset = self.entity_description.last_reset_format_fn(
                     last_reset_value
                 )
 
-        self._state, self._unit = self.entity_description.formatter(value)
+        self._state, self._unit = self.entity_description.format_fn(value)
         self._last_reset = last_reset
         self._available = value is not None
