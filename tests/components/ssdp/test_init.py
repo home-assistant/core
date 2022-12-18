@@ -11,7 +11,6 @@ from async_upnp_client.ssdp_listener import SsdpListener
 from async_upnp_client.utils import CaseInsensitiveDict
 import pytest
 
-import homeassistant
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.const import (
@@ -19,6 +18,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     MATCH_ALL,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -31,7 +31,7 @@ def _ssdp_headers(headers):
     return ssdp_headers
 
 
-async def init_ssdp_component(hass: homeassistant) -> SsdpListener:
+async def init_ssdp_component(hass: HomeAssistant) -> SsdpListener:
     """Initialize ssdp component and get SsdpListener."""
     await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
     await hass.async_block_till_done()

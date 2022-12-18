@@ -477,7 +477,7 @@ class Scanner:
 
         # If there are no changes from a search, do not trigger a config flow
         if source != SsdpSource.SEARCH_ALIVE:
-            info_desc = await self._async_get_description_dict(location) or {}
+            info_desc = await self._async_get_description_dict(location)
             matching_domains = self.integration_matchers.async_matching_domains(
                 CaseInsensitiveDict(combined_headers.as_dict(), **info_desc)
             )
@@ -486,7 +486,7 @@ class Scanner:
             return
 
         if info_desc is None:
-            info_desc = await self._async_get_description_dict(location) or {}
+            info_desc = await self._async_get_description_dict(location)
         discovery_info = discovery_info_from_headers_and_description(
             combined_headers, info_desc
         )
@@ -514,6 +514,13 @@ class Scanner:
     ) -> Mapping[str, str]:
         """Get description dict."""
         assert self._description_cache is not None
+
+        has_description, description = self._description_cache.peek_description_dict(
+            location
+        )
+        if has_description:
+            return description or {}
+
         return await self._description_cache.async_get_description_dict(location) or {}
 
     async def _async_headers_to_discovery_info(
@@ -524,10 +531,9 @@ class Scanner:
         Building this is a bit expensive so we only do it on demand.
         """
         assert self._description_cache is not None
+
         location = headers["location"]
-        info_desc = (
-            await self._description_cache.async_get_description_dict(location) or {}
-        )
+        info_desc = await self._async_get_description_dict(location)
         return discovery_info_from_headers_and_description(headers, info_desc)
 
     async def async_get_discovery_info_by_udn_st(  # pylint: disable=invalid-name
