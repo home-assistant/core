@@ -1,28 +1,17 @@
-"""Open ports in your router for Home Assistant and provide statistics."""
+"""UPnP/IGD integration."""
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
-from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
 
-from async_upnp_client.exceptions import UpnpCommunicationError, UpnpConnectionError
+from async_upnp_client.exceptions import UpnpConnectionError
 
 from homeassistant.components import ssdp
-from homeassistant.components.binary_sensor import BinarySensorEntityDescription
-from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers import config_validation, device_registry
 
 from .const import (
     CONFIG_ENTRY_HOST,
@@ -36,14 +25,15 @@ from .const import (
     IDENTIFIER_SERIAL_NUMBER,
     LOGGER,
 )
-from .device import Device, async_create_device
+from .coordinator import UpnpDataUpdateCoordinator
+from .device import async_create_device
 
 NOTIFICATION_ID = "upnp_notification"
 NOTIFICATION_TITLE = "UPnP/IGD Setup"
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
+CONFIG_SCHEMA = config_validation.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -126,12 +116,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if device.serial_number:
         identifiers.add((IDENTIFIER_SERIAL_NUMBER, device.serial_number))
 
-    connections = {(dr.CONNECTION_UPNP, device.udn)}
+    connections = {(device_registry.CONNECTION_UPNP, device.udn)}
     if device_mac_address:
-        connections.add((dr.CONNECTION_NETWORK_MAC, device_mac_address))
+        connections.add((device_registry.CONNECTION_NETWORK_MAC, device_mac_address))
 
-    device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_device(
+    dev_registry = device_registry.async_get(hass)
+    device_entry = dev_registry.async_get_device(
         identifiers=identifiers, connections=connections
     )
     if device_entry:
@@ -142,7 +132,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     if not device_entry:
         # No device found, create new device entry.
-        device_entry = device_registry.async_get_or_create(
+        device_entry = dev_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             connections=connections,
             identifiers=identifiers,
@@ -155,7 +145,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     else:
         # Update identifier.
-        device_entry = device_registry.async_update_device(
+        device_entry = dev_registry.async_update_device(
             device_entry.id,
             new_identifiers=identifiers,
         )
@@ -191,96 +181,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         del hass.data[DOMAIN][entry.entry_id]
 
     return unload_ok
-
-
-@dataclass
-class UpnpBinarySensorEntityDescription(BinarySensorEntityDescription):
-    """A class that describes UPnP entities."""
-
-    format: str = "s"
-    unique_id: str | None = None
-
-
-@dataclass
-class UpnpSensorEntityDescription(SensorEntityDescription):
-    """A class that describes a sensor UPnP entities."""
-
-    format: str = "s"
-    unique_id: str | None = None
-
-
-class UpnpDataUpdateCoordinator(DataUpdateCoordinator):
-    """Define an object to update data from UPNP device."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        device: Device,
-        device_entry: dr.DeviceEntry,
-        update_interval: timedelta,
-    ) -> None:
-        """Initialize."""
-        self.device = device
-        self.device_entry = device_entry
-
-        super().__init__(
-            hass,
-            LOGGER,
-            name=device.name,
-            update_interval=update_interval,
-        )
-
-    async def _async_update_data(self) -> Mapping[str, Any]:
-        """Update data."""
-        try:
-            update_values = await asyncio.gather(
-                self.device.async_get_traffic_data(),
-                self.device.async_get_status(),
-            )
-        except UpnpCommunicationError as exception:
-            LOGGER.debug(
-                "Caught exception when updating device: %s, exception: %s",
-                self.device,
-                exception,
-            )
-            raise UpdateFailed(
-                f"Unable to communicate with IGD at: {self.device.device_url}"
-            ) from exception
-
-        return {
-            **update_values[0],
-            **update_values[1],
-        }
-
-
-class UpnpEntity(CoordinatorEntity[UpnpDataUpdateCoordinator]):
-    """Base class for UPnP/IGD entities."""
-
-    entity_description: UpnpSensorEntityDescription | UpnpBinarySensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: UpnpDataUpdateCoordinator,
-        entity_description: UpnpSensorEntityDescription
-        | UpnpBinarySensorEntityDescription,
-    ) -> None:
-        """Initialize the base entities."""
-        super().__init__(coordinator)
-        self._device = coordinator.device
-        self.entity_description = entity_description
-        self._attr_name = f"{coordinator.device.name} {entity_description.name}"
-        self._attr_unique_id = f"{coordinator.device.original_udn}_{entity_description.unique_id or entity_description.key}"
-        self._attr_device_info = DeviceInfo(
-            connections=coordinator.device_entry.connections,
-            name=coordinator.device_entry.name,
-            manufacturer=coordinator.device_entry.manufacturer,
-            model=coordinator.device_entry.model,
-            configuration_url=coordinator.device_entry.configuration_url,
-        )
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return super().available and (
-            self.coordinator.data.get(self.entity_description.key) is not None
-        )

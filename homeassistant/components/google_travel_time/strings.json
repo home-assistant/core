@@ -30,6 +30,7 @@
           "time_type": "Time Type",
           "time": "Time",
           "avoid": "Avoid",
+          "traffic_mode": "Traffic Mode",
           "transit_mode": "Transit Mode",
           "transit_routing_preference": "Transit Routing Preference",
           "units": "Units"

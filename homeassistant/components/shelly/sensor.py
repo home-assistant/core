@@ -18,13 +18,13 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
     ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_WATT,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_CELSIUS,
+    UnitOfElectricPotential,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -47,12 +47,7 @@ from .entity import (
     async_setup_entry_rest,
     async_setup_entry_rpc,
 )
-from .utils import (
-    get_device_entry_gen,
-    get_device_uptime,
-    is_rpc_device_externally_powered,
-    temperature_unit,
-)
+from .utils import get_device_entry_gen, get_device_uptime
 
 
 @dataclass
@@ -84,7 +79,7 @@ SENSORS: Final = {
     ("device", "deviceTemp"): BlockSensorDescription(
         key="device|deviceTemp",
         name="Device Temperature",
-        unit_fn=temperature_unit,
+        native_unit_of_measurement=TEMP_CELSIUS,
         value=lambda value: round(value, 1),
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -102,7 +97,7 @@ SENSORS: Final = {
     ("light", "power"): BlockSensorDescription(
         key="light|power",
         name="Power",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         value=lambda value: round(value, 1),
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -111,7 +106,7 @@ SENSORS: Final = {
     ("device", "power"): BlockSensorDescription(
         key="device|power",
         name="Power",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         value=lambda value: round(value, 1),
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -119,7 +114,7 @@ SENSORS: Final = {
     ("emeter", "power"): BlockSensorDescription(
         key="emeter|power",
         name="Power",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         value=lambda value: round(value, 1),
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -127,7 +122,7 @@ SENSORS: Final = {
     ("device", "voltage"): BlockSensorDescription(
         key="device|voltage",
         name="Voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         value=lambda value: round(value, 1),
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -136,7 +131,7 @@ SENSORS: Final = {
     ("emeter", "voltage"): BlockSensorDescription(
         key="emeter|voltage",
         name="Voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         value=lambda value: round(value, 1),
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -145,14 +140,14 @@ SENSORS: Final = {
         key="emeter|powerFactor",
         name="Power Factor",
         native_unit_of_measurement=PERCENTAGE,
-        value=lambda value: abs(round(value * 100, 1)),
+        value=lambda value: round(value * 100, 1),
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ("relay", "power"): BlockSensorDescription(
         key="relay|power",
         name="Power",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         value=lambda value: round(value, 1),
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -160,7 +155,7 @@ SENSORS: Final = {
     ("roller", "rollerPower"): BlockSensorDescription(
         key="roller|rollerPower",
         name="Power",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         value=lambda value: round(value, 1),
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -226,7 +221,7 @@ SENSORS: Final = {
     ("sensor", "temp"): BlockSensorDescription(
         key="sensor|temp",
         name="Temperature",
-        unit_fn=temperature_unit,
+        native_unit_of_measurement=TEMP_CELSIUS,
         value=lambda value: round(value, 1),
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -235,7 +230,7 @@ SENSORS: Final = {
     ("sensor", "extTemp"): BlockSensorDescription(
         key="sensor|extTemp",
         name="Temperature",
-        unit_fn=temperature_unit,
+        native_unit_of_measurement=TEMP_CELSIUS,
         value=lambda value: round(value, 1),
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -281,7 +276,7 @@ SENSORS: Final = {
     ("adc", "adc"): BlockSensorDescription(
         key="adc|adc",
         name="ADC",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         value=lambda value: round(value, 2),
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -322,7 +317,7 @@ RPC_SENSORS: Final = {
         key="switch",
         sub_key="apower",
         name="Power",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         value=lambda status, _: round(float(status), 1),
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -331,7 +326,7 @@ RPC_SENSORS: Final = {
         key="switch",
         sub_key="voltage",
         name="Voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         value=lambda status, _: round(float(status), 1),
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -407,7 +402,6 @@ RPC_SENSORS: Final = {
         value=lambda status, _: status["percent"],
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
-        removal_condition=is_rpc_device_externally_powered,
         entity_registry_enabled_default=True,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -415,7 +409,7 @@ RPC_SENSORS: Final = {
         key="voltmeter",
         sub_key="voltage",
         name="Voltmeter",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         value=lambda status, _: round(float(status), 2),
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -423,7 +417,7 @@ RPC_SENSORS: Final = {
         available=lambda status: status is not None,
     ),
     "analoginput": RpcSensorDescription(
-        key="analoginput",
+        key="input",
         sub_key="percent",
         name="Analog Input",
         native_unit_of_measurement=PERCENTAGE,
@@ -505,8 +499,6 @@ class BlockSensor(ShellyBlockAttributeEntity, SensorEntity):
         super().__init__(coordinator, block, attribute, description)
 
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
-        if unit_fn := description.unit_fn:
-            self._attr_native_unit_of_measurement = unit_fn(block.info(attribute))
 
     @property
     def native_value(self) -> StateType:
@@ -553,10 +545,6 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
         """Initialize the sleeping sensor."""
         super().__init__(coordinator, block, attribute, description, entry, sensors)
 
-        self._attr_native_unit_of_measurement = description.native_unit_of_measurement
-        if block and (unit_fn := description.unit_fn):
-            self._attr_native_unit_of_measurement = unit_fn(block.info(attribute))
-
     @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
@@ -564,6 +552,14 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
             return self.attribute_value
 
         return self.last_state
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement of the sensor, if any."""
+        if self.block is not None:
+            return self.entity_description.native_unit_of_measurement
+
+        return self.last_unit
 
 
 class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, SensorEntity):
@@ -578,3 +574,11 @@ class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, SensorEntity):
             return self.attribute_value
 
         return self.last_state
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement of the sensor, if any."""
+        if self.coordinator.device.initialized:
+            return self.entity_description.native_unit_of_measurement
+
+        return self.last_unit

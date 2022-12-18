@@ -5,12 +5,11 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
-    ELECTRIC_POTENTIAL_MILLIVOLT,
-    MASS_GRAMS,
     PERCENTAGE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    VOLUME_LITERS,
+    UnitOfElectricPotential,
+    UnitOfMass,
+    UnitOfTemperature,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -108,12 +107,12 @@ class OmniLogicTemperatureSensor(OmnilogicSensor):
         sensor_data = self.coordinator.data[self._item_id][self._state_key]
 
         hayward_state = sensor_data
-        hayward_unit_of_measure = TEMP_FAHRENHEIT
+        hayward_unit_of_measure = UnitOfTemperature.FAHRENHEIT
         state = sensor_data
 
         if self._unit_type == "Metric":
             hayward_state = round((int(hayward_state) - 32) * 5 / 9, 1)
-            hayward_unit_of_measure = TEMP_CELSIUS
+            hayward_unit_of_measure = UnitOfTemperature.CELSIUS
 
         if int(sensor_data) == -1:
             hayward_state = None
@@ -122,7 +121,7 @@ class OmniLogicTemperatureSensor(OmnilogicSensor):
         self._attrs["hayward_temperature"] = hayward_state
         self._attrs["hayward_unit_of_measure"] = hayward_unit_of_measure
 
-        self._unit = TEMP_FAHRENHEIT
+        self._unit = UnitOfTemperature.FAHRENHEIT
 
         return state
 
@@ -174,7 +173,7 @@ class OmniLogicSaltLevelSensor(OmnilogicSensor):
 
         if self._unit_type == "Metric":
             salt_return = round(int(salt_return) / 1000, 2)
-            unit_of_measurement = f"{MASS_GRAMS}/{VOLUME_LITERS}"
+            unit_of_measurement = f"{UnitOfMass.GRAMS}/{UnitOfVolume.LITERS}"
 
         self._unit = unit_of_measurement
 
@@ -259,7 +258,7 @@ SENSOR_TYPES: dict[tuple[int, str], list[dict[str, Any]]] = {
             "kind": "air_temperature",
             "device_class": SensorDeviceClass.TEMPERATURE,
             "icon": None,
-            "unit": TEMP_FAHRENHEIT,
+            "unit": UnitOfTemperature.FAHRENHEIT,
             "guard_condition": [{}],
         },
     ],
@@ -270,7 +269,7 @@ SENSOR_TYPES: dict[tuple[int, str], list[dict[str, Any]]] = {
             "kind": "water_temperature",
             "device_class": SensorDeviceClass.TEMPERATURE,
             "icon": None,
-            "unit": TEMP_FAHRENHEIT,
+            "unit": UnitOfTemperature.FAHRENHEIT,
             "guard_condition": [{}],
         },
     ],
@@ -351,7 +350,7 @@ SENSOR_TYPES: dict[tuple[int, str], list[dict[str, Any]]] = {
             "kind": "csad_orp",
             "device_class": None,
             "icon": "mdi:gauge",
-            "unit": ELECTRIC_POTENTIAL_MILLIVOLT,
+            "unit": UnitOfElectricPotential.MILLIVOLT,
             "guard_condition": [
                 {"orp": ""},
             ],

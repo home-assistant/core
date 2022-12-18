@@ -28,7 +28,7 @@ from homeassistant.const import (
     __version__,
 )
 from homeassistant.core import ConfigSource, HomeAssistant, HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 import homeassistant.helpers.check_config as check_config
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import async_get_integration
@@ -40,7 +40,7 @@ from homeassistant.util.unit_system import (
 )
 from homeassistant.util.yaml import SECRET_YAML
 
-from tests.common import get_test_config_dir, patch_yaml_files
+from tests.common import MockUser, get_test_config_dir, patch_yaml_files
 
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
@@ -214,6 +214,8 @@ def test_core_config_schema():
         {"customize": "bla"},
         {"customize": {"light.sensor": 100}},
         {"customize": {"entity_id": []}},
+        {"country": "xx"},
+        {"language": "xx"},
     ):
         with pytest.raises(MultipleInvalid):
             config_util.CORE_CONFIG_SCHEMA(value)
@@ -228,6 +230,8 @@ def test_core_config_schema():
             CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
             "currency": "USD",
             "customize": {"sensor.temperature": {"hidden": True}},
+            "country": "SE",
+            "language": "sv",
         }
     )
 
@@ -393,9 +397,12 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
             "external_url": "https://www.example.com",
             "internal_url": "http://example.local",
             "currency": "EUR",
+            "country": "SE",
+            "language": "sv",
         },
         "key": "core.config",
         "version": 1,
+        "minor_version": 3,
     }
     await config_util.async_process_ha_core_config(
         hass, {"allowlist_external_dirs": "/etc"}
@@ -410,6 +417,8 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
     assert hass.config.external_url == "https://www.example.com"
     assert hass.config.internal_url == "http://example.local"
     assert hass.config.currency == "EUR"
+    assert hass.config.country == "SE"
+    assert hass.config.language == "sv"
     assert len(hass.config.allowlist_external_dirs) == 3
     assert "/etc" in hass.config.allowlist_external_dirs
     assert hass.config.config_source is ConfigSource.STORAGE
@@ -445,7 +454,7 @@ async def test_loading_configuration_from_storage_with_yaml_only(hass, hass_stor
     assert hass.config.config_source is ConfigSource.STORAGE
 
 
-async def test_igration_and_updating_configuration(hass, hass_storage):
+async def test_migration_and_updating_configuration(hass, hass_storage):
     """Test updating configuration stores the new configuration."""
     core_data = {
         "data": {
@@ -475,10 +484,15 @@ async def test_igration_and_updating_configuration(hass, hass_storage):
     expected_new_core_data["data"]["currency"] = "USD"
     # 1.1 -> 1.2 store migration with migrated unit system
     expected_new_core_data["data"]["unit_system_v2"] = "us_customary"
-    expected_new_core_data["minor_version"] = 2
+    expected_new_core_data["minor_version"] = 3
+    # defaults for country and language
+    expected_new_core_data["data"]["country"] = None
+    expected_new_core_data["data"]["language"] = "en"
     assert hass_storage["core.config"] == expected_new_core_data
     assert hass.config.latitude == 50
     assert hass.config.currency == "USD"
+    assert hass.config.country is None
+    assert hass.config.language == "en"
 
 
 async def test_override_stored_configuration(hass, hass_storage):
@@ -527,6 +541,8 @@ async def test_loading_configuration(hass):
             "media_dirs": {"mymedia": "/usr"},
             "legacy_templates": True,
             "currency": "EUR",
+            "country": "SE",
+            "language": "sv",
         },
     )
 
@@ -545,6 +561,74 @@ async def test_loading_configuration(hass):
     assert hass.config.config_source is ConfigSource.YAML
     assert hass.config.legacy_templates is True
     assert hass.config.currency == "EUR"
+    assert hass.config.country == "SE"
+    assert hass.config.language == "sv"
+
+
+@pytest.mark.parametrize(
+    "minor_version, users, user_data, default_language",
+    (
+        (2, (), {}, "en"),
+        (2, ({"is_owner": True},), {}, "en"),
+        (
+            2,
+            ({"id": "user1", "is_owner": True},),
+            {"user1": {"language": {"language": "sv"}}},
+            "sv",
+        ),
+        (
+            2,
+            ({"id": "user1", "is_owner": False},),
+            {"user1": {"language": {"language": "sv"}}},
+            "en",
+        ),
+        (3, (), {}, "en"),
+        (3, ({"is_owner": True},), {}, "en"),
+        (
+            3,
+            ({"id": "user1", "is_owner": True},),
+            {"user1": {"language": {"language": "sv"}}},
+            "en",
+        ),
+        (
+            3,
+            ({"id": "user1", "is_owner": False},),
+            {"user1": {"language": {"language": "sv"}}},
+            "en",
+        ),
+    ),
+)
+async def test_language_default(
+    hass, hass_storage, minor_version, users, user_data, default_language
+):
+    """Test language config default to owner user's language during migration.
+
+    This should only happen if the core store version < 1.3
+    """
+    core_data = {
+        "data": {},
+        "key": "core.config",
+        "version": 1,
+        "minor_version": minor_version,
+    }
+    hass_storage["core.config"] = dict(core_data)
+
+    for user_config in users:
+        user = MockUser(**user_config).add_to_hass(hass)
+        if user.id not in user_data:
+            continue
+        storage_key = f"frontend.user_data_{user.id}"
+        hass_storage[storage_key] = {
+            "key": storage_key,
+            "version": 1,
+            "data": user_data[user.id],
+        }
+
+    await config_util.async_process_ha_core_config(
+        hass,
+        {},
+    )
+    assert hass.config.language == default_language
 
 
 async def test_loading_configuration_default_media_dirs_docker(hass):
@@ -1205,3 +1289,67 @@ def test_identify_config_schema(domain, schema, expected):
         config_util._identify_config_schema(Mock(DOMAIN=domain, CONFIG_SCHEMA=schema))
         == expected
     )
+
+
+async def test_core_config_schema_historic_currency(hass):
+    """Test core config schema."""
+    await config_util.async_process_ha_core_config(hass, {"currency": "LTT"})
+
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue("homeassistant", "historic_currency")
+    assert issue
+    assert issue.translation_placeholders == {"currency": "LTT"}
+
+
+async def test_core_store_historic_currency(hass, hass_storage):
+    """Test core config store."""
+    core_data = {
+        "data": {
+            "currency": "LTT",
+        },
+        "key": "core.config",
+        "version": 1,
+        "minor_version": 1,
+    }
+    hass_storage["core.config"] = dict(core_data)
+    await config_util.async_process_ha_core_config(hass, {})
+
+    issue_registry = ir.async_get(hass)
+    issue_id = "historic_currency"
+    issue = issue_registry.async_get_issue("homeassistant", issue_id)
+    assert issue
+    assert issue.translation_placeholders == {"currency": "LTT"}
+
+    await hass.config.async_update(**{"currency": "EUR"})
+    issue = issue_registry.async_get_issue("homeassistant", issue_id)
+    assert not issue
+
+
+async def test_core_config_schema_no_country(hass):
+    """Test core config schema."""
+    await config_util.async_process_ha_core_config(hass, {})
+
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue("homeassistant", "country_not_configured")
+    assert issue
+
+
+async def test_core_store_no_country(hass, hass_storage):
+    """Test core config store."""
+    core_data = {
+        "data": {},
+        "key": "core.config",
+        "version": 1,
+        "minor_version": 1,
+    }
+    hass_storage["core.config"] = dict(core_data)
+    await config_util.async_process_ha_core_config(hass, {})
+
+    issue_registry = ir.async_get(hass)
+    issue_id = "country_not_configured"
+    issue = issue_registry.async_get_issue("homeassistant", issue_id)
+    assert issue
+
+    await hass.config.async_update(**{"country": "SE"})
+    issue = issue_registry.async_get_issue("homeassistant", issue_id)
+    assert not issue

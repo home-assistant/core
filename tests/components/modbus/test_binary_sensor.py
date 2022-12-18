@@ -6,6 +6,7 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
+    CALL_TYPE_REGISTER_INPUT,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_SLAVE_COUNT,
@@ -54,6 +55,16 @@ ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
                 }
             ]
         },
+        {
+            CONF_BINARY_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_SLAVE: 10,
+                    CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
+                }
+            ]
+        },
     ],
 )
 async def test_config_binary_sensor(hass, mock_modbus):
@@ -91,40 +102,64 @@ async def test_config_binary_sensor(hass, mock_modbus):
                 },
             ],
         },
+        {
+            CONF_BINARY_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
+                },
+            ],
+        },
     ],
 )
 @pytest.mark.parametrize(
     "register_words,do_exception,expected",
     [
         (
-            [0xFF],
+            [True] * 8,
             False,
             STATE_ON,
         ),
         (
-            [0x01],
+            [False] * 8,
+            False,
+            STATE_OFF,
+        ),
+        (
+            [False] + [True] * 7,
+            False,
+            STATE_OFF,
+        ),
+        (
+            [True] + [False] * 7,
             False,
             STATE_ON,
         ),
         (
-            [0x00],
-            False,
-            STATE_OFF,
-        ),
-        (
-            [0x80],
-            False,
-            STATE_OFF,
-        ),
-        (
-            [0xFE],
-            False,
-            STATE_OFF,
-        ),
-        (
-            [0x00],
+            [False] * 8,
             True,
             STATE_UNAVAILABLE,
+        ),
+        (
+            [1] * 8,
+            False,
+            STATE_ON,
+        ),
+        (
+            [2] * 8,
+            False,
+            STATE_OFF,
+        ),
+        (
+            [4] + [1] * 7,
+            False,
+            STATE_OFF,
+        ),
+        (
+            [1] + [8] * 7,
+            False,
+            STATE_ON,
         ),
     ],
 )
@@ -153,7 +188,7 @@ async def test_all_binary_sensor(hass, expected, mock_do_cycle):
     "register_words,do_exception,start_expect,end_expect",
     [
         (
-            [0x00],
+            [False * 16],
             True,
             STATE_UNKNOWN,
             STATE_UNAVAILABLE,
@@ -269,6 +304,34 @@ async def test_config_slave_binary_sensor(hass, mock_modbus):
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
+                    CONF_INPUT_TYPE: CALL_TYPE_COIL,
+                }
+            ]
+        },
+        {
+            CONF_BINARY_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_INPUT_TYPE: CALL_TYPE_DISCRETE,
+                }
+            ]
+        },
+        {
+            CONF_BINARY_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                }
+            ]
+        },
+        {
+            CONF_BINARY_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
                 }
             ]
         },
@@ -279,106 +342,33 @@ async def test_config_slave_binary_sensor(hass, mock_modbus):
     [
         (
             {CONF_SLAVE_COUNT: 1},
-            [0x01],
-            STATE_ON,
-            [
-                STATE_OFF,
-            ],
+            [False] * 8,
+            STATE_OFF,
+            [STATE_OFF],
         ),
         (
             {CONF_SLAVE_COUNT: 1},
-            [0x02],
-            STATE_OFF,
-            [
-                STATE_ON,
-            ],
+            [True] + [False] * 7,
+            STATE_ON,
+            [STATE_OFF],
         ),
         (
             {CONF_SLAVE_COUNT: 1},
-            [0x04],
+            [False, True] + [False] * 6,
             STATE_OFF,
-            [
-                STATE_OFF,
-            ],
+            [STATE_ON],
         ),
         (
             {CONF_SLAVE_COUNT: 7},
-            [0x01],
+            [True, False] * 4,
             STATE_ON,
-            [
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
-            ],
+            [STATE_OFF, STATE_ON] * 3 + [STATE_OFF],
         ),
         (
-            {CONF_SLAVE_COUNT: 7},
-            [0x82],
-            STATE_OFF,
-            [
-                STATE_ON,
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
-                STATE_ON,
-            ],
-        ),
-        (
-            {CONF_SLAVE_COUNT: 10},
-            [0x01, 0x00],
+            {CONF_SLAVE_COUNT: 31},
+            [True, False] * 16,
             STATE_ON,
-            [
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
-            ],
-        ),
-        (
-            {CONF_SLAVE_COUNT: 10},
-            [0x01, 0x01],
-            STATE_ON,
-            [
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
-                STATE_ON,
-                STATE_OFF,
-                STATE_OFF,
-            ],
-        ),
-        (
-            {CONF_SLAVE_COUNT: 10},
-            [0x81, 0x01],
-            STATE_ON,
-            [
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
-                STATE_ON,
-                STATE_ON,
-                STATE_OFF,
-                STATE_OFF,
-            ],
+            [STATE_OFF, STATE_ON] * 15 + [STATE_OFF],
         ),
     ],
 )

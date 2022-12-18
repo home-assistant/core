@@ -14,7 +14,7 @@
       "name": "Anna",
       "vendor": "Plugwise",
       "thermostat": {
-        "setpoint_low": 20.0,
+        "setpoint_low": 4.0,
         "setpoint_high": 23.5,
         "lower_bound": 1.0,
         "upper_bound": 35.0,
@@ -30,7 +30,7 @@
       "mode": "heat_cool",
       "sensors": {
         "temperature": 25.8,
-        "setpoint_low": 20.0,
+        "setpoint_low": 4.0,
         "setpoint_high": 23.5
       }
     },

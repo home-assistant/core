@@ -33,7 +33,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Before set up, battery-powered devices must be woken up, you can now wake the device up using a button on it."
+                "description": "Before setup, battery-powered devices must be woken up, you can now wake the device up using a button on it."
             }
         }
     },
@@ -57,6 +57,19 @@
             "single_long": "{subtype} single clicked and then long clicked",
             "single_push": "{subtype} single push",
             "triple": "{subtype} triple clicked"
+        }
+    },
+    "options": {
+        "abort": {
+            "ble_unsupported": "Bluetooth support requires firmware version {ble_min_version} or newer."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "ble_scanner_mode": "Bluetooth scanner mode"
+                },
+                "description": "Bluetooth scanning can be active or passive. With active, the Shelly requests data from nearby devices; with passive, the Shelly receives unsolicited data from nearby devices."
+            }
         }
     }
 }

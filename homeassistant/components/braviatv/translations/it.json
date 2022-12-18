@@ -23,7 +23,7 @@
                 "title": "Autorizza Sony Bravia TV"
             },
             "confirm": {
-                "description": "Vuoi iniziare la configurazione?"
+                "description": "Vuoi avviare la configurazione?"
             },
             "reauth_confirm": {
                 "data": {
@@ -41,6 +41,9 @@
         }
     },
     "options": {
+        "abort": {
+            "failed_update": "Si \u00e8 verificato un errore durante l'aggiornamento dell'elenco delle fonti.\n\nAssicurati che il televisore sia acceso prima di provare a configurarlo."
+        },
         "step": {
             "user": {
                 "data": {

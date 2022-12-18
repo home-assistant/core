@@ -10,7 +10,7 @@
         "flow_title": "{name} ({host})",
         "step": {
             "link": {
-                "description": "Vil du konfigurere {name} ({host})?",
+                "description": "Vil du sette opp {name} ( {host} )?",
                 "title": "Koble til PowerView-huben"
             },
             "user": {

@@ -24,7 +24,6 @@ from .mixins import (
     MQTT_AVAILABILITY_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
-    async_setup_platform_helper,
     warn_for_legacy_schema,
 )
 from .util import valid_publish_topic
@@ -46,30 +45,13 @@ PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     }
 ).extend(MQTT_AVAILABILITY_SCHEMA.schema)
 
-# Configuring MQTT Scenes under the scene platform key is deprecated in HA Core 2022.6
+# Configuring MQTT Scenes under the scene platform key was deprecated in HA Core 2022.6
+# Setup for the legacy YAML format was removed in HA Core 2022.12
 PLATFORM_SCHEMA = vol.All(
-    cv.PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_MODERN.schema),
     warn_for_legacy_schema(scene.DOMAIN),
 )
 
 DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up MQTT scene configured under the scene platform key (deprecated)."""
-    # Deprecated in HA Core 2022.6
-    await async_setup_platform_helper(
-        hass,
-        scene.DOMAIN,
-        discovery_info or config,
-        async_add_entities,
-        _async_setup_entity,
-    )
 
 
 async def async_setup_entry(
@@ -88,8 +70,8 @@ async def _async_setup_entity(
     hass: HomeAssistant,
     async_add_entities: AddEntitiesCallback,
     config: ConfigType,
-    config_entry: ConfigEntry | None = None,
-    discovery_data: dict | None = None,
+    config_entry: ConfigEntry,
+    discovery_data: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the MQTT scene."""
     async_add_entities([MqttScene(hass, config, config_entry, discovery_data)])
@@ -103,23 +85,29 @@ class MqttScene(
 
     _entity_id_format = scene.DOMAIN + ".{}"
 
-    def __init__(self, hass, config, config_entry, discovery_data):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        config_entry: ConfigEntry,
+        discovery_data: DiscoveryInfoType | None,
+    ) -> None:
         """Initialize the MQTT scene."""
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
-    def config_schema():
+    def config_schema() -> vol.Schema:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
-    def _setup_from_config(self, config):
+    def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._config = config
 
-    def _prepare_subscribe_topics(self):
+    def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
-    async def _subscribe_topics(self):
+    async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
     async def async_activate(self, **kwargs: Any) -> None:

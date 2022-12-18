@@ -1388,7 +1388,9 @@ async def test_measure_cet(recorder_mock, hass):
 async def test_end_time_with_microseconds_zeroed(time_zone, recorder_mock, hass):
     """Test the history statistics sensor that has the end time microseconds zeroed out."""
     hass.config.set_time_zone(time_zone)
-    start_of_today = dt_util.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    start_of_today = dt_util.now().replace(
+        day=9, month=7, year=1986, hour=0, minute=0, second=0, microsecond=0
+    )
     start_time = start_of_today + timedelta(minutes=60)
     t0 = start_time + timedelta(minutes=20)
     t1 = t0 + timedelta(minutes=10)

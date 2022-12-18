@@ -7,12 +7,13 @@ import re
 from typing import Any, cast
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DATA_KILOBYTES, DATA_MEGABYTES, TIME_DAYS
+from homeassistant.const import TIME_DAYS, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -36,21 +37,24 @@ SENSOR_DESCRIPTIONS: tuple[SensorValueEntityDescription, ...] = (
         key="usedMb",
         name="Data used",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:network",
     ),
     SensorValueEntityDescription(
         key="downloadedMb",
         name="Downloaded",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:download-network",
     ),
     SensorValueEntityDescription(
         key="uploadedMb",
         name="Uploaded",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:upload-network",
     ),
     # Mobile Phone Services sensors
@@ -86,7 +90,8 @@ SENSOR_DESCRIPTIONS: tuple[SensorValueEntityDescription, ...] = (
         key="internet",
         name="Data used",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=DATA_KILOBYTES,
+        native_unit_of_measurement=UnitOfInformation.KILOBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:network",
         value=lambda x: x.get("kbytes"),
     ),

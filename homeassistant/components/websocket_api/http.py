@@ -214,7 +214,7 @@ class WebSocketHandler:
                 disconnect_warn = "Did not receive auth message within 10 seconds"
                 raise Disconnect from err
 
-            if msg.type in (WSMsgType.CLOSE, WSMsgType.CLOSING):
+            if msg.type in (WSMsgType.CLOSE, WSMsgType.CLOSED, WSMsgType.CLOSING):
                 raise Disconnect
 
             if msg.type != WSMsgType.TEXT:
@@ -238,7 +238,7 @@ class WebSocketHandler:
             while not wsock.closed:
                 msg = await wsock.receive()
 
-                if msg.type in (WSMsgType.CLOSE, WSMsgType.CLOSING):
+                if msg.type in (WSMsgType.CLOSE, WSMsgType.CLOSED, WSMsgType.CLOSING):
                     break
 
                 if msg.type != WSMsgType.TEXT:

@@ -28,6 +28,7 @@
                     "mode": "Travel Mode",
                     "time": "Time",
                     "time_type": "Time Type",
+                    "traffic_mode": "Traffic Mode",
                     "transit_mode": "Transit Mode",
                     "transit_routing_preference": "Transit Routing Preference",
                     "units": "Units"

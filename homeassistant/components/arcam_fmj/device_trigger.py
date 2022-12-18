@@ -65,7 +65,7 @@ async def async_attach_trigger(
         entity_id = config[CONF_ENTITY_ID]
 
         @callback
-        def _handle_event(event: Event):
+        def _handle_event(event: Event) -> None:
             if event.data[ATTR_ENTITY_ID] == entity_id:
                 hass.async_run_hass_job(
                     job,

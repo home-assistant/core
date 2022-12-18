@@ -52,10 +52,10 @@ async def test_setup(
         },
     )
     await hass.async_block_till_done()
-    assert hass.config_entries.async_entries(DOMAIN)
+    assert not hass.config_entries.async_entries(DOMAIN)
     issues = await get_repairs(hass, hass_ws_client)
     assert len(issues) == 1
-    assert issues[0]["issue_id"] == "deprecated_yaml"
+    assert issues[0]["issue_id"] == "removed_yaml"
 
 
 async def test_async_setup_entry_success(

@@ -6,7 +6,7 @@ from typing import Any, Final
 import aioshelly
 from aioshelly.block_device import BlockDevice
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
-from aioshelly.rpc_device import RpcDevice
+from aioshelly.rpc_device import RpcDevice, UpdateType
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -16,7 +16,6 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
     CONF_COAP_PORT,
@@ -113,13 +112,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Shelly block based device from a config entry."""
-    temperature_unit = "C" if hass.config.units is METRIC_SYSTEM else "F"
-
     options = aioshelly.common.ConnectionOptions(
         entry.data[CONF_HOST],
         entry.data.get(CONF_USERNAME),
         entry.data.get(CONF_PASSWORD),
-        temperature_unit,
     )
 
     coap_context = await get_coap_context(hass)
@@ -256,7 +252,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
         hass.config_entries.async_setup_platforms(entry, platforms)
 
     @callback
-    def _async_device_online(_: Any) -> None:
+    def _async_device_online(_: Any, update_type: UpdateType) -> None:
         LOGGER.debug("Device %s is online, resuming setup", entry.title)
         shelly_entry_data.device = None
 

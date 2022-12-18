@@ -1,4 +1,25 @@
 {
+    "entity": {
+        "select": {
+            "speed": {
+                "state": {
+                    "light_speed": "\u5149\u901f",
+                    "ludicrous_speed": "\u53ef\u7b11\u7684\u901f\u5ea6",
+                    "ridiculous_speed": "\u8352\u8b2c\u7684\u901f\u5ea6"
+                }
+            }
+        },
+        "sensor": {
+            "thermostat_mode": {
+                "state": {
+                    "away": "\u96e2\u5bb6\u6a21\u5f0f",
+                    "comfort": "\u8212\u9069\u6a21\u5f0f",
+                    "eco": "\u7bc0\u80fd\u6a21\u5f0f",
+                    "sleep": "\u7761\u7720\u6a21\u5f0f"
+                }
+            }
+        }
+    },
     "issues": {
         "bad_psu": {
             "fix_flow": {
@@ -10,6 +31,14 @@
                 }
             },
             "title": "\u96fb\u6e90\u4f9b\u61c9\u4e0d\u7a69\u5b9a"
+        },
+        "cold_tea": {
+            "fix_flow": {
+                "abort": {
+                    "not_tea_time": "\u76ee\u524d\u7121\u6cd5\u518d\u52a0\u71b1\u8336"
+                }
+            },
+            "title": "\u8336\u6dbc\u4e86"
         },
         "out_of_blinker_fluid": {
             "fix_flow": {

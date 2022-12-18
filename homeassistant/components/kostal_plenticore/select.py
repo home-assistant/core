@@ -42,7 +42,6 @@ SELECT_SETTINGS_DATA = [
             "Battery:SmartBatteryControl:Enable",
             "Battery:TimeControl:Enable",
         ],
-        device_class="kostal_plenticore__battery",
     )
 ]
 

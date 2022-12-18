@@ -20,15 +20,9 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
-    FREQUENCY_HERTZ,
-    LENGTH_CENTIMETERS,
     LIGHT_LUX,
-    MASS_KILOGRAMS,
     PERCENTAGE,
-    POWER_VOLT_AMPERE,
-    POWER_WATT,
     PRESSURE_HPA,
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -38,6 +32,12 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TEMP_KELVIN,
+    UnitOfApparentPower,
+    UnitOfElectricPotential,
+    UnitOfFrequency,
+    UnitOfLength,
+    UnitOfMass,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -214,14 +214,14 @@ SENSOR_UNIT_MAP = {
     hc.CONCENTRATION_PARTS_PER_BILLION: CONCENTRATION_PARTS_PER_BILLION,
     hc.CONCENTRATION_PARTS_PER_MILLION: CONCENTRATION_PARTS_PER_MILLION,
     hc.ELECTRICAL_CURRENT_AMPERE: ELECTRIC_CURRENT_AMPERE,
-    hc.ELECTRICAL_VOLT_AMPERE: POWER_VOLT_AMPERE,
+    hc.ELECTRICAL_VOLT_AMPERE: UnitOfApparentPower.VOLT_AMPERE,
     hc.ENERGY_KILO_WATT_HOUR: ENERGY_KILO_WATT_HOUR,
-    hc.FREQUENCY_HERTZ: FREQUENCY_HERTZ,
-    hc.LENGTH_CENTIMETERS: LENGTH_CENTIMETERS,
+    hc.FREQUENCY_HERTZ: UnitOfFrequency.HERTZ,
+    hc.LENGTH_CENTIMETERS: UnitOfLength.CENTIMETERS,
     hc.LIGHT_LUX: LIGHT_LUX,
-    hc.MASS_KILOGRAMS: MASS_KILOGRAMS,
+    hc.MASS_KILOGRAMS: UnitOfMass.KILOGRAMS,
     hc.PERCENTAGE: PERCENTAGE,
-    hc.POWER_WATT: POWER_WATT,
+    hc.POWER_WATT: UnitOfPower.WATT,
     hc.PRESSURE_HPA: PRESSURE_HPA,
     hc.SIGNAL_STRENGTH_DECIBELS: SIGNAL_STRENGTH_DECIBELS,
     hc.SIGNAL_STRENGTH_DECIBELS_MILLIWATT: SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -231,7 +231,7 @@ SENSOR_UNIT_MAP = {
     hc.TEMP_CELSIUS: TEMP_CELSIUS,
     hc.TEMP_FAHRENHEIT: TEMP_FAHRENHEIT,
     hc.TEMP_KELVIN: TEMP_KELVIN,
-    hc.VOLT: ELECTRIC_POTENTIAL_VOLT,
+    hc.VOLT: UnitOfElectricPotential.VOLT,
 }
 
 
@@ -294,7 +294,7 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
         self.async_write_ha_state()
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> SensorDeviceClass | None:
         """Return the device class of the sensor."""
         class_or_icon = SENSOR_DEVICE_CLASS_ICON_MAP.get(
             self._tasmota_entity.quantity, {}

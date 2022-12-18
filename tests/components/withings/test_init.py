@@ -177,6 +177,10 @@ async def test_set_config_unique_id(
             spec=DataUpdateCoordinator
         )
         data_manager.poll_data_update_coordinator.last_update_success = True
+        data_manager.subscription_update_coordinator = MagicMock(
+            spec=DataUpdateCoordinator
+        )
+        data_manager.subscription_update_coordinator.last_update_success = True
         mock.return_value = data_manager
         config_entry.add_to_hass(hass)
 

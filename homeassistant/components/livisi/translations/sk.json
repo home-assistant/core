@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "wrong_ip_address": "IP adresa je nespr\u00e1vna alebo SHC nie je mo\u017en\u00e9 lok\u00e1lne dosiahnu\u0165.",
+            "wrong_password": "Heslo je nespr\u00e1vne."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "IP adresa",
+                    "password": "Heslo"
+                },
+                "description": "Zadajte IP adresu a (miestne) heslo SHC."
+            }
+        }
+    }
+}

@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ure\u0111aj je ve\u0107 konfiguriran"
+        },
+        "error": {
+            "cannot_connect": "Povezivanje nije uspjelo",
+            "invalid_auth": "Neva\u017ee\u0107a provjera autenti\u010dnosti",
+            "invalid_input": "Neva\u017ee\u0107i naziv hosta ili IP adresa"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP adresa",
+                    "password": "Lozinka"
+                },
+                "description": "Navedite IP adresu ili mDNS ure\u0111aja i njegovu lozinku",
+                "title": "Identificirajte ure\u0111aj"
+            }
+        }
+    }
+}

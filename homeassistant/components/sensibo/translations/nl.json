@@ -29,5 +29,20 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "sensitivity": {
+                "state": {
+                    "n": "Normaal"
+                }
+            },
+            "smart_type": {
+                "state": {
+                    "humidity": "Vochtigheid",
+                    "temperature": "Temperatuur"
+                }
+            }
+        }
     }
 }

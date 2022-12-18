@@ -1,6 +1,6 @@
 """Test the Powerwall config flow."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from tesla_powerwall import (
     AccessDeniedError,
@@ -18,6 +18,7 @@ from .mocks import (
     MOCK_GATEWAY_DIN,
     _mock_powerwall_side_effect,
     _mock_powerwall_site_name,
+    _mock_powerwall_with_fixtures,
 )
 
 from tests.common import MockConfigEntry
@@ -351,7 +352,7 @@ async def test_dhcp_discovery_update_ip_address(hass):
         unique_id=MOCK_GATEWAY_DIN,
     )
     entry.add_to_hass(hass)
-    mock_powerwall = await _mock_powerwall_site_name(hass, "Some site")
+    mock_powerwall = MagicMock(login=MagicMock(side_effect=PowerwallUnreachableError))
 
     with patch(
         "homeassistant.components.powerwall.config_flow.Powerwall",
@@ -373,6 +374,70 @@ async def test_dhcp_discovery_update_ip_address(hass):
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_IP_ADDRESS] == "1.1.1.1"
+
+
+async def test_dhcp_discovery_does_not_update_ip_when_auth_fails(hass):
+    """Test we do not switch to another interface when auth is failing."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=VALID_CONFIG,
+        unique_id=MOCK_GATEWAY_DIN,
+    )
+    entry.add_to_hass(hass)
+    mock_powerwall = MagicMock(login=MagicMock(side_effect=AccessDeniedError("any")))
+
+    with patch(
+        "homeassistant.components.powerwall.config_flow.Powerwall",
+        return_value=mock_powerwall,
+    ), patch(
+        "homeassistant.components.powerwall.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=dhcp.DhcpServiceInfo(
+                ip="1.1.1.1",
+                macaddress="AA:BB:CC:DD:EE:FF",
+                hostname=MOCK_GATEWAY_DIN.lower(),
+            ),
+        )
+        await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_IP_ADDRESS] == "1.2.3.4"
+
+
+async def test_dhcp_discovery_does_not_update_ip_when_auth_successful(hass):
+    """Test we do not switch to another interface when auth is successful."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=VALID_CONFIG,
+        unique_id=MOCK_GATEWAY_DIN,
+    )
+    entry.add_to_hass(hass)
+    mock_powerwall = MagicMock(login=MagicMock(return_value=True))
+
+    with patch(
+        "homeassistant.components.powerwall.config_flow.Powerwall",
+        return_value=mock_powerwall,
+    ), patch(
+        "homeassistant.components.powerwall.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=dhcp.DhcpServiceInfo(
+                ip="1.1.1.1",
+                macaddress="AA:BB:CC:DD:EE:FF",
+                hostname=MOCK_GATEWAY_DIN.lower(),
+            ),
+        )
+        await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_IP_ADDRESS] == "1.2.3.4"
 
 
 async def test_dhcp_discovery_updates_unique_id(hass):
@@ -406,3 +471,70 @@ async def test_dhcp_discovery_updates_unique_id(hass):
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_IP_ADDRESS] == "1.2.3.4"
     assert entry.unique_id == MOCK_GATEWAY_DIN
+
+
+async def test_dhcp_discovery_updates_unique_id_when_entry_is_failed(hass):
+    """Test we can update the unique id from dhcp in a failed state."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=VALID_CONFIG,
+        unique_id="1.2.3.4",
+    )
+    entry.add_to_hass(hass)
+    entry.state = config_entries.ConfigEntryState.SETUP_ERROR
+    mock_powerwall = await _mock_powerwall_site_name(hass, "Some site")
+
+    with patch(
+        "homeassistant.components.powerwall.config_flow.Powerwall",
+        return_value=mock_powerwall,
+    ), patch(
+        "homeassistant.components.powerwall.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=dhcp.DhcpServiceInfo(
+                ip="1.2.3.4",
+                macaddress="AA:BB:CC:DD:EE:FF",
+                hostname=MOCK_GATEWAY_DIN.lower(),
+            ),
+        )
+        await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_IP_ADDRESS] == "1.2.3.4"
+    assert entry.unique_id == MOCK_GATEWAY_DIN
+
+
+async def test_discovered_wifi_does_not_update_ip_if_is_still_online(hass) -> None:
+    """Test a discovery does not update the ip unless the powerwall at the old ip is offline."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=VALID_CONFIG,
+        unique_id=MOCK_GATEWAY_DIN,
+    )
+    entry.add_to_hass(hass)
+    mock_powerwall = await _mock_powerwall_with_fixtures(hass)
+
+    with patch(
+        "homeassistant.components.powerwall.config_flow.Powerwall",
+        return_value=mock_powerwall,
+    ), patch(
+        "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=dhcp.DhcpServiceInfo(
+                ip="1.2.3.5",
+                macaddress="AA:BB:CC:DD:EE:FF",
+                hostname=MOCK_GATEWAY_DIN.lower(),
+            ),
+        )
+        await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_IP_ADDRESS] == "1.2.3.4"

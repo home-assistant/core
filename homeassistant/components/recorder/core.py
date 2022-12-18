@@ -26,18 +26,18 @@ from homeassistant.components import persistent_notification
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     EVENT_HOMEASSISTANT_FINAL_WRITE,
-    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
     MATCH_ALL,
 )
-from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers.event import (
     async_track_time_change,
     async_track_time_interval,
     async_track_utc_time_change,
 )
 from homeassistant.helpers.json import JSON_ENCODE_EXCEPTIONS
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 import homeassistant.util.dt as dt_util
 
@@ -375,12 +375,6 @@ class Recorder(threading.Thread):
         # Unknown what it is.
         return True
 
-    def do_adhoc_statistics(self, **kwargs: Any) -> None:
-        """Trigger an adhoc statistics run."""
-        if not (start := kwargs.get("start")):
-            start = statistics.get_start_time()
-        self.queue_task(StatisticsTask(start))
-
     def _empty_queue(self, event: Event) -> None:
         """Empty the queue if its still present at final write."""
 
@@ -407,7 +401,7 @@ class Recorder(threading.Thread):
         await self.hass.async_add_executor_job(self.join)
 
     @callback
-    def _async_hass_started(self, event: Event) -> None:
+    def _async_hass_started(self, hass: HomeAssistant) -> None:
         """Notify that hass has started."""
         self._hass_started.set_result(None)
 
@@ -417,10 +411,7 @@ class Recorder(threading.Thread):
         bus = self.hass.bus
         bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, self._empty_queue)
         bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
-        if self.hass.state == CoreState.running:
-            self._hass_started.set_result(None)
-            return
-        bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, self._async_hass_started)
+        async_at_started(self.hass, self._async_hass_started)
 
     @callback
     def async_connection_failed(self) -> None:
@@ -482,7 +473,7 @@ class Recorder(threading.Thread):
         Short term statistics run every 5 minutes
         """
         start = statistics.get_start_time()
-        self.queue_task(StatisticsTask(start))
+        self.queue_task(StatisticsTask(start, True))
 
     @callback
     def async_adjust_statistics(
@@ -600,16 +591,14 @@ class Recorder(threading.Thread):
             self.hass.add_job(self.async_connection_failed)
             return
 
-        schema_status = migration.validate_db_schema(self.hass, self.get_session)
+        schema_status = migration.validate_db_schema(self.hass, self, self.get_session)
         if schema_status is None:
             # Give up if we could not validate the schema
             self.hass.add_job(self.async_connection_failed)
             return
         self.schema_version = schema_status.current_version
 
-        schema_is_valid = migration.schema_is_valid(schema_status)
-
-        if schema_is_valid:
+        if schema_status.valid:
             self._setup_run()
         else:
             self.migration_in_progress = True
@@ -617,8 +606,8 @@ class Recorder(threading.Thread):
 
         self.hass.add_job(self.async_connection_success)
 
-        if self.migration_is_live or schema_is_valid:
-            # If the migrate is live or the schema is current, we need to
+        if self.migration_is_live or schema_status.valid:
+            # If the migrate is live or the schema is valid, we need to
             # wait for startup to complete. If its not live, we need to continue
             # on.
             self.hass.add_job(self.async_set_db_ready)
@@ -635,7 +624,7 @@ class Recorder(threading.Thread):
                 self.hass.add_job(self.async_set_db_ready)
                 return
 
-        if not schema_is_valid:
+        if not schema_status.valid:
             if self._migrate_schema_and_setup_run(schema_status):
                 self.schema_version = SCHEMA_VERSION
                 if not self._event_listener:
@@ -1196,7 +1185,7 @@ class Recorder(threading.Thread):
         while start < last_period:
             end = start + timedelta(minutes=5)
             _LOGGER.debug("Compiling missing statistics for %s-%s", start, end)
-            self.queue_task(StatisticsTask(start))
+            self.queue_task(StatisticsTask(start, end >= last_period))
             start = end
 
     def _end_session(self) -> None:

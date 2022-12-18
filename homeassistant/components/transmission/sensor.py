@@ -3,11 +3,11 @@ from __future__ import annotations
 
 from contextlib import suppress
 
-from transmissionrpc.torrent import Torrent
+from transmission_rpc.torrent import Torrent
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, DATA_RATE_MEGABYTES_PER_SECOND, STATE_IDLE
+from homeassistant.const import CONF_NAME, STATE_IDLE, UnitOfDataRate
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -97,10 +97,8 @@ class TransmissionSensor(SensorEntity):
 class TransmissionSpeedSensor(TransmissionSensor):
     """Representation of a Transmission speed sensor."""
 
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return DATA_RATE_MEGABYTES_PER_SECOND
+    _attr_device_class = SensorDeviceClass.DATA_RATE
+    _attr_native_unit_of_measurement = UnitOfDataRate.MEGABYTES_PER_SECOND
 
     def update(self) -> None:
         """Get the latest data from Transmission and updates the state."""

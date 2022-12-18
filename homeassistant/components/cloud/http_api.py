@@ -9,7 +9,7 @@ from typing import Any
 import aiohttp
 import async_timeout
 import attr
-from hass_nabucasa import Cloud, auth, cloud_api, thingtalk
+from hass_nabucasa import Cloud, auth, thingtalk
 from hass_nabucasa.const import STATE_DISCONNECTED
 from hass_nabucasa.voice import MAP_VOICE
 import voluptuous as vol
@@ -38,6 +38,8 @@ from .const import (
     PREF_TTS_DEFAULT_VOICE,
     REQUEST_TIMEOUT,
 )
+from .repairs import async_manage_legacy_subscription_issue
+from .subscription import async_subscription_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -328,15 +330,14 @@ async def websocket_subscription(
 ) -> None:
     """Handle request for account info."""
     cloud = hass.data[DOMAIN]
-    try:
-        async with async_timeout.timeout(REQUEST_TIMEOUT):
-            data = await cloud_api.async_subscription_info(cloud)
-    except aiohttp.ClientError:
+    if (data := await async_subscription_info(cloud)) is None:
         connection.send_error(
             msg["id"], "request_failed", "Failed to request subscription"
         )
-    else:
-        connection.send_result(msg["id"], data)
+        return
+
+    connection.send_result(msg["id"], data)
+    async_manage_legacy_subscription_issue(hass, data)
 
 
 @_require_cloud_login

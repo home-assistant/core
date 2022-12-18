@@ -6,8 +6,7 @@ import logging
 from aiounifi.models.api import SOURCE_DATA, SOURCE_EVENT
 from aiounifi.models.event import EventKey
 
-from homeassistant.components.device_tracker import DOMAIN, SourceType
-from homeassistant.components.device_tracker.config_entry import ScannerEntity
+from homeassistant.components.device_tracker import DOMAIN, ScannerEntity, SourceType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect

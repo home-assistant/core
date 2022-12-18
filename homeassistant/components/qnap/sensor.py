@@ -188,7 +188,7 @@ class QNAPMemorySensor(QNAPSensor):
         if self.coordinator.data:
             data = self.coordinator.data["system_stats"]["memory"]
             size = round_nicely(float(data["total"]) / 1024)
-            return {ATTR_MEMORY_SIZE: f"{size} {DATA_GIBIBYTES}"}
+            return {ATTR_MEMORY_SIZE: f"{size} {UnitOfInformation.GIBIBYTES}"}
 
 
 class QNAPSystemSensor(QNAPSensor):

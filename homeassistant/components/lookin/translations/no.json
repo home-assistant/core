@@ -19,7 +19,7 @@
                 }
             },
             "discovery_confirm": {
-                "description": "Vil du konfigurere {name} ({host})?"
+                "description": "Vil du sette opp {name} ( {host} )?"
             },
             "user": {
                 "data": {

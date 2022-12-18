@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Kontoen er allerede konfigurert",
             "already_configured_account": "Kontoen er allerede konfigurert",
             "already_configured_device": "Enheten er allerede konfigurert",
             "no_devices_found": "Ingen enheter funnet p\u00e5 nettverket",
@@ -26,9 +25,6 @@
                 "description": "Vil du konfigurere {model} ( {device_id} )?"
             },
             "local": {
-                "data": {
-                    "host": "IP adresse"
-                },
                 "description": "F\u00f8lg [disse instruksjonene]( {url} ) om hvordan du aktiverer Awair Local API. \n\n Klikk p\u00e5 send n\u00e5r du er ferdig."
             },
             "local_pick": {
@@ -36,13 +32,6 @@
                     "device": "Enhet",
                     "host": "IP adresse"
                 }
-            },
-            "reauth": {
-                "data": {
-                    "access_token": "Tilgangstoken",
-                    "email": "E-post"
-                },
-                "description": "Skriv inn tilgangstokenet for Awair-utviklere p\u00e5 nytt."
             },
             "reauth_confirm": {
                 "data": {
@@ -52,10 +41,6 @@
                 "description": "Skriv inn Awair-utviklertilgangstokenet ditt p\u00e5 nytt."
             },
             "user": {
-                "data": {
-                    "access_token": "Tilgangstoken",
-                    "email": "E-post"
-                },
                 "description": "Velg lokal for den beste opplevelsen. Bruk bare sky hvis enheten ikke er koblet til samme nettverk som Home Assistant, eller hvis du har en eldre enhet.",
                 "menu_options": {
                     "cloud": "Koble til via skyen",

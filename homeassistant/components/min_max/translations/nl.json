@@ -12,7 +12,7 @@
                     "round_digits": "Regelt het aantal decimale cijfers in de uitvoer wanneer de statistische eigenschap gemiddelde of mediaan is."
                 },
                 "description": "Maak een sensor die een min, max, gemiddelde of mediaanwaarde berekent uit een lijst van invoersensoren.",
-                "title": "Voeg min / max / gemiddelde / mediaan sensor toe"
+                "title": "Voeg min / max / gemiddelde / mediaan / som sensor toe"
             }
         }
     },

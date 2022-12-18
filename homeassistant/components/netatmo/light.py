@@ -193,17 +193,20 @@ class NetatmoLight(NetatmoBase, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
-        _LOGGER.debug("Turn light '%s' on", self.name)
         if ATTR_BRIGHTNESS in kwargs:
             await self._dimmer.async_set_brightness(kwargs[ATTR_BRIGHTNESS])
 
         else:
             await self._dimmer.async_on()
 
+        self._attr_is_on = True
+        self.async_write_ha_state()
+
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
-        _LOGGER.debug("Turn light '%s' off", self.name)
         await self._dimmer.async_off()
+        self._attr_is_on = False
+        self.async_write_ha_state()
 
     @callback
     def async_update_callback(self) -> None:

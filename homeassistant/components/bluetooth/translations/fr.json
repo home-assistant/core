@@ -8,14 +8,14 @@
             "bluetooth_confirm": {
                 "description": "Voulez-vous configurer {name}\u00a0?"
             },
-            "enable_bluetooth": {
-                "description": "Voulez-vous configurer le Bluetooth\u00a0?"
-            },
             "multiple_adapters": {
                 "data": {
                     "adapter": "Adaptateur"
                 },
                 "description": "S\u00e9lectionner un adaptateur Bluetooth \u00e0 configurer"
+            },
+            "single_adapter": {
+                "description": "Voulez-vous configurer l\u2019adaptateur Bluetooth {name}\u00a0?"
             },
             "user": {
                 "data": {
@@ -25,13 +25,18 @@
             }
         }
     },
+    "issues": {
+        "haos_outdated": {
+            "description": "Pour am\u00e9liorer la fiabilit\u00e9 et les performances du Bluetooth, nous vous recommandons vivement de passer \u00e0 la version 9.0 ou ult\u00e9rieure du syst\u00e8me d'exploitation d'Home Assistant.",
+            "title": "Mettez \u00e0 jour le syst\u00e8me d'exploitation Home Assistant (HAOS) vers la version 9.0 ou sup\u00e9rieure"
+        }
+    },
     "options": {
         "step": {
             "init": {
                 "data": {
                     "passive": "Recherche passive"
-                },
-                "description": "L'\u00e9coute passive n\u00e9cessite BlueZ version 5.63 ou ult\u00e9rieure avec les fonctions exp\u00e9rimentales activ\u00e9es."
+                }
             }
         }
     }

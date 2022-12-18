@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/map",
   "dependencies": ["frontend"],
   "codeowners": [],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "integration_type": "system"
 }

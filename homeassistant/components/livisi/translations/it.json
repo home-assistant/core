@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "wrong_ip_address": "L'indirizzo IP non \u00e8 corretto o l'SHC non pu\u00f2 essere raggiunto localmente.",
+            "wrong_password": "La password non \u00e8 corretta."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Indirizzo IP",
+                    "password": "Password"
+                },
+                "description": "Immettere l'indirizzo IP e la password (locale) dell'SHC."
+            }
+        }
+    }
+}
