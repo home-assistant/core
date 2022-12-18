@@ -127,9 +127,6 @@ def async_get_sensor_index(
     Note that this method expects that there will always be a single sensor index per
     DeviceEntry.
     """
-    device_registry = dr.async_get(hass)
-    device_entry = cast(dr.DeviceEntry, device_registry.async_get(device_entry.id))
-
     [sensor_index] = [
         sensor_index
         for sensor_index in config_entry.options[CONF_SENSOR_INDICES]
@@ -149,7 +146,8 @@ def async_remove_sensor_by_device_id(
 ) -> dict[str, Any]:
     """Remove a sensor and return update config entry options."""
     device_registry = dr.async_get(hass)
-    device_entry = cast(dr.DeviceEntry, device_registry.async_get(device_id))
+    device_entry = device_registry.async_get(device_id)
+    assert device_entry
 
     removed_sensor_index = async_get_sensor_index(hass, config_entry, device_entry)
     options = deepcopy({**config_entry.options})
