@@ -673,6 +673,7 @@ omit =
     homeassistant/components/ld2410_ble/__init__.py
     homeassistant/components/ld2410_ble/binary_sensor.py
     homeassistant/components/ld2410_ble/coordinator.py
+    homeassistant/components/ld2410_ble/sensor.py
     homeassistant/components/led_ble/__init__.py
     homeassistant/components/led_ble/light.py
     homeassistant/components/lg_netcast/media_player.py
