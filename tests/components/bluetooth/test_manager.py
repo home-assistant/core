@@ -607,7 +607,9 @@ async def test_switching_adapters_when_one_stop_scanning(
     cancel_hci2()
 
 
-async def test_goes_unavailable_connectable_only_and_recovers(hass):
+async def test_goes_unavailable_connectable_only_and_recovers(
+    hass, mock_bluetooth_adapters
+):
     """Test all connectable scanners go unavailable, and than recover when there is a non-connectable scanner."""
     assert await async_setup_component(hass, bluetooth.DOMAIN, {})
     await hass.async_block_till_done()
