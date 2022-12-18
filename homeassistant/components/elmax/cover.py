@@ -6,7 +6,6 @@ from typing import Any
 
 from elmax_api.model.command import CoverCommand
 from elmax_api.model.cover_status import CoverStatus
-from elmax_api.model.panel import PanelStatus
 
 from homeassistant.components.cover import CoverEntity, CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry
@@ -30,10 +29,8 @@ async def async_setup_entry(
     known_devices = set()
 
     def _discover_new_devices():
-        panel_status: PanelStatus = coordinator.data
-        # In case the panel is offline, its status will be None. In that case, simply do nothing
-        if panel_status is None:
-            return
+        if (panel_status := coordinator.data) is None:
+            return  # In case the panel is offline, its status will be None. In that case, simply do nothing
 
         # Otherwise, add all the entities we found
         entities = []
@@ -69,8 +66,9 @@ class ElmaxCover(ElmaxEntity, CoverEntity):
 
     def __check_cover_status(self, status_to_check: CoverStatus) -> bool | None:
         """Check if the current cover entity is in a specific state."""
-        state = self.coordinator.get_cover_state(self._device.endpoint_id).status
-        if state is None:
+        if (
+            state := self.coordinator.get_cover_state(self._device.endpoint_id).status
+        ) is None:
             return None
         return state == status_to_check
 
