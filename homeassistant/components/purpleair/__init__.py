@@ -10,7 +10,7 @@ import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .config_flow import async_get_sensor_index, async_untrack_sensor_index
+from .config_flow import async_remove_sensor_by_device_id
 from .const import CONF_LAST_UPDATE_SENSOR_ADD, DOMAIN
 from .coordinator import PurpleAirDataUpdateCoordinator
 
@@ -41,11 +41,12 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
-    removed_sensor_index = async_get_sensor_index(hass, config_entry, device_entry)
-    new_entry_options = async_untrack_sensor_index(config_entry, removed_sensor_index)
-    hass.config_entries.async_update_entry(config_entry, options=new_entry_options)
-
-    return True
+    new_entry_options = async_remove_sensor_by_device_id(
+        hass, config_entry, device_entry.id, remove_device=False
+    )
+    return hass.config_entries.async_update_entry(
+        config_entry, options=new_entry_options
+    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

@@ -140,13 +140,27 @@ def async_get_sensor_index(
 
 
 @callback
-def async_untrack_sensor_index(
-    config_entry: ConfigEntry, sensor_index: int
+def async_remove_sensor_by_device_id(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    device_id: str,
+    *,
+    remove_device: bool = True,
 ) -> dict[str, Any]:
-    """Untrack a sensor index from a config entry and return the current index list."""
+    """Remove a sensor and return update config entry options."""
+    device_registry = dr.async_get(hass)
+    device_entry = cast(dr.DeviceEntry, device_registry.async_get(device_id))
+
+    removed_sensor_index = async_get_sensor_index(hass, config_entry, device_entry)
     options = deepcopy({**config_entry.options})
     options[CONF_LAST_UPDATE_SENSOR_ADD] = False
-    options[CONF_SENSOR_INDICES].remove(sensor_index)
+    options[CONF_SENSOR_INDICES].remove(removed_sensor_index)
+
+    if remove_device:
+        device_registry.async_update_device(
+            device_entry.id, remove_config_entry_id=config_entry.entry_id
+        )
+
     return options
 
 
@@ -419,22 +433,8 @@ class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
                 ),
             )
 
-        device_registry = dr.async_get(self.hass)
-        device_entry = cast(
-            dr.DeviceEntry, device_registry.async_get(user_input[CONF_SENSOR_DEVICE_ID])
+        new_entry_options = async_remove_sensor_by_device_id(
+            self.hass, self.config_entry, user_input[CONF_SENSOR_DEVICE_ID]
         )
 
-        removed_sensor_index = async_get_sensor_index(
-            self.hass, self.config_entry, device_entry
-        )
-
-        # Remove the sensor's device from the device registry:
-        device_registry.async_update_device(
-            device_entry.id, remove_config_entry_id=self.config_entry.entry_id
-        )
-
-        # Untrack the sensor index in config entry options:
-        new_entry_options = async_untrack_sensor_index(
-            self.config_entry, removed_sensor_index
-        )
         return self.async_create_entry(title="", data=new_entry_options)
