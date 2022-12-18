@@ -62,13 +62,15 @@ class SwitchbotDataUpdateCoordinator(
 
     @callback
     def _needs_poll(
-        self, service_info: bluetooth.BluetoothServiceInfoBleak, last_poll: float | None
+        self,
+        service_info: bluetooth.BluetoothServiceInfoBleak,
+        seconds_since_last_poll: float | None,
     ) -> bool:
         # Only poll if hass is running, we need to poll,
         # and we actually have a way to connect to the device
         return (
             self.hass.state == CoreState.running
-            and self.device.poll_needed(last_poll)
+            and self.device.poll_needed(seconds_since_last_poll)
             and bool(
                 bluetooth.async_ble_device_from_address(
                     self.hass, service_info.device.address, connectable=True
