@@ -37,7 +37,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.22.0
+PySwitchbot==0.23.2
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -450,7 +450,7 @@ bluemaestro-ble==0.2.0
 bluetooth-adapters==0.12.0
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==1.0.0
+bluetooth-auto-recovery==1.0.3
 
 # homeassistant.components.bluetooth
 # homeassistant.components.led_ble
@@ -796,7 +796,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.19.1
+govee-ble==0.19.3
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -884,7 +884,7 @@ hole==0.7.0
 holidays==0.17.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20221213.0
+home-assistant-frontend==20221213.1
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -926,7 +926,7 @@ ibm-watson==5.2.2
 ibmiotf==0.3.4
 
 # homeassistant.components.local_calendar
-ical==4.2.2
+ical==4.2.3
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -1432,7 +1432,7 @@ pyRFXtrx==0.30.0
 pySwitchmate==0.5.1
 
 # homeassistant.components.tibber
-pyTibber==0.26.4
+pyTibber==0.26.5
 
 # homeassistant.components.dlink
 pyW215==0.7.0
