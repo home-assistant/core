@@ -86,11 +86,7 @@ async def setup_purpleair_fixture(hass, api, config_entry_data):
     """Define a fixture to set up PurpleAir."""
     with patch(
         "homeassistant.components.purpleair.config_flow.API", return_value=api
-    ), patch(
-        "homeassistant.components.purpleair.coordinator.API", return_value=api
-    ), patch(
-        "homeassistant.components.purpleair.PLATFORMS", []
-    ):
+    ), patch("homeassistant.components.purpleair.coordinator.API", return_value=api):
         assert await async_setup_component(hass, DOMAIN, config_entry_data)
         await hass.async_block_till_done()
         yield
