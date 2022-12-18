@@ -75,7 +75,7 @@ class SwitchbotDataUpdateCoordinator(
         # and we actually have a way to connect to the device
         return (
             self.hass.state == CoreState.running
-            # and self.device.poll_needed(last_poll)
+            and self.device.poll_needed(last_poll)
             and bool(
                 bluetooth.async_ble_device_from_address(
                     self.hass, service_info.device.address, connectable=True
