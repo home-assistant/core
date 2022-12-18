@@ -42,7 +42,12 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Remove a config entry from a device."""
     new_entry_options = async_remove_sensor_by_device_id(
-        hass, config_entry, device_entry.id, remove_device=False
+        hass,
+        config_entry,
+        device_entry.id,
+        # remove_device is set to False because in this instance, the device has
+        # already been removed:
+        remove_device=False,
     )
     return hass.config_entries.async_update_entry(
         config_entry, options=new_entry_options
