@@ -55,7 +55,7 @@ class SwitchbotEntity(PassiveBluetoothCoordinatorEntity):
 
     @property
     def parsed_data(self) -> dict[str, Any]:
-        """Return coordinator data for this entity."""
+        """Return parsed device data for this entity."""
         return self.coordinator.device.parsed_data
 
     @property
