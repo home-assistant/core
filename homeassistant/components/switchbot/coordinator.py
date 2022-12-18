@@ -24,14 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 DEVICE_STARTUP_TIMEOUT = 30
 
 
-def flatten_sensors_data(sensor):
-    """Deconstruct SwitchBot library temp object C/Fº readings from dictionary."""
-    if "temp" in sensor["data"]:
-        sensor["data"]["temperature"] = sensor["data"]["temp"]["c"]
-
-    return sensor
-
-
 class SwitchbotDataUpdateCoordinator(
     ActiveBluetoothDataUpdateCoordinator[dict[str, Any]]
 ):
@@ -60,7 +52,7 @@ class SwitchbotDataUpdateCoordinator(
         )
         self.ble_device = ble_device
         self.device = device
-        self.data: dict[str, Any] = {}
+        self.flat_data: dict[str, Any] = {}
         self.device_name = device_name
         self.base_unique_id = base_unique_id
         self.model = model
@@ -118,7 +110,6 @@ class SwitchbotDataUpdateCoordinator(
         if not self.device.advertisement_changed(adv) and not self._was_unavailable:
             return
         self._was_unavailable = False
-        self.data = flatten_sensors_data(adv.data)
         self.device.update_from_advertisement(adv)
         super()._async_handle_bluetooth_event(service_info, change)
 

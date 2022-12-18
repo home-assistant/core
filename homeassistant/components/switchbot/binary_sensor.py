@@ -54,7 +54,7 @@ async def async_setup_entry(
     coordinator: SwitchbotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         SwitchBotBinarySensor(coordinator, binary_sensor)
-        for binary_sensor in coordinator.data["data"]
+        for binary_sensor in coordinator.device.data
         if binary_sensor in BINARY_SENSOR_TYPES
     )
 
