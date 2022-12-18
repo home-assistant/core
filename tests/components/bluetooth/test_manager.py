@@ -41,7 +41,7 @@ from . import (
     inject_advertisement_with_time_and_source_connectable,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
+from tests.common import async_fire_time_changed, load_fixture
 
 
 @pytest.fixture
@@ -609,11 +609,7 @@ async def test_switching_adapters_when_one_stop_scanning(
 
 async def test_goes_unavailable_connectable_only_and_recovers(hass):
     """Test all connectable scanners go unavailable, and than recover when there is a non-connectable scanner."""
-    entry = MockConfigEntry(domain="bluetooth", unique_id="00:00:00:00:00:01")
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    await hass.config_entries.async_unload(entry.entry_id)
+    assert await async_setup_component(hass, bluetooth.DOMAIN, {})
     await hass.async_block_till_done()
 
     assert async_scanner_count(hass, connectable=True) == 0
