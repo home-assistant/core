@@ -41,7 +41,10 @@ STATIC_TARGET_DISTANCE_DESCRIPTION = distance_description(
     "static_target_distance",
     "Static Target Distance",
 )
-
+DETECTION_DISTANCE_DESCRIPTION = distance_description(
+    "detection_distance",
+    "Detection Distance",
+)
 
 energy_description: Callable[
     [str, str], SensorEntityDescription
@@ -98,6 +101,12 @@ async def async_setup_entry(
                 data.device,
                 entry.title,
                 STATIC_TARGET_ENERGY_DESCRIPTION,
+            ),
+            LD2410BLESensor(
+                data.coordinator,
+                data.device,
+                entry.title,
+                DETECTION_DISTANCE_DESCRIPTION,
             ),
         ]
     )
