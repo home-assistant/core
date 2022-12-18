@@ -1,95 +1,70 @@
 """The test for the ecobee thermostat number module."""
-from unittest import mock
+from unittest.mock import patch
 
-import pytest
+from homeassistant.components.number import ATTR_VALUE, DOMAIN, SERVICE_SET_VALUE
+from homeassistant.const import ATTR_ENTITY_ID, UnitOfTime
 
-from homeassistant.components.ecobee import number as ecobee
+from .common import setup_platform
 
-
-@pytest.fixture
-def ecobee_fixture():
-    """Set up ecobee mock."""
-    vals = {
-        "name": "Ecobee",
-        "identifier": "123123123",
-        "modelNumber": "athenaSmart",
-        "program": {
-            "climates": [
-                {"name": "Climate1", "climateRef": "c1"},
-                {"name": "Climate2", "climateRef": "c2"},
-            ],
-            "currentClimateRef": "c1",
-        },
-        "runtime": {
-            "connected": True,
-            "actualTemperature": 300,
-            "actualHumidity": 15,
-            "desiredHeat": 400,
-            "desiredCool": 200,
-            "desiredFanMode": "on",
-        },
-        "settings": {
-            "hvacMode": "auto",
-            "heatStages": 1,
-            "coolStages": 1,
-            "fanMinOnTime": 10,
-            "heatCoolMinDelta": 50,
-            "holdAction": "nextTransition",
-            "ventilatorType": "hrv",
-            "ventilatorMinOnTimeHome": 20,
-            "ventilatorMinOnTimeAway": 10,
-            "isVentilatorTimerOn": False,
-        },
-        "equipmentStatus": "fan",
-        "events": [
-            {
-                "name": "Event1",
-                "running": True,
-                "type": "hold",
-                "holdClimateRef": "away",
-                "endDate": "2017-01-01 10:00:00",
-                "startDate": "2017-02-02 11:00:00",
-            }
-        ],
-    }
-    mock_ecobee = mock.Mock()
-    mock_ecobee.__getitem__ = mock.Mock(side_effect=vals.__getitem__)
-    mock_ecobee.__setitem__ = mock.Mock(side_effect=vals.__setitem__)
-    return mock_ecobee
+VENTILATOR_MIN_HOME_ID = "number.ecobee_ventilator_min_time_home"
+VENTILATOR_MIN_AWAY_ID = "number.ecobee_ventilator_min_time_away"
 
 
-@pytest.fixture(name="data")
-def data_fixture(ecobee_fixture):
-    """Set up data mock."""
-    data = mock.Mock()
-    data.ecobee.get_thermostat.return_value = ecobee_fixture
-    return data
+async def test_ventilator_min_on_home_attributes(hass):
+    """Test the ventilator number on home attributes are correct."""
+    await setup_platform(hass, DOMAIN)
+
+    state = hass.states.get(VENTILATOR_MIN_HOME_ID)
+    assert state.state == "20"
+    assert state.attributes.get("min") == 0
+    assert state.attributes.get("max") == 60
+    assert state.attributes.get("step") == 5
+    assert state.attributes.get("friendly_name") == "ecobee Ventilator min time home"
+    assert state.attributes.get("unit_of_measurement") == UnitOfTime.MINUTES
 
 
-@pytest.fixture(name="number")
-def home_number_fixture(data):
-    """Set up ecobee number min time home object."""
-    return ecobee.EcobeeVentilatorMinTime(
-        data,
-        1,
-        "home",
-        "ventilatorMinOnTimeHome",
-        data.ecobee.set_ventilator_min_on_time_home,
-    )
+async def test_ventilator_min_on_away_attributes(hass):
+    """Test the ventilator number on away attributes are correct."""
+    await setup_platform(hass, DOMAIN)
+
+    state = hass.states.get(VENTILATOR_MIN_AWAY_ID)
+    assert state.state == "10"
+    assert state.attributes.get("min") == 0
+    assert state.attributes.get("max") == 60
+    assert state.attributes.get("step") == 5
+    assert state.attributes.get("friendly_name") == "ecobee Ventilator min time away"
+    assert state.attributes.get("unit_of_measurement") == UnitOfTime.MINUTES
 
 
-async def test_name(number):
-    """Test name property."""
-    assert number.name == "Ventilator min time home"
+async def test_set_min_time_home(hass):
+    """Test the number can set min time home."""
+    with patch(
+        "pyecobee.Ecobee.set_ventilator_min_on_time_home"
+    ) as mock_set_min_home_time:
+        await setup_platform(hass, DOMAIN)
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: VENTILATOR_MIN_HOME_ID, ATTR_VALUE: 40},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_set_min_home_time.assert_called_once_with(0, 40)
 
 
-async def test_value(number):
-    """Test value."""
-    assert number.native_value == 20
+async def test_set_min_time_away(hass):
+    """Test the number can set min time away."""
+    with patch(
+        "pyecobee.Ecobee.set_ventilator_min_on_time_away"
+    ) as mock_set_min_away_time:
+        await setup_platform(hass, DOMAIN)
 
-
-async def test_set_ventilator_min_on_time(number, data):
-    """Test set ventilator min time home."""
-    data.reset_mock()
-    number.set_native_value(40)
-    data.ecobee.set_ventilator_min_on_time_home.assert_has_calls([mock.call(1, 40)])
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: VENTILATOR_MIN_AWAY_ID, ATTR_VALUE: 0},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_set_min_away_time.assert_called_once_with(0, 0)
