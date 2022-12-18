@@ -70,7 +70,6 @@ SENSOR_NAMES_TO_DEVICE_CLASS = {
     RUNNING_STATE: None,
 }
 
-
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
