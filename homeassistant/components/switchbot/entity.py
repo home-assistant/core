@@ -1,6 +1,7 @@
 """An abstract class common to all Switchbot entities."""
 from __future__ import annotations
 
+from abc import abstractmethod
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -53,16 +54,44 @@ class SwitchbotEntity(PassiveBluetoothCoordinatorEntity):
         )
 
     @property
-    def parsed_data(self) -> dict[str, Any]:
-        """Return parsed device data for this entity."""
-        return self.coordinator.device.parsed_data
+    def data(self) -> dict[str, Any]:
+        """Return coordinator data for this entity."""
+        return self.coordinator.data
 
     @property
     def extra_state_attributes(self) -> Mapping[Any, Any]:
         """Return the state attributes."""
         return {"last_run_success": self._last_run_success}
 
-    @callback
+
+class SwitchbotSwitchedEntity(SwitchbotEntity, ToggleEntity):
+    """Base class for Switchbot entities that can be turned on and off."""
+
+    _device: Switchbot
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn device on."""
+        _LOGGER.debug("Turn Switchbot device on %s", self._address)
+
+        self._last_run_success = bool(await self._device.turn_on())
+        if self._last_run_success:
+            self._attr_is_on = True
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn device off."""
+        _LOGGER.debug("Turn Switchbot device off %s", self._address)
+
+        self._last_run_success = bool(await self._device.turn_off())
+        if self._last_run_success:
+            self._attr_is_on = False
+        self.async_write_ha_state()
+
+
+class SwitchbotSubscribeEntity(SwitchbotEntity):
+    """Base class for Switchbot entities that use subscribe."""
+
+    @abstractmethod
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
 
@@ -83,21 +112,3 @@ class SwitchbotEntity(PassiveBluetoothCoordinatorEntity):
         Only used by the generic entity update service.
         """
         await self._device.update()
-
-
-class SwitchbotSwitchedEntity(SwitchbotEntity, ToggleEntity):
-    """Base class for Switchbot entities that can be turned on and off."""
-
-    _device: Switchbot
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn device on."""
-        _LOGGER.debug("Turn Switchbot device on %s", self._address)
-        self._last_run_success = bool(await self._device.turn_on())
-        self.async_write_ha_state()
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn device off."""
-        _LOGGER.debug("Turn Switchbot device off %s", self._address)
-        self._last_run_success = bool(await self._device.turn_off())
-        self.async_write_ha_state()

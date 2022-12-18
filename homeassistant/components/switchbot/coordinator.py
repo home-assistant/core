@@ -11,10 +11,10 @@ import switchbot
 from switchbot import SwitchbotModel
 
 from homeassistant.components import bluetooth
-from homeassistant.components.bluetooth.active_update_coordinator import (
-    ActiveBluetoothDataUpdateCoordinator,
+from homeassistant.components.bluetooth.passive_update_coordinator import (
+    PassiveBluetoothDataUpdateCoordinator,
 )
-from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
@@ -25,9 +25,15 @@ _LOGGER = logging.getLogger(__name__)
 DEVICE_STARTUP_TIMEOUT = 30
 
 
-class SwitchbotDataUpdateCoordinator(
-    ActiveBluetoothDataUpdateCoordinator[dict[str, Any]]
-):
+def flatten_sensors_data(sensor):
+    """Deconstruct SwitchBot library temp object C/Fº readings from dictionary."""
+    if "temp" in sensor["data"]:
+        sensor["data"]["temperature"] = sensor["data"]["temp"]["c"]
+
+    return sensor
+
+
+class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
     """Class to manage fetching switchbot data."""
 
     def __init__(
@@ -43,47 +49,20 @@ class SwitchbotDataUpdateCoordinator(
     ) -> None:
         """Initialize global switchbot data updater."""
         super().__init__(
-            hass=hass,
-            logger=logger,
-            address=ble_device.address,
-            needs_poll_method=self._needs_poll,
-            poll_method=self._async_update,
-            mode=bluetooth.BluetoothScanningMode.ACTIVE,
-            connectable=connectable,
+            hass,
+            logger,
+            ble_device.address,
+            bluetooth.BluetoothScanningMode.ACTIVE,
+            connectable,
         )
         self.ble_device = ble_device
         self.device = device
-        self.flat_data: dict[str, Any] = {}
+        self.data: dict[str, Any] = {}
         self.device_name = device_name
         self.base_unique_id = base_unique_id
         self.model = model
         self._ready_event = asyncio.Event()
         self._was_unavailable = True
-
-    @callback
-    def _needs_poll(
-        self,
-        service_info: bluetooth.BluetoothServiceInfoBleak,
-        seconds_since_last_poll: float | None,
-    ) -> bool:
-        # Only poll if hass is running, we need to poll,
-        # and we actually have a way to connect to the device
-        return (
-            self.hass.state == CoreState.running
-            and self.device.poll_needed(seconds_since_last_poll)
-            and bool(
-                bluetooth.async_ble_device_from_address(
-                    self.hass, service_info.device.address, connectable=True
-                )
-            )
-        )
-
-    async def _async_update(
-        self, service_info: bluetooth.BluetoothServiceInfoBleak
-    ) -> dict[str, Any]:
-        """Poll the device."""
-        _LOGGER.warning("%s: Doing update", self.device_name)
-        return await self.device.update()
 
     @callback
     def _async_handle_unavailable(
@@ -113,6 +92,7 @@ class SwitchbotDataUpdateCoordinator(
         if not self.device.advertisement_changed(adv) and not self._was_unavailable:
             return
         self._was_unavailable = False
+        self.data = flatten_sensors_data(adv.data)
         self.device.update_from_advertisement(adv)
         super()._async_handle_bluetooth_event(service_info, change)
 
