@@ -5,7 +5,7 @@
             "api_not_enabled": "The API is not enabled. Enable API in the HomeWizard Energy App under settings",
             "device_not_supported": "This device is not supported",
             "invalid_discovery_parameters": "Detected unsupported API version",
-            "reauth_successful": "Enabeling API was successful",
+            "reauth_successful": "Enabling API was successful",
             "unknown_error": "Unexpected error"
         },
         "error": {
