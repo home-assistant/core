@@ -15,9 +15,9 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_IP_ADDRESS,
     CONF_USERNAME,
-    ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     TEMP_CELSIUS,
+    UnitOfEnergy,
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -45,14 +45,14 @@ HEATER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=CONSUMPTION_YEAR,
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         name="Year consumption",
     ),
     SensorEntityDescription(
         key=CONSUMPTION_TODAY,
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         name="Day consumption",
     ),
