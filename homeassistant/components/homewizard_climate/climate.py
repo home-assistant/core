@@ -22,6 +22,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -51,19 +52,27 @@ class HomeWizardClimateEntity(ClimateEntity):
         )
 
     @property
+    def device_info(self) -> DeviceInfo:
+        """Return device specific attributes."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_web_socket.device.identifier)},
+            name=self.name,
+        )
+
+    @property
     def unique_id(self) -> str:
         """Return unique ID for this device."""
         return f"{self._device_web_socket.device.type}_{self._device_web_socket.device.identifier}"
 
     @property
-    def current_temperature(self) -> int:
-        """Return the current temperature."""
-        return self._device_web_socket.last_state.current_temperature
-
-    @property
     def name(self) -> str:
         """Return the name of the climate device."""
         return self._device_web_socket.device.name
+
+    @property
+    def current_temperature(self) -> int:
+        """Return the current temperature."""
+        return self._device_web_socket.last_state.current_temperature
 
     @property
     def fan_mode(self):
