@@ -94,7 +94,7 @@ class SwisscomDeviceScanner(DeviceScanner):
         "parameters":{"expression":"lan and not self"}}"""
 
         devices = {}
-        request = None
+
         try:
             request = requests.post(
                 url, headers=headers, data=data, timeout=5, verify=self.verify_ssl
