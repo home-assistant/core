@@ -40,7 +40,10 @@ from .const import (
     ICON_CAR,
     ICONS,
 )
-from .coordinator import HERERoutingDataUpdateCoordinator
+from .coordinator import (
+    HERERoutingDataUpdateCoordinator,
+    HERETransitDataUpdateCoordinator,
+)
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -107,7 +110,8 @@ class HERETravelTimeSensor(CoordinatorEntity, RestoreSensor):
         unique_id_prefix: str,
         name: str,
         sensor_description: SensorEntityDescription,
-        coordinator: HERERoutingDataUpdateCoordinator,
+        coordinator: HERERoutingDataUpdateCoordinator
+        | HERETransitDataUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -131,7 +135,7 @@ class HERETravelTimeSensor(CoordinatorEntity, RestoreSensor):
         await self._async_restore_state()
         await super().async_added_to_hass()
 
-        async def _update_at_start(_):
+        async def _update_at_start(_: HomeAssistant) -> None:
             await self.async_update()
 
         self.async_on_remove(async_at_started(self.hass, _update_at_start))
@@ -149,7 +153,8 @@ class HERETravelTimeSensor(CoordinatorEntity, RestoreSensor):
     def attribution(self) -> str | None:
         """Return the attribution."""
         if self.coordinator.data is not None:
-            return self.coordinator.data.get(ATTR_ATTRIBUTION)
+            if (attribution := self.coordinator.data.get(ATTR_ATTRIBUTION)) is not None:
+                return str(attribution)
         return None
 
 
