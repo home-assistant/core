@@ -28,9 +28,11 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
+    device_registry as dr,
     entity_registry,
 )
 from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -49,12 +51,33 @@ from .const import (
     LOGGER,
 )
 
+# We use a raw string for the airvisual_pro domain (instead of importing the actual
+# constant) so that we can avoid listing it as a dependency:
+DOMAIN_AIRVISUAL_PRO = "airvisual_pro"
+
 PLATFORMS = [Platform.SENSOR]
 
 DEFAULT_ATTRIBUTION = "Data provided by AirVisual"
 DEFAULT_NODE_PRO_UPDATE_INTERVAL = timedelta(minutes=1)
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
+
+
+@callback
+def async_get_pro_device_by_config_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> dr.DeviceEntry:
+    """Get the Pro device entry related to a config entry.
+
+    Note that a Pro config entry can only contain a single device.
+    """
+    device_registry = dr.async_get(hass)
+    [device_entry] = [
+        device_entry
+        for device_entry in device_registry.devices.values()
+        if config_entry.entry_id in device_entry.config_entries
+    ]
+    return device_entry
 
 
 @callback
@@ -317,21 +340,48 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         version = 3
 
         if entry.data[CONF_INTEGRATION_TYPE] == INTEGRATION_TYPE_NODE_PRO:
-            data = {**entry.data}
-            data.pop(CONF_INTEGRATION_TYPE)
+            ip_address = entry.data[CONF_IP_ADDRESS]
+
+            # Get the existing Pro device entry:
+            old_device_entry = async_get_pro_device_by_config_entry(hass, entry)
+
+            new_entry_data = {**entry.data}
+            new_entry_data.pop(CONF_INTEGRATION_TYPE)
 
             tasks = [
                 hass.config_entries.async_remove(entry.entry_id),
                 hass.config_entries.flow.async_init(
-                    # We use a raw string for the airvisual_pro domain (instead of
-                    # importing the actual constant) so that we can avoid listing it
-                    # as a dependency:
-                    "airvisual_pro",
+                    DOMAIN_AIRVISUAL_PRO,
                     context={"source": SOURCE_IMPORT},
-                    data=data,
+                    data=new_entry_data,
                 ),
             ]
             await asyncio.gather(*tasks)
+
+            # After the config entry has been migrated, get the new Pro device entry:
+            [new_config_entry] = [
+                entry
+                for entry in hass.config_entries.async_entries(DOMAIN_AIRVISUAL_PRO)
+                if entry.data[CONF_IP_ADDRESS] == ip_address
+            ]
+            new_device_entry = async_get_pro_device_by_config_entry(
+                hass, new_config_entry
+            )
+
+            async_create_issue(
+                hass,
+                DOMAIN,
+                f"airvisual_pro_migration_{entry.entry_id}",
+                is_fixable=False,
+                is_persistent=True,
+                severity=IssueSeverity.WARNING,
+                translation_key="airvisual_pro_migration",
+                translation_placeholders={
+                    "ip_address": ip_address,
+                    "old_device_id": old_device_entry.id,
+                    "new_device_id": new_device_entry.id,
+                },
+            )
         else:
             entry.version = version
             hass.config_entries.async_update_entry(entry)
