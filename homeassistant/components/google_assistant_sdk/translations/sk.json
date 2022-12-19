@@ -29,5 +29,14 @@
                 "title": "Znova overi\u0165 integr\u00e1ciu"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "language_code": "K\u00f3d jazyka"
+                }
+            }
+        }
     }
 }

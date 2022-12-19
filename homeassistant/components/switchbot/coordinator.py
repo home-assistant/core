@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 import async_timeout
 import switchbot
+from switchbot import SwitchbotModel
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.active_update_coordinator import (
@@ -38,7 +39,7 @@ class SwitchbotDataUpdateCoordinator(
         base_unique_id: str,
         device_name: str,
         connectable: bool,
-        model: str,
+        model: SwitchbotModel,
     ) -> None:
         """Initialize global switchbot data updater."""
         super().__init__(
@@ -102,7 +103,7 @@ class SwitchbotDataUpdateCoordinator(
         self.ble_device = service_info.device
         if not (
             adv := switchbot.parse_advertisement_data(
-                service_info.device, service_info.advertisement
+                service_info.device, service_info.advertisement, self.model
             )
         ):
             return
