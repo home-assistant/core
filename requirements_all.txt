@@ -2252,9 +2252,6 @@ satel_integra==0.3.7
 # homeassistant.components.dhcp
 scapy==2.4.5
 
-# homeassistant.components.deutsche_bahn
-schiene==0.23
-
 # homeassistant.components.screenlogic
 screenlogicpy==0.5.4
 
