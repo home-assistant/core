@@ -30,19 +30,19 @@ from .const import DOMAIN
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Todo."""
+    """Create entries for each device in Homewizard cloud."""
     websockets = hass.data[DOMAIN][entry.entry_id]["websockets"]
     entities = [HomeWizardClimateEntity(ws, hass) for ws in websockets]
     async_add_entities(entities)
 
 
 class HomeWizardClimateEntity(ClimateEntity):
-    """Todo."""
+    """Climate entity for a given device in Homewizard cloud."""
 
     def __init__(
         self, device_web_socket: HomeWizardClimateWebSocket, hass: HomeAssistant
     ) -> None:
-        """Todo."""
+        """Initialize the device and identifiers."""
         self._device_web_socket = device_web_socket
         self._device_web_socket.set_on_state_change(self.on_device_state_change)
         self._hass = hass
@@ -86,12 +86,12 @@ class HomeWizardClimateEntity(ClimateEntity):
 
     @property
     def swing_modes(self) -> list[str]:
-        """Todo."""
+        """Return all possible swing modes."""
         return [SWING_HORIZONTAL, SWING_OFF]
 
     @property
     def swing_mode(self) -> str:
-        """Todo."""
+        """Return current swing mode."""
         return (
             SWING_HORIZONTAL
             if self._device_web_socket.last_state.oscillate
@@ -119,51 +119,47 @@ class HomeWizardClimateEntity(ClimateEntity):
 
     @property
     def temperature_unit(self):
-        """Todo."""
+        """Return the current temperature unit."""
         return TEMP_CELSIUS
 
     @property
     def target_temperature_step(self) -> float:
-        """Todo."""
+        """Return the current target_temperature_step."""
         return 1
 
     @property
     def target_temperature_high(self) -> float:
-        """Todo."""
+        """Return the highest possible target temperature."""
         return 30
 
     @property
     def target_temperature_low(self) -> float:
-        """Todo."""
+        """Return the lowest possible target temperature."""
         return 14
 
     @property
     def min_temp(self) -> float:
-        """Todo."""
+        """Return the minimum possible temperature."""
         return self.target_temperature_low
 
     @property
     def max_temp(self) -> float:
-        """Todo."""
+        """Return the maximum possible temperature."""
         return self.target_temperature_high
 
     @property
     def target_temperature(self) -> float:
-        """Todo."""
+        """Return the current target temperature."""
         return self._device_web_socket.last_state.target_temperature
 
     def set_temperature(self, **kwargs) -> None:
-        """Todo."""
+        """Set the current target temperature."""
         self._device_web_socket.set_target_temperature(
             int(kwargs.get(ATTR_TEMPERATURE, "0"))
         )
 
-    def set_humidity(self, humidity: int) -> None:
-        """Todo."""
-        raise NotImplementedError()
-
     def set_fan_mode(self, fan_mode: str) -> None:
-        """Todo."""
+        """Set fan mode."""
         if fan_mode == FAN_ON:
             self._device_web_socket.turn_on()
         elif fan_mode == FAN_OFF:
@@ -178,7 +174,7 @@ class HomeWizardClimateEntity(ClimateEntity):
             self._device_web_socket.set_fan_speed(speed)
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Todo."""
+        """Set HVAC mode."""
         if hvac_mode == HVACMode.HEAT:
             if not self._device_web_socket.last_state.power_on:
                 self._device_web_socket.turn_on()
@@ -195,32 +191,39 @@ class HomeWizardClimateEntity(ClimateEntity):
                 self._device_web_socket.turn_on_cooler()
 
     def turn_on(self) -> None:
-        """Todo."""
+        """Turn on."""
         self._device_web_socket.turn_on()
 
     def turn_off(self) -> None:
-        """Todo."""
+        """Turn off."""
         self._device_web_socket.turn_off()
 
     def set_swing_mode(self, swing_mode: str) -> None:
-        """Todo."""
+        """Set swing mode."""
         if swing_mode == SWING_HORIZONTAL:
             self._device_web_socket.turn_on_oscillation()
         else:
             self._device_web_socket.turn_off_oscillation()
 
     def set_preset_mode(self, preset_mode: str) -> None:
-        """Todo."""
+        """Not implemented."""
+        raise NotImplementedError()
 
     def turn_aux_heat_on(self) -> None:
-        """Todo."""
+        """Not implemented."""
+        raise NotImplementedError()
 
     def turn_aux_heat_off(self) -> None:
-        """Todo."""
+        """Not implemented."""
+        raise NotImplementedError()
+
+    def set_humidity(self, humidity: int) -> None:
+        """Not implemented."""
+        raise NotImplementedError()
 
     def on_device_state_change(
         self, state: HomeWizardClimateDeviceState, diff: str
     ) -> None:
-        """Todo."""
+        """Get called when any update is pushed through the websocket server andupdates HA state."""
         self._logger.debug("State updated, diff: %s", diff)
         self._hass.add_job(self.async_write_ha_state)

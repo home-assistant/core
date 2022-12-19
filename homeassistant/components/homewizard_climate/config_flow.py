@@ -8,19 +8,20 @@ from homewizard_climate_websocket.api.api import InvalidHomewizardAuth
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from . import HomeWizardClimateApi
-from .const import DOMAIN, PASSWORD, USERNAME
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(USERNAME): str,
-        vol.Required(PASSWORD): str,
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -30,7 +31,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    api = HomeWizardClimateApi(data[USERNAME], data[PASSWORD])
+    api = HomeWizardClimateApi(data[CONF_USERNAME], data[CONF_PASSWORD])
     try:
         token = await hass.async_add_executor_job(api.login)
         if not token:
@@ -39,7 +40,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         raise InvalidAuth from exc
 
     # Return info that you want to store in the config entry.
-    return {"title": data[USERNAME], "config": data}
+    return {"title": data[CONF_USERNAME], "config": data}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

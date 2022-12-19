@@ -8,10 +8,10 @@ from homewizard_climate_websocket.model.climate_device import HomeWizardClimateD
 from homewizard_climate_websocket.ws.hw_websocket import HomeWizardClimateWebSocket
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, PASSWORD, USERNAME
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,9 +21,8 @@ PLATFORMS: list[Platform] = [Platform.CLIMATE]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Homewizard Climate from a config entry."""
 
-    hass.data.setdefault(DOMAIN, {})
     api: HomeWizardClimateApi = HomeWizardClimateApi(
-        entry.data.get(USERNAME), entry.data.get(PASSWORD)
+        entry.data.get(CONF_USERNAME), entry.data.get(CONF_PASSWORD)
     )
     await hass.async_add_executor_job(api.login)
 
@@ -40,6 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         websocket.connect_in_thread()
         websockets.append(websocket)
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {}
     hass.data[DOMAIN][entry.entry_id]["websockets"] = websockets
 
