@@ -102,7 +102,7 @@ def websocket_get_entity(
         vol.Required("type"): "config/entity_registry/update",
         vol.Required("entity_id"): cv.entity_id,
         # If passed in, we update value. Passing None will remove old value.
-        vol.Optional("aliases"): vol.Any(list),
+        vol.Optional("aliases"): list,
         vol.Optional("area_id"): vol.Any(str, None),
         vol.Optional("device_class"): vol.Any(str, None),
         vol.Optional("icon"): vol.Any(str, None),
