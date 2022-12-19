@@ -62,27 +62,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if not entry.data.get(CONF_SESSION_ID):
             raise ConfigEntryAuthFailed
 
-        # No EZVIZ login session, call api login().
-        if not ezviz_client:
+        ezviz_client = EzvizClient(
+            token={
+                CONF_SESSION_ID: entry.data.get(CONF_SESSION_ID),
+                CONF_RFSESSION_ID: entry.data.get(CONF_RFSESSION_ID),
+                "api_url": entry.data.get(CONF_URL),
+            },
+            timeout=entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+        )
 
-            ezviz_client = EzvizClient(
-                token={
-                    CONF_SESSION_ID: entry.data.get(CONF_SESSION_ID),
-                    CONF_RFSESSION_ID: entry.data.get(CONF_RFSESSION_ID),
-                    "api_url": entry.data.get(CONF_URL),
-                },
-                timeout=entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
-            )
+        try:
+            await hass.async_add_executor_job(ezviz_client.login)
 
-            try:
-                await hass.async_add_executor_job(ezviz_client.login)
+        except (EzvizAuthTokenExpired, EzvizAuthVerificationCode) as error:
+            raise ConfigEntryAuthFailed from error
 
-            except (EzvizAuthTokenExpired, EzvizAuthVerificationCode) as error:
-                raise ConfigEntryAuthFailed from error
-
-            except (InvalidURL, HTTPError, PyEzvizError) as error:
-                _LOGGER.error("Unable to connect to Ezviz service: %s", str(error))
-                raise ConfigEntryNotReady from error
+        except (InvalidURL, HTTPError, PyEzvizError) as error:
+            _LOGGER.error("Unable to connect to Ezviz service: %s", str(error))
+            raise ConfigEntryNotReady from error
 
         coordinator = EzvizDataUpdateCoordinator(
             hass, api=ezviz_client, api_timeout=entry.options[CONF_TIMEOUT]
