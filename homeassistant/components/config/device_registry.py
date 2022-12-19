@@ -38,7 +38,11 @@ async def async_setup(hass):
             vol.Required("type"): "config/device_registry/list",
         }
     )
-    def websocket_list_devices(hass, connection, msg):
+    def websocket_list_devices(
+        hass: HomeAssistant,
+        connection: websocket_api.ActiveConnection,
+        msg: dict[str, Any],
+    ) -> None:
         """Handle list devices command."""
         nonlocal cached_list_devices
         if not cached_list_devices:
@@ -80,7 +84,11 @@ async def async_setup(hass):
     }
 )
 @callback
-def websocket_update_device(hass, connection, msg):
+def websocket_update_device(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Handle update device websocket command."""
     registry = async_get(hass)
 
