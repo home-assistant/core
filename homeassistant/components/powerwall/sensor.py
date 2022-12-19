@@ -14,10 +14,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
 )
@@ -203,7 +203,7 @@ class PowerWallEnergyDirectionSensor(PowerWallEntity, SensorEntity):
     """Representation of an Powerwall Direction Energy sensor."""
 
     _attr_state_class = SensorStateClass.TOTAL
-    _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_device_class = SensorDeviceClass.ENERGY
 
     def __init__(

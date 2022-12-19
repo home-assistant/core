@@ -339,6 +339,7 @@ class VolumeConverter(BaseUnitConverter):
         UnitOfVolume.FLUID_OUNCES: 1 / _FLUID_OUNCE_TO_CUBIC_METER,
         UnitOfVolume.CUBIC_METERS: 1,
         UnitOfVolume.CUBIC_FEET: 1 / _CUBIC_FOOT_TO_CUBIC_METER,
+        UnitOfVolume.CENTUM_CUBIC_FEET: 1 / (100 * _CUBIC_FOOT_TO_CUBIC_METER),
     }
     VALID_UNITS = {
         UnitOfVolume.LITERS,
@@ -347,4 +348,5 @@ class VolumeConverter(BaseUnitConverter):
         UnitOfVolume.FLUID_OUNCES,
         UnitOfVolume.CUBIC_METERS,
         UnitOfVolume.CUBIC_FEET,
+        UnitOfVolume.CENTUM_CUBIC_FEET,
     }

@@ -29,19 +29,6 @@
             }
         }
     },
-    "issues": {
-        "deprecated_key": {
-            "fix_flow": {
-                "step": {
-                    "confirm": {
-                        "description": "Update any automations or scripts that use this service and replace the name key with the entry_id key.",
-                        "title": "The name key in Transmission services is being removed"
-                    }
-                }
-            },
-            "title": "The name key in Transmission services is being removed"
-        }
-    },
     "options": {
         "step": {
             "init": {
