@@ -53,7 +53,6 @@ class CurrentEnergyUsageSensor(SensorEntity):
     """Representation of the sensor."""
 
     _attr_device_class = SensorDeviceClass.ENERGY
-    _attr_icon = "mdi:counter"
     _attr_name = "ORU Current Energy Usage"
     _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
 
