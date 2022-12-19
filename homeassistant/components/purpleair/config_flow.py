@@ -276,13 +276,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="by_sensor_index", data_schema=SENSOR_INDEX_SCHEMA
             )
 
-        input_sensor_index = user_input[CONF_SENSOR_INDEX]
-        real_sensor_index = int(input_sensor_index)
+        sensor_index = int(user_input[CONF_SENSOR_INDEX])
 
         validation = await async_validate_sensor_index(
-            self.hass, self._flow_data[CONF_API_KEY], real_sensor_index
+            self.hass, self._flow_data[CONF_API_KEY], sensor_index
         )
-
         if validation.errors:
             return self.async_show_form(
                 step_id="by_sensor_index",
@@ -295,7 +293,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data=self._flow_data,
             # Note that we store the sensor indices in options so that later on, we can
             # add/remove additional sensors via an options flow:
-            options={CONF_SENSOR_INDICES: [real_sensor_index]},
+            options={CONF_SENSOR_INDICES: [sensor_index]},
         )
 
     async def async_step_choose_method(
@@ -417,7 +415,6 @@ class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
             user_input[CONF_LONGITUDE],
             user_input[CONF_DISTANCE],
         )
-
         if validation.errors:
             return self.async_show_form(
                 step_id="add_sensor_by_coordinates",
@@ -446,7 +443,6 @@ class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
         validation = await async_validate_sensor_index(
             self.hass, self.config_entry.data[CONF_API_KEY], real_sensor_index
         )
-
         if validation.errors:
             return self.async_show_form(
                 step_id="add_sensor_by_index",
@@ -455,7 +451,7 @@ class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
             )
 
         device_registry = dr.async_get(self.hass)
-        if _ := device_registry.async_get_device({(DOMAIN, input_sensor_index)}):
+        if device_registry.async_get_device({(DOMAIN, input_sensor_index)}):
             return self.async_abort(reason="already_configured")
 
         return self._async_update_entry(real_sensor_index)
