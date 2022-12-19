@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 import async_timeout
 import switchbot
+from switchbot import SwitchbotModel
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.active_update_coordinator import (
@@ -38,7 +39,7 @@ class SwitchbotDataUpdateCoordinator(
         base_unique_id: str,
         device_name: str,
         connectable: bool,
-        model: str,
+        model: SwitchbotModel,
     ) -> None:
         """Initialize global switchbot data updater."""
         super().__init__(
@@ -52,7 +53,6 @@ class SwitchbotDataUpdateCoordinator(
         )
         self.ble_device = ble_device
         self.device = device
-        self.flat_data: dict[str, Any] = {}
         self.device_name = device_name
         self.base_unique_id = base_unique_id
         self.model = model
@@ -108,7 +108,9 @@ class SwitchbotDataUpdateCoordinator(
             return
         if "modelName" in adv.data:
             self._ready_event.set()
-        _LOGGER.debug("%s: Switchbot data: %s", self.ble_device.address, self.data)
+        _LOGGER.debug(
+            "%s: Switchbot data: %s", self.ble_device.address, self.device.data
+        )
         if not self.device.advertisement_changed(adv) and not self._was_unavailable:
             return
         self._was_unavailable = False

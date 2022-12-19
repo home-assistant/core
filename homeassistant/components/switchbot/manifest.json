@@ -24,6 +24,14 @@
     {
       "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b",
       "connectable": false
+    },
+    {
+      "manufacturer_id": 2409,
+      "connectable": false
+    },
+    {
+      "manufacturer_id": 89,
+      "connectable": true
     }
   ],
   "iot_class": "local_push",
