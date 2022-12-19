@@ -14,11 +14,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE,
     LIGHT_LUX,
     PERCENTAGE,
     PRESSURE_KPA,
     TEMP_CELSIUS,
+    UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
@@ -72,7 +72,7 @@ SENSORS_MAP: dict[str, ZWaveMeSensorEntityDescription] = {
     "meterElectric_ampere": ZWaveMeSensorEntityDescription(
         key="meterElectric_ampere",
         device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "meterElectric_kilowatt_hour": ZWaveMeSensorEntityDescription(
