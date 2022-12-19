@@ -19,7 +19,17 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import ATTR_OPTION, ATTR_OPTIONS, DOMAIN, SERVICE_SELECT_OPTION
+from .const import (
+    ATTR_CYCLE,
+    ATTR_OPTION,
+    ATTR_OPTIONS,
+    DOMAIN,
+    SERVICE_SELECT_FIRST,
+    SERVICE_SELECT_LAST,
+    SERVICE_SELECT_NEXT,
+    SERVICE_SELECT_OPTION,
+    SERVICE_SELECT_PREVIOUS,
+)
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -44,6 +54,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         {vol.Required(ATTR_OPTION): cv.string},
         async_select_option,
     )
+    component.async_register_entity_service(
+        SERVICE_SELECT_NEXT,
+        {vol.Optional(ATTR_CYCLE, default=True): bool},
+        async_next,
+    )
+    component.async_register_entity_service(
+        SERVICE_SELECT_PREVIOUS,
+        {vol.Optional(ATTR_CYCLE, default=True): bool},
+        async_previous,
+    )
+    component.async_register_entity_service(
+        SERVICE_SELECT_FIRST,
+        {},
+        async_first,
+    )
+    component.async_register_entity_service(
+        SERVICE_SELECT_LAST,
+        {},
+        async_last,
+    )
 
     return True
 
@@ -54,6 +84,53 @@ async def async_select_option(entity: SelectEntity, service_call: ServiceCall) -
     if option not in entity.options:
         raise ValueError(f"Option {option} not valid for {entity.name}")
     await entity.async_select_option(option)
+
+
+async def async_next(entity: SelectEntity, service_call: ServiceCall) -> None:
+    """Select next option."""
+    # If there is no current option, first item is the next
+    if entity.current_option is None:
+        await entity.async_select_option(entity.options[0])
+        return
+    await async_offset_index(entity, 1, service_call.data[ATTR_CYCLE])
+
+
+async def async_previous(entity: SelectEntity, service_call: ServiceCall) -> None:
+    """Select previous option."""
+    # If there is no current option, last item is the previous
+    if entity.current_option is None:
+        await entity.async_select_option(entity.options[-1])
+        return
+    await async_offset_index(entity, -1, service_call.data[ATTR_CYCLE])
+
+
+async def async_offset_index(entity: SelectEntity, offset: int, cycle: bool) -> None:
+    """Offset current index."""
+    current_index = (
+        entity.options.index(entity.current_option)
+        if entity.current_option is not None
+        else 0
+    )
+
+    new_index = current_index + offset
+    if cycle:
+        new_index = new_index % len(entity.options)
+    elif new_index < 0:
+        new_index = 0
+    elif new_index >= len(entity.options):
+        new_index = len(entity.options) - 1
+
+    await entity.async_select_option(entity.options[new_index])
+
+
+async def async_first(entity: SelectEntity, service_call: ServiceCall) -> None:
+    """Select first option."""
+    await entity.async_select_option(entity.options[0])
+
+
+async def async_last(entity: SelectEntity, service_call: ServiceCall) -> None:
+    """Select last option."""
+    await entity.async_select_option(entity.options[-1])
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
