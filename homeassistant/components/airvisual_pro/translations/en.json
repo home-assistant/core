@@ -12,7 +12,6 @@
         "step": {
             "reauth_confirm": {
                 "data": {
-                    "ip_address": "Host",
                     "password": "Password"
                 },
                 "description": "The password can be retrieved from the AirVisual Pro's UI."
