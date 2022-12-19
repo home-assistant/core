@@ -10,10 +10,10 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
-    PRESSURE_BAR,
     TEMP_CELSIUS,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfPressure,
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
@@ -280,7 +280,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="water_pressure",
         name="Water pressure",
-        native_unit_of_measurement=PRESSURE_BAR,
+        native_unit_of_measurement=UnitOfPressure.BAR,
         device_class=SensorDeviceClass.PRESSURE,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
