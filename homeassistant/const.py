@@ -723,6 +723,7 @@ class UnitOfVolume(StrEnum):
     """Volume units."""
 
     CUBIC_FEET = "ft³"
+    CENTUM_CUBIC_FEET = "CCF"
     CUBIC_METERS = "m³"
     LITERS = "L"
     MILLILITERS = "mL"
