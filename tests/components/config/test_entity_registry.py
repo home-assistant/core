@@ -1,6 +1,4 @@
 """Test entity_registry API."""
-from unittest.mock import ANY
-
 import pytest
 
 from homeassistant.components.config import entity_registry
@@ -15,6 +13,7 @@ from homeassistant.helpers.entity_registry import (
 )
 
 from tests.common import (
+    ANY,
     MockConfigEntry,
     MockEntity,
     MockEntityPlatform,
