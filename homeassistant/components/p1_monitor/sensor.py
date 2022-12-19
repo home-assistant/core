@@ -14,9 +14,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CURRENCY_EURO,
-    ENERGY_KILO_WATT_HOUR,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfPower,
     UnitOfVolume,
 )
@@ -55,14 +55,14 @@ SENSORS_SMARTMETER: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="energy_consumption_high",
         name="Energy Consumption - High Tariff",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="energy_consumption_low",
         name="Energy Consumption - Low Tariff",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -76,14 +76,14 @@ SENSORS_SMARTMETER: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="energy_production_high",
         name="Energy Production - High Tariff",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="energy_production_low",
         name="Energy Production - Low Tariff",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -193,25 +193,25 @@ SENSORS_SETTINGS: tuple[SensorEntityDescription, ...] = (
         key="energy_consumption_price_low",
         name="Energy Consumption Price - Low",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
     ),
     SensorEntityDescription(
         key="energy_consumption_price_high",
         name="Energy Consumption Price - High",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
     ),
     SensorEntityDescription(
         key="energy_production_price_low",
         name="Energy Production Price - Low",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
     ),
     SensorEntityDescription(
         key="energy_production_price_high",
         name="Energy Production Price - High",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
     ),
 )
 

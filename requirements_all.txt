@@ -202,7 +202,7 @@ aiolifx==0.8.7
 aiolifx_effects==0.3.1
 
 # homeassistant.components.lifx
-aiolifx_themes==0.3.0
+aiolifx_themes==0.4.0
 
 # homeassistant.components.livisi
 aiolivisi==0.0.14
@@ -741,7 +741,7 @@ fritzconnection==1.10.3
 gTTS==2.2.4
 
 # homeassistant.components.google_assistant_sdk
-gassist-text==0.0.4
+gassist-text==0.0.5
 
 # homeassistant.components.google
 gcal-sync==4.0.4
@@ -1155,7 +1155,7 @@ netdisco==3.0.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==1.5.0
+nettigo-air-monitor==1.6.0
 
 # homeassistant.components.neurio_energy
 neurio==0.3.1
@@ -2644,7 +2644,7 @@ zamg==0.1.1
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.39.4
+zeroconf==0.44.0
 
 # homeassistant.components.zha
 zha-quirks==0.0.89

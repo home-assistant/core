@@ -7,7 +7,7 @@ astral==2.2
 async-upnp-client==0.32.3
 async_timeout==4.0.2
 atomicwrites-homeassistant==1.4.1
-attrs==21.2.0
+attrs==22.1.0
 awesomeversion==22.9.0
 bcrypt==3.1.7
 bleak-retry-connector==2.10.2
@@ -44,7 +44,7 @@ typing-extensions>=4.4.0,<5.0
 voluptuous-serialize==2.5.0
 voluptuous==0.13.1
 yarl==1.8.1
-zeroconf==0.39.4
+zeroconf==0.44.0
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238

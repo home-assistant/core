@@ -22,13 +22,14 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_SSL,
+    CONF_UUID,
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_BASE_PATH, CONF_SERIAL, CONF_UUID, DOMAIN
+from .const import CONF_BASE_PATH, CONF_SERIAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
