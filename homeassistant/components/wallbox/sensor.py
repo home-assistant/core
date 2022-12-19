@@ -14,8 +14,8 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
-    ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
+    UnitOfEnergy,
     UnitOfLength,
     UnitOfPower,
 )
@@ -94,7 +94,7 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
         key=CHARGER_ADDED_ENERGY_KEY,
         name="Added Energy",
         precision=2,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -102,7 +102,7 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
         key=CHARGER_ADDED_DISCHARGED_ENERGY_KEY,
         name="Discharged Energy",
         precision=2,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),

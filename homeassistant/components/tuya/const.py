@@ -16,8 +16,6 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_CURRENT_MILLIAMPERE,
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
     PRESSURE_BAR,
@@ -34,6 +32,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
     Platform,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfPower,
 )
 
@@ -441,12 +440,12 @@ UNITS = (
         conversion_fn=lambda x: x / 1000,
     ),
     UnitOfMeasurement(
-        unit=ENERGY_WATT_HOUR,
+        unit=UnitOfEnergy.WATT_HOUR,
         aliases={"wh", "watthour"},
         device_classes={SensorDeviceClass.ENERGY},
     ),
     UnitOfMeasurement(
-        unit=ENERGY_KILO_WATT_HOUR,
+        unit=UnitOfEnergy.KILO_WATT_HOUR,
         aliases={"kwh", "kilowatt-hour", "kW·h"},
         device_classes={SensorDeviceClass.ENERGY},
     ),

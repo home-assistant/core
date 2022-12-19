@@ -17,9 +17,9 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
-    ENERGY_KILO_WATT_HOUR,
     TEMP_CELSIUS,
     TIME_MINUTES,
+    UnitOfEnergy,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -64,14 +64,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="usage_session",
         name="Usage this Session",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="usage_total",
         name="Total Usage",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
