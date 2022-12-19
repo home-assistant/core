@@ -23,10 +23,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     TEMP_CELSIUS,
     TIME_MINUTES,
+    UnitOfEnergy,
     UnitOfLength,
     UnitOfPower,
     UnitOfVolume,
@@ -256,7 +256,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         entity_class=RenaultSensor[KamereonVehicleBatteryStatusData],
         device_class=SensorDeviceClass.ENERGY,
         name="Battery available energy",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     RenaultSensorEntityDescription(

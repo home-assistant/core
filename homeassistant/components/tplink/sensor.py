@@ -16,8 +16,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_VOLTAGE,
     ELECTRIC_CURRENT_AMPERE,
-    ENERGY_KILO_WATT_HOUR,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
@@ -55,7 +55,7 @@ ENERGY_SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
     ),
     TPLinkSensorEntityDescription(
         key=ATTR_TOTAL_ENERGY_KWH,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         name="Total Consumption",
@@ -64,7 +64,7 @@ ENERGY_SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
     ),
     TPLinkSensorEntityDescription(
         key=ATTR_TODAY_ENERGY_KWH,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         name="Today's Consumption",

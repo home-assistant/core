@@ -18,12 +18,12 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
     ELECTRIC_CURRENT_AMPERE,
-    ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_CELSIUS,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
@@ -163,7 +163,7 @@ SENSORS: Final = {
     ("device", "energy"): BlockSensorDescription(
         key="device|energy",
         name="Energy",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda value: round(value / 60 / 1000, 2),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -171,7 +171,7 @@ SENSORS: Final = {
     ("emeter", "energy"): BlockSensorDescription(
         key="emeter|energy",
         name="Energy",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda value: round(value / 1000, 2),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -180,7 +180,7 @@ SENSORS: Final = {
     ("emeter", "energyReturned"): BlockSensorDescription(
         key="emeter|energyReturned",
         name="Energy Returned",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda value: round(value / 1000, 2),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -189,7 +189,7 @@ SENSORS: Final = {
     ("light", "energy"): BlockSensorDescription(
         key="light|energy",
         name="Energy",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda value: round(value / 60 / 1000, 2),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -198,7 +198,7 @@ SENSORS: Final = {
     ("relay", "energy"): BlockSensorDescription(
         key="relay|energy",
         name="Energy",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda value: round(value / 60 / 1000, 2),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -206,7 +206,7 @@ SENSORS: Final = {
     ("roller", "rollerEnergy"): BlockSensorDescription(
         key="roller|rollerEnergy",
         name="Energy",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda value: round(value / 60 / 1000, 2),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -336,7 +336,7 @@ RPC_SENSORS: Final = {
         key="switch",
         sub_key="aenergy",
         name="Energy",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: round(status["total"] / 1000, 2),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
