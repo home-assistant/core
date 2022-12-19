@@ -17,11 +17,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
-    ELECTRIC_CURRENT_AMPERE,
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_CELSIUS,
+    UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
@@ -89,7 +89,7 @@ SENSORS: Final = {
     ("emeter", "current"): BlockSensorDescription(
         key="emeter|current",
         name="Current",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         value=lambda value: value,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
