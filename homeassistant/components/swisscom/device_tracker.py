@@ -12,17 +12,23 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_IP = "192.168.1.1"
+DEFAULT_HOST = "internetbox.swisscom.ch"
+DEFAULT_SSL = True
+DEFAULT_VERIFY_SSL = True
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_HOST, default=DEFAULT_IP): cv.string}
+    {
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
+    }
 )
 
 
@@ -41,6 +47,8 @@ class SwisscomDeviceScanner(DeviceScanner):
     def __init__(self, config):
         """Initialize the scanner."""
         self.host = config[CONF_HOST]
+        self.protocol = "https" if config[CONF_SSL] else "http"
+        self.verify_ssl = config[CONF_VERIFY_SSL]
         self.last_results = {}
 
         # Test the router is accessible.
@@ -79,34 +87,39 @@ class SwisscomDeviceScanner(DeviceScanner):
 
     def get_swisscom_data(self):
         """Retrieve data from Swisscom and return parsed result."""
-        url = f"http://{self.host}/ws"
+        url = f"{self.protocol}://{self.host}/ws"
         headers = {"Content-Type": "application/x-sah-ws-4-call+json"}
         data = """
         {"service":"Devices", "method":"get",
         "parameters":{"expression":"lan and not self"}}"""
 
         devices = {}
-
+        request = None
         try:
-            request = requests.post(url, headers=headers, data=data, timeout=10)
-        except (
-            requests.exceptions.ConnectionError,
-            requests.exceptions.Timeout,
-            requests.exceptions.ConnectTimeout,
-        ):
-            _LOGGER.info("No response from Swisscom Internet Box")
-            return devices
+            request = requests.post(
+                url, headers=headers, data=data, timeout=5, verify=self.verify_ssl
+            )
+        except requests.exceptions.ReadTimeout:
+            _LOGGER.error("No response from Swisscom Internet Box")
+        except requests.exceptions.Timeout:
+            _LOGGER.error("Timeout during connection to Swisscom Internet Box")
+        except requests.exceptions.SSLError:
+            _LOGGER.error("SSL error during connection to Swisscom Internet Box")
+        except requests.exceptions.ConnectionError:
+            _LOGGER.error("Unspecific error during connection to Swisscom Internet Box")
+        except requests.exceptions.RequestException:
+            _LOGGER.error("Unspecific error during request")
+        else:
+            if "status" not in request.json():
+                _LOGGER.info("No status in response from Swisscom Internet Box")
+                return devices
 
-        if "status" not in request.json():
-            _LOGGER.info("No status in response from Swisscom Internet Box")
-            return devices
-
-        for device in request.json()["status"]:
-            with suppress(KeyError, requests.exceptions.RequestException):
-                devices[device["Key"]] = {
-                    "ip": device["IPAddress"],
-                    "mac": device["PhysAddress"],
-                    "host": device["Name"],
-                    "status": device["Active"],
-                }
+            for device in request.json()["status"]:
+                with suppress(KeyError, requests.exceptions.RequestException):
+                    devices[device["Key"]] = {
+                        "ip": device["IPAddress"],
+                        "mac": device["PhysAddress"],
+                        "host": device["Name"],
+                        "status": device["Active"],
+                    }
         return devices
