@@ -134,7 +134,9 @@ class NumberDeviceClass(StrEnum):
     GAS = "gas"
     """Gas.
 
-    Unit of measurement: `m³`, `ft³`
+    Unit of measurement:
+    - SI / metric: `m³`
+    - USCS / imperial: `ft³`, `CCF`
     """
 
     HUMIDITY = "humidity"
@@ -307,7 +309,7 @@ class NumberDeviceClass(StrEnum):
 
     Unit of measurement: `VOLUME_*` units
     - SI / metric: `mL`, `L`, `m³`
-    - USCS / imperial: `fl. oz.`, `ft³`, `gal` (warning: volumes expressed in
+    - USCS / imperial: `ft³`, `CCF`, `fl. oz.`, `gal` (warning: volumes expressed in
     USCS/imperial units are currently assumed to be US volumes)
     """
 
@@ -316,7 +318,7 @@ class NumberDeviceClass(StrEnum):
 
     Unit of measurement:
     - SI / metric: `m³`, `L`
-    - USCS / imperial: `ft³`, `gal` (warning: volumes expressed in
+    - USCS / imperial: `ft³`, `CCF`, `gal` (warning: volumes expressed in
     USCS/imperial units are currently assumed to be US volumes)
     """
 

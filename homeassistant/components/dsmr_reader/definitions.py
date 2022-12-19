@@ -12,16 +12,16 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CURRENCY_EURO,
-    VOLUME_CUBIC_METERS,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfVolume,
 )
 from homeassistant.util import dt as dt_util
 
 PRICE_EUR_KWH: Final = f"EUR/{UnitOfEnergy.KILO_WATT_HOUR}"
-PRICE_EUR_M3: Final = f"EUR/{VOLUME_CUBIC_METERS}"
+PRICE_EUR_M3: Final = f"EUR/{UnitOfVolume.CUBIC_METERS}"
 
 
 def dsmr_transform(value):
@@ -141,7 +141,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         name="Gas meter usage",
         entity_registry_enabled_default=False,
         icon="mdi:fire",
-        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DSMRReaderSensorEntityDescription(
@@ -203,14 +203,14 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         key="dsmr/consumption/gas/delivered",
         name="Gas usage",
         device_class=SensorDeviceClass.GAS,
-        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/consumption/gas/currently_delivered",
         name="Current gas usage",
         device_class=SensorDeviceClass.GAS,
-        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
@@ -278,7 +278,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         key="dsmr/day-consumption/gas",
         name="Gas usage",
         icon="mdi:counter",
-        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/gas_cost",
@@ -453,7 +453,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         key="dsmr/current-month/gas",
         name="Current month gas usage",
         icon="mdi:counter",
-        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/current-month/gas_cost",
@@ -531,7 +531,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         key="dsmr/current-year/gas",
         name="Current year gas usage",
         icon="mdi:counter",
-        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/current-year/gas_cost",

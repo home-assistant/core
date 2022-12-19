@@ -13,8 +13,8 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE,
     PERCENTAGE,
+    UnitOfElectricCurrent,
     UnitOfEnergy,
     UnitOfLength,
     UnitOfPower,
@@ -70,7 +70,7 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
         key=CHARGER_MAX_AVAILABLE_POWER_KEY,
         name="Max Available Power",
         precision=0,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -146,7 +146,7 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
     CHARGER_MAX_CHARGING_CURRENT_KEY: WallboxSensorEntityDescription(
         key=CHARGER_MAX_CHARGING_CURRENT_KEY,
         name="Max. Charging Current",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
