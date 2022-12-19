@@ -49,7 +49,7 @@ async def async_setup(hass):
             registry = async_get(hass)
             cached_list_devices = message_to_json(
                 websocket_api.result_message(
-                    IDEN_TEMPLATE,
+                    IDEN_TEMPLATE,  # type: ignore[arg-type]
                     [_entry_dict(entry) for entry in registry.devices.values()],
                 )
             )
