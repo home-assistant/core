@@ -668,7 +668,7 @@ async def _async_find_next_available_port(source: AddressTupleVXType) -> int:
             test_socket.bind(addr)
             return port
         except OSError:
-            if port == UPNP_SERVER_MAX_PORT:
+            if port == UPNP_SERVER_MAX_PORT - 1:
                 raise
 
     raise RuntimeError("unreachable")
