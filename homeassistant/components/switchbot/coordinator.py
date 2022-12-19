@@ -53,7 +53,6 @@ class SwitchbotDataUpdateCoordinator(
         )
         self.ble_device = ble_device
         self.device = device
-        self.flat_data: dict[str, Any] = {}
         self.device_name = device_name
         self.base_unique_id = base_unique_id
         self.model = model
@@ -109,7 +108,9 @@ class SwitchbotDataUpdateCoordinator(
             return
         if "modelName" in adv.data:
             self._ready_event.set()
-        _LOGGER.debug("%s: Switchbot data: %s", self.ble_device.address, self.data)
+        _LOGGER.debug(
+            "%s: Switchbot data: %s", self.ble_device.address, self.device.data
+        )
         if not self.device.advertisement_changed(adv) and not self._was_unavailable:
             return
         self._was_unavailable = False
