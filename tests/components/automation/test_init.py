@@ -1993,6 +1993,35 @@ async def test_blueprint_automation_bad_config(
     assert details in caplog.text
 
 
+async def test_blueprint_automation_fails_substitution(hass, caplog):
+    """Test blueprint automation with bad inputs."""
+    with patch(
+        "homeassistant.components.blueprint.models.BlueprintInputs.async_substitute",
+        side_effect=yaml.UndefinedSubstitution("blah"),
+    ):
+        assert await async_setup_component(
+            hass,
+            "automation",
+            {
+                "automation": {
+                    "use_blueprint": {
+                        "path": "test_event_service.yaml",
+                        "input": {
+                            "trigger_event": "test_event",
+                            "service_to_call": "test.automation",
+                            "a_number": 5,
+                        },
+                    }
+                }
+            },
+        )
+    assert (
+        "Blueprint 'Call service based on event' failed to generate automation with inputs "
+        "{'trigger_event': 'test_event', 'service_to_call': 'test.automation', 'a_number': 5}:"
+        " No substitution found for input blah" in caplog.text
+    )
+
+
 async def test_trigger_service(hass, calls):
     """Test the automation trigger service."""
     assert await async_setup_component(

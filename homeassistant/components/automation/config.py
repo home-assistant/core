@@ -10,9 +10,6 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant.components import blueprint
-from homeassistant.components.device_automation.exceptions import (
-    InvalidDeviceAutomationConfig,
-)
 from homeassistant.components.trace import TRACE_CONFIG_SCHEMA
 from homeassistant.config import config_without_domain
 from homeassistant.const import (
@@ -28,7 +25,6 @@ from homeassistant.helpers import config_per_platform, config_validation as cv, 
 from homeassistant.helpers.condition import async_validate_conditions_config
 from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import IntegrationNotFound
 from homeassistant.util.yaml.input import UndefinedSubstitution
 
 from .const import (
@@ -134,7 +130,7 @@ async def _async_validate_config_item(
                     blueprint_inputs.inputs,
                     err,
                 )
-            raise
+            raise HomeAssistantError from err
 
     automation_name = "Unnamed automation"
     if isinstance(config, Mapping):
@@ -156,8 +152,6 @@ async def _async_validate_config_item(
     except (
         vol.Invalid,
         HomeAssistantError,
-        IntegrationNotFound,
-        InvalidDeviceAutomationConfig,
     ) as err:
         _log_invalid_automation(
             err, automation_name, "failed to setup triggers", validated_config
@@ -172,8 +166,6 @@ async def _async_validate_config_item(
         except (
             vol.Invalid,
             HomeAssistantError,
-            IntegrationNotFound,
-            InvalidDeviceAutomationConfig,
         ) as err:
             _log_invalid_automation(
                 err, automation_name, "failed to setup conditions", validated_config
@@ -187,8 +179,6 @@ async def _async_validate_config_item(
     except (
         vol.Invalid,
         HomeAssistantError,
-        IntegrationNotFound,
-        InvalidDeviceAutomationConfig,
     ) as err:
         _log_invalid_automation(
             err, automation_name, "failed to setup actions", validated_config
@@ -215,12 +205,7 @@ async def _try_async_validate_config_item(
     """Validate config item."""
     try:
         return await _async_validate_config_item(hass, config, True)
-    except (
-        vol.Invalid,
-        HomeAssistantError,
-        IntegrationNotFound,
-        InvalidDeviceAutomationConfig,
-    ):
+    except (vol.Invalid, HomeAssistantError):
         return None
 
 
@@ -229,15 +214,7 @@ async def async_validate_config_item(
     config: dict[str, Any],
 ) -> AutomationConfig | None:
     """Validate config item, called by EditAutomationConfigView."""
-    try:
-        return await _async_validate_config_item(hass, config, False)
-    except (
-        IntegrationNotFound,
-        InvalidDeviceAutomationConfig,
-        UndefinedSubstitution,
-    ) as err:
-        # Convert errors for EditAutomationConfigView
-        raise HomeAssistantError from err
+    return await _async_validate_config_item(hass, config, False)
 
 
 async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> ConfigType:
