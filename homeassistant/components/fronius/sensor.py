@@ -592,14 +592,12 @@ STORAGE_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         key="capacity_maximum",
         name="Capacity maximum",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="capacity_designed",
         name="Capacity designed",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
