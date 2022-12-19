@@ -1,13 +1,7 @@
 """Constants for the LCN component."""
 from itertools import product
 
-from homeassistant.const import (
-    DEGREE,
-    PERCENTAGE,
-    Platform,
-    UnitOfElectricPotential,
-    UnitOfTemperature,
-)
+from homeassistant.const import Platform
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -164,9 +158,9 @@ VAR_UNITS = [
     "",
     "LCN",
     "NATIVE",
-    UnitOfTemperature.CELSIUS,
-    UnitOfTemperature.KELVIN,
-    UnitOfTemperature.FAHRENHEIT,
+    "°C",
+    "K",
+    "°F",
     "LUX_T",
     "LX_T",
     "LUX_I",
@@ -174,16 +168,16 @@ VAR_UNITS = [
     "LX",
     "M/S",
     "METERPERSECOND",
-    PERCENTAGE,
+    "%",
     "PERCENT",
     "PPM",
     "VOLT",
-    UnitOfElectricPotential.VOLT,
+    "V",
     "AMPERE",
     "AMP",
     "A",
     "DEGREE",
-    DEGREE,
+    "°",
 ]
 
 RELVARREF = ["CURRENT", "PROG"]
