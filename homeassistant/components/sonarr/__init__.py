@@ -39,7 +39,7 @@ from .coordinator import (
     WantedDataUpdateCoordinator,
 )
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.SENSOR, Platform.CALENDAR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
