@@ -13,7 +13,6 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import (
     BASE_API_URL,
-    CONF_CALLER,
     CONF_LANGUAGE,
     CONF_VOICE,
     DEFAULT_LANGUAGE,
@@ -29,7 +28,6 @@ ClickSendSchema = vol.Schema(
         vol.Required(CONF_RECIPIENT): cv.string,
         vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): cv.string,
         vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): cv.string,
-        vol.Optional(CONF_CALLER, default=""): cv.string,
     }
 )
 
@@ -79,10 +77,7 @@ class ClickSendConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.data = user_input
                 # Return the form of the next step.
                 return self.async_create_entry(
-                    title="TTS From "
-                    + self.data[CONF_CALLER]
-                    + " To "
-                    + self.data[CONF_RECIPIENT],
+                    title="TTS" + " To " + self.data[CONF_RECIPIENT],
                     data=self.data,
                 )
 

@@ -68,7 +68,6 @@ class ClicksendNotificationService(BaseNotificationService):
             data["messages"].append(
                 {
                     "source": "hass.notify",
-                    "from": self.caller,
                     "to": recipient.strip(),
                     "body": message,
                     "lang": self.language,

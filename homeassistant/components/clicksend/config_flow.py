@@ -68,10 +68,7 @@ class ClickSendConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.data = user_input
                 # Return the form of the next step.
                 return self.async_create_entry(
-                    title="SMS From "
-                    + self.data[CONF_SENDER]
-                    + " To "
-                    + self.data[CONF_RECIPIENT],
+                    title="SMS" + " To " + self.data[CONF_RECIPIENT],
                     data=self.data,
                 )
 

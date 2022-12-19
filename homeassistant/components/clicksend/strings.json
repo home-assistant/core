@@ -8,10 +8,10 @@
         "data": {
           "api_key": "API Key",
           "username": "Username",
-          "recipient": "Recepient",
-          "sender": "Sender"
+          "recipient": "Recipient Phone Number",
+          "sender": "Sender (Optional)"
         },
-        "description": "Enter Configurations for ClickSend SMS.",
+        "description": "Find your credentials here:\nhttps://dashboard.clicksend.com/account/subaccounts",
         "title": "ClickSend SMS Configurations"
       }
     }
