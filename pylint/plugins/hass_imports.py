@@ -325,6 +325,10 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
         # ),
         ObsoleteImportMatch(
             reason="replaced by unit enums",
+            constant=re.compile(r"^TIME_(\w*)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by unit enums",
             constant=re.compile(r"^VOLUME_(\w*)$"),
         ),
     ],
