@@ -12,7 +12,6 @@ from pyairvisual.cloud_api import InvalidKeyError, KeyExpiredError, Unauthorized
 from pyairvisual.errors import AirVisualError
 from pyairvisual.node import NodeProError
 
-from homeassistant.components.airvisual_pro import DOMAIN as AIRVISUAL_PRO_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
@@ -324,7 +323,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             tasks = [
                 hass.config_entries.async_remove(entry.entry_id),
                 hass.config_entries.flow.async_init(
-                    AIRVISUAL_PRO_DOMAIN, context={"source": SOURCE_IMPORT}, data=data
+                    # We use a raw string for the airvisual_pro domain (instead of
+                    # importing the actual constant) so that we can avoid listing it
+                    # as a dependency:
+                    "airvisual_pro",
+                    context={"source": SOURCE_IMPORT},
+                    data=data,
                 ),
             ]
             await asyncio.gather(*tasks)
