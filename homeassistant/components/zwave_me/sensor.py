@@ -17,11 +17,11 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     LIGHT_LUX,
     PERCENTAGE,
-    PRESSURE_KPA,
     TEMP_CELSIUS,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfPressure,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -42,7 +42,7 @@ SENSORS_MAP: dict[str, ZWaveMeSensorEntityDescription] = {
     "barometer": ZWaveMeSensorEntityDescription(
         key="barometer",
         device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement=PRESSURE_KPA,
+        native_unit_of_measurement=UnitOfPressure.KPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "co": ZWaveMeSensorEntityDescription(

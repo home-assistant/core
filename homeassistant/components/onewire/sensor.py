@@ -19,10 +19,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
-    PRESSURE_CBAR,
-    PRESSURE_MBAR,
     TEMP_CELSIUS,
     UnitOfElectricPotential,
+    UnitOfPressure,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -95,7 +94,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.PRESSURE,
             entity_registry_enabled_default=False,
             name="Pressure",
-            native_unit_of_measurement=PRESSURE_MBAR,
+            native_unit_of_measurement=UnitOfPressure.MBAR,
             read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -153,7 +152,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.PRESSURE,
             entity_registry_enabled_default=False,
             name="Pressure",
-            native_unit_of_measurement=PRESSURE_MBAR,
+            native_unit_of_measurement=UnitOfPressure.MBAR,
             read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -284,7 +283,7 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             key=f"moisture/sensor.{id}",
             device_class=SensorDeviceClass.PRESSURE,
             name=f"Moisture {id}",
-            native_unit_of_measurement=PRESSURE_CBAR,
+            native_unit_of_measurement=UnitOfPressure.CBAR,
             read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
         )
@@ -308,7 +307,7 @@ EDS_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             key="EDS0066/pressure",
             device_class=SensorDeviceClass.PRESSURE,
             name="Pressure",
-            native_unit_of_measurement=PRESSURE_MBAR,
+            native_unit_of_measurement=UnitOfPressure.MBAR,
             read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -326,7 +325,7 @@ EDS_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             key="EDS0068/pressure",
             device_class=SensorDeviceClass.PRESSURE,
             name="Pressure",
-            native_unit_of_measurement=PRESSURE_MBAR,
+            native_unit_of_measurement=UnitOfPressure.MBAR,
             read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
         ),
