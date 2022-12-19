@@ -11,7 +11,11 @@ import voluptuous as vol
 
 from homeassistant.components import mqtt
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
+from homeassistant.components.alarm_control_panel import (
+    ATTR_NEXT_STATE,
+    ATTR_PREVIOUS_STATE,
+    AlarmControlPanelEntityFeature,
+)
 from homeassistant.const import (
     CONF_CODE,
     CONF_DELAY_TIME,
@@ -80,9 +84,6 @@ SUPPORTED_PRETRIGGER_STATES = [
 SUPPORTED_PENDING_STATES = [
     state for state in SUPPORTED_STATES if state != STATE_ALARM_DISARMED
 ]
-
-ATTR_PRE_PENDING_STATE = "pre_pending_state"
-ATTR_POST_PENDING_STATE = "post_pending_state"
 
 
 def _state_validator(config):
@@ -455,8 +456,8 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         if self.state != STATE_ALARM_PENDING:
             return {}
         return {
-            ATTR_PRE_PENDING_STATE: self._previous_state,
-            ATTR_POST_PENDING_STATE: self._state,
+            ATTR_PREVIOUS_STATE: self._previous_state,
+            ATTR_NEXT_STATE: self._state,
         }
 
     @callback
