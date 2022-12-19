@@ -61,7 +61,7 @@ SAVE_DELAY = 10
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 9
+STORAGE_VERSION_MINOR = 10
 STORAGE_KEY = "core.entity_registry"
 
 # Attributes relevant to describing entity
@@ -104,6 +104,7 @@ class RegistryEntry:
     entity_id: str = attr.ib()
     unique_id: str = attr.ib()
     platform: str = attr.ib()
+    aliases: set[str] = attr.ib(factory=set)
     area_id: str | None = attr.ib(default=None)
     capabilities: Mapping[str, Any] | None = attr.ib(default=None)
     config_entry_id: str | None = attr.ib(default=None)
@@ -239,6 +240,11 @@ class EntityRegistryStore(storage.Store):
             # Version 1.9 adds translation_key
             for entity in data["entities"]:
                 entity["translation_key"] = entity.get("translation_key")
+
+        if old_major_version == 1 and old_minor_version < 10:
+            # Version 1.10 adds aliases
+            for entity in data["entities"]:
+                entity.setdefault("aliases", set())
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -588,6 +594,7 @@ class EntityRegistry:
         self,
         entity_id: str,
         *,
+        aliases: set[str] | UndefinedType = UNDEFINED,
         area_id: str | None | UndefinedType = UNDEFINED,
         capabilities: Mapping[str, Any] | None | UndefinedType = UNDEFINED,
         config_entry_id: str | None | UndefinedType = UNDEFINED,
@@ -639,6 +646,7 @@ class EntityRegistry:
             raise ValueError("entity_category must be a valid EntityCategory instance")
 
         for attr_name, value in (
+            ("aliases", aliases),
             ("area_id", area_id),
             ("capabilities", capabilities),
             ("config_entry_id", config_entry_id),
@@ -714,6 +722,7 @@ class EntityRegistry:
         self,
         entity_id: str,
         *,
+        aliases: set[str] | UndefinedType = UNDEFINED,
         area_id: str | None | UndefinedType = UNDEFINED,
         capabilities: Mapping[str, Any] | None | UndefinedType = UNDEFINED,
         config_entry_id: str | None | UndefinedType = UNDEFINED,
@@ -737,6 +746,7 @@ class EntityRegistry:
         """Update properties of an entity."""
         return self._async_update_entity(
             entity_id,
+            aliases=aliases,
             area_id=area_id,
             capabilities=capabilities,
             config_entry_id=config_entry_id,
@@ -819,6 +829,7 @@ class EntityRegistry:
                     entity["entity_category"] = None
 
                 entities[entity["entity_id"]] = RegistryEntry(
+                    aliases=set(entity["aliases"]),
                     area_id=entity["area_id"],
                     capabilities=entity["capabilities"],
                     config_entry_id=entity["config_entry_id"],
@@ -863,6 +874,7 @@ class EntityRegistry:
 
         data["entities"] = [
             {
+                "aliases": list(entry.aliases),
                 "area_id": entry.area_id,
                 "capabilities": entry.capabilities,
                 "config_entry_id": entry.config_entry_id,

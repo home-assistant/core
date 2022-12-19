@@ -2,6 +2,7 @@
 from unittest.mock import ANY
 
 import pytest
+from pytest_unordered import unordered
 
 from homeassistant.components.config import entity_registry
 from homeassistant.const import ATTR_ICON
@@ -160,6 +161,7 @@ async def test_get_entity(hass, client):
     msg = await client.receive_json()
 
     assert msg["result"] == {
+        "aliases": [],
         "area_id": None,
         "capabilities": None,
         "config_entry_id": None,
@@ -192,6 +194,7 @@ async def test_get_entity(hass, client):
     msg = await client.receive_json()
 
     assert msg["result"] == {
+        "aliases": [],
         "area_id": None,
         "capabilities": None,
         "config_entry_id": None,
@@ -245,6 +248,7 @@ async def test_update_entity(hass, client):
             "id": 6,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
+            "aliases": ["alias_1", "alias_2"],
             "area_id": "mock-area-id",
             "device_class": "custom_device_class",
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
@@ -257,6 +261,7 @@ async def test_update_entity(hass, client):
 
     assert msg["result"] == {
         "entity_entry": {
+            "aliases": unordered(["alias_1", "alias_2"]),
             "area_id": "mock-area-id",
             "capabilities": None,
             "config_entry_id": None,
@@ -331,6 +336,7 @@ async def test_update_entity(hass, client):
 
     assert msg["result"] == {
         "entity_entry": {
+            "aliases": unordered(["alias_1", "alias_2"]),
             "area_id": "mock-area-id",
             "capabilities": None,
             "config_entry_id": None,
@@ -370,6 +376,7 @@ async def test_update_entity(hass, client):
 
     assert msg["result"] == {
         "entity_entry": {
+            "aliases": unordered(["alias_1", "alias_2"]),
             "area_id": "mock-area-id",
             "capabilities": None,
             "config_entry_id": None,
@@ -421,6 +428,7 @@ async def test_update_entity_require_restart(hass, client):
 
     assert msg["result"] == {
         "entity_entry": {
+            "aliases": [],
             "area_id": None,
             "capabilities": None,
             "config_entry_id": config_entry.entry_id,
@@ -528,6 +536,7 @@ async def test_update_entity_no_changes(hass, client):
 
     assert msg["result"] == {
         "entity_entry": {
+            "aliases": [],
             "area_id": None,
             "capabilities": None,
             "config_entry_id": None,
@@ -616,6 +625,7 @@ async def test_update_entity_id(hass, client):
 
     assert msg["result"] == {
         "entity_entry": {
+            "aliases": [],
             "area_id": None,
             "capabilities": None,
             "config_entry_id": None,
