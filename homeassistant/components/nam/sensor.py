@@ -17,9 +17,9 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
-    PRESSURE_HPA,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_CELSIUS,
+    UnitOfPressure,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
@@ -81,7 +81,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_BME280_PRESSURE,
         name="BME280 pressure",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -95,7 +95,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_BMP180_PRESSURE,
         name="BMP180 pressure",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -109,7 +109,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_BMP280_PRESSURE,
         name="BMP280 pressure",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),

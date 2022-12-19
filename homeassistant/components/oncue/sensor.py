@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
-    PRESSURE_PSI,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     UnitOfElectricCurrent,
@@ -20,6 +19,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfPressure,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -47,7 +47,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="EngineOilPressure",
-        native_unit_of_measurement=PRESSURE_PSI,
+        native_unit_of_measurement=UnitOfPressure.PSI,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,

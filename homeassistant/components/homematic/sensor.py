@@ -17,7 +17,6 @@ from homeassistant.const import (
     DEGREE,
     LIGHT_LUX,
     PERCENTAGE,
-    PRESSURE_HPA,
     TEMP_CELSIUS,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -25,6 +24,7 @@ from homeassistant.const import (
     UnitOfFrequency,
     UnitOfPower,
     UnitOfPrecipitationDepth,
+    UnitOfPressure,
     UnitOfSpeed,
     UnitOfVolume,
 )
@@ -188,7 +188,7 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     "AIR_PRESSURE": SensorEntityDescription(
         key="AIR_PRESSURE",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
