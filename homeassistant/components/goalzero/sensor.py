@@ -11,7 +11,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ENERGY_WATT_HOUR,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
     TEMP_CELSIUS,
@@ -19,6 +18,7 @@ from homeassistant.const import (
     TIME_SECONDS,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
@@ -64,7 +64,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="whOut",
         name="Wh out",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
@@ -72,7 +72,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="whStored",
         name="Wh stored",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(

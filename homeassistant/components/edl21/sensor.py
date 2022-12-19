@@ -18,10 +18,9 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONF_NAME,
     DEGREE,
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_WATT_HOUR,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
 )
@@ -255,8 +254,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 SENSORS = {desc.key: desc for desc in SENSOR_TYPES}
 
 SENSOR_UNIT_MAPPING = {
-    "Wh": ENERGY_WATT_HOUR,
-    "kWh": ENERGY_KILO_WATT_HOUR,
+    "Wh": UnitOfEnergy.WATT_HOUR,
+    "kWh": UnitOfEnergy.KILO_WATT_HOUR,
     "W": UnitOfPower.WATT,
     "A": UnitOfElectricCurrent.AMPERE,
     "V": UnitOfElectricPotential.VOLT,
