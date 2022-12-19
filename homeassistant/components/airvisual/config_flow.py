@@ -64,7 +64,6 @@ PICK_INTEGRATION_TYPE_SCHEMA = vol.Schema(
             [
                 INTEGRATION_TYPE_GEOGRAPHY_COORDS,
                 INTEGRATION_TYPE_GEOGRAPHY_NAME,
-                INTEGRATION_TYPE_NODE_PRO,
             ]
         )
     }
@@ -81,7 +80,7 @@ OPTIONS_FLOW = {
 class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle an AirVisual config flow."""
 
-    VERSION = 2
+    VERSION = 3
 
     def __init__(self) -> None:
         """Initialize the config flow."""
