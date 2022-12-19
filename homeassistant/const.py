@@ -769,12 +769,6 @@ CONDUCTIVITY: Final = "µS/cm"
 
 
 # Light units
-class UnitOfLuminousFlux(StrEnum):
-    """Luminous flux units."""
-
-    LUMEN = "lm"
-
-
 class UnitOfIlluminance(StrEnum):
     """Illuminance units."""
 
