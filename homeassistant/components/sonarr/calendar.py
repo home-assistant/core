@@ -39,7 +39,8 @@ async def get_sonarr_episode_events(
                 description=episode.title,
                 location=episode.series.network,
                 start=episode.airDateUtc,
-                end=episode.airDateUtc + datetime.timedelta(hours=1),
+                end=episode.airDateUtc
+                + datetime.timedelta(minutes=episode.series.runtime),
             )
         )
     return calendar_entries
