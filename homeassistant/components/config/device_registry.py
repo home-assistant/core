@@ -21,24 +21,6 @@ from homeassistant.helpers.device_registry import (
     async_get,
 )
 
-WS_TYPE_LIST = "config/device_registry/list"
-SCHEMA_WS_LIST = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_LIST}
-)
-
-WS_TYPE_UPDATE = "config/device_registry/update"
-SCHEMA_WS_UPDATE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {
-        vol.Required("type"): WS_TYPE_UPDATE,
-        vol.Required("device_id"): str,
-        vol.Optional("area_id"): vol.Any(str, None),
-        vol.Optional("name_by_user"): vol.Any(str, None),
-        # We only allow setting disabled_by user via API.
-        # No Enum support like this in voluptuous, use .value
-        vol.Optional("disabled_by"): vol.Any(DeviceEntryDisabler.USER.value, None),
-    }
-)
-
 
 async def async_setup(hass):
     """Enable the Device Registry views."""
@@ -51,6 +33,11 @@ async def async_setup(hass):
         cached_list_devices = None
 
     @callback
+    @websocket_api.websocket_command(
+        {
+            vol.Required("type"): "config/device_registry/list",
+        }
+    )
     def websocket_list_devices(hass, connection, msg):
         """Handle list devices command."""
         nonlocal cached_list_devices
@@ -72,12 +59,8 @@ async def async_setup(hass):
         run_immediately=True,
     )
 
-    websocket_api.async_register_command(
-        hass, WS_TYPE_LIST, websocket_list_devices, SCHEMA_WS_LIST
-    )
-    websocket_api.async_register_command(
-        hass, WS_TYPE_UPDATE, websocket_update_device, SCHEMA_WS_UPDATE
-    )
+    websocket_api.async_register_command(hass, websocket_list_devices)
+    websocket_api.async_register_command(hass, websocket_update_device)
     websocket_api.async_register_command(
         hass, websocket_remove_config_entry_from_device
     )
@@ -85,9 +68,20 @@ async def async_setup(hass):
 
 
 @require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "config/device_registry/update",
+        vol.Optional("area_id"): vol.Any(str, None),
+        vol.Required("device_id"): str,
+        # We only allow setting disabled_by user via API.
+        # No Enum support like this in voluptuous, use .value
+        vol.Optional("disabled_by"): vol.Any(DeviceEntryDisabler.USER.value, None),
+        vol.Optional("name_by_user"): vol.Any(str, None),
+    }
+)
 @callback
 def websocket_update_device(hass, connection, msg):
-    """Handle update area websocket command."""
+    """Handle update device websocket command."""
     registry = async_get(hass)
 
     msg.pop("type")
@@ -105,8 +99,8 @@ def websocket_update_device(hass, connection, msg):
 @websocket_api.websocket_command(
     {
         "type": "config/device_registry/remove_config_entry",
-        "device_id": str,
         "config_entry_id": str,
+        "device_id": str,
     }
 )
 @websocket_api.async_response
