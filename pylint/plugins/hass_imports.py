@@ -273,6 +273,10 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
         ),
         ObsoleteImportMatch(
             reason="replaced by unit enums",
+            constant=re.compile(r"^ELECTRIC_(\w*)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by unit enums",
             constant=re.compile(r"^ENERGY_(\w*)$"),
         ),
         ObsoleteImportMatch(
