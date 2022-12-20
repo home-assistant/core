@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -23,7 +23,7 @@ from ..entity import OverkizEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-OVERKIZ_TO_PRESET_MODES = {
+OVERKIZ_TO_PRESET_MODES: dict[str, str] = {
     OverkizCommandParam.SECURED: PRESET_AWAY,
     OverkizCommandParam.ECO: PRESET_ECO,
     OverkizCommandParam.COMFORT: PRESET_COMFORT,
@@ -32,25 +32,25 @@ OVERKIZ_TO_PRESET_MODES = {
 
 PRESET_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_PRESET_MODES.items()}
 
-OVERKIZ_TO_HVAC_MODES = {
+OVERKIZ_TO_HVAC_MODES: dict[str, str] = {
     OverkizCommandParam.AUTO: HVACMode.AUTO,
     OverkizCommandParam.MANU: HVACMode.HEAT_COOL,
 }
 
 HVAC_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_HVAC_MODES.items()}
 
-OVERKIZ_TO_HVAC_ACTION = {
+OVERKIZ_TO_HVAC_ACTION: dict[str, str] = {
     OverkizCommandParam.COOLING: HVACAction.COOLING,
     OverkizCommandParam.HEATING: HVACAction.HEATING,
 }
 
-MAP_PRESET_TEMPERATURES = {
+MAP_PRESET_TEMPERATURES: dict[str, str] = {
     PRESET_COMFORT: OverkizState.CORE_COMFORT_ROOM_TEMPERATURE,
     PRESET_ECO: OverkizState.CORE_ECO_ROOM_TEMPERATURE,
     PRESET_AWAY: OverkizState.CORE_SECURED_POSITION_TEMPERATURE,
 }
 
-MODE_COMMAND_MAPPING = {
+MODE_COMMAND_MAPPING: dict[str, str] = {
     OverkizCommandParam.COMFORT: OverkizCommand.SET_COMFORT_TEMPERATURE,
     OverkizCommandParam.ECO: OverkizCommand.SET_ECO_TEMPERATURE,
     OverkizCommandParam.SECURED: OverkizCommand.SET_SECURED_POSITION_TEMPERATURE,
@@ -94,28 +94,17 @@ class SomfyHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> str:
         """Return hvac operation i.e. heat, cool mode."""
-        if (
-            cast(str, self.executor.select_state(OverkizState.CORE_ON_OFF))
-            == OverkizCommandParam.OFF
-        ):
+        state = self.device.states[OverkizState.CORE_ON_OFF]
+        if state and state.value_as_str == OverkizCommandParam.OFF:
             return HVACMode.OFF
 
-        state = cast(
-            str,
-            self.executor.select_state(
+        if (
+            state := self.device.states[
                 OverkizState.OVP_HEATING_TEMPERATURE_INTERFACE_ACTIVE_MODE
-            ),
-        )
-        if mode := OVERKIZ_TO_HVAC_MODES[OverkizCommandParam(state)]:
-            return mode
+            ]
+        ) and state.value_as_str:
+            return OVERKIZ_TO_HVAC_MODES[state.value_as_str]
 
-        if state is not None:
-            # Unknown and potentially a new state, log to make it easier to report
-            _LOGGER.warning(
-                "Overkiz %s state unknown: %s",
-                OverkizState.OVP_HEATING_TEMPERATURE_INTERFACE_ACTIVE_MODE,
-                state,
-            )
         return HVACMode.OFF
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -127,13 +116,13 @@ class SomfyHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
-        state = cast(
-            str,
-            self.executor.select_state(
+        if (
+            state := self.device.states[
                 OverkizState.OVP_HEATING_TEMPERATURE_INTERFACE_SETPOINT_MODE
-            ),
-        )
-        return OVERKIZ_TO_PRESET_MODES[OverkizCommandParam(state)]
+            ]
+        ) and state.value_as_str:
+            return OVERKIZ_TO_PRESET_MODES[state.value_as_str]
+        return None
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
@@ -145,59 +134,50 @@ class SomfyHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
     @property
     def hvac_action(self) -> str | None:
         """Return the current running hvac operation if supported."""
-        current_operation = cast(
-            str,
-            self.executor.select_state(
+        if (
+            current_operation := self.device.states[
                 OverkizState.OVP_HEATING_TEMPERATURE_INTERFACE_OPERATING_MODE
-            ),
-        )
+            ]
+        ) and current_operation.value_as_str:
 
-        if action := OVERKIZ_TO_HVAC_ACTION[OverkizCommandParam(current_operation)]:
-            return action
+            return OVERKIZ_TO_HVAC_ACTION[current_operation.value_as_str]
 
-        if current_operation is not None:
-            # Unknown and potentially a new state, log to make it easier to report
-            _LOGGER.error(
-                "Overkiz %s state unknown: %s",
-                OverkizState.OVP_HEATING_TEMPERATURE_INTERFACE_OPERATING_MODE,
-                current_operation,
-            )
         return None
 
     @property
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
-        if self.preset_mode not in PRESET_MODES_TO_OVERKIZ:
-            return None
 
         # Allow to get the current target temperature for the current preset
         # The preset can be switched manually or on a schedule (auto).
         # This allows to reflect the current target temperature automatically
+        if not self.preset_mode:
+            return None
+
         mode = PRESET_MODES_TO_OVERKIZ[self.preset_mode]
         if mode not in MAP_PRESET_TEMPERATURES:
             return None
 
-        return cast(float, self.executor.select_state(MAP_PRESET_TEMPERATURES[mode]))
+        if state := self.device.states[MAP_PRESET_TEMPERATURES[mode]]:
+            return state.value_as_float
+        return None
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if temperature := self.temperature_device.states[OverkizState.CORE_TEMPERATURE]:
-            return cast(float, temperature.value)
+            return temperature.value_as_float
         return None
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
 
-        mode = self.executor.select_state(
-            OverkizState.OVP_HEATING_TEMPERATURE_INTERFACE_SETPOINT_MODE
-        )
-
-        if mode not in MODE_COMMAND_MAPPING:
-            _LOGGER.error("Unknown temperature mode: %s", mode)
-            return None
-
-        return await self.executor.async_execute_command(
-            MODE_COMMAND_MAPPING[OverkizCommandParam(mode)], temperature
-        )
+        if (
+            mode := self.device.states[
+                OverkizState.OVP_HEATING_TEMPERATURE_INTERFACE_SETPOINT_MODE
+            ]
+        ) and mode.value_as_str:
+            return await self.executor.async_execute_command(
+                MODE_COMMAND_MAPPING[mode.value_as_str], temperature
+            )
