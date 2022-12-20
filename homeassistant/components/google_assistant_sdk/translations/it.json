@@ -29,5 +29,14 @@
                 "title": "Autentica nuovamente l'integrazione"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "language_code": "Codice lingua"
+                }
+            }
+        }
     }
 }

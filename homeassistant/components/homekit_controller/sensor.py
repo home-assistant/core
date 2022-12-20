@@ -25,7 +25,6 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
-    PRESSURE_HPA,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_CELSIUS,
     Platform,
@@ -33,6 +32,7 @@ from homeassistant.const import (
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfPressure,
     UnitOfSoundPressure,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -216,7 +216,7 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         name="Air Pressure",
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
     ),
     CharacteristicsTypes.VENDOR_VOCOLINC_OUTLET_ENERGY: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.VENDOR_VOCOLINC_OUTLET_ENERGY,

@@ -14,9 +14,9 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     LIGHT_LUX,
     PERCENTAGE,
-    PRESSURE_HPA,
     TEMP_CELSIUS,
     UnitOfPower,
+    UnitOfPressure,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -53,7 +53,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     ),
     "pressure": SensorEntityDescription(
         key="pressure",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),

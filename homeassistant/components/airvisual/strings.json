@@ -20,14 +20,6 @@
           "state": "state"
         }
       },
-      "node_pro": {
-        "title": "Configure an AirVisual Node/Pro",
-        "description": "Monitor a personal AirVisual unit. The password can be retrieved from the unit's UI.",
-        "data": {
-          "ip_address": "[%key:common::config_flow::data::host%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      },
       "reauth_confirm": {
         "title": "Re-authenticate AirVisual",
         "data": {
@@ -46,7 +38,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_location%] or Node/Pro ID is already registered.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },

@@ -25,9 +25,9 @@ from homeassistant.const import (
     ATTR_SW_VERSION,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
-    PRESSURE_HPA,
     TEMP_CELSIUS,
     TIME_SECONDS,
+    UnitOfPressure,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -54,7 +54,7 @@ SENSOR_DESCRIPTIONS = {
         key="pressure",
         name="Pressure",
         device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "co2": SensorEntityDescription(

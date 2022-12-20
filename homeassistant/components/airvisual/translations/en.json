@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Location is already configured or Node/Pro ID is already registered.",
+            "already_configured": "Location is already configured",
             "reauth_successful": "Re-authentication was successful"
         },
         "error": {
