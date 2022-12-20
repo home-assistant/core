@@ -16,8 +16,8 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
-    TEMP_CELSIUS,
     UnitOfPressure,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
@@ -39,7 +39,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "temp": SensorEntityDescription(
         key="temp",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         name="Temperature",
     ),
     "humidity": SensorEntityDescription(

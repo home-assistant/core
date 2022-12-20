@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_SHOW_ON_MAP,
     CONF_STATE,
     PERCENTAGE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
@@ -136,7 +136,7 @@ NODE_PRO_SENSOR_DESCRIPTIONS = (
         key=SENSOR_KIND_TEMPERATURE,
         name="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
