@@ -29,7 +29,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import subscription
 from .config import MQTT_RO_SCHEMA
-from .const import CONF_QOS, CONF_STATE_TOPIC, CONF_PAYLOAD_RESET
+from .const import CONF_PAYLOAD_RESET, CONF_QOS, CONF_STATE_TOPIC
 from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
@@ -44,7 +44,7 @@ CONF_PAYLOAD_HOME = "payload_home"
 CONF_PAYLOAD_NOT_HOME = "payload_not_home"
 CONF_SOURCE_TYPE = "source_type"
 
-DEFAULT_PAYLOAD_RESET = "RST"
+DEFAULT_PAYLOAD_RESET = "None"
 DEFAULT_SOURCE_TYPE = SourceType.GPS
 
 PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
