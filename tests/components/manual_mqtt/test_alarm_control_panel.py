@@ -1240,8 +1240,19 @@ async def test_disarm_with_template_code(hass, mqtt_mock_entry_with_yaml_config)
     assert state.state == STATE_ALARM_DISARMED
 
 
-async def test_arm_home_via_command_topic(hass, mqtt_mock_entry_with_yaml_config):
-    """Test arming home via command topic."""
+@pytest.mark.parametrize(
+    "config,expected_state",
+    [
+        ("payload_arm_away", STATE_ALARM_ARMED_AWAY),
+        ("payload_arm_home", STATE_ALARM_ARMED_HOME),
+        ("payload_arm_night", STATE_ALARM_ARMED_NIGHT),
+    ],
+)
+async def test_arm_via_command_topic(
+    hass, config, expected_state, mqtt_mock_entry_with_yaml_config
+):
+    """Test arming via command topic."""
+    command = config[8:].upper()
     assert await async_setup_component(
         hass,
         alarm_control_panel.DOMAIN,
@@ -1252,7 +1263,7 @@ async def test_arm_home_via_command_topic(hass, mqtt_mock_entry_with_yaml_config
                 "pending_time": 1,
                 "state_topic": "alarm/state",
                 "command_topic": "alarm/command",
-                "payload_arm_home": "ARM_HOME",
+                config: command,
             }
         },
     )
@@ -1262,8 +1273,8 @@ async def test_arm_home_via_command_topic(hass, mqtt_mock_entry_with_yaml_config
 
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
 
-    # Fire the arm command via MQTT; ensure state changes to pending
-    async_fire_mqtt_message(hass, "alarm/command", "ARM_HOME")
+    # Fire the arm command via MQTT; ensure state changes to arming
+    async_fire_mqtt_message(hass, "alarm/command", command)
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_ALARM_PENDING
 
@@ -1276,85 +1287,7 @@ async def test_arm_home_via_command_topic(hass, mqtt_mock_entry_with_yaml_config
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_HOME
-
-
-async def test_arm_away_via_command_topic(hass, mqtt_mock_entry_with_yaml_config):
-    """Test arming away via command topic."""
-    assert await async_setup_component(
-        hass,
-        alarm_control_panel.DOMAIN,
-        {
-            alarm_control_panel.DOMAIN: {
-                "platform": "manual_mqtt",
-                "name": "test",
-                "pending_time": 1,
-                "state_topic": "alarm/state",
-                "command_topic": "alarm/command",
-                "payload_arm_away": "ARM_AWAY",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    entity_id = "alarm_control_panel.test"
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
-
-    # Fire the arm command via MQTT; ensure state changes to pending
-    async_fire_mqtt_message(hass, "alarm/command", "ARM_AWAY")
-    await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ALARM_PENDING
-
-    # Fast-forward a little bit
-    future = dt_util.utcnow() + timedelta(seconds=1)
-    with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
-        return_value=future,
-    ):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_AWAY
-
-
-async def test_arm_night_via_command_topic(hass, mqtt_mock_entry_with_yaml_config):
-    """Test arming night via command topic."""
-    assert await async_setup_component(
-        hass,
-        alarm_control_panel.DOMAIN,
-        {
-            alarm_control_panel.DOMAIN: {
-                "platform": "manual_mqtt",
-                "name": "test",
-                "pending_time": 1,
-                "state_topic": "alarm/state",
-                "command_topic": "alarm/command",
-                "payload_arm_night": "ARM_NIGHT",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    entity_id = "alarm_control_panel.test"
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
-
-    # Fire the arm command via MQTT; ensure state changes to pending
-    async_fire_mqtt_message(hass, "alarm/command", "ARM_NIGHT")
-    await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ALARM_PENDING
-
-    # Fast-forward a little bit
-    future = dt_util.utcnow() + timedelta(seconds=1)
-    with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
-        return_value=future,
-    ):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_NIGHT
+    assert hass.states.get(entity_id).state == expected_state
 
 
 async def test_disarm_pending_via_command_topic(hass, mqtt_mock_entry_with_yaml_config):
