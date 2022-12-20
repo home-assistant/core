@@ -14,9 +14,9 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     TEMP_CELSIUS,
+    UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
 )
@@ -98,7 +98,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         name="Cool energy consumption",
         icon="mdi:snowflake",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         entity_registry_enabled_default=False,
         value_func=lambda device: round(device.last_hour_cool_energy_consumption, 2),
     ),
@@ -107,7 +107,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         name="Heat energy consumption",
         icon="mdi:fire",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         entity_registry_enabled_default=False,
         value_func=lambda device: round(device.last_hour_heat_energy_consumption, 2),
     ),
@@ -116,7 +116,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         name="Energy consumption",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value_func=lambda device: round(device.today_energy_consumption, 2),
     ),
     DaikinSensorEntityDescription(
@@ -134,7 +134,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         name="Compressor energy consumption",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         entity_registry_enabled_default=False,
         value_func=lambda device: round(device.today_total_energy_consumption, 2),
     ),

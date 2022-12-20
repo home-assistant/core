@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.const import TIME_SECONDS
+from homeassistant.const import UnitOfTime
 
 LOGGER = logging.getLogger(__package__)
 
@@ -18,7 +18,7 @@ PACKETS_PER_SEC_RECEIVED = "packets_per_sec_received"
 PACKETS_PER_SEC_SENT = "packets_per_sec_sent"
 TIMESTAMP = "timestamp"
 DATA_PACKETS = "packets"
-DATA_RATE_PACKETS_PER_SECOND = f"{DATA_PACKETS}/{TIME_SECONDS}"
+DATA_RATE_PACKETS_PER_SECOND = f"{DATA_PACKETS}/{UnitOfTime.SECONDS}"
 WAN_STATUS = "wan_status"
 ROUTER_IP = "ip"
 ROUTER_UPTIME = "uptime"

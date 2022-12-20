@@ -25,7 +25,6 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    TIME_SECONDS,
     VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -37,6 +36,7 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfVolume,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -108,7 +108,7 @@ SENSOR_DESCRIPTIONS = {
     (BTHomeSensorDeviceClass.DURATION, Units.TIME_SECONDS): SensorEntityDescription(
         key=f"{BTHomeSensorDeviceClass.DURATION}_{Units.TIME_SECONDS}",
         device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # Energy (kWh)

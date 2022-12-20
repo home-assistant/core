@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
-    ENERGY_KILO_WATT_HOUR,
+    UnitOfEnergy,
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
@@ -266,7 +266,7 @@ class AtomeSensor(SensorEntity):
             self._attr_state_class = SensorStateClass.MEASUREMENT
         else:
             self._attr_device_class = SensorDeviceClass.ENERGY
-            self._attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+            self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     def update(self) -> None:

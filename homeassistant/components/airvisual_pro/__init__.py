@@ -7,8 +7,12 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
-from pyairvisual import NodeSamba
-from pyairvisual.node import NodeConnectionError, NodeProError
+from pyairvisual.node import (
+    InvalidAuthenticationError,
+    NodeConnectionError,
+    NodeProError,
+    NodeSamba,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -18,7 +22,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -56,6 +60,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Get data from the device."""
         try:
             data = await node.async_get_latest_measurements()
+        except InvalidAuthenticationError as err:
+            raise ConfigEntryAuthFailed("Invalid Samba password") from err
         except NodeConnectionError as err:
             nonlocal reload_task
             if not reload_task:
