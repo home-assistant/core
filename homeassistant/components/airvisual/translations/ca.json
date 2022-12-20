@@ -74,6 +74,12 @@
             }
         }
     },
+    "issues": {
+        "airvisual_pro_migration": {
+            "description": "Les unitats d'AirVisual Pro s\u00f3n ara la seva pr\u00f2pia integraci\u00f3 de Home Assistant (en lloc de ser incloses a trav\u00e9s de la integraci\u00f3 AirVisual original que utilitza l'API del n\u00favol d'AirVisual). El dispositiu Pro que es troba a `{ip_address}` s'ha migrat autom\u00e0ticament. \n\nCom a part de la migraci\u00f3, l'identificador (ID) del dispositiu Pro ha canviat de `{old_device_id}` a `{new_device_id}`. Actualitza les seg\u00fcents automatitzacions amb el nou ID de dispositiu: {device_automations_string}.",
+            "title": "{ip_address} ara forma part de la integraci\u00f3 AirVisual Pro"
+        }
+    },
     "options": {
         "step": {
             "init": {
