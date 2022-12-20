@@ -57,7 +57,7 @@ async def test_energy_today(
     assert state.state == "0.37"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Average electricity market price - Today"
+        == "Average electricity market price - today"
     )
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -73,7 +73,7 @@ async def test_energy_today(
     assert state
     assert entry.unique_id == f"{entry_id}_today_energy_max_price"
     assert state.state == "0.55"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Highest Price - Today"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Highest price - today"
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}"
@@ -90,7 +90,7 @@ async def test_energy_today(
     assert state
     assert entry.unique_id == f"{entry_id}_today_energy_highest_price_time"
     assert state.state == "2022-12-07T16:00:00+00:00"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Time of highest price - Today"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Time of highest price - today"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
     assert ATTR_ICON not in state.attributes
 
@@ -99,7 +99,7 @@ async def test_energy_today(
     assert device_entry
     assert device_entry.identifiers == {(DOMAIN, f"{entry_id}_today_energy")}
     assert device_entry.manufacturer == "EnergyZero"
-    assert device_entry.name == "Energy Market Price"
+    assert device_entry.name == "Energy market price"
     assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
     assert not device_entry.model
     assert not device_entry.sw_version
@@ -134,7 +134,7 @@ async def test_gas_today(
     assert device_entry
     assert device_entry.identifiers == {(DOMAIN, f"{entry_id}_today_gas")}
     assert device_entry.manufacturer == "EnergyZero"
-    assert device_entry.name == "Gas Market Price"
+    assert device_entry.name == "Gas market price"
     assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
     assert not device_entry.model
     assert not device_entry.sw_version

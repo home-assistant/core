@@ -6,7 +6,6 @@ import logging
 from typing import Final
 
 DOMAIN: Final = "energyzero"
-ATTRIBUTION: Final = "Data provided by EnergyZero"
 LOGGER = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(minutes=10)
 
