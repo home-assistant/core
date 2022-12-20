@@ -34,7 +34,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         websocket: HomeWizardClimateWebSocket = HomeWizardClimateWebSocket(
             api,
             device,
-            on_initialized=device_initialized,
         )
         websocket.connect_in_thread()
         websockets.append(websocket)
@@ -48,13 +47,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-def device_initialized(device: HomeWizardClimateDevice):
-    """Todo."""
-    _LOGGER.info("Device %s initialized", device.identifier)
-
-
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    for websocket in hass.data[DOMAIN][entry.entry_id]["websockets"]:
+        websocket.disconnect()
+
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
 
