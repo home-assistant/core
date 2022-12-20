@@ -21,7 +21,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, SERVICE_TYPE_DEVICE_NAMES
 from .coordinator import EnergyZeroData, EnergyZeroDataUpdateCoordinator
 
 
@@ -30,6 +30,7 @@ class EnergyZeroSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[EnergyZeroData], float | datetime | None]
+    service_type: str
 
 
 @dataclass
@@ -39,10 +40,11 @@ class EnergyZeroSensorEntityDescription(
     """Describes a Pure Energie sensor entity."""
 
 
-SENSORS_GAS: tuple[EnergyZeroSensorEntityDescription, ...] = (
+SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
     EnergyZeroSensorEntityDescription(
         key="current_hour_price",
         name="Current hour",
+        service_type="today_gas",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}",
@@ -51,6 +53,7 @@ SENSORS_GAS: tuple[EnergyZeroSensorEntityDescription, ...] = (
     EnergyZeroSensorEntityDescription(
         key="next_hour_price",
         name="Next hour",
+        service_type="today_gas",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}",
         value_fn=lambda data: data.gas_today.price_at_time(
@@ -59,12 +62,10 @@ SENSORS_GAS: tuple[EnergyZeroSensorEntityDescription, ...] = (
         if data.gas_today
         else None,
     ),
-)
-
-SENSORS_ENERGY: tuple[EnergyZeroSensorEntityDescription, ...] = (
     EnergyZeroSensorEntityDescription(
         key="current_hour_price",
         name="Current hour",
+        service_type="today_energy",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
@@ -73,6 +74,7 @@ SENSORS_ENERGY: tuple[EnergyZeroSensorEntityDescription, ...] = (
     EnergyZeroSensorEntityDescription(
         key="next_hour_price",
         name="Next hour",
+        service_type="today_energy",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         value_fn=lambda data: data.energy_today.price_at_time(
@@ -82,6 +84,7 @@ SENSORS_ENERGY: tuple[EnergyZeroSensorEntityDescription, ...] = (
     EnergyZeroSensorEntityDescription(
         key="average_price",
         name="Average - today",
+        service_type="today_energy",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         value_fn=lambda data: data.energy_today.average_price,
@@ -89,6 +92,7 @@ SENSORS_ENERGY: tuple[EnergyZeroSensorEntityDescription, ...] = (
     EnergyZeroSensorEntityDescription(
         key="max_price",
         name="Highest price - today",
+        service_type="today_energy",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         value_fn=lambda data: data.energy_today.extreme_prices[1],
@@ -96,6 +100,7 @@ SENSORS_ENERGY: tuple[EnergyZeroSensorEntityDescription, ...] = (
     EnergyZeroSensorEntityDescription(
         key="min_price",
         name="Lowest price - today",
+        service_type="today_energy",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         value_fn=lambda data: data.energy_today.extreme_prices[0],
@@ -103,18 +108,21 @@ SENSORS_ENERGY: tuple[EnergyZeroSensorEntityDescription, ...] = (
     EnergyZeroSensorEntityDescription(
         key="highest_price_time",
         name="Time of highest price - today",
+        service_type="today_energy",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: data.energy_today.highest_price_time,
     ),
     EnergyZeroSensorEntityDescription(
         key="lowest_price_time",
         name="Time of lowest price - today",
+        service_type="today_energy",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: data.energy_today.lowest_price_time,
     ),
     EnergyZeroSensorEntityDescription(
         key="percentage_of_max",
         name="Current percentage of highest price - today",
+        service_type="today_energy",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:percent",
         value_fn=lambda data: data.energy_today.pct_of_max_price,
@@ -127,25 +135,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up EnergyZero Sensors based on a config entry."""
     coordinator: EnergyZeroDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    entities = [
+    async_add_entities(
         EnergyZeroSensorEntity(
             coordinator=coordinator,
             description=description,
-            name="Energy market price",
-            service="today_energy",
         )
-        for description in SENSORS_ENERGY
-    ]
-    entities.extend(
-        EnergyZeroSensorEntity(
-            coordinator=coordinator,
-            description=description,
-            name="Gas market price",
-            service="today_gas",
-        )
-        for description in SENSORS_GAS
+        for description in SENSORS
     )
-    async_add_entities(entities)
 
 
 class EnergyZeroSensorEntity(
@@ -162,22 +158,24 @@ class EnergyZeroSensorEntity(
         *,
         coordinator: EnergyZeroDataUpdateCoordinator,
         description: EnergyZeroSensorEntityDescription,
-        name: str,
-        service: str,
     ) -> None:
         """Initialize EnergyZero sensor."""
         super().__init__(coordinator=coordinator)
-        self.entity_id = f"{SENSOR_DOMAIN}.energyzero_{service}_{description.key}"
         self.entity_description = description
-        self._attr_unique_id = (
-            f"{coordinator.config_entry.entry_id}_{service}_{description.key}"
+        self.entity_id = (
+            f"{SENSOR_DOMAIN}.{DOMAIN}_{description.service_type}_{description.key}"
         )
-
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.service_type}_{description.key}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, f"{coordinator.config_entry.entry_id}_{service}")},
+            identifiers={
+                (
+                    DOMAIN,
+                    f"{coordinator.config_entry.entry_id}_{description.service_type}",
+                )
+            },
             manufacturer="EnergyZero",
-            name=name,
+            name=SERVICE_TYPE_DEVICE_NAMES[self.entity_description.service_type],
         )
 
     @property

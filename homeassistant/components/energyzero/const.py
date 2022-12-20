@@ -10,4 +10,7 @@ LOGGER = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(minutes=10)
 THRESHOLD_HOUR: Final = 14
 
-CONF_GAS: Final = "gas"
+SERVICE_TYPE_DEVICE_NAMES = {
+    "today_energy": "Energy market price",
+    "today_gas": "Gas market price",
+}
