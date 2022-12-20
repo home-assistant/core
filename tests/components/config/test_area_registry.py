@@ -159,7 +159,7 @@ async def test_update_area(hass, client, registry):
     await client.send_json(
         {
             "id": 2,
-            "aliases": [],
+            "aliases": ["alias_1", "alias_1"],
             "area_id": area.id,
             "picture": None,
             "type": "config/area_registry/update",
@@ -169,7 +169,7 @@ async def test_update_area(hass, client, registry):
     msg = await client.receive_json()
 
     assert msg["result"] == {
-        "aliases": [],
+        "aliases": ["alias_1"],
         "area_id": area.id,
         "name": "mock 2",
         "picture": None,
