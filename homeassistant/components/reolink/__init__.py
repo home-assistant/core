@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import cast
+from aiohttp import ClientConnectorError
+from asyncio import TimeoutError
 
 import async_timeout
 
@@ -14,6 +16,8 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from reolink_ip.exceptions import InvalidContentTypeError, ApiError
 
 from .const import (
     DEVICE_CONFIG_UPDATE_COORDINATOR,
@@ -49,15 +53,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise ConfigEntryNotReady(
                 f"Error while trying to setup {host.api.host}:{host.api.port}: failed to obtain data from device."
             )
-    except Exception as error:  # pylint: disable=broad-except
-        err = str(error)
-        if err:
-            raise ConfigEntryNotReady(
-                f'Error while trying to setup {host.api.host}:{host.api.port}: "{err}".'
-            ) from error
+    except (ClientConnectorError, TimeoutError, ApiError, InvalidContentTypeError) as err:
         raise ConfigEntryNotReady(
-            f"Error while trying to setup {host.api.host}:{host.api.port}: failed to connect to device."
-        ) from error
+            f'Error while trying to setup {host.api.host}:{host.api.port}: "{str(err)}".'
+        ) from err
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, host.stop)
