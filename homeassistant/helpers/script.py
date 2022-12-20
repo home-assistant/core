@@ -494,8 +494,14 @@ class _ScriptRun:
         ):
             raise exception
 
-        # Only Home Assistant errors can be ignored.
-        if not isinstance(exception, exceptions.HomeAssistantError):
+        # Only Home Assistant errors and Connection error can be ignored.
+        if not isinstance(
+            exception,
+            (
+                exceptions.HomeAssistantError,
+                exceptions.ConnectionError,
+            ),
+        ):
             raise exception
 
     def _log_exception(self, exception):
