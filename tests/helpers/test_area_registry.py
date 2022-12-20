@@ -196,14 +196,40 @@ async def test_load_area(hass, registry):
 async def test_loading_area_from_storage(hass, hass_storage):
     """Test loading stored areas on start."""
     hass_storage[area_registry.STORAGE_KEY] = {
-        "version": area_registry.STORAGE_VERSION,
-        "data": {"areas": [{"id": "12345A", "name": "mock"}]},
+        "version": area_registry.STORAGE_VERSION_MAJOR,
+        "minor_version": area_registry.STORAGE_VERSION_MINOR,
+        "data": {"areas": [{"id": "12345A", "name": "mock", "picture": "blah"}]},
     }
 
     await area_registry.async_load(hass)
     registry = area_registry.async_get(hass)
 
     assert len(registry.areas) == 1
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_migration_from_1_1(hass, hass_storage):
+    """Test migration from version 1.1."""
+    hass_storage[area_registry.STORAGE_KEY] = {
+        "version": 1,
+        "data": {"areas": [{"id": "12345A", "name": "mock"}]},
+    }
+
+    await area_registry.async_load(hass)
+    registry = area_registry.async_get(hass)
+
+    # Test data was loaded
+    entry = registry.async_get_or_create("mock")
+    assert entry.id == "12345A"
+
+    # Check we store migrated data
+    await flush_store(registry._store)
+    assert hass_storage[area_registry.STORAGE_KEY] == {
+        "version": area_registry.STORAGE_VERSION_MAJOR,
+        "minor_version": area_registry.STORAGE_VERSION_MINOR,
+        "key": area_registry.STORAGE_KEY,
+        "data": {"areas": [{"id": "12345A", "name": "mock", "picture": None}]},
+    }
 
 
 async def test_async_get_or_create(hass, registry):

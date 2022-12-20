@@ -9,7 +9,7 @@
 -r requirements_test_pre_commit.txt
 astroid==2.12.13
 codecov==2.1.12
-coverage==6.4.4
+coverage==7.0.0
 freezegun==1.2.2
 mock-open==1.4.0
 mypy==0.991
@@ -24,6 +24,7 @@ pytest-socket==0.5.1
 pytest-test-groups==1.0.3
 pytest-sugar==0.9.5
 pytest-timeout==2.1.0
+pytest-unordered==0.5.2
 pytest-xdist==2.5.0
 pytest==7.2.0
 requests_mock==1.10.0

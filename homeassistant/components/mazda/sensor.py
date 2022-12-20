@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, PRESSURE_PSI, UnitOfLength
+from homeassistant.const import PERCENTAGE, UnitOfLength, UnitOfPressure
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -185,7 +185,7 @@ SENSOR_ENTITIES = [
         name="Front left tire pressure",
         icon="mdi:car-tire-alert",
         device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement=PRESSURE_PSI,
+        native_unit_of_measurement=UnitOfPressure.PSI,
         state_class=SensorStateClass.MEASUREMENT,
         is_supported=_front_left_tire_pressure_supported,
         value=_front_left_tire_pressure_value,
@@ -195,7 +195,7 @@ SENSOR_ENTITIES = [
         name="Front right tire pressure",
         icon="mdi:car-tire-alert",
         device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement=PRESSURE_PSI,
+        native_unit_of_measurement=UnitOfPressure.PSI,
         state_class=SensorStateClass.MEASUREMENT,
         is_supported=_front_right_tire_pressure_supported,
         value=_front_right_tire_pressure_value,
@@ -205,7 +205,7 @@ SENSOR_ENTITIES = [
         name="Rear left tire pressure",
         icon="mdi:car-tire-alert",
         device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement=PRESSURE_PSI,
+        native_unit_of_measurement=UnitOfPressure.PSI,
         state_class=SensorStateClass.MEASUREMENT,
         is_supported=_rear_left_tire_pressure_supported,
         value=_rear_left_tire_pressure_value,
@@ -215,7 +215,7 @@ SENSOR_ENTITIES = [
         name="Rear right tire pressure",
         icon="mdi:car-tire-alert",
         device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement=PRESSURE_PSI,
+        native_unit_of_measurement=UnitOfPressure.PSI,
         state_class=SensorStateClass.MEASUREMENT,
         is_supported=_rear_right_tire_pressure_supported,
         value=_rear_right_tire_pressure_value,

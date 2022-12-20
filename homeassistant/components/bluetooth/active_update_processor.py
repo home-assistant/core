@@ -1,4 +1,4 @@
-"""A Bluetooth passive coordinator that collects data from advertisements but can also poll."""
+"""A Bluetooth passive processor coordinator that collects data from advertisements but can also poll."""
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -24,7 +24,7 @@ class ActiveBluetoothProcessorCoordinator(
     Generic[_T], PassiveBluetoothProcessorCoordinator[_T]
 ):
     """
-    A coordinator that parses passive data from advertisements but can also poll.
+    A processor coordinator that parses passive data from advertisements but can also poll.
 
     Every time an advertisement is received, needs_poll_method is called to work
     out if a poll is needed. This should return True if it is and False if it is

@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_NAME,
     EVENT_HOMEASSISTANT_STARTED,
-    TIME_MINUTES,
+    UnitOfTime,
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -76,7 +76,7 @@ class GoogleTravelTimeSensor(SensorEntity):
         """Initialize the sensor."""
         self._name = name
         self._config_entry = config_entry
-        self._unit_of_measurement = TIME_MINUTES
+        self._unit_of_measurement = UnitOfTime.MINUTES
         self._matrix = None
         self._api_key = api_key
         self._unique_id = config_entry.entry_id
