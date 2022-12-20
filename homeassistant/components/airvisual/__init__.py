@@ -1,4 +1,4 @@
-"""The airvisual component."""
+"""The AirVisual component."""
 from __future__ import annotations
 
 import asyncio
@@ -7,10 +7,13 @@ from datetime import timedelta
 from math import ceil
 from typing import Any
 
-from pyairvisual import CloudAPI, NodeSamba
-from pyairvisual.cloud_api import InvalidKeyError, KeyExpiredError, UnauthorizedError
+from pyairvisual.cloud_api import (
+    CloudAPI,
+    InvalidKeyError,
+    KeyExpiredError,
+    UnauthorizedError,
+)
 from pyairvisual.errors import AirVisualError
-from pyairvisual.node import NodeProError
 
 from homeassistant.components import automation
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -19,7 +22,6 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_PASSWORD,
     CONF_SHOW_ON_MAP,
     CONF_STATE,
     Platform,
@@ -30,7 +32,6 @@ from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
     device_registry as dr,
-    entity_registry,
 )
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -204,108 +205,54 @@ def _standardize_geography_config_entry(
     hass.config_entries.async_update_entry(entry, **entry_updates)
 
 
-@callback
-def _standardize_node_pro_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Ensure that Node/Pro config entries have appropriate properties."""
-    entry_updates: dict[str, Any] = {}
-
-    if CONF_INTEGRATION_TYPE not in entry.data:
-        # If the config entry data doesn't contain the integration type, add it:
-        entry_updates["data"] = {
-            **entry.data,
-            CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_NODE_PRO,
-        }
-
-    if not entry_updates:
-        return
-
-    hass.config_entries.async_update_entry(entry, **entry_updates)
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up AirVisual as config entry."""
-    if CONF_API_KEY in entry.data:
-        _standardize_geography_config_entry(hass, entry)
+    _standardize_geography_config_entry(hass, entry)
 
-        websession = aiohttp_client.async_get_clientsession(hass)
-        cloud_api = CloudAPI(entry.data[CONF_API_KEY], session=websession)
+    websession = aiohttp_client.async_get_clientsession(hass)
+    cloud_api = CloudAPI(entry.data[CONF_API_KEY], session=websession)
 
-        async def async_update_data() -> dict[str, Any]:
-            """Get new data from the API."""
-            if CONF_CITY in entry.data:
-                api_coro = cloud_api.air_quality.city(
-                    entry.data[CONF_CITY],
-                    entry.data[CONF_STATE],
-                    entry.data[CONF_COUNTRY],
-                )
-            else:
-                api_coro = cloud_api.air_quality.nearest_city(
-                    entry.data[CONF_LATITUDE],
-                    entry.data[CONF_LONGITUDE],
-                )
-
-            try:
-                return await api_coro
-            except (InvalidKeyError, KeyExpiredError, UnauthorizedError) as ex:
-                raise ConfigEntryAuthFailed from ex
-            except AirVisualError as err:
-                raise UpdateFailed(f"Error while retrieving data: {err}") from err
-
-        coordinator = DataUpdateCoordinator(
-            hass,
-            LOGGER,
-            name=async_get_geography_id(entry.data),
-            # We give a placeholder update interval in order to create the coordinator;
-            # then, below, we use the coordinator's presence (along with any other
-            # coordinators using the same API key) to calculate an actual, leveled
-            # update interval:
-            update_interval=timedelta(minutes=5),
-            update_method=async_update_data,
-        )
-
-        # Only geography-based entries have options:
-        entry.async_on_unload(entry.add_update_listener(async_reload_entry))
-    else:
-        # Remove outdated air_quality entities from the entity registry if they exist:
-        ent_reg = entity_registry.async_get(hass)
-        for entity_entry in [
-            e
-            for e in ent_reg.entities.values()
-            if e.config_entry_id == entry.entry_id
-            and e.entity_id.startswith("air_quality")
-        ]:
-            LOGGER.debug(
-                'Removing deprecated air_quality entity: "%s"', entity_entry.entity_id
+    async def async_update_data() -> dict[str, Any]:
+        """Get new data from the API."""
+        if CONF_CITY in entry.data:
+            api_coro = cloud_api.air_quality.city(
+                entry.data[CONF_CITY],
+                entry.data[CONF_STATE],
+                entry.data[CONF_COUNTRY],
             )
-            ent_reg.async_remove(entity_entry.entity_id)
+        else:
+            api_coro = cloud_api.air_quality.nearest_city(
+                entry.data[CONF_LATITUDE],
+                entry.data[CONF_LONGITUDE],
+            )
 
-        _standardize_node_pro_config_entry(hass, entry)
+        try:
+            return await api_coro
+        except (InvalidKeyError, KeyExpiredError, UnauthorizedError) as ex:
+            raise ConfigEntryAuthFailed from ex
+        except AirVisualError as err:
+            raise UpdateFailed(f"Error while retrieving data: {err}") from err
 
-        async def async_update_data() -> dict[str, Any]:
-            """Get new data from the API."""
-            try:
-                async with NodeSamba(
-                    entry.data[CONF_IP_ADDRESS], entry.data[CONF_PASSWORD]
-                ) as node:
-                    return await node.async_get_latest_measurements()
-            except NodeProError as err:
-                raise UpdateFailed(f"Error while retrieving data: {err}") from err
+    coordinator = DataUpdateCoordinator(
+        hass,
+        LOGGER,
+        name=async_get_geography_id(entry.data),
+        # We give a placeholder update interval in order to create the coordinator;
+        # then, below, we use the coordinator's presence (along with any other
+        # coordinators using the same API key) to calculate an actual, leveled
+        # update interval:
+        update_interval=timedelta(minutes=5),
+        update_method=async_update_data,
+    )
 
-        coordinator = DataUpdateCoordinator(
-            hass,
-            LOGGER,
-            name="Node/Pro data",
-            update_interval=DEFAULT_NODE_PRO_UPDATE_INTERVAL,
-            update_method=async_update_data,
-        )
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     # Reassess the interval between 2 server requests
-    if CONF_API_KEY in entry.data:
-        async_sync_geo_coordinator_update_intervals(hass, entry.data[CONF_API_KEY])
+    async_sync_geo_coordinator_update_intervals(hass, entry.data[CONF_API_KEY])
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

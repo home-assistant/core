@@ -12,12 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import (
-    CONF_CURRENCY,
-    CONF_DISPLAY_OPTIONS,
-    TIME_MINUTES,
-    TIME_SECONDS,
-)
+from homeassistant.const import CONF_CURRENCY, CONF_DISPLAY_OPTIONS, UnitOfTime
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -65,7 +60,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="minutes_between_blocks",
         name="Time between Blocks",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
     ),
     SensorEntityDescription(
         key="number_of_transactions",
@@ -74,7 +69,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="hash_rate",
         name="Hash rate",
-        native_unit_of_measurement=f"PH/{TIME_SECONDS}",
+        native_unit_of_measurement=f"PH/{UnitOfTime.SECONDS}",
     ),
     SensorEntityDescription(
         key="timestamp",

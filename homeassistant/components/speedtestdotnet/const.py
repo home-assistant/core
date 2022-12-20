@@ -7,7 +7,6 @@ DOMAIN: Final = "speedtestdotnet"
 
 CONF_SERVER_NAME: Final = "server_name"
 CONF_SERVER_ID: Final = "server_id"
-CONF_MANUAL: Final = "manual"
 
 ATTR_BYTES_RECEIVED: Final = "bytes_received"
 ATTR_BYTES_SENT: Final = "bytes_sent"

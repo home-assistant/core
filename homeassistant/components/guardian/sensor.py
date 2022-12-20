@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_FAHRENHEIT, TIME_MINUTES, UnitOfElectricPotential
+from homeassistant.const import TEMP_FAHRENHEIT, UnitOfElectricPotential, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
@@ -72,7 +72,7 @@ VALVE_CONTROLLER_DESCRIPTIONS = (
         name="Uptime",
         icon="mdi:timer",
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         api_category=API_SYSTEM_DIAGNOSTICS,
     ),
 )

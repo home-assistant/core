@@ -33,9 +33,9 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     TEMP_CELSIUS,
-    TIME_SECONDS,
     UnitOfDataRate,
     UnitOfInformation,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
@@ -146,7 +146,7 @@ SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
         key=QSD_SYSTEM_TIME,
         entity_category=EntityCategory.DIAGNOSTIC,
         name="Uptime",
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         subkey=QSD_UPTIME,
     ),

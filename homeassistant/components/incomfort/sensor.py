@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import PRESSURE_BAR, TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS, UnitOfPressure
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -35,7 +35,7 @@ SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (
         key="pressure",
         name=INCOMFORT_PRESSURE,
         device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement=PRESSURE_BAR,
+        native_unit_of_measurement=UnitOfPressure.BAR,
     ),
     IncomfortSensorEntityDescription(
         key="heater_temp",
