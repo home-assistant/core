@@ -188,7 +188,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         tokens = dict(app_storage or {})
 
         if tokens.pop(CONF_USERNAME, None) != config[DOMAIN][CONF_USERNAME]:
-            # any tokens won't be valid, and store might be be corrupt
+            # any tokens won't be valid, and store might be corrupt
             await store.async_save({})
             return ({}, None)
 

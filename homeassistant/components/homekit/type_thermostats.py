@@ -405,7 +405,7 @@ class Thermostat(HomeAccessory):
             if target_hc not in self.hc_homekit_to_hass:
                 # If the target heating cooling state we want does not
                 # exist on the device, we have to sort it out
-                # based on the the current and target temperature since
+                # based on the current and target temperature since
                 # siri will always send HC_HEAT_COOL_AUTO in this case
                 # and hope for the best.
                 hc_target_temp = char_values.get(CHAR_TARGET_TEMPERATURE)

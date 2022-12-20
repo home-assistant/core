@@ -90,7 +90,7 @@ async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> Non
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Unload the config config and platforms."""
+    """Unload the config and platforms."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     )
