@@ -1,7 +1,7 @@
 """Coordinator for imag integration."""
 from __future__ import annotations
 
-from asyncio import Task, TimeoutError as AsyncIOTimeoutError
+import asyncio
 import logging
 from typing import Any
 
@@ -36,7 +36,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int]):
         """Initiate imap client."""
         self.hass = hass
         self.imap_client = imap_client
-        self.idle_loop_task: Task | None = None
+        self.idle_loop_task: asyncio.Task | None = None
         self.support_push = imap_client.has_capability("IDLE")
         super().__init__(
             hass,
@@ -49,18 +49,21 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int]):
         try:
             if self.imap_client is None:
                 await self.retry_connection()
-        except (AioImapException, AsyncIOTimeoutError) as err:
+        except (AioImapException, asyncio.TimeoutError) as err:
             raise UpdateFailed(err) from err
 
         return await self.refresh_email_count()
 
     async def refresh_email_count(self) -> int:
         """Check the number of found emails."""
-        await self.imap_client.noop()
-        result, lines = await self.imap_client.search(
-            self.config_entry.data[CONF_SEARCH],
-            charset=self.config_entry.data[CONF_CHARSET],
-        )
+        try:
+            await self.imap_client.noop()
+            result, lines = await self.imap_client.search(
+                self.config_entry.data[CONF_SEARCH],
+                charset=self.config_entry.data[CONF_CHARSET],
+            )
+        except (AioImapException, asyncio.TimeoutError) as err:
+            raise UpdateFailed(err) from err
 
         if result != "OK":
             raise UpdateFailed(
@@ -78,7 +81,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int]):
                 async with async_timeout.timeout(10):
                     await idle
                 await self.async_request_refresh()
-            except (AioImapException, AsyncIOTimeoutError):
+            except (AioImapException, asyncio.TimeoutError):
                 _LOGGER.warning(
                     "Lost %s (will attempt to reconnect)",
                     self.config_entry.data[CONF_SERVER],
@@ -90,7 +93,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int]):
         """Retry the connection in case of error."""
         self.imap_client = await connect_to_server(dict(self.config_entry.data))
         if self.support_push:
-            self.hass.loop.create_task(self.idle_loop())
+            asyncio.create_task(self.idle_loop())
 
     async def shutdown(self, *_) -> None:
         """Close resources."""

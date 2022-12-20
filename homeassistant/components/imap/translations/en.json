@@ -20,7 +20,6 @@
                 "data": {
                     "charset": "Character set",
                     "folder": "Folder",
-                    "name": "Name",
                     "password": "Password",
                     "port": "Port",
                     "search": "IMAP search",

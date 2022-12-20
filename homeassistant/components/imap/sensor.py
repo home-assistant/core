@@ -50,7 +50,7 @@ async def async_setup_platform(
         hass,
         DOMAIN,
         "deprecated_yaml",
-        breaks_in_ha_version="2022.11.0",
+        breaks_in_ha_version="2023.3.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
@@ -87,13 +87,12 @@ class ImapSensor(CoordinatorEntity[ImapDataUpdateCoordinator], SensorEntity):
         if CONF_NAME in coordinator.config_entry.data:
             self._attr_name = coordinator.config_entry.data[CONF_NAME]
             self._attr_has_entity_name = False
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{coordinator.config_entry.data[CONF_USERNAME]}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             name=f"IMAP ({coordinator.config_entry.data[CONF_USERNAME]})",
             entry_type=DeviceEntryType.SERVICE,
         )
-        self._attr_should_poll = coordinator.support_push
 
     @property
     def native_value(self) -> int:

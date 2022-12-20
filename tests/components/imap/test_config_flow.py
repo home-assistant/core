@@ -1,5 +1,5 @@
 """Test the imap config flow."""
-from asyncio import TimeoutError as AsyncIOTimeoutError
+import asyncio
 from unittest.mock import patch
 
 from aioimaplib import AioImapException
@@ -145,7 +145,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.imap.config_flow.connect_to_server",
-        side_effect=AsyncIOTimeoutError,
+        side_effect=asyncio.TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], MOCK_CONFIG
@@ -252,7 +252,7 @@ async def test_reauth_failed_conn_error(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.imap.config_flow.connect_to_server",
-        side_effect=AsyncIOTimeoutError,
+        side_effect=asyncio.TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

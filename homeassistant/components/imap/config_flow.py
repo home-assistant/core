@@ -1,7 +1,7 @@
 """Config flow for imap integration."""
 from __future__ import annotations
 
-from asyncio import TimeoutError as AsyncIOTimeoutError
+import asyncio
 from collections.abc import Mapping
 from typing import Any
 
@@ -63,7 +63,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await connect_to_server(user_input)
-        except (AsyncIOTimeoutError, ConnectionRefusedError):
+        except (asyncio.TimeoutError, ConnectionRefusedError):
             errors["base"] = "cannot_connect"
         except AioImapException:
             errors["base"] = "invalid_auth"
@@ -98,7 +98,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user_input = {**self._reauth_entry.data, **user_input}
             try:
                 await connect_to_server(user_input)
-            except (AsyncIOTimeoutError, ConnectionRefusedError):
+            except (asyncio.TimeoutError, ConnectionRefusedError):
                 errors["base"] = "cannot_connect"
             except AioImapException:
                 errors["base"] = "invalid_auth"

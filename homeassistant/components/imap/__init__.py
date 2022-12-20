@@ -1,7 +1,7 @@
 """The imap integration."""
 from __future__ import annotations
 
-from asyncio import TimeoutError as AsyncIOTimeoutError
+import asyncio
 from datetime import timedelta
 
 from aioimaplib import IMAP4_SSL, AioImapException
@@ -23,20 +23,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         imap_client: IMAP4_SSL = await connect_to_server(dict(entry.data))
     except AioImapException as err:
         raise ConfigEntryAuthFailed from err
-    except AsyncIOTimeoutError as err:
+    except asyncio.TimeoutError as err:
         raise ConfigEntryNotReady from err
 
     coordinator = ImapDataUpdateCoordinator(hass, imap_client)
     await coordinator.async_config_entry_first_refresh()
 
     if coordinator.support_push:
-        coordinator.idle_loop_task = hass.loop.create_task(coordinator.idle_loop())
+        coordinator.idle_loop_task = asyncio.create_task(coordinator.idle_loop())
     else:
         coordinator.update_interval = timedelta(seconds=10)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, coordinator.shutdown)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, coordinator.shutdown)
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
