@@ -13,7 +13,7 @@ from wolf_smartset.models import (
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS, TIME_HOURS, UnitOfPressure
+from homeassistant.const import TEMP_CELSIUS, UnitOfPressure, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -100,7 +100,7 @@ class WolfLinkHours(WolfLinkSensor):
     @property
     def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return TIME_HOURS
+        return UnitOfTime.HOURS
 
 
 class WolfLinkTemperature(WolfLinkSensor):
