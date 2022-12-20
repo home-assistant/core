@@ -176,7 +176,6 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 for device in old_data["devices"]:
                     device["hw_version"] = None
             if old_minor_version < 4:
-                # Introduced in 2022.2
                 for device in old_data["devices"]:
                     device["aliases"] = []
 
