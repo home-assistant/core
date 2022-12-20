@@ -8,5 +8,5 @@
   "after_dependencies": ["http"],
   "codeowners": ["@starkillerOG", "@JimStar"],
   "iot_class": "local_polling",
-  "loggers": ["motionblinds"]
+  "loggers": ["reolink-ip"]
 }
