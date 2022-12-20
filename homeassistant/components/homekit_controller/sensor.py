@@ -26,7 +26,6 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    TEMP_CELSIUS,
     Platform,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -34,6 +33,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPressure,
     UnitOfSoundPressure,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
@@ -230,7 +230,7 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         name="Current Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         # This sensor is only for temperature characteristics that are not part
         # of a temperature sensor service.
         probe=(lambda char: char.service.type != ServicesTypes.TEMPERATURE_SENSOR),
@@ -380,7 +380,7 @@ class HomeKitTemperatureSensor(HomeKitSensor):
     """Representation of a Homekit temperature sensor."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = TEMP_CELSIUS
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
