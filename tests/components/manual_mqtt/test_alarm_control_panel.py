@@ -260,7 +260,17 @@ async def test_with_invalid_code(
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
 
 
-async def test_arm_home_with_template_code(hass, mqtt_mock_entry_with_yaml_config):
+@pytest.mark.parametrize(
+    "service,expected_state",
+    [
+        (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
+        (SERVICE_ALARM_ARM_HOME, STATE_ALARM_ARMED_HOME),
+        (SERVICE_ALARM_ARM_NIGHT, STATE_ALARM_ARMED_NIGHT),
+    ],
+)
+async def test_with_template_code(
+    hass, service, expected_state, mqtt_mock_entry_with_yaml_config
+):
     """Attempt to arm with a template-based code."""
     assert await async_setup_component(
         hass,
@@ -283,11 +293,15 @@ async def test_arm_home_with_template_code(hass, mqtt_mock_entry_with_yaml_confi
 
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
 
-    await common.async_alarm_arm_home(hass, "abc")
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        alarm_control_panel.DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: "abc"},
+        blocking=True,
+    )
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ALARM_ARMED_HOME
+    assert state.state == expected_state
 
 
 async def test_trigger_no_pending(hass, mqtt_mock_entry_with_yaml_config):
