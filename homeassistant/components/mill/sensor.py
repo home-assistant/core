@@ -16,9 +16,9 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_USERNAME,
     PERCENTAGE,
-    TEMP_CELSIUS,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -62,7 +62,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=TEMPERATURE,
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         name="Temperature",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -112,7 +112,7 @@ LOCAL_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="raw_ambient_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         name="Uncalibrated temperature",
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
