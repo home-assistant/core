@@ -33,7 +33,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_CATEGORIES, DEFAULT_RADIUS_IN_KM, VALID_CATEGORIES
+from .const import (
+    CONF_CATEGORIES,
+    DEFAULT_RADIUS_IN_KM,
+    DEFAULT_SCAN_INTERVAL,
+    VALID_CATEGORIES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,8 +51,6 @@ ATTR_RESPONSIBLE_AGENCY = "responsible_agency"
 ATTR_SIZE = "size"
 ATTR_STATUS = "status"
 ATTR_TYPE = "type"
-
-SCAN_INTERVAL = timedelta(minutes=5)
 
 SIGNAL_DELETE_ENTITY = "nsw_rural_fire_service_feed_delete_{}"
 SIGNAL_UPDATE_ENTITY = "nsw_rural_fire_service_feed_update_{}"
@@ -73,7 +76,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the NSW Rural Fire Service Feed platform."""
-    scan_interval: timedelta = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
+    scan_interval: timedelta = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     coordinates: tuple[float, float] = (
         config.get(CONF_LATITUDE, hass.config.latitude),
         config.get(CONF_LONGITUDE, hass.config.longitude),
