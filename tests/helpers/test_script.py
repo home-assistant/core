@@ -31,7 +31,7 @@ from homeassistant.core import (
     ServiceCall,
     callback,
 )
-from homeassistant.exceptions import ConditionError, HomeAssistantError, ServiceNotFound
+from homeassistant.exceptions import ConditionError, HomeAssistantError, ServiceNotFound, ConnectionError
 from homeassistant.helpers import (
     config_validation as cv,
     entity_registry as er,
