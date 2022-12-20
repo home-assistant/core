@@ -81,7 +81,6 @@ class SwitchbotDataUpdateCoordinator(
         self, service_info: bluetooth.BluetoothServiceInfoBleak
     ) -> dict[str, Any]:
         """Poll the device."""
-        _LOGGER.warning("%s: Doing update", self.device_name)
         return await self.device.update()
 
     @callback
