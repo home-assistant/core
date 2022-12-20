@@ -24,17 +24,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry
-from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
-from .const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
-    SUPPORT_ALARM_ARM_VACATION,
-)
 
 BASIC_TRIGGER_TYPES: Final[set[str]] = {"triggered", "disarmed", "arming"}
 TRIGGER_TYPES: Final[set[str]] = BASIC_TRIGGER_TYPES | {
@@ -65,8 +58,6 @@ async def async_get_triggers(
         if entry.domain != DOMAIN:
             continue
 
-        supported_features = get_supported_features(hass, entry.entity_id)
-
         # Add triggers for each entity that belongs to this integration
         base_trigger = {
             CONF_PLATFORM: "device",
@@ -80,37 +71,8 @@ async def async_get_triggers(
                 **base_trigger,
                 CONF_TYPE: trigger,
             }
-            for trigger in BASIC_TRIGGER_TYPES
+            for trigger in TRIGGER_TYPES
         ]
-        if supported_features & SUPPORT_ALARM_ARM_HOME:
-            triggers.append(
-                {
-                    **base_trigger,
-                    CONF_TYPE: "armed_home",
-                }
-            )
-        if supported_features & SUPPORT_ALARM_ARM_AWAY:
-            triggers.append(
-                {
-                    **base_trigger,
-                    CONF_TYPE: "armed_away",
-                }
-            )
-        if supported_features & SUPPORT_ALARM_ARM_NIGHT:
-            triggers.append(
-                {
-                    **base_trigger,
-                    CONF_TYPE: "armed_night",
-                }
-            )
-        if supported_features & SUPPORT_ALARM_ARM_VACATION:
-            triggers.append(
-                {
-                    **base_trigger,
-                    CONF_TYPE: "armed_vacation",
-                }
-            )
-
     return triggers
 
 

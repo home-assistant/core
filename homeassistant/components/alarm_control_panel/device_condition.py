@@ -23,7 +23,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import condition, config_validation as cv, entity_registry
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
-from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DOMAIN
@@ -35,11 +34,6 @@ from .const import (
     CONDITION_ARMED_VACATION,
     CONDITION_DISARMED,
     CONDITION_TRIGGERED,
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
-    SUPPORT_ALARM_ARM_VACATION,
 )
 
 CONDITION_TYPES: Final[set[str]] = {
@@ -72,8 +66,6 @@ async def async_get_conditions(
         if entry.domain != DOMAIN:
             continue
 
-        supported_features = get_supported_features(hass, entry.entity_id)
-
         # Add conditions for each entity that belongs to this integration
         base_condition = {
             CONF_CONDITION: "device",
@@ -85,19 +77,12 @@ async def async_get_conditions(
         conditions += [
             {**base_condition, CONF_TYPE: CONDITION_DISARMED},
             {**base_condition, CONF_TYPE: CONDITION_TRIGGERED},
+            {**base_condition, CONF_TYPE: CONDITION_ARMED_HOME},
+            {**base_condition, CONF_TYPE: CONDITION_ARMED_AWAY},
+            {**base_condition, CONF_TYPE: CONDITION_ARMED_NIGHT},
+            {**base_condition, CONF_TYPE: CONDITION_ARMED_VACATION},
+            {**base_condition, CONF_TYPE: CONDITION_ARMED_CUSTOM_BYPASS},
         ]
-        if supported_features & SUPPORT_ALARM_ARM_HOME:
-            conditions.append({**base_condition, CONF_TYPE: CONDITION_ARMED_HOME})
-        if supported_features & SUPPORT_ALARM_ARM_AWAY:
-            conditions.append({**base_condition, CONF_TYPE: CONDITION_ARMED_AWAY})
-        if supported_features & SUPPORT_ALARM_ARM_NIGHT:
-            conditions.append({**base_condition, CONF_TYPE: CONDITION_ARMED_NIGHT})
-        if supported_features & SUPPORT_ALARM_ARM_VACATION:
-            conditions.append({**base_condition, CONF_TYPE: CONDITION_ARMED_VACATION})
-        if supported_features & SUPPORT_ALARM_ARM_CUSTOM_BYPASS:
-            conditions.append(
-                {**base_condition, CONF_TYPE: CONDITION_ARMED_CUSTOM_BYPASS}
-            )
 
     return conditions
 
