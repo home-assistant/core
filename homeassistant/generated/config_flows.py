@@ -286,6 +286,7 @@ FLOWS = {
         "nmap_tracker",
         "nobo_hub",
         "notion",
+        "nsw_rural_fire_service_feed",
         "nuheat",
         "nuki",
         "nut",

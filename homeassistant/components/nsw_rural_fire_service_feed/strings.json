@@ -1,0 +1,19 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Fill in your filter details.",
+        "data": {
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]",
+          "radius": "Radius",
+          "categories": "Categories",
+          "scan_interval": "Update Interval (seconds)"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  }
+}

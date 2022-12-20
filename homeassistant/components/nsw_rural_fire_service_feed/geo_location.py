@@ -46,6 +46,7 @@ ATTR_TYPE = "type"
 
 SOURCE = "nsw_rural_fire_service_feed"
 
+# Deprecated.
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_CATEGORIES, default=[]): vol.All(
