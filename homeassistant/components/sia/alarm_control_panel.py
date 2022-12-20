@@ -10,6 +10,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityDescription,
 )
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
@@ -17,7 +18,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
-    STATE_UNAVAILABLE,
+    STATE_UNAVAILABLE
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -108,6 +109,7 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
 
         self._attr_state: StateType = None
         self._old_state: StateType = None
+        self._attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY | AlarmControlPanelEntityFeature.ARM_NIGHT | AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
 
     def handle_last_state(self, last_state: State | None) -> None:
         """Handle the last state."""
