@@ -172,11 +172,14 @@ class RegistryEntry:
         hass.states.async_set(self.entity_id, STATE_UNAVAILABLE, attrs)
 
 
-class EntityRegistryStore(storage.Store):
+class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
     """Store entity registry data."""
 
     async def _async_migrate_func(
-        self, old_major_version: int, old_minor_version: int, old_data: dict
+        self,
+        old_major_version: int,
+        old_minor_version: int,
+        old_data: dict[str, list[dict[str, Any]]],
     ) -> dict:
         """Migrate to the new version."""
         data = old_data
@@ -184,20 +187,20 @@ class EntityRegistryStore(storage.Store):
             # From version 1.1
             for entity in data["entities"]:
                 # Populate all keys
-                entity["area_id"] = entity.get("area_id")
-                entity["capabilities"] = entity.get("capabilities") or {}
-                entity["config_entry_id"] = entity.get("config_entry_id")
-                entity["device_class"] = entity.get("device_class")
-                entity["device_id"] = entity.get("device_id")
-                entity["disabled_by"] = entity.get("disabled_by")
-                entity["entity_category"] = entity.get("entity_category")
-                entity["icon"] = entity.get("icon")
-                entity["name"] = entity.get("name")
-                entity["original_icon"] = entity.get("original_icon")
-                entity["original_name"] = entity.get("original_name")
-                entity["platform"] = entity["platform"]
-                entity["supported_features"] = entity.get("supported_features", 0)
-                entity["unit_of_measurement"] = entity.get("unit_of_measurement")
+                entity.setdefault("area_id", None)
+                entity.setdefault("capabilities", {})
+                entity.setdefault("config_entry_id", None)
+                entity.setdefault("device_class", None)
+                entity.setdefault("device_id", None)
+                entity.setdefault("disabled_by", None)
+                entity.setdefault("entity_category", None)
+                entity.setdefault("icon", None)
+                entity.setdefault("name", None)
+                entity.setdefault("original_icon", None)
+                entity.setdefault("original_name", None)
+                entity.setdefault("platform", None)
+                entity.setdefault("supported_features", 0)
+                entity.setdefault("unit_of_measurement", None)
 
         if old_major_version == 1 and old_minor_version < 3:
             # Version 1.3 adds original_device_class
@@ -238,7 +241,7 @@ class EntityRegistryStore(storage.Store):
         if old_major_version == 1 and old_minor_version < 9:
             # Version 1.9 adds translation_key
             for entity in data["entities"]:
-                entity["translation_key"] = entity.get("translation_key")
+                entity["translation_key"] = None
 
         if old_major_version > 1:
             raise NotImplementedError
