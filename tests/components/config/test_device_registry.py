@@ -164,7 +164,8 @@ async def test_update_device(hass, client, registry, payload_key, payload_value)
     assert isinstance(device.disabled_by, (helpers_dr.DeviceEntryDisabler, type(None)))
 
 
-async def test_update_aliases(hass, client, registry):
+@pytest.mark.parametrize("aliases", (["alias_1", "alias_2"], ["alias_1", "alias_1"]))
+async def test_update_aliases(hass, client, registry, aliases):
     """Test update entry."""
     device = registry.async_get_or_create(
         config_entry_id="1234",
@@ -175,8 +176,6 @@ async def test_update_aliases(hass, client, registry):
     )
 
     assert not device.aliases == {}
-
-    aliases = ["alias_1", "alias_2"]
 
     await client.send_json(
         {
@@ -196,10 +195,9 @@ async def test_update_aliases(hass, client, registry):
         connections={("ethernet", "12:34:56:78:90:AB:CD:EF")},
     )
 
-    assert msg["result"]["aliases"] == unordered(aliases)
+    # Test that the aliases list is stored by the registry as a set
+    assert msg["result"]["aliases"] == unordered(list(set(aliases)))
     assert device.aliases == set(aliases)
-
-    assert isinstance(device.disabled_by, (helpers_dr.DeviceEntryDisabler, type(None)))
 
 
 async def test_remove_config_entry_from_device(hass, hass_ws_client):
