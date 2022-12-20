@@ -76,3 +76,18 @@ ptz:
             - "GotoPreset"
             - "RelativeMove"
             - "Stop"
+
+aux:
+  name: AUX
+  description: If your ONVIF camera supports PTZ auxiliary commands such as turning wiper or heater on, you will be able to send them.
+  target:
+    entity:
+      integration: onvif
+      domain: camera
+  fields:
+    cmd:
+      name: Command
+      description: "Command to send"
+      example: "tt:Wiper|On"
+      selector:
+        text:

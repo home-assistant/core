@@ -19,6 +19,7 @@ ATTR_SPEED = "speed"
 ATTR_MOVE_MODE = "move_mode"
 ATTR_CONTINUOUS_DURATION = "continuous_duration"
 ATTR_PRESET = "preset"
+ATTR_CMD = "cmd"
 
 DIR_UP = "UP"
 DIR_DOWN = "DOWN"
@@ -36,3 +37,4 @@ GOTOPRESET_MOVE = "GotoPreset"
 STOP_MOVE = "Stop"
 
 SERVICE_PTZ = "ptz"
+SERVICE_AUX = "aux"

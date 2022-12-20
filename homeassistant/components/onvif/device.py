@@ -482,6 +482,33 @@ class ONVIFDevice:
             else:
                 LOGGER.error("Error trying to perform PTZ action: %s", err)
 
+    async def async_run_aux_command(
+        self,
+        profile: Profile,
+        cmd,
+    ):
+        """Execute a PTZ auxiliary command on the camera."""
+        if not self.capabilities.ptz:
+            LOGGER.warning("PTZ actions are not supported on device '%s'", self.name)
+            return
+
+        ptz_service = self.device.create_ptz_service()
+
+        LOGGER.debug(
+            "Running Aux Command | Cmd = %s",
+            cmd,
+        )
+        try:
+            req = ptz_service.create_type("SendAuxiliaryCommand")
+            req.ProfileToken = profile.token
+            req.AuxiliaryData = cmd
+            await ptz_service.SendAuxiliaryCommand(req)
+        except ONVIFError as err:
+            if "Bad Request" in err.reason:
+                LOGGER.warning("Device '%s' doesn't support PTZ", self.name)
+            else:
+                LOGGER.error("Error trying to send PTZ auxiliary command: %s", err)
+
 
 def get_device(hass, host, port, username, password) -> ONVIFCamera:
     """Get ONVIFCamera instance."""

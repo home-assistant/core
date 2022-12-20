@@ -24,6 +24,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .base import ONVIFBaseEntity
 from .const import (
     ABSOLUTE_MOVE,
+    ATTR_CMD,
     ATTR_CONTINUOUS_DURATION,
     ATTR_DISTANCE,
     ATTR_MOVE_MODE,
@@ -42,6 +43,7 @@ from .const import (
     GOTOPRESET_MOVE,
     LOGGER,
     RELATIVE_MOVE,
+    SERVICE_AUX,
     SERVICE_PTZ,
     STOP_MOVE,
     ZOOM_IN,
@@ -81,6 +83,14 @@ async def async_setup_entry(
             vol.Optional(ATTR_PRESET, default="0"): cv.string,
         },
         "async_perform_ptz",
+    )
+    # Create aux cmd service
+    platform.async_register_entity_service(
+        SERVICE_AUX,
+        {
+            ATTR_CMD: cv.string,
+        },
+        "async_run_aux_command",
     )
 
     device = hass.data[DOMAIN][config_entry.unique_id]
@@ -220,4 +230,14 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
             pan,
             tilt,
             zoom,
+        )
+
+    async def async_run_aux_command(
+        self,
+        cmd,
+    ) -> None:
+        """Execute a PTZ auxiliary command on the camera."""
+        await self.device.async_run_aux_command(
+            self.profile,
+            cmd,
         )
