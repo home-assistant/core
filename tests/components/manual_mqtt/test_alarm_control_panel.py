@@ -19,6 +19,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_ARMED_VACATION,
+    STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
@@ -92,7 +93,7 @@ async def test_no_pending(
                 "platform": "manual_mqtt",
                 "name": "test",
                 "code": CODE,
-                "pending_time": 0,
+                "arming_time": 0,
                 "disarm_after_trigger": False,
                 "command_topic": "alarm/command",
                 "state_topic": "alarm/state",
@@ -138,7 +139,7 @@ async def test_no_pending_when_code_not_req(
                 "name": "test",
                 "code": CODE,
                 "code_arm_required": False,
-                "pending_time": 0,
+                "arming_time": 0,
                 "disarm_after_trigger": False,
                 "command_topic": "alarm/command",
                 "state_topic": "alarm/state",
@@ -183,7 +184,7 @@ async def test_with_pending(
                 "platform": "manual_mqtt",
                 "name": "test",
                 "code": CODE,
-                "pending_time": 1,
+                "arming_time": 1,
                 "disarm_after_trigger": False,
                 "command_topic": "alarm/command",
                 "state_topic": "alarm/state",
@@ -203,7 +204,7 @@ async def test_with_pending(
         blocking=True,
     )
 
-    assert hass.states.get(entity_id).state == STATE_ALARM_PENDING
+    assert hass.states.get(entity_id).state == STATE_ALARM_ARMING
 
     state = hass.states.get(entity_id)
     assert state.attributes["next_state"] == expected_state
@@ -252,7 +253,7 @@ async def test_with_invalid_code(
                 "platform": "manual_mqtt",
                 "name": "test",
                 "code": CODE,
-                "pending_time": 1,
+                "arming_time": 1,
                 "disarm_after_trigger": False,
                 "command_topic": "alarm/command",
                 "state_topic": "alarm/state",
@@ -297,7 +298,7 @@ async def test_with_template_code(
                 "platform": "manual_mqtt",
                 "name": "test",
                 "code_template": '{{ "abc" }}',
-                "pending_time": 0,
+                "arming_time": 0,
                 "disarm_after_trigger": False,
                 "command_topic": "alarm/command",
                 "state_topic": "alarm/state",
@@ -342,8 +343,8 @@ async def test_with_specific_pending(
             "alarm_control_panel": {
                 "platform": "manual_mqtt",
                 "name": "test",
-                "pending_time": 10,
-                expected_state: {"pending_time": 2},
+                "arming_time": 10,
+                expected_state: {"arming_time": 2},
                 "command_topic": "alarm/command",
                 "state_topic": "alarm/state",
             }
@@ -360,7 +361,7 @@ async def test_with_specific_pending(
         blocking=True,
     )
 
-    assert hass.states.get(entity_id).state == STATE_ALARM_PENDING
+    assert hass.states.get(entity_id).state == STATE_ALARM_ARMING
 
     future = dt_util.utcnow() + timedelta(seconds=2)
     with patch(
@@ -424,7 +425,7 @@ async def test_trigger_with_delay(hass, mqtt_mock_entry_with_yaml_config):
                 "name": "test",
                 "code": CODE,
                 "delay_time": 1,
-                "pending_time": 0,
+                "arming_time": 0,
                 "disarm_after_trigger": False,
                 "command_topic": "alarm/command",
                 "state_topic": "alarm/state",
@@ -469,7 +470,7 @@ async def test_trigger_zero_trigger_time(hass, mqtt_mock_entry_with_yaml_config)
             "alarm_control_panel": {
                 "platform": "manual_mqtt",
                 "name": "test",
-                "pending_time": 0,
+                "arming_time": 0,
                 "trigger_time": 0,
                 "disarm_after_trigger": False,
                 "command_topic": "alarm/command",
@@ -499,7 +500,7 @@ async def test_trigger_zero_trigger_time_with_pending(
             "alarm_control_panel": {
                 "platform": "manual_mqtt",
                 "name": "test",
-                "pending_time": 2,
+                "arming_time": 2,
                 "trigger_time": 0,
                 "disarm_after_trigger": False,
                 "command_topic": "alarm/command",
@@ -527,7 +528,7 @@ async def test_trigger_with_pending(hass, mqtt_mock_entry_with_yaml_config):
             "alarm_control_panel": {
                 "platform": "manual_mqtt",
                 "name": "test",
-                "pending_time": 2,
+                "delay_time": 2,
                 "trigger_time": 3,
                 "disarm_after_trigger": False,
                 "command_topic": "alarm/command",
@@ -585,7 +586,7 @@ async def test_trigger_with_unused_specific_delay(
                 "name": "test",
                 "code": CODE,
                 "delay_time": 5,
-                "pending_time": 0,
+                "arming_time": 0,
                 "armed_home": {"delay_time": 10},
                 "disarm_after_trigger": False,
                 "command_topic": "alarm/command",
@@ -633,7 +634,7 @@ async def test_trigger_with_specific_delay(hass, mqtt_mock_entry_with_yaml_confi
                 "name": "test",
                 "code": CODE,
                 "delay_time": 10,
-                "pending_time": 0,
+                "arming_time": 0,
                 "armed_away": {"delay_time": 1},
                 "disarm_after_trigger": False,
                 "command_topic": "alarm/command",
@@ -680,9 +681,8 @@ async def test_trigger_with_pending_and_delay(hass, mqtt_mock_entry_with_yaml_co
                 "platform": "manual_mqtt",
                 "name": "test",
                 "code": CODE,
-                "delay_time": 1,
-                "pending_time": 0,
-                "triggered": {"pending_time": 1},
+                "delay_time": 2,
+                "arming_time": 0,
                 "disarm_after_trigger": False,
                 "command_topic": "alarm/command",
                 "state_topic": "alarm/state",
@@ -743,9 +743,8 @@ async def test_trigger_with_pending_and_specific_delay(
                 "name": "test",
                 "code": CODE,
                 "delay_time": 10,
-                "pending_time": 0,
-                "armed_away": {"delay_time": 1},
-                "triggered": {"pending_time": 1},
+                "arming_time": 0,
+                "armed_away": {"delay_time": 2},
                 "disarm_after_trigger": False,
                 "command_topic": "alarm/command",
                 "state_topic": "alarm/state",
@@ -802,8 +801,8 @@ async def test_trigger_with_specific_pending(hass, mqtt_mock_entry_with_yaml_con
             "alarm_control_panel": {
                 "platform": "manual_mqtt",
                 "name": "test",
-                "pending_time": 10,
-                "triggered": {"pending_time": 2},
+                "delay_time": 10,
+                "disarmed": {"delay_time": 2},
                 "trigger_time": 3,
                 "disarm_after_trigger": False,
                 "command_topic": "alarm/command",
@@ -854,7 +853,7 @@ async def test_trigger_with_disarm_after_trigger(
                 "platform": "manual_mqtt",
                 "name": "test",
                 "trigger_time": 5,
-                "pending_time": 0,
+                "delay_time": 0,
                 "disarm_after_trigger": True,
                 "command_topic": "alarm/command",
                 "state_topic": "alarm/state",
@@ -897,7 +896,7 @@ async def test_trigger_with_zero_specific_trigger_time(
                 "name": "test",
                 "trigger_time": 5,
                 "disarmed": {"trigger_time": 0},
-                "pending_time": 0,
+                "arming_time": 0,
                 "disarm_after_trigger": True,
                 "command_topic": "alarm/command",
                 "state_topic": "alarm/state",
@@ -928,7 +927,7 @@ async def test_trigger_with_unused_zero_specific_trigger_time(
                 "name": "test",
                 "trigger_time": 5,
                 "armed_home": {"trigger_time": 0},
-                "pending_time": 0,
+                "delay_time": 0,
                 "disarm_after_trigger": True,
                 "command_topic": "alarm/command",
                 "state_topic": "alarm/state",
@@ -970,7 +969,7 @@ async def test_trigger_with_specific_trigger_time(
                 "platform": "manual_mqtt",
                 "name": "test",
                 "disarmed": {"trigger_time": 5},
-                "pending_time": 0,
+                "delay_time": 0,
                 "disarm_after_trigger": True,
                 "command_topic": "alarm/command",
                 "state_topic": "alarm/state",
@@ -1012,7 +1011,7 @@ async def test_trigger_with_no_disarm_after_trigger(
                 "platform": "manual_mqtt",
                 "name": "test",
                 "trigger_time": 5,
-                "pending_time": 0,
+                "arming_time": 0,
                 "delay_time": 0,
                 "disarm_after_trigger": False,
                 "command_topic": "alarm/command",
@@ -1059,7 +1058,8 @@ async def test_back_to_back_trigger_with_no_disarm_after_trigger(
                 "platform": "manual_mqtt",
                 "name": "test",
                 "trigger_time": 5,
-                "pending_time": 0,
+                "arming_time": 0,
+                "delay_time": 0,
                 "disarm_after_trigger": False,
                 "command_topic": "alarm/command",
                 "state_topic": "alarm/state",
@@ -1161,7 +1161,7 @@ async def test_disarm_during_trigger_with_invalid_code(
             "alarm_control_panel": {
                 "platform": "manual_mqtt",
                 "name": "test",
-                "pending_time": 5,
+                "delay_time": 5,
                 "code": f"{CODE}2",
                 "disarm_after_trigger": False,
                 "command_topic": "alarm/command",
@@ -1206,7 +1206,7 @@ async def test_disarm_with_template_code(hass, mqtt_mock_entry_with_yaml_config)
                 "platform": "manual_mqtt",
                 "name": "test",
                 "code_template": '{{ "" if from_state == "disarmed" else "abc" }}',
-                "pending_time": 0,
+                "arming_time": 0,
                 "disarm_after_trigger": False,
                 "command_topic": "alarm/command",
                 "state_topic": "alarm/state",
@@ -1245,9 +1245,9 @@ async def test_arm_away_after_disabled_disarmed(hass, mqtt_mock_entry_with_yaml_
                 "platform": "manual_mqtt",
                 "name": "test",
                 "code": CODE,
-                "pending_time": 0,
+                "arming_time": 0,
                 "delay_time": 1,
-                "armed_away": {"pending_time": 1},
+                "armed_away": {"arming_time": 1},
                 "disarmed": {"trigger_time": 0},
                 "disarm_after_trigger": False,
                 "command_topic": "alarm/command",
@@ -1264,14 +1264,14 @@ async def test_arm_away_after_disabled_disarmed(hass, mqtt_mock_entry_with_yaml_
     await common.async_alarm_arm_away(hass, CODE)
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ALARM_PENDING
+    assert state.state == STATE_ALARM_ARMING
     assert state.attributes["previous_state"] == STATE_ALARM_DISARMED
     assert state.attributes["next_state"] == STATE_ALARM_ARMED_AWAY
 
     await common.async_alarm_trigger(hass, entity_id=entity_id)
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ALARM_PENDING
+    assert state.state == STATE_ALARM_ARMING
     assert state.attributes["previous_state"] == STATE_ALARM_DISARMED
     assert state.attributes["next_state"] == STATE_ALARM_ARMED_AWAY
 
@@ -1322,7 +1322,7 @@ async def test_arm_via_command_topic(
             alarm_control_panel.DOMAIN: {
                 "platform": "manual_mqtt",
                 "name": "test",
-                "pending_time": 1,
+                "arming_time": 1,
                 "state_topic": "alarm/state",
                 "command_topic": "alarm/command",
                 config: command,
@@ -1338,7 +1338,7 @@ async def test_arm_via_command_topic(
     # Fire the arm command via MQTT; ensure state changes to arming
     async_fire_mqtt_message(hass, "alarm/command", command)
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ALARM_PENDING
+    assert hass.states.get(entity_id).state == STATE_ALARM_ARMING
 
     # Fast-forward a little bit
     future = dt_util.utcnow() + timedelta(seconds=1)
@@ -1361,7 +1361,7 @@ async def test_disarm_pending_via_command_topic(hass, mqtt_mock_entry_with_yaml_
             alarm_control_panel.DOMAIN: {
                 "platform": "manual_mqtt",
                 "name": "test",
-                "pending_time": 1,
+                "delay_time": 1,
                 "state_topic": "alarm/state",
                 "command_topic": "alarm/command",
                 "payload_disarm": "DISARM",
@@ -1397,7 +1397,7 @@ async def test_state_changes_are_published_to_mqtt(
             alarm_control_panel.DOMAIN: {
                 "platform": "manual_mqtt",
                 "name": "test",
-                "pending_time": 1,
+                "arming_time": 1,
                 "trigger_time": 1,
                 "state_topic": "alarm/state",
                 "command_topic": "alarm/command",
@@ -1418,7 +1418,7 @@ async def test_state_changes_are_published_to_mqtt(
     await common.async_alarm_arm_home(hass)
     await hass.async_block_till_done()
     mqtt_mock.async_publish.assert_called_once_with(
-        "alarm/state", STATE_ALARM_PENDING, 0, True
+        "alarm/state", STATE_ALARM_ARMING, 0, True
     )
     mqtt_mock.async_publish.reset_mock()
     # Fast-forward a little bit
@@ -1438,7 +1438,7 @@ async def test_state_changes_are_published_to_mqtt(
     await common.async_alarm_arm_away(hass)
     await hass.async_block_till_done()
     mqtt_mock.async_publish.assert_called_once_with(
-        "alarm/state", STATE_ALARM_PENDING, 0, True
+        "alarm/state", STATE_ALARM_ARMING, 0, True
     )
     mqtt_mock.async_publish.reset_mock()
     # Fast-forward a little bit
@@ -1458,7 +1458,7 @@ async def test_state_changes_are_published_to_mqtt(
     await common.async_alarm_arm_night(hass)
     await hass.async_block_till_done()
     mqtt_mock.async_publish.assert_called_once_with(
-        "alarm/state", STATE_ALARM_PENDING, 0, True
+        "alarm/state", STATE_ALARM_ARMING, 0, True
     )
     mqtt_mock.async_publish.reset_mock()
     # Fast-forward a little bit
@@ -1507,7 +1507,7 @@ async def test_restore_state(hass, expected_state, mqtt_mock_entry_with_yaml_con
             "alarm_control_panel": {
                 "platform": "manual_mqtt",
                 "name": "test",
-                "pending_time": 0,
+                "arming_time": 0,
                 "trigger_time": 0,
                 "disarm_after_trigger": False,
                 "state_topic": "alarm/state",
@@ -1532,10 +1532,10 @@ async def test_restore_state(hass, expected_state, mqtt_mock_entry_with_yaml_con
         (STATE_ALARM_ARMED_VACATION),
     ],
 )
-async def test_restore_state_pending(
+async def test_restore_state_arming(
     hass, expected_state, mqtt_mock_entry_with_yaml_config
 ):
-    """Ensure PENDING state is restored on startup."""
+    """Ensure ARMING state is restored on startup."""
     time = dt_util.utcnow() - timedelta(seconds=15)
     entity_id = "alarm_control_panel.test"
     attributes = {
@@ -1556,7 +1556,7 @@ async def test_restore_state_pending(
             "alarm_control_panel": {
                 "platform": "manual_mqtt",
                 "name": "test",
-                "pending_time": 60,
+                "arming_time": 60,
                 "trigger_time": 0,
                 "disarm_after_trigger": False,
                 "state_topic": "alarm/state",
@@ -1570,7 +1570,7 @@ async def test_restore_state_pending(
     assert state
     assert state.attributes["previous_state"] == STATE_ALARM_DISARMED
     assert state.attributes["next_state"] == expected_state
-    assert state.state == STATE_ALARM_PENDING
+    assert state.state == STATE_ALARM_ARMING
 
     future = time + timedelta(seconds=61)
     with freeze_time(future):
@@ -1617,7 +1617,7 @@ async def test_restore_state_pending(
             "alarm_control_panel": {
                 "platform": "manual_mqtt",
                 "name": "test",
-                "pending_time": 0,
+                "arming_time": 0,
                 "delay_time": 60,
                 "trigger_time": 60,
                 "disarm_after_trigger": False,
@@ -1686,7 +1686,7 @@ async def test_restore_state_triggered(
             "alarm_control_panel": {
                 "platform": "manual_mqtt",
                 "name": "test",
-                "pending_time": 0,
+                "arming_time": 0,
                 "delay_time": 60,
                 "trigger_time": 60,
                 "disarm_after_trigger": False,
@@ -1734,7 +1734,7 @@ async def test_restore_state_triggered_disarm(hass, mqtt_mock_entry_with_yaml_co
             "alarm_control_panel": {
                 "platform": "manual_mqtt",
                 "name": "test",
-                "pending_time": 0,
+                "arming_time": 0,
                 "delay_time": 60,
                 "trigger_time": 60,
                 "disarm_after_trigger": True,
