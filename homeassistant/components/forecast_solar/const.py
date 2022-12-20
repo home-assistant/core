@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+import logging
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import UnitOfEnergy, UnitOfPower
@@ -9,6 +10,7 @@ from homeassistant.const import UnitOfEnergy, UnitOfPower
 from .models import ForecastSolarSensorEntityDescription
 
 DOMAIN = "forecast_solar"
+LOGGER = logging.getLogger(__package__)
 
 CONF_DECLINATION = "declination"
 CONF_AZIMUTH = "azimuth"
