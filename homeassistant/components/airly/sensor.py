@@ -16,8 +16,8 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONF_NAME,
     PERCENTAGE,
-    TEMP_CELSIUS,
     UnitOfPressure,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -112,7 +112,7 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
         key=ATTR_API_TEMPERATURE,
         device_class=SensorDeviceClass.TEMPERATURE,
         name=ATTR_API_TEMPERATURE.capitalize(),
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda value: round(value, 1),
     ),

@@ -15,10 +15,10 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
-    TEMP_CELSIUS,
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -58,7 +58,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         name="Inside temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_func=lambda device: device.inside_temperature,
     ),
     DaikinSensorEntityDescription(
@@ -66,7 +66,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         name="Outside temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_func=lambda device: device.outside_temperature,
     ),
     DaikinSensorEntityDescription(
