@@ -3,9 +3,15 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun import freeze_time
+import pytest
 
 from homeassistant.components import alarm_control_panel
 from homeassistant.const import (
+    ATTR_CODE,
+    ATTR_ENTITY_ID,
+    SERVICE_ALARM_ARM_AWAY,
+    SERVICE_ALARM_ARM_HOME,
+    SERVICE_ALARM_ARM_NIGHT,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
@@ -57,8 +63,18 @@ async def test_fail_setup_without_command_topic(hass, mqtt_mock_entry_with_yaml_
         )
 
 
-async def test_arm_home_no_pending(hass, mqtt_mock_entry_with_yaml_config):
-    """Test arm home method."""
+@pytest.mark.parametrize(
+    "service,expected_state",
+    [
+        (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
+        (SERVICE_ALARM_ARM_HOME, STATE_ALARM_ARMED_HOME),
+        (SERVICE_ALARM_ARM_NIGHT, STATE_ALARM_ARMED_NIGHT),
+    ],
+)
+async def test_no_pending(
+    hass, service, expected_state, mqtt_mock_entry_with_yaml_config
+):
+    """Test arm method."""
     assert await async_setup_component(
         hass,
         alarm_control_panel.DOMAIN,
@@ -80,10 +96,14 @@ async def test_arm_home_no_pending(hass, mqtt_mock_entry_with_yaml_config):
 
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
 
-    await common.async_alarm_arm_home(hass, CODE)
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        alarm_control_panel.DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: CODE},
+        blocking=True,
+    )
 
-    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_HOME
+    assert hass.states.get(entity_id).state == expected_state
 
 
 async def test_arm_home_no_pending_when_code_not_req(
@@ -187,35 +207,6 @@ async def test_arm_home_with_invalid_code(hass, mqtt_mock_entry_with_yaml_config
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
-
-
-async def test_arm_away_no_pending(hass, mqtt_mock_entry_with_yaml_config):
-    """Test arm home method."""
-    assert await async_setup_component(
-        hass,
-        alarm_control_panel.DOMAIN,
-        {
-            "alarm_control_panel": {
-                "platform": "manual_mqtt",
-                "name": "test",
-                "code": CODE,
-                "pending_time": 0,
-                "disarm_after_trigger": False,
-                "command_topic": "alarm/command",
-                "state_topic": "alarm/state",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    entity_id = "alarm_control_panel.test"
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
-
-    await common.async_alarm_arm_away(hass, CODE, entity_id)
-    await hass.async_block_till_done()
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_AWAY
 
 
 async def test_arm_away_no_pending_when_code_not_req(
@@ -349,35 +340,6 @@ async def test_arm_away_with_invalid_code(hass, mqtt_mock_entry_with_yaml_config
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
-
-
-async def test_arm_night_no_pending(hass, mqtt_mock_entry_with_yaml_config):
-    """Test arm night method."""
-    assert await async_setup_component(
-        hass,
-        alarm_control_panel.DOMAIN,
-        {
-            "alarm_control_panel": {
-                "platform": "manual_mqtt",
-                "name": "test",
-                "code": CODE,
-                "pending_time": 0,
-                "disarm_after_trigger": False,
-                "command_topic": "alarm/command",
-                "state_topic": "alarm/state",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    entity_id = "alarm_control_panel.test"
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
-
-    await common.async_alarm_arm_night(hass, CODE, entity_id)
-    await hass.async_block_till_done()
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_NIGHT
 
 
 async def test_arm_night_no_pending_when_code_not_req(
