@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import TypedDict
+from typing import NamedTuple
 
 from energyzero import Electricity, EnergyZero, EnergyZeroNoDataError, Gas
 
@@ -11,19 +11,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt
 
-from .const import (
-    CONF_GAS,
-    DOMAIN,
-    LOGGER,
-    SCAN_INTERVAL,
-    SERVICE_ENERGY_TODAY,
-    SERVICE_ENERGY_TOMORROW,
-    SERVICE_GAS_TODAY,
-    THRESHOLD_HOUR,
-)
+from .const import CONF_GAS, DOMAIN, LOGGER, SCAN_INTERVAL, THRESHOLD_HOUR
 
 
-class EnergyZeroData(TypedDict):
+class EnergyZeroData(NamedTuple):
     """Class for defining data in dict."""
 
     energy_today: Electricity
@@ -35,7 +26,6 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
     """Class to manage fetching EnergyZero data from single endpoint."""
 
     config_entry: ConfigEntry
-    has_tomorrow_data: bool | None = None
 
     def __init__(self, hass) -> None:
         """Initialize global EnergyZero data updater."""
@@ -52,32 +42,30 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
         """Fetch data from EnergyZero."""
         today = dt.now().replace(hour=0, minute=0, second=0, microsecond=0)
         tomorrow = today + timedelta(days=1)
-        data: EnergyZeroData = {
-            SERVICE_ENERGY_TODAY: await self.energyzero.energy_prices(
-                start_date=today, end_date=today
-            ),
-            SERVICE_ENERGY_TOMORROW: None,
-            SERVICE_GAS_TODAY: None,
-        }
+
+        energy_today = await self.energyzero.energy_prices(
+            start_date=today, end_date=today
+        )
+        energy_tomorrow = None
+        gas_today = None
 
         # Gas for today - optional in config flow
         if self.config_entry.data.get(CONF_GAS):
-            data[SERVICE_GAS_TODAY] = await self.energyzero.gas_prices(
+            gas_today = await self.energyzero.gas_prices(
                 start_date=today, end_date=today
             )
 
         # Energy for tomorrow only after 14:00
-        if dt.now().hour >= THRESHOLD_HOUR and (
-            self.has_tomorrow_data or self.has_tomorrow_data is None
-        ):
+        if dt.now().hour >= THRESHOLD_HOUR:
             try:
-                data[SERVICE_ENERGY_TOMORROW] = await self.energyzero.energy_prices(
+                energy_tomorrow = await self.energyzero.energy_prices(
                     start_date=tomorrow, end_date=tomorrow
                 )
-                self.has_tomorrow_data = True
             except EnergyZeroNoDataError:
                 LOGGER.debug("No data for tomorrow for EnergyZero integration")
-                if self.has_tomorrow_data is None:
-                    self.has_tomorrow_data = False
 
-        return data
+        return EnergyZeroData(
+            energy_today=energy_today,
+            energy_tomorrow=energy_tomorrow,
+            gas_today=gas_today,
+        )

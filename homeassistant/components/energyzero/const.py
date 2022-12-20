@@ -8,12 +8,6 @@ from typing import Final
 DOMAIN: Final = "energyzero"
 LOGGER = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(minutes=10)
+THRESHOLD_HOUR: Final = 14
 
 CONF_GAS: Final = "gas"
-
-SERVICE_ENERGY_TODAY: Final = "energy_today"
-SERVICE_ENERGY_TOMORROW: Final = "energy_tomorrow"
-SERVICE_GAS_TODAY: Final = "gas_today"
-SERVICE_GAS_TOMORROW: Final = "gas_tomorrow"
-
-THRESHOLD_HOUR: Final = 14
