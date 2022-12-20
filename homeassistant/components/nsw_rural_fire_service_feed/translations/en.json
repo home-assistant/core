@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "categories": "Categories",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "radius": "Radius",
+                    "scan_interval": "Update Interval (seconds)"
+                },
+                "title": "Fill in your filter details."
+            }
+        }
+    }
+}
