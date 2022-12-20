@@ -24,7 +24,7 @@ async def test_list_areas(hass, client, registry):
     """Test list entries."""
     area1 = registry.async_create("mock 1")
     area2 = registry.async_create(
-        "mock 2", aliases=["alias_1", "alias_2"], picture="/image/example.png"
+        "mock 2", aliases={"alias_1", "alias_2"}, picture="/image/example.png"
     )
 
     await client.send_json({"id": 1, "type": "config/area_registry/list"})

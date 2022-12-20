@@ -54,9 +54,9 @@ def websocket_create_area(
     data.pop("type")
     data.pop("id")
 
-    if "aliases" in msg:
+    if "aliases" in data:
         # Convert aliases to a set
-        msg["aliases"] = set(msg["aliases"])
+        data["aliases"] = set(data["aliases"])
 
     try:
         entry = registry.async_create(**data)
@@ -113,9 +113,9 @@ def websocket_update_area(
     data.pop("type")
     data.pop("id")
 
-    if "aliases" in msg:
+    if "aliases" in data:
         # Convert aliases to a set
-        msg["aliases"] = set(msg["aliases"])
+        data["aliases"] = set(data["aliases"])
 
     try:
         entry = registry.async_update(**data)
