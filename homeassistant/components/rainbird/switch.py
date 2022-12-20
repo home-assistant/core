@@ -1,17 +1,32 @@
 """Support for Rain Bird Irrigation system LNK WiFi Module."""
 from __future__ import annotations
 
-from pyrainbird import AvailableStations, RainbirdController
+import logging
+
+import async_timeout
+from pyrainbird import AvailableStations
+from pyrainbird.async_client import AsyncRainbirdController, RainbirdApiException
+from pyrainbird.data import States
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import ATTR_ENTITY_ID, CONF_FRIENDLY_NAME, CONF_TRIGGER_TIME
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from . import CONF_ZONES, DATA_RAINBIRD, DOMAIN, RAINBIRD_CONTROLLER
+
+_LOGGER = logging.getLogger(__name__)
+
+TIMEOUT_SECONDS = 20
 
 ATTR_DURATION = "duration"
 
@@ -32,10 +47,10 @@ SERVICE_SCHEMA_RAIN_DELAY = vol.Schema(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up Rain Bird switches over a Rain Bird controller."""
@@ -43,12 +58,18 @@ def setup_platform(
     if discovery_info is None:
         return
 
-    controller: RainbirdController = hass.data[DATA_RAINBIRD][
+    controller: AsyncRainbirdController = hass.data[DATA_RAINBIRD][
         discovery_info[RAINBIRD_CONTROLLER]
     ]
-    available_stations: AvailableStations = controller.get_available_stations()
+    try:
+        available_stations: AvailableStations = (
+            await controller.get_available_stations()
+        )
+    except RainbirdApiException as err:
+        raise PlatformNotReady(f"Failed to get stations: {str(err)}") from err
     if not (available_stations and available_stations.stations):
         return
+    coordinator = RainbirdUpdateCoordinator(hass, controller)
     devices = []
     for zone in range(1, available_stations.stations.count + 1):
         if available_stations.stations.active(zone):
@@ -57,36 +78,42 @@ def setup_platform(
             name = zone_config.get(CONF_FRIENDLY_NAME)
             devices.append(
                 RainBirdSwitch(
-                    controller,
+                    coordinator,
                     zone,
                     time,
                     name if name else f"Sprinkler {zone}",
                 )
             )
 
-    add_entities(devices, True)
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady as err:
+        raise PlatformNotReady(f"Failed to load zone state: {str(err)}") from err
 
-    def start_irrigation(service: ServiceCall) -> None:
+    # async_add_entities(devices, True)
+    async_add_entities(devices)
+
+    async def start_irrigation(service: ServiceCall) -> None:
         entity_id = service.data[ATTR_ENTITY_ID]
         duration = service.data[ATTR_DURATION]
 
         for device in devices:
             if device.entity_id == entity_id:
-                device.turn_on(duration=duration)
+                await device.async_turn_on(duration=duration)
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN,
         SERVICE_START_IRRIGATION,
         start_irrigation,
         schema=SERVICE_SCHEMA_IRRIGATION,
     )
 
-    def set_rain_delay(service: ServiceCall) -> None:
+    async def set_rain_delay(service: ServiceCall) -> None:
         duration = service.data[ATTR_DURATION]
 
-        controller.set_rain_delay(duration)
+        await controller.set_rain_delay(duration)
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN,
         SERVICE_SET_RAIN_DELAY,
         set_rain_delay,
@@ -94,12 +121,40 @@ def setup_platform(
     )
 
 
-class RainBirdSwitch(SwitchEntity):
+class RainbirdUpdateCoordinator(DataUpdateCoordinator[States]):
+    """Coordinator for calendar RPC calls that use an efficient sync."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        rainbird: AsyncRainbirdController,
+    ) -> None:
+        """Create the CalendarSyncUpdateCoordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name="Rainbird",
+        )
+        self.rainbird = rainbird
+
+    async def _async_update_data(self) -> States | None:
+        """Fetch data from API endpoint."""
+        try:
+            async with async_timeout.timeout(TIMEOUT_SECONDS):
+                return await self.rainbird.get_zone_states()
+        except RainbirdApiException as err:
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
+
+
+class RainBirdSwitch(CoordinatorEntity, SwitchEntity):
     """Representation of a Rain Bird switch."""
 
-    def __init__(self, controller: RainbirdController, zone, time, name):
+    def __init__(
+        self, coordinator: RainbirdUpdateCoordinator, zone: int, time: int, name: str
+    ) -> None:
         """Initialize a Rain Bird Switch Device."""
-        self._rainbird = controller
+        super().__init__(coordinator)
+        self._rainbird = coordinator.rainbird
         self._zone = zone
         self._name = name
         self._state = None
@@ -116,24 +171,20 @@ class RainBirdSwitch(SwitchEntity):
         """Get the name of the switch."""
         return self._name
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
-        if self._rainbird.irrigate_zone(
+        await self._rainbird.irrigate_zone(
             int(self._zone),
             int(kwargs[ATTR_DURATION] if ATTR_DURATION in kwargs else self._duration),
-        ):
-            self._state = True
+        )
+        await self.coordinator.async_request_refresh()
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
-        if self._rainbird.stop_irrigation():
-            self._state = False
-
-    def update(self):
-        """Update switch status."""
-        self._state = self._rainbird.get_zone_state(self._zone)
+        await self._rainbird.stop_irrigation()
+        await self.coordinator.async_request_refresh()
 
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self._state
+        return self.coordinator.data.active(self._zone)

@@ -3,7 +3,11 @@ from __future__ import annotations
 
 import logging
 
-from pyrainbird import RainbirdController
+from pyrainbird.async_client import (
+    AsyncRainbirdClient,
+    AsyncRainbirdController,
+    RainbirdApiException,
+)
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorEntityDescription
@@ -17,6 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -84,26 +89,27 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Rain Bird component."""
 
     hass.data[DATA_RAINBIRD] = []
     success = False
     for controller_config in config[DOMAIN]:
-        success = success or _setup_controller(hass, controller_config, config)
+        success = success or await _setup_controller(hass, controller_config, config)
 
     return success
 
 
-def _setup_controller(hass, controller_config, config):
+async def _setup_controller(hass, controller_config, config):
     """Set up a controller."""
     server = controller_config[CONF_HOST]
     password = controller_config[CONF_PASSWORD]
-    controller = RainbirdController(server, password)
+    client = AsyncRainbirdClient(async_get_clientsession(hass), server, password)
+    controller = AsyncRainbirdController(client)
     position = len(hass.data[DATA_RAINBIRD])
     try:
-        controller.get_serial_number()
-    except Exception as exc:  # pylint: disable=broad-except
+        await controller.get_serial_number()
+    except RainbirdApiException as exc:
         _LOGGER.error("Unable to setup controller: %s", exc)
         return False
     hass.data[DATA_RAINBIRD].append(controller)

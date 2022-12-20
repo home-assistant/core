@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from pyrainbird import RainbirdController
+from pyrainbird.async_client import AsyncRainbirdController
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -49,19 +49,19 @@ class RainBirdSensor(BinarySensorEntity):
 
     def __init__(
         self,
-        controller: RainbirdController,
+        controller: AsyncRainbirdController,
         description: BinarySensorEntityDescription,
     ) -> None:
         """Initialize the Rain Bird sensor."""
         self.entity_description = description
         self._controller = controller
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Get the latest data and updates the states."""
         _LOGGER.debug("Updating sensor: %s", self.name)
         state = None
         if self.entity_description.key == SENSOR_TYPE_RAINSENSOR:
-            state = self._controller.get_rain_sensor_state()
+            state = await self._controller.get_rain_sensor_state()
         elif self.entity_description.key == SENSOR_TYPE_RAINDELAY:
-            state = self._controller.get_rain_delay()
+            state = await self._controller.get_rain_delay()
         self._attr_is_on = None if state is None else bool(state)

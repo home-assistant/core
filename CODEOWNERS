@@ -926,6 +926,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/radiotherm/ @bdraco @vinnyfuria
 /tests/components/radiotherm/ @bdraco @vinnyfuria
 /homeassistant/components/rainbird/ @konikvranik @allenporter
+/tests/components/rainbird/ @konikvranik @allenporter
 /homeassistant/components/raincloud/ @vanstinator
 /homeassistant/components/rainforest_eagle/ @gtdiehl @jcalbert @hastarin
 /tests/components/rainforest_eagle/ @gtdiehl @jcalbert @hastarin
