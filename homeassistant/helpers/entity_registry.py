@@ -244,7 +244,7 @@ class EntityRegistryStore(storage.Store):
         if old_major_version == 1 and old_minor_version < 10:
             # Version 1.10 adds aliases
             for entity in data["entities"]:
-                entity.setdefault("aliases", [])
+                entity["aliases"] = []
 
         if old_major_version > 1:
             raise NotImplementedError
