@@ -341,7 +341,7 @@ class AugustData(AugustSubscriberMixin):
         )
 
     async def async_status_async(self, device_id, hyper_bridge):
-        """Request status of the the device but do not wait for a response since it will come via pubnub."""
+        """Request status of the device but do not wait for a response since it will come via pubnub."""
         return await self._async_call_api_op_requires_bridge(
             device_id,
             self._api.async_status_async,

@@ -131,7 +131,7 @@ class EcoNetEntity(Entity):
 
     @property
     def available(self):
-        """Return if the the device is online or not."""
+        """Return if the device is online or not."""
         return self._econet.connected
 
     @property

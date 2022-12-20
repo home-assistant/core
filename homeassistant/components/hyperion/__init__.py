@@ -241,7 +241,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 instance_name,
             )
 
-        # Remove entities that are are not running instances on Hyperion.
+        # Remove entities that are not running instances on Hyperion.
         for instance_num in set(existing_instances) - running_instances:
             del existing_instances[instance_num]
             async_dispatcher_send(
