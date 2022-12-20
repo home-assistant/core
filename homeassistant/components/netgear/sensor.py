@@ -17,9 +17,9 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
-    TIME_MILLISECONDS,
     UnitOfDataRate,
     UnitOfInformation,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
@@ -260,7 +260,7 @@ SENSOR_SPEED_TYPES = [
         key="AveragePing",
         name="Average Ping",
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=TIME_MILLISECONDS,
+        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         icon="mdi:wan",
     ),
 ]

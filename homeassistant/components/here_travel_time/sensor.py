@@ -18,8 +18,8 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     CONF_MODE,
     CONF_NAME,
-    TIME_MINUTES,
     UnitOfLength,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -56,14 +56,14 @@ def sensor_descriptions(travel_mode: str) -> tuple[SensorEntityDescription, ...]
             icon=ICONS.get(travel_mode, ICON_CAR),
             key=ATTR_DURATION,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=TIME_MINUTES,
+            native_unit_of_measurement=UnitOfTime.MINUTES,
         ),
         SensorEntityDescription(
             name="Duration in traffic",
             icon=ICONS.get(travel_mode, ICON_CAR),
             key=ATTR_DURATION_IN_TRAFFIC,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=TIME_MINUTES,
+            native_unit_of_measurement=UnitOfTime.MINUTES,
         ),
         SensorEntityDescription(
             name="Distance",
