@@ -37,8 +37,8 @@ OVERKIZ_TO_PRESET_MODE: dict[str, str] = {
     OverkizCommandParam.COMFORT_2: PRESET_COMFORT2,
     OverkizCommandParam.AUTO: PRESET_AUTO,
     OverkizCommandParam.BOOST: PRESET_BOOST,
-    OverkizCommandParam.INTERNAL: PRESET_PROG,
     OverkizCommandParam.EXTERNAL: PRESET_EXTERNAL,
+    OverkizCommandParam.INTERNAL: PRESET_PROG,
 }
 
 PRESET_MODE_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_PRESET_MODE.items()}
@@ -108,7 +108,7 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
             return PRESET_EXTERNAL
 
         if (
-            state := self.device.states[OverkizState.IO_TARGET_HEATING_LEVEL]
+            state := states[OverkizState.IO_TARGET_HEATING_LEVEL]
         ) and state.value_as_str:
             return OVERKIZ_TO_PRESET_MODE[state.value_as_str]
         return None
