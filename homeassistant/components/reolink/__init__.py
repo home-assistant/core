@@ -34,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Reolink from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    host = ReolinkHost(hass, cast(dict, entry.data), cast(dict, entry.options))
+    host = ReolinkHost(hass, dict(entry.data), dict(entry.options))
 
     try:
         if not await host.init():
