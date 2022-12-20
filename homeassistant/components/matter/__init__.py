@@ -110,7 +110,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await matter.setup_nodes()
 
     # If the listen task is already failed, we need to raise ConfigEntryNotReady
-    await asyncio.sleep(0)  # yield to the listen task at least once again
     if listen_task.done() and (listen_error := listen_task.exception()) is not None:
         await hass.config_entries.async_unload_platforms(entry, DEVICE_PLATFORM)
         hass.data[DOMAIN].pop(entry.entry_id)
