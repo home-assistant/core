@@ -14,13 +14,13 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_RECIPIENT,
     CONF_SENDER,
     CONF_TIMEOUT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import selector
 import homeassistant.helpers.config_validation as cv
 
 from . import get_smtp_client
@@ -44,20 +44,25 @@ RECEPIENTS_SCHEMA = vol.Schema(vol.All(cv.ensure_list_csv, [vol.Email()]))
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-        vol.Required(CONF_SENDER): str,
-        vol.Optional(CONF_SENDER_NAME): str,
-        vol.Required(CONF_RECIPIENT): str,
-        vol.Optional(CONF_SERVER, default=DEFAULT_HOST): str,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): selector.TextSelector(),
+        vol.Required(CONF_SENDER): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.EMAIL)
+        ),
+        vol.Optional(CONF_SENDER_NAME): selector.TextSelector(),
+        vol.Optional(CONF_SERVER, default=DEFAULT_HOST): selector.TextSelector(),
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-        vol.Optional(CONF_ENCRYPTION, default=DEFAULT_ENCRYPTION): vol.In(
-            ENCRYPTION_OPTIONS
+        vol.Optional(
+            CONF_ENCRYPTION, default=DEFAULT_ENCRYPTION
+        ): selector.SelectSelector(
+            selector.SelectSelectorConfig(options=ENCRYPTION_OPTIONS)
         ),
-        vol.Optional(CONF_USERNAME): str,
-        vol.Optional(CONF_PASSWORD): str,
-        vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): bool,
-        vol.Optional(CONF_VERIFY_SSL, default=True): bool,
+        vol.Optional(CONF_USERNAME): selector.TextSelector(),
+        vol.Optional(CONF_PASSWORD): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+        ),
+        vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): selector.BooleanSelector(),
+        vol.Optional(CONF_VERIFY_SSL, default=True): selector.BooleanSelector(),
     }
 )
 
@@ -67,27 +72,15 @@ _LOGGER = logging.getLogger(__name__)
 def validate_input(user_input: dict[str, Any]) -> dict[str, str]:
     """Validate user input."""
     errors: dict[str, str] = {}
-    try:
-        # pylint: disable=no-value-for-parameter
-        vol.Email()(user_input[CONF_SENDER])
-    except vol.Invalid:
-        errors[CONF_SENDER] = "invalid_email"
 
     try:
-        RECEPIENTS_SCHEMA(user_input[CONF_RECIPIENT])
-    except vol.Invalid:
-        errors[CONF_RECIPIENT] = "invalid_email"
-
-    if not errors:
-        try:
-            smtp_client = get_smtp_client(user_input)
-            smtp_client.quit()
-
-        except SMTPAuthenticationError:
-            errors[CONF_USERNAME] = errors[CONF_PASSWORD] = "invalid_auth"
-
-        except (socket.gaierror, ConnectionRefusedError, OSError):
-            errors["base"] = "cannot_connect"
+        smtp_client = get_smtp_client(user_input)
+        smtp_client.quit()
+    except SMTPAuthenticationError as error:
+        print(error)
+        errors[CONF_USERNAME] = errors[CONF_PASSWORD] = "invalid_auth"
+    except (socket.gaierror, ConnectionRefusedError, OSError):
+        errors["base"] = "cannot_connect"
 
     return errors
 
@@ -136,9 +129,7 @@ class SMTPFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return await self.async_step_user(import_config)
 
-    async def async_step_reauth(
-        self, data: Mapping[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
         """Handle a reauthorization flow request."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]

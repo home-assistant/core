@@ -7,7 +7,6 @@
           "name": "[%key:common::config_flow::data::name%]",
           "sender": "Email address for sender",
           "sender_name": "Sender name to be mentioned",
-          "recipient": "Email address of recepient(s)",
           "server": "The outgoing smtp server.",
           "port": "The outgoing smtp port.",
           "timeout": "Timeout for the smtp server.",
@@ -38,7 +37,18 @@
   "issues": {
     "deprecated_yaml": {
       "title": "The SMTP YAML configuration is being removed",
-      "description": "Configuring SMTP using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the SMTP YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+      "description": "Configuring SMTP using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the SMTP YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue.\n\nThe imported recipient key will be removed in the future. Ensure that you update your scripts and automations to set the recipients as targets."
+    },
+    "missing_target": {
+      "title": "Imported recipients is being removed",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Imported recipients is being removed",
+            "description": "Recipients from imported YAML config will be removed in the future. Ensure that you update any automations or scripts to specify the recipients as targets."
+          }
+        }
+      }
     }
   }
 }

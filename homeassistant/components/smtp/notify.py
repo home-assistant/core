@@ -21,8 +21,6 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.components.repairs.issue_handler import async_create_issue
-from homeassistant.components.repairs.models import IssueSeverity
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -35,6 +33,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    create_issue,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
@@ -90,7 +93,7 @@ async def async_get_service(
             hass,
             DOMAIN,
             "deprecated_yaml",
-            breaks_in_ha_version="2022.11.0",
+            breaks_in_ha_version="2023.2.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_yaml",
@@ -134,13 +137,26 @@ class MailNotificationService(BaseNotificationService):
 
         msg["Subject"] = subject
 
+        if not kwargs.get(ATTR_TARGET):
+            create_issue(
+                self.hass,
+                DOMAIN,
+                "missing_target",
+                breaks_in_ha_version="2023.2.0",
+                is_fixable=True,
+                is_persistent=True,
+                severity=IssueSeverity.WARNING,
+                translation_key="missing_target",
+            )
+            if not self.entry.get(CONF_RECIPIENT):
+                raise ValueError("At least one target recipient is required")
+
         try:
             recipients = RECEPIENTS_SCHEMA(
                 kwargs.get(ATTR_TARGET) or self.entry[CONF_RECIPIENT]
             )
-        except vol.Invalid:
-            _LOGGER.error("Target is not a valid list of email addresses")
-            return
+        except vol.Invalid as err:
+            raise ValueError("Target is not a valid list of email addresses") from err
 
         msg["To"] = ",".join(recipients)
 
@@ -180,13 +196,15 @@ def _build_text_msg(message: str) -> MIMEText:
     return MIMEText(message)
 
 
-def _attach_file(atch_name: str, content_id: str) -> MIMEImage | MIMEApplication | None:
+def _attach_file(
+    attach_name: str, content_id: str
+) -> MIMEImage | MIMEApplication | None:
     """Create a message attachment."""
     try:
-        with open(atch_name, "rb") as attachment_file:
+        with open(attach_name, "rb") as attachment_file:
             file_bytes = attachment_file.read()
     except FileNotFoundError:
-        _LOGGER.warning("Attachment %s not found. Skipping", atch_name)
+        _LOGGER.warning("Attachment %s not found. Skipping", attach_name)
         return None
 
     try:
@@ -194,10 +212,10 @@ def _attach_file(atch_name: str, content_id: str) -> MIMEImage | MIMEApplication
     except TypeError:
         _LOGGER.warning(
             "Attachment %s has an unknown MIME type. Falling back to file",
-            atch_name,
+            attach_name,
         )
-        attachment = MIMEApplication(file_bytes, Name=atch_name)
-        attachment["Content-Disposition"] = f'attachment; filename="{atch_name}"'
+        attachment = MIMEApplication(file_bytes, Name=attach_name)
+        attachment["Content-Disposition"] = f'attachment; filename="{attach_name}"'
 
     attachment.add_header("Content-ID", f"<{content_id}>")
     return attachment
@@ -213,10 +231,10 @@ def _build_multipart_msg(message: str, images: list[str]) -> MIMEMultipart:
     msg_alt.attach(body_txt)
     body_text = [f"<p>{message}</p><br>"]
 
-    for atch_num, atch_name in enumerate(images):
+    for atch_num, attach_name in enumerate(images):
         cid = f"image{atch_num}"
         body_text.append(f'<img src="cid:{cid}"><br>')
-        attachment = _attach_file(atch_name, cid)
+        attachment = _attach_file(attach_name, cid)
         if attachment:
             msg.attach(attachment)
 
@@ -234,9 +252,9 @@ def _build_html_msg(text: str, html: str, images: list[str]) -> MIMEMultipart:
     alternative.attach(MIMEText(html, ATTR_HTML, _charset="utf-8"))
     msg.attach(alternative)
 
-    for atch_name in images:
-        name = os.path.basename(atch_name)
-        attachment = _attach_file(atch_name, name)
+    for attach_name in images:
+        name = os.path.basename(attach_name)
+        attachment = _attach_file(attach_name, name)
         if attachment:
             msg.attach(attachment)
     return msg

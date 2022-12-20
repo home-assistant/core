@@ -30,3 +30,17 @@ MOCK_CONFIG = {
     CONF_DEBUG: True,
     CONF_VERIFY_SSL: True,
 }
+
+MOCK_USER_INPUT = {
+    CONF_NAME: "smtp",
+    CONF_SENDER: "test@test.com",
+    CONF_SENDER_NAME: "Home Assistant",
+    CONF_SERVER: "server",
+    CONF_PORT: 587,
+    CONF_TIMEOUT: 5,
+    CONF_ENCRYPTION: "starttls",
+    CONF_USERNAME: "username",
+    CONF_PASSWORD: "password",
+    CONF_DEBUG: True,
+    CONF_VERIFY_SSL: True,
+}
