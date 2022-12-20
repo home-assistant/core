@@ -184,9 +184,9 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
         """Migrate to the new version."""
         data = old_data
         if old_major_version == 1 and old_minor_version < 2:
-            # From version 1.1
+            # Version 1.2 implements migration and freezes the available keys
             for entity in data["entities"]:
-                # Populate all keys
+                # Populate keys which were introduced before version 1.2
                 entity.setdefault("area_id", None)
                 entity.setdefault("capabilities", {})
                 entity.setdefault("config_entry_id", None)

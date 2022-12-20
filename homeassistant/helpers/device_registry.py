@@ -154,31 +154,24 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
         """Migrate to the new version."""
         if old_major_version < 2:
             if old_minor_version < 2:
-                # From version 1.1
+                # Version 1.2 implements migration and freezes the available keys,
+                # populate keys which were introduced before version 1.2
                 for device in old_data["devices"]:
-                    # Introduced in 0.110
+                    device.setdefault("area_id", None)
+                    device.setdefault("configuration_url", None)
+                    device.setdefault("disabled_by", None)
                     try:
                         device["entry_type"] = DeviceEntryType(device.get("entry_type"))  # type: ignore[arg-type]
                     except ValueError:
                         device["entry_type"] = None
-
-                    # Introduced in 0.79 as hub_device_id
-                    # renamed in 0.95
-                    device.setdefault("via_device_id", device.get("hub_device_id"))
-                    # Introduced in 0.87
-                    device.setdefault("area_id", None)
                     device.setdefault("name_by_user", None)
-                    # Introduced in 0.119
-                    device.setdefault("disabled_by", None)
-                    # Introduced in 2021.11
-                    device.setdefault("configuration_url", None)
-                # Introduced in 0.111
+                    # via_device_id was originally introduced as hub_device_id
+                    device.setdefault("via_device_id", device.get("hub_device_id"))
                 old_data.setdefault("deleted_devices", [])
                 for device in old_data["deleted_devices"]:
-                    # Introduced in 2021.2
                     device.setdefault("orphaned_timestamp", None)
             if old_minor_version < 3:
-                # Introduced in 2022.2
+                # Version 1.3 adds hw_version
                 for device in old_data["devices"]:
                     device["hw_version"] = None
 
