@@ -33,6 +33,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import CONF_CATEGORIES, DEFAULT_RADIUS_IN_KM, VALID_CATEGORIES
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CATEGORY = "category"
@@ -45,18 +47,12 @@ ATTR_SIZE = "size"
 ATTR_STATUS = "status"
 ATTR_TYPE = "type"
 
-CONF_CATEGORIES = "categories"
-
-DEFAULT_RADIUS_IN_KM = 20.0
-
 SCAN_INTERVAL = timedelta(minutes=5)
 
 SIGNAL_DELETE_ENTITY = "nsw_rural_fire_service_feed_delete_{}"
 SIGNAL_UPDATE_ENTITY = "nsw_rural_fire_service_feed_update_{}"
 
 SOURCE = "nsw_rural_fire_service_feed"
-
-VALID_CATEGORIES = ["Advice", "Emergency Warning", "Not Applicable", "Watch and Act"]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
