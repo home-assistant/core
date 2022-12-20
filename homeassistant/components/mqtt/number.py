@@ -39,6 +39,7 @@ from .const import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
+    CONF_PAYLOAD_RESET,
 )
 from .debug_info import log_messages
 from .mixins import (
@@ -60,7 +61,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_MIN = "min"
 CONF_MAX = "max"
-CONF_PAYLOAD_RESET = "payload_reset"
 CONF_STEP = "step"
 
 DEFAULT_NAME = "MQTT Number"

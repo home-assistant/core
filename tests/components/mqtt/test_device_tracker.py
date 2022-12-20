@@ -429,10 +429,10 @@ async def test_setting_device_tracker_location_via_lat_lon_message(
     assert state.state == STATE_UNKNOWN
 
 
-async def test_setting_device_tracker_location_via_auto_zone_message(
+async def test_setting_device_tracker_location_via_reset_message(
     hass, mqtt_mock_entry_no_yaml_config, caplog
 ):
-    """Test the automatic inference of zones via MQTT."""
+    """Test the automatic inference of zones via MQTT via reset."""
     await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(
         hass,
@@ -465,13 +465,13 @@ async def test_setting_device_tracker_location_via_auto_zone_message(
     hass.config.latitude = 32.87336
     hass.config.longitude = -117.22743
 
-    # test auto zone and gps attributes
+    # test reset and gps attributes
     async_fire_mqtt_message(
         hass,
         "attributes-topic",
         '{"latitude":32.87336,"longitude": -117.22743, "gps_accuracy":1.5}',
     )
-    async_fire_mqtt_message(hass, "test-topic", "auto_zone")
+    async_fire_mqtt_message(hass, "test-topic", "RST")
 
     state = hass.states.get("device_tracker.test")
     assert state.attributes["latitude"] == 32.87336
@@ -486,13 +486,13 @@ async def test_setting_device_tracker_location_via_auto_zone_message(
     state = hass.states.get("device_tracker.test")
     assert state.state == "Work"
 
-    # test auto_zone
-    async_fire_mqtt_message(hass, "test-topic", "auto_zone")
+    # test reset
+    async_fire_mqtt_message(hass, "test-topic", "RST")
 
     state = hass.states.get("device_tracker.test")
     assert state.state == STATE_HOME
 
-    # test auto_zone inferring correct school area
+    # test reset inferring correct school area
     async_fire_mqtt_message(
         hass,
         "attributes-topic",
@@ -503,10 +503,10 @@ async def test_setting_device_tracker_location_via_auto_zone_message(
     assert state.state == "School"
 
 
-async def test_setting_device_tracker_location_via_abbr_auto_zone_message(
+async def test_setting_device_tracker_location_via_abbr_reset_message(
     hass, mqtt_mock_entry_no_yaml_config, caplog
 ):
-    """Test the setting of auto_zone via abbreviated names and custom payloads via MQTT."""
+    """Test the setting of reset via abbreviated names and custom payloads via MQTT."""
     await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(
         hass,
@@ -515,7 +515,7 @@ async def test_setting_device_tracker_location_via_abbr_auto_zone_message(
         '"name": "test", '
         '"state_topic": "test-topic", '
         '"json_attributes_topic": "attributes-topic", '
-        '"pl_aut_zn": "auto" '
+        '"pl_rst": "reset" '
         "}",
     )
 
@@ -529,13 +529,13 @@ async def test_setting_device_tracker_location_via_abbr_auto_zone_message(
     hass.config.latitude = 32.87336
     hass.config.longitude = -117.22743
 
-    # test custom auto zone payload and gps attributes
+    # test custom reset payload and gps attributes
     async_fire_mqtt_message(
         hass,
         "attributes-topic",
         '{"latitude":32.87336,"longitude": -117.22743, "gps_accuracy":1.5}',
     )
-    async_fire_mqtt_message(hass, "test-topic", "auto")
+    async_fire_mqtt_message(hass, "test-topic", "reset")
 
     state = hass.states.get("device_tracker.test")
     assert state.attributes["latitude"] == 32.87336
