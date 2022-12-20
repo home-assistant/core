@@ -572,313 +572,6 @@ async def test_trigger_with_pending(hass, mqtt_mock_entry_with_yaml_config):
     assert state.state == STATE_ALARM_DISARMED
 
 
-async def test_trigger_with_disarm_after_trigger(
-    hass, mqtt_mock_entry_with_yaml_config
-):
-    """Test disarm after trigger."""
-    assert await async_setup_component(
-        hass,
-        alarm_control_panel.DOMAIN,
-        {
-            "alarm_control_panel": {
-                "platform": "manual_mqtt",
-                "name": "test",
-                "trigger_time": 5,
-                "pending_time": 0,
-                "disarm_after_trigger": True,
-                "command_topic": "alarm/command",
-                "state_topic": "alarm/state",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    entity_id = "alarm_control_panel.test"
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
-
-    await common.async_alarm_trigger(hass, entity_id=entity_id)
-
-    state = hass.states.get(entity_id)
-    assert state.attributes["previous_state"] == STATE_ALARM_DISARMED
-    assert state.state == STATE_ALARM_TRIGGERED
-
-    future = dt_util.utcnow() + timedelta(seconds=5)
-    with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
-        return_value=future,
-    ):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
-
-
-async def test_trigger_with_zero_specific_trigger_time(
-    hass, mqtt_mock_entry_with_yaml_config
-):
-    """Test trigger method."""
-    assert await async_setup_component(
-        hass,
-        alarm_control_panel.DOMAIN,
-        {
-            "alarm_control_panel": {
-                "platform": "manual_mqtt",
-                "name": "test",
-                "trigger_time": 5,
-                "disarmed": {"trigger_time": 0},
-                "pending_time": 0,
-                "disarm_after_trigger": True,
-                "command_topic": "alarm/command",
-                "state_topic": "alarm/state",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    entity_id = "alarm_control_panel.test"
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
-
-    await common.async_alarm_trigger(hass, entity_id=entity_id)
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
-
-
-async def test_trigger_with_unused_zero_specific_trigger_time(
-    hass, mqtt_mock_entry_with_yaml_config
-):
-    """Test disarm after trigger."""
-    assert await async_setup_component(
-        hass,
-        alarm_control_panel.DOMAIN,
-        {
-            "alarm_control_panel": {
-                "platform": "manual_mqtt",
-                "name": "test",
-                "trigger_time": 5,
-                "armed_home": {"trigger_time": 0},
-                "pending_time": 0,
-                "disarm_after_trigger": True,
-                "command_topic": "alarm/command",
-                "state_topic": "alarm/state",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    entity_id = "alarm_control_panel.test"
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
-
-    await common.async_alarm_trigger(hass, entity_id=entity_id)
-
-    state = hass.states.get(entity_id)
-    assert state.attributes["previous_state"] == STATE_ALARM_DISARMED
-    assert state.state == STATE_ALARM_TRIGGERED
-
-    future = dt_util.utcnow() + timedelta(seconds=5)
-    with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
-        return_value=future,
-    ):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
-
-
-async def test_trigger_with_specific_trigger_time(
-    hass, mqtt_mock_entry_with_yaml_config
-):
-    """Test disarm after trigger."""
-    assert await async_setup_component(
-        hass,
-        alarm_control_panel.DOMAIN,
-        {
-            "alarm_control_panel": {
-                "platform": "manual_mqtt",
-                "name": "test",
-                "disarmed": {"trigger_time": 5},
-                "pending_time": 0,
-                "disarm_after_trigger": True,
-                "command_topic": "alarm/command",
-                "state_topic": "alarm/state",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    entity_id = "alarm_control_panel.test"
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
-
-    await common.async_alarm_trigger(hass, entity_id=entity_id)
-
-    state = hass.states.get(entity_id)
-    assert state.attributes["previous_state"] == STATE_ALARM_DISARMED
-    assert state.state == STATE_ALARM_TRIGGERED
-
-    future = dt_util.utcnow() + timedelta(seconds=5)
-    with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
-        return_value=future,
-    ):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
-
-
-async def test_back_to_back_trigger_with_no_disarm_after_trigger(
-    hass, mqtt_mock_entry_with_yaml_config
-):
-    """Test no disarm after back to back trigger."""
-    assert await async_setup_component(
-        hass,
-        alarm_control_panel.DOMAIN,
-        {
-            "alarm_control_panel": {
-                "platform": "manual_mqtt",
-                "name": "test",
-                "trigger_time": 5,
-                "pending_time": 0,
-                "disarm_after_trigger": False,
-                "command_topic": "alarm/command",
-                "state_topic": "alarm/state",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    entity_id = "alarm_control_panel.test"
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
-
-    await common.async_alarm_arm_away(hass, CODE, entity_id)
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_AWAY
-
-    await common.async_alarm_trigger(hass, entity_id=entity_id)
-
-    state = hass.states.get(entity_id)
-    assert state.attributes["previous_state"] == STATE_ALARM_ARMED_AWAY
-    assert state.state == STATE_ALARM_TRIGGERED
-
-    future = dt_util.utcnow() + timedelta(seconds=5)
-    with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
-        return_value=future,
-    ):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_AWAY
-
-    await common.async_alarm_trigger(hass, entity_id=entity_id)
-
-    state = hass.states.get(entity_id)
-    assert state.attributes["previous_state"] == STATE_ALARM_ARMED_AWAY
-    assert state.state == STATE_ALARM_TRIGGERED
-
-    future = dt_util.utcnow() + timedelta(seconds=5)
-    with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
-        return_value=future,
-    ):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_AWAY
-
-
-async def test_disarm_while_pending_trigger(hass, mqtt_mock_entry_with_yaml_config):
-    """Test disarming while pending state."""
-    assert await async_setup_component(
-        hass,
-        alarm_control_panel.DOMAIN,
-        {
-            "alarm_control_panel": {
-                "platform": "manual_mqtt",
-                "name": "test",
-                "trigger_time": 5,
-                "disarm_after_trigger": False,
-                "command_topic": "alarm/command",
-                "state_topic": "alarm/state",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    entity_id = "alarm_control_panel.test"
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
-
-    await common.async_alarm_trigger(hass)
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_PENDING
-
-    await common.async_alarm_disarm(hass, entity_id=entity_id)
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
-
-    future = dt_util.utcnow() + timedelta(seconds=5)
-    with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
-        return_value=future,
-    ):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
-
-
-async def test_disarm_during_trigger_with_invalid_code(
-    hass, mqtt_mock_entry_with_yaml_config
-):
-    """Test disarming while code is invalid."""
-    assert await async_setup_component(
-        hass,
-        alarm_control_panel.DOMAIN,
-        {
-            "alarm_control_panel": {
-                "platform": "manual_mqtt",
-                "name": "test",
-                "pending_time": 5,
-                "code": f"{CODE}2",
-                "disarm_after_trigger": False,
-                "command_topic": "alarm/command",
-                "state_topic": "alarm/state",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    entity_id = "alarm_control_panel.test"
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
-
-    await common.async_alarm_trigger(hass)
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_PENDING
-
-    await common.async_alarm_disarm(hass, entity_id=entity_id)
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_PENDING
-
-    future = dt_util.utcnow() + timedelta(seconds=5)
-    with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
-        return_value=future,
-    ):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state.attributes["previous_state"] == STATE_ALARM_DISARMED
-    assert state.state == STATE_ALARM_TRIGGERED
-
-
 async def test_trigger_with_unused_specific_delay(
     hass, mqtt_mock_entry_with_yaml_config
 ):
@@ -1149,6 +842,164 @@ async def test_trigger_with_specific_pending(hass, mqtt_mock_entry_with_yaml_con
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
 
 
+async def test_trigger_with_disarm_after_trigger(
+    hass, mqtt_mock_entry_with_yaml_config
+):
+    """Test disarm after trigger."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual_mqtt",
+                "name": "test",
+                "trigger_time": 5,
+                "pending_time": 0,
+                "disarm_after_trigger": True,
+                "command_topic": "alarm/command",
+                "state_topic": "alarm/state",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity_id = "alarm_control_panel.test"
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
+
+    await common.async_alarm_trigger(hass, entity_id=entity_id)
+
+    state = hass.states.get(entity_id)
+    assert state.attributes["previous_state"] == STATE_ALARM_DISARMED
+    assert state.state == STATE_ALARM_TRIGGERED
+
+    future = dt_util.utcnow() + timedelta(seconds=5)
+    with patch(
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
+        return_value=future,
+    ):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
+
+
+async def test_trigger_with_zero_specific_trigger_time(
+    hass, mqtt_mock_entry_with_yaml_config
+):
+    """Test trigger method."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual_mqtt",
+                "name": "test",
+                "trigger_time": 5,
+                "disarmed": {"trigger_time": 0},
+                "pending_time": 0,
+                "disarm_after_trigger": True,
+                "command_topic": "alarm/command",
+                "state_topic": "alarm/state",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity_id = "alarm_control_panel.test"
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
+
+    await common.async_alarm_trigger(hass, entity_id=entity_id)
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
+
+
+async def test_trigger_with_unused_zero_specific_trigger_time(
+    hass, mqtt_mock_entry_with_yaml_config
+):
+    """Test disarm after trigger."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual_mqtt",
+                "name": "test",
+                "trigger_time": 5,
+                "armed_home": {"trigger_time": 0},
+                "pending_time": 0,
+                "disarm_after_trigger": True,
+                "command_topic": "alarm/command",
+                "state_topic": "alarm/state",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity_id = "alarm_control_panel.test"
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
+
+    await common.async_alarm_trigger(hass, entity_id=entity_id)
+
+    state = hass.states.get(entity_id)
+    assert state.attributes["previous_state"] == STATE_ALARM_DISARMED
+    assert state.state == STATE_ALARM_TRIGGERED
+
+    future = dt_util.utcnow() + timedelta(seconds=5)
+    with patch(
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
+        return_value=future,
+    ):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
+
+
+async def test_trigger_with_specific_trigger_time(
+    hass, mqtt_mock_entry_with_yaml_config
+):
+    """Test disarm after trigger."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual_mqtt",
+                "name": "test",
+                "disarmed": {"trigger_time": 5},
+                "pending_time": 0,
+                "disarm_after_trigger": True,
+                "command_topic": "alarm/command",
+                "state_topic": "alarm/state",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity_id = "alarm_control_panel.test"
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
+
+    await common.async_alarm_trigger(hass, entity_id=entity_id)
+
+    state = hass.states.get(entity_id)
+    assert state.attributes["previous_state"] == STATE_ALARM_DISARMED
+    assert state.state == STATE_ALARM_TRIGGERED
+
+    future = dt_util.utcnow() + timedelta(seconds=5)
+    with patch(
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
+        return_value=future,
+    ):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
+
+
 async def test_trigger_with_no_disarm_after_trigger(
     hass, mqtt_mock_entry_with_yaml_config
 ):
@@ -1194,6 +1045,194 @@ async def test_trigger_with_no_disarm_after_trigger(
         await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_AWAY
+
+
+async def test_back_to_back_trigger_with_no_disarm_after_trigger(
+    hass, mqtt_mock_entry_with_yaml_config
+):
+    """Test no disarm after back to back trigger."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual_mqtt",
+                "name": "test",
+                "trigger_time": 5,
+                "pending_time": 0,
+                "disarm_after_trigger": False,
+                "command_topic": "alarm/command",
+                "state_topic": "alarm/state",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity_id = "alarm_control_panel.test"
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
+
+    await common.async_alarm_arm_away(hass, CODE, entity_id)
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_AWAY
+
+    await common.async_alarm_trigger(hass, entity_id=entity_id)
+
+    state = hass.states.get(entity_id)
+    assert state.attributes["previous_state"] == STATE_ALARM_ARMED_AWAY
+    assert state.state == STATE_ALARM_TRIGGERED
+
+    future = dt_util.utcnow() + timedelta(seconds=5)
+    with patch(
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
+        return_value=future,
+    ):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_AWAY
+
+    await common.async_alarm_trigger(hass, entity_id=entity_id)
+
+    state = hass.states.get(entity_id)
+    assert state.attributes["previous_state"] == STATE_ALARM_ARMED_AWAY
+    assert state.state == STATE_ALARM_TRIGGERED
+
+    future = dt_util.utcnow() + timedelta(seconds=5)
+    with patch(
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
+        return_value=future,
+    ):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_AWAY
+
+
+async def test_disarm_while_pending_trigger(hass, mqtt_mock_entry_with_yaml_config):
+    """Test disarming while pending state."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual_mqtt",
+                "name": "test",
+                "trigger_time": 5,
+                "disarm_after_trigger": False,
+                "command_topic": "alarm/command",
+                "state_topic": "alarm/state",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity_id = "alarm_control_panel.test"
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
+
+    await common.async_alarm_trigger(hass)
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_PENDING
+
+    await common.async_alarm_disarm(hass, entity_id=entity_id)
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
+
+    future = dt_util.utcnow() + timedelta(seconds=5)
+    with patch(
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
+        return_value=future,
+    ):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
+
+
+async def test_disarm_during_trigger_with_invalid_code(
+    hass, mqtt_mock_entry_with_yaml_config
+):
+    """Test disarming while code is invalid."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual_mqtt",
+                "name": "test",
+                "pending_time": 5,
+                "code": f"{CODE}2",
+                "disarm_after_trigger": False,
+                "command_topic": "alarm/command",
+                "state_topic": "alarm/state",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity_id = "alarm_control_panel.test"
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
+
+    await common.async_alarm_trigger(hass)
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_PENDING
+
+    await common.async_alarm_disarm(hass, entity_id=entity_id)
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_PENDING
+
+    future = dt_util.utcnow() + timedelta(seconds=5)
+    with patch(
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
+        return_value=future,
+    ):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.attributes["previous_state"] == STATE_ALARM_DISARMED
+    assert state.state == STATE_ALARM_TRIGGERED
+
+
+async def test_disarm_with_template_code(hass, mqtt_mock_entry_with_yaml_config):
+    """Attempt to disarm with a valid or invalid template-based code."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual_mqtt",
+                "name": "test",
+                "code_template": '{{ "" if from_state == "disarmed" else "abc" }}',
+                "pending_time": 0,
+                "disarm_after_trigger": False,
+                "command_topic": "alarm/command",
+                "state_topic": "alarm/state",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity_id = "alarm_control_panel.test"
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
+
+    await common.async_alarm_arm_home(hass, "def")
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ALARM_ARMED_HOME
+
+    await common.async_alarm_disarm(hass, "def")
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ALARM_ARMED_HOME
+
+    await common.async_alarm_disarm(hass, "abc")
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ALARM_DISARMED
 
 
 async def test_arm_away_after_disabled_disarmed(hass, mqtt_mock_entry_with_yaml_config):
@@ -1259,45 +1298,6 @@ async def test_arm_away_after_disabled_disarmed(hass, mqtt_mock_entry_with_yaml_
     state = hass.states.get(entity_id)
     assert state.attributes["previous_state"] == STATE_ALARM_ARMED_AWAY
     assert state.state == STATE_ALARM_TRIGGERED
-
-
-async def test_disarm_with_template_code(hass, mqtt_mock_entry_with_yaml_config):
-    """Attempt to disarm with a valid or invalid template-based code."""
-    assert await async_setup_component(
-        hass,
-        alarm_control_panel.DOMAIN,
-        {
-            "alarm_control_panel": {
-                "platform": "manual_mqtt",
-                "name": "test",
-                "code_template": '{{ "" if from_state == "disarmed" else "abc" }}',
-                "pending_time": 0,
-                "disarm_after_trigger": False,
-                "command_topic": "alarm/command",
-                "state_topic": "alarm/state",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    entity_id = "alarm_control_panel.test"
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
-
-    await common.async_alarm_arm_home(hass, "def")
-
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_ALARM_ARMED_HOME
-
-    await common.async_alarm_disarm(hass, "def")
-
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_ALARM_ARMED_HOME
-
-    await common.async_alarm_disarm(hass, "abc")
-
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_ALARM_DISARMED
 
 
 @pytest.mark.parametrize(
