@@ -594,9 +594,8 @@ class TodoistProjectData:
             )
             if not due_date:
                 continue
-            gmt_string = self._api.state["user"]["tz_info"]["gmt_string"]
             local_midnight = dt.parse_datetime(
-                f'{due_date.strftime("%Y-%m-%d")}T00:00:00{gmt_string}'
+                due_date.strftime(f"%Y-%m-%dT00:00:00{gmt_string}")
             )
             if local_midnight is not None:
                 midnight = dt.as_utc(local_midnight)
