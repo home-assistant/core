@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DOMAIN, TIME_DAYS
+from homeassistant.const import CONF_DOMAIN, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
@@ -81,7 +81,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         key="days_until_expiration",
         name="Days until expiration",
         icon="mdi:calendar-clock",
-        native_unit_of_measurement=TIME_DAYS,
+        native_unit_of_measurement=UnitOfTime.DAYS,
         value_fn=_days_until_expiration,
     ),
     WhoisSensorEntityDescription(

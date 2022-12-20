@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TIME_MINUTES
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -63,7 +63,7 @@ SENSORS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:power-settings",
         name="Power Timer",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         getter=lambda status: status.power_timer,
         availability_checker=lambda settings, status: status.power_on
         and settings.power_timer is not None,
@@ -73,7 +73,7 @@ SENSORS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:shaker-outline",
         name="Salt Bath Timer",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         getter=lambda status: status.salt_bath_timer,
         availability_checker=lambda settings, status: status.salt_bath_on
         and settings.salt_bath_timer is not None,
@@ -83,7 +83,7 @@ SENSORS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:fan-auto",
         name="Fan Timer",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         getter=lambda status: status.fan_timer,
         availability_checker=lambda settings, status: status.fan_on
         and settings.fan_timer is not None,
