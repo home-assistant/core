@@ -1,14 +1,12 @@
 """Define constants for the NSW Rural Fire Service Feeds integration."""
 from __future__ import annotations
 
-from datetime import timedelta
-
 from homeassistant.const import Platform
 
 CONF_CATEGORIES = "categories"
 
 DEFAULT_RADIUS_IN_KM = 20.0
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
+DEFAULT_SCAN_INTERVAL = 300
 
 DOMAIN = "nsw_rural_fire_service_feed"
 

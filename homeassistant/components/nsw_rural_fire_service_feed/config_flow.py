@@ -12,13 +12,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 
-from .const import (
-    CONF_CATEGORIES,
-    DEFAULT_RADIUS_IN_KM,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    VALID_CATEGORIES,
-)
+from .const import CONF_CATEGORIES, DEFAULT_RADIUS_IN_KM, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,9 +35,9 @@ class NswRuralFireServiceFeedFlowHandler(config_entries.ConfigFlow, domain=DOMAI
                     vol.Optional(
                         CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM
                     ): cv.positive_int,
-                    vol.Optional(CONF_CATEGORIES, default=[]): vol.All(
-                        cv.ensure_list, [vol.In(VALID_CATEGORIES)]
-                    ),
+                    # vol.Optional(CONF_CATEGORIES, default=[]): vol.All(
+                    #     cv.ensure_list, [vol.In(VALID_CATEGORIES)]
+                    # ),
                     vol.Required(
                         CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                     ): cv.positive_int,
@@ -73,7 +67,7 @@ class NswRuralFireServiceFeedFlowHandler(config_entries.ConfigFlow, domain=DOMAI
         self._abort_if_unique_id_configured()
 
         scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        user_input[CONF_SCAN_INTERVAL] = scan_interval.total_seconds()
+        user_input[CONF_SCAN_INTERVAL] = scan_interval
 
         categories = user_input.get(CONF_CATEGORIES, [])
         user_input[CONF_CATEGORIES] = categories

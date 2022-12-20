@@ -118,8 +118,8 @@ class NswRuralFireServiceFeedEntityManager:
         )
         radius_in_km = config_entry.data[CONF_RADIUS]
         categories = config_entry.data[CONF_CATEGORIES]
-        scan_interval: timedelta = config_entry.data.get(
-            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+        scan_interval: timedelta = timedelta(
+            seconds=config_entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         )
         websession = aiohttp_client.async_get_clientsession(hass)
         self._feed_manager = NswRuralFireServiceIncidentsFeedManager(
