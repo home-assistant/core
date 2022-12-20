@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import Container, Iterable, MutableMapping
-from typing import Optional, cast
+from typing import Any, Optional, cast
 
 import attr
 
@@ -19,7 +19,8 @@ from .typing import UNDEFINED, UndefinedType
 DATA_REGISTRY = "area_registry"
 EVENT_AREA_REGISTRY_UPDATED = "area_registry_updated"
 STORAGE_KEY = "core.area_registry"
-STORAGE_VERSION = 1
+STORAGE_VERSION_MAJOR = 1
+STORAGE_VERSION_MINOR = 2
 SAVE_DELAY = 10
 
 
@@ -42,6 +43,28 @@ class AreaEntry:
         object.__setattr__(self, "id", suggestion)
 
 
+class AreaRegistryStore(Store[dict[str, list[dict[str, Optional[str]]]]]):
+    """Store area registry data."""
+
+    async def _async_migrate_func(
+        self,
+        old_major_version: int,
+        old_minor_version: int,
+        old_data: dict[str, list[dict[str, str | None]]],
+    ) -> dict[str, Any]:
+        """Migrate to the new version."""
+        if old_major_version < 2:
+            if old_minor_version < 2:
+                # Version 1.2 implements migration and freezes the available keys
+                for area in old_data["areas"]:
+                    # Populate keys which were introduced before version 1.2
+                    area.setdefault("picture", None)
+
+        if old_major_version > 1:
+            raise NotImplementedError
+        return old_data
+
+
 class AreaRegistry:
     """Class to hold a registry of areas."""
 
@@ -49,8 +72,12 @@ class AreaRegistry:
         """Initialize the area registry."""
         self.hass = hass
         self.areas: MutableMapping[str, AreaEntry] = {}
-        self._store = Store[dict[str, list[dict[str, Optional[str]]]]](
-            hass, STORAGE_VERSION, STORAGE_KEY, atomic_writes=True
+        self._store = AreaRegistryStore(
+            hass,
+            STORAGE_VERSION_MAJOR,
+            STORAGE_KEY,
+            atomic_writes=True,
+            minor_version=STORAGE_VERSION_MINOR,
         )
         self._normalized_name_area_idx: dict[str, str] = {}
 
@@ -183,11 +210,10 @@ class AreaRegistry:
                 assert area["name"] is not None and area["id"] is not None
                 normalized_name = normalize_area_name(area["name"])
                 areas[area["id"]] = AreaEntry(
-                    name=area["name"],
                     id=area["id"],
-                    # New in 2021.11
-                    picture=area.get("picture"),
+                    name=area["name"],
                     normalized_name=normalized_name,
+                    picture=area["picture"],
                 )
                 self._normalized_name_area_idx[normalized_name] = area["id"]
 
