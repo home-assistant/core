@@ -65,7 +65,7 @@ PULSE_COUNTER_SCHEMA = vol.Schema(
         vol.Required(CONF_COUNTED_QUANTITY): cv.string,
         vol.Optional(CONF_COUNTED_QUANTITY_PER_PULSE, default=1.0): vol.Coerce(float),
         vol.Optional(CONF_TIME_UNIT, default=UnitOfTime.SECONDS): vol.Any(
-            UnitOfTime.SECONDS, UnitOfTime.MINUTES, UnitOfTime.HOURS
+            UnitOfTime.SECONDS.value, UnitOfTime.MINUTES.value, UnitOfTime.HOURS.value
         ),
     }
 )
