@@ -12,7 +12,13 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_CATEGORIES, DEFAULT_RADIUS_IN_KM, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import (
+    CONF_CATEGORIES,
+    DEFAULT_RADIUS_IN_KM,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    VALID_CATEGORIES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,9 +41,9 @@ class NswRuralFireServiceFeedFlowHandler(config_entries.ConfigFlow, domain=DOMAI
                     vol.Optional(
                         CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM
                     ): cv.positive_int,
-                    # vol.Optional(CONF_CATEGORIES, default=[]): vol.All(
-                    #     cv.ensure_list, [vol.In(VALID_CATEGORIES)]
-                    # ),
+                    vol.Optional(
+                        CONF_CATEGORIES, default=VALID_CATEGORIES
+                    ): cv.multi_select(VALID_CATEGORIES),
                     vol.Required(
                         CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                     ): cv.positive_int,
