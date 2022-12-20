@@ -8,9 +8,8 @@ from pysiaalarm import SIAEvent
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
-    AlarmControlPanelEntityDescription,
-)
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
+    AlarmControlPanelEntityDescription
+) 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
@@ -18,7 +17,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
-    STATE_UNAVAILABLE
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
