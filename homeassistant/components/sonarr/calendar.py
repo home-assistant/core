@@ -1,5 +1,5 @@
 """Support for Sonarr calendar."""
-import datetime
+from datetime import datetime, timedelta
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.config_entries import ConfigEntry
@@ -33,14 +33,16 @@ async def get_sonarr_episode_events(
     """Update the list of upcoming episodes."""
     calendar_entries: list[CalendarEvent] = []
     for episode in coordinator.data:
+        episode_endtime_utc = episode.airDateUtc + timedelta(
+            minutes=episode.series.runtime
+        )
         calendar_entries.append(
             CalendarEvent(
                 summary=episode.series.title,
                 description=episode.title,
                 location=episode.series.network,
                 start=episode.airDateUtc,
-                end=episode.airDateUtc
-                + datetime.timedelta(minutes=episode.series.runtime),
+                end=episode_endtime_utc,
             )
         )
     return calendar_entries
@@ -62,8 +64,8 @@ class SonarrCalendarEntity(CalendarEntity):
     async def async_get_events(
         self,
         hass: HomeAssistant,
-        start_date: datetime.datetime,
-        end_date: datetime.datetime,
+        start_date: datetime,
+        end_date: datetime,
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
         return self._events
