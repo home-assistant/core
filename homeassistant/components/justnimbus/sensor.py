@@ -15,8 +15,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
     TEMP_CELSIUS,
-    TIME_HOURS,
     UnitOfPressure,
+    UnitOfTime,
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
@@ -84,7 +84,7 @@ SENSOR_TYPES = (
         name="Pump hours",
         icon="mdi:clock",
         device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=TIME_HOURS,
+        native_unit_of_measurement=UnitOfTime.HOURS,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda coordinator: coordinator.data.pump_hours,
