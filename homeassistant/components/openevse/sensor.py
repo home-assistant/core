@@ -18,8 +18,8 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
     TEMP_CELSIUS,
-    TIME_MINUTES,
     UnitOfEnergy,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -36,7 +36,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="charge_time",
         name="Charge Time Elapsed",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
