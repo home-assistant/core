@@ -174,7 +174,7 @@ class NMBSLiveBoard(SensorEntity):
 
 
 class NMBSSensor(SensorEntity):
-    """Get the the total travel time for a given connection."""
+    """Get the total travel time for a given connection."""
 
     _attr_attribution = "https://api.irail.be/"
     _attr_native_unit_of_measurement = TIME_MINUTES
