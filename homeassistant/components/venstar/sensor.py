@@ -15,8 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
@@ -106,9 +105,9 @@ async def async_setup_entry(
 
 def temperature_unit(coordinator: VenstarDataUpdateCoordinator) -> str:
     """Return the correct unit for temperature."""
-    unit = TEMP_CELSIUS
+    unit = UnitOfTemperature.CELSIUS
     if coordinator.client.tempunits == coordinator.client.TEMPUNITS_F:
-        unit = TEMP_FAHRENHEIT
+        unit = UnitOfTemperature.FAHRENHEIT
     return unit
 
 

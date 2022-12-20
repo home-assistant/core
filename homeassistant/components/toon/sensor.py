@@ -12,9 +12,9 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
-    TEMP_CELSIUS,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfTemperature,
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
@@ -132,7 +132,7 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         name="Temperature",
         section="thermostat",
         measurement="current_display_temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
