@@ -15,7 +15,7 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_ALLOWED_REGIONS, CONF_REGIONS_MAP, DOMAIN
+from .const import CONF_REGIONS_MAP, DOMAIN
 from .util import get_brand_for_region
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_REGION): vol.In(CONF_ALLOWED_REGIONS),
+        vol.Required(CONF_REGION): vol.In(list(CONF_REGIONS_MAP)),
     }
 )
 
