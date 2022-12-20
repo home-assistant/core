@@ -3,7 +3,7 @@
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEVICE_CONFIG_UPDATE_COORDINATOR, DOMAIN
+from .const import DOMAIN
 from .host import ReolinkHost
 
 

@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import cast
-from aiohttp import ClientConnectorError
-from asyncio import TimeoutError
 
+from aiohttp import ClientConnectorError
 import async_timeout
+from reolink_ip.exceptions import ApiError, InvalidContentTypeError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -17,18 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from reolink_ip.exceptions import InvalidContentTypeError, ApiError
-
-from .const import (
-    DEVICE_CONFIG_UPDATE_COORDINATOR,
-    DEVICE_UPDATE_INTERVAL,
-    DOMAIN,
-    PLATFORMS,
-    SERVICE_PTZ_CONTROL,
-    SERVICE_SET_BACKLIGHT,
-    SERVICE_SET_DAYNIGHT,
-    SERVICE_SET_SENSITIVITY,
-)
+from .const import DEVICE_UPDATE_INTERVAL, DOMAIN, PLATFORMS
 from .host import ReolinkHost
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,7 +42,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise ConfigEntryNotReady(
                 f"Error while trying to setup {host.api.host}:{host.api.port}: failed to obtain data from device."
             )
-    except (ClientConnectorError, TimeoutError, ApiError, InvalidContentTypeError) as err:
+    except (
+        ClientConnectorError,
+        asyncio.TimeoutError,
+        ApiError,
+        InvalidContentTypeError,
+    ) as err:
         raise ConfigEntryNotReady(
             f'Error while trying to setup {host.api.host}:{host.api.port}: "{str(err)}".'
         ) from err
@@ -78,8 +72,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator_device_config_update.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][entry.entry_id] = ReolinkData(
-        host = host,
-        device_coordinator = coordinator_device_config_update,
+        host=host,
+        device_coordinator=coordinator_device_config_update,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -100,7 +94,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await host.stop()
 
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
