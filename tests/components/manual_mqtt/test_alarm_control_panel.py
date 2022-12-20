@@ -23,6 +23,7 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
+from homeassistant.core import CoreState, State
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -30,6 +31,8 @@ from tests.common import (
     assert_setup_component,
     async_fire_mqtt_message,
     async_fire_time_changed,
+    mock_component,
+    mock_restore_cache,
 )
 from tests.components.alarm_control_panel import common
 
@@ -1476,3 +1479,270 @@ async def test_state_changes_are_published_to_mqtt(
     mqtt_mock.async_publish.assert_called_once_with(
         "alarm/state", STATE_ALARM_DISARMED, 0, True
     )
+
+
+@pytest.mark.parametrize(
+    "expected_state",
+    [
+        (STATE_ALARM_ARMED_AWAY),
+        (STATE_ALARM_ARMED_CUSTOM_BYPASS),
+        (STATE_ALARM_ARMED_HOME),
+        (STATE_ALARM_ARMED_NIGHT),
+        (STATE_ALARM_ARMED_VACATION),
+        (STATE_ALARM_DISARMED),
+    ],
+)
+async def test_restore_state(hass, expected_state, mqtt_mock_entry_with_yaml_config):
+    """Ensure state is restored on startup."""
+    mock_restore_cache(hass, (State("alarm_control_panel.test", expected_state),))
+
+    hass.state = CoreState.starting
+    mock_component(hass, "recorder")
+
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual_mqtt",
+                "name": "test",
+                "pending_time": 0,
+                "trigger_time": 0,
+                "disarm_after_trigger": False,
+                "state_topic": "alarm/state",
+                "command_topic": "alarm/command",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("alarm_control_panel.test")
+    assert state
+    assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    "expected_state",
+    [
+        (STATE_ALARM_ARMED_AWAY),
+        (STATE_ALARM_ARMED_CUSTOM_BYPASS),
+        (STATE_ALARM_ARMED_HOME),
+        (STATE_ALARM_ARMED_NIGHT),
+        (STATE_ALARM_ARMED_VACATION),
+    ],
+)
+async def test_restore_state_pending(
+    hass, expected_state, mqtt_mock_entry_with_yaml_config
+):
+    """Ensure PENDING state is restored on startup."""
+    time = dt_util.utcnow() - timedelta(seconds=15)
+    entity_id = "alarm_control_panel.test"
+    attributes = {
+        "previous_state": STATE_ALARM_DISARMED,
+        "next_state": expected_state,
+    }
+    mock_restore_cache(
+        hass, (State(entity_id, expected_state, attributes, last_updated=time),)
+    )
+
+    hass.state = CoreState.starting
+    mock_component(hass, "recorder")
+
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual_mqtt",
+                "name": "test",
+                "pending_time": 60,
+                "trigger_time": 0,
+                "disarm_after_trigger": False,
+                "state_topic": "alarm/state",
+                "command_topic": "alarm/command",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["previous_state"] == STATE_ALARM_DISARMED
+    assert state.attributes["next_state"] == expected_state
+    assert state.state == STATE_ALARM_PENDING
+
+    future = time + timedelta(seconds=61)
+    with freeze_time(future):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    "previous_state",
+    [
+        (STATE_ALARM_ARMED_AWAY),
+        (STATE_ALARM_ARMED_CUSTOM_BYPASS),
+        (STATE_ALARM_ARMED_HOME),
+        (STATE_ALARM_ARMED_NIGHT),
+        (STATE_ALARM_ARMED_VACATION),
+        (STATE_ALARM_DISARMED),
+    ],
+)
+async def test_restore_state_pending(
+    hass, previous_state, mqtt_mock_entry_with_yaml_config
+):
+    """Ensure PENDING state is restored on startup."""
+    time = dt_util.utcnow() - timedelta(seconds=15)
+    entity_id = "alarm_control_panel.test"
+    attributes = {
+        "previous_state": previous_state,
+        "next_state": STATE_ALARM_TRIGGERED,
+    }
+    mock_restore_cache(
+        hass,
+        (State(entity_id, STATE_ALARM_TRIGGERED, attributes, last_updated=time),),
+    )
+
+    hass.state = CoreState.starting
+    mock_component(hass, "recorder")
+
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual_mqtt",
+                "name": "test",
+                "pending_time": 0,
+                "delay_time": 60,
+                "trigger_time": 60,
+                "disarm_after_trigger": False,
+                "state_topic": "alarm/state",
+                "command_topic": "alarm/command",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["previous_state"] == previous_state
+    assert state.attributes["next_state"] == STATE_ALARM_TRIGGERED
+    assert state.state == STATE_ALARM_PENDING
+
+    future = time + timedelta(seconds=61)
+    with freeze_time(future):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ALARM_TRIGGERED
+
+    future = time + timedelta(seconds=121)
+    with freeze_time(future):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == previous_state
+
+
+@pytest.mark.parametrize(
+    "previous_state",
+    [
+        (STATE_ALARM_ARMED_AWAY),
+        (STATE_ALARM_ARMED_CUSTOM_BYPASS),
+        (STATE_ALARM_ARMED_HOME),
+        (STATE_ALARM_ARMED_NIGHT),
+        (STATE_ALARM_ARMED_VACATION),
+        (STATE_ALARM_DISARMED),
+    ],
+)
+async def test_restore_state_triggered(
+    hass, previous_state, mqtt_mock_entry_with_yaml_config
+):
+    """Ensure PENDING state is resolved to TRIGGERED on startup."""
+    time = dt_util.utcnow() - timedelta(seconds=75)
+    entity_id = "alarm_control_panel.test"
+    attributes = {
+        "previous_state": previous_state,
+    }
+    mock_restore_cache(
+        hass,
+        (State(entity_id, STATE_ALARM_TRIGGERED, attributes, last_updated=time),),
+    )
+
+    hass.state = CoreState.starting
+    mock_component(hass, "recorder")
+
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual_mqtt",
+                "name": "test",
+                "pending_time": 0,
+                "delay_time": 60,
+                "trigger_time": 60,
+                "disarm_after_trigger": False,
+                "command_topic": "alarm/command",
+                "state_topic": "alarm/state",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["previous_state"] == previous_state
+    assert "next_state" not in state.attributes
+    assert state.state == STATE_ALARM_TRIGGERED
+
+    future = time + timedelta(seconds=121)
+    with freeze_time(future):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == previous_state
+
+
+async def test_restore_state_triggered_disarm(hass, mqtt_mock_entry_with_yaml_config):
+    """Ensure TRIGGERED state is resolved on startup."""
+    time = dt_util.utcnow() - timedelta(seconds=125)
+    entity_id = "alarm_control_panel.test"
+    attributes = {
+        "previous_state": STATE_ALARM_ARMED_AWAY,
+    }
+    mock_restore_cache(
+        hass,
+        (State(entity_id, STATE_ALARM_TRIGGERED, attributes, last_updated=time),),
+    )
+
+    hass.state = CoreState.starting
+    mock_component(hass, "recorder")
+
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual_mqtt",
+                "name": "test",
+                "pending_time": 0,
+                "delay_time": 60,
+                "trigger_time": 60,
+                "disarm_after_trigger": True,
+                "command_topic": "alarm/command",
+                "state_topic": "alarm/state",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ALARM_DISARMED
