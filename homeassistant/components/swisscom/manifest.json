@@ -1,7 +1,9 @@
 {
   "domain": "swisscom",
   "name": "Swisscom Internet-Box",
+  "integration_type": "hub",
   "documentation": "https://www.home-assistant.io/integrations/swisscom",
   "codeowners": [],
+  "requirements": [],
   "iot_class": "local_polling"
 }
