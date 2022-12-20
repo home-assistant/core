@@ -1,4 +1,4 @@
-"""The nsw_rural_fire_service_feed component."""
+"""The NSW Rural Fire Service Feeds integration."""
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -11,28 +11,30 @@ from aio_geojson_nsw_rfs_incidents.feed_entry import (
 )
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_CATEGORIES,
     DEFAULT_RADIUS_IN_KM,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    FEED,
+    PLATFORMS,
     SIGNAL_DELETE_ENTITY,
     SIGNAL_UPDATE_ENTITY,
     VALID_CATEGORIES,
 )
-from .geo_location import NswRuralFireServiceLocationEvent
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,20 +60,67 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the NSW Rural Fire Service Feeds integration."""
+    if DOMAIN not in config:
+        return True
+
+    conf = config[DOMAIN]
+    latitude = conf.get(CONF_LATITUDE, hass.config.latitude)
+    longitude = conf.get(CONF_LONGITUDE, hass.config.longitude)
+    scan_interval = conf[CONF_SCAN_INTERVAL]
+    categories = conf[CONF_CATEGORIES]
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_LATITUDE: latitude,
+                CONF_LONGITUDE: longitude,
+                CONF_RADIUS: conf[CONF_RADIUS],
+                CONF_SCAN_INTERVAL: scan_interval,
+                CONF_CATEGORIES: categories,
+            },
+        )
+    )
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Set up the NSW Rural Fire Service Feeds integration as config entry."""
+    hass.data.setdefault(DOMAIN, {})
+    feeds = hass.data[DOMAIN].setdefault(FEED, {})
+
+    # Create feed entity manager for all platforms.
+    manager = NswRuralFireServiceFeedEntityManager(hass, config_entry)
+    feeds[config_entry.entry_id] = manager
+    _LOGGER.debug("Feed entity manager added for %s", config_entry.entry_id)
+    await manager.async_init()
+    return True
+
+
 class NswRuralFireServiceFeedEntityManager:
     """Feed Entity Manager for NSW Rural Fire Service GeoJSON feed."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        async_add_entities: AddEntitiesCallback,
-        scan_interval: timedelta,
-        coordinates: tuple[float, float],
-        radius_in_km: float,
-        categories: list[str],
+        config_entry: ConfigEntry,
     ) -> None:
         """Initialize the Feed Entity Manager."""
         self._hass = hass
+        self._config_entry = config_entry
+        coordinates: tuple[float, float] = (
+            config_entry.data.get(CONF_LATITUDE, hass.config.latitude),
+            config_entry.data.get(CONF_LONGITUDE, hass.config.longitude),
+        )
+        radius_in_km = config_entry.data[CONF_RADIUS]
+        categories = config_entry.data[CONF_CATEGORIES]
+        scan_interval: timedelta = config_entry.data.get(
+            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+        )
         websession = aiohttp_client.async_get_clientsession(hass)
         self._feed_manager = NswRuralFireServiceIncidentsFeedManager(
             websession,
@@ -82,12 +131,16 @@ class NswRuralFireServiceFeedEntityManager:
             filter_radius=radius_in_km,
             filter_categories=categories,
         )
-        self._async_add_entities = async_add_entities
+        self._config_entry_id = config_entry.entry_id
         self._scan_interval = scan_interval
         self._track_time_remove_callback: Callable[[], None] | None = None
 
     async def async_init(self) -> None:
         """Schedule initial and regular updates based on configured time interval."""
+
+        await self._hass.config_entries.async_forward_entry_setups(
+            self._config_entry, PLATFORMS
+        )
 
         async def update(event_time: datetime) -> None:
             """Update."""
@@ -111,6 +164,11 @@ class NswRuralFireServiceFeedEntityManager:
             self._track_time_remove_callback()
         _LOGGER.debug("Feed entity manager stopped")
 
+    @callback
+    def async_event_new_entity(self):
+        """Return manager specific event to signal new entity."""
+        return f"nsw_rural_fire_service_feed_new_geolocation_{self._config_entry_id}"
+
     def get_entry(
         self, external_id: str
     ) -> NswRuralFireServiceIncidentsFeedEntry | None:
@@ -119,9 +177,13 @@ class NswRuralFireServiceFeedEntityManager:
 
     async def _generate_entity(self, external_id: str) -> None:
         """Generate new entity."""
-        new_entity = NswRuralFireServiceLocationEvent(self, external_id)
-        # Add new entities to HA.
-        self._async_add_entities([new_entity], True)
+        async_dispatcher_send(
+            self._hass,
+            self.async_event_new_entity(),
+            self,
+            self._config_entry.unique_id,
+            external_id,
+        )
 
     async def _update_entity(self, external_id: str) -> None:
         """Update entity."""

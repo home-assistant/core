@@ -3,12 +3,18 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+from homeassistant.const import Platform
+
 CONF_CATEGORIES = "categories"
 
 DEFAULT_RADIUS_IN_KM = 20.0
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
 
 DOMAIN = "nsw_rural_fire_service_feed"
+
+FEED = "feed"
+
+PLATFORMS = [Platform.GEO_LOCATION]
 
 VALID_CATEGORIES = ["Advice", "Emergency Warning", "Not Applicable", "Watch and Act"]
 
