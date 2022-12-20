@@ -25,7 +25,6 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    TIME_SECONDS,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -35,6 +34,7 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -207,7 +207,7 @@ SENSOR_DESCRIPTIONS = {
     (BTHomeSensorDeviceClass.DURATION, Units.TIME_SECONDS): SensorEntityDescription(
         key=f"{BTHomeSensorDeviceClass.DURATION}_{Units.TIME_SECONDS}",
         device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # Used for current sensor

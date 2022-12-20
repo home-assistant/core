@@ -41,10 +41,10 @@ from homeassistant.const import (
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
     TEMP_CELSIUS,
-    TIME_DAYS,
     VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -232,7 +232,7 @@ SENSOR_TYPES = (
     ComfoconnectSensorEntityDescription(
         key=ATTR_DAYS_TO_REPLACE_FILTER,
         name="Days to replace filter",
-        native_unit_of_measurement=TIME_DAYS,
+        native_unit_of_measurement=UnitOfTime.DAYS,
         icon="mdi:calendar",
         sensor_id=SENSOR_DAYS_TO_REPLACE_FILTER,
     ),
