@@ -2,10 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Set up EnergyZero to integrate with Home Assistant.",
-        "data": {
-          "gas": "Add gas prices"
-        }
+        "description": "Set up EnergyZero to integrate with Home Assistant."
       }
     },
     "error": {

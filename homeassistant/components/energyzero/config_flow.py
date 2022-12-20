@@ -4,14 +4,13 @@ from __future__ import annotations
 from typing import Any
 
 from energyzero import EnergyZero, EnergyZeroError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_GAS, DOMAIN
+from .const import DOMAIN
 
 
 class EnergyZeroFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -37,17 +36,10 @@ class EnergyZeroFlowHandler(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(
                     title="EnergyZero",
-                    data={
-                        CONF_GAS: user_input[CONF_GAS],
-                    },
+                    data={},
                 )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(CONF_GAS, default=False): bool,
-                }
-            ),
             errors=errors,
         )

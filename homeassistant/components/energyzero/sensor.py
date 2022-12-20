@@ -21,7 +21,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_GAS, DOMAIN
+from .const import DOMAIN
 from .coordinator import EnergyZeroData, EnergyZeroDataUpdateCoordinator
 
 
@@ -127,8 +127,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up EnergyZero Sensors based on a config entry."""
     coordinator: EnergyZeroDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    entities: list[EnergyZeroSensorEntity] = []
-    entities.extend(
+    entities = [
         EnergyZeroSensorEntity(
             coordinator=coordinator,
             description=description,
@@ -136,17 +135,16 @@ async def async_setup_entry(
             service="today_energy",
         )
         for description in SENSORS_ENERGY
-    )
-    if entry.data[CONF_GAS]:
-        entities.extend(
-            EnergyZeroSensorEntity(
-                coordinator=coordinator,
-                description=description,
-                name="Gas market price",
-                service="today_gas",
-            )
-            for description in SENSORS_GAS
+    ]
+    entities.extend(
+        EnergyZeroSensorEntity(
+            coordinator=coordinator,
+            description=description,
+            name="Gas market price",
+            service="today_gas",
         )
+        for description in SENSORS_GAS
+    )
     async_add_entities(entities)
 
 

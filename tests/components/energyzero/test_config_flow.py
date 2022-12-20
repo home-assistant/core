@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from energyzero import EnergyZeroError
 
-from homeassistant.components.energyzero.const import CONF_GAS, DOMAIN
+from homeassistant.components.energyzero.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -26,12 +26,12 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_GAS: True},
+            user_input={},
         )
 
     assert result2.get("type") == FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "EnergyZero"
-    assert result2.get("data") == {CONF_GAS: True}
+    assert result2.get("data") == {}
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_energyzero.mock_calls) == 1
@@ -46,7 +46,7 @@ async def test_api_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
-            data={CONF_GAS: True},
+            data={},
         )
 
     assert result.get("type") == FlowResultType.FORM

@@ -11,7 +11,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt
 
-from .const import CONF_GAS, DOMAIN, LOGGER, SCAN_INTERVAL, THRESHOLD_HOUR
+from .const import DOMAIN, LOGGER, SCAN_INTERVAL, THRESHOLD_HOUR
 
 
 class EnergyZeroData(NamedTuple):
@@ -47,13 +47,7 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
             start_date=today, end_date=today
         )
         energy_tomorrow = None
-        gas_today = None
-
-        # Gas for today - optional in config flow
-        if self.config_entry.data.get(CONF_GAS):
-            gas_today = await self.energyzero.gas_prices(
-                start_date=today, end_date=today
-            )
+        gas_today = await self.energyzero.gas_prices(start_date=today, end_date=today)
 
         # Energy for tomorrow only after 14:00
         if dt.now().hour >= THRESHOLD_HOUR:

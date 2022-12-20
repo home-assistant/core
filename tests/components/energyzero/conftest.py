@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from energyzero import Electricity, Gas
 import pytest
 
-from homeassistant.components.energyzero.const import CONF_GAS, DOMAIN
+from homeassistant.components.energyzero.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
@@ -17,7 +17,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         title="energy",
         domain=DOMAIN,
-        data={CONF_GAS: True},
+        data={},
         unique_id="unique_thingy",
     )
 

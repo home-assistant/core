@@ -9,9 +9,6 @@
         },
         "step": {
             "user": {
-                "data": {
-                    "gas": "Add gas prices"
-                },
                 "description": "Set up EnergyZero to integrate with Home Assistant."
             }
         }
