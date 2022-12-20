@@ -14,8 +14,8 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
-    TEMP_CELSIUS,
     UnitOfPressure,
+    UnitOfTemperature,
     UnitOfTime,
     UnitOfVolume,
 )
@@ -92,7 +92,7 @@ SENSOR_TYPES = (
     JustNimbusEntityDescription(
         key="reservoir_temp",
         name="Reservoir Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
