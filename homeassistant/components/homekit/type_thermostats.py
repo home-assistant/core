@@ -53,8 +53,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     PERCENTAGE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import State, callback
 from homeassistant.util.percentage import (
@@ -98,7 +97,7 @@ DEFAULT_HVAC_MODES = [
 ]
 
 HC_HOMEKIT_VALID_MODES_WATER_HEATER = {"Heat": 1}
-UNIT_HASS_TO_HOMEKIT = {TEMP_CELSIUS: 0, TEMP_FAHRENHEIT: 1}
+UNIT_HASS_TO_HOMEKIT = {UnitOfTemperature.CELSIUS: 0, UnitOfTemperature.FAHRENHEIT: 1}
 
 HC_HEAT_COOL_OFF = 0
 HC_HEAT_COOL_HEAT = 1
