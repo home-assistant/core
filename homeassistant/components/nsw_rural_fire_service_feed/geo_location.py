@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import timedelta
 import logging
 from typing import Any
 
@@ -12,17 +11,15 @@ from aio_geojson_nsw_rfs_incidents.feed_entry import (
 import voluptuous as vol
 
 from homeassistant.components.geo_location import PLATFORM_SCHEMA, GeolocationEvent
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_LOCATION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_RADIUS,
-    CONF_SCAN_INTERVAL,
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
     UnitOfLength,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -33,12 +30,7 @@ from . import (
     SIGNAL_UPDATE_ENTITY,
     NswRuralFireServiceFeedEntityManager,
 )
-from .const import (
-    CONF_CATEGORIES,
-    DEFAULT_RADIUS_IN_KM,
-    DEFAULT_SCAN_INTERVAL,
-    VALID_CATEGORIES,
-)
+from .const import CONF_CATEGORIES, DEFAULT_RADIUS_IN_KM, DOMAIN, FEED, VALID_CATEGORIES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,6 +58,38 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the NSW Rural Fire Service Feeds platform."""
+    manager: NswRuralFireServiceFeedEntityManager = hass.data[DOMAIN][FEED][
+        entry.entry_id
+    ]
+
+    @callback
+    def async_add_geolocation(
+        feed_manager: NswRuralFireServiceFeedEntityManager,
+        integration_id: str,
+        external_id: str,
+    ) -> None:
+        """Add geolocation entity from feed."""
+        new_entity = NswRuralFireServiceLocationEvent(
+            feed_manager, integration_id, external_id
+        )
+        _LOGGER.debug("Adding geolocation %s", new_entity)
+        async_add_entities([new_entity], True)
+
+    manager.listeners.append(
+        async_dispatcher_connect(
+            hass, manager.async_event_new_entity(), async_add_geolocation
+        )
+    )
+    # Do not wait for update here so that the setup can be completed and because an
+    # update will fetch data from the feed via HTTP and then process that data.
+    hass.async_create_task(manager.async_update())
+    _LOGGER.debug("Geolocation setup done")
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -73,29 +97,11 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the NSW Rural Fire Service Feed platform."""
-    scan_interval: timedelta = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-    coordinates: tuple[float, float] = (
-        config.get(CONF_LATITUDE, hass.config.latitude),
-        config.get(CONF_LONGITUDE, hass.config.longitude),
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
     )
-    radius_in_km: float = config[CONF_RADIUS]
-    categories: list[str] = config[CONF_CATEGORIES]
-    # Initialize the entity manager.
-    manager = NswRuralFireServiceFeedEntityManager(
-        hass, async_add_entities, scan_interval, coordinates, radius_in_km, categories
-    )
-
-    async def start_feed_manager(event: Event) -> None:
-        """Start feed manager."""
-        await manager.async_init()
-
-    async def stop_feed_manager(event: Event) -> None:
-        """Stop feed manager."""
-        await manager.async_stop()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_feed_manager)
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_feed_manager)
-    hass.async_create_task(manager.async_update())
 
 
 class NswRuralFireServiceLocationEvent(GeolocationEvent):
@@ -106,11 +112,15 @@ class NswRuralFireServiceLocationEvent(GeolocationEvent):
     _attr_unit_of_measurement = UnitOfLength.KILOMETERS
 
     def __init__(
-        self, feed_manager: NswRuralFireServiceFeedEntityManager, external_id: str
+        self,
+        feed_manager: NswRuralFireServiceFeedEntityManager,
+        integration_id: str,
+        external_id: str,
     ) -> None:
         """Initialize entity with data from feed entry."""
         self._feed_manager = feed_manager
         self._external_id = external_id
+        self._attr_unique_id = f"{integration_id}_{external_id}"
         self._category = None
         self._publication_date = None
         self._location = None

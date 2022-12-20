@@ -134,6 +134,7 @@ class NswRuralFireServiceFeedEntityManager:
         self._config_entry_id = config_entry.entry_id
         self._scan_interval = scan_interval
         self._track_time_remove_callback: Callable[[], None] | None = None
+        self.listeners: list[Callable[[], None]] = []
 
     async def async_init(self) -> None:
         """Schedule initial and regular updates based on configured time interval."""
@@ -160,6 +161,9 @@ class NswRuralFireServiceFeedEntityManager:
 
     async def async_stop(self) -> None:
         """Stop this feed entity manager from refreshing."""
+        for unsub_dispatcher in self.listeners:
+            unsub_dispatcher()
+        self.listeners = []
         if self._track_time_remove_callback:
             self._track_time_remove_callback()
         _LOGGER.debug("Feed entity manager stopped")
