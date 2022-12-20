@@ -38,7 +38,7 @@ async def test_energy_today(
     assert entry.unique_id == f"{entry_id}_today_energy_current_hour_price"
     assert state.state == "unknown"
     assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME) == "Current electricity market price"
+        state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy market price Current hour"
     )
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -57,7 +57,7 @@ async def test_energy_today(
     assert state.state == "0.37"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Average electricity market price - today"
+        == "Energy market price Average - today"
     )
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -73,7 +73,10 @@ async def test_energy_today(
     assert state
     assert entry.unique_id == f"{entry_id}_today_energy_max_price"
     assert state.state == "0.55"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Highest price - today"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Energy market price Highest price - today"
+    )
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}"
@@ -90,7 +93,10 @@ async def test_energy_today(
     assert state
     assert entry.unique_id == f"{entry_id}_today_energy_highest_price_time"
     assert state.state == "2022-12-07T16:00:00+00:00"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Time of highest price - today"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Energy market price Time of highest price - today"
+    )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
     assert ATTR_ICON not in state.attributes
 
@@ -120,7 +126,7 @@ async def test_gas_today(
     assert state
     assert entry.unique_id == f"{entry_id}_today_gas_current_hour_price"
     assert state.state == "unknown"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Current gas market price"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Gas market price Current hour"
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}"
