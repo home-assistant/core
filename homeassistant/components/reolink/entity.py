@@ -3,7 +3,7 @@
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEVICE_CONFIG_UPDATE_COORDINATOR, DOMAIN, HOST
+from .const import DEVICE_CONFIG_UPDATE_COORDINATOR, DOMAIN
 from .host import ReolinkHost
 
 
@@ -13,12 +13,10 @@ class ReolinkCoordinatorEntity(CoordinatorEntity):
     def __init__(self, hass, config):
         """Initialize ReolinkCoordinatorEntity."""
         self._hass = hass
-        coordinator = self._hass.data[DOMAIN][config.entry_id][
-            DEVICE_CONFIG_UPDATE_COORDINATOR
-        ]
+        coordinator = self._hass.data[DOMAIN][config.entry_id].device_coordinator
         super().__init__(coordinator)
 
-        self._host: ReolinkHost = self._hass.data[DOMAIN][config.entry_id][HOST]
+        self._host: ReolinkHost = self._hass.data[DOMAIN][config.entry_id].host
         self._channel = None
 
     @property

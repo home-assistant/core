@@ -15,7 +15,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DOMAIN,
-    HOST,
 )
 from .entity import ReolinkCoordinatorEntity
 from .host import ReolinkHost
@@ -29,7 +28,7 @@ async def async_setup_entry(
     async_add_devices: AddEntitiesCallback,
 ) -> None:
     """Set up a Reolink IP Camera."""
-    host: ReolinkHost = hass.data[DOMAIN][config_entry.entry_id][HOST]
+    host: ReolinkHost = hass.data[DOMAIN][config_entry.entry_id].host
 
     cameras = []
     for channel in host.api.channels:
