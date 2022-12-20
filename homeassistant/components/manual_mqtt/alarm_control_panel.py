@@ -40,6 +40,7 @@ from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_state_change_event,
 )
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
@@ -219,7 +220,7 @@ def setup_platform(
     )
 
 
-class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
+class ManualMQTTAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
     """
     Representation of an alarm status.
 
@@ -420,7 +421,10 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         self._state = state
         self._state_ts = dt_util.utcnow()
         self.async_write_ha_state()
+        self._async_set_state_update_events()
 
+    def _async_set_state_update_events(self) -> None:
+        state = self._state
         pending_time = self._pending_time(state)
         if state == STATE_ALARM_TRIGGERED:
             async_track_point_in_time(
@@ -478,7 +482,22 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
-        """Subscribe to MQTT events."""
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        if state := await self.async_get_last_state():
+            self._state_ts = state.last_updated
+            if hasattr(state, "attributes") and ATTR_NEXT_STATE in state.attributes:
+                # If in arming or pending state we record the transition,
+                # not the current state
+                self._state = state.attributes[ATTR_NEXT_STATE]
+            else:
+                self._state = state.state
+
+            if hasattr(state, "attributes") and ATTR_PREVIOUS_STATE in state.attributes:
+                self._previous_state = state.attributes[ATTR_PREVIOUS_STATE]
+                self._async_set_state_update_events()
+
+        # Now subscribe to MQTT events.
         async_track_state_change_event(
             self.hass, [self.entity_id], self._async_state_changed_listener
         )
