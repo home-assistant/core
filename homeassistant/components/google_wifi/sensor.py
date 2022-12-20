@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     STATE_UNKNOWN,
-    TIME_DAYS,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -75,7 +75,7 @@ SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (
         key=ATTR_UPTIME,
         primary_key="system",
         sensor_key="uptime",
-        native_unit_of_measurement=TIME_DAYS,
+        native_unit_of_measurement=UnitOfTime.DAYS,
         icon="mdi:timelapse",
     ),
     GoogleWifiSensorEntityDescription(

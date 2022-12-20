@@ -5,8 +5,8 @@ from homeassistant.const import (
     PERCENTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    TIME_HOURS,
     UnitOfPressure,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -52,7 +52,7 @@ class AtagSensor(AtagEntity, SensorEntity):
             TEMP_CELSIUS,
             TEMP_FAHRENHEIT,
             PERCENTAGE,
-            TIME_HOURS,
+            UnitOfTime.HOURS,
         ):
             self._attr_native_unit_of_measurement = coordinator.data.report[
                 self._id
