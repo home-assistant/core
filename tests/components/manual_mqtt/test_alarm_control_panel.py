@@ -568,7 +568,8 @@ async def test_trigger_with_pending(hass, mqtt_mock_entry_with_yaml_config):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ALARM_DISARMED
 
 
 async def test_trigger_with_disarm_after_trigger(
