@@ -32,9 +32,9 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    TEMP_CELSIUS,
     UnitOfDataRate,
     UnitOfInformation,
+    UnitOfTemperature,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -117,7 +117,7 @@ SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         key=QSD_SYSTEM_SENSOR,
         name="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         subkey=QSD_TEMP,
     ),
