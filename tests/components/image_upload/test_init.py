@@ -19,7 +19,7 @@ async def test_upload_image(hass, hass_client, hass_ws_client):
     with tempfile.TemporaryDirectory() as tempdir, patch.object(
         hass.config, "path", return_value=tempdir
     ), patch("homeassistant.util.dt.utcnow", return_value=now):
-        assert await async_setup_component(hass, "image", {})
+        assert await async_setup_component(hass, "image_upload", {})
         ws_client: ClientWebSocketResponse = await hass_ws_client()
         client: ClientSession = await hass_client()
 

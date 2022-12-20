@@ -56,12 +56,20 @@ def data_task_fixture():
     return json.loads(load_fixture("task_data.json", "notion"))
 
 
+@pytest.fixture(name="get_client")
+def get_client_fixture(client):
+    """Define a fixture to mock the async_get_client method."""
+    return AsyncMock(return_value=client)
+
+
 @pytest.fixture(name="setup_notion")
-async def setup_notion_fixture(hass, client, config):
+async def setup_notion_fixture(hass, config, get_client):
     """Define a fixture to set up Notion."""
-    with patch("homeassistant.components.notion.config_flow.async_get_client"), patch(
+    with patch(
+        "homeassistant.components.notion.config_flow.async_get_client", get_client
+    ), patch("homeassistant.components.notion.async_get_client", get_client), patch(
         "homeassistant.components.notion.PLATFORMS", []
-    ), patch("homeassistant.components.notion.async_get_client", return_value=client):
+    ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
         yield

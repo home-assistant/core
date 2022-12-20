@@ -3,9 +3,11 @@ from unittest.mock import call, patch
 
 from homeassistant.components import notify
 from homeassistant.components.google_assistant_sdk import DOMAIN
+from homeassistant.components.google_assistant_sdk.const import SUPPORTED_LANGUAGE_CODES
+from homeassistant.components.google_assistant_sdk.notify import broadcast_commands
 from homeassistant.core import HomeAssistant
 
-from .conftest import ComponentSetup
+from .conftest import ComponentSetup, ExpectedCredentials
 
 
 async def test_broadcast_no_targets(
@@ -17,15 +19,16 @@ async def test_broadcast_no_targets(
     message = "time for dinner"
     expected_command = "broadcast time for dinner"
     with patch(
-        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist"
-    ) as mock_assist_call:
+        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant"
+    ) as mock_text_assistant:
         await hass.services.async_call(
             notify.DOMAIN,
             DOMAIN,
             {notify.ATTR_MESSAGE: message},
         )
         await hass.async_block_till_done()
-    mock_assist_call.assert_called_once_with(expected_command)
+    mock_text_assistant.assert_called_once_with(ExpectedCredentials(), "en-US")
+    mock_text_assistant.assert_has_calls([call().__enter__().assist(expected_command)])
 
 
 async def test_broadcast_one_target(
@@ -90,3 +93,39 @@ async def test_broadcast_empty_message(
         )
         await hass.async_block_till_done()
     mock_assist_call.assert_not_called()
+
+
+async def test_broadcast_spanish(
+    hass: HomeAssistant, setup_integration: ComponentSetup
+) -> None:
+    """Test broadcast in Spanish."""
+    await setup_integration()
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    entry.options = {"language_code": "es-ES"}
+
+    message = "comida"
+    expected_command = "Anuncia comida"
+    with patch(
+        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant"
+    ) as mock_text_assistant:
+        await hass.services.async_call(
+            notify.DOMAIN,
+            DOMAIN,
+            {notify.ATTR_MESSAGE: message},
+        )
+        await hass.async_block_till_done()
+    mock_text_assistant.assert_called_once_with(ExpectedCredentials(), "es-ES")
+    mock_text_assistant.assert_has_calls([call().__enter__().assist(expected_command)])
+
+
+def test_broadcast_language_mapping(
+    hass: HomeAssistant, setup_integration: ComponentSetup
+) -> None:
+    """Test all supported languages have a mapped broadcast command."""
+    for language_code in SUPPORTED_LANGUAGE_CODES:
+        cmds = broadcast_commands(language_code)
+        assert cmds
+        assert len(cmds) == 2
+        assert cmds[0]
+        assert cmds[1]

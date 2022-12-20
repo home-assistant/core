@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime, time, timedelta
 import logging
+from typing import Any
 
 import here_routing
 from here_routing import HERERoutingApi, Return, RoutingMode, Spans, TransportMode
@@ -15,7 +16,7 @@ from here_transit import (
 )
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ATTRIBUTION, UnitOfLength
+from homeassistant.const import UnitOfLength
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.location import find_coordinates
@@ -23,18 +24,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt
 from homeassistant.util.unit_conversion import DistanceConverter
 
-from .const import (
-    ATTR_DESTINATION,
-    ATTR_DESTINATION_NAME,
-    ATTR_DISTANCE,
-    ATTR_DURATION,
-    ATTR_DURATION_IN_TRAFFIC,
-    ATTR_ORIGIN,
-    ATTR_ORIGIN_NAME,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    ROUTE_MODE_FASTEST,
-)
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, ROUTE_MODE_FASTEST
 from .model import HERETravelTimeConfig, HERETravelTimeData
 
 _LOGGER = logging.getLogger(__name__)
@@ -96,10 +86,10 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator):
 
         return self._parse_routing_response(response)
 
-    def _parse_routing_response(self, response) -> HERETravelTimeData:
+    def _parse_routing_response(self, response: dict[str, Any]) -> HERETravelTimeData:
         """Parse the routing response dict to a HERETravelTimeData."""
-        section: dict = response["routes"][0]["sections"][0]
-        summary: dict = section["summary"]
+        section: dict[str, Any] = response["routes"][0]["sections"][0]
+        summary: dict[str, int] = section["summary"]
         mapped_origin_lat: float = section["departure"]["place"]["location"]["lat"]
         mapped_origin_lon: float = section["departure"]["place"]["location"]["lng"]
         mapped_destination_lat: float = section["arrival"]["place"]["location"]["lat"]
@@ -114,16 +104,14 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator):
         if (names := section["spans"][-1].get("names")) is not None:
             destination_name = names[0]["value"]
         return HERETravelTimeData(
-            {
-                ATTR_ATTRIBUTION: None,
-                ATTR_DURATION: round(summary["baseDuration"] / 60),  # type: ignore[misc]
-                ATTR_DURATION_IN_TRAFFIC: round(summary["duration"] / 60),
-                ATTR_DISTANCE: distance,
-                ATTR_ORIGIN: f"{mapped_origin_lat},{mapped_origin_lon}",
-                ATTR_DESTINATION: f"{mapped_destination_lat},{mapped_destination_lon}",
-                ATTR_ORIGIN_NAME: origin_name,
-                ATTR_DESTINATION_NAME: destination_name,
-            }
+            attribution=None,
+            duration=round(summary["baseDuration"] / 60),
+            duration_in_traffic=round(summary["duration"] / 60),
+            distance=distance,
+            origin=f"{mapped_origin_lat},{mapped_origin_lon}",
+            destination=f"{mapped_destination_lat},{mapped_destination_lon}",
+            origin_name=origin_name,
+            destination_name=destination_name,
         )
 
 
@@ -182,9 +170,9 @@ class HERETransitDataUpdateCoordinator(DataUpdateCoordinator):
         except (HERETransitConnectionError, HERETransitNoRouteFoundError) as error:
             raise UpdateFailed from error
 
-    def _parse_transit_response(self, response) -> HERETravelTimeData:
+    def _parse_transit_response(self, response: dict[str, Any]) -> HERETravelTimeData:
         """Parse the transit response dict to a HERETravelTimeData."""
-        sections: dict = response["routes"][0]["sections"]
+        sections: list[dict[str, Any]] = response["routes"][0]["sections"]
         attribution: str | None = build_hass_attribution(sections)
         mapped_origin_lat: float = sections[0]["departure"]["place"]["location"]["lat"]
         mapped_origin_lon: float = sections[0]["departure"]["place"]["location"]["lng"]
@@ -203,16 +191,14 @@ class HERETransitDataUpdateCoordinator(DataUpdateCoordinator):
             section["travelSummary"]["duration"] for section in sections
         )
         return HERETravelTimeData(
-            {
-                ATTR_ATTRIBUTION: attribution,
-                ATTR_DURATION: round(duration / 60),  # type: ignore[misc]
-                ATTR_DURATION_IN_TRAFFIC: round(duration / 60),
-                ATTR_DISTANCE: distance,
-                ATTR_ORIGIN: f"{mapped_origin_lat},{mapped_origin_lon}",
-                ATTR_DESTINATION: f"{mapped_destination_lat},{mapped_destination_lon}",
-                ATTR_ORIGIN_NAME: sections[0]["departure"]["place"].get("name"),
-                ATTR_DESTINATION_NAME: sections[-1]["arrival"]["place"].get("name"),
-            }
+            attribution=attribution,
+            duration=round(duration / 60),
+            duration_in_traffic=round(duration / 60),
+            distance=distance,
+            origin=f"{mapped_origin_lat},{mapped_origin_lon}",
+            destination=f"{mapped_destination_lat},{mapped_destination_lon}",
+            origin_name=sections[0]["departure"]["place"].get("name"),
+            destination_name=sections[-1]["arrival"]["place"].get("name"),
         )
 
 
@@ -266,7 +252,7 @@ def prepare_parameters(
     return (origin, destination, arrival, departure)
 
 
-def build_hass_attribution(sections: dict) -> str | None:
+def build_hass_attribution(sections: list[dict[str, Any]]) -> str | None:
     """Build a hass frontend ready string out of the attributions."""
     relevant_attributions = []
     for section in sections:

@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
             "invalid_api_key": "Kehtetu API v\u00f5ti",
@@ -30,6 +31,14 @@
                     "sensor_index": "Andur mida j\u00e4lgida"
                 },
                 "description": "Milliseid l\u00e4heduses olevaid andureid soovid j\u00e4lgida?"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API v\u00f5ti"
+                },
+                "data_description": {
+                    "api_key": "PurpleAir API v\u00f5ti (kui on nii lugemis- kui ka kirjutamisv\u00f5ti, kasuta lugemisv\u00f5ti)."
+                }
             },
             "user": {
                 "data": {

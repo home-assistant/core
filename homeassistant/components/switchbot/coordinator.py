@@ -4,10 +4,11 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import async_timeout
 import switchbot
+from switchbot import SwitchbotModel
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.passive_update_coordinator import (
@@ -24,14 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 DEVICE_STARTUP_TIMEOUT = 30
 
 
-def flatten_sensors_data(sensor):
-    """Deconstruct SwitchBot library temp object C/Fº readings from dictionary."""
-    if "temp" in sensor["data"]:
-        sensor["data"]["temperature"] = sensor["data"]["temp"]["c"]
-
-    return sensor
-
-
 class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
     """Class to manage fetching switchbot data."""
 
@@ -44,7 +37,7 @@ class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
         base_unique_id: str,
         device_name: str,
         connectable: bool,
-        model: str,
+        model: SwitchbotModel,
     ) -> None:
         """Initialize global switchbot data updater."""
         super().__init__(
@@ -56,7 +49,6 @@ class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
         )
         self.ble_device = ble_device
         self.device = device
-        self.data: dict[str, Any] = {}
         self.device_name = device_name
         self.base_unique_id = base_unique_id
         self.model = model
@@ -81,17 +73,18 @@ class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
         self.ble_device = service_info.device
         if not (
             adv := switchbot.parse_advertisement_data(
-                service_info.device, service_info.advertisement
+                service_info.device, service_info.advertisement, self.model
             )
         ):
             return
         if "modelName" in adv.data:
             self._ready_event.set()
-        _LOGGER.debug("%s: Switchbot data: %s", self.ble_device.address, self.data)
+        _LOGGER.debug(
+            "%s: Switchbot data: %s", self.ble_device.address, self.device.data
+        )
         if not self.device.advertisement_changed(adv) and not self._was_unavailable:
             return
         self._was_unavailable = False
-        self.data = flatten_sensors_data(adv.data)
         self.device.update_from_advertisement(adv)
         super()._async_handle_bluetooth_event(service_info, change)
 

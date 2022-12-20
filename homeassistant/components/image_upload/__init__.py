@@ -1,4 +1,4 @@
-"""The Picture integration."""
+"""The Image Upload integration."""
 from __future__ import annotations
 
 import asyncio
@@ -25,7 +25,7 @@ import homeassistant.util.dt as dt_util
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-STORAGE_KEY = DOMAIN
+STORAGE_KEY = "image"
 STORAGE_VERSION = 1
 VALID_SIZES = {256, 512}
 MAX_SIZE = 1024 * 1024 * 10
@@ -41,13 +41,13 @@ UPDATE_FIELDS = {
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Image integration."""
-    image_dir = pathlib.Path(hass.config.path(DOMAIN))
+    image_dir = pathlib.Path(hass.config.path("image"))
     hass.data[DOMAIN] = storage_collection = ImageStorageCollection(hass, image_dir)
     await storage_collection.async_load()
     collection.StorageCollectionWebsocket(
         storage_collection,
-        DOMAIN,
-        DOMAIN,
+        "image",
+        "image",
         CREATE_FIELDS,
         UPDATE_FIELDS,
     ).async_setup(hass, create_create=False)
