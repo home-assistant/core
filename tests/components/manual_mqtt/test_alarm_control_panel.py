@@ -106,10 +106,18 @@ async def test_no_pending(
     assert hass.states.get(entity_id).state == expected_state
 
 
-async def test_arm_home_no_pending_when_code_not_req(
-    hass, mqtt_mock_entry_with_yaml_config
+@pytest.mark.parametrize(
+    "service,expected_state",
+    [
+        (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
+        (SERVICE_ALARM_ARM_HOME, STATE_ALARM_ARMED_HOME),
+        (SERVICE_ALARM_ARM_NIGHT, STATE_ALARM_ARMED_NIGHT),
+    ],
+)
+async def test_no_pending_when_code_not_req(
+    hass, service, expected_state, mqtt_mock_entry_with_yaml_config
 ):
-    """Test arm home method."""
+    """Test arm method."""
     assert await async_setup_component(
         hass,
         alarm_control_panel.DOMAIN,
@@ -132,10 +140,14 @@ async def test_arm_home_no_pending_when_code_not_req(
 
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
 
-    await common.async_alarm_arm_home(hass, 0)
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        alarm_control_panel.DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: CODE},
+        blocking=True,
+    )
 
-    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_HOME
+    assert hass.states.get(entity_id).state == expected_state
 
 
 async def test_arm_home_with_pending(hass, mqtt_mock_entry_with_yaml_config):
@@ -207,38 +219,6 @@ async def test_arm_home_with_invalid_code(hass, mqtt_mock_entry_with_yaml_config
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
-
-
-async def test_arm_away_no_pending_when_code_not_req(
-    hass, mqtt_mock_entry_with_yaml_config
-):
-    """Test arm home method."""
-    assert await async_setup_component(
-        hass,
-        alarm_control_panel.DOMAIN,
-        {
-            "alarm_control_panel": {
-                "platform": "manual_mqtt",
-                "name": "test",
-                "code_arm_required": False,
-                "code": CODE,
-                "pending_time": 0,
-                "disarm_after_trigger": False,
-                "command_topic": "alarm/command",
-                "state_topic": "alarm/state",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    entity_id = "alarm_control_panel.test"
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
-
-    await common.async_alarm_arm_away(hass, 0, entity_id)
-    await hass.async_block_till_done()
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_AWAY
 
 
 async def test_arm_home_with_template_code(hass, mqtt_mock_entry_with_yaml_config):
@@ -340,38 +320,6 @@ async def test_arm_away_with_invalid_code(hass, mqtt_mock_entry_with_yaml_config
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
-
-
-async def test_arm_night_no_pending_when_code_not_req(
-    hass, mqtt_mock_entry_with_yaml_config
-):
-    """Test arm night method."""
-    assert await async_setup_component(
-        hass,
-        alarm_control_panel.DOMAIN,
-        {
-            "alarm_control_panel": {
-                "platform": "manual_mqtt",
-                "name": "test",
-                "code_arm_required": False,
-                "code": CODE,
-                "pending_time": 0,
-                "disarm_after_trigger": False,
-                "command_topic": "alarm/command",
-                "state_topic": "alarm/state",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    entity_id = "alarm_control_panel.test"
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
-
-    await common.async_alarm_arm_night(hass, 0, entity_id)
-    await hass.async_block_till_done()
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_NIGHT
 
 
 async def test_arm_night_with_pending(hass, mqtt_mock_entry_with_yaml_config):
