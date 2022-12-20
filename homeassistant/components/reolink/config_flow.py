@@ -37,7 +37,7 @@ class ReolinkOptionsFlowHandler(config_entries.OptionsFlow):
                         default=self.config_entry.options.get(
                             CONF_PROTOCOL, DEFAULT_PROTOCOL
                         ),
-                    ): vol.In(["rtmp", "rtsp"]),
+                    ): vol.In(["rtsp", "rtmp"]),
                 }
             ),
         )
