@@ -42,6 +42,7 @@ from .const import (
     HA_TERMINATION_TYPE,
     HA_TO_TADO_FAN_MODE_MAP,
     HA_TO_TADO_HVAC_MODE_MAP,
+    HA_TO_TADO_SWING_MODE_MAP,
     ORDERED_KNOWN_TADO_MODES,
     SIGNAL_TADO_UPDATE_RECEIVED,
     SUPPORT_PRESET,
@@ -52,6 +53,7 @@ from .const import (
     TADO_TO_HA_FAN_MODE_MAP,
     TADO_TO_HA_HVAC_MODE_MAP,
     TADO_TO_HA_OFFSET_MAP,
+    TADO_TO_HA_SWING_MODE_MAP,
     TEMP_OFFSET,
     TYPE_AIR_CONDITIONING,
     TYPE_HEATING,
@@ -456,13 +458,16 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     @property
     def swing_mode(self):
         """Active swing mode for the device."""
-        return self._current_tado_swing_mode
+        return TADO_TO_HA_SWING_MODE_MAP[self._current_tado_swing_mode]
 
     @property
     def swing_modes(self):
         """Swing modes for the device."""
         if self.supported_features & ClimateEntityFeature.SWING_MODE:
-            return [TADO_SWING_ON, TADO_SWING_OFF]
+            return [
+                TADO_TO_HA_SWING_MODE_MAP[TADO_SWING_ON],
+                TADO_TO_HA_SWING_MODE_MAP[TADO_SWING_OFF],
+            ]
         return None
 
     @property
@@ -479,7 +484,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
     def set_swing_mode(self, swing_mode: str) -> None:
         """Set swing modes for the device."""
-        self._control_hvac(swing_mode=swing_mode)
+        self._control_hvac(swing_mode=HA_TO_TADO_SWING_MODE_MAP[swing_mode])
 
     @callback
     def _async_update_zone_data(self):
