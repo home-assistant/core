@@ -26,8 +26,8 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     TEMP_CELSIUS,
-    TIME_SECONDS,
     UnitOfPressure,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -75,7 +75,7 @@ SENSOR_DESCRIPTIONS = {
         key="update_interval",
         name="Update Interval",
         device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
         # The interval setting is not a generally useful entity for most users.
         entity_registry_enabled_default=False,
