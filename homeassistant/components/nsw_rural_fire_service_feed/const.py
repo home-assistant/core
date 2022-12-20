@@ -11,3 +11,6 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
 DOMAIN = "nsw_rural_fire_service_feed"
 
 VALID_CATEGORIES = ["Advice", "Emergency Warning", "Not Applicable", "Watch and Act"]
+
+SIGNAL_DELETE_ENTITY = "nsw_rural_fire_service_feed_delete_{}"
+SIGNAL_UPDATE_ENTITY = "nsw_rural_fire_service_feed_update_{}"
