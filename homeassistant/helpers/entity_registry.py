@@ -198,7 +198,6 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 entity.setdefault("name", None)
                 entity.setdefault("original_icon", None)
                 entity.setdefault("original_name", None)
-                entity.setdefault("platform", None)
                 entity.setdefault("supported_features", 0)
                 entity.setdefault("unit_of_measurement", None)
 
