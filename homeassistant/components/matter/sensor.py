@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Types import Nullable, NullValue
@@ -29,11 +29,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .entity import MatterEntity, MatterEntityDescriptionBaseClass
-
-if TYPE_CHECKING:
-    from .adapter import MatterAdapter
+from .helpers import get_matter
 
 
 async def async_setup_entry(
@@ -42,7 +39,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Matter sensors from Config Entry."""
-    matter: MatterAdapter = hass.data[DOMAIN][config_entry.entry_id]
+    matter = get_matter(hass)
     matter.register_platform_handler(Platform.SENSOR, async_add_entities)
 
 
