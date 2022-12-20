@@ -3,10 +3,8 @@ from __future__ import annotations
 
 import logging
 
-import async_timeout
 from pyrainbird import AvailableStations
 from pyrainbird.async_client import AsyncRainbirdController, RainbirdApiException
-from pyrainbird.data import States
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
@@ -16,17 +14,12 @@ from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import CONF_ZONES, DATA_RAINBIRD, DOMAIN, RAINBIRD_CONTROLLER
+from . import CONF_ZONES, DOMAIN, RAINBIRD_CONTROLLER
+from .coordinator import RainbirdUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-TIMEOUT_SECONDS = 20
 
 ATTR_DURATION = "duration"
 
@@ -58,9 +51,7 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    controller: AsyncRainbirdController = hass.data[DATA_RAINBIRD][
-        discovery_info[RAINBIRD_CONTROLLER]
-    ]
+    controller: AsyncRainbirdController = discovery_info[RAINBIRD_CONTROLLER]
     try:
         available_stations: AvailableStations = (
             await controller.get_available_stations()
@@ -69,7 +60,7 @@ async def async_setup_platform(
         raise PlatformNotReady(f"Failed to get stations: {str(err)}") from err
     if not (available_stations and available_stations.stations):
         return
-    coordinator = RainbirdUpdateCoordinator(hass, controller)
+    coordinator = RainbirdUpdateCoordinator(hass, controller.get_zone_states)
     devices = []
     for zone in range(1, available_stations.stations.count + 1):
         if available_stations.stations.active(zone):
@@ -79,6 +70,7 @@ async def async_setup_platform(
             devices.append(
                 RainBirdSwitch(
                     coordinator,
+                    controller,
                     zone,
                     time,
                     name if name else f"Sprinkler {zone}",
@@ -121,40 +113,20 @@ async def async_setup_platform(
     )
 
 
-class RainbirdUpdateCoordinator(DataUpdateCoordinator[States]):
-    """Coordinator for calendar RPC calls that use an efficient sync."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        rainbird: AsyncRainbirdController,
-    ) -> None:
-        """Create the CalendarSyncUpdateCoordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            name="Rainbird",
-        )
-        self.rainbird = rainbird
-
-    async def _async_update_data(self) -> States | None:
-        """Fetch data from API endpoint."""
-        try:
-            async with async_timeout.timeout(TIMEOUT_SECONDS):
-                return await self.rainbird.get_zone_states()
-        except RainbirdApiException as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
-
-
 class RainBirdSwitch(CoordinatorEntity, SwitchEntity):
     """Representation of a Rain Bird switch."""
 
     def __init__(
-        self, coordinator: RainbirdUpdateCoordinator, zone: int, time: int, name: str
+        self,
+        coordinator: RainbirdUpdateCoordinator,
+        rainbird: AsyncRainbirdController,
+        zone: int,
+        time: int,
+        name: str,
     ) -> None:
         """Initialize a Rain Bird Switch Device."""
         super().__init__(coordinator)
-        self._rainbird = coordinator.rainbird
+        self._rainbird = rainbird
         self._zone = zone
         self._name = name
         self._state = None

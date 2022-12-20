@@ -1,6 +1,7 @@
 """Support for Rain Bird Irrigation system LNK WiFi Module."""
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from pyrainbird.async_client import (
@@ -24,6 +25,8 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
+
+from .coordinator import RainbirdUpdateCoordinator
 
 CONF_ZONES = "zones"
 
@@ -93,11 +96,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Rain Bird component."""
 
     hass.data[DATA_RAINBIRD] = []
-    success = False
-    for controller_config in config[DOMAIN]:
-        success = success or await _setup_controller(hass, controller_config, config)
 
-    return success
+    tasks = []
+    for controller_config in config[DOMAIN]:
+        tasks.append(_setup_controller(hass, controller_config, config))
+    return all(await asyncio.gather(*tasks))
 
 
 async def _setup_controller(hass, controller_config, config):
@@ -113,13 +116,22 @@ async def _setup_controller(hass, controller_config, config):
         _LOGGER.error("Unable to setup controller: %s", exc)
         return False
     hass.data[DATA_RAINBIRD].append(controller)
+
+    rain_coordinator = RainbirdUpdateCoordinator(hass, controller.get_rain_sensor_state)
+    delay_coordinator = RainbirdUpdateCoordinator(hass, controller.get_rain_delay)
+
     _LOGGER.debug("Rain Bird Controller %d set to: %s", position, server)
     for platform in PLATFORMS:
         discovery.load_platform(
             hass,
             platform,
             DOMAIN,
-            {RAINBIRD_CONTROLLER: position, **controller_config},
+            {
+                RAINBIRD_CONTROLLER: controller,
+                SENSOR_TYPE_RAINSENSOR: rain_coordinator,
+                SENSOR_TYPE_RAINDELAY: delay_coordinator,
+                **controller_config,
+            },
             config,
         )
     return True
