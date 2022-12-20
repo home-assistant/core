@@ -31,8 +31,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entityfilter, state as state_helper
@@ -347,9 +346,12 @@ class PrometheusMetrics:
 
         with suppress(ValueError):
             value = self.state_as_number(state)
-            if state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_FAHRENHEIT:
+            if (
+                state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+                == UnitOfTemperature.FAHRENHEIT
+            ):
                 value = TemperatureConverter.convert(
-                    value, TEMP_FAHRENHEIT, TEMP_CELSIUS
+                    value, UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS
                 )
             metric.labels(**self._labels(state)).set(value)
 
@@ -395,8 +397,10 @@ class PrometheusMetrics:
 
     def _handle_climate_temp(self, state, attr, metric_name, metric_description):
         if temp := state.attributes.get(attr):
-            if self._climate_units == TEMP_FAHRENHEIT:
-                temp = TemperatureConverter.convert(temp, TEMP_FAHRENHEIT, TEMP_CELSIUS)
+            if self._climate_units == UnitOfTemperature.FAHRENHEIT:
+                temp = TemperatureConverter.convert(
+                    temp, UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS
+                )
             metric = self._metric(
                 metric_name,
                 self.prometheus_cli.Gauge,
@@ -508,9 +512,12 @@ class PrometheusMetrics:
 
             try:
                 value = self.state_as_number(state)
-                if state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_FAHRENHEIT:
+                if (
+                    state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+                    == UnitOfTemperature.FAHRENHEIT
+                ):
                     value = TemperatureConverter.convert(
-                        value, TEMP_FAHRENHEIT, TEMP_CELSIUS
+                        value, UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS
                     )
                 _metric.labels(**self._labels(state)).set(value)
             except ValueError:
@@ -559,8 +566,8 @@ class PrometheusMetrics:
             return
 
         units = {
-            TEMP_CELSIUS: "celsius",
-            TEMP_FAHRENHEIT: "celsius",  # F should go into C metric
+            UnitOfTemperature.CELSIUS: "celsius",
+            UnitOfTemperature.FAHRENHEIT: "celsius",  # F should go into C metric
             PERCENTAGE: "percent",
         }
         default = unit.replace("/", "_per_")
