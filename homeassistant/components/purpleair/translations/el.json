@@ -49,5 +49,31 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "add_sensor": {
+                "title": "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ae\u03ba\u03b7 \u03b1\u03b9\u03c3\u03b8\u03b7\u03c4\u03ae\u03c1\u03b1"
+            },
+            "choose_sensor": {
+                "description": "\u03a0\u03bf\u03b9\u03bf\u03c5\u03c2 \u03b1\u03c0\u03cc \u03c4\u03bf\u03c5\u03c2 \u03ba\u03bf\u03bd\u03c4\u03b9\u03bd\u03bf\u03cd\u03c2 \u03b1\u03b9\u03c3\u03b8\u03b7\u03c4\u03ae\u03c1\u03b5\u03c2 \u03b8\u03b1 \u03b8\u03ad\u03bb\u03b1\u03c4\u03b5 \u03bd\u03b1 \u03c0\u03b1\u03c1\u03b1\u03ba\u03bf\u03bb\u03bf\u03c5\u03b8\u03ae\u03c3\u03b5\u03c4\u03b5;",
+                "title": "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03b1\u03b9\u03c3\u03b8\u03b7\u03c4\u03ae\u03c1\u03b1 \u03b3\u03b9\u03b1 \u03c0\u03c1\u03bf\u03c3\u03b8\u03ae\u03ba\u03b7"
+            },
+            "init": {
+                "menu_options": {
+                    "add_sensor": "\u03a0\u03c1\u03bf\u03c3\u03b8\u03ae\u03ba\u03b7 \u03b1\u03b9\u03c3\u03b8\u03b7\u03c4\u03ae\u03c1\u03b1",
+                    "remove_sensor": "\u039a\u03b1\u03c4\u03ac\u03c1\u03b3\u03b7\u03c3\u03b7 \u03b1\u03b9\u03c3\u03b8\u03b7\u03c4\u03ae\u03c1\u03b1"
+                }
+            },
+            "remove_sensor": {
+                "data": {
+                    "sensor_device_id": "\u038c\u03bd\u03bf\u03bc\u03b1 \u03b1\u03b9\u03c3\u03b8\u03b7\u03c4\u03ae\u03c1\u03b1"
+                },
+                "data_description": {
+                    "sensor_device_id": "\u039f \u03b1\u03b9\u03c3\u03b8\u03b7\u03c4\u03ae\u03c1\u03b1\u03c2 \u03b3\u03b9\u03b1 \u03b1\u03c6\u03b1\u03af\u03c1\u03b5\u03c3\u03b7"
+                },
+                "title": "\u039a\u03b1\u03c4\u03ac\u03c1\u03b3\u03b7\u03c3\u03b7 \u03b1\u03b9\u03c3\u03b8\u03b7\u03c4\u03ae\u03c1\u03b1"
+            }
+        }
     }
 }
