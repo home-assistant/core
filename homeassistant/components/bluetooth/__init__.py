@@ -9,10 +9,12 @@ from typing import TYPE_CHECKING
 from awesomeversion import AwesomeVersion
 from bluetooth_adapters import (
     ADAPTER_ADDRESS,
+    ADAPTER_CONNECTIONS_SLOTS,
     ADAPTER_HW_VERSION,
     ADAPTER_MANUFACTURER,
     ADAPTER_SW_VERSION,
     DEFAULT_ADDRESS,
+    DEFAULT_CONNECTION_SLOTS,
     AdapterDetails,
     adapter_human_name,
     adapter_model,
@@ -61,11 +63,9 @@ from .base_scanner import BaseHaRemoteScanner, BaseHaScanner
 from .const import (
     BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS,
     CONF_ADAPTER,
-    CONF_CONNECTION_SLOTS,
     CONF_DETAILS,
     CONF_PASSIVE,
     DATA_MANAGER,
-    DEFAULT_CONNECTION_SLOTS,
     DOMAIN,
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     LINUX_FIRMWARE_LOAD_FALLBACK_SECONDS,
@@ -321,10 +321,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from err
     adapters = await manager.async_get_bluetooth_adapters()
     details = adapters[adapter]
-    # TODO : detect known connection slots in bluetooth-adapters
-    # since the BCM ones can do 7 connections and the CSR ones
-    # can do 5 connections.
-    slots = details.get(ADAPTER_CONNECTIONS_SLOTS, DEFAULT_CONNECTION_SLOTS)
+    slots = details.get(ADAPTER_CONNECTIONS_SLOTS) or DEFAULT_CONNECTION_SLOTS
     entry.async_on_unload(async_register_scanner(hass, scanner, True, slots))
     await async_update_device(hass, entry, adapter, details)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = scanner
