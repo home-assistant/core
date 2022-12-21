@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_RADIUS,
     CONF_SHOW_ON_MAP,
-    LENGTH_KILOMETERS,
+    UnitOfLength,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
@@ -204,7 +204,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                             min=1.0,
                             max=25,
                             step=0.1,
-                            unit_of_measurement=LENGTH_KILOMETERS,
+                            unit_of_measurement=UnitOfLength.KILOMETERS,
                         ),
                     ),
                 }

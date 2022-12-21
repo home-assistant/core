@@ -369,6 +369,7 @@ class BluetoothManager:
         all_history = self._all_history
         connectable = service_info.connectable
         connectable_history = self._connectable_history
+        old_connectable_service_info = connectable and connectable_history.get(address)
 
         source = service_info.source
         debug = _LOGGER.isEnabledFor(logging.DEBUG)
@@ -399,7 +400,6 @@ class BluetoothManager:
             # but not in the connectable history or the connectable source is the same
             # as the new source, we need to add it to the connectable history
             if connectable:
-                old_connectable_service_info = connectable_history.get(address)
                 if old_connectable_service_info and (
                     # If its the same as the preferred source, we are done
                     # as we know we prefer the old advertisement
@@ -442,17 +442,24 @@ class BluetoothManager:
             tracker.async_collect(service_info)
 
         # If the advertisement data is the same as the last time we saw it, we
-        # don't need to do anything else.
-        if old_service_info and not (
-            service_info.manufacturer_data != old_service_info.manufacturer_data
-            or service_info.service_data != old_service_info.service_data
-            or service_info.service_uuids != old_service_info.service_uuids
-            or service_info.name != old_service_info.name
+        # don't need to do anything else unless its connectable and we are missing
+        # connectable history for the device so we can make it available again
+        # after unavailable callbacks.
+        if (
+            # Ensure its not a connectable device missing from connectable history
+            not (connectable and not old_connectable_service_info)
+            # Than check if advertisement data is the same
+            and old_service_info
+            and not (
+                service_info.manufacturer_data != old_service_info.manufacturer_data
+                or service_info.service_data != old_service_info.service_data
+                or service_info.service_uuids != old_service_info.service_uuids
+                or service_info.name != old_service_info.name
+            )
         ):
             return
 
-        is_connectable_by_any_source = address in self._connectable_history
-        if not connectable and is_connectable_by_any_source:
+        if not connectable and old_connectable_service_info:
             # Since we have a connectable path and our BleakClient will
             # route any connection attempts to the connectable path, we
             # mark the service_info as connectable so that the callbacks
@@ -481,7 +488,7 @@ class BluetoothManager:
                 matched_domains,
             )
 
-        if is_connectable_by_any_source:
+        if connectable or old_connectable_service_info:
             # Bleak callbacks must get a connectable device
             for callback_filters in self._bleak_callbacks:
                 _dispatch_bleak_callback(*callback_filters, device, advertisement_data)

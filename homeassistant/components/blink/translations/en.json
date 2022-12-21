@@ -14,7 +14,7 @@
                 "data": {
                     "2fa": "Two-factor code"
                 },
-                "description": "Enter the PIN sent to your email",
+                "description": "Enter the PIN sent via email or SMS",
                 "title": "Two-factor authentication"
             },
             "user": {

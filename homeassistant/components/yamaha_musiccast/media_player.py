@@ -653,7 +653,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
     @property
     def musiccast_zone_entity(self) -> MusicCastMediaPlayer:
-        """Return the the entity of the zone, which is using MusicCast at the moment, if there is one, self else.
+        """Return the entity of the zone, which is using MusicCast at the moment, if there is one, self else.
 
         It is possible that multiple zones use MusicCast as client at the same time. In this case the first one is
         returned.

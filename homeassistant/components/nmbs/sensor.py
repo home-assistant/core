@@ -12,7 +12,7 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     CONF_NAME,
     CONF_SHOW_ON_MAP,
-    TIME_MINUTES,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -174,10 +174,10 @@ class NMBSLiveBoard(SensorEntity):
 
 
 class NMBSSensor(SensorEntity):
-    """Get the the total travel time for a given connection."""
+    """Get the total travel time for a given connection."""
 
     _attr_attribution = "https://api.irail.be/"
-    _attr_native_unit_of_measurement = TIME_MINUTES
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
     def __init__(
         self, api_client, name, show_on_map, station_from, station_to, excl_vias
