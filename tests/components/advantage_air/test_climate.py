@@ -253,7 +253,7 @@ async def test_climate_async_failed_update(hass, aioclient_mock):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: ["climate.ac_one"], ATTR_TEMPERATURE: 25},
+            {ATTR_ENTITY_ID: ["climate.myzone"], ATTR_TEMPERATURE: 25},
             blocking=True,
         )
     assert len(aioclient_mock.mock_calls) == 2
