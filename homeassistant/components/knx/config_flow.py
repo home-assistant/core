@@ -440,18 +440,37 @@ class KNXCommonFlow(ABC, FlowHandler):
     ) -> FlowResult:
         """Configure secure knxkeys used to authenticate."""
         errors = {}
+        description_placeholders = {}
 
         if user_input is not None:
+            connection_type = self.new_entry_data[CONF_KNX_CONNECTION_TYPE]
             storage_key = CONST_KNX_STORAGE_KEY + user_input[CONF_KNX_KNXKEY_FILENAME]
             try:
-                await load_keyring(
+                keyring = await load_keyring(
                     path=self.hass.config.path(STORAGE_DIR, storage_key),
                     password=user_input[CONF_KNX_KNXKEY_PASSWORD],
                 )
             except FileNotFoundError:
-                errors[CONF_KNX_KNXKEY_FILENAME] = "file_not_found"
+                errors[CONF_KNX_KNXKEY_FILENAME] = "keyfile_not_found"
             except InvalidSecureConfiguration:
-                errors[CONF_KNX_KNXKEY_PASSWORD] = "invalid_signature"
+                errors[CONF_KNX_KNXKEY_PASSWORD] = "keyfile_invalid_signature"
+            else:
+                if (
+                    connection_type == CONF_KNX_TUNNELING_TCP_SECURE
+                    and self._selected_tunnel is not None
+                ):
+                    tunnel_endpoints = []
+                    if host_ia := self._selected_tunnel.individual_address:
+                        tunnel_endpoints = keyring.get_tunnel_interfaces_by_host(
+                            host=host_ia
+                        )
+                    if not tunnel_endpoints:
+                        errors["base"] = "keyfile_no_tunnel_for_host"
+                        description_placeholders = {CONF_HOST: str(host_ia)}
+
+                if connection_type == CONF_KNX_ROUTING_SECURE:
+                    if not (keyring.backbone is not None and keyring.backbone.key):
+                        errors["base"] = "keyfile_no_backbone_key"
 
             if not errors:
                 self.new_entry_data |= KNXConfigEntryData(
@@ -463,10 +482,7 @@ class KNXCommonFlow(ABC, FlowHandler):
                     user_id=None,
                     user_password=None,
                 )
-                if (
-                    self.new_entry_data[CONF_KNX_CONNECTION_TYPE]
-                    == CONF_KNX_ROUTING_SECURE
-                ):
+                if connection_type == CONF_KNX_ROUTING_SECURE:
                     title = (
                         "Secure Routing as"
                         f" {self.new_entry_data[CONF_KNX_INDIVIDUAL_ADDRESS]}"
@@ -488,7 +504,10 @@ class KNXCommonFlow(ABC, FlowHandler):
         }
 
         return self.async_show_form(
-            step_id="secure_knxkeys", data_schema=vol.Schema(fields), errors=errors
+            step_id="secure_knxkeys",
+            data_schema=vol.Schema(fields),
+            errors=errors,
+            description_placeholders=description_placeholders,
         )
 
     async def async_step_routing(self, user_input: dict | None = None) -> FlowResult:

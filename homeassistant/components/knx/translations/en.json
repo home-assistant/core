@@ -6,11 +6,12 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "file_not_found": "The specified `.knxkeys` file was not found in the path config/.storage/knx/",
             "invalid_backbone_key": "Invalid backbone key. 32 hexadecimal numbers expected.",
             "invalid_individual_address": "Value does not match pattern for KNX individual address.\n'area.line.device'",
             "invalid_ip_address": "Invalid IPv4 address.",
-            "invalid_signature": "The password to decrypt the `.knxkeys` file is wrong.",
+            "keyfile_invalid_signature": "The password to decrypt the `.knxkeys` file is wrong.",
+            "keyfile_no_tunnel_for_host": "The `.knxkeys` file does not contain a tunnel for host {host}.",
+            "keyfile_not_found": "The specified `.knxkeys` file was not found in the path config/.storage/knx/",
             "no_router_discovered": "No KNXnet/IP router was discovered on the network.",
             "no_tunnel_discovered": "Could not find a KNX tunneling server on your network.",
             "unsupported_tunnel_type": "Selected tunnelling type not supported by gateway."
@@ -106,11 +107,12 @@
     "options": {
         "error": {
             "cannot_connect": "Failed to connect",
-            "file_not_found": "The specified `.knxkeys` file was not found in the path config/.storage/knx/",
             "invalid_backbone_key": "Invalid backbone key. 32 hexadecimal numbers expected.",
             "invalid_individual_address": "Value does not match pattern for KNX individual address.\n'area.line.device'",
             "invalid_ip_address": "Invalid IPv4 address.",
-            "invalid_signature": "The password to decrypt the `.knxkeys` file is wrong.",
+            "keyfile_invalid_signature": "The password to decrypt the `.knxkeys` file is wrong.",
+            "keyfile_no_tunnel_for_host": "The `.knxkeys` file does not contain a tunnel for host {host}.",
+            "keyfile_not_found": "The specified `.knxkeys` file was not found in the path config/.storage/knx/",
             "no_router_discovered": "No KNXnet/IP router was discovered on the network.",
             "no_tunnel_discovered": "Could not find a KNX tunneling server on your network.",
             "unsupported_tunnel_type": "Selected tunnelling type not supported by gateway."
