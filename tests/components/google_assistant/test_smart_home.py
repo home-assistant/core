@@ -3,6 +3,7 @@ import asyncio
 from unittest.mock import ANY, call, patch
 
 import pytest
+from pytest_unordered import unordered
 
 from homeassistant.components import camera
 from homeassistant.components.climate import ATTR_MAX_TEMP, ATTR_MIN_TEMP, HVACMode
@@ -161,13 +162,15 @@ async def test_sync_message(hass, registries):
                     "id": "light.demo_light",
                     "name": {
                         "name": "Demo Light",
-                        "nicknames": [
-                            "Demo Light",
-                            "Hello",
-                            "World",
-                            "Stay",
-                            "Healthy",
-                        ],
+                        "nicknames": unordered(
+                            [
+                                "Demo Light",
+                                "Hello",
+                                "World",
+                                "Stay",
+                                "Healthy",
+                            ]
+                        ),
                     },
                     "traits": [
                         trait.TRAIT_BRIGHTNESS,
@@ -198,7 +201,10 @@ async def test_sync_message(hass, registries):
                                     {
                                         "setting_name": "none",
                                         "setting_values": [
-                                            {"lang": "en", "setting_synonym": ["none"]}
+                                            {
+                                                "lang": "en",
+                                                "setting_synonym": ["none"],
+                                            }
                                         ],
                                     },
                                 ],
