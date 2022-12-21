@@ -1,7 +1,9 @@
 """Support for Todoist task management (https://todoist.com)."""
 from __future__ import annotations
 
+import asyncio
 from datetime import date, datetime, timedelta, timezone
+from itertools import chain
 import logging
 from typing import Any
 import uuid
@@ -152,8 +154,8 @@ async def async_setup_platform(
     projects = await api.get_projects()
 
     collaborators = []
-    for project in projects:
-        collaborators.extend(await api.get_collaborators(project.id))
+    collaborator_tasks = (api.get_collaborators(project.id) for project in projects)
+    collaborators = list(chain.from_iterable(await asyncio.gather(*collaborator_tasks)))
 
     # Grab all labels
     labels = await api.get_labels()
@@ -222,10 +224,10 @@ async def async_setup_platform(
         content = call.data[CONTENT]
         data: dict[str, Any] = {"project_id": project_id}
 
-        if LABELS in call.data:
-            task_labels = call.data[LABELS]
-            label_ids = [label_id_lookup[label.lower()] for label in task_labels]
-            data["label_ids"] = label_ids
+        if task_labels := call.data.get(LABELS):
+            data["label_ids"] = [
+                label_id_lookup[label.lower()] for label in task_labels
+            ]
 
         if ASSIGNEE in call.data:
             task_assignee = call.data[ASSIGNEE].lower()
@@ -470,18 +472,25 @@ class TodoistProjectData:
         """Return the next upcoming calendar event."""
         if not self.event:
             return None
-        if not self.event.get(END) or self.event.get(ALL_DAY):
-            start = self.event[START].date()
-            return CalendarEvent(
-                summary=self.event[SUMMARY],
-                start=start,
-                end=start + timedelta(days=1),
-            )
-        if end := self.event[END]:
-            return CalendarEvent(
-                summary=self.event[SUMMARY], start=self.event[START], end=end
-            )
-        return None
+
+        end = self.event[END]
+        if self.event.get(ALL_DAY):
+            return self.create_all_day_event(self.event)
+        elif end is None:
+            return self.create_all_day_event(self.event)
+
+        return CalendarEvent(
+            summary=self.event[SUMMARY], start=self.event[START], end=end
+        )
+
+    def create_all_day_event(self, event: TodoistEvent) -> CalendarEvent:
+        """Create an all day calendar event."""
+        start = event[START].date()
+        return CalendarEvent(
+            summary=event[SUMMARY],
+            start=start,
+            end=start + timedelta(days=1),
+        )
 
     def create_todoist_task(self, data: Task):
         """
@@ -491,21 +500,16 @@ class TodoistProjectData:
         """
         task: TodoistEvent = {
             ALL_DAY: False,
-            COMPLETED: False,
-            DESCRIPTION: "",
+            COMPLETED: data.is_completed,
+            DESCRIPTION: f"https://todoist.com/showTask?id={data.id}",
             DUE_TODAY: False,
             END: None,
             LABELS: [],
             OVERDUE: False,
-            PRIORITY: 1,
+            PRIORITY: data.priority,
             START: dt.utcnow(),
-            SUMMARY: "",
+            SUMMARY: data.content,
         }
-        # Fields are required to be in all returned task objects.
-        task[SUMMARY] = data.content
-        task[COMPLETED] = data.is_completed
-        task[PRIORITY] = data.priority
-        task[DESCRIPTION] = f"https://todoist.com/showTask?id={data.id}"
 
         # All task Labels (optional parameter).
         task[LABELS] = [
@@ -524,7 +528,6 @@ class TodoistProjectData:
         # That means that the START date is the earliest time one can
         # complete the task.
         # Generally speaking, that means right now.
-        task[START] = dt.utcnow()
         if data.due is not None:
             task[END] = _parse_due_date(
                 data.due,
