@@ -92,15 +92,6 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator):
                 return_values=[Return.POLYINE, Return.SUMMARY],
                 spans=[Spans.NAMES],
             )
-            _LOGGER.debug("Raw response is: %s", response)
-
-            if self.update_interval != timedelta(seconds=DEFAULT_SCAN_INTERVAL):
-                _LOGGER.debug(
-                    "Resetting update interval to %s",
-                    DEFAULT_SCAN_INTERVAL,
-                )
-                self.update_interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
-            return self._parse_routing_response(response)
         except HERERoutingTooManyRequestsError as error:
             assert self.update_interval is not None
             _LOGGER.debug(
@@ -111,6 +102,15 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator):
                 seconds=self.update_interval.total_seconds() * BACKOFF_MULTIPLIER
             )
             raise UpdateFailed("Rate limit has been reached") from error
+        _LOGGER.debug("Raw response is: %s", response)
+
+        if self.update_interval != timedelta(seconds=DEFAULT_SCAN_INTERVAL):
+            _LOGGER.debug(
+                "Resetting update interval to %s",
+                DEFAULT_SCAN_INTERVAL,
+            )
+            self.update_interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
+        return self._parse_routing_response(response)
 
     def _parse_routing_response(self, response: dict[str, Any]) -> HERETravelTimeData:
         """Parse the routing response dict to a HERETravelTimeData."""
@@ -186,16 +186,6 @@ class HERETransitDataUpdateCoordinator(DataUpdateCoordinator):
                     here_transit.Return.TRAVEL_SUMMARY,
                 ],
             )
-
-            _LOGGER.debug("Raw response is: %s", response)
-
-            if self.update_interval != timedelta(seconds=DEFAULT_SCAN_INTERVAL):
-                _LOGGER.debug(
-                    "Resetting update interval to %s",
-                    DEFAULT_SCAN_INTERVAL,
-                )
-                self.update_interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
-            return self._parse_transit_response(response)
         except HERETransitTooManyRequestsError as error:
             assert self.update_interval is not None
             _LOGGER.debug(
@@ -211,6 +201,15 @@ class HERETransitDataUpdateCoordinator(DataUpdateCoordinator):
             return None
         except (HERETransitConnectionError, HERETransitNoRouteFoundError) as error:
             raise UpdateFailed from error
+
+        _LOGGER.debug("Raw response is: %s", response)
+        if self.update_interval != timedelta(seconds=DEFAULT_SCAN_INTERVAL):
+            _LOGGER.debug(
+                "Resetting update interval to %s",
+                DEFAULT_SCAN_INTERVAL,
+            )
+            self.update_interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
+        return self._parse_transit_response(response)
 
     def _parse_transit_response(self, response: dict[str, Any]) -> HERETravelTimeData:
         """Parse the transit response dict to a HERETravelTimeData."""
