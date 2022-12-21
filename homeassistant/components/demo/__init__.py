@@ -17,9 +17,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     EVENT_HOMEASSISTANT_START,
-    SOUND_PRESSURE_DB,
     Platform,
     UnitOfEnergy,
+    UnitOfSoundPressure,
     UnitOfTemperature,
     UnitOfVolume,
 )
@@ -161,7 +161,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                         "min": 0,
                         "max": 10,
                         "name": "Allowed Noise",
-                        "unit_of_measurement": SOUND_PRESSURE_DB,
+                        "unit_of_measurement": UnitOfSoundPressure.DECIBEL,
                     }
                 }
             },

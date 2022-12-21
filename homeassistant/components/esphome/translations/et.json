@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "already_in_progress": "Seadistamine on juba k\u00e4imas",
+            "mdns_missing_mac": "MDNS-i atribuutides puudub MAC-aadress.",
             "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
@@ -46,8 +47,8 @@
     },
     "issues": {
         "ble_firmware_outdated": {
-            "description": "Bluetoothi t\u00f6\u00f6kindluse ja j\u00f5udluse parandamiseks soovitame tungivalt v\u00e4rskendada {name} versiooniga ESPHome 2022.11.0 v\u00f5i uuema versiooniga.",
-            "title": "Uuenda {nimi} ESPHome 2022.11.0 v\u00f5i uuema versiooniga"
+            "description": "Bluetoothi t\u00f6\u00f6kindluse ja j\u00f5udluse parandamiseks soovitame tungivalt v\u00e4rskendada {name} ESPHome'i {version} v\u00f5i uuema versiooniga. Seadme v\u00e4rskendamisel versioonile ESPHome {version} on uue partitsiooniskeemi \u00e4rakasutamiseks soovitatav kasutada \u00f5hu kaudu toimuva v\u00e4rskenduse asemel jadakaablit.",
+            "title": "V\u00e4rskenda {name} ESPHome'i {version} v\u00f5i uuema versiooniga"
         }
     }
 }

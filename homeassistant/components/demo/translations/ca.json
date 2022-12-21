@@ -1,5 +1,14 @@
 {
     "entity": {
+        "select": {
+            "speed": {
+                "state": {
+                    "light_speed": "Velocitat de la llum",
+                    "ludicrous_speed": "Velocitat Ludicrous",
+                    "ridiculous_speed": "Velocitat rid\u00edcula"
+                }
+            }
+        },
         "sensor": {
             "thermostat_mode": {
                 "state": {

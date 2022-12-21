@@ -13,7 +13,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import issue_registry as ir
 
 from .const import DOMAIN
-from .subscription import async_subscription_info
+from .subscription import async_migrate_paypal_agreement, async_subscription_info
 
 BACKOFF_TIME = 5
 MAX_RETRIES = 60  # This allows for 10 minutes of retries
@@ -30,7 +30,7 @@ def async_manage_legacy_subscription_issue(
     If the provider is "legacy" create an issue,
     in all other cases remove the issue.
     """
-    if subscription_info["provider"] == "legacy":
+    if subscription_info.get("provider") == "legacy":
         ir.async_create_issue(
             hass=hass,
             domain=DOMAIN,
@@ -68,12 +68,12 @@ class LegacySubscriptionRepairFlow(RepairsFlow):
     async def async_step_change_plan(self, _: None = None) -> FlowResult:
         """Wait for the user to authorize the app installation."""
 
+        cloud: Cloud = self.hass.data[DOMAIN]
+
         async def _async_wait_for_plan_change() -> None:
             flow_manager = repairs_flow_manager(self.hass)
             # We can not get here without a flow manager
             assert flow_manager is not None
-
-            cloud: Cloud = self.hass.data[DOMAIN]
 
             retries = 0
             while retries < MAX_RETRIES:
@@ -90,9 +90,10 @@ class LegacySubscriptionRepairFlow(RepairsFlow):
 
         if not self.wait_task:
             self.wait_task = self.hass.async_create_task(_async_wait_for_plan_change())
+            migration = await async_migrate_paypal_agreement(cloud)
             return self.async_external_step(
                 step_id="change_plan",
-                url="https://account.nabucasa.com/",
+                url=migration["url"] if migration else "https://account.nabucasa.com/",
             )
 
         await self.wait_task
@@ -105,7 +106,7 @@ class LegacySubscriptionRepairFlow(RepairsFlow):
 
     async def async_step_complete(self, _: None = None) -> FlowResult:
         """Handle the final step of a fix flow."""
-        return self.async_create_entry(title="", data={})
+        return self.async_create_entry(data={})
 
     async def async_step_timeout(self, _: None = None) -> FlowResult:
         """Handle the final step of a fix flow."""

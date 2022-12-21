@@ -33,7 +33,8 @@ _DAYS_TO_SECS = 24 * _HRS_TO_SECS  # 1 day = 24 hours = 86400 seconds
 
 # Mass conversion constants
 _POUND_TO_G = 453.59237
-_OUNCE_TO_G = _POUND_TO_G / 16
+_OUNCE_TO_G = _POUND_TO_G / 16  # 16 ounces to a pound
+_STONE_TO_G = _POUND_TO_G * 14  # 14 pounds to a stone
 
 # Pressure conversion constants
 _STANDARD_GRAVITY = 9.80665
@@ -143,6 +144,7 @@ class MassConverter(BaseUnitConverter):
         UnitOfMass.KILOGRAMS: 1 / 1000,
         UnitOfMass.OUNCES: 1 / _OUNCE_TO_G,
         UnitOfMass.POUNDS: 1 / _POUND_TO_G,
+        UnitOfMass.STONES: 1 / _STONE_TO_G,
     }
     VALID_UNITS = {
         UnitOfMass.GRAMS,
@@ -151,6 +153,7 @@ class MassConverter(BaseUnitConverter):
         UnitOfMass.MICROGRAMS,
         UnitOfMass.OUNCES,
         UnitOfMass.POUNDS,
+        UnitOfMass.STONES,
     }
 
 
@@ -336,6 +339,7 @@ class VolumeConverter(BaseUnitConverter):
         UnitOfVolume.FLUID_OUNCES: 1 / _FLUID_OUNCE_TO_CUBIC_METER,
         UnitOfVolume.CUBIC_METERS: 1,
         UnitOfVolume.CUBIC_FEET: 1 / _CUBIC_FOOT_TO_CUBIC_METER,
+        UnitOfVolume.CENTUM_CUBIC_FEET: 1 / (100 * _CUBIC_FOOT_TO_CUBIC_METER),
     }
     VALID_UNITS = {
         UnitOfVolume.LITERS,
@@ -344,4 +348,5 @@ class VolumeConverter(BaseUnitConverter):
         UnitOfVolume.FLUID_OUNCES,
         UnitOfVolume.CUBIC_METERS,
         UnitOfVolume.CUBIC_FEET,
+        UnitOfVolume.CENTUM_CUBIC_FEET,
     }

@@ -3,7 +3,7 @@ import logging
 from typing import Generic, TypeVar, cast
 
 from switchbee import SWITCHBEE_BRAND
-from switchbee.api import SwitchBeeDeviceOfflineError, SwitchBeeError
+from switchbee.api.central_unit import SwitchBeeDeviceOfflineError, SwitchBeeError
 from switchbee.device import DeviceType, SwitchBeeBaseDevice
 
 from homeassistant.helpers.entity import DeviceInfo

@@ -11,6 +11,11 @@
             "invalid_auth": "Ongeldige authenticatie"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Wachtwoord"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Wachtwoord",

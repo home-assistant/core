@@ -14,6 +14,7 @@ from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCal
 from aioshelly.rpc_device import RpcDevice, UpdateType
 from awesomeversion import AwesomeVersion
 
+from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
@@ -479,6 +480,9 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
                 return
             self.connected = False
             self._async_run_disconnected_events()
+        # Try to reconnect right away if hass is not stopping
+        if not self.hass.is_stopping:
+            await self.async_request_refresh()
 
     @callback
     def _async_run_disconnected_events(self) -> None:
@@ -564,7 +568,8 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
 
     async def shutdown(self) -> None:
         """Shutdown the coordinator."""
-        await async_stop_scanner(self.device)
+        if self.device.connected:
+            await async_stop_scanner(self.device)
         await self.device.shutdown()
         await self._async_disconnected()
 
@@ -642,3 +647,16 @@ def get_rpc_coordinator_by_device_id(
                 return coordinator
 
     return None
+
+
+async def async_reconnect_soon(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry
+) -> None:
+    """Try to reconnect soon."""
+    if (
+        not hass.is_stopping
+        and entry.state == config_entries.ConfigEntryState.LOADED
+        and (entry_data := get_entry_data(hass).get(entry.entry_id))
+        and (coordinator := entry_data.rpc)
+    ):
+        hass.async_create_task(coordinator.async_request_refresh())

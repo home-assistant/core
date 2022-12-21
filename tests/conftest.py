@@ -14,7 +14,6 @@ import ssl
 import threading
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
-import warnings
 
 from aiohttp import client
 from aiohttp.pytest_plugin import AiohttpClient
@@ -212,14 +211,14 @@ def verify_cleanup(event_loop: asyncio.AbstractEventLoop):
     # before moving on to the next test.
     tasks = asyncio.all_tasks(event_loop) - tasks_before
     for task in tasks:
-        warnings.warn(f"Linger task after test {task}")
+        _LOGGER.warning("Linger task after test %r", task)
         task.cancel()
     if tasks:
         event_loop.run_until_complete(asyncio.wait(tasks))
 
     for handle in event_loop._scheduled:  # pylint: disable=protected-access
         if not handle.cancelled():
-            warnings.warn(f"Lingering timer after test {handle}")
+            _LOGGER.warning("Lingering timer after test %r", handle)
             handle.cancel()
 
     # Make sure garbage collect run in same test as allocation
@@ -1092,6 +1091,9 @@ async def mock_enable_bluetooth(
     entry = MockConfigEntry(domain="bluetooth", unique_id="00:00:00:00:00:01")
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    yield
+    await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
 

@@ -14,9 +14,13 @@ from aiopyarr import (
     SonarrWantedMissing,
 )
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DATA_GIGABYTES
+from homeassistant.const import UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -49,7 +53,9 @@ def get_disk_space_attr(disks: list[Diskspace]) -> dict[str, str]:
         free = disk.freeSpace / 1024**3
         total = disk.totalSpace / 1024**3
         usage = free / total * 100
-        attrs[disk.path] = f"{free:.2f}/{total:.2f}{DATA_GIGABYTES} ({usage:.2f}%)"
+        attrs[
+            disk.path
+        ] = f"{free:.2f}/{total:.2f}{UnitOfInformation.GIGABYTES} ({usage:.2f}%)"
     return attrs
 
 
@@ -93,7 +99,8 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
         key="diskspace",
         name="Disk space",
         icon="mdi:harddisk",
-        native_unit_of_measurement=DATA_GIGABYTES,
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         entity_registry_enabled_default=False,
         value_fn=lambda data: f"{sum(disk.freeSpace for disk in data) / 1024**3:.2f}",
         attributes_fn=get_disk_space_attr,

@@ -11,13 +11,25 @@
             "reauth_confirm": {
                 "data": {
                     "password": "Heslo"
-                }
+                },
+                "title": "Znova overte dla\u017edicu"
             },
             "user": {
                 "data": {
                     "password": "Heslo",
                     "username": "Email"
-                }
+                },
+                "title": "Konfigur\u00e1cia dla\u017edice"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_inactive": "Zobrazi\u0165 neakt\u00edvne dla\u017edice"
+                },
+                "title": "Konfigur\u00e1cia dla\u017edice"
             }
         }
     }
