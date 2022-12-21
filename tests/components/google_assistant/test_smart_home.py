@@ -101,10 +101,21 @@ async def test_async_handle_message(hass):
     await hass.async_block_till_done()
 
 
-async def test_sync_message(hass):
+async def test_sync_message(hass, registries):
     """Test a sync message."""
+    entity = registries.entity.async_get_or_create(
+        "light",
+        "test",
+        "unique-demo-light",
+        suggested_object_id="demo_light",
+    )
+    registries.entity.async_update_entity(
+        entity.entity_id,
+        aliases={"Stay", "Healthy"},
+    )
+
     light = DemoLight(
-        None,
+        "unique-demo-light",
         "Demo Light",
         state=False,
         hs_color=(180, 75),
@@ -150,7 +161,13 @@ async def test_sync_message(hass):
                     "id": "light.demo_light",
                     "name": {
                         "name": "Demo Light",
-                        "nicknames": ["Demo Light", "Hello", "World"],
+                        "nicknames": [
+                            "Demo Light",
+                            "Hello",
+                            "World",
+                            "Stay",
+                            "Healthy",
+                        ],
                     },
                     "traits": [
                         trait.TRAIT_BRIGHTNESS,
