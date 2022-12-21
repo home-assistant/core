@@ -61,10 +61,10 @@ async def test_migrate_config_entry(hass: HomeAssistant):
     """Test successful migration of entry data."""
     legacy_config = {CONF_NAME: "fake_name", CONF_PORT: "1.2.3.4:5678"}
     entry = MockConfigEntry(domain=DOMAIN, unique_id="my own id", data=legacy_config)
-    entry.version = 1
     entry.add_to_hass(hass)
 
     assert entry.data == legacy_config
+    assert entry.version == 1
 
     await hass.config_entries.async_setup(entry.entry_id)
 
