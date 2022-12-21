@@ -62,7 +62,6 @@ SENSOR_DESCRIPTIONS = {
         Units.ELECTRIC_POTENTIAL_MILLIVOLT,
     ): SensorEntityDescription(
         key=f"{SSDSensorDeviceClass.VOLTAGE}_{Units.ELECTRIC_POTENTIAL_MILLIVOLT}",
-        device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
