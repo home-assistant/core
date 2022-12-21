@@ -1018,7 +1018,7 @@ class XiaomiGatewayLight(LightEntity):
         self._gateway.light.set_rgb(0, self._rgb)
         self.schedule_update_ha_state()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch state from the device."""
         try:
             state_dict = await self.hass.async_add_executor_job(

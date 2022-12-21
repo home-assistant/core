@@ -309,7 +309,7 @@ async def async_test_device_temperature(hass, cluster, entity_id):
         ),
         (
             smartenergy.Metering.cluster_id,
-            "smartenergy_metering",
+            "instantaneous_demand",
             async_test_metering,
             1,
             {
@@ -323,7 +323,7 @@ async def async_test_device_temperature(hass, cluster, entity_id):
         ),
         (
             smartenergy.Metering.cluster_id,
-            "smartenergy_summation",
+            "summation_delivered",
             async_test_smart_energy_summation,
             1,
             {
@@ -339,7 +339,7 @@ async def async_test_device_temperature(hass, cluster, entity_id):
         ),
         (
             homeautomation.ElectricalMeasurement.cluster_id,
-            "electrical_measurement",
+            "active_power",
             async_test_electrical_measurement,
             7,
             {"ac_power_divisor": 1000, "ac_power_multiplier": 1},
@@ -347,7 +347,7 @@ async def async_test_device_temperature(hass, cluster, entity_id):
         ),
         (
             homeautomation.ElectricalMeasurement.cluster_id,
-            "electrical_measurement_apparent_power",
+            "apparent_power",
             async_test_em_apparent_power,
             7,
             {"ac_power_divisor": 1000, "ac_power_multiplier": 1},
@@ -355,7 +355,7 @@ async def async_test_device_temperature(hass, cluster, entity_id):
         ),
         (
             homeautomation.ElectricalMeasurement.cluster_id,
-            "electrical_measurement_rms_current",
+            "rms_current",
             async_test_em_rms_current,
             7,
             {"ac_current_divisor": 1000, "ac_current_multiplier": 1},
@@ -363,7 +363,7 @@ async def async_test_device_temperature(hass, cluster, entity_id):
         ),
         (
             homeautomation.ElectricalMeasurement.cluster_id,
-            "electrical_measurement_rms_voltage",
+            "rms_voltage",
             async_test_em_rms_voltage,
             7,
             {"ac_voltage_divisor": 10, "ac_voltage_multiplier": 1},
@@ -437,7 +437,7 @@ async def test_sensor(
         zigpy_device.node_desc.mac_capability_flags |= 0b_0000_0100
     cluster.PLUGGED_ATTR_READS = read_plug
     zha_device = await zha_device_joined_restored(zigpy_device)
-    entity_id = ENTITY_ID_PREFIX.format(entity_suffix.replace("_", ""))
+    entity_id = ENTITY_ID_PREFIX.format(entity_suffix)
 
     await async_enable_traffic(hass, [zha_device], enabled=False)
     await hass.async_block_till_done()
@@ -642,37 +642,37 @@ async def test_electrical_measurement_init(
             homeautomation.ElectricalMeasurement.cluster_id,
             {"apparent_power", "rms_voltage", "rms_current"},
             {
-                "electrical_measurement",
-                "electrical_measurement_frequency",
-                "electrical_measurement_power_factor",
+                "active_power",
+                "ac_frequency",
+                "power_factor",
             },
             {
-                "electrical_measurement_apparent_power",
-                "electrical_measurement_rms_voltage",
-                "electrical_measurement_rms_current",
+                "apparent_power",
+                "rms_voltage",
+                "rms_current",
             },
         ),
         (
             homeautomation.ElectricalMeasurement.cluster_id,
             {"apparent_power", "rms_current", "ac_frequency", "power_factor"},
-            {"electrical_measurement_rms_voltage", "electrical_measurement"},
+            {"rms_voltage", "active_power"},
             {
-                "electrical_measurement_apparent_power",
-                "electrical_measurement_rms_current",
-                "electrical_measurement_frequency",
-                "electrical_measurement_power_factor",
+                "apparent_power",
+                "rms_current",
+                "ac_frequency",
+                "power_factor",
             },
         ),
         (
             homeautomation.ElectricalMeasurement.cluster_id,
             set(),
             {
-                "electrical_measurement_rms_voltage",
-                "electrical_measurement",
-                "electrical_measurement_apparent_power",
-                "electrical_measurement_rms_current",
-                "electrical_measurement_frequency",
-                "electrical_measurement_power_factor",
+                "rms_voltage",
+                "active_power",
+                "apparent_power",
+                "rms_current",
+                "ac_frequency",
+                "power_factor",
             },
             set(),
         ),
@@ -682,10 +682,10 @@ async def test_electrical_measurement_init(
                 "instantaneous_demand",
             },
             {
-                "smartenergy_summation",
+                "summation_delivered",
             },
             {
-                "smartenergy_metering",
+                "instantaneous_demand",
             },
         ),
         (
@@ -693,16 +693,16 @@ async def test_electrical_measurement_init(
             {"instantaneous_demand", "current_summ_delivered"},
             {},
             {
-                "smartenergy_summation",
-                "smartenergy_metering",
+                "summation_delivered",
+                "instantaneous_demand",
             },
         ),
         (
             smartenergy.Metering.cluster_id,
             {},
             {
-                "smartenergy_summation",
-                "smartenergy_metering",
+                "summation_delivered",
+                "instantaneous_demand",
             },
             {},
         ),
@@ -719,10 +719,8 @@ async def test_unsupported_attributes_sensor(
 ):
     """Test zha sensor platform."""
 
-    entity_ids = {ENTITY_ID_PREFIX.format(e.replace("_", "")) for e in entity_ids}
-    missing_entity_ids = {
-        ENTITY_ID_PREFIX.format(e.replace("_", "")) for e in missing_entity_ids
-    }
+    entity_ids = {ENTITY_ID_PREFIX.format(e) for e in entity_ids}
+    missing_entity_ids = {ENTITY_ID_PREFIX.format(e) for e in missing_entity_ids}
 
     zigpy_device = zigpy_device_mock(
         {
@@ -836,7 +834,7 @@ async def test_se_summation_uom(
 ):
     """Test zha smart energy summation."""
 
-    entity_id = ENTITY_ID_PREFIX.format("smartenergysummation")
+    entity_id = ENTITY_ID_PREFIX.format("summation_delivered")
     zigpy_device = zigpy_device_mock(
         {
             1: {
@@ -890,7 +888,7 @@ async def test_elec_measurement_sensor_type(
 ):
     """Test zha electrical measurement sensor type."""
 
-    entity_id = ENTITY_ID_PREFIX.format("electricalmeasurement")
+    entity_id = ENTITY_ID_PREFIX.format("active_power")
     zigpy_dev = elec_measurement_zigpy_dev
     zigpy_dev.endpoints[1].electrical_measurement.PLUGGED_ATTR_READS[
         "measurement_type"
@@ -939,7 +937,7 @@ async def test_elec_measurement_skip_unsupported_attribute(
 ):
     """Test zha electrical measurement skipping update of unsupported attributes."""
 
-    entity_id = ENTITY_ID_PREFIX.format("electricalmeasurement")
+    entity_id = ENTITY_ID_PREFIX.format("active_power")
     zha_dev = elec_measurement_zha_dev
 
     cluster = zha_dev.device.endpoints[1].electrical_measurement

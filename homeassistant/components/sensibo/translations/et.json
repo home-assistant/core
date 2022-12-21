@@ -15,11 +15,34 @@
             "reauth_confirm": {
                 "data": {
                     "api_key": "API v\u00f5ti"
+                },
+                "data_description": {
+                    "api_key": "API-v\u00f5tme saamiseks j\u00e4rgi dokumentatsiooni"
                 }
             },
             "user": {
                 "data": {
                     "api_key": "API v\u00f5ti"
+                },
+                "data_description": {
+                    "api_key": "API-v\u00f5tme hankimiseks j\u00e4rgi dokumentatsiooni"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "sensitivity": {
+                "state": {
+                    "n": "Tavaline",
+                    "s": "Tundlik"
+                }
+            },
+            "smart_type": {
+                "state": {
+                    "feelslike": "Tundub nagu",
+                    "humidity": "Niiskus",
+                    "temperature": "Temperatuur"
                 }
             }
         }

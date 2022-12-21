@@ -2,7 +2,9 @@
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
-from tests.components.homekit_controller.common import setup_test_component
+from homeassistant.helpers import entity_registry as er
+
+from .common import get_next_aid, setup_test_component
 
 
 def create_fan_service(accessory):
@@ -804,4 +806,21 @@ async def test_v2_set_percentage_non_standard_rotation_range(hass, utcnow):
         {
             CharacteristicsTypes.ACTIVE: 0,
         },
+    )
+
+
+async def test_migrate_unique_id(hass, utcnow):
+    """Test a we can migrate a fan unique id."""
+    entity_registry = er.async_get(hass)
+    aid = get_next_aid()
+    fan_entry = entity_registry.async_get_or_create(
+        "fan",
+        "homekit_controller",
+        f"homekit-00:00:00:00:00:00-{aid}-8",
+    )
+    await setup_test_component(hass, create_fanv2_service_non_standard_rotation_range)
+
+    assert (
+        entity_registry.async_get(fan_entry.entity_id).unique_id
+        == f"00:00:00:00:00:00_{aid}_8"
     )

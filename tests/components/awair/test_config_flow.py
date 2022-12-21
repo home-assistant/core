@@ -1,4 +1,5 @@
 """Define tests for the Awair config flow."""
+from typing import Any
 from unittest.mock import Mock, patch
 
 from aiohttp.client_exceptions import ClientConnectorError
@@ -364,3 +365,63 @@ async def test_unsuccessful_create_zeroconf_entry(hass: HomeAssistant):
         )
 
         assert result["type"] == data_entry_flow.FlowResultType.ABORT
+
+
+async def test_zeroconf_discovery_update_configuration(
+    hass: HomeAssistant, local_devices: Any
+) -> None:
+    """Test updating an existing Awair config entry with discovery info."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "127.0.0.1"},
+        unique_id=LOCAL_UNIQUE_ID,
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.awair.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry, patch(
+        "python_awair.AwairClient.query", side_effect=[local_devices]
+    ), patch(
+        "homeassistant.components.awair.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data=ZEROCONF_DISCOVERY,
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "already_configured_device"
+
+        assert config_entry.data[CONF_HOST] == ZEROCONF_DISCOVERY.host
+        assert mock_setup_entry.call_count == 0
+
+
+async def test_zeroconf_during_onboarding(
+    hass: HomeAssistant, local_devices: Any
+) -> None:
+    """Test the zeroconf creates an entry during onboarding."""
+    with patch(
+        "homeassistant.components.awair.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry, patch(
+        "python_awair.AwairClient.query", side_effect=[local_devices]
+    ), patch(
+        "homeassistant.components.onboarding.async_is_onboarded",
+        return_value=False,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=ZEROCONF_DISCOVERY
+        )
+
+    assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "Awair Element (24947)"
+    assert "data" in result
+    assert result["data"][CONF_HOST] == ZEROCONF_DISCOVERY.host
+    assert "result" in result
+    assert result["result"].unique_id == LOCAL_UNIQUE_ID
+    assert len(mock_setup_entry.mock_calls) == 1

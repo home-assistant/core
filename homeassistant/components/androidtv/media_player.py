@@ -21,8 +21,10 @@ import voluptuous as vol
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -33,11 +35,6 @@ from homeassistant.const import (
     ATTR_SW_VERSION,
     CONF_HOST,
     CONF_NAME,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
-    STATE_STANDBY,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -85,11 +82,11 @@ PREFIX_FIRETV = "Fire TV"
 
 # Translate from `AndroidTV` / `FireTV` reported state to HA state.
 ANDROIDTV_STATES = {
-    "off": STATE_OFF,
-    "idle": STATE_IDLE,
-    "standby": STATE_STANDBY,
-    "playing": STATE_PLAYING,
-    "paused": STATE_PAUSED,
+    "off": MediaPlayerState.OFF,
+    "idle": MediaPlayerState.IDLE,
+    "standby": MediaPlayerState.STANDBY,
+    "playing": MediaPlayerState.PLAYING,
+    "paused": MediaPlayerState.PAUSED,
 }
 
 
@@ -209,6 +206,8 @@ def adb_decorator(
 class ADBDevice(MediaPlayerEntity):
     """Representation of an Android TV or Fire TV device."""
 
+    _attr_device_class = MediaPlayerDeviceClass.TV
+
     def __init__(
         self,
         aftv,
@@ -323,7 +322,11 @@ class ADBDevice(MediaPlayerEntity):
 
     async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
         """Fetch current playing image."""
-        if not self._screencap or self.state in (STATE_OFF, None) or not self.available:
+        if (
+            not self._screencap
+            or self.state in {MediaPlayerState.OFF, None}
+            or not self.available
+        ):
             return None, None
 
         media_data = await self._adb_screencap()

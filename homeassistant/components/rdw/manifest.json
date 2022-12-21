@@ -6,5 +6,6 @@
   "requirements": ["vehicle==0.4.0"],
   "codeowners": ["@frenck"],
   "quality_scale": "platinum",
+  "integration_type": "service",
   "iot_class": "cloud_polling"
 }

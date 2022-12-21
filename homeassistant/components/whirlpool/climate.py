@@ -8,8 +8,8 @@ from whirlpool.aircon import Aircon, FanSpeed as AirconFanSpeed, Mode as AirconM
 from whirlpool.auth import Auth
 from whirlpool.backendselector import BackendSelector
 
-from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
+    ENTITY_ID_FORMAT,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -17,11 +17,12 @@ from homeassistant.components.climate.const import (
     FAN_OFF,
     SWING_HORIZONTAL,
     SWING_OFF,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -101,7 +102,7 @@ class AirConEntity(ClimateEntity):
     )
     _attr_swing_modes = SUPPORTED_SWING_MODES
     _attr_target_temperature_step = SUPPORTED_TARGET_TEMPERATURE_STEP
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_should_poll = False
 
     def __init__(self, hass, said, name, backend_selector: BackendSelector, auth: Auth):

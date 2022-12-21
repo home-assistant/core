@@ -5,11 +5,13 @@ import pytest
 from zigpy.exceptions import ZigbeeException
 from zigpy.profiles import zha
 import zigpy.zcl.clusters.general as general
+import zigpy.zcl.clusters.lighting as lighting
 import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
-from homeassistant.const import ENTITY_CATEGORY_CONFIG, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.setup import async_setup_component
 
 from .common import (
@@ -63,12 +65,13 @@ async def light(zigpy_device_mock):
         {
             1: {
                 SIG_EP_PROFILE: zha.PROFILE_ID,
-                SIG_EP_TYPE: zha.DeviceType.ON_OFF_LIGHT,
+                SIG_EP_TYPE: zha.DeviceType.COLOR_DIMMABLE_LIGHT,
                 SIG_EP_INPUT: [
                     general.Basic.cluster_id,
                     general.Identify.cluster_id,
                     general.OnOff.cluster_id,
                     general.LevelControl.cluster_id,
+                    lighting.Color.cluster_id,
                 ],
                 SIG_EP_OUTPUT: [general.Ota.cluster_id],
             }
@@ -210,7 +213,7 @@ async def test_level_control_number(
         Platform.NUMBER,
         zha_device,
         hass,
-        qualifier=attr.replace("_", ""),
+        qualifier=attr,
     )
     assert entity_id is not None
 
@@ -259,7 +262,7 @@ async def test_level_control_number(
 
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry
-    assert entity_entry.entity_category == ENTITY_CATEGORY_CONFIG
+    assert entity_entry.entity_category == EntityCategory.CONFIG
 
     # Test number set_value
     await hass.services.async_call(
@@ -318,6 +321,116 @@ async def test_level_control_number(
 
     assert level_control_cluster.write_attributes.call_count == 1
     assert level_control_cluster.write_attributes.call_args[0][0] == {
+        attr: new_value,
+    }
+    assert hass.states.get(entity_id).state == str(initial_value)
+
+
+@pytest.mark.parametrize(
+    "attr, initial_value, new_value",
+    (("start_up_color_temperature", 500, 350),),
+)
+async def test_color_number(
+    hass, light, zha_device_joined, attr, initial_value, new_value
+):
+    """Test zha color number entities - new join."""
+
+    entity_registry = er.async_get(hass)
+    color_cluster = light.endpoints[1].light_color
+    color_cluster.PLUGGED_ATTR_READS = {
+        attr: initial_value,
+    }
+    zha_device = await zha_device_joined(light)
+
+    entity_id = await find_entity_id(
+        Platform.NUMBER,
+        zha_device,
+        hass,
+        qualifier=attr,
+    )
+    assert entity_id is not None
+
+    assert color_cluster.read_attributes.call_count == 3
+    assert (
+        call(
+            [
+                "color_temp_physical_min",
+                "color_temp_physical_max",
+                "color_capabilities",
+                "start_up_color_temperature",
+            ],
+            allow_cache=True,
+            only_cache=False,
+            manufacturer=None,
+        )
+        in color_cluster.read_attributes.call_args_list
+    )
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == str(initial_value)
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category == EntityCategory.CONFIG
+
+    # Test number set_value
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {
+            "entity_id": entity_id,
+            "value": new_value,
+        },
+        blocking=True,
+    )
+
+    assert color_cluster.write_attributes.call_count == 1
+    assert color_cluster.write_attributes.call_args[0][0] == {
+        attr: new_value,
+    }
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == str(new_value)
+
+    color_cluster.read_attributes.reset_mock()
+    await async_setup_component(hass, "homeassistant", {})
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+    )
+    # the mocking doesn't update the attr cache so this flips back to initial value
+    assert hass.states.get(entity_id).state == str(initial_value)
+    assert color_cluster.read_attributes.call_count == 1
+    assert (
+        call(
+            [
+                attr,
+            ],
+            allow_cache=False,
+            only_cache=False,
+            manufacturer=None,
+        )
+        in color_cluster.read_attributes.call_args_list
+    )
+
+    color_cluster.write_attributes.reset_mock()
+    color_cluster.write_attributes.side_effect = ZigbeeException
+
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {
+            "entity_id": entity_id,
+            "value": new_value,
+        },
+        blocking=True,
+    )
+
+    assert color_cluster.write_attributes.call_count == 1
+    assert color_cluster.write_attributes.call_args[0][0] == {
         attr: new_value,
     }
     assert hass.states.get(entity_id).state == str(initial_value)

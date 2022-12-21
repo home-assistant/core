@@ -3,9 +3,9 @@
 from insteon_frontend import get_build_id, locate_dir
 
 from homeassistant.components import panel_custom, websocket_api
-from homeassistant.components.insteon.const import CONF_DEV_PATH, DOMAIN
 from homeassistant.core import HomeAssistant, callback
 
+from ..const import CONF_DEV_PATH, DOMAIN
 from .aldb import (
     websocket_add_default_links,
     websocket_change_aldb_record,

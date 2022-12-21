@@ -7,7 +7,9 @@
             "link_local_address": "Les adresses de liaison locale ne sont pas prises en charge",
             "missing_configuration": "L'int\u00e9gration LaMetric n'est pas configur\u00e9e\u00a0; veuillez suivre la documentation.",
             "no_devices": "L'utilisateur autoris\u00e9 ne poss\u00e8de aucun appareil LaMetric",
-            "no_url_available": "Aucune URL disponible. Pour plus d'informations sur cette erreur, [consultez la section d'aide]({docs_url})"
+            "no_url_available": "Aucune URL disponible. Pour plus d'informations sur cette erreur, [consultez la section d'aide]({docs_url})",
+            "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi",
+            "unknown": "Erreur inattendue"
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",

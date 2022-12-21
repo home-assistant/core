@@ -934,3 +934,23 @@ async def test_friendly_name(
     assert len(hass.states.async_entity_ids()) == 1
     state = hass.states.async_all()[0]
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name
+
+
+async def test_translation_key(hass):
+    """Test translation key property."""
+    mock_entity1 = entity.Entity()
+    mock_entity1.hass = hass
+    mock_entity1.entity_description = entity.EntityDescription(
+        key="abc", translation_key="from_entity_description"
+    )
+    mock_entity1.entity_id = "hello.world"
+    mock_entity1._attr_translation_key = "from_attr"
+    assert mock_entity1.translation_key == "from_attr"
+
+    mock_entity2 = entity.Entity()
+    mock_entity2.hass = hass
+    mock_entity2.entity_description = entity.EntityDescription(
+        key="abc", translation_key="from_entity_description"
+    )
+    mock_entity2.entity_id = "hello.world"
+    assert mock_entity2.translation_key == "from_entity_description"

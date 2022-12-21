@@ -7,7 +7,7 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .test_weather import MockLocation
+from . import MockLocation
 
 from tests.common import MockConfigEntry, mock_registry
 
@@ -159,7 +159,7 @@ async def test_config_entry_migration(hass):
     )
 
     with patch(
-        "homeassistant.components.ipma.weather.async_get_location",
+        "pyipma.location.Location.get",
         return_value=MockLocation(),
     ):
         assert await async_setup_component(hass, DOMAIN, {})

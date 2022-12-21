@@ -19,7 +19,7 @@ from homeassistant.helpers.network import (
     is_hass_url,
 )
 
-from .const import CONTENT_AUTH_EXPIRY_TIME, MEDIA_CLASS_DIRECTORY
+from .const import CONTENT_AUTH_EXPIRY_TIME, MediaClass, MediaType
 
 # Paths that we don't need to sign
 PATHS_WITHOUT_AUTH = ("/api/tts_proxy/",)
@@ -92,14 +92,14 @@ class BrowseMedia:
     def __init__(
         self,
         *,
-        media_class: str,
+        media_class: MediaClass | str,
         media_content_id: str,
-        media_content_type: str,
+        media_content_type: MediaType | str,
         title: str,
         can_play: bool,
         can_expand: bool,
         children: Sequence[BrowseMedia] | None = None,
-        children_media_class: str | None = None,
+        children_media_class: MediaClass | str | None = None,
         thumbnail: str | None = None,
         not_shown: int = 0,
     ) -> None:
@@ -115,7 +115,7 @@ class BrowseMedia:
         self.thumbnail = thumbnail
         self.not_shown = not_shown
 
-    def as_dict(self, *, parent: bool = True) -> dict:
+    def as_dict(self, *, parent: bool = True) -> dict[str, Any]:
         """Convert Media class to browse media dictionary."""
         if self.children_media_class is None and self.children:
             self.calculate_children_class()
@@ -147,7 +147,7 @@ class BrowseMedia:
 
     def calculate_children_class(self) -> None:
         """Count the children media classes and calculate the correct class."""
-        self.children_media_class = MEDIA_CLASS_DIRECTORY
+        self.children_media_class = MediaClass.DIRECTORY
         assert self.children is not None
         proposed_class = self.children[0].media_class
         if all(child.media_class == proposed_class for child in self.children):

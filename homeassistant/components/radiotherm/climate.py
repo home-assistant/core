@@ -7,13 +7,14 @@ from typing import Any
 import radiotherm
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     FAN_AUTO,
     FAN_OFF,
     FAN_ON,
+    PLATFORM_SCHEMA,
     PRESET_AWAY,
     PRESET_HOME,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -23,7 +24,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,
     PRECISION_HALVES,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -168,7 +169,7 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
     """Representation of a Radio Thermostat."""
 
     _attr_hvac_modes = OPERATION_LIST
-    _attr_temperature_unit = TEMP_FAHRENHEIT
+    _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
     _attr_precision = PRECISION_HALVES
 
     def __init__(self, coordinator: RadioThermUpdateCoordinator) -> None:

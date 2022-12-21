@@ -18,7 +18,7 @@ from homeassistant.const import (
     STATE_PROBLEM,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -111,7 +111,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: {cv.string: PLANT_SCHEMA}}, extra=vol.ALLOW_
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Plant component."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent[Plant](_LOGGER, DOMAIN, hass)
 
     entities = []
     for plant_name, plant_config in config[DOMAIN].items():
@@ -138,7 +138,7 @@ class Plant(Entity):
             "min": CONF_MIN_BATTERY_LEVEL,
         },
         READING_TEMPERATURE: {
-            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
             "min": CONF_MIN_TEMPERATURE,
             "max": CONF_MAX_TEMPERATURE,
         },

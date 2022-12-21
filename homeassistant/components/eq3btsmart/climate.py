@@ -7,11 +7,12 @@ from typing import Any
 import eq3bt as eq3  # pylint: disable=import-error
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA,
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -20,7 +21,7 @@ from homeassistant.const import (
     CONF_DEVICES,
     CONF_MAC,
     PRECISION_HALVES,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -106,7 +107,7 @@ class EQ3BTSmartThermostat(ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, mac: str, name: str) -> None:
         """Initialize the thermostat."""

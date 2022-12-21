@@ -138,6 +138,6 @@ class W800rf32BinarySensor(BinarySensorEntity):
         self._state = state
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register update callback."""
         async_dispatcher_connect(self.hass, self._signal, self.binary_sensor_update)

@@ -38,6 +38,8 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     }
 )
 
+# mypy: disallow-any-generics
+
 
 class CalendarEventListener:
     """Helper class to listen to calendar events."""
@@ -172,7 +174,7 @@ async def async_attach_trigger(
     event_type = config[CONF_EVENT]
     offset = config[CONF_OFFSET]
 
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
     if not (entity := component.get_entity(entity_id)) or not isinstance(
         entity, CalendarEntity
     ):

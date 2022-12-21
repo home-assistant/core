@@ -7,8 +7,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-# mypy: allow-untyped-defs
-
 EVENT_START = "start"
 EVENT_SHUTDOWN = "shutdown"
 

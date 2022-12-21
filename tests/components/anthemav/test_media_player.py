@@ -4,14 +4,14 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_APP_NAME,
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_TITLE,
+    ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
 )
-from homeassistant.components.siren.const import ATTR_VOLUME_LEVEL
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
@@ -63,7 +63,7 @@ async def test_update_states_zone1(
     states = hass.states.get("media_player.anthem_av")
     assert states
     assert states.state == STATE_ON
-    assert states.attributes[ATTR_VOLUME_LEVEL] == 42
+    assert states.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 42
     assert states.attributes[ATTR_MEDIA_VOLUME_MUTED] is True
     assert states.attributes[ATTR_INPUT_SOURCE] == "TEST INPUT"
     assert states.attributes[ATTR_MEDIA_TITLE] == "TEST INPUT"

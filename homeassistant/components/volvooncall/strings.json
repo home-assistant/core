@@ -6,8 +6,8 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "region": "Region",
-          "mutable": "Allow Remote Start / Lock / etc.",
-          "scandinavian_miles": "Use Scandinavian Miles"
+          "unit_system": "Unit System",
+          "mutable": "Allow Remote Start / Lock / etc."
         }
       }
     },
@@ -16,7 +16,8 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "Account is already configured"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "issues": {

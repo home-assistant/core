@@ -1,16 +1,9 @@
 """Demo platform that has two fake binary sensors."""
 from __future__ import annotations
 
-import copy
 import datetime
-from typing import Any
 
-from homeassistant.components.calendar import (
-    CalendarEntity,
-    CalendarEvent,
-    CalendarEventDevice,
-    get_date,
-)
+from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -28,7 +21,6 @@ def setup_platform(
         [
             DemoCalendar(calendar_data_future(), "Calendar 1"),
             DemoCalendar(calendar_data_current(), "Calendar 2"),
-            LegacyDemoCalendar("Calendar 3"),
         ]
     )
 
@@ -76,41 +68,3 @@ class DemoCalendar(CalendarEntity):
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
         return [self._event]
-
-
-class LegacyDemoCalendar(CalendarEventDevice):
-    """Calendar for exercising shim API."""
-
-    def __init__(self, name: str) -> None:
-        """Initialize demo calendar."""
-        self._attr_name = name
-        one_hour_from_now = dt_util.now() + datetime.timedelta(minutes=30)
-        self._event = {
-            "start": {"dateTime": one_hour_from_now.isoformat()},
-            "end": {
-                "dateTime": (
-                    one_hour_from_now + datetime.timedelta(minutes=60)
-                ).isoformat()
-            },
-            "summary": "Future Event",
-            "description": "Future Description",
-            "location": "Future Location",
-        }
-
-    @property
-    def event(self) -> dict[str, Any]:
-        """Return the next upcoming event."""
-        return self._event
-
-    async def async_get_events(
-        self,
-        hass: HomeAssistant,
-        start_date: datetime.datetime,
-        end_date: datetime.datetime,
-    ) -> list[dict[str, Any]]:
-        """Get all events in a specific time frame."""
-        event = copy.copy(self.event)
-        event["title"] = event["summary"]
-        event["start"] = get_date(event["start"]).isoformat()
-        event["end"] = get_date(event["end"]).isoformat()
-        return [event]

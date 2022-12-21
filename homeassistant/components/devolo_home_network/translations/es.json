@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "El dispositivo ya est\u00e1 configurado",
-            "home_control": "La unidad central Home Control de devolo no funciona con esta integraci\u00f3n."
+            "home_control": "La unidad central Home Control de devolo no funciona con esta integraci\u00f3n.",
+            "reauth_successful": "La autenticaci\u00f3n se volvi\u00f3 a realizar correctamente"
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
@@ -10,6 +11,11 @@
         },
         "flow_title": "{product} ({name})",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Contrase\u00f1a"
+                }
+            },
             "user": {
                 "data": {
                     "ip_address": "Direcci\u00f3n IP"

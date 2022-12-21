@@ -1,5 +1,6 @@
 """Support for Xiaomi Aqara binary sensors."""
 import logging
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -179,13 +180,13 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchEntity):
         attrs.update(super().extra_state_attributes)
         return attrs
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         if self._write_to_hub(self._sid, **{self._data_key: "on"}):
             self._state = True
             self.schedule_update_ha_state()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         if self._write_to_hub(self._sid, **{self._data_key: "off"}):
             self._state = False
@@ -216,7 +217,7 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchEntity):
         self._state = state
         return True
 
-    def update(self):
+    def update(self) -> None:
         """Get data from hub."""
         _LOGGER.debug("Update data from hub: %s", self._name)
         self._get_from_hub(self._sid)

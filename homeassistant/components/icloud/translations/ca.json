@@ -11,7 +11,7 @@
             "validate_verification_code": "No s'ha pogut verificar el codi de verificaci\u00f3, torna-ho a provar"
         },
         "step": {
-            "reauth": {
+            "reauth_confirm": {
                 "data": {
                     "password": "Contrasenya"
                 },

@@ -15,7 +15,6 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -57,18 +56,11 @@ async def async_get_service(
         async_create_issue(
             hass,
             DOMAIN,
-            "deprecated_yaml",
+            "removed_yaml",
             breaks_in_ha_version="2022.11.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-        )
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=config,
-            )
+            translation_key="removed_yaml",
         )
         return None
 
@@ -89,7 +81,7 @@ class PushoverNotificationService(BaseNotificationService):
         self._user_key = user_key
         self.pushover = pushover
 
-    def send_message(self, message: str = "", **kwargs: dict[str, Any]) -> None:
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
 
         # Extract params from data dict
@@ -128,7 +120,7 @@ class PushoverNotificationService(BaseNotificationService):
             self.pushover.send_message(
                 self._user_key,
                 message,
-                kwargs.get(ATTR_TARGET),
+                ",".join(kwargs.get(ATTR_TARGET, [])),
                 title,
                 url,
                 url_title,

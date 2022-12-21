@@ -40,7 +40,7 @@ from .const import (
     RISCO_GROUPS,
     RISCO_PARTIAL_ARM,
 )
-from .entity import RiscoEntity
+from .entity import RiscoCloudEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,7 +107,6 @@ class RiscoAlarm(AlarmControlPanelEntity):
         self._code_disarm_required = options[CONF_CODE_DISARM_REQUIRED]
         self._risco_to_ha = options[CONF_RISCO_STATES_TO_HA]
         self._ha_to_risco = options[CONF_HA_STATES_TO_RISCO]
-        self._attr_supported_features = 0
         self._attr_has_entity_name = True
         self._attr_name = None
         for state in self._ha_to_risco:
@@ -178,7 +177,7 @@ class RiscoAlarm(AlarmControlPanelEntity):
         raise NotImplementedError
 
 
-class RiscoCloudAlarm(RiscoAlarm, RiscoEntity):
+class RiscoCloudAlarm(RiscoAlarm, RiscoCloudEntity):
     """Representation of a Risco partition."""
 
     def __init__(
@@ -235,7 +234,7 @@ class RiscoLocalAlarm(RiscoAlarm):
         self._attr_unique_id = f"{system_id}_{partition_id}_local"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
-            name=f"Risco {system_id} Partition {partition_id}",
+            name=partition.name,
             manufacturer="Risco",
         )
 

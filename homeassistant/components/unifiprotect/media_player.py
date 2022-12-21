@@ -20,13 +20,11 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityDescription,
     MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.browse_media import (
+    MediaPlayerState,
+    MediaType,
     async_process_play_media_url,
 )
-from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_IDLE, STATE_PLAYING
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -95,7 +93,7 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
         )
 
         self._attr_name = f"{self.device.display_name} Speaker"
-        self._attr_media_content_type = MEDIA_TYPE_MUSIC
+        self._attr_media_content_type = MediaType.MUSIC
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
@@ -106,9 +104,9 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
             self.device.talkback_stream is not None
             and self.device.talkback_stream.is_running
         ):
-            self._attr_state = STATE_PLAYING
+            self._attr_state = MediaPlayerState.PLAYING
         else:
-            self._attr_state = STATE_IDLE
+            self._attr_state = MediaPlayerState.IDLE
 
         is_connected = self.data.last_update_success and (
             self.device.state == StateType.CONNECTED
@@ -134,17 +132,17 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
             self._async_updated_event(self.device)
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
         if media_source.is_media_source_id(media_id):
-            media_type = MEDIA_TYPE_MUSIC
+            media_type = MediaType.MUSIC
             play_item = await media_source.async_resolve_media(
                 self.hass, media_id, self.entity_id
             )
             media_id = async_process_play_media_url(self.hass, play_item.url)
 
-        if media_type != MEDIA_TYPE_MUSIC:
+        if media_type != MediaType.MUSIC:
             raise HomeAssistantError("Only music media type is supported")
 
         _LOGGER.debug(
@@ -164,7 +162,9 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
         self._async_updated_event(self.device)
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(

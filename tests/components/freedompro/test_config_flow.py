@@ -6,7 +6,7 @@ from homeassistant.components.freedompro.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY
 
-from tests.components.freedompro.const import DEVICES
+from .const import DEVICES
 
 VALID_CONFIG = {
     CONF_API_KEY: "ksdjfgslkjdfksjdfksjgfksjd",

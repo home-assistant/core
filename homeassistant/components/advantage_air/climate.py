@@ -4,19 +4,20 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
+
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -71,12 +72,13 @@ async def async_setup_entry(
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
     entities: list[ClimateEntity] = []
-    for ac_key, ac_device in instance["coordinator"].data["aircons"].items():
-        entities.append(AdvantageAirAC(instance, ac_key))
-        for zone_key, zone in ac_device["zones"].items():
-            # Only add zone climate control when zone is in temperature control
-            if zone["type"] != 0:
-                entities.append(AdvantageAirZone(instance, ac_key, zone_key))
+    if aircons := instance["coordinator"].data.get("aircons"):
+        for ac_key, ac_device in aircons.items():
+            entities.append(AdvantageAirAC(instance, ac_key))
+            for zone_key, zone in ac_device["zones"].items():
+                # Only add zone climate control when zone is in temperature control
+                if zone["type"] != 0:
+                    entities.append(AdvantageAirZone(instance, ac_key, zone_key))
     async_add_entities(entities)
 
 
@@ -84,12 +86,12 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     """AdvantageAir AC unit."""
 
     _attr_fan_modes = [FAN_LOW, FAN_MEDIUM, FAN_HIGH]
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_max_temp = 32
     _attr_min_temp = 16
 
-    def __init__(self, instance, ac_key):
+    def __init__(self, instance: dict[str, Any], ac_key: str) -> None:
         """Initialize an AdvantageAir AC unit."""
         super().__init__(instance, ac_key)
         self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{ac_key}'
@@ -113,7 +115,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
         return self._ac["setTemp"]
 
     @property
-    def hvac_mode(self) -> HVACMode:
+    def hvac_mode(self) -> HVACMode | None:
         """Return the current HVAC modes."""
         if self._ac["state"] == ADVANTAGE_AIR_STATE_ON:
             return ADVANTAGE_AIR_HVAC_MODES[self._ac["mode"]]
@@ -196,11 +198,11 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC Mode and State."""
         if hvac_mode == HVACMode.OFF:
-            await self.async_change(
+            await self.aircon(
                 {self.ac_key: {"info": {"state": ADVANTAGE_AIR_STATE_OFF}}}
             )
         else:
-            await self.async_change(
+            await self.aircon(
                 {
                     self.ac_key: {
                         "info": {
@@ -213,7 +215,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the Fan Mode."""
-        await self.async_change(
+        await self.aircon(
             {self.ac_key: {"info": {"fan": HASS_FAN_MODES.get(fan_mode)}}}
         )
 
@@ -250,12 +252,12 @@ class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
 
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT_COOL]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_max_temp = 32
     _attr_min_temp = 16
 
-    def __init__(self, instance, ac_key, zone_key) -> None:
+    def __init__(self, instance: dict[str, Any], ac_key: str, zone_key: str) -> None:
         """Initialize an AdvantageAir Zone control."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = self._zone["name"]
@@ -299,6 +301,4 @@ class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the Temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
-        await self.async_change(
-            {self.ac_key: {"zones": {self.zone_key: {"setTemp": temp}}}}
-        )
+        await self.aircon({self.ac_key: {"zones": {self.zone_key: {"setTemp": temp}}}})

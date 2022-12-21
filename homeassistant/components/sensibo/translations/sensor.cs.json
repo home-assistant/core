@@ -1,0 +1,9 @@
+{
+    "state": {
+        "sensibo__smart_type": {
+            "feelslike": "Pocitov\u011b",
+            "humidity": "Vlhkost vzduchu",
+            "temperature": "Teplota"
+        }
+    }
+}

@@ -1,4 +1,6 @@
 """Intents for the light integration."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON

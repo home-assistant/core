@@ -1,8 +1,6 @@
 """Adds config flow for Brother Printer."""
 from __future__ import annotations
 
-import ipaddress
-import re
 from typing import Any
 
 from brother import Brother, SnmpError, UnsupportedModel
@@ -12,6 +10,7 @@ from homeassistant import config_entries, exceptions
 from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.util.network import is_host_valid
 
 from .const import DOMAIN, PRINTER_TYPES
 from .utils import get_snmp_engine
@@ -22,17 +21,6 @@ DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_TYPE, default="laser"): vol.In(PRINTER_TYPES),
     }
 )
-
-
-def host_valid(host: str) -> bool:
-    """Return True if hostname or IP address is valid."""
-    try:
-        if ipaddress.ip_address(host).version in [4, 6]:
-            return True
-    except ValueError:
-        pass
-    disallowed = re.compile(r"[^a-zA-Z\d\-]")
-    return all(x and not disallowed.search(x) for x in host.split("."))
 
 
 class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -53,12 +41,14 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                if not host_valid(user_input[CONF_HOST]):
+                if not is_host_valid(user_input[CONF_HOST]):
                     raise InvalidHost()
 
                 snmp_engine = get_snmp_engine(self.hass)
 
-                brother = Brother(user_input[CONF_HOST], snmp_engine=snmp_engine)
+                brother = await Brother.create(
+                    user_input[CONF_HOST], snmp_engine=snmp_engine
+                )
                 await brother.async_update()
 
                 await self.async_set_unique_id(brother.serial.lower())
@@ -92,7 +82,9 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         model = discovery_info.properties.get("product")
 
         try:
-            self.brother = Brother(self.host, snmp_engine=snmp_engine, model=model)
+            self.brother = await Brother.create(
+                self.host, snmp_engine=snmp_engine, model=model
+            )
             await self.brother.async_update()
         except UnsupportedModel:
             return self.async_abort(reason="unsupported_model")

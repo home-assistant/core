@@ -3,24 +3,28 @@ from __future__ import annotations
 
 from typing import Any
 
-from homematicip.aio.device import AsyncHeatingThermostat, AsyncHeatingThermostatCompact
+from homematicip.aio.device import (
+    AsyncHeatingThermostat,
+    AsyncHeatingThermostatCompact,
+    AsyncHeatingThermostatEvo,
+)
 from homematicip.aio.group import AsyncHeatingGroup
 from homematicip.base.enums import AbsenceType
 from homematicip.device import Switch
 from homematicip.functionalHomes import IndoorClimateHome
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_ECO,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -51,8 +55,7 @@ async def async_setup_entry(
         if isinstance(device, AsyncHeatingGroup):
             entities.append(HomematicipHeatingGroup(hap, device))
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
@@ -66,7 +69,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, hap: HomematicipHAP, device: AsyncHeatingGroup) -> None:
         """Initialize heating group."""
@@ -194,7 +197,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         """Return the maximum temperature."""
         return self._device.maxTemperature
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
@@ -313,11 +316,16 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     @property
     def _first_radiator_thermostat(
         self,
-    ) -> AsyncHeatingThermostat | AsyncHeatingThermostatCompact | None:
+    ) -> AsyncHeatingThermostat | AsyncHeatingThermostatCompact | AsyncHeatingThermostatEvo | None:
         """Return the first radiator thermostat from the hmip heating group."""
         for device in self._device.devices:
             if isinstance(
-                device, (AsyncHeatingThermostat, AsyncHeatingThermostatCompact)
+                device,
+                (
+                    AsyncHeatingThermostat,
+                    AsyncHeatingThermostatCompact,
+                    AsyncHeatingThermostatEvo,
+                ),
             ):
                 return device
 

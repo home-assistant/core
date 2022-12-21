@@ -12,8 +12,7 @@ import plexapi.server
 from requests import Session
 import requests.exceptions
 
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.components.media_player.const import MEDIA_TYPE_PLAYLIST
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, MediaType
 from homeassistant.const import CONF_CLIENT_ID, CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import callback
 from homeassistant.helpers.debounce import Debouncer
@@ -627,7 +626,7 @@ class PlexServer:
             except NotFound as err:
                 raise MediaNotFound(f"Media for key {key} not found") from err
 
-        if media_type == MEDIA_TYPE_PLAYLIST:
+        if media_type == MediaType.PLAYLIST:
             try:
                 playlist_name = kwargs["playlist_name"]
                 return self.playlist(playlist_name)

@@ -12,6 +12,7 @@ from homeassistant.components.image_processing import (
     ATTR_CONFIDENCE,
     CONF_CONFIDENCE,
     PLATFORM_SCHEMA,
+    ImageProcessingDeviceClass,
     ImageProcessingEntity,
 )
 from homeassistant.const import (
@@ -102,9 +103,11 @@ async def async_setup_platform(
 class ImageProcessingAlprEntity(ImageProcessingEntity):
     """Base entity class for ALPR image processing."""
 
-    def __init__(self):
+    _attr_device_class = ImageProcessingDeviceClass.ALPR
+
+    def __init__(self) -> None:
         """Initialize base ALPR entity."""
-        self.plates = {}
+        self.plates: dict[str, float] = {}
         self.vehicles = 0
 
     @property
@@ -121,34 +124,29 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
         return plate
 
     @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return "alpr"
-
-    @property
     def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {ATTR_PLATES: self.plates, ATTR_VEHICLES: self.vehicles}
 
-    def process_plates(self, plates, vehicles):
+    def process_plates(self, plates: dict[str, float], vehicles: int) -> None:
         """Send event with new plates and store data."""
         run_callback_threadsafe(
             self.hass.loop, self.async_process_plates, plates, vehicles
         ).result()
 
     @callback
-    def async_process_plates(self, plates, vehicles):
+    def async_process_plates(self, plates: dict[str, float], vehicles: int) -> None:
         """Send event with new plates and store data.
 
         plates are a dict in follow format:
-          { 'plate': confidence }
+          { '<plate>': confidence }
 
         This method must be run in the event loop.
         """
         plates = {
             plate: confidence
             for plate, confidence in plates.items()
-            if confidence >= self.confidence
+            if self.confidence is None or confidence >= self.confidence
         }
         new_plates = set(plates) - set(self.plates)
 

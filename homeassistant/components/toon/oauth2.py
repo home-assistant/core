@@ -33,6 +33,7 @@ def register_oauth2_implementations(
             client_secret=client_secret,
             name="Engie Electrabel Boxx",
             tenant_id="electrabel",
+            issuer="identity.toon.eu",
         ),
     )
     config_flow.ToonFlowHandler.async_register_implementation(

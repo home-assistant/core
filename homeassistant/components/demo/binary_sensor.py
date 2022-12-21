@@ -61,7 +61,7 @@ class DemoBinarySensor(BinarySensorEntity):
         self._unique_id = unique_id
         self._attr_name = name
         self._state = state
-        self._sensor_type = device_class
+        self._attr_device_class = device_class
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -78,11 +78,6 @@ class DemoBinarySensor(BinarySensorEntity):
     def unique_id(self) -> str:
         """Return the unique id."""
         return self._unique_id
-
-    @property
-    def device_class(self) -> BinarySensorDeviceClass:
-        """Return the class of this sensor."""
-        return self._sensor_type
 
     @property
     def is_on(self) -> bool:

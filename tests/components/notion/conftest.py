@@ -22,9 +22,9 @@ def client_fixture(data_bridge, data_sensor, data_task):
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(hass, config, unique_id):
+def config_entry_fixture(hass, config):
     """Define a config entry fixture."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id=unique_id, data=config)
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=config[CONF_USERNAME], data=config)
     entry.add_to_hass(hass)
     return entry
 
@@ -38,36 +38,38 @@ def config_fixture(hass):
     }
 
 
-@pytest.fixture(name="data_bridge", scope="session")
+@pytest.fixture(name="data_bridge", scope="package")
 def data_bridge_fixture():
     """Define bridge data."""
     return json.loads(load_fixture("bridge_data.json", "notion"))
 
 
-@pytest.fixture(name="data_sensor", scope="session")
+@pytest.fixture(name="data_sensor", scope="package")
 def data_sensor_fixture():
     """Define sensor data."""
     return json.loads(load_fixture("sensor_data.json", "notion"))
 
 
-@pytest.fixture(name="data_task", scope="session")
+@pytest.fixture(name="data_task", scope="package")
 def data_task_fixture():
     """Define task data."""
     return json.loads(load_fixture("task_data.json", "notion"))
 
 
+@pytest.fixture(name="get_client")
+def get_client_fixture(client):
+    """Define a fixture to mock the async_get_client method."""
+    return AsyncMock(return_value=client)
+
+
 @pytest.fixture(name="setup_notion")
-async def setup_notion_fixture(hass, client, config):
+async def setup_notion_fixture(hass, config, get_client):
     """Define a fixture to set up Notion."""
-    with patch("homeassistant.components.notion.config_flow.async_get_client"), patch(
+    with patch(
+        "homeassistant.components.notion.config_flow.async_get_client", get_client
+    ), patch("homeassistant.components.notion.async_get_client", get_client), patch(
         "homeassistant.components.notion.PLATFORMS", []
-    ), patch("homeassistant.components.notion.async_get_client", return_value=client):
+    ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
         yield
-
-
-@pytest.fixture(name="unique_id")
-def unique_id_fixture(hass):
-    """Define a config entry unique ID fixture."""
-    return "user@host.com"

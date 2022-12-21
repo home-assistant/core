@@ -14,7 +14,7 @@
             "authentication_error": "Incorrect HomeKit code. Please check it and try again.",
             "insecure_setup_code": "The requested setup code is insecure because of its trivial nature. This accessory fails to meet basic security requirements.",
             "max_peers_error": "Device refused to add pairing as it has no free pairing storage.",
-            "pairing_failed": "An unhandled error occurred while attempting to pair with this device. This may be a temporary failure or your device may not be supported currently.",
+            "pairing_failed": "An unhandled error occurred while attempting to pair with this device. This may be a temporary failure or your device may not be supported currently: {error}",
             "unable_to_pair": "Unable to pair, please try again.",
             "unknown_error": "Device reported an unknown error. Pairing failed."
         },
@@ -67,6 +67,40 @@
             "double_press": "\"{subtype}\" pressed twice",
             "long_press": "\"{subtype}\" pressed and held",
             "single_press": "\"{subtype}\" pressed"
+        }
+    },
+    "entity": {
+        "select": {
+            "ecobee_mode": {
+                "state": {
+                    "away": "Away",
+                    "home": "Home",
+                    "sleep": "Sleep"
+                }
+            }
+        },
+        "sensor": {
+            "thread_node_capabilities": {
+                "state": {
+                    "border_router_capable": "Border Router Capable",
+                    "full": "Full End Device",
+                    "minimal": "Minimal End Device",
+                    "none": "None",
+                    "router_eligible": "Router Eligible End Device",
+                    "sleepy": "Sleepy End Device"
+                }
+            },
+            "thread_status": {
+                "state": {
+                    "border_router": "Border Router",
+                    "child": "Child",
+                    "detached": "Detached",
+                    "disabled": "Disabled",
+                    "joining": "Joining",
+                    "leader": "Leader",
+                    "router": "Router"
+                }
+            }
         }
     },
     "title": "HomeKit Controller"

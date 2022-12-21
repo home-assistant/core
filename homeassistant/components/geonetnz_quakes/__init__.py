@@ -11,15 +11,15 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    LENGTH_MILES,
+    UnitOfLength,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.unit_system import METRIC_SYSTEM
+from homeassistant.util.unit_conversion import DistanceConverter
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (
     CONF_MINIMUM_MAGNITUDE,
@@ -94,8 +94,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     feeds = hass.data[DOMAIN].setdefault(FEED, {})
 
     radius = config_entry.data[CONF_RADIUS]
-    if hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
-        radius = METRIC_SYSTEM.length(radius, LENGTH_MILES)
+    if hass.config.units is US_CUSTOMARY_SYSTEM:
+        radius = DistanceConverter.convert(
+            radius, UnitOfLength.MILES, UnitOfLength.KILOMETERS
+        )
     # Create feed entity manager for all platforms.
     manager = GeonetnzQuakesFeedEntityManager(hass, config_entry, radius)
     feeds[config_entry.entry_id] = manager

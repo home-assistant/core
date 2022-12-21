@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Account is already configured"
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "invalid_auth": "Invalid authentication",
@@ -13,7 +14,7 @@
                     "mutable": "Allow Remote Start / Lock / etc.",
                     "password": "Password",
                     "region": "Region",
-                    "scandinavian_miles": "Use Scandinavian Miles",
+                    "unit_system": "Unit System",
                     "username": "Username"
                 }
             }

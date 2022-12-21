@@ -1,6 +1,8 @@
 """Support for Volvo heater."""
 from __future__ import annotations
 
+from typing import Any
+
 from volvooncall.dashboard import Instrument
 
 from homeassistant.components.switch import SwitchEntity
@@ -67,12 +69,12 @@ class VolvoSwitch(VolvoEntity, SwitchEntity):
         """Determine if switch is on."""
         return self.instrument.state
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.instrument.turn_on()
         await self.coordinator.async_request_refresh()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.instrument.turn_off()
         await self.coordinator.async_request_refresh()

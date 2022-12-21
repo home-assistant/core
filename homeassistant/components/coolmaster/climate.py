@@ -2,10 +2,13 @@
 import logging
 from typing import Any
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
+from homeassistant.components.climate import (
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -97,9 +100,9 @@ class CoolmasterClimate(CoordinatorEntity, ClimateEntity):
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         if self._unit.temperature_unit == "celsius":
-            return TEMP_CELSIUS
+            return UnitOfTemperature.CELSIUS
 
-        return TEMP_FAHRENHEIT
+        return UnitOfTemperature.FAHRENHEIT
 
     @property
     def current_temperature(self):

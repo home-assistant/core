@@ -9,7 +9,7 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "credential_timeout": "Le service d'informations d'identification a expir\u00e9. Appuyez sur soumettre pour red\u00e9marrer.",
+            "credential_timeout": "Le service d'informations d'identification a expir\u00e9. Appuyez sur \u00ab\u00a0Valider\u00a0\u00bb pour red\u00e9marrer.",
             "login_failed": "\u00c9chec de l'association \u00e0 la PlayStation 4. V\u00e9rifiez que le code PIN est correct.",
             "no_ipaddress": "Entrez l'adresse IP de la PlayStation 4 que vous souhaitez configurer."
         },

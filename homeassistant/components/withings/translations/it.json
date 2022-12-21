@@ -24,10 +24,6 @@
                 "description": "Fornire un nome di profilo univoco per questi dati. Di solito questo \u00e8 il nome del profilo selezionato nella fase precedente.",
                 "title": "Profilo utente."
             },
-            "reauth": {
-                "description": "Il profilo \"{profile}\" deve essere autenticato nuovamente per continuare a ricevere i dati Withings.",
-                "title": "Autentica nuovamente l'integrazione"
-            },
             "reauth_confirm": {
                 "description": "Il profilo \"{profile}\" deve essere nuovamente autenticato per continuare a ricevere i dati di Withings.",
                 "title": "Autentica nuovamente l'integrazione"

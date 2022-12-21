@@ -22,7 +22,7 @@
                     "type": "Tipo di stampante"
                 },
                 "description": "Vuoi aggiungere la stampante {model} con il numero seriale `{serial_number}` a Home Assistant?",
-                "title": "Trovata stampante Brother"
+                "title": "Rilevata stampante Brother"
             }
         }
     }

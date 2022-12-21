@@ -8,7 +8,7 @@
         },
         "error": {
             "authorize_url_timeout": "D\u00e9lai de g\u00e9n\u00e9ration de l'URL d'authentification expir\u00e9.",
-            "follow_link": "Veuillez suivre le lien et vous authentifier avant d'appuyer sur Soumettre.",
+            "follow_link": "Veuillez suivre le lien et vous authentifier avant d'appuyer sur \u00ab\u00a0Valider\u00a0\u00bb.",
             "invalid_auth": "Authentification non valide"
         },
         "step": {

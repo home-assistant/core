@@ -9,5 +9,14 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "phase": {
+                "state": {
+                    "full_moon": "Volle maan"
+                }
+            }
+        }
+    },
     "title": "Maan"
 }

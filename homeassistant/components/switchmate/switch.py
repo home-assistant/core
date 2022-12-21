@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 
 from switchmate import Switchmate
 import voluptuous as vol
@@ -74,10 +75,10 @@ class SwitchmateEntity(SwitchEntity):
         """Return true if it is on."""
         return self._device.state
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._device.turn_on()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._device.turn_off()

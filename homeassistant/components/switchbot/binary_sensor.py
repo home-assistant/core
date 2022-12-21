@@ -15,7 +15,7 @@ from .const import DOMAIN
 from .coordinator import SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
     "calibration": BinarySensorEntityDescription(
@@ -54,15 +54,13 @@ async def async_setup_entry(
     coordinator: SwitchbotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         SwitchBotBinarySensor(coordinator, binary_sensor)
-        for binary_sensor in coordinator.data["data"]
+        for binary_sensor in coordinator.device.parsed_data
         if binary_sensor in BINARY_SENSOR_TYPES
     )
 
 
 class SwitchBotBinarySensor(SwitchbotEntity, BinarySensorEntity):
     """Representation of a Switchbot binary sensor."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -79,4 +77,4 @@ class SwitchBotBinarySensor(SwitchbotEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the sensor."""
-        return self.data["data"][self._sensor]
+        return self.parsed_data[self._sensor]

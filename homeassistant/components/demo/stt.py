@@ -3,13 +3,15 @@ from __future__ import annotations
 
 from aiohttp import StreamReader
 
-from homeassistant.components.stt import Provider, SpeechMetadata, SpeechResult
-from homeassistant.components.stt.const import (
+from homeassistant.components.stt import (
     AudioBitRates,
     AudioChannels,
     AudioCodecs,
     AudioFormats,
     AudioSampleRates,
+    Provider,
+    SpeechMetadata,
+    SpeechResult,
     SpeechResultState,
 )
 from homeassistant.core import HomeAssistant

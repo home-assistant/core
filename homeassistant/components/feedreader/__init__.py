@@ -156,26 +156,27 @@ class FeedManager:
 
     def _update_and_fire_entry(self, entry: feedparser.FeedParserDict) -> None:
         """Update last_entry_timestamp and fire entry."""
-        # Check if the entry has a published or updated date.
-        if "published_parsed" in entry and entry.published_parsed:
-            # We are lucky, `published_parsed` data available, let's make use of
-            # it to publish only new available entries since the last run
-            self._has_published_parsed = True
-            self._last_entry_timestamp = max(
-                entry.published_parsed, self._last_entry_timestamp
-            )
-        elif "updated_parsed" in entry and entry.updated_parsed:
+        # Check if the entry has a updated or published date.
+        # Start from a updated date because generally `updated` > `published`.
+        if "updated_parsed" in entry and entry.updated_parsed:
             # We are lucky, `updated_parsed` data available, let's make use of
             # it to publish only new available entries since the last run
             self._has_updated_parsed = True
             self._last_entry_timestamp = max(
                 entry.updated_parsed, self._last_entry_timestamp
             )
+        elif "published_parsed" in entry and entry.published_parsed:
+            # We are lucky, `published_parsed` data available, let's make use of
+            # it to publish only new available entries since the last run
+            self._has_published_parsed = True
+            self._last_entry_timestamp = max(
+                entry.published_parsed, self._last_entry_timestamp
+            )
         else:
-            self._has_published_parsed = False
             self._has_updated_parsed = False
+            self._has_published_parsed = False
             _LOGGER.debug(
-                "No published_parsed or updated_parsed info available for entry %s",
+                "No updated_parsed or published_parsed info available for entry %s",
                 entry,
             )
         entry.update({"feed_url": self._url})

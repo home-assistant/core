@@ -16,8 +16,8 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONF_NAME,
     PERCENTAGE,
-    PRESSURE_HPA,
-    TEMP_CELSIUS,
+    UnitOfPressure,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -33,11 +33,15 @@ from .const import (
     ATTR_API_CAQI,
     ATTR_API_CAQI_DESCRIPTION,
     ATTR_API_CAQI_LEVEL,
+    ATTR_API_CO,
     ATTR_API_HUMIDITY,
+    ATTR_API_NO2,
+    ATTR_API_O3,
     ATTR_API_PM1,
     ATTR_API_PM10,
     ATTR_API_PM25,
     ATTR_API_PRESSURE,
+    ATTR_API_SO2,
     ATTR_API_TEMPERATURE,
     ATTR_DESCRIPTION,
     ATTR_LEVEL,
@@ -64,7 +68,7 @@ class AirlySensorEntityDescription(SensorEntityDescription):
 SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_CAQI,
-        device_class=SensorDeviceClass.AQI,
+        icon="mdi:air-filter",
         name=ATTR_API_CAQI,
         native_unit_of_measurement="CAQI",
     ),
@@ -101,16 +105,43 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
         key=ATTR_API_PRESSURE,
         device_class=SensorDeviceClass.PRESSURE,
         name=ATTR_API_PRESSURE.capitalize(),
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     AirlySensorEntityDescription(
         key=ATTR_API_TEMPERATURE,
         device_class=SensorDeviceClass.TEMPERATURE,
         name=ATTR_API_TEMPERATURE.capitalize(),
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda value: round(value, 1),
+    ),
+    AirlySensorEntityDescription(
+        key=ATTR_API_CO,
+        name=ATTR_API_CO,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AirlySensorEntityDescription(
+        key=ATTR_API_NO2,
+        device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
+        name=ATTR_API_NO2,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AirlySensorEntityDescription(
+        key=ATTR_API_SO2,
+        device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
+        name=ATTR_API_SO2,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AirlySensorEntityDescription(
+        key=ATTR_API_O3,
+        device_class=SensorDeviceClass.OZONE,
+        name=ATTR_API_O3,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -190,5 +221,33 @@ class AirlySensor(CoordinatorEntity[AirlyDataUpdateCoordinator], SensorEntity):
             ]
             self._attrs[ATTR_PERCENT] = round(
                 self.coordinator.data[f"{ATTR_API_PM10}_{SUFFIX_PERCENT}"]
+            )
+        if self.entity_description.key == ATTR_API_CO:
+            self._attrs[ATTR_LIMIT] = self.coordinator.data[
+                f"{ATTR_API_CO}_{SUFFIX_LIMIT}"
+            ]
+            self._attrs[ATTR_PERCENT] = round(
+                self.coordinator.data[f"{ATTR_API_CO}_{SUFFIX_PERCENT}"]
+            )
+        if self.entity_description.key == ATTR_API_NO2:
+            self._attrs[ATTR_LIMIT] = self.coordinator.data[
+                f"{ATTR_API_NO2}_{SUFFIX_LIMIT}"
+            ]
+            self._attrs[ATTR_PERCENT] = round(
+                self.coordinator.data[f"{ATTR_API_NO2}_{SUFFIX_PERCENT}"]
+            )
+        if self.entity_description.key == ATTR_API_SO2:
+            self._attrs[ATTR_LIMIT] = self.coordinator.data[
+                f"{ATTR_API_SO2}_{SUFFIX_LIMIT}"
+            ]
+            self._attrs[ATTR_PERCENT] = round(
+                self.coordinator.data[f"{ATTR_API_SO2}_{SUFFIX_PERCENT}"]
+            )
+        if self.entity_description.key == ATTR_API_O3:
+            self._attrs[ATTR_LIMIT] = self.coordinator.data[
+                f"{ATTR_API_O3}_{SUFFIX_LIMIT}"
+            ]
+            self._attrs[ATTR_PERCENT] = round(
+                self.coordinator.data[f"{ATTR_API_O3}_{SUFFIX_PERCENT}"]
             )
         return self._attrs

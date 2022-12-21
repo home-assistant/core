@@ -3,13 +3,23 @@
   "name": "Bluetooth",
   "documentation": "https://www.home-assistant.io/integrations/bluetooth",
   "dependencies": ["usb"],
+  "after_dependencies": ["hassio"],
   "quality_scale": "internal",
   "requirements": [
-    "bleak==0.15.1",
-    "bluetooth-adapters==0.3.2",
-    "bluetooth-auto-recovery==0.2.2"
+    "bleak==0.19.2",
+    "bleak-retry-connector==2.10.2",
+    "bluetooth-adapters==0.14.1",
+    "bluetooth-auto-recovery==1.0.3",
+    "bluetooth-data-tools==0.3.1",
+    "dbus-fast==1.82.0"
   ],
   "codeowners": ["@bdraco"],
   "config_flow": true,
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "loggers": [
+    "btsocket",
+    "bleak_retry_connector",
+    "bluetooth_adapters",
+    "bluetooth_auto_recovery"
+  ]
 }

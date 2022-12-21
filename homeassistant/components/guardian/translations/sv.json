@@ -17,5 +17,18 @@
                 "description": "Konfigurera en lokal Elexa Guardian-enhet."
             }
         }
+    },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Uppdatera alla automatiseringar eller skript som anv\u00e4nder den h\u00e4r tj\u00e4nsten f\u00f6r att ist\u00e4llet anv\u00e4nda tj\u00e4nsten ` {alternate_service} ` med ett m\u00e5lenhets-ID p\u00e5 ` {alternate_target} `. Klicka sedan p\u00e5 SKICKA nedan f\u00f6r att markera problemet som l\u00f6st.",
+                        "title": "Tj\u00e4nsten {deprecated_service} tas bort"
+                    }
+                }
+            },
+            "title": "Tj\u00e4nsten {deprecated_service} tas bort"
+        }
     }
 }

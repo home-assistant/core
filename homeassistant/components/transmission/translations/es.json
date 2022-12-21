@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "El dispositivo ya est\u00e1 configurado",
-            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
+            "reauth_successful": "La autenticaci\u00f3n se volvi\u00f3 a realizar correctamente"
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
@@ -27,6 +27,19 @@
                 },
                 "title": "Configuraci\u00f3n del cliente Transmission"
             }
+        }
+    },
+    "issues": {
+        "deprecated_key": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Actualiza cualquier automatizaci\u00f3n o script que use este servicio y sustituye la clave nombre por la clave entry_id.",
+                        "title": "Se va a eliminar la clave nombre en los servicios de Transmission"
+                    }
+                }
+            },
+            "title": "Se va a eliminar la clave nombre en los servicios de Transmission"
         }
     },
     "options": {

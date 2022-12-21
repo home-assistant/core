@@ -3,9 +3,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, ClimateEntity
-from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.components.climate import (
+    DOMAIN as CLIMATE_DOMAIN,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
+)
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -37,7 +41,7 @@ class InComfortClimate(IncomfortChild, ClimateEntity):
     _attr_hvac_mode = HVACMode.HEAT
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, client, heater, room) -> None:
         """Initialize the climate device."""
@@ -75,7 +79,7 @@ class InComfortClimate(IncomfortChild, ClimateEntity):
         """Return max valid temperature that can be set."""
         return 30.0
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature for this zone."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         await self._room.set_override(temperature)

@@ -55,14 +55,14 @@
         },
         "trigger_type": {
             "double_short_release": "\u4e21\u65b9\u306e \"{subtype}\" \u3092\u96e2\u3059",
-            "initial_press": "\u30dc\u30bf\u30f3 \"{subtype}\" \u6700\u521d\u306b\u62bc\u3055\u308c\u305f",
-            "long_release": "\u30dc\u30bf\u30f3 \"{subtype}\" \u96e2\u3057\u305f\u5f8c\u306b\u9577\u62bc\u3057",
+            "initial_press": "\u300c {subtype} \u300d\u304c\u6700\u521d\u306b\u62bc\u3055\u308c\u307e\u3057\u305f",
+            "long_release": "\u300c {subtype} \u300d\u3092\u9577\u62bc\u3057\u3057\u3066\u96e2\u3059",
             "remote_button_long_release": "\u9577\u62bc\u3057\u3059\u308b\u3068 \"{subtype}\" \u30dc\u30bf\u30f3\u304c\u30ea\u30ea\u30fc\u30b9\u3055\u308c\u308b",
             "remote_button_short_press": "\"{subtype}\" \u30dc\u30bf\u30f3\u304c\u62bc\u3055\u308c\u307e\u3057\u305f\u3002",
             "remote_button_short_release": "\"{subtype}\" \u30dc\u30bf\u30f3\u304c\u30ea\u30ea\u30fc\u30b9\u3055\u308c\u307e\u3057\u305f",
             "remote_double_button_long_press": "\u4e21\u65b9\u306e \"{subtype}\" \u306f\u9577\u62bc\u3057\u5f8c\u306b\u30ea\u30ea\u30fc\u30b9\u3055\u308c\u307e\u3057\u305f",
             "remote_double_button_short_press": "\u4e21\u65b9\u306e \"{subtype}\" \u3092\u96e2\u3059",
-            "repeat": "\u30dc\u30bf\u30f3 \"{subtype}\" \u3092\u62bc\u3057\u305f\u307e\u307e",
+            "repeat": "\u300c {subtype} \u300d\u304c\u62bc\u3055\u308c\u305f",
             "short_release": "\u30dc\u30bf\u30f3 \"{subtype}\" \u77ed\u62bc\u3057\u306e\u5f8c\u306b\u96e2\u3059",
             "start": "\"{subtype}\" \u304c\u6700\u521d\u306b\u62bc\u3055\u308c\u307e\u3057\u305f"
         }

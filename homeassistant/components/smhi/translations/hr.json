@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "wrong_location": "Lokacija samo \u0160vedska"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Zemljopisna \u0161irina",
+                    "longitude": "Zemljopisna du\u017eina"
+                },
+                "title": "Lokacija u \u0160vedskoj"
+            }
+        }
+    }
+}

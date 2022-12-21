@@ -3,7 +3,7 @@ import datetime as dt
 from unittest.mock import patch
 
 from homeassistant import setup
-from homeassistant.components.button.const import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.template.button import DEFAULT_NAME
 from homeassistant.const import (
     CONF_DEVICE_CLASS,

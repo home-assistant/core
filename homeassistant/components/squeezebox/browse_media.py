@@ -2,19 +2,11 @@
 import contextlib
 
 from homeassistant.components import media_source
-from homeassistant.components.media_player import BrowseError, BrowseMedia
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_ALBUM,
-    MEDIA_CLASS_ARTIST,
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_GENRE,
-    MEDIA_CLASS_PLAYLIST,
-    MEDIA_CLASS_TRACK,
-    MEDIA_TYPE_ALBUM,
-    MEDIA_TYPE_ARTIST,
-    MEDIA_TYPE_GENRE,
-    MEDIA_TYPE_PLAYLIST,
-    MEDIA_TYPE_TRACK,
+from homeassistant.components.media_player import (
+    BrowseError,
+    BrowseMedia,
+    MediaClass,
+    MediaType,
 )
 from homeassistant.helpers.network import is_internal_request
 
@@ -26,44 +18,44 @@ MEDIA_TYPE_TO_SQUEEZEBOX = {
     "Tracks": "titles",
     "Playlists": "playlists",
     "Genres": "genres",
-    MEDIA_TYPE_ALBUM: "album",
-    MEDIA_TYPE_ARTIST: "artist",
-    MEDIA_TYPE_TRACK: "title",
-    MEDIA_TYPE_PLAYLIST: "playlist",
-    MEDIA_TYPE_GENRE: "genre",
+    MediaType.ALBUM: "album",
+    MediaType.ARTIST: "artist",
+    MediaType.TRACK: "title",
+    MediaType.PLAYLIST: "playlist",
+    MediaType.GENRE: "genre",
 }
 
 SQUEEZEBOX_ID_BY_TYPE = {
-    MEDIA_TYPE_ALBUM: "album_id",
-    MEDIA_TYPE_ARTIST: "artist_id",
-    MEDIA_TYPE_TRACK: "track_id",
-    MEDIA_TYPE_PLAYLIST: "playlist_id",
-    MEDIA_TYPE_GENRE: "genre_id",
+    MediaType.ALBUM: "album_id",
+    MediaType.ARTIST: "artist_id",
+    MediaType.TRACK: "track_id",
+    MediaType.PLAYLIST: "playlist_id",
+    MediaType.GENRE: "genre_id",
 }
 
 CONTENT_TYPE_MEDIA_CLASS = {
-    "Artists": {"item": MEDIA_CLASS_DIRECTORY, "children": MEDIA_CLASS_ARTIST},
-    "Albums": {"item": MEDIA_CLASS_DIRECTORY, "children": MEDIA_CLASS_ALBUM},
-    "Tracks": {"item": MEDIA_CLASS_DIRECTORY, "children": MEDIA_CLASS_TRACK},
-    "Playlists": {"item": MEDIA_CLASS_DIRECTORY, "children": MEDIA_CLASS_PLAYLIST},
-    "Genres": {"item": MEDIA_CLASS_DIRECTORY, "children": MEDIA_CLASS_GENRE},
-    MEDIA_TYPE_ALBUM: {"item": MEDIA_CLASS_ALBUM, "children": MEDIA_CLASS_TRACK},
-    MEDIA_TYPE_ARTIST: {"item": MEDIA_CLASS_ARTIST, "children": MEDIA_CLASS_ALBUM},
-    MEDIA_TYPE_TRACK: {"item": MEDIA_CLASS_TRACK, "children": None},
-    MEDIA_TYPE_GENRE: {"item": MEDIA_CLASS_GENRE, "children": MEDIA_CLASS_ARTIST},
-    MEDIA_TYPE_PLAYLIST: {"item": MEDIA_CLASS_PLAYLIST, "children": MEDIA_CLASS_TRACK},
+    "Artists": {"item": MediaClass.DIRECTORY, "children": MediaClass.ARTIST},
+    "Albums": {"item": MediaClass.DIRECTORY, "children": MediaClass.ALBUM},
+    "Tracks": {"item": MediaClass.DIRECTORY, "children": MediaClass.TRACK},
+    "Playlists": {"item": MediaClass.DIRECTORY, "children": MediaClass.PLAYLIST},
+    "Genres": {"item": MediaClass.DIRECTORY, "children": MediaClass.GENRE},
+    MediaType.ALBUM: {"item": MediaClass.ALBUM, "children": MediaClass.TRACK},
+    MediaType.ARTIST: {"item": MediaClass.ARTIST, "children": MediaClass.ALBUM},
+    MediaType.TRACK: {"item": MediaClass.TRACK, "children": None},
+    MediaType.GENRE: {"item": MediaClass.GENRE, "children": MediaClass.ARTIST},
+    MediaType.PLAYLIST: {"item": MediaClass.PLAYLIST, "children": MediaClass.TRACK},
 }
 
 CONTENT_TYPE_TO_CHILD_TYPE = {
-    MEDIA_TYPE_ALBUM: MEDIA_TYPE_TRACK,
-    MEDIA_TYPE_PLAYLIST: MEDIA_TYPE_PLAYLIST,
-    MEDIA_TYPE_ARTIST: MEDIA_TYPE_ALBUM,
-    MEDIA_TYPE_GENRE: MEDIA_TYPE_ARTIST,
-    "Artists": MEDIA_TYPE_ARTIST,
-    "Albums": MEDIA_TYPE_ALBUM,
-    "Tracks": MEDIA_TYPE_TRACK,
-    "Playlists": MEDIA_TYPE_PLAYLIST,
-    "Genres": MEDIA_TYPE_GENRE,
+    MediaType.ALBUM: MediaType.TRACK,
+    MediaType.PLAYLIST: MediaType.PLAYLIST,
+    MediaType.ARTIST: MediaType.ALBUM,
+    MediaType.GENRE: MediaType.ARTIST,
+    "Artists": MediaType.ARTIST,
+    "Albums": MediaType.ALBUM,
+    "Tracks": MediaType.TRACK,
+    "Playlists": MediaType.PLAYLIST,
+    "Genres": MediaType.GENRE,
 }
 
 BROWSE_LIMIT = 1000
@@ -141,7 +133,7 @@ async def library_payload(hass, player):
     """Create response payload to describe contents of library."""
     library_info = {
         "title": "Music Library",
-        "media_class": MEDIA_CLASS_DIRECTORY,
+        "media_class": MediaClass.DIRECTORY,
         "media_content_id": "library",
         "media_content_type": "library",
         "can_play": False,
@@ -164,7 +156,6 @@ async def library_payload(hass, player):
                     media_content_type=item,
                     can_play=True,
                     can_expand=True,
-                    thumbnail="https://brands.home-assistant.io/_/squeezebox/logo.png",
                 )
             )
 

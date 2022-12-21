@@ -15,11 +15,34 @@
             "reauth_confirm": {
                 "data": {
                     "api_key": "Kunci API"
+                },
+                "data_description": {
+                    "api_key": "Ikuti petunjuk dalam dokumentasi untuk mendapatkan kunci API"
                 }
             },
             "user": {
                 "data": {
                     "api_key": "Kunci API"
+                },
+                "data_description": {
+                    "api_key": "Ikuti petunjuk dalam dokumentasi untuk mendapatkan kunci API"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "sensitivity": {
+                "state": {
+                    "n": "Normal",
+                    "s": "Sensitif"
+                }
+            },
+            "smart_type": {
+                "state": {
+                    "feelslike": "Terasa seperti",
+                    "humidity": "Kelembaban",
+                    "temperature": "Suhu"
                 }
             }
         }

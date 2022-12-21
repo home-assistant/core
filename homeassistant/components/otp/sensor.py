@@ -53,7 +53,7 @@ class TOTPSensor(SensorEntity):
         self._state = None
         self._next_expiration = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle when an entity is about to be added to Home Assistant."""
         self._call_loop()
 

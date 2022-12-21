@@ -6,11 +6,6 @@ from typing import Protocol
 from homeassistant import data_entry_flow
 from homeassistant.core import HomeAssistant
 
-# pylint: disable-next=unused-import
-from homeassistant.helpers.issue_registry import (  # noqa: F401; Remove when integrations have been updated
-    IssueSeverity,
-)
-
 
 class RepairsFlow(data_entry_flow.FlowHandler):
     """Handle a flow for fixing an issue."""

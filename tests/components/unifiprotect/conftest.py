@@ -68,7 +68,6 @@ def mock_ufp_config_entry():
             "port": 443,
             "verify_ssl": False,
         },
-        options={"ignored_devices": "FFFFFFFFFFFF,test"},
         version=2,
     )
 
@@ -129,7 +128,7 @@ def mock_entry(
     """Mock ProtectApiClient for testing."""
 
     with _patch_discovery(no_device=True), patch(
-        "homeassistant.components.unifiprotect.ProtectApiClient"
+        "homeassistant.components.unifiprotect.utils.ProtectApiClient"
     ) as mock_api:
         ufp_config_entry.add_to_hass(hass)
 

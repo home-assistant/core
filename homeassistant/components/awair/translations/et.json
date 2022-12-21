@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto on juba seadistatud",
             "already_configured_account": "Konto on juba seadistatud",
             "already_configured_device": "Seade on juba h\u00e4\u00e4lestatud",
             "no_devices_found": "V\u00f5rgust ei leitud Awair seadmeid",
@@ -26,9 +25,6 @@
                 "description": "Kas seadistada {model}  ({device_id})?"
             },
             "local": {
-                "data": {
-                    "host": "IP aadress"
-                },
                 "description": "J\u00e4rgi [neid juhiseid]({url}) Awair Local API lubamise kohta.\n\nKui oled l\u00f5petanud, kl\u00f5psa nuppu Esita."
             },
             "local_pick": {
@@ -36,13 +32,6 @@
                     "device": "Seade",
                     "host": "IP aadress"
                 }
-            },
-            "reauth": {
-                "data": {
-                    "access_token": "Juurdep\u00e4\u00e4sut\u00f5end",
-                    "email": "E-post"
-                },
-                "description": "Taassisesta oma Awairi arendaja juurdep\u00e4\u00e4suluba."
             },
             "reauth_confirm": {
                 "data": {
@@ -52,10 +41,6 @@
                 "description": "Taassisesta oma Awairi arendaja juurdep\u00e4\u00e4suluba."
             },
             "user": {
-                "data": {
-                    "access_token": "Juurdep\u00e4\u00e4sut\u00f5end",
-                    "email": "E-post"
-                },
                 "description": "Parima kogemuse saamiseks vali kohalik \u00fchendus. Kasuta pilve ainult siis, kui seade ei ole \u00fchendatud samasse v\u00f5rku kui Home Assistant v\u00f5i kui on vanem seade.",
                 "menu_options": {
                     "cloud": "Pilve\u00fchendus",

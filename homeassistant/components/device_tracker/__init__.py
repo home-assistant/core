@@ -6,13 +6,19 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-from .config_entry import async_setup_entry, async_unload_entry  # noqa: F401
+from .config_entry import (  # noqa: F401
+    ScannerEntity,
+    TrackerEntity,
+    async_setup_entry,
+    async_unload_entry,
+)
 from .const import (  # noqa: F401
     ATTR_ATTRIBUTES,
     ATTR_BATTERY,
     ATTR_DEV_ID,
     ATTR_GPS,
     ATTR_HOST_NAME,
+    ATTR_IP,
     ATTR_LOCATION_NAME,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
@@ -20,8 +26,12 @@ from .const import (  # noqa: F401
     CONF_NEW_DEVICE_DEFAULTS,
     CONF_SCAN_INTERVAL,
     CONF_TRACK_NEW,
+    CONNECTED_DEVICE_REGISTERED,
+    DEFAULT_CONSIDER_HOME,
+    DEFAULT_TRACK_NEW,
     DOMAIN,
     ENTITY_ID_FORMAT,
+    SCAN_INTERVAL,
     SOURCE_TYPE_BLUETOOTH,
     SOURCE_TYPE_BLUETOOTH_LE,
     SOURCE_TYPE_GPS,

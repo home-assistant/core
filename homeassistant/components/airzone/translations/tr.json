@@ -12,8 +12,7 @@
                 "data": {
                     "host": "Sunucu",
                     "port": "Port"
-                },
-                "description": "Airzone entegrasyonunu ayarlay\u0131n."
+                }
             }
         }
     }

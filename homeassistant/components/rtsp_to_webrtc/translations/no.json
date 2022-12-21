@@ -23,5 +23,14 @@
                 "title": "Konfigurer RTSPtoWebRTC"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "stun_server": "Sl\u00e5 serveradresse (vert:port)"
+                }
+            }
+        }
     }
 }

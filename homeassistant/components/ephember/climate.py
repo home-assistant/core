@@ -18,8 +18,9 @@ from pyephember.pyephember import (
 )
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -28,7 +29,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_PASSWORD,
     CONF_USERNAME,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -81,7 +82,7 @@ class EphEmberThermostat(ClimateEntity):
     """Representation of a EphEmber thermostat."""
 
     _attr_hvac_modes = OPERATION_LIST
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, ember, zone):
         """Initialize the thermostat."""

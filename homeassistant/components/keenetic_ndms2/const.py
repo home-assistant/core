@@ -1,6 +1,6 @@
 """Constants used in the Keenetic NDMS2 components."""
 
-from homeassistant.components.device_tracker.const import (
+from homeassistant.components.device_tracker import (
     DEFAULT_CONSIDER_HOME as _DEFAULT_CONSIDER_HOME,
 )
 
