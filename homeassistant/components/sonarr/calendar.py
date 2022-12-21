@@ -1,4 +1,6 @@
 """Support for Sonarr calendar."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
@@ -17,14 +19,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Sonarr calendar based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]["upcoming"]
-    episodes = await get_sonarr_episode_events(coordinator)
-    async_add_entities(
-        [
-            SonarrCalendarEntity(
-                list(ep for ep in episodes), "Sonarr Episodes"  # noqa: C400
-            )
-        ]
-    )
+    async_add_entities([SonarrCalendarEntity(coordinator, "Sonarr Episodes")])
 
 
 async def get_sonarr_episode_events(
@@ -51,15 +46,21 @@ async def get_sonarr_episode_events(
 class SonarrCalendarEntity(CalendarEntity):
     """Representation of a Demo Calendar element."""
 
-    def __init__(self, events: list[CalendarEvent], name: str) -> None:
+    coordinator: CalendarDataUpdateCoordinator
+    _events: list[CalendarEvent]
+
+    def __init__(self, coordinator: CalendarDataUpdateCoordinator, name: str) -> None:
         """Initialize demo calendar."""
-        self._events = events
+        self.coordinator = coordinator
         self._attr_name = name
+        self._events = []
 
     @property
-    def event(self) -> CalendarEvent:
+    def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
-        return self._events[0]
+        if len(self._events) > 0:
+            return self._events[0]
+        return None
 
     async def async_get_events(
         self,
@@ -68,4 +69,10 @@ class SonarrCalendarEntity(CalendarEntity):
         end_date: datetime,
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
+        self._events = await get_sonarr_episode_events(self.coordinator)
         return self._events
+
+    async def async_update(self) -> None:
+        """Update the calendar for new entries."""
+        episodes = await get_sonarr_episode_events(self.coordinator)
+        self._events = episodes
