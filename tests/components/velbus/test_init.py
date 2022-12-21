@@ -65,7 +65,6 @@ async def test_migrate_config_entry(hass: HomeAssistant):
     entry.add_to_hass(hass)
 
     assert entry.data == legacy_config
-    assert entry.version == 1
 
     await hass.config_entries.async_setup(entry.entry_id)
 
