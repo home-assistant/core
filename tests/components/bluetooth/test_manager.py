@@ -27,7 +27,6 @@ from homeassistant.components.bluetooth.manager import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.json import json_loads
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -40,7 +39,7 @@ from . import (
     inject_advertisement_with_time_and_source_connectable,
 )
 
-from tests.common import async_fire_time_changed, load_fixture
+from tests.common import async_fire_time_changed
 
 
 @pytest.fixture
