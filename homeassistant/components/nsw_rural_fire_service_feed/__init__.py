@@ -17,10 +17,15 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity_registry import (
+    async_entries_for_config_entry,
+    async_get_registry,
+)
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
@@ -97,6 +102,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     manager = NswRuralFireServiceFeedEntityManager(hass, config_entry)
     feeds[config_entry.entry_id] = manager
     _LOGGER.debug("Feed entity manager added for %s", config_entry.entry_id)
+    # Remove orphaned geo_location entities.
+    entity_registry = await async_get_registry(hass)
+    orphaned_entries = async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    if orphaned_entries is not None:
+        for entry in orphaned_entries:
+            if entry.domain == Platform.GEO_LOCATION:
+                _LOGGER.debug("Removing orphaned entry %s", entry.entity_id)
+                entity_registry.async_remove(entry.entity_id)
     await manager.async_init()
     return True
 
