@@ -3,9 +3,10 @@ import pytest
 
 from homeassistant.components.velbus.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 
-from tests.common import mock_device_registry
+from tests.common import MockConfigEntry, mock_device_registry
 
 
 @pytest.mark.usefixtures("controller")
@@ -54,3 +55,17 @@ async def test_device_identifier_migration(
     assert device_entry.manufacturer == "Velleman"
     assert device_entry.model == "module_type_name"
     assert device_entry.sw_version == "module_sw_version"
+
+
+async def test_migrate_config_entry(hass: HomeAssistant):
+    """Test successful migration of entry data."""
+    legacy_config = {CONF_NAME: "fake_name", CONF_PORT: "1.2.3.4:5678"}
+    entry = MockConfigEntry(domain=DOMAIN, data=legacy_config)
+
+    assert entry.data == legacy_config
+    assert entry.version == 1
+
+    await entry.async_migrate(hass)
+
+    assert entry.data == legacy_config
+    assert entry.version == 2
