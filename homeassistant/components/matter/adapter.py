@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from chip.clusters import Objects as all_clusters
+from matter_server.common.models.events import EventType
 from matter_server.common.models.node_device import AbstractMatterNodeDevice
 
 from homeassistant.config_entries import ConfigEntry
@@ -42,9 +43,17 @@ class MatterAdapter:
         self.platform_handlers[platform] = add_entities
 
     async def setup_nodes(self) -> None:
-        """Set up all existing nodes."""
+        """Set up all existing nodes and subscribe to new nodes."""
         for node in await self.matter_client.get_nodes():
             self._setup_node(node)
+
+        def node_added_callback(event: EventType, node: MatterNode) -> None:
+            """Handle node added event."""
+            self._setup_node(node)
+
+        self.config_entry.async_on_unload(
+            self.matter_client.subscribe(EventType.NODE_ADDED, node_added_callback)
+        )
 
     def _setup_node(self, node: MatterNode) -> None:
         """Set up an node."""
