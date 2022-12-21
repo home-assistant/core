@@ -5,13 +5,13 @@ from datetime import datetime, timedelta
 from typing import Any, cast
 
 from aiohttp.web import Request, WebSocketResponse
-from aioshelly.block_device import BLOCK_VALUE_UNIT, COAP, Block, BlockDevice
+from aioshelly.block_device import COAP, Block, BlockDevice
 from aioshelly.const import MODEL_NAMES
 from aioshelly.rpc_device import RpcDevice, WsServer
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry, entity_registry, singleton
 from homeassistant.helpers.typing import EventType
@@ -41,13 +41,6 @@ def async_remove_shelly_entity(
     if entity_id:
         LOGGER.debug("Removing entity: %s", entity_id)
         entity_reg.async_remove(entity_id)
-
-
-def temperature_unit(block_info: dict[str, Any]) -> str:
-    """Detect temperature unit."""
-    if block_info[BLOCK_VALUE_UNIT] == "F":
-        return TEMP_FAHRENHEIT
-    return TEMP_CELSIUS
 
 
 def get_block_device_name(device: BlockDevice) -> str:
@@ -305,7 +298,7 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
         entity_name = device.config[key].get("name", device_name)
 
     if entity_name is None:
-        if [k for k in key if k.startswith(("input", "switch"))]:
+        if key.startswith(("input:", "light:", "switch:")):
             return f"{device_name} {key.replace(':', '_')}"
         return device_name
 
@@ -364,13 +357,6 @@ def is_rpc_channel_type_light(config: dict[str, Any], channel: int) -> bool:
     return con_types is not None and con_types[channel].lower().startswith("light")
 
 
-def is_rpc_device_externally_powered(
-    config: dict[str, Any], status: dict[str, Any], key: str
-) -> bool:
-    """Return true if device has external power instead of battery."""
-    return cast(bool, status[key]["external"]["present"])
-
-
 def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
     """Return list of input triggers for RPC device."""
     triggers = []
@@ -412,3 +398,19 @@ def device_update_info(
         dev_registry.async_update_device(
             device.id, sw_version=shellydevice.firmware_version
         )
+
+
+def brightness_to_percentage(brightness: int) -> int:
+    """Convert brightness level to percentage."""
+    return int(100 * (brightness + 1) / 255)
+
+
+def percentage_to_brightness(percentage: int) -> int:
+    """Convert percentage to brightness level."""
+    return round(255 * percentage / 100)
+
+
+def mac_address_from_name(name: str) -> str | None:
+    """Convert a name to a mac address."""
+    mac = name.partition(".")[0].partition("-")[-1]
+    return mac.upper() if len(mac) == 12 else None

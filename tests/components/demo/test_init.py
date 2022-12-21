@@ -63,6 +63,7 @@ async def test_demo_statistics(recorder_mock, mock_history, hass):
         list_statistic_ids, hass
     )
     assert {
+        "display_unit_of_measurement": "°C",
         "has_mean": True,
         "has_sum": False,
         "name": "Outdoor temperature",
@@ -72,6 +73,7 @@ async def test_demo_statistics(recorder_mock, mock_history, hass):
         "unit_class": "temperature",
     } in statistic_ids
     assert {
+        "display_unit_of_measurement": "kWh",
         "has_mean": False,
         "has_sum": True,
         "name": "Energy consumption 1",
@@ -114,7 +116,7 @@ async def test_demo_statistics_growth(recorder_mock, mock_history, hass):
     await async_wait_recording_done(hass)
 
     statistics = await get_instance(hass).async_add_executor_job(
-        get_last_statistics, hass, 1, statistic_id, False
+        get_last_statistics, hass, 1, statistic_id, False, {"sum"}
     )
     assert statistics[statistic_id][0]["sum"] > 2**20
     assert statistics[statistic_id][0]["sum"] <= (2**20 + 24)
@@ -192,6 +194,20 @@ async def test_issues_created(mock_history, hass, hass_client, hass_ws_client):
                 "translation_key": "bad_psu",
                 "translation_placeholders": None,
             },
+            {
+                "breaks_in_ha_version": None,
+                "created": ANY,
+                "dismissed_version": None,
+                "domain": "demo",
+                "is_fixable": True,
+                "issue_domain": None,
+                "issue_id": "cold_tea",
+                "learn_more_url": None,
+                "severity": "warning",
+                "translation_key": "cold_tea",
+                "translation_placeholders": None,
+                "ignored": False,
+            },
         ]
     }
 
@@ -227,7 +243,6 @@ async def test_issues_created(mock_history, hass, hass_client, hass_ws_client):
         "description_placeholders": None,
         "flow_id": flow_id,
         "handler": "demo",
-        "title": "",
         "type": "create_entry",
         "version": 1,
     }
@@ -279,6 +294,20 @@ async def test_issues_created(mock_history, hass, hass_client, hass_ws_client):
                 "severity": "critical",
                 "translation_key": "bad_psu",
                 "translation_placeholders": None,
+            },
+            {
+                "breaks_in_ha_version": None,
+                "created": ANY,
+                "dismissed_version": None,
+                "domain": "demo",
+                "is_fixable": True,
+                "issue_domain": None,
+                "issue_id": "cold_tea",
+                "learn_more_url": None,
+                "severity": "warning",
+                "translation_key": "cold_tea",
+                "translation_placeholders": None,
+                "ignored": False,
             },
         ]
     }

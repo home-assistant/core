@@ -1,7 +1,7 @@
 """Support for ISY994 lights."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from pyisy.constants import ISY_VALUE_UNKNOWN
 from pyisy.helpers import NodeProperty
@@ -70,7 +70,7 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
             return None
         # Special Case for ISY Z-Wave Devices using % instead of 0-255:
         if self._node.uom == UOM_PERCENTAGE:
-            return round(self._node.status * 255.0 / 100.0)
+            return round(cast(float, self._node.status) * 255.0 / 100.0)
         return int(self._node.status)
 
     async def async_turn_off(self, **kwargs: Any) -> None:

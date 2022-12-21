@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TIME_MILLISECONDS
+from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -114,7 +114,7 @@ class MinecraftServerLatencyTimeSensor(MinecraftServerSensorEntity):
             server=server,
             type_name=NAME_LATENCY_TIME,
             icon=ICON_LATENCY_TIME,
-            unit=TIME_MILLISECONDS,
+            unit=UnitOfTime.MILLISECONDS,
         )
 
     async def async_update(self) -> None:

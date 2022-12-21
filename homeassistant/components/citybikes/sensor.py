@@ -24,8 +24,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
     CONF_RADIUS,
-    LENGTH_FEET,
-    LENGTH_METERS,
+    UnitOfLength,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
@@ -172,7 +171,9 @@ async def async_setup_platform(
     radius = config.get(CONF_RADIUS, 0)
     name = config[CONF_NAME]
     if hass.config.units is US_CUSTOMARY_SYSTEM:
-        radius = DistanceConverter.convert(radius, LENGTH_FEET, LENGTH_METERS)
+        radius = DistanceConverter.convert(
+            radius, UnitOfLength.FEET, UnitOfLength.METERS
+        )
 
     # Create a single instance of CityBikesNetworks.
     networks = hass.data.setdefault(CITYBIKES_NETWORKS, CityBikesNetworks(hass))

@@ -20,12 +20,8 @@
             },
             "user": {
                 "data": {
-                    "address": "Alamat perangkat",
-                    "mac": "Alamat MAC perangkat",
-                    "name": "Nama",
-                    "password": "Kata Sandi"
-                },
-                "title": "Siapkan perangkat Switchbot"
+                    "address": "Alamat perangkat"
+                }
             }
         }
     },
@@ -33,10 +29,7 @@
         "step": {
             "init": {
                 "data": {
-                    "retry_count": "Jumlah percobaan",
-                    "retry_timeout": "Tenggang waktu antara percobaan ulang",
-                    "scan_timeout": "Berapa lama untuk memindai data iklan",
-                    "update_time": "Waktu antara pembaruan (detik)"
+                    "retry_count": "Jumlah percobaan"
                 }
             }
         }

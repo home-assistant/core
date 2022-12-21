@@ -8,30 +8,18 @@ from datetime import datetime, timezone
 from typing import Any, Generic
 
 from aiopyarr import Diskspace, RootFolder, SystemStatus
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_MONITORED_CONDITIONS,
-    CONF_PORT,
-    CONF_SSL,
-    DATA_BYTES,
-    DATA_GIGABYTES,
-    DATA_KILOBYTES,
-    DATA_MEGABYTES,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfInformation
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import RadarrEntity
@@ -42,7 +30,7 @@ from .coordinator import RadarrDataUpdateCoordinator, T
 def get_space(data: list[Diskspace], name: str) -> str:
     """Get space."""
     space = [
-        mount.freeSpace / 1024 ** BYTE_SIZES.index(DATA_GIGABYTES)
+        mount.freeSpace / 1024 ** BYTE_SIZES.index(UnitOfInformation.GIGABYTES)
         for mount in data
         if name in mount.path
     ]
@@ -83,7 +71,8 @@ SENSOR_TYPES: dict[str, RadarrSensorEntityDescription[Any]] = {
     "disk_space": RadarrSensorEntityDescription(
         key="disk_space",
         name="Disk space",
-        native_unit_of_measurement=DATA_GIGABYTES,
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:harddisk",
         value_fn=get_space,
         description_fn=get_modified_description,
@@ -107,27 +96,11 @@ SENSOR_TYPES: dict[str, RadarrSensorEntityDescription[Any]] = {
 }
 
 BYTE_SIZES = [
-    DATA_BYTES,
-    DATA_KILOBYTES,
-    DATA_MEGABYTES,
-    DATA_GIGABYTES,
+    UnitOfInformation.BYTES,
+    UnitOfInformation.KILOBYTES,
+    UnitOfInformation.MEGABYTES,
+    UnitOfInformation.GIGABYTES,
 ]
-# Deprecated in Home Assistant 2022.10
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional("days", default=1): cv.string,
-        vol.Optional(CONF_HOST, default="localhost"): cv.string,
-        vol.Optional("include_paths", default=[]): cv.ensure_list,
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=["movies"]): vol.All(
-            cv.ensure_list
-        ),
-        vol.Optional(CONF_PORT, default=7878): cv.port,
-        vol.Optional(CONF_SSL, default=False): cv.boolean,
-        vol.Optional("unit", default=DATA_GIGABYTES): cv.string,
-        vol.Optional("urlbase", default=""): cv.string,
-    }
-)
 
 PARALLEL_UPDATES = 1
 
@@ -139,10 +112,14 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Radarr platform."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "removed_yaml",
+        breaks_in_ha_version="2022.12.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="removed_yaml",
     )
 
 

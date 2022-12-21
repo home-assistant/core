@@ -35,8 +35,7 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_ON,
     STATE_UNAVAILABLE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
     __version__,
 )
 from homeassistant.core import (
@@ -184,8 +183,8 @@ def get_accessory(  # noqa: C901
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if device_class == SensorDeviceClass.TEMPERATURE or unit in (
-            TEMP_CELSIUS,
-            TEMP_FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
         ):
             a_type = "TemperatureSensor"
         elif device_class == SensorDeviceClass.HUMIDITY and unit == PERCENTAGE:
@@ -200,6 +199,10 @@ def get_accessory(  # noqa: C901
             or SensorDeviceClass.PM25 in state.entity_id
         ):
             a_type = "PM25Sensor"
+        elif device_class == SensorDeviceClass.NITROGEN_DIOXIDE:
+            a_type = "NitrogenDioxideSensor"
+        elif device_class == SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS:
+            a_type = "VolatileOrganicCompoundsSensor"
         elif (
             device_class == SensorDeviceClass.GAS
             or SensorDeviceClass.GAS in state.entity_id
@@ -270,7 +273,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             driver=driver,
             display_name=cleanup_name_for_homekit(name),
             aid=aid,
-            iid_manager=driver.iid_manager,
+            iid_manager=HomeIIDManager(driver.iid_storage),
             *args,
             **kwargs,
         )
@@ -354,12 +357,12 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             if state is not None:
                 battery_found = state.state
             else:
-                self.linked_battery_sensor = None
                 _LOGGER.warning(
                     "%s: Battery sensor state missing: %s",
                     self.entity_id,
                     self.linked_battery_sensor,
                 )
+                self.linked_battery_sensor = None
 
         if not battery_found:
             return
@@ -570,7 +573,7 @@ class HomeBridge(Bridge):  # type: ignore[misc]
 
     def __init__(self, hass: HomeAssistant, driver: HomeDriver, name: str) -> None:
         """Initialize a Bridge object."""
-        super().__init__(driver, name, iid_manager=driver.iid_manager)
+        super().__init__(driver, name, iid_manager=HomeIIDManager(driver.iid_storage))
         self.set_info_service(
             firmware_revision=format_version(__version__),
             manufacturer=MANUFACTURER,
@@ -603,7 +606,7 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
         entry_id: str,
         bridge_name: str,
         entry_title: str,
-        iid_manager: HomeIIDManager,
+        iid_storage: AccessoryIIDStorage,
         **kwargs: Any,
     ) -> None:
         """Initialize a AccessoryDriver object."""
@@ -612,7 +615,7 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
         self._entry_id = entry_id
         self._bridge_name = bridge_name
         self._entry_title = entry_title
-        self.iid_manager = iid_manager
+        self.iid_storage = iid_storage
 
     @pyhap_callback  # type: ignore[misc]
     def pair(
@@ -653,7 +656,7 @@ class HomeIIDManager(IIDManager):  # type: ignore[misc]
         """Get IID for object."""
         aid = obj.broker.aid
         if isinstance(obj, Characteristic):
-            service = obj.service
+            service: Service = obj.service
             iid = self._iid_storage.get_or_allocate_iid(
                 aid, service.type_id, service.unique_id, obj.type_id, obj.unique_id
             )

@@ -202,7 +202,7 @@ def async_prepare_call_from_config(
                 f"Template rendered invalid service: {domain_service}"
             ) from ex
 
-    domain, service = domain_service.split(".", 1)
+    domain, _, service = domain_service.partition(".")
 
     target = {}
     if CONF_TARGET in config:
@@ -437,7 +437,7 @@ def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_T
 def _load_services_files(
     hass: HomeAssistant, integrations: Iterable[Integration]
 ) -> list[JSON_TYPE]:
-    """Load service files for multiple intergrations."""
+    """Load service files for multiple integrations."""
     return [_load_services_file(hass, integration) for integration in integrations]
 
 

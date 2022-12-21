@@ -20,12 +20,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_SCAN_INTERVAL,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.const import ATTR_TEMPERATURE, CONF_SCAN_INTERVAL, UnitOfTemperature
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 
@@ -97,7 +92,7 @@ class NestThermostat(ClimateEntity):
         self._fan_modes = [FAN_ON, FAN_AUTO]
 
         # Set the default supported features
-        self._support_flags = (
+        self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
         )
 
@@ -106,7 +101,9 @@ class NestThermostat(ClimateEntity):
 
         if self.device.can_heat and self.device.can_cool:
             self._operation_list.append(HVACMode.AUTO)
-            self._support_flags |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            )
 
         # Add supported nest thermostat features
         if self.device.can_heat:
@@ -120,7 +117,7 @@ class NestThermostat(ClimateEntity):
         # feature of device
         self._has_fan = self.device.has_fan
         if self._has_fan:
-            self._support_flags |= ClimateEntityFeature.FAN_MODE
+            self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
 
         # data attributes
         self._away = None
@@ -149,11 +146,6 @@ class NestThermostat(ClimateEntity):
         self.async_on_remove(
             async_dispatcher_connect(self.hass, SIGNAL_NEST_UPDATE, async_update_state)
         )
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return self._support_flags
 
     @property
     def unique_id(self):
@@ -344,6 +336,6 @@ class NestThermostat(ClimateEntity):
         self._max_temperature = self.device.max_temperature
         self._is_locked = self.device.is_locked
         if self.device.temperature_scale == "C":
-            self._temperature_scale = TEMP_CELSIUS
+            self._temperature_scale = UnitOfTemperature.CELSIUS
         else:
-            self._temperature_scale = TEMP_FAHRENHEIT
+            self._temperature_scale = UnitOfTemperature.FAHRENHEIT

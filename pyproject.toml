@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2022.12.0.dev0"
+version     = "2023.1.0.dev0"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -27,7 +27,7 @@ dependencies    = [
     "aiohttp==3.8.1",
     "astral==2.2",
     "async_timeout==4.0.2",
-    "attrs==21.2.0",
+    "attrs==22.1.0",
     "atomicwrites-homeassistant==1.4.1",
     "awesomeversion==22.9.0",
     "bcrypt==3.1.7",
@@ -35,14 +35,14 @@ dependencies    = [
     "ciso8601==2.2.0",
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
-    "httpx==0.23.0",
-    "home-assistant-bluetooth==1.6.0",
+    "httpx==0.23.1",
+    "home-assistant-bluetooth==1.9.0",
     "ifaddr==0.1.7",
     "jinja2==3.1.2",
     "lru-dict==1.1.8",
     "PyJWT==2.5.0",
     # PyJWT has loose dependency. We want the latest one.
-    "cryptography==38.0.1",
+    "cryptography==38.0.3",
     "orjson==3.8.1",
     "pip>=21.0,<22.4",
     "python-slugify==4.0.1",
@@ -74,7 +74,7 @@ include = ["homeassistant*"]
 
 [tool.black]
 target-version = ["py39", "py310"]
-exclude = 'generated'
+extend-exclude = "/generated/"
 
 [tool.isort]
 # https://github.com/PyCQA/isort/wiki/isort-Settings
@@ -227,3 +227,4 @@ norecursedirs = [
 ]
 log_format = "%(asctime)s.%(msecs)03d %(levelname)-8s %(threadName)s %(name)s:%(filename)s:%(lineno)s %(message)s"
 log_date_format = "%Y-%m-%d %H:%M:%S"
+asyncio_mode = "auto"

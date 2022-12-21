@@ -28,6 +28,7 @@
                     "mode": "Tryb podr\u00f3\u017cy",
                     "time": "Czas",
                     "time_type": "Typ czasu",
+                    "traffic_mode": "Tryb nat\u0119\u017cenia ruchu",
                     "transit_mode": "Tryb tranzytu",
                     "transit_routing_preference": "Preferencje trasy tranzytowej",
                     "units": "Jednostki"

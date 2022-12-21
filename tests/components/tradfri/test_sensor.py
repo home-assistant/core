@@ -71,6 +71,7 @@ async def test_cover_battery_sensor(hass, mock_gateway, mock_api_factory):
     assert sensor_1.state == "42"
     assert sensor_1.attributes["unit_of_measurement"] == "%"
     assert sensor_1.attributes["device_class"] == "battery"
+    assert sensor_1.attributes["state_class"] == "measurement"
 
 
 async def test_air_quality_sensor(hass, mock_gateway, mock_api_factory):
@@ -91,6 +92,7 @@ async def test_air_quality_sensor(hass, mock_gateway, mock_api_factory):
     assert sensor_1.state == "42"
     assert sensor_1.attributes["unit_of_measurement"] == "µg/m³"
     assert sensor_1.attributes["device_class"] == "aqi"
+    assert sensor_1.attributes["state_class"] == "measurement"
 
 
 async def test_filter_time_left_sensor(hass, mock_gateway, mock_api_factory):

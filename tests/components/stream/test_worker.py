@@ -39,7 +39,7 @@ from homeassistant.components.stream.const import (
     SEGMENT_DURATION_ADJUSTER,
     TARGET_SEGMENT_DURATION_NON_LL_HLS,
 )
-from homeassistant.components.stream.core import StreamSettings
+from homeassistant.components.stream.core import Orientation, StreamSettings
 from homeassistant.components.stream.worker import (
     StreamEndedError,
     StreamState,
@@ -48,7 +48,7 @@ from homeassistant.components.stream.worker import (
 )
 from homeassistant.setup import async_setup_component
 
-from .common import generate_h264_video, generate_h265_video
+from .common import dynamic_stream_settings, generate_h264_video, generate_h265_video
 from .test_ll_hls import TEST_PART_DURATION
 
 from tests.components.camera.common import EMPTY_8_6_JPEG, mock_turbo_jpeg
@@ -90,7 +90,6 @@ def mock_stream_settings(hass):
             part_target_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS,
             hls_advance_part_limit=3,
             hls_part_timeout=TARGET_SEGMENT_DURATION_NON_LL_HLS,
-            orientation=1,
         )
     }
 
@@ -287,7 +286,7 @@ def run_worker(hass, stream, stream_source, stream_settings=None):
         {},
         stream_settings or hass.data[DOMAIN][ATTR_SETTINGS],
         stream_state,
-        KeyFrameConverter(hass, 1),
+        KeyFrameConverter(hass, stream_settings, dynamic_stream_settings()),
         threading.Event(),
     )
 
@@ -295,7 +294,11 @@ def run_worker(hass, stream, stream_source, stream_settings=None):
 async def async_decode_stream(hass, packets, py_av=None, stream_settings=None):
     """Start a stream worker that decodes incoming stream packets into output segments."""
     stream = Stream(
-        hass, STREAM_SOURCE, {}, stream_settings or hass.data[DOMAIN][ATTR_SETTINGS]
+        hass,
+        STREAM_SOURCE,
+        {},
+        stream_settings or hass.data[DOMAIN][ATTR_SETTINGS],
+        dynamic_stream_settings(),
     )
     stream.add_provider(HLS_PROVIDER)
 
@@ -322,7 +325,13 @@ async def async_decode_stream(hass, packets, py_av=None, stream_settings=None):
 
 async def test_stream_open_fails(hass):
     """Test failure on stream open."""
-    stream = Stream(hass, STREAM_SOURCE, {}, hass.data[DOMAIN][ATTR_SETTINGS])
+    stream = Stream(
+        hass,
+        STREAM_SOURCE,
+        {},
+        hass.data[DOMAIN][ATTR_SETTINGS],
+        dynamic_stream_settings(),
+    )
     stream.add_provider(HLS_PROVIDER)
     with patch("av.open") as av_open, pytest.raises(StreamWorkerError):
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
@@ -636,7 +645,13 @@ async def test_stream_stopped_while_decoding(hass):
     worker_open = threading.Event()
     worker_wake = threading.Event()
 
-    stream = Stream(hass, STREAM_SOURCE, {}, hass.data[DOMAIN][ATTR_SETTINGS])
+    stream = Stream(
+        hass,
+        STREAM_SOURCE,
+        {},
+        hass.data[DOMAIN][ATTR_SETTINGS],
+        dynamic_stream_settings(),
+    )
     stream.add_provider(HLS_PROVIDER)
 
     py_av = MockPyAv()
@@ -666,7 +681,13 @@ async def test_update_stream_source(hass):
     worker_open = threading.Event()
     worker_wake = threading.Event()
 
-    stream = Stream(hass, STREAM_SOURCE, {}, hass.data[DOMAIN][ATTR_SETTINGS])
+    stream = Stream(
+        hass,
+        STREAM_SOURCE,
+        {},
+        hass.data[DOMAIN][ATTR_SETTINGS],
+        dynamic_stream_settings(),
+    )
     stream.add_provider(HLS_PROVIDER)
     # Note that retries are disabled by default in tests, however the stream is "restarted" when
     # the stream source is updated.
@@ -706,22 +727,43 @@ async def test_update_stream_source(hass):
         await stream.stop()
 
 
-async def test_worker_log(hass, caplog):
+test_worker_log_cases = (
+    ("https://abcd:efgh@foo.bar", "https://****:****@foo.bar"),
+    (
+        "https://foo.bar/baz?user=abcd&password=efgh",
+        "https://foo.bar/baz?user=****&password=****",
+    ),
+    (
+        "https://foo.bar/baz?param1=abcd&param2=efgh",
+        "https://foo.bar/baz?param1=abcd&param2=efgh",
+    ),
+    (
+        "https://foo.bar/baz?param1=abcd&password=efgh",
+        "https://foo.bar/baz?param1=abcd&password=****",
+    ),
+)
+
+
+@pytest.mark.parametrize("stream_url, redacted_url", test_worker_log_cases)
+async def test_worker_log(hass, caplog, stream_url, redacted_url):
     """Test that the worker logs the url without username and password."""
     stream = Stream(
-        hass, "https://abcd:efgh@foo.bar", {}, hass.data[DOMAIN][ATTR_SETTINGS]
+        hass,
+        stream_url,
+        {},
+        hass.data[DOMAIN][ATTR_SETTINGS],
+        dynamic_stream_settings(),
     )
     stream.add_provider(HLS_PROVIDER)
 
     with patch("av.open") as av_open, pytest.raises(StreamWorkerError) as err:
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
-        run_worker(hass, stream, "https://abcd:efgh@foo.bar")
+        run_worker(hass, stream, stream_url)
         await hass.async_block_till_done()
     assert (
-        str(err.value)
-        == "Error opening stream (ERRORTYPE_-2, error) https://****:****@foo.bar"
+        str(err.value) == f"Error opening stream (ERRORTYPE_-2, error) {redacted_url}"
     )
-    assert "https://abcd:efgh@foo.bar" not in caplog.text
+    assert stream_url not in caplog.text
 
 
 @pytest.fixture
@@ -764,7 +806,9 @@ async def test_durations(hass, worker_finished_stream):
     worker_finished, mock_stream = worker_finished_stream
 
     with patch("homeassistant.components.stream.Stream", wraps=mock_stream):
-        stream = create_stream(hass, source, {}, stream_label="camera")
+        stream = create_stream(
+            hass, source, {}, dynamic_stream_settings(), stream_label="camera"
+        )
 
     recorder_output = stream.add_provider(RECORDER_PROVIDER, timeout=30)
     await stream.start()
@@ -839,7 +883,9 @@ async def test_has_keyframe(hass, h264_video, worker_finished_stream):
     worker_finished, mock_stream = worker_finished_stream
 
     with patch("homeassistant.components.stream.Stream", wraps=mock_stream):
-        stream = create_stream(hass, h264_video, {}, stream_label="camera")
+        stream = create_stream(
+            hass, h264_video, {}, dynamic_stream_settings(), stream_label="camera"
+        )
 
     recorder_output = stream.add_provider(RECORDER_PROVIDER, timeout=30)
     await stream.start()
@@ -880,7 +926,9 @@ async def test_h265_video_is_hvc1(hass, worker_finished_stream):
 
     worker_finished, mock_stream = worker_finished_stream
     with patch("homeassistant.components.stream.Stream", wraps=mock_stream):
-        stream = create_stream(hass, source, {}, stream_label="camera")
+        stream = create_stream(
+            hass, source, {}, dynamic_stream_settings(), stream_label="camera"
+        )
 
     recorder_output = stream.add_provider(RECORDER_PROVIDER, timeout=30)
     await stream.start()
@@ -900,7 +948,7 @@ async def test_h265_video_is_hvc1(hass, worker_finished_stream):
     assert stream.get_diagnostics() == {
         "container_format": "mov,mp4,m4a,3gp,3g2,mj2",
         "keepalive": False,
-        "orientation": 1,
+        "orientation": Orientation.NO_TRANSFORM,
         "start_worker": 1,
         "video_codec": "hevc",
         "worker_error": 1,
@@ -916,7 +964,7 @@ async def test_get_image(hass, h264_video, filename):
         "homeassistant.components.camera.img_util.TurboJPEGSingleton"
     ) as mock_turbo_jpeg_singleton:
         mock_turbo_jpeg_singleton.instance.return_value = mock_turbo_jpeg()
-        stream = create_stream(hass, h264_video, {})
+        stream = create_stream(hass, h264_video, {}, dynamic_stream_settings())
 
     with patch.object(hass.config, "is_allowed_path", return_value=True):
         make_recording = hass.async_create_task(stream.async_record(filename))
@@ -937,7 +985,6 @@ async def test_worker_disable_ll_hls(hass):
         part_target_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS,
         hls_advance_part_limit=3,
         hls_part_timeout=TARGET_SEGMENT_DURATION_NON_LL_HLS,
-        orientation=1,
     )
     py_av = MockPyAv()
     py_av.container.format.name = "hls"
@@ -959,9 +1006,9 @@ async def test_get_image_rotated(hass, h264_video, filename):
         "homeassistant.components.camera.img_util.TurboJPEGSingleton"
     ) as mock_turbo_jpeg_singleton:
         mock_turbo_jpeg_singleton.instance.return_value = mock_turbo_jpeg()
-        for orientation in (1, 8):
-            stream = create_stream(hass, h264_video, {})
-            stream._stream_settings.orientation = orientation
+        for orientation in (Orientation.NO_TRANSFORM, Orientation.ROTATE_RIGHT):
+            stream = create_stream(hass, h264_video, {}, dynamic_stream_settings())
+            stream.dynamic_stream_settings.orientation = orientation
 
             with patch.object(hass.config, "is_allowed_path", return_value=True):
                 make_recording = hass.async_create_task(stream.async_record(filename))

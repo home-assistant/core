@@ -14,5 +14,18 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "printer_state": {
+                "state": {
+                    "cancelling": "Annullamento",
+                    "idle": "Inattivo",
+                    "paused": "In pausa",
+                    "pausing": "Pausa",
+                    "printing": "Stampa"
+                }
+            }
+        }
     }
 }

@@ -1,7 +1,6 @@
 """Models for manifest validator."""
 from __future__ import annotations
 
-import importlib
 import json
 import pathlib
 from typing import Any
@@ -26,7 +25,7 @@ class Error:
 class Config:
     """Config for the run."""
 
-    specific_integrations: pathlib.Path | None = attr.ib()
+    specific_integrations: list[pathlib.Path] | None = attr.ib()
     root: pathlib.Path = attr.ib()
     action: str = attr.ib()
     requirements: bool = attr.ib()
@@ -44,10 +43,10 @@ class Brand:
     """Represent a brand in our validator."""
 
     @classmethod
-    def load_dir(cls, path: pathlib.Path, config: Config):
+    def load_dir(cls, path: pathlib.Path, config: Config) -> dict[str, Brand]:
         """Load all brands in a directory."""
         assert path.is_dir()
-        brands = {}
+        brands: dict[str, Brand] = {}
         for fil in path.iterdir():
             brand = cls(fil)
             brand.load_brand(config)
@@ -56,7 +55,13 @@ class Brand:
         return brands
 
     path: pathlib.Path = attr.ib()
-    brand: dict[str, Any] | None = attr.ib(default=None)
+    _brand: dict[str, Any] | None = attr.ib(default=None)
+
+    @property
+    def brand(self) -> dict[str, Any]:
+        """Guarded access to brand."""
+        assert self._brand is not None, "brand has not been loaded"
+        return self._brand
 
     @property
     def domain(self) -> str:
@@ -71,7 +76,7 @@ class Brand:
     @property
     def integrations(self) -> list[str]:
         """Return the sub integrations of this brand."""
-        return self.brand.get("integrations")
+        return self.brand.get("integrations", [])
 
     @property
     def iot_standards(self) -> list[str]:
@@ -85,14 +90,14 @@ class Brand:
             return
 
         try:
-            brand = json.loads(self.path.read_text())
+            brand: dict[str, Any] = json.loads(self.path.read_text())
         except ValueError as err:
             config.add_error(
                 "model", f"Brand file {self.path.name} contains invalid JSON: {err}"
             )
             return
 
-        self.brand = brand
+        self._brand = brand
 
 
 @attr.s
@@ -100,10 +105,10 @@ class Integration:
     """Represent an integration in our validator."""
 
     @classmethod
-    def load_dir(cls, path: pathlib.Path):
+    def load_dir(cls, path: pathlib.Path) -> dict[str, Integration]:
         """Load all integrations in a directory."""
         assert path.is_dir()
-        integrations = {}
+        integrations: dict[str, Integration] = {}
         for fil in path.iterdir():
             if fil.is_file() or fil.name == "__pycache__":
                 continue
@@ -125,10 +130,16 @@ class Integration:
         return integrations
 
     path: pathlib.Path = attr.ib()
-    manifest: dict[str, Any] | None = attr.ib(default=None)
+    _manifest: dict[str, Any] | None = attr.ib(default=None)
     errors: list[Error] = attr.ib(factory=list)
     warnings: list[Error] = attr.ib(factory=list)
     translated_name: bool = attr.ib(default=False)
+
+    @property
+    def manifest(self) -> dict[str, Any]:
+        """Guarded access to manifest."""
+        assert self._manifest is not None, "manifest has not been loaded"
+        return self._manifest
 
     @property
     def domain(self) -> str:
@@ -148,10 +159,11 @@ class Integration:
     @property
     def name(self) -> str:
         """Return name of the integration."""
-        return self.manifest["name"]
+        name: str = self.manifest["name"]
+        return name
 
     @property
-    def quality_scale(self) -> str:
+    def quality_scale(self) -> str | None:
         """Return quality scale of the integration."""
         return self.manifest.get("quality_scale")
 
@@ -206,16 +218,9 @@ class Integration:
             return
 
         try:
-            manifest = json.loads(manifest_path.read_text())
+            manifest: dict[str, Any] = json.loads(manifest_path.read_text())
         except ValueError as err:
             self.add_error("model", f"Manifest contains invalid JSON: {err}")
             return
 
-        self.manifest = manifest
-
-    def import_pkg(self, platform=None):
-        """Import the Python file."""
-        pkg = f"homeassistant.components.{self.domain}"
-        if platform is not None:
-            pkg += f".{platform}"
-        return importlib.import_module(pkg)
+        self._manifest = manifest

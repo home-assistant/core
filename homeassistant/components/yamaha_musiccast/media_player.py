@@ -145,7 +145,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         return None
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState:
         """Return the state of the player."""
         if self.coordinator.data.zones[self._zone_id].power == "on":
             if self._is_netusb and self.coordinator.data.netusb_playback == "pause":
@@ -424,7 +424,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         )
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         supported_features = MUSIC_PLAYER_BASE_SUPPORT
         zone = self.coordinator.data.zones[self._zone_id]
@@ -653,7 +653,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
     @property
     def musiccast_zone_entity(self) -> MusicCastMediaPlayer:
-        """Return the the entity of the zone, which is using MusicCast at the moment, if there is one, self else.
+        """Return the entity of the zone, which is using MusicCast at the moment, if there is one, self else.
 
         It is possible that multiple zones use MusicCast as client at the same time. In this case the first one is
         returned.

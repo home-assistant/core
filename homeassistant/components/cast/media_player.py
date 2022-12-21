@@ -43,6 +43,7 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CAST_APP_ID_HOMEASSISTANT_LOVELACE,
+    CONF_UUID,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
@@ -59,7 +60,6 @@ from .const import (
     ADDED_CAST_DEVICES_KEY,
     CAST_MULTIZONE_MANAGER_KEY,
     CONF_IGNORE_CEC,
-    CONF_UUID,
     DOMAIN as CAST_DOMAIN,
     SIGNAL_CAST_DISCOVERED,
     SIGNAL_CAST_REMOVED,
@@ -899,7 +899,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         return self._chromecast.app_display_name if self._chromecast else None
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         support = (
             MediaPlayerEntityFeature.PLAY_MEDIA

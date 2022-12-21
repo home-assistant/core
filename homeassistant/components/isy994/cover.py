@@ -1,7 +1,7 @@
 """Support for ISY994 covers."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from pyisy.constants import ISY_VALUE_UNKNOWN
 
@@ -58,7 +58,7 @@ class ISYCoverEntity(ISYNodeEntity, CoverEntity):
         if self._node.status == ISY_VALUE_UNKNOWN:
             return None
         if self._node.uom == UOM_8_BIT_RANGE:
-            return round(self._node.status * 100.0 / 255.0)
+            return round(cast(float, self._node.status) * 100.0 / 255.0)
         return int(sorted((0, self._node.status, 100))[1])
 
     @property

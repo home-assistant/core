@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 import contextlib
-from dataclasses import dataclass
+from dataclasses import dataclass, replace as dataclass_replace
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
@@ -37,9 +37,11 @@ from .db_schema import (
 )
 from .models import process_timestamp
 from .statistics import (
+    correct_db_schema as statistics_correct_db_schema,
     delete_statistics_duplicates,
     delete_statistics_meta_duplicates,
     get_start_time,
+    validate_db_schema as statistics_validate_db_schema,
 )
 from .util import session_scope
 
@@ -83,6 +85,8 @@ class SchemaValidationStatus:
     """Store schema validation status."""
 
     current_version: int
+    statistics_schema_errors: set[str]
+    valid: bool
 
 
 def _schema_is_current(current_version: int) -> bool:
@@ -90,13 +94,8 @@ def _schema_is_current(current_version: int) -> bool:
     return current_version == SCHEMA_VERSION
 
 
-def schema_is_valid(schema_status: SchemaValidationStatus) -> bool:
-    """Check if the schema is valid."""
-    return _schema_is_current(schema_status.current_version)
-
-
 def validate_db_schema(
-    hass: HomeAssistant, session_maker: Callable[[], Session]
+    hass: HomeAssistant, engine: Engine, session_maker: Callable[[], Session]
 ) -> SchemaValidationStatus | None:
     """Check if the schema is valid.
 
@@ -104,11 +103,20 @@ def validate_db_schema(
     errors caused by manual migration between database engines, for example importing an
     SQLite database to MariaDB.
     """
+    schema_errors: set[str] = set()
+
     current_version = get_schema_version(session_maker)
     if current_version is None:
         return None
 
-    return SchemaValidationStatus(current_version)
+    if is_current := _schema_is_current(current_version):
+        # We can only check for further errors if the schema is current, because
+        # columns may otherwise not exist etc.
+        schema_errors |= statistics_validate_db_schema(hass, engine, session_maker)
+
+    valid = is_current and not schema_errors
+
+    return SchemaValidationStatus(current_version, schema_errors, valid)
 
 
 def live_migration(schema_status: SchemaValidationStatus) -> bool:
@@ -125,10 +133,18 @@ def migrate_schema(
 ) -> None:
     """Check if the schema needs to be upgraded."""
     current_version = schema_status.current_version
-    _LOGGER.warning("Database is about to upgrade. Schema version: %s", current_version)
+    if current_version != SCHEMA_VERSION:
+        _LOGGER.warning(
+            "Database is about to upgrade from schema version: %s to: %s",
+            current_version,
+            SCHEMA_VERSION,
+        )
     db_ready = False
     for version in range(current_version, SCHEMA_VERSION):
-        if live_migration(SchemaValidationStatus(version)) and not db_ready:
+        if (
+            live_migration(dataclass_replace(schema_status, current_version=version))
+            and not db_ready
+        ):
             db_ready = True
             instance.migration_is_live = True
             hass.add_job(instance.async_set_db_ready)
@@ -139,6 +155,13 @@ def migrate_schema(
             session.add(SchemaChanges(schema_version=new_version))
 
         _LOGGER.info("Upgrade to version %s done", new_version)
+
+    if schema_errors := schema_status.statistics_schema_errors:
+        _LOGGER.warning(
+            "Database is about to correct DB schema errors: %s",
+            ", ".join(sorted(schema_errors)),
+        )
+        statistics_correct_db_schema(instance, engine, session_maker, schema_errors)
 
 
 def _create_index(

@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
             "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve",
+            "mdns_missing_mac": "Hi\u00e1nyz\u00f3 MAC-c\u00edm az MDNS-tulajdons\u00e1gokban.",
             "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."
         },
         "error": {
@@ -42,6 +43,12 @@
                 },
                 "description": "K\u00e9rem, adja meg az [ESPHome]({esphome_url}) v\u00e9gpontj\u00e1nak kapcsol\u00f3d\u00e1si be\u00e1ll\u00edt\u00e1sait."
             }
+        }
+    },
+    "issues": {
+        "ble_firmware_outdated": {
+            "description": "A Bluetooth megb\u00edzhat\u00f3s\u00e1g\u00e1nak \u00e9s teljes\u00edtm\u00e9ny\u00e9nek jav\u00edt\u00e1sa \u00e9rdek\u00e9ben javasoljuk {name} v\u00e9gpont friss\u00edt\u00e9s\u00e9t az ESPHome 2022.11.0 vagy \u00fajabb verzi\u00f3ra.",
+            "title": "{name} v\u00e9gpont friss\u00edt\u00e9se ESPHome 2022.11.0 vagy \u00fajabb verzi\u00f3j\u00e1val"
         }
     }
 }

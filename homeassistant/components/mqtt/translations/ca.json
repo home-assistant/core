@@ -12,6 +12,7 @@
             "bad_client_key": "Clau privada inv\u00e0lida, assegura't que la codificaci\u00f3 del fitxer sigui PEM i sense contrasenya",
             "bad_discovery_prefix": "Prefix de descobriment inv\u00e0lid",
             "bad_will": "T\u00f2pic del missatge d'\u00faltima voluntat ('will') inv\u00e0lid",
+            "bad_ws_headers": "Proporciona cap\u00e7aleres HTTP v\u00e0lides en format d'objecte JSON",
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "invalid_inclusion": "El certificat de client i la clau privada s'han de configurar conjuntament"
         },
@@ -20,11 +21,10 @@
                 "data": {
                     "advanced_options": "Opcions avan\u00e7ades",
                     "broker": "Broker",
-                    "certificate": "Ruta a un fitxer de certificat CA personalitzat",
-                    "client_cert": "Ruta a un fitxer de certificat de client",
+                    "certificate": "Puja fitxer de certificat CA personalitzat",
+                    "client_cert": "Puja fitxer de certificat client",
                     "client_id": "ID de client (deixa-ho buit per generar-lo aleat\u00f2riament)",
-                    "client_key": "Ruta a un fitxer de clau privada",
-                    "discovery": "Habilita el descobriment autom\u00e0tic",
+                    "client_key": "Puja fitxer de clau privada",
                     "keepalive": "Temps entre enviaments de missatges de manteniment viu ('keep alive')",
                     "password": "Contrasenya",
                     "port": "Port",
@@ -32,13 +32,16 @@
                     "set_ca_cert": "Validaci\u00f3 del certificat del 'broker'",
                     "set_client_cert": "Utilitza un certificat de client",
                     "tls_insecure": "Ignora la validaci\u00f3 del certificat del 'broker'",
-                    "username": "Nom d'usuari"
+                    "transport": "Transport MQTT",
+                    "username": "Nom d'usuari",
+                    "ws_headers": "Cap\u00e7aleres del WebSocket en format JSON",
+                    "ws_path": "Ruta del WebSocket"
                 },
                 "description": "Introdueix la informaci\u00f3 de connexi\u00f3 del teu broker MQTT."
             },
             "hassio_confirm": {
                 "data": {
-                    "discovery": "Habilitar descobriment autom\u00e0tic"
+                    "discovery": "Activa el descobriment"
                 },
                 "description": "Vols configurar Home Assistant perqu\u00e8 es connecti amb el broker MQTT proporcionat pel complement {addon}?",
                 "title": "Broker MQTT via complement de Home Assistant"
@@ -86,6 +89,7 @@
             "bad_client_key": "Clau privada inv\u00e0lida, assegura't que la codificaci\u00f3 del fitxer sigui PEM i sense contrasenya",
             "bad_discovery_prefix": "Prefix de descobriment inv\u00e0lid",
             "bad_will": "T\u00f2pic del missatge d'\u00faltima voluntat ('will') inv\u00e0lid",
+            "bad_ws_headers": "Proporciona cap\u00e7aleres HTTP v\u00e0lides en format d'objecte JSON",
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "invalid_inclusion": "El certificat de client i la clau privada s'han de configurar conjuntament"
         },
@@ -94,10 +98,10 @@
                 "data": {
                     "advanced_options": "Opcions avan\u00e7ades",
                     "broker": "Broker",
-                    "certificate": "Puja un fitxer de certificat CA personalitzat",
-                    "client_cert": "Puja un fitxer de certificat de client",
+                    "certificate": "Puja fitxer de certificat CA personalitzat",
+                    "client_cert": "Puja fitxer de certificat client",
                     "client_id": "ID de client (deixa-ho buit per generar-lo aleat\u00f2riament)",
-                    "client_key": "Puja un fitxer de clau privada",
+                    "client_key": "Puja fitxer de clau privada",
                     "keepalive": "Temps entre enviaments de missatges de manteniment viu ('keep alive')",
                     "password": "Contrasenya",
                     "port": "Port",
@@ -105,7 +109,10 @@
                     "set_ca_cert": "Validaci\u00f3 del certificat del 'broker'",
                     "set_client_cert": "Utilitza un certificat de client",
                     "tls_insecure": "Ignora la validaci\u00f3 del certificat del 'broker'",
-                    "username": "Nom d'usuari"
+                    "transport": "Transport MQTT",
+                    "username": "Nom d'usuari",
+                    "ws_headers": "Cap\u00e7aleres del WebSocket en format JSON",
+                    "ws_path": "Ruta del WebSocket"
                 },
                 "description": "Introdueix la informaci\u00f3 de connexi\u00f3 del teu broker MQTT.",
                 "title": "Opcions del broker"
@@ -117,7 +124,7 @@
                     "birth_qos": "QoS del missatge de naixement",
                     "birth_retain": "Retenci\u00f3 del missatge de naixement",
                     "birth_topic": "Topic del missatge de naixement",
-                    "discovery": "Activar descobriment",
+                    "discovery": "Activa el descobriment",
                     "discovery_prefix": "Prefix de descobriment",
                     "will_enable": "Activa el missatge d'\u00faltima voluntat",
                     "will_payload": "Dades (payload) del missatge d'\u00faltima voluntat",

@@ -38,13 +38,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONF_RESOURCES,
-    ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
-    POWER_WATT,
     REVOLUTIONS_PER_MINUTE,
-    TEMP_CELSIUS,
-    TIME_DAYS,
     VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -101,7 +101,7 @@ SENSOR_TYPES = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         name="Inside temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         sensor_id=SENSOR_TEMPERATURE_EXTRACT,
         multiplier=0.1,
     ),
@@ -118,7 +118,7 @@ SENSOR_TYPES = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         name="Current RMOT",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         sensor_id=SENSOR_CURRENT_RMOT,
         multiplier=0.1,
     ),
@@ -127,7 +127,7 @@ SENSOR_TYPES = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         name="Outside temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         sensor_id=SENSOR_TEMPERATURE_OUTDOOR,
         multiplier=0.1,
     ),
@@ -144,7 +144,7 @@ SENSOR_TYPES = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         name="Supply temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         sensor_id=SENSOR_TEMPERATURE_SUPPLY,
         multiplier=0.1,
     ),
@@ -193,7 +193,7 @@ SENSOR_TYPES = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         name="Exhaust temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         sensor_id=SENSOR_TEMPERATURE_EXHAUST,
         multiplier=0.1,
     ),
@@ -232,7 +232,7 @@ SENSOR_TYPES = (
     ComfoconnectSensorEntityDescription(
         key=ATTR_DAYS_TO_REPLACE_FILTER,
         name="Days to replace filter",
-        native_unit_of_measurement=TIME_DAYS,
+        native_unit_of_measurement=UnitOfTime.DAYS,
         icon="mdi:calendar",
         sensor_id=SENSOR_DAYS_TO_REPLACE_FILTER,
     ),
@@ -241,7 +241,7 @@ SENSOR_TYPES = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         name="Power usage",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         sensor_id=SENSOR_POWER_CURRENT,
     ),
     ComfoconnectSensorEntityDescription(
@@ -249,7 +249,7 @@ SENSOR_TYPES = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         name="Energy total",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         sensor_id=SENSOR_POWER_TOTAL,
     ),
     ComfoconnectSensorEntityDescription(
@@ -257,7 +257,7 @@ SENSOR_TYPES = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         name="Preheater power usage",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         sensor_id=SENSOR_PREHEATER_POWER_CURRENT,
     ),
     ComfoconnectSensorEntityDescription(
@@ -265,7 +265,7 @@ SENSOR_TYPES = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         name="Preheater energy total",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         sensor_id=SENSOR_PREHEATER_POWER_TOTAL,
     ),
 )

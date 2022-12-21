@@ -3,7 +3,7 @@
   "name": "Internet Printing Protocol (IPP)",
   "documentation": "https://www.home-assistant.io/integrations/ipp",
   "integration_type": "device",
-  "requirements": ["pyipp==0.12.0"],
+  "requirements": ["pyipp==0.12.1"],
   "codeowners": ["@ctalkington"],
   "config_flow": true,
   "quality_scale": "platinum",

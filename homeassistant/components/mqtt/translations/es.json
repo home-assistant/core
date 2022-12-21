@@ -8,10 +8,11 @@
             "bad_birth": "Tema de nacimiento no v\u00e1lido",
             "bad_certificate": "El certificado de la CA no es v\u00e1lido",
             "bad_client_cert": "Certificado de cliente no v\u00e1lido, aseg\u00farate de proporcionar un archivo codificado PEM",
-            "bad_client_cert_key": "Certificado de cliente y la clave privada no son un par v\u00e1lido",
+            "bad_client_cert_key": "El certificado de cliente y la clave privada no son un par v\u00e1lido",
             "bad_client_key": "Clave privada no v\u00e1lida, aseg\u00farate de que se proporcione un archivo codificado PEM sin contrase\u00f1a",
             "bad_discovery_prefix": "Prefijo de descubrimiento no v\u00e1lido",
             "bad_will": "Tema de voluntad no v\u00e1lido",
+            "bad_ws_headers": "Proporciona cabeceras HTTP v\u00e1lidas como un objeto JSON",
             "cannot_connect": "No se pudo conectar",
             "invalid_inclusion": "El certificado del cliente y la clave privada deben configurarse juntos"
         },
@@ -20,11 +21,10 @@
                 "data": {
                     "advanced_options": "Opciones avanzadas",
                     "broker": "Br\u00f3ker",
-                    "certificate": "Ruta al archivo de certificado de la CA personalizado",
-                    "client_cert": "Ruta a un archivo de certificado de cliente",
+                    "certificate": "Subir archivo de certificado de la CA personalizado",
+                    "client_cert": "Subir archivo de certificado de cliente",
                     "client_id": "ID de cliente (dejar vac\u00edo para generar uno aleatoriamente)",
-                    "client_key": "Ruta a un archivo de clave privada",
-                    "discovery": "Habilitar descubrimiento",
+                    "client_key": "Subir archivo de clave privada",
                     "keepalive": "El tiempo entre el env\u00edo de mensajes keep alive",
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
@@ -32,7 +32,10 @@
                     "set_ca_cert": "Validaci\u00f3n del certificado del br\u00f3ker",
                     "set_client_cert": "Utilizar un certificado de cliente",
                     "tls_insecure": "Ignorar la validaci\u00f3n del certificado del br\u00f3ker",
-                    "username": "Nombre de usuario"
+                    "transport": "Transporte MQTT",
+                    "username": "Nombre de usuario",
+                    "ws_headers": "Cabeceras WebSocket en formato JSON",
+                    "ws_path": "Ruta del WebSocket"
                 },
                 "description": "Por favor, introduce la informaci\u00f3n de conexi\u00f3n de tu br\u00f3ker MQTT."
             },
@@ -82,10 +85,11 @@
             "bad_birth": "Tema de nacimiento no v\u00e1lido",
             "bad_certificate": "El certificado de la CA no es v\u00e1lido",
             "bad_client_cert": "Certificado de cliente no v\u00e1lido, aseg\u00farate de proporcionar un archivo codificado PEM",
-            "bad_client_cert_key": "Certificado de cliente y la clave privada no son un par v\u00e1lido",
+            "bad_client_cert_key": "El certificado de cliente y la clave privada no son un par v\u00e1lido",
             "bad_client_key": "Clave privada no v\u00e1lida, aseg\u00farate de que se proporcione un archivo codificado PEM sin contrase\u00f1a",
             "bad_discovery_prefix": "Prefijo de descubrimiento no v\u00e1lido",
             "bad_will": "Tema de voluntad no v\u00e1lido",
+            "bad_ws_headers": "Proporciona cabeceras HTTP v\u00e1lidas como un objeto JSON",
             "cannot_connect": "No se pudo conectar",
             "invalid_inclusion": "El certificado del cliente y la clave privada deben configurarse juntos"
         },
@@ -105,7 +109,10 @@
                     "set_ca_cert": "Validaci\u00f3n del certificado del br\u00f3ker",
                     "set_client_cert": "Utilizar un certificado de cliente",
                     "tls_insecure": "Ignorar la validaci\u00f3n del certificado del br\u00f3ker",
-                    "username": "Nombre de usuario"
+                    "transport": "Transporte MQTT",
+                    "username": "Nombre de usuario",
+                    "ws_headers": "Cabeceras WebSocket en formato JSON",
+                    "ws_path": "Ruta del WebSocket"
                 },
                 "description": "Por favor, introduce la informaci\u00f3n de conexi\u00f3n de tu br\u00f3ker MQTT.",
                 "title": "Opciones del br\u00f3ker"

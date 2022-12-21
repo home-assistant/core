@@ -12,7 +12,6 @@ from homeassistant.components.camera.const import (
     PREF_ORIENTATION,
     PREF_PRELOAD_STREAM,
 )
-from homeassistant.components.camera.prefs import CameraEntityPreferences
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
@@ -302,8 +301,9 @@ async def test_websocket_update_preload_prefs(hass, hass_ws_client, mock_camera)
     )
     msg = await client.receive_json()
 
-    # There should be no preferences
-    assert not msg["result"]
+    # The default prefs should be returned. Preload stream should be False
+    assert msg["success"]
+    assert msg["result"][PREF_PRELOAD_STREAM] is False
 
     # Update the preference
     await client.send_json(
@@ -367,7 +367,7 @@ async def test_websocket_update_orientation_prefs(hass, hass_ws_client, mock_cam
     assert response["success"]
 
     er_camera_prefs = registry.async_get("camera.demo_uniquecamera").options[DOMAIN]
-    assert er_camera_prefs[PREF_ORIENTATION] == 3
+    assert er_camera_prefs[PREF_ORIENTATION] == camera.Orientation.ROTATE_180
     assert response["result"][PREF_ORIENTATION] == er_camera_prefs[PREF_ORIENTATION]
     # Check that the preference was saved
     await client.send_json(
@@ -375,7 +375,7 @@ async def test_websocket_update_orientation_prefs(hass, hass_ws_client, mock_cam
     )
     msg = await client.receive_json()
     # orientation entry for this camera should have been added
-    assert msg["result"]["orientation"] == 3
+    assert msg["result"]["orientation"] == camera.Orientation.ROTATE_180
 
 
 async def test_play_stream_service_no_source(hass, mock_camera, mock_stream):
@@ -421,12 +421,12 @@ async def test_handle_play_stream_service(hass, mock_camera, mock_stream):
 
 async def test_no_preload_stream(hass, mock_stream):
     """Test camera preload preference."""
-    demo_prefs = CameraEntityPreferences({PREF_PRELOAD_STREAM: False})
+    demo_settings = camera.DynamicStreamSettings()
     with patch(
         "homeassistant.components.camera.Stream.endpoint_url",
     ) as mock_request_stream, patch(
-        "homeassistant.components.camera.prefs.CameraPreferences.get",
-        return_value=demo_prefs,
+        "homeassistant.components.camera.prefs.CameraPreferences.get_dynamic_stream_settings",
+        return_value=demo_settings,
     ), patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
         new_callable=PropertyMock,
@@ -440,12 +440,12 @@ async def test_no_preload_stream(hass, mock_stream):
 
 async def test_preload_stream(hass, mock_stream):
     """Test camera preload preference."""
-    demo_prefs = CameraEntityPreferences({PREF_PRELOAD_STREAM: True})
+    demo_settings = camera.DynamicStreamSettings(preload_stream=True)
     with patch(
         "homeassistant.components.camera.create_stream"
     ) as mock_create_stream, patch(
-        "homeassistant.components.camera.prefs.CameraPreferences.get",
-        return_value=demo_prefs,
+        "homeassistant.components.camera.prefs.CameraPreferences.get_dynamic_stream_settings",
+        return_value=demo_settings,
     ), patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
         return_value="http://example.com",
@@ -503,15 +503,17 @@ async def test_camera_proxy_stream(hass, mock_camera, hass_client):
 
     client = await hass_client()
 
-    response = await client.get("/api/camera_proxy_stream/camera.demo_camera")
-    assert response.status == HTTPStatus.OK
+    async with client.get("/api/camera_proxy_stream/camera.demo_camera") as response:
+        assert response.status == HTTPStatus.OK
 
     with patch(
         "homeassistant.components.demo.camera.DemoCamera.handle_async_mjpeg_stream",
         return_value=None,
     ):
-        response = await client.get("/api/camera_proxy_stream/camera.demo_camera")
-        assert response.status == HTTPStatus.BAD_GATEWAY
+        async with await client.get(
+            "/api/camera_proxy_stream/camera.demo_camera"
+        ) as response:
+            assert response.status == HTTPStatus.BAD_GATEWAY
 
 
 async def test_websocket_web_rtc_offer(

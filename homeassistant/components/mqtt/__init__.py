@@ -76,7 +76,10 @@ from .const import (  # noqa: F401
     CONF_TLS_INSECURE,
     CONF_TLS_VERSION,
     CONF_TOPIC,
+    CONF_TRANSPORT,
     CONF_WILL_MESSAGE,
+    CONF_WS_HEADERS,
+    CONF_WS_PATH,
     DATA_MQTT,
     DEFAULT_ENCODING,
     DEFAULT_QOS,
@@ -95,12 +98,12 @@ from .models import (  # noqa: F401
     ReceivePayloadType,
 )
 from .util import (
-    _VALID_QOS_SCHEMA,
     async_create_certificate_temp_files,
     get_mqtt_data,
     migrate_certificate_file_to_content,
     mqtt_config_entry_enabled,
     valid_publish_topic,
+    valid_qos_schema,
     valid_subscribe_topic,
 )
 
@@ -134,6 +137,9 @@ CONFIG_ENTRY_CONFIG_KEYS = [
     CONF_PORT,
     CONF_PROTOCOL,
     CONF_TLS_INSECURE,
+    CONF_TRANSPORT,
+    CONF_WS_PATH,
+    CONF_WS_HEADERS,
     CONF_USERNAME,
     CONF_WILL_MESSAGE,
 ]
@@ -172,7 +178,7 @@ MQTT_PUBLISH_SCHEMA = vol.All(
             vol.Exclusive(ATTR_TOPIC_TEMPLATE, CONF_TOPIC): cv.string,
             vol.Exclusive(ATTR_PAYLOAD, CONF_PAYLOAD): cv.string,
             vol.Exclusive(ATTR_PAYLOAD_TEMPLATE, CONF_PAYLOAD): cv.string,
-            vol.Optional(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
+            vol.Optional(ATTR_QOS, default=DEFAULT_QOS): valid_qos_schema,
             vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         },
         required=True,
@@ -192,7 +198,7 @@ async def _async_setup_discovery(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Start the MQTT protocol service."""
+    """Set up the MQTT protocol service."""
     mqtt_data = get_mqtt_data(hass, True)
 
     conf: ConfigType | None = config.get(DOMAIN)
@@ -369,10 +375,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_publish_service(call: ServiceCall) -> None:
         """Handle MQTT publish service calls."""
-        msg_topic = call.data.get(ATTR_TOPIC)
-        msg_topic_template = call.data.get(ATTR_TOPIC_TEMPLATE)
-        payload = call.data.get(ATTR_PAYLOAD)
-        payload_template = call.data.get(ATTR_PAYLOAD_TEMPLATE)
+        msg_topic: str | None = call.data.get(ATTR_TOPIC)
+        msg_topic_template: str | None = call.data.get(ATTR_TOPIC_TEMPLATE)
+        payload: PublishPayloadType = call.data.get(ATTR_PAYLOAD)
+        payload_template: str | None = call.data.get(ATTR_PAYLOAD_TEMPLATE)
         qos: int = call.data[ATTR_QOS]
         retain: bool = call.data[ATTR_RETAIN]
         if msg_topic_template is not None:
@@ -464,9 +470,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         async def _reload_config(call: ServiceCall) -> None:
             """Reload the platforms."""
-            # Reload the legacy yaml platform
-            await async_reload_integration_platforms(hass, DOMAIN, RELOADABLE_PLATFORMS)
-
             # Reload the modern yaml platforms
             mqtt_platforms = async_get_platforms(hass, DOMAIN)
             tasks = [
@@ -570,6 +573,7 @@ def websocket_mqtt_info(
     {
         vol.Required("type"): "mqtt/subscribe",
         vol.Required("topic"): valid_subscribe_topic,
+        vol.Optional("qos"): valid_qos_schema,
     }
 )
 @websocket_api.async_response
@@ -603,8 +607,9 @@ async def websocket_subscribe(
         )
 
     # Perform UTF-8 decoding directly in callback routine
+    qos: int = msg["qos"] if "qos" in msg else DEFAULT_QOS
     connection.subscriptions[msg["id"]] = await async_subscribe(
-        hass, msg["topic"], forward_messages, encoding=None
+        hass, msg["topic"], forward_messages, encoding=None, qos=qos
     )
 
     connection.send_message(websocket_api.result_message(msg["id"]))

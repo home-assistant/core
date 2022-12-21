@@ -5,7 +5,7 @@ from collections.abc import Iterable
 import csv
 import dataclasses
 from datetime import timedelta
-from enum import IntEnum
+from enum import IntFlag
 import logging
 import os
 from typing import Any, cast, final
@@ -41,7 +41,7 @@ DATA_PROFILES = "light_profiles"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 
-class LightEntityFeature(IntEnum):
+class LightEntityFeature(IntFlag):
     """Supported features of the light entity."""
 
     EFFECT = 4
@@ -793,7 +793,7 @@ class LightEntity(ToggleEntity):
     _attr_rgbw_color: tuple[int, int, int, int] | None = None
     _attr_rgbww_color: tuple[int, int, int, int, int] | None = None
     _attr_supported_color_modes: set[ColorMode] | set[str] | None = None
-    _attr_supported_features: int = 0
+    _attr_supported_features: LightEntityFeature = LightEntityFeature(0)
     _attr_xy_color: tuple[float, float] | None = None
 
     @property
@@ -1060,6 +1060,6 @@ class LightEntity(ToggleEntity):
         return self._attr_supported_color_modes
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> LightEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features

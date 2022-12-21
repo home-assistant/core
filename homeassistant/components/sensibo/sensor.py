@@ -19,10 +19,10 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
-    ELECTRIC_POTENTIAL_VOLT,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    TEMP_CELSIUS,
+    UnitOfElectricPotential,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -90,7 +90,7 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionSensorEntityDescription, ...] = (
         key="battery_voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
         name="Battery voltage",
         icon="mdi:battery",
@@ -131,7 +131,7 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         icon="mdi:air-filter",
         value_fn=lambda data: data.pure_sensitivity,
         extra_fn=None,
-        device_class="sensibo__sensitivity",
+        translation_key="sensitivity",
     ),
     FILTER_LAST_RESET_DESCRIPTION,
 )
@@ -174,7 +174,7 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
     ),
     SensiboDeviceSensorEntityDescription(
         key="climate_react_type",
-        device_class="sensibo__smart_type",
+        translation_key="smart_type",
         name="Climate React type",
         value_fn=lambda data: data.smart_type,
         extra_fn=None,
@@ -204,7 +204,56 @@ AIRQ_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
     ),
 )
 
-DESCRIPTION_BY_MODELS = {"pure": PURE_SENSOR_TYPES, "airq": AIRQ_SENSOR_TYPES}
+ELEMENT_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
+    SensiboDeviceSensorEntityDescription(
+        key="pm25",
+        device_class=SensorDeviceClass.PM25,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="PM 2.5",
+        value_fn=lambda data: data.pm25,
+        extra_fn=None,
+    ),
+    SensiboDeviceSensorEntityDescription(
+        key="tvoc",
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="TVOC",
+        value_fn=lambda data: data.tvoc,
+        extra_fn=None,
+    ),
+    SensiboDeviceSensorEntityDescription(
+        key="co2",
+        device_class=SensorDeviceClass.CO2,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="CO2",
+        value_fn=lambda data: data.co2,
+        extra_fn=None,
+    ),
+    SensiboDeviceSensorEntityDescription(
+        key="ethanol",
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Ethanol",
+        value_fn=lambda data: data.etoh,
+        extra_fn=None,
+    ),
+    SensiboDeviceSensorEntityDescription(
+        key="iaq",
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Air quality",
+        value_fn=lambda data: data.iaq,
+        extra_fn=None,
+    ),
+)
+
+DESCRIPTION_BY_MODELS = {
+    "pure": PURE_SENSOR_TYPES,
+    "airq": AIRQ_SENSOR_TYPES,
+    "elements": ELEMENT_SENSOR_TYPES,
+}
 
 
 async def async_setup_entry(
@@ -262,7 +311,7 @@ class SensiboMotionSensor(SensiboMotionBaseEntity, SensorEntity):
     def native_unit_of_measurement(self) -> str | None:
         """Add native unit of measurement."""
         if self.entity_description.device_class == SensorDeviceClass.TEMPERATURE:
-            return TEMP_CELSIUS
+            return UnitOfTemperature.CELSIUS
         return self.entity_description.native_unit_of_measurement
 
     @property
@@ -296,7 +345,7 @@ class SensiboDeviceSensor(SensiboDeviceBaseEntity, SensorEntity):
     def native_unit_of_measurement(self) -> str | None:
         """Add native unit of measurement."""
         if self.entity_description.device_class == SensorDeviceClass.TEMPERATURE:
-            return TEMP_CELSIUS
+            return UnitOfTemperature.CELSIUS
         return self.entity_description.native_unit_of_measurement
 
     @property

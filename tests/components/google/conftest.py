@@ -47,7 +47,6 @@ TEST_API_CALENDAR = {
     "id": CALENDAR_ID,
     "etag": '"3584134138943410"',
     "timeZone": "UTC",
-    "accessRole": "reader",
     "foregroundColor": "#000000",
     "selected": True,
     "kind": "calendar#calendarListEntry",
@@ -62,10 +61,19 @@ CLIENT_ID = "client-id"
 CLIENT_SECRET = "client-secret"
 
 
+@pytest.fixture(name="calendar_access_role")
+def test_calendar_access_role() -> str:
+    """Default access role to use for test_api_calendar in tests."""
+    return "owner"
+
+
 @pytest.fixture
-def test_api_calendar():
+def test_api_calendar(calendar_access_role: str):
     """Return a test calendar object used in API responses."""
-    return TEST_API_CALENDAR
+    return {
+        **TEST_API_CALENDAR,
+        "accessRole": calendar_access_role,
+    }
 
 
 @pytest.fixture

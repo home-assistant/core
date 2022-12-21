@@ -35,7 +35,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_TYPE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
@@ -391,12 +391,20 @@ def cleanup_name_for_homekit(name: str | None) -> str:
 
 def temperature_to_homekit(temperature: float | int, unit: str) -> float:
     """Convert temperature to Celsius for HomeKit."""
-    return round(TemperatureConverter.convert(temperature, unit, TEMP_CELSIUS), 1)
+    return round(
+        TemperatureConverter.convert(temperature, unit, UnitOfTemperature.CELSIUS), 1
+    )
 
 
 def temperature_to_states(temperature: float | int, unit: str) -> float:
     """Convert temperature back from Celsius to Home Assistant unit."""
-    return round(TemperatureConverter.convert(temperature, TEMP_CELSIUS, unit) * 2) / 2
+    return (
+        round(
+            TemperatureConverter.convert(temperature, UnitOfTemperature.CELSIUS, unit)
+            * 2
+        )
+        / 2
+    )
 
 
 def density_to_air_quality(density: float) -> int:
@@ -413,14 +421,40 @@ def density_to_air_quality(density: float) -> int:
 
 
 def density_to_air_quality_pm10(density: float) -> int:
-    """Map PM10 density to HomeKit AirQuality level."""
-    if density <= 40:
+    """Map PM10 µg/m3 density to HomeKit AirQuality level."""
+    if density <= 54:  # US AQI 0-50 (HomeKit: Excellent)
         return 1
-    if density <= 80:
+    if density <= 154:  # US AQI 51-100 (HomeKit: Good)
         return 2
-    if density <= 120:
+    if density <= 254:  # US AQI 101-150 (HomeKit: Fair)
         return 3
-    if density <= 300:
+    if density <= 354:  # US AQI 151-200 (HomeKit: Inferior)
+        return 4
+    return 5  # US AQI 201+ (HomeKit: Poor)
+
+
+def density_to_air_quality_nitrogen_dioxide(density: float) -> int:
+    """Map nitrogen dioxide µg/m3 to HomeKit AirQuality level."""
+    if density <= 30:
+        return 1
+    if density <= 60:
+        return 2
+    if density <= 80:
+        return 3
+    if density <= 90:
+        return 4
+    return 5
+
+
+def density_to_air_quality_voc(density: float) -> int:
+    """Map VOCs µg/m3 to HomeKit AirQuality level."""
+    if density <= 24:
+        return 1
+    if density <= 48:
+        return 2
+    if density <= 64:
+        return 3
+    if density <= 96:
         return 4
     return 5
 

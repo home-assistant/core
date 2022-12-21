@@ -1,6 +1,7 @@
 """Configure select in a device through MQTT topic."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import functools
 import logging
 
@@ -31,10 +32,15 @@ from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
-    async_setup_platform_helper,
     warn_for_legacy_schema,
 )
-from .models import MqttCommandTemplate, MqttValueTemplate
+from .models import (
+    MqttCommandTemplate,
+    MqttValueTemplate,
+    PublishPayloadType,
+    ReceiveMessage,
+    ReceivePayloadType,
+)
 from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,30 +67,12 @@ PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-# Configuring MQTT Select under the select platform key is deprecated in HA Core 2022.6
+# Configuring MQTT Select under the select platform key was deprecated in HA Core 2022.6
 PLATFORM_SCHEMA = vol.All(
-    cv.PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_MODERN.schema),
     warn_for_legacy_schema(select.DOMAIN),
 )
 
 DISCOVERY_SCHEMA = vol.All(PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA))
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up MQTT select configured under the select platform key (deprecated)."""
-    # Deprecated in HA Core 2022.6
-    await async_setup_platform_helper(
-        hass,
-        select.DOMAIN,
-        discovery_info or config,
-        async_add_entities,
-        _async_setup_entity,
-    )
 
 
 async def async_setup_entry(
@@ -103,8 +91,8 @@ async def _async_setup_entity(
     hass: HomeAssistant,
     async_add_entities: AddEntitiesCallback,
     config: ConfigType,
-    config_entry: ConfigEntry | None = None,
-    discovery_data: dict | None = None,
+    config_entry: ConfigEntry,
+    discovery_data: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the MQTT select."""
     async_add_entities([MqttSelect(hass, config, config_entry, discovery_data)])
@@ -114,53 +102,55 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
     """representation of an MQTT select."""
 
     _entity_id_format = select.ENTITY_ID_FORMAT
-
     _attributes_extra_blocked = MQTT_SELECT_ATTRIBUTES_BLOCKED
+    _command_template: Callable[[PublishPayloadType], PublishPayloadType]
+    _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
+    _optimistic: bool = False
 
-    def __init__(self, hass, config, config_entry, discovery_data):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        config_entry: ConfigEntry,
+        discovery_data: DiscoveryInfoType | None,
+    ) -> None:
         """Initialize the MQTT select."""
-        self._config = config
-        self._optimistic = False
-        self._sub_state = None
-
-        self._attr_current_option = None
-
         SelectEntity.__init__(self)
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
-    def config_schema():
+    def config_schema() -> vol.Schema:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
-    def _setup_from_config(self, config):
+    def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
+        self._attr_current_option = None
         self._optimistic = config[CONF_OPTIMISTIC]
         self._attr_options = config[CONF_OPTIONS]
 
-        self._templates = {
-            CONF_COMMAND_TEMPLATE: MqttCommandTemplate(
-                config.get(CONF_COMMAND_TEMPLATE), entity=self
-            ).async_render,
-            CONF_VALUE_TEMPLATE: MqttValueTemplate(
-                config.get(CONF_VALUE_TEMPLATE),
-                entity=self,
-            ).async_render_with_possible_json_value,
-        }
+        self._command_template = MqttCommandTemplate(
+            config.get(CONF_COMMAND_TEMPLATE),
+            entity=self,
+        ).async_render
+        self._value_template = MqttValueTemplate(
+            config.get(CONF_VALUE_TEMPLATE), entity=self
+        ).async_render_with_possible_json_value
 
-    def _prepare_subscribe_topics(self):
+    def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def message_received(msg):
+        def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
-            payload = self._templates[CONF_VALUE_TEMPLATE](msg.payload)
-
+            payload = str(self._value_template(msg.payload))
             if payload.lower() == "none":
-                payload = None
+                self._attr_current_option = None
+                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+                return
 
-            if payload is not None and payload not in self.options:
+            if payload not in self.options:
                 _LOGGER.error(
                     "Invalid option for %s: '%s' (valid options: %s)",
                     self.entity_id,
@@ -168,7 +158,6 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
                     self.options,
                 )
                 return
-
             self._attr_current_option = payload
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
@@ -189,7 +178,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
                 },
             )
 
-    async def _subscribe_topics(self):
+    async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
@@ -198,7 +187,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Update the current value."""
-        payload = self._templates[CONF_COMMAND_TEMPLATE](option)
+        payload = self._command_template(option)
         if self._optimistic:
             self._attr_current_option = option
             self.async_write_ha_state()

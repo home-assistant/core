@@ -177,6 +177,7 @@ class Store(Generic[_T]):
                     if data["version"] != self.version:
                         raise
                     stored = data["data"]
+            await self.async_save(stored)
 
         return stored
 

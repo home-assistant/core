@@ -19,10 +19,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.trigger import PluggableAction
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import LOGGER as _LOGGER, PhilipsTVDataUpdateCoordinator
 from .const import DOMAIN
+from .helpers import async_get_turn_on_trigger
 
 SUPPORT_PHILIPS_JS = (
     MediaPlayerEntityFeature.TURN_OFF
@@ -38,8 +40,6 @@ SUPPORT_PHILIPS_JS = (
     | MediaPlayerEntityFeature.PAUSE
     | MediaPlayerEntityFeature.STOP
 )
-
-CONF_ON_ACTION = "turn_on_action"
 
 
 def _inverted(data):
@@ -95,8 +95,20 @@ class PhilipsTVMediaPlayer(
         self._media_title: str | None = None
         self._media_channel: str | None = None
 
+        self._turn_on = PluggableAction(self.async_write_ha_state)
         super().__init__(coordinator)
         self._update_from_coordinator()
+
+    async def async_added_to_hass(self) -> None:
+        """Handle being added to hass."""
+        await super().async_added_to_hass()
+
+        if (entry := self.registry_entry) and entry.device_id:
+            self.async_on_remove(
+                self._turn_on.async_register(
+                    self.hass, async_get_turn_on_trigger(entry.device_id)
+                )
+            )
 
     async def _async_update_soon(self):
         """Reschedule update task."""
@@ -104,12 +116,10 @@ class PhilipsTVMediaPlayer(
         await self.coordinator.async_request_refresh()
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         supports = self._supports
-        if self.coordinator.turn_on or (
-            self._tv.on and self._tv.powerstate is not None
-        ):
+        if self._turn_on or (self._tv.on and self._tv.powerstate is not None):
             supports |= MediaPlayerEntityFeature.TURN_ON
         return supports
 
@@ -152,7 +162,7 @@ class PhilipsTVMediaPlayer(
             await self._tv.setPowerState("On")
             self._state = MediaPlayerState.ON
         else:
-            await self.coordinator.turn_on.async_run(self.hass, self._context)
+            await self._turn_on.async_run(self.hass, self._context)
         await self._async_update_soon()
 
     async def async_turn_off(self) -> None:

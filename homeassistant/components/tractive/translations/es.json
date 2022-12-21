@@ -17,5 +17,17 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "tracker_state": {
+                "state": {
+                    "not_reporting": "No informando",
+                    "operational": "Operativo",
+                    "system_shutdown_user": "Usuario de apagado del sistema",
+                    "system_startup": "Inicio del sistema"
+                }
+            }
+        }
     }
 }

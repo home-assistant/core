@@ -64,9 +64,6 @@
                 },
                 "description": "Restaure suas configura\u00e7\u00f5es de rede de um arquivo JSON de backup carregado. Voc\u00ea pode baixar um de uma instala\u00e7\u00e3o ZHA diferente em **Network Settings**, ou usar um arquivo Zigbee2MQTT `coordinator_backup.json`.",
                 "title": "Carregar um backup manual"
-            },
-            "user": {
-                "title": "ZHA"
             }
         }
     },

@@ -38,9 +38,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
-    PRESSURE_HPA,
-    SPEED_KILOMETERS_PER_HOUR,
-    TEMP_CELSIUS,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
@@ -115,9 +115,9 @@ async def async_setup_entry(
 class IPMAWeather(WeatherEntity):
     """Representation of a weather condition."""
 
-    _attr_native_pressure_unit = PRESSURE_HPA
-    _attr_native_temperature_unit = TEMP_CELSIUS
-    _attr_native_wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
+    _attr_native_pressure_unit = UnitOfPressure.HPA
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
 
     _attr_attribution = ATTRIBUTION
 
