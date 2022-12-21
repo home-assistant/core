@@ -34,7 +34,7 @@ OVERKIZ_TO_HVAC_MODE: dict[str, str] = {
 HVAC_MODE_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_HVAC_MODE.items()}
 
 PRESET_EXTERNAL = "external"
-PRESET_FROSTPROTECTION = "frostprotection"
+PRESET_FROSTPROTECTION = "frost_protection"
 
 OVERKIZ_TO_PRESET_MODES: dict[str, str] = {
     OverkizCommandParam.OFF: PRESET_ECO,
