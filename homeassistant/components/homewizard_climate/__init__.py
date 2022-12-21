@@ -3,13 +3,17 @@ from __future__ import annotations
 
 import logging
 
-from homewizard_climate_websocket.api.api import HomeWizardClimateApi
+from homewizard_climate_websocket.api.api import (
+    HomeWizardClimateApi,
+    InvalidHomewizardAuth,
+)
 from homewizard_climate_websocket.model.climate_device import HomeWizardClimateDevice
 from homewizard_climate_websocket.ws.hw_websocket import HomeWizardClimateWebSocket
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .const import DOMAIN
 
@@ -24,7 +28,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api: HomeWizardClimateApi = HomeWizardClimateApi(
         entry.data.get(CONF_USERNAME), entry.data.get(CONF_PASSWORD)
     )
-    await hass.async_add_executor_job(api.login)
+
+    try:
+        await hass.async_add_executor_job(api.login)
+    except InvalidHomewizardAuth as exc:
+        raise ConfigEntryAuthFailed from exc
 
     devices: list[HomeWizardClimateDevice] = await hass.async_add_executor_job(
         api.get_devices

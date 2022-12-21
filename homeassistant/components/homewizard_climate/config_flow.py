@@ -1,6 +1,7 @@
 """Config flow for Homewizard Climate integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -74,6 +75,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Restart the config flow for reauth."""
+        return await self.async_step_user()
 
 
 class CannotConnect(HomeAssistantError):
