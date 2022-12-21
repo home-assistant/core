@@ -321,10 +321,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from err
     adapters = await manager.async_get_bluetooth_adapters()
     details = adapters[adapter]
-    slots = entry.options.get(
-        CONF_CONNECTION_SLOTS,
-        details.get(ADAPTER_CONNECTIONS_SLOTS) or DEFAULT_CONNECTION_SLOTS,
-    )
+    # TODO : detect known connection slots in bluetooth-adapters
+    # since the BCM ones can do 7 connections and the CSR ones
+    # can do 5 connections.
+    slots = details.get(ADAPTER_CONNECTIONS_SLOTS, DEFAULT_CONNECTION_SLOTS),
     entry.async_on_unload(async_register_scanner(hass, scanner, True, slots))
     await async_update_device(hass, entry, adapter, details)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = scanner
