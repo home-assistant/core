@@ -1427,7 +1427,9 @@ async def test_automation_with_error_in_script(
     assert issues[0]["issue_id"] == "automation.hello_service_not_found_test.automation"
 
 
-async def test_automation_with_error_in_script_2(hass: HomeAssistant, caplog: pytest.LogCaptureFixture):
+async def test_automation_with_error_in_script_2(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test automation with an error in script."""
     assert await async_setup_component(
         hass,
