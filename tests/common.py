@@ -1347,3 +1347,13 @@ def raise_contains_mocks(val):
     if isinstance(val, list):
         for dict_value in val:
             raise_contains_mocks(dict_value)
+
+
+async def create_hass_access_token(hass, user, credential):
+    """Return an access token to access Home Assistant."""
+    await hass.auth.async_link_user(user, credential)
+
+    refresh_token = await hass.auth.async_create_refresh_token(
+        user, CLIENT_ID, credential=credential
+    )
+    return hass.auth.async_create_access_token(refresh_token)

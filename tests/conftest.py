@@ -45,7 +45,7 @@ from homeassistant.components.websocket_api.http import URL
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, recorder as recorder_helper
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, location
 
@@ -64,6 +64,7 @@ from tests.common import (  # noqa: E402, isort:skip
     get_test_home_assistant,
     init_recorder_component,
     mock_storage as mock_storage,
+    create_hass_access_token,
 )
 from tests.test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:skip
 from tests.components.recorder.common import (  # noqa: E402, isort:skip
@@ -479,12 +480,7 @@ async def hass_admin_credential(hass, local_auth):
 @pytest.fixture
 async def hass_access_token(hass, hass_admin_user, hass_admin_credential):
     """Return an access token to access Home Assistant."""
-    await hass.auth.async_link_user(hass_admin_user, hass_admin_credential)
-
-    refresh_token = await hass.auth.async_create_refresh_token(
-        hass_admin_user, CLIENT_ID, credential=hass_admin_credential
-    )
-    return hass.auth.async_create_access_token(refresh_token)
+    return await create_hass_access_token(hass, hass_admin_user, hass_admin_credential)
 
 
 @pytest.fixture
@@ -575,13 +571,18 @@ def local_auth(hass):
 
 
 @pytest.fixture
-def hass_client(hass, aiohttp_client, hass_access_token, socket_enabled):
+def hass_client(
+    hass, aiohttp_client, hass_admin_user, hass_admin_credential, socket_enabled
+):
     """Return an authenticated HTTP client."""
 
     async def auth_client():
         """Return an authenticated client."""
+        access_token = await create_hass_access_token(
+            hass, hass_admin_user, hass_admin_credential
+        )
         return await aiohttp_client(
-            hass.http.app, headers={"Authorization": f"Bearer {hass_access_token}"}
+            hass.http.app, headers={"Authorization": f"Bearer {access_token}"}
         )
 
     return auth_client
@@ -623,11 +624,17 @@ def current_request_with_host(current_request):
 
 
 @pytest.fixture
-def hass_ws_client(aiohttp_client, hass_access_token, hass, socket_enabled):
+def hass_ws_client(
+    aiohttp_client, hass_admin_user, hass_admin_credential, hass, socket_enabled
+):
     """Websocket client fixture connected to websocket server."""
 
-    async def create_client(hass=hass, access_token=hass_access_token):
+    async def create_client(hass=hass, access_token=UNDEFINED):
         """Create a websocket client."""
+        if access_token == UNDEFINED:
+            access_token = await create_hass_access_token(
+                hass, hass_admin_user, hass_admin_credential
+            )
         assert await async_setup_component(hass, "websocket_api", {})
         client = await aiohttp_client(hass.http.app)
         websocket = await client.ws_connect(URL)
