@@ -1,11 +1,15 @@
 """The tests for the NSW Rural Fire Service Feeds platform."""
 import datetime
+from datetime import timedelta
 from unittest.mock import ANY, MagicMock, call, patch
 
 from aio_geojson_nsw_rfs_incidents import NswRuralFireServiceIncidentsFeed
 
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
+from homeassistant.components.nsw_rural_fire_service_feed.const import (
+    DEFAULT_SCAN_INTERVAL,
+)
 from homeassistant.components.nsw_rural_fire_service_feed.geo_location import (
     ATTR_CATEGORY,
     ATTR_COUNCIL_AREA,
@@ -17,7 +21,6 @@ from homeassistant.components.nsw_rural_fire_service_feed.geo_location import (
     ATTR_SIZE,
     ATTR_STATUS,
     ATTR_TYPE,
-    SCAN_INTERVAL,
 )
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -132,8 +135,7 @@ async def test_setup(hass):
             # Collect events.
             await hass.async_block_till_done()
 
-            all_states = hass.states.async_all()
-            assert len(all_states) == 3
+            assert len(hass.states.async_entity_ids("geo_location")) == 3
 
             state = hass.states.get("geo_location.title_1")
             assert state is not None
@@ -197,28 +199,31 @@ async def test_setup(hass):
                 "OK",
                 [mock_entry_1, mock_entry_4, mock_entry_3],
             )
-            async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
+            async_fire_time_changed(
+                hass, utcnow + timedelta(seconds=DEFAULT_SCAN_INTERVAL)
+            )
             await hass.async_block_till_done()
 
-            all_states = hass.states.async_all()
-            assert len(all_states) == 3
+            assert len(hass.states.async_entity_ids("geo_location")) == 3
 
             # Simulate an update - empty data, but successful update,
             # so no changes to entities.
             mock_feed_update.return_value = "OK_NO_DATA", None
-            async_fire_time_changed(hass, utcnow + 2 * SCAN_INTERVAL)
+            async_fire_time_changed(
+                hass, utcnow + 2 * timedelta(seconds=DEFAULT_SCAN_INTERVAL)
+            )
             await hass.async_block_till_done()
 
-            all_states = hass.states.async_all()
-            assert len(all_states) == 3
+            assert len(hass.states.async_entity_ids("geo_location")) == 3
 
             # Simulate an update - empty data, removes all entities
             mock_feed_update.return_value = "ERROR", None
-            async_fire_time_changed(hass, utcnow + 3 * SCAN_INTERVAL)
+            async_fire_time_changed(
+                hass, utcnow + 3 * timedelta(seconds=DEFAULT_SCAN_INTERVAL)
+            )
             await hass.async_block_till_done()
 
-            all_states = hass.states.async_all()
-            assert len(all_states) == 0
+            assert len(hass.states.async_entity_ids("geo_location")) == 0
 
             # Artificially trigger update.
             hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
@@ -250,8 +255,7 @@ async def test_setup_with_custom_location(hass):
             # Collect events.
             await hass.async_block_till_done()
 
-            all_states = hass.states.async_all()
-            assert len(all_states) == 1
+            assert len(hass.states.async_entity_ids("geo_location")) == 1
 
             assert mock_feed_manager.call_args == call(
                 ANY, (15.1, 25.2), filter_categories=[], filter_radius=200.0
