@@ -45,9 +45,7 @@ from homeassistant.const import (  # noqa: F401, pylint: disable=[hass-deprecate
     DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
     DEVICE_CLASS_VOLTAGE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    TEMP_KELVIN,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -737,7 +735,8 @@ class SensorEntity(Entity):
 
         if (
             self.device_class == DEVICE_CLASS_TEMPERATURE
-            and native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
+            and native_unit_of_measurement
+            in {UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT}
         ):
             return self.hass.config.units.temperature_unit
 
