@@ -1,6 +1,7 @@
 """UniFi entity representation."""
 from __future__ import annotations
 
+from abc import abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Generic, TypeVar
@@ -151,18 +152,22 @@ class UnifiEntity(Entity, Generic[HandlerT, DataT]):
             await self.async_remove(force_remove=True)
 
     @callback
+    @abstractmethod
     def async_initiate_state(self) -> None:
         """Initiate entity state.
 
         Perform additional actions setting up platform entity child class state.
         """
+        raise NotImplementedError()
 
     @callback
+    @abstractmethod
     def async_update_state(self, event: ItemEvent, obj_id: str) -> None:
         """Update entity state.
 
         Perform additional actions updating platform entity child class state.
         """
+        raise NotImplementedError()
 
     @callback
     def async_event_callback(self, event: Event) -> None:
@@ -170,6 +175,7 @@ class UnifiEntity(Entity, Generic[HandlerT, DataT]):
 
         Perform additional action updating platform entity child class state.
         """
+        raise NotImplementedError()
 
     @callback
     def async_custom_subscribe(self) -> None:
