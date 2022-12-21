@@ -140,7 +140,7 @@ class NswRuralFireServiceFeedEntityManager:
             config_entry.data.get(CONF_LONGITUDE, hass.config.longitude),
         )
         radius_in_km = config_entry.data[CONF_RADIUS]
-        categories = config_entry.data[CONF_CATEGORIES]
+        categories = config_entry.data.get(CONF_CATEGORIES, [])
         scan_interval: timedelta = timedelta(
             seconds=config_entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         )
