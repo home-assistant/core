@@ -1139,7 +1139,7 @@ async def test_device_classes_with_invalid_unit_of_measurement(
     enable_custom_integrations: None,
     device_class: SensorDeviceClass,
 ):
-    """Test error on a sensor using an invalid device class for a sensor."""
+    """Test error when unit of measurement is not valid for used device class."""
     platform = getattr(hass.components, "test.sensor")
     platform.init(empty=True)
     platform.ENTITIES["0"] = platform.MockSensor(
