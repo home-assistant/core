@@ -964,19 +964,12 @@ class SensorEntity(Entity):
             and native_unit_of_measurement not in units
         ):
             self._invalid_unit_of_measurement_reported = True
-            report_issue = self._suggest_report_issue()
 
             # This should raise in Home Assistant Core 2023.6
-            _LOGGER.warning(
-                "Entity %s (%s) is using native unit of measurement '%s' which "
-                "is not a valid unit for the device class ('%s') it is using; "
-                "Please update your configuration if your entity is manually "
-                "configured, otherwise %s",
-                self.entity_id,
-                type(self),
-                native_unit_of_measurement,
-                device_class,
-                report_issue,
+            raise ValueError(
+                f"Entity {self.entity_id} ({type(self)}) is using native unit of measurement "
+                f"'{native_unit_of_measurement}' which "
+                f"is not a valid unit for the device class ('{device_class}') it is using"
             )
 
         return value

@@ -90,7 +90,7 @@ async def async_setup_platform(
                 0.5,  # 6kWh / h
                 SensorDeviceClass.ENERGY,
                 SensorStateClass.TOTAL,
-                UnitOfEnergy.KILO_WATT_HOUR,
+                "cows",
                 None,
                 "total_energy_kwh",
             ),
