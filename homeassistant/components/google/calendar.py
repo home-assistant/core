@@ -555,12 +555,13 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
 
 def _get_calendar_event(event: Event) -> CalendarEvent:
     """Return a CalendarEvent from an API event."""
+    rrule: str | None = None
+    if len(event.recurrence) == 1:
+        rrule = event.recurrence[0].lstrip(RRULE_PREFIX)
     return CalendarEvent(
         uid=event.ical_uuid,
         recurrence_id=event.id if event.recurring_event_id else None,
-        rrule=event.recurrence[0].lstrip(RRULE_PREFIX)
-        if len(event.recurrence) == 1
-        else None,
+        rrule=rrule,
         summary=event.summary,
         start=event.start.value,
         end=event.end.value,
