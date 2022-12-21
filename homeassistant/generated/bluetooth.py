@@ -343,6 +343,11 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "manufacturer_id": 89,
     },
     {
+        "connectable": True,
+        "domain": "switchbot",
+        "manufacturer_id": 741,
+    },
+    {
         "connectable": False,
         "domain": "thermobeacon",
         "manufacturer_data_start": [
