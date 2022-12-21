@@ -1349,7 +1349,9 @@ def raise_contains_mocks(val):
             raise_contains_mocks(dict_value)
 
 
-async def create_hass_access_token(hass, user, credential):
+async def create_hass_access_token(
+    hass: HomeAssistant, user: auth_models.User, credential: auth_models.Credentials
+) -> str:
     """Return an access token to access Home Assistant."""
     await hass.auth.async_link_user(user, credential)
 
