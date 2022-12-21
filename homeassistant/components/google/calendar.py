@@ -89,6 +89,10 @@ SYNC_EVENT_MIN_TIME = timedelta(days=-90)
 # are not opaque are ignored by default.
 OPAQUE = "opaque"
 
+# Google calendar prefixes recurrence rules with RRULE: which
+# we need to strip when working with the frontend recurrence rule values
+RRULE_PREFIX = "RRULE:"
+
 _EVENT_IN_TYPES = vol.Schema(
     {
         vol.Exclusive(EVENT_IN_DAYS, EVENT_TYPES_CONF): cv.positive_int,
@@ -526,7 +530,7 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
             }
         )
         if rrule := kwargs.get(EVENT_RRULE):
-            event.recurrence = [rrule]
+            event.recurrence = [f"{RRULE_PREFIX}{rrule}"]
 
         await self.coordinator.sync.store_service.async_add_event(event)
         await self.coordinator.async_refresh()
@@ -551,10 +555,13 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
 
 def _get_calendar_event(event: Event) -> CalendarEvent:
     """Return a CalendarEvent from an API event."""
+    rrule: str | None = None
+    if len(event.recurrence) == 1:
+        rrule = event.recurrence[0].lstrip(RRULE_PREFIX)
     return CalendarEvent(
         uid=event.ical_uuid,
         recurrence_id=event.id if event.recurring_event_id else None,
-        rrule=event.recurrence[0] if len(event.recurrence) == 1 else None,
+        rrule=rrule,
         summary=event.summary,
         start=event.start.value,
         end=event.end.value,
