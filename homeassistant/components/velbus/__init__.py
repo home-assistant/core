@@ -203,7 +203,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     if config_entry.version == 1:
         # This is the config entry migration for adding the new program selection
         # clean the velbusCache
-        if os.path.isdir(f"velbuscache-{config_entry.entry_id}"):
+        if os.path.isdir(
+            hass.config.path(STORAGE_DIR, f"velbuscache-{config_entry.entry_id}/")
+        ):
             await hass.async_add_executor_job(
                 shutil.rmtree,
                 hass.config.path(STORAGE_DIR, f"velbuscache-{config_entry.entry_id}/"),
