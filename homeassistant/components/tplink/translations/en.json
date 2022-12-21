@@ -24,5 +24,14 @@
                 "description": "If you leave the host empty, discovery will be used to find devices."
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Device polling interval(s)"
+                }
+            }
+        }
     }
 }

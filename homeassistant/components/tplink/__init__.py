@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
     CONF_NAME,
+    CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_STARTED,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -23,7 +24,7 @@ from homeassistant.helpers import device_registry as dr, discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, PLATFORMS
+from .const import DOMAIN, PLATFORMS, SCAN_INTERVAL_DEFAULT
 from .coordinator import TPLinkDataUpdateCoordinator
 
 DISCOVERY_INTERVAL = timedelta(minutes=15)
@@ -83,8 +84,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SmartDeviceException as ex:
         raise ConfigEntryNotReady from ex
 
-    hass.data[DOMAIN][entry.entry_id] = TPLinkDataUpdateCoordinator(hass, device)
+    entry.options.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL_DEFAULT)
+
+    hass.data[DOMAIN][entry.entry_id] = TPLinkDataUpdateCoordinator(
+        hass, device, entry.options.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL_DEFAULT)
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    entry.async_on_unload(entry.add_update_listener(async_update_options))
 
     return True
 
@@ -97,6 +103,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass_data.pop(entry.entry_id)
     await device.protocol.close()
     return unload_ok
+
+
+async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Update options."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 def legacy_device_id(device: SmartDevice) -> str:

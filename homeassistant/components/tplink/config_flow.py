@@ -9,20 +9,28 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import async_discover_devices
-from .const import DOMAIN
+from .const import DOMAIN, SCAN_INTERVAL_DEFAULT
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for tplink."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler(config_entry)
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -97,7 +105,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Optional(CONF_HOST, default=""): str}),
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(CONF_HOST, default=""): str,
+                }
+            ),
             errors=errors,
         )
 
@@ -135,6 +147,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title=f"{device.alias} {device.model}",
             data={
                 CONF_HOST: device.host,
+                CONF_SCAN_INTERVAL: SCAN_INTERVAL_DEFAULT,
             },
         )
 
@@ -148,3 +161,29 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             dr.format_mac(device.mac), raise_on_progress=raise_on_progress
         )
         return device
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle tp-link kasa device options."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage tp-link kasa device options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        options = {
+            vol.Required(
+                CONF_SCAN_INTERVAL,
+                default=self.config_entry.options.get(
+                    CONF_SCAN_INTERVAL, SCAN_INTERVAL_DEFAULT
+                ),
+            ): int,
+        }
+
+        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))

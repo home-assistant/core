@@ -18,5 +18,6 @@ CONF_LIGHT: Final = "light"
 CONF_STRIP: Final = "strip"
 CONF_SWITCH: Final = "switch"
 CONF_SENSOR: Final = "sensor"
+SCAN_INTERVAL_DEFAULT = 10
 
 PLATFORMS: Final = [Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]

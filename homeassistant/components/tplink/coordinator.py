@@ -19,14 +19,12 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator):
     """DataUpdateCoordinator to gather data for a specific TPLink device."""
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        device: SmartDevice,
+        self, hass: HomeAssistant, device: SmartDevice, scan_interval: int
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific SmartPlug."""
         self.device = device
         self.update_children = True
-        update_interval = timedelta(seconds=10)
+        update_interval = timedelta(seconds=scan_interval)
         super().__init__(
             hass,
             _LOGGER,
