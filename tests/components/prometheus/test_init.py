@@ -293,6 +293,12 @@ async def test_climate(client, climate_entities):
         'friendly_name="Ecobee"} 24.0' in body
     )
 
+    assert (
+        'climate_target_temperature_celsius{domain="climate",'
+        'entity="climate.fritzdect",'
+        'friendly_name="Fritz!DECT"} 0.0' in body
+    )
+
 
 @pytest.mark.parametrize("namespace", [""])
 async def test_humidifier(client, humidifier_entities):
@@ -1000,6 +1006,23 @@ async def climate_fixture(hass, registry):
     )
     data["climate_2"] = climate_2
     data["climate_2_attributes"] = climate_2_attributes
+
+    climate_3 = registry.async_get_or_create(
+        domain=climate.DOMAIN,
+        platform="test",
+        unique_id="climate_3",
+        unit_of_measurement=TEMP_CELSIUS,
+        suggested_object_id="fritzdect",
+        original_name="Fritz!DECT",
+    )
+    climate_3_attributes = {
+        ATTR_TEMPERATURE: 0,
+        ATTR_CURRENT_TEMPERATURE: 22,
+        ATTR_HVAC_ACTION: climate.HVACAction.OFF,
+    }
+    set_state_with_entry(hass, climate_3, climate.HVACAction.OFF, climate_3_attributes)
+    data["climate_3"] = climate_3
+    data["climate_3_attributes"] = climate_3_attributes
 
     await hass.async_block_till_done()
     return data
