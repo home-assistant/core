@@ -11,15 +11,14 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_KILO_WATT_HOUR,
-    FREQUENCY_HERTZ,
     PERCENTAGE,
-    POWER_WATT,
-    PRESSURE_PSI,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfFrequency,
+    UnitOfPower,
+    UnitOfPressure,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -47,7 +46,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="EngineOilPressure",
-        native_unit_of_measurement=PRESSURE_PSI,
+        native_unit_of_measurement=UnitOfPressure.PSI,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -60,7 +59,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="BatteryVoltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -85,7 +84,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="GeneratorTrueTotalPower",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -97,14 +96,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="GeneratorVoltageAverageLineToLine",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="GeneratorFrequency",
-        native_unit_of_measurement=FREQUENCY_HERTZ,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -138,21 +137,21 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="Source1VoltageAverageLineToLine",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="Source2VoltageAverageLineToLine",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="GensetTotalEnergy",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -163,7 +162,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="GeneratorCurrentAverage",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -173,8 +172,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 SENSOR_MAP = {description.key: description for description in SENSOR_TYPES}
 
 UNIT_MAPPINGS = {
-    "C": TEMP_CELSIUS,
-    "F": TEMP_FAHRENHEIT,
+    "C": UnitOfTemperature.CELSIUS,
+    "F": UnitOfTemperature.FAHRENHEIT,
 }
 
 

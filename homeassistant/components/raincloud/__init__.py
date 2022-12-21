@@ -12,8 +12,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
     PERCENTAGE,
-    TIME_DAYS,
-    TIME_MINUTES,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -63,9 +62,9 @@ UNIT_OF_MEASUREMENT_MAP = {
     "is_watering": "",
     "manual_watering": "",
     "next_cycle": "",
-    "rain_delay": TIME_DAYS,
+    "rain_delay": UnitOfTime.DAYS,
     "status": "",
-    "watering_time": TIME_MINUTES,
+    "watering_time": UnitOfTime.MINUTES,
 }
 
 BINARY_SENSORS = ["is_watering", "status"]

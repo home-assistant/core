@@ -90,6 +90,7 @@ SENSOR_TYPES: tuple[RenaultSelectEntityDescription, ...] = (
         key="charge_mode",
         coordinator="charge_mode",
         data_key="chargeMode",
+        translation_key="charge_mode",
         icon_lambda=_get_charge_mode_icon,
         name="Charge mode",
         options=["always", "always_charging", "schedule_mode"],

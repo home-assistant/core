@@ -4,6 +4,113 @@
   "last_interview": "2022-11-29T21:23:48.485057",
   "interview_version": 1,
   "attributes": {
+    "0/29/0": {
+      "node_id": 1,
+      "endpoint": 0,
+      "cluster_id": 29,
+      "cluster_type": "chip.clusters.Objects.Descriptor",
+      "cluster_name": "Descriptor",
+      "attribute_id": 0,
+      "attribute_type": "chip.clusters.Objects.Descriptor.Attributes.DeviceTypeList",
+      "attribute_name": "DeviceTypeList",
+      "value": [
+        {
+          "type": 22,
+          "revision": 1
+        }
+      ]
+    },
+    "0/29/1": {
+      "node_id": 1,
+      "endpoint": 0,
+      "cluster_id": 29,
+      "cluster_type": "chip.clusters.Objects.Descriptor",
+      "cluster_name": "Descriptor",
+      "attribute_id": 1,
+      "attribute_type": "chip.clusters.Objects.Descriptor.Attributes.ServerList",
+      "attribute_name": "ServerList",
+      "value": [
+        4, 29, 31, 40, 42, 43, 44, 48, 49, 50, 51, 52, 53, 54, 55, 59, 60, 62,
+        63, 64, 65
+      ]
+    },
+    "0/29/2": {
+      "node_id": 1,
+      "endpoint": 0,
+      "cluster_id": 29,
+      "cluster_type": "chip.clusters.Objects.Descriptor",
+      "cluster_name": "Descriptor",
+      "attribute_id": 2,
+      "attribute_type": "chip.clusters.Objects.Descriptor.Attributes.ClientList",
+      "attribute_name": "ClientList",
+      "value": [41]
+    },
+    "0/29/3": {
+      "node_id": 1,
+      "endpoint": 0,
+      "cluster_id": 29,
+      "cluster_type": "chip.clusters.Objects.Descriptor",
+      "cluster_name": "Descriptor",
+      "attribute_id": 3,
+      "attribute_type": "chip.clusters.Objects.Descriptor.Attributes.PartsList",
+      "attribute_name": "PartsList",
+      "value": [1]
+    },
+    "0/29/65532": {
+      "node_id": 1,
+      "endpoint": 0,
+      "cluster_id": 29,
+      "cluster_type": "chip.clusters.Objects.Descriptor",
+      "cluster_name": "Descriptor",
+      "attribute_id": 65532,
+      "attribute_type": "chip.clusters.Objects.Descriptor.Attributes.FeatureMap",
+      "attribute_name": "FeatureMap",
+      "value": 0
+    },
+    "0/29/65533": {
+      "node_id": 1,
+      "endpoint": 0,
+      "cluster_id": 29,
+      "cluster_type": "chip.clusters.Objects.Descriptor",
+      "cluster_name": "Descriptor",
+      "attribute_id": 65533,
+      "attribute_type": "chip.clusters.Objects.Descriptor.Attributes.ClusterRevision",
+      "attribute_name": "ClusterRevision",
+      "value": 1
+    },
+    "0/29/65528": {
+      "node_id": 1,
+      "endpoint": 0,
+      "cluster_id": 29,
+      "cluster_type": "chip.clusters.Objects.Descriptor",
+      "cluster_name": "Descriptor",
+      "attribute_id": 65528,
+      "attribute_type": "chip.clusters.Objects.Descriptor.Attributes.GeneratedCommandList",
+      "attribute_name": "GeneratedCommandList",
+      "value": []
+    },
+    "0/29/65529": {
+      "node_id": 1,
+      "endpoint": 0,
+      "cluster_id": 29,
+      "cluster_type": "chip.clusters.Objects.Descriptor",
+      "cluster_name": "Descriptor",
+      "attribute_id": 65529,
+      "attribute_type": "chip.clusters.Objects.Descriptor.Attributes.AcceptedCommandList",
+      "attribute_name": "AcceptedCommandList",
+      "value": []
+    },
+    "0/29/65531": {
+      "node_id": 1,
+      "endpoint": 0,
+      "cluster_id": 29,
+      "cluster_type": "chip.clusters.Objects.Descriptor",
+      "cluster_name": "Descriptor",
+      "attribute_id": 65531,
+      "attribute_type": "chip.clusters.Objects.Descriptor.Attributes.AttributeList",
+      "attribute_name": "AttributeList",
+      "value": [0, 1, 2, 3, 65528, 65529, 65531, 65532, 65533]
+    },
     "0/40/0": {
       "node_id": 1,
       "endpoint": 0,

@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "mdns_missing_mac": "Fehlende MAC-Adresse in MDNS-Eigenschaften.",
             "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
@@ -46,8 +47,8 @@
     },
     "issues": {
         "ble_firmware_outdated": {
-            "description": "Um die Zuverl\u00e4ssigkeit und Leistung von Bluetooth zu verbessern, empfehlen wir dringend, {name} mit ESPHome 2022.11.0 oder h\u00f6her zu aktualisieren.",
-            "title": "Aktualisieren von {name} mit ESPHome 2022.11.0 oder h\u00f6her"
+            "description": "Um die Zuverl\u00e4ssigkeit und Leistung von Bluetooth zu verbessern, empfehlen wir dringend, {name} mit ESPHome {version} oder h\u00f6her zu aktualisieren. Wenn du das Ger\u00e4t auf ESPHome {version} aktualisierst, wird empfohlen, ein serielles Kabel anstelle eines Over-the-Air-Updates zu verwenden, um das neue Partitionsschema zu nutzen.",
+            "title": "Aktualisieren von {name} mit ESPHome {version} oder h\u00f6her"
         }
     }
 }

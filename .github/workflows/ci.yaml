@@ -56,7 +56,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.2.0
       - name: Generate partial Python venv restore key
         id: generate_python_cache_key
         run: >-
@@ -167,10 +167,10 @@ jobs:
       - info
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.2.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.3.0
+        uses: actions/setup-python@v4.3.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -211,9 +211,9 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.2.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.3.0
+        uses: actions/setup-python@v4.3.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -265,9 +265,9 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.2.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.3.0
+        uses: actions/setup-python@v4.3.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -322,9 +322,9 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.2.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.3.0
+        uses: actions/setup-python@v4.3.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -368,9 +368,9 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.2.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.3.0
+        uses: actions/setup-python@v4.3.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -495,10 +495,10 @@ jobs:
         python-version: ${{ fromJSON(needs.info.outputs.python_versions) }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.2.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.3.0
+        uses: actions/setup-python@v4.3.1
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -559,10 +559,10 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.2.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.3.0
+        uses: actions/setup-python@v4.3.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -592,10 +592,10 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.2.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.3.0
+        uses: actions/setup-python@v4.3.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -626,10 +626,10 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.2.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.3.0
+        uses: actions/setup-python@v4.3.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -671,10 +671,10 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.2.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.3.0
+        uses: actions/setup-python@v4.3.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -720,10 +720,10 @@ jobs:
     name: Run pip check ${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.2.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.3.0
+        uses: actions/setup-python@v4.3.1
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -775,10 +775,10 @@ jobs:
             bluez \
             ffmpeg
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.2.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.3.0
+        uses: actions/setup-python@v4.3.1
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -898,10 +898,10 @@ jobs:
             ffmpeg \
             libmariadb-dev-compat
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.2.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.3.0
+        uses: actions/setup-python@v4.3.1
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -970,7 +970,7 @@ jobs:
       - pytest
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.2.0
       - name: Download all coverage artifacts
         uses: actions/download-artifact@v3
       - name: Upload coverage to Codecov (full coverage)

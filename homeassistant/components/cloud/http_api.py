@@ -226,14 +226,16 @@ class CloudRegisterView(HomeAssistantView):
 
         client_metadata = None
 
-        if location_info := await async_detect_location_info(
-            async_get_clientsession(hass)
-        ):
-            client_metadata = {
-                "NC_COUNTRY_CODE": location_info.country_code,
-                "NC_REGION_CODE": location_info.region_code,
-                "NC_ZIP_CODE": location_info.zip_code,
-            }
+        if (
+            location_info := await async_detect_location_info(
+                async_get_clientsession(hass)
+            )
+        ) and location_info.country_code is not None:
+            client_metadata = {"NC_COUNTRY_CODE": location_info.country_code}
+            if location_info.region_code is not None:
+                client_metadata["NC_REGION_CODE"] = location_info.region_code
+            if location_info.zip_code is not None:
+                client_metadata["NC_ZIP_CODE"] = location_info.zip_code
 
         async with async_timeout.timeout(REQUEST_TIMEOUT):
             await cloud.auth.async_register(

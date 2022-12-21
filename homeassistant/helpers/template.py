@@ -38,8 +38,8 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     ATTR_PERSONS,
     ATTR_UNIT_OF_MEASUREMENT,
-    LENGTH_METERS,
     STATE_UNKNOWN,
+    UnitOfLength,
 )
 from homeassistant.core import (
     Context,
@@ -1364,7 +1364,7 @@ def distance(hass, *args):
         return hass.config.distance(*locations[0])
 
     return hass.config.units.length(
-        loc_util.distance(*locations[0] + locations[1]), LENGTH_METERS
+        loc_util.distance(*locations[0] + locations[1]), UnitOfLength.METERS
     )
 
 
@@ -1675,7 +1675,7 @@ def average(*args: Any, default: Any = _SENTINEL) -> Any:
     if len(args) == 0:
         raise TypeError("average expected at least 1 argument, got 0")
 
-    # If first argument is iterable and more then 1 argument provided but not a named default,
+    # If first argument is iterable and more than 1 argument provided but not a named default,
     # then use 2nd argument as default.
     if isinstance(args[0], Iterable):
         average_list = args[0]

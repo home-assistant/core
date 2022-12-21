@@ -19,7 +19,9 @@
         "step": {
             "init": {
                 "data": {
-                    "country_code": "K\u00f3d krajiny"
+                    "country_code": "K\u00f3d krajiny",
+                    "delta": "\u010casov\u00fd interval v sekund\u00e1ch medzi aktualiz\u00e1ciami sn\u00edmok z kamery",
+                    "timeframe": "Predpove\u010f zr\u00e1\u017eok za p\u00e1r min\u00fat"
                 }
             }
         }

@@ -11,6 +11,8 @@ from ical.calendar_stream import IcsCalendarStream
 from ical.event import Event
 from ical.store import EventStore
 from ical.types import Range, Recur
+from pydantic import ValidationError
+import voluptuous as vol
 
 from homeassistant.components.calendar import (
     EVENT_DESCRIPTION,
@@ -102,14 +104,19 @@ class LocalCalendarEntity(CalendarEntity):
 
     async def async_create_event(self, **kwargs: Any) -> None:
         """Add a new event to calendar."""
-        event = Event.parse_obj(
-            {
-                EVENT_SUMMARY: kwargs[EVENT_SUMMARY],
-                EVENT_START: kwargs[EVENT_START],
-                EVENT_END: kwargs[EVENT_END],
-                EVENT_DESCRIPTION: kwargs.get(EVENT_DESCRIPTION),
-            }
-        )
+        event_data = {
+            EVENT_SUMMARY: kwargs[EVENT_SUMMARY],
+            EVENT_START: kwargs[EVENT_START],
+            EVENT_END: kwargs[EVENT_END],
+            EVENT_DESCRIPTION: kwargs.get(EVENT_DESCRIPTION),
+        }
+        try:
+            event = Event.parse_obj(event_data)
+        except ValidationError as err:
+            _LOGGER.debug(
+                "Error parsing event input fields: %s (%s)", event_data, str(err)
+            )
+            raise vol.Invalid("Error parsing event input fields") from err
         if rrule := kwargs.get(EVENT_RRULE):
             event.rrule = Recur.from_rrule(rrule)
 

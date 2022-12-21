@@ -81,6 +81,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="wind_speed",
         name="Wind speed",
         native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
+        # Hint mph because that's the preferred unit for wind speeds in UK
+        # This can be removed if we add a mixed metric/imperial unit system for UK users
         suggested_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
         device_class=SensorDeviceClass.WIND_SPEED,
         entity_registry_enabled_default=True,
@@ -95,6 +97,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="wind_gust",
         name="Wind gust",
         native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
+        # Hint mph because that's the preferred unit for wind speeds in UK
+        # This can be removed if we add a mixed metric/imperial unit system for UK users
         suggested_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
         device_class=SensorDeviceClass.WIND_SPEED,
         entity_registry_enabled_default=False,

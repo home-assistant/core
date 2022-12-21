@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
+import dataclasses
+from dataclasses import dataclass
+from enum import Enum
 import logging
 import re
 from typing import Any, TypeVar
@@ -56,6 +59,7 @@ async def async_handle(
     slots: _SlotsType | None = None,
     text_input: str | None = None,
     context: Context | None = None,
+    language: str | None = None,
 ) -> IntentResponse:
     """Handle an intent."""
     handler: IntentHandler = hass.data.get(DATA_KEY, {}).get(intent_type)
@@ -66,7 +70,12 @@ async def async_handle(
     if context is None:
         context = Context()
 
-    intent = Intent(hass, platform, intent_type, slots or {}, text_input, context)
+    if language is None:
+        language = hass.config.language
+
+    intent = Intent(
+        hass, platform, intent_type, slots or {}, text_input, context, language
+    )
 
     try:
         _LOGGER.info("Triggering intent handler %s", handler)
@@ -212,13 +221,41 @@ class ServiceIntentHandler(IntentHandler):
 
         response = intent_obj.create_response()
         response.async_set_speech(self.speech.format(state.name))
+        response.async_set_results(
+            success_results=[
+                IntentResponseTarget(
+                    type=IntentResponseTargetType.ENTITY,
+                    name=state.name,
+                    id=state.entity_id,
+                ),
+            ],
+        )
         return response
+
+
+class IntentCategory(Enum):
+    """Category of an intent."""
+
+    ACTION = "action"
+    """Trigger an action like turning an entity on or off"""
+
+    QUERY = "query"
+    """Get information about the state of an entity"""
 
 
 class Intent:
     """Hold the intent."""
 
-    __slots__ = ["hass", "platform", "intent_type", "slots", "text_input", "context"]
+    __slots__ = [
+        "hass",
+        "platform",
+        "intent_type",
+        "slots",
+        "text_input",
+        "context",
+        "language",
+        "category",
+    ]
 
     def __init__(
         self,
@@ -228,6 +265,8 @@ class Intent:
         slots: _SlotsType,
         text_input: str | None,
         context: Context,
+        language: str,
+        category: IntentCategory | None = None,
     ) -> None:
         """Initialize an intent."""
         self.hass = hass
@@ -236,36 +275,117 @@ class Intent:
         self.slots = slots
         self.text_input = text_input
         self.context = context
+        self.language = language
+        self.category = category
 
     @callback
     def create_response(self) -> IntentResponse:
         """Create a response."""
-        return IntentResponse(self)
+        return IntentResponse(language=self.language, intent=self)
+
+
+class IntentResponseType(Enum):
+    """Type of the intent response."""
+
+    ACTION_DONE = "action_done"
+    """Intent caused an action to occur"""
+
+    PARTIAL_ACTION_DONE = "partial_action_done"
+    """Intent caused an action, but it could only be partially done"""
+
+    QUERY_ANSWER = "query_answer"
+    """Response is an answer to a query"""
+
+    ERROR = "error"
+    """Response is an error"""
+
+
+class IntentResponseErrorCode(str, Enum):
+    """Reason for an intent response error."""
+
+    NO_INTENT_MATCH = "no_intent_match"
+    """Text could not be matched to an intent"""
+
+    NO_VALID_TARGETS = "no_valid_targets"
+    """Intent was matched, but no valid areas/devices/entities were targeted"""
+
+    FAILED_TO_HANDLE = "failed_to_handle"
+    """Unexpected error occurred while handling intent"""
+
+    UNKNOWN = "unknown"
+    """Error outside the scope of intent processing"""
+
+
+class IntentResponseTargetType(str, Enum):
+    """Type of target for an intent response."""
+
+    AREA = "area"
+    DEVICE = "device"
+    ENTITY = "entity"
+    DOMAIN = "domain"
+    DEVICE_CLASS = "device_class"
+    CUSTOM = "custom"
+
+
+@dataclass
+class IntentResponseTarget:
+    """Target of the intent response."""
+
+    name: str
+    type: IntentResponseTargetType
+    id: str | None = None
 
 
 class IntentResponse:
     """Response to an intent."""
 
-    def __init__(self, intent: Intent | None = None) -> None:
+    def __init__(
+        self,
+        language: str,
+        intent: Intent | None = None,
+    ) -> None:
         """Initialize an IntentResponse."""
+        self.language = language
         self.intent = intent
         self.speech: dict[str, dict[str, Any]] = {}
         self.reprompt: dict[str, dict[str, Any]] = {}
         self.card: dict[str, dict[str, str]] = {}
+        self.error_code: IntentResponseErrorCode | None = None
+        self.intent_targets: list[IntentResponseTarget] = []
+        self.success_results: list[IntentResponseTarget] = []
+        self.failed_results: list[IntentResponseTarget] = []
+
+        if (self.intent is not None) and (self.intent.category == IntentCategory.QUERY):
+            # speech will be the answer to the query
+            self.response_type = IntentResponseType.QUERY_ANSWER
+        else:
+            self.response_type = IntentResponseType.ACTION_DONE
 
     @callback
     def async_set_speech(
-        self, speech: str, speech_type: str = "plain", extra_data: Any | None = None
+        self,
+        speech: str,
+        speech_type: str = "plain",
+        extra_data: Any | None = None,
     ) -> None:
         """Set speech response."""
-        self.speech[speech_type] = {"speech": speech, "extra_data": extra_data}
+        self.speech[speech_type] = {
+            "speech": speech,
+            "extra_data": extra_data,
+        }
 
     @callback
     def async_set_reprompt(
-        self, speech: str, speech_type: str = "plain", extra_data: Any | None = None
+        self,
+        speech: str,
+        speech_type: str = "plain",
+        extra_data: Any | None = None,
     ) -> None:
         """Set reprompt response."""
-        self.reprompt[speech_type] = {"reprompt": speech, "extra_data": extra_data}
+        self.reprompt[speech_type] = {
+            "reprompt": speech,
+            "extra_data": extra_data,
+        }
 
     @callback
     def async_set_card(
@@ -275,10 +395,65 @@ class IntentResponse:
         self.card[card_type] = {"title": title, "content": content}
 
     @callback
-    def as_dict(self) -> dict[str, dict[str, dict[str, Any]]]:
+    def async_set_error(self, code: IntentResponseErrorCode, message: str) -> None:
+        """Set response error."""
+        self.response_type = IntentResponseType.ERROR
+        self.error_code = code
+
+        # Speak error message
+        self.async_set_speech(message)
+
+    @callback
+    def async_set_targets(
+        self,
+        intent_targets: list[IntentResponseTarget],
+    ) -> None:
+        """Set response targets."""
+        self.intent_targets = intent_targets
+
+    @callback
+    def async_set_results(
+        self,
+        success_results: list[IntentResponseTarget],
+        failed_results: list[IntentResponseTarget] | None = None,
+    ) -> None:
+        """Set response results."""
+        self.success_results = success_results
+        self.failed_results = failed_results if failed_results is not None else []
+
+    @callback
+    def as_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of an intent response."""
-        return (
-            {"speech": self.speech, "reprompt": self.reprompt, "card": self.card}
-            if self.reprompt
-            else {"speech": self.speech, "card": self.card}
-        )
+        response_dict: dict[str, Any] = {
+            "speech": self.speech,
+            "card": self.card,
+            "language": self.language,
+            "response_type": self.response_type.value,
+        }
+
+        if self.reprompt:
+            response_dict["reprompt"] = self.reprompt
+
+        response_data: dict[str, Any] = {}
+
+        if self.response_type == IntentResponseType.ERROR:
+            assert self.error_code is not None, "error code is required"
+            response_data["code"] = self.error_code.value
+        else:
+            # action done or query answer
+            response_data["targets"] = [
+                dataclasses.asdict(target) for target in self.intent_targets
+            ]
+
+            # Add success/failed targets
+            response_data["success"] = [
+                dataclasses.asdict(target) for target in self.success_results
+            ]
+
+            response_data["failed"] = [
+                dataclasses.asdict(target) for target in self.failed_results
+            ]
+
+        response_dict["data"] = response_data
+
+        return response_dict

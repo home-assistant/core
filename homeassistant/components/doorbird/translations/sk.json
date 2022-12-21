@@ -27,6 +27,9 @@
             "init": {
                 "data": {
                     "events": "Zoznam udalost\u00ed oddelen\u00fdch \u010diarkou."
+                },
+                "data_description": {
+                    "events": "Pre ka\u017ed\u00fa udalos\u0165, ktor\u00fa chcete sledova\u0165, pridajte n\u00e1zov udalosti oddelen\u00fd \u010diarkou. Po ich zadan\u00ed sem ich pomocou aplik\u00e1cie DoorBird prira\u010fte ku konkr\u00e9tnej udalosti. \n\n Pr\u00edklad: niekto_stla\u010dil_tla\u010didlo, pohyb"
                 }
             }
         }

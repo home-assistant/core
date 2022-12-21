@@ -132,10 +132,8 @@ async def async_setup_platform(
             UdpTransportTarget((host, port), timeout=DEFAULT_TIMEOUT),
             ContextData(),
         ]
-
-    errindication, _, _, _ = await getCmd(
-        *request_args, ObjectType(ObjectIdentity(baseoid))
-    )
+    get_result = await getCmd(*request_args, ObjectType(ObjectIdentity(baseoid)))
+    errindication, _, _, _ = await get_result
 
     if errindication and not accept_errors:
         _LOGGER.error("Please check the details in the configuration file")
@@ -194,9 +192,10 @@ class SnmpData:
     async def async_update(self):
         """Get the latest data from the remote SNMP capable host."""
 
-        errindication, errstatus, errindex, restable = await getCmd(
+        get_result = await getCmd(
             *self._request_args, ObjectType(ObjectIdentity(self._baseoid))
         )
+        errindication, errstatus, errindex, restable = await get_result
 
         if errindication and not self._accept_errors:
             _LOGGER.error("SNMP error: %s", errindication)

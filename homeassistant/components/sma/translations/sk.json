@@ -18,7 +18,9 @@
                     "password": "Heslo",
                     "ssl": "Pou\u017e\u00edva SSL certifik\u00e1t",
                     "verify_ssl": "Overi\u0165 SSL certifik\u00e1t"
-                }
+                },
+                "description": "Zadajte inform\u00e1cie o svojom zariaden\u00ed SMA.",
+                "title": "Nastavenie SMA Solar"
             }
         }
     }

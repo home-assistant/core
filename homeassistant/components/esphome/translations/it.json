@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "mdns_missing_mac": "Indirizzo MAC mancante nelle propriet\u00e0 MDNS.",
             "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
@@ -46,8 +47,8 @@
     },
     "issues": {
         "ble_firmware_outdated": {
-            "description": "Per migliorare l'affidabilit\u00e0 e le prestazioni Bluetooth, si consiglia vivamente di aggiornare {name} con ESPHome 2022.11.0 o versioni successive.",
-            "title": "Aggiorna {name} con ESPHome 2022.11.0 o versioni successive"
+            "description": "Per migliorare l'affidabilit\u00e0 e le prestazioni del Bluetooth, ti consigliamo vivamente di aggiornare {name} con ESPHome {version} o successiva. Quando si aggiorna il dispositivo a ESPHome {version}, si consiglia di utilizzare un cavo seriale invece di un aggiornamento via etere per sfruttare il nuovo schema di partizione.",
+            "title": "Aggiorna {name} con ESPHome {version} o successiva"
         }
     }
 }

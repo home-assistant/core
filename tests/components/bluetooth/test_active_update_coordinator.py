@@ -1,19 +1,23 @@
-"""Tests for the Bluetooth integration PassiveBluetoothDataUpdateCoordinator."""
+"""Tests for the Bluetooth integration ActiveBluetoothDataUpdateCoordinator."""
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable, Coroutine
 import logging
-from unittest.mock import MagicMock, call
+from typing import Any
+from unittest.mock import MagicMock
 
-from bleak import BleakError
+from bleak.exc import BleakError
 
 from homeassistant.components.bluetooth import (
     DOMAIN,
+    BluetoothChange,
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
 )
 from homeassistant.components.bluetooth.active_update_coordinator import (
-    ActiveBluetoothProcessorCoordinator,
+    _T,
+    ActiveBluetoothDataUpdateCoordinator,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
@@ -36,337 +40,344 @@ GENERIC_BLUETOOTH_SERVICE_INFO = BluetoothServiceInfo(
     service_uuids=[],
     source="local",
 )
+
 GENERIC_BLUETOOTH_SERVICE_INFO_2 = BluetoothServiceInfo(
     name="Generic",
     address="aa:bb:cc:dd:ee:ff",
     rssi=-95,
-    manufacturer_data={1: b"\x01\x01\x01\x01\x01\x01\x01\x01", 2: b"\x02"},
+    manufacturer_data={
+        2: b"\x01\x01\x01\x01\x01\x01\x01\x01",
+    },
     service_data={},
     service_uuids=[],
     source="local",
 )
 
 
-async def test_basic_usage(
-    hass: HomeAssistant, mock_bleak_scanner_start, mock_bluetooth_adapters
-):
-    """Test basic usage of the ActiveBluetoothProcessorCoordinator."""
+class MyCoordinator(ActiveBluetoothDataUpdateCoordinator[dict[str, Any]]):
+    """An example coordinator that subclasses ActiveBluetoothDataUpdateCoordinator."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        logger: logging.Logger,
+        *,
+        address: str,
+        mode: BluetoothScanningMode,
+        needs_poll_method: Callable[[BluetoothServiceInfoBleak, float | None], bool],
+        poll_method: Callable[
+            [BluetoothServiceInfoBleak],
+            Coroutine[Any, Any, _T],
+        ]
+        | None = None,
+        poll_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None,
+        connectable: bool = True,
+    ) -> None:
+        """Initialize the coordinator."""
+        self.passive_data: dict[str, Any] = {}
+        super().__init__(
+            hass=hass,
+            logger=logger,
+            address=address,
+            mode=mode,
+            needs_poll_method=needs_poll_method,
+            poll_method=poll_method,
+            poll_debouncer=poll_debouncer,
+            connectable=connectable,
+        )
+
+    def _async_handle_bluetooth_event(
+        self,
+        service_info: BluetoothServiceInfo,
+        change: BluetoothChange,
+    ) -> None:
+        """Handle a Bluetooth event."""
+        self.passive_data = {"rssi": service_info.rssi}
+        super()._async_handle_bluetooth_event(service_info, change)
+
+
+async def test_basic_usage(hass, mock_bleak_scanner_start, mock_bluetooth_adapters):
+    """Test basic usage of the ActiveBluetoothDataUpdateCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
-    def _update_method(service_info: BluetoothServiceInfoBleak):
-        return {"testdata": 0}
-
-    def _poll_needed(*args, **kwargs):
+    def _needs_poll(
+        service_info: BluetoothServiceInfoBleak, seconds_since_last_poll: float | None
+    ) -> bool:
         return True
 
-    async def _poll(*args, **kwargs):
-        return {"testdata": 1}
+    async def _poll_method(service_info: BluetoothServiceInfoBleak) -> dict[str, Any]:
+        return {"fake": "data"}
 
-    coordinator = ActiveBluetoothProcessorCoordinator(
-        hass,
-        _LOGGER,
+    coordinator = MyCoordinator(
+        hass=hass,
+        logger=_LOGGER,
         address="aa:bb:cc:dd:ee:ff",
         mode=BluetoothScanningMode.ACTIVE,
-        update_method=_update_method,
-        needs_poll_method=_poll_needed,
-        poll_method=_poll,
+        needs_poll_method=_needs_poll,
+        poll_method=_poll_method,
     )
     assert coordinator.available is False  # no data yet
 
-    processor = MagicMock()
-    coordinator.async_register_processor(processor)
-    async_handle_update = processor.async_handle_update
+    mock_listener = MagicMock()
+    unregister_listener = coordinator.async_add_listener(mock_listener)
 
     cancel = coordinator.async_start()
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
     await hass.async_block_till_done()
-
-    assert coordinator.available is True
-
-    # async_handle_update should have been called twice
-    # The first time, it was passed the data from parsing the advertisement
-    # The second time, it was passed the data from polling
-    assert len(async_handle_update.mock_calls) == 2
-    assert async_handle_update.mock_calls[0] == call({"testdata": 0})
-    assert async_handle_update.mock_calls[1] == call({"testdata": 1})
+    assert coordinator.passive_data == {"rssi": GENERIC_BLUETOOTH_SERVICE_INFO.rssi}
+    assert coordinator.data == {"fake": "data"}
 
     cancel()
+    unregister_listener()
 
 
-async def test_poll_can_be_skipped(
-    hass: HomeAssistant, mock_bleak_scanner_start, mock_bluetooth_adapters
+async def test_bleak_error_during_polling(
+    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
 ):
-    """Test need_poll callback works and can skip a poll if its not needed."""
+    """Test bleak error during polling ActiveBluetoothDataUpdateCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    poll_count = 0
 
-    flag = True
-
-    def _update_method(service_info: BluetoothServiceInfoBleak):
-        return {"testdata": None}
-
-    def _poll_needed(*args, **kwargs):
-        nonlocal flag
-        return flag
-
-    async def _poll(*args, **kwargs):
-        return {"testdata": flag}
-
-    coordinator = ActiveBluetoothProcessorCoordinator(
-        hass,
-        _LOGGER,
-        address="aa:bb:cc:dd:ee:ff",
-        mode=BluetoothScanningMode.ACTIVE,
-        update_method=_update_method,
-        needs_poll_method=_poll_needed,
-        poll_method=_poll,
-        poll_debouncer=Debouncer(
-            hass,
-            _LOGGER,
-            cooldown=0,
-            immediate=True,
-        ),
-    )
-    assert coordinator.available is False  # no data yet
-
-    processor = MagicMock()
-    coordinator.async_register_processor(processor)
-    async_handle_update = processor.async_handle_update
-
-    cancel = coordinator.async_start()
-
-    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
-    await hass.async_block_till_done()
-    assert async_handle_update.mock_calls[-1] == call({"testdata": True})
-
-    flag = False
-
-    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
-    await hass.async_block_till_done()
-    assert async_handle_update.mock_calls[-1] == call({"testdata": None})
-
-    flag = True
-
-    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
-    await hass.async_block_till_done()
-    assert async_handle_update.mock_calls[-1] == call({"testdata": True})
-
-    cancel()
-
-
-async def test_bleak_error_and_recover(
-    hass: HomeAssistant, mock_bleak_scanner_start, mock_bluetooth_adapters, caplog
-):
-    """Test bleak error handling and recovery."""
-    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
-
-    flag = True
-
-    def _update_method(service_info: BluetoothServiceInfoBleak):
-        return {"testdata": None}
-
-    def _poll_needed(*args, **kwargs):
+    def _needs_poll(
+        service_info: BluetoothServiceInfoBleak, seconds_since_last_poll: float | None
+    ) -> bool:
         return True
 
-    async def _poll(*args, **kwargs):
-        nonlocal flag
-        if flag:
-            raise BleakError("Connection was aborted")
-        return {"testdata": flag}
+    async def _poll_method(service_info: BluetoothServiceInfoBleak) -> dict[str, Any]:
+        nonlocal poll_count
+        poll_count += 1
+        if poll_count == 1:
+            raise BleakError("fake bleak error")
+        return {"fake": "data"}
 
-    coordinator = ActiveBluetoothProcessorCoordinator(
-        hass,
-        _LOGGER,
+    coordinator = MyCoordinator(
+        hass=hass,
+        logger=_LOGGER,
         address="aa:bb:cc:dd:ee:ff",
         mode=BluetoothScanningMode.ACTIVE,
-        update_method=_update_method,
-        needs_poll_method=_poll_needed,
-        poll_method=_poll,
-        poll_debouncer=Debouncer(
-            hass,
-            _LOGGER,
-            cooldown=0,
-            immediate=True,
-        ),
+        needs_poll_method=_needs_poll,
+        poll_method=_poll_method,
+        poll_debouncer=Debouncer(hass, _LOGGER, cooldown=0, immediate=True),
     )
     assert coordinator.available is False  # no data yet
 
-    processor = MagicMock()
-    coordinator.async_register_processor(processor)
-    async_handle_update = processor.async_handle_update
+    mock_listener = MagicMock()
+    unregister_listener = coordinator.async_add_listener(mock_listener)
 
     cancel = coordinator.async_start()
 
-    # First poll fails
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
     await hass.async_block_till_done()
-    assert async_handle_update.mock_calls[-1] == call({"testdata": None})
+    assert coordinator.passive_data == {"rssi": GENERIC_BLUETOOTH_SERVICE_INFO.rssi}
+    assert coordinator.data is None
+    assert coordinator.last_poll_successful is False
 
-    assert (
-        "aa:bb:cc:dd:ee:ff: Bluetooth error whilst polling: Connection was aborted"
-        in caplog.text
-    )
-
-    # Second poll works
-    flag = False
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
     await hass.async_block_till_done()
-    assert async_handle_update.mock_calls[-1] == call({"testdata": False})
+    assert coordinator.passive_data == {"rssi": GENERIC_BLUETOOTH_SERVICE_INFO_2.rssi}
+    assert coordinator.data == {"fake": "data"}
+    assert coordinator.last_poll_successful is True
 
     cancel()
+    unregister_listener()
 
 
-async def test_poll_failure_and_recover(
-    hass: HomeAssistant, mock_bleak_scanner_start, mock_bluetooth_adapters
+async def test_generic_exception_during_polling(
+    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
 ):
-    """Test error handling and recovery."""
+    """Test generic exception during polling ActiveBluetoothDataUpdateCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    poll_count = 0
 
-    flag = True
-
-    def _update_method(service_info: BluetoothServiceInfoBleak):
-        return {"testdata": None}
-
-    def _poll_needed(*args, **kwargs):
+    def _needs_poll(
+        service_info: BluetoothServiceInfoBleak, seconds_since_last_poll: float | None
+    ) -> bool:
         return True
 
-    async def _poll(*args, **kwargs):
-        nonlocal flag
-        if flag:
-            raise RuntimeError("Poll failure")
-        return {"testdata": flag}
+    async def _poll_method(service_info: BluetoothServiceInfoBleak) -> dict[str, Any]:
+        nonlocal poll_count
+        poll_count += 1
+        if poll_count == 1:
+            raise ValueError("fake error")
+        return {"fake": "data"}
 
-    coordinator = ActiveBluetoothProcessorCoordinator(
-        hass,
-        _LOGGER,
+    coordinator = MyCoordinator(
+        hass=hass,
+        logger=_LOGGER,
         address="aa:bb:cc:dd:ee:ff",
         mode=BluetoothScanningMode.ACTIVE,
-        update_method=_update_method,
-        needs_poll_method=_poll_needed,
-        poll_method=_poll,
-        poll_debouncer=Debouncer(
-            hass,
-            _LOGGER,
-            cooldown=0,
-            immediate=True,
-        ),
+        needs_poll_method=_needs_poll,
+        poll_method=_poll_method,
+        poll_debouncer=Debouncer(hass, _LOGGER, cooldown=0, immediate=True),
     )
     assert coordinator.available is False  # no data yet
 
-    processor = MagicMock()
-    coordinator.async_register_processor(processor)
-    async_handle_update = processor.async_handle_update
+    mock_listener = MagicMock()
+    unregister_listener = coordinator.async_add_listener(mock_listener)
 
     cancel = coordinator.async_start()
 
-    # First poll fails
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
     await hass.async_block_till_done()
-    assert async_handle_update.mock_calls[-1] == call({"testdata": None})
+    assert coordinator.passive_data == {"rssi": GENERIC_BLUETOOTH_SERVICE_INFO.rssi}
+    assert coordinator.data is None
+    assert coordinator.last_poll_successful is False
 
-    # Second poll works
-    flag = False
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
     await hass.async_block_till_done()
-    assert async_handle_update.mock_calls[-1] == call({"testdata": False})
+    assert coordinator.passive_data == {"rssi": GENERIC_BLUETOOTH_SERVICE_INFO_2.rssi}
+    assert coordinator.data == {"fake": "data"}
+    assert coordinator.last_poll_successful is True
 
     cancel()
+    unregister_listener()
 
 
-async def test_second_poll_needed(
-    hass: HomeAssistant, mock_bleak_scanner_start, mock_bluetooth_adapters
+async def test_polling_debounce(
+    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
 ):
-    """If a poll is queued, by the time it starts it may no longer be needed."""
+    """Test basic usage of the ActiveBluetoothDataUpdateCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    poll_count = 0
 
-    count = 0
-
-    def _update_method(service_info: BluetoothServiceInfoBleak):
-        return {"testdata": None}
-
-    # Only poll once
-    def _poll_needed(*args, **kwargs):
-        nonlocal count
-        return count == 0
-
-    async def _poll(*args, **kwargs):
-        nonlocal count
-        count += 1
-        return {"testdata": count}
-
-    coordinator = ActiveBluetoothProcessorCoordinator(
-        hass,
-        _LOGGER,
-        address="aa:bb:cc:dd:ee:ff",
-        mode=BluetoothScanningMode.ACTIVE,
-        update_method=_update_method,
-        needs_poll_method=_poll_needed,
-        poll_method=_poll,
-    )
-    assert coordinator.available is False  # no data yet
-
-    processor = MagicMock()
-    coordinator.async_register_processor(processor)
-    async_handle_update = processor.async_handle_update
-
-    cancel = coordinator.async_start()
-
-    # First poll gets queued
-    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
-    # Second poll gets stuck behind first poll
-    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
-
-    await hass.async_block_till_done()
-    assert async_handle_update.mock_calls[-1] == call({"testdata": 1})
-
-    cancel()
-
-
-async def test_rate_limit(
-    hass: HomeAssistant, mock_bleak_scanner_start, mock_bluetooth_adapters
-):
-    """Test error handling and recovery."""
-    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
-
-    count = 0
-
-    def _update_method(service_info: BluetoothServiceInfoBleak):
-        return {"testdata": None}
-
-    def _poll_needed(*args, **kwargs):
+    def _needs_poll(
+        service_info: BluetoothServiceInfoBleak, seconds_since_last_poll: float | None
+    ) -> bool:
         return True
 
-    async def _poll(*args, **kwargs):
-        nonlocal count
-        count += 1
-        await asyncio.sleep(0)
-        return {"testdata": count}
+    async def _poll_method(service_info: BluetoothServiceInfoBleak) -> dict[str, Any]:
+        nonlocal poll_count
+        poll_count += 1
+        await asyncio.sleep(0.0001)
+        return {"poll_count": poll_count}
 
-    coordinator = ActiveBluetoothProcessorCoordinator(
-        hass,
-        _LOGGER,
+    coordinator = MyCoordinator(
+        hass=hass,
+        logger=_LOGGER,
         address="aa:bb:cc:dd:ee:ff",
         mode=BluetoothScanningMode.ACTIVE,
-        update_method=_update_method,
-        needs_poll_method=_poll_needed,
-        poll_method=_poll,
+        needs_poll_method=_needs_poll,
+        poll_method=_poll_method,
     )
     assert coordinator.available is False  # no data yet
 
-    processor = MagicMock()
-    coordinator.async_register_processor(processor)
-    async_handle_update = processor.async_handle_update
+    mock_listener = MagicMock()
+    unregister_listener = coordinator.async_add_listener(mock_listener)
 
     cancel = coordinator.async_start()
 
-    # First poll gets queued
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
-    # Second poll gets stuck behind first poll
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
-    # Third poll gets stuck behind first poll doesn't get queued
-    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
-
     await hass.async_block_till_done()
-    assert async_handle_update.mock_calls[-1] == call({"testdata": 1})
+    assert coordinator.passive_data == {"rssi": GENERIC_BLUETOOTH_SERVICE_INFO.rssi}
+    # We should only get one poll because of the debounce
+    assert coordinator.data == {"poll_count": 1}
 
     cancel()
+    unregister_listener()
+
+
+async def test_polling_debounce_with_custom_debouncer(
+    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
+):
+    """Test basic usage of the ActiveBluetoothDataUpdateCoordinator."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    poll_count = 0
+
+    def _needs_poll(
+        service_info: BluetoothServiceInfoBleak, seconds_since_last_poll: float | None
+    ) -> bool:
+        return True
+
+    async def _poll_method(service_info: BluetoothServiceInfoBleak) -> dict[str, Any]:
+        nonlocal poll_count
+        poll_count += 1
+        await asyncio.sleep(0.0001)
+        return {"poll_count": poll_count}
+
+    coordinator = MyCoordinator(
+        hass=hass,
+        logger=_LOGGER,
+        address="aa:bb:cc:dd:ee:ff",
+        mode=BluetoothScanningMode.ACTIVE,
+        needs_poll_method=_needs_poll,
+        poll_method=_poll_method,
+        poll_debouncer=Debouncer(hass, _LOGGER, cooldown=0.1, immediate=True),
+    )
+    assert coordinator.available is False  # no data yet
+
+    mock_listener = MagicMock()
+    unregister_listener = coordinator.async_add_listener(mock_listener)
+
+    cancel = coordinator.async_start()
+
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
+    await hass.async_block_till_done()
+    assert coordinator.passive_data == {"rssi": GENERIC_BLUETOOTH_SERVICE_INFO.rssi}
+    # We should only get one poll because of the debounce
+    assert coordinator.data == {"poll_count": 1}
+
+    cancel()
+    unregister_listener()
+
+
+async def test_polling_rejecting_the_first_time(
+    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
+):
+    """Test need_poll rejects the first time ActiveBluetoothDataUpdateCoordinator."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    attempt = 0
+
+    def _needs_poll(
+        service_info: BluetoothServiceInfoBleak, seconds_since_last_poll: float | None
+    ) -> bool:
+        nonlocal attempt
+        attempt += 1
+        return attempt != 1
+
+    async def _poll_method(service_info: BluetoothServiceInfoBleak) -> dict[str, Any]:
+        return {"fake": "data"}
+
+    coordinator = MyCoordinator(
+        hass=hass,
+        logger=_LOGGER,
+        address="aa:bb:cc:dd:ee:ff",
+        mode=BluetoothScanningMode.ACTIVE,
+        needs_poll_method=_needs_poll,
+        poll_method=_poll_method,
+    )
+    assert coordinator.available is False  # no data yet
+
+    mock_listener = MagicMock()
+    unregister_listener = coordinator.async_add_listener(mock_listener)
+
+    cancel = coordinator.async_start()
+
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
+    await hass.async_block_till_done()
+    assert coordinator.passive_data == {"rssi": GENERIC_BLUETOOTH_SERVICE_INFO.rssi}
+    # First poll is rejected, so no data yet
+    assert coordinator.data is None
+
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
+    await hass.async_block_till_done()
+    assert coordinator.passive_data == {"rssi": GENERIC_BLUETOOTH_SERVICE_INFO.rssi}
+    # Data is the same so no poll check
+    assert coordinator.data is None
+
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
+    await hass.async_block_till_done()
+    assert coordinator.passive_data == {"rssi": GENERIC_BLUETOOTH_SERVICE_INFO_2.rssi}
+    # Data is different so poll is done
+    assert coordinator.data == {"fake": "data"}
+
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
+    await hass.async_block_till_done()
+    assert coordinator.passive_data == {"rssi": GENERIC_BLUETOOTH_SERVICE_INFO.rssi}
+    # Data is different again so poll is done
+    assert coordinator.data == {"fake": "data"}
+
+    cancel()
+    unregister_listener()

@@ -256,6 +256,7 @@ CONF_UNIT_SYSTEM: Final = "unit_system"
 CONF_UNTIL: Final = "until"
 CONF_URL: Final = "url"
 CONF_USERNAME: Final = "username"
+CONF_UUID: Final = "uuid"
 CONF_VALUE_TEMPLATE: Final = "value_template"
 CONF_VARIABLES: Final = "variables"
 CONF_VERIFY_SSL: Final = "verify_ssl"
@@ -477,9 +478,17 @@ ATTR_TEMPERATURE: Final = "temperature"
 # Persons attribute
 ATTR_PERSONS: Final = "persons"
 
+
 # #### UNITS OF MEASUREMENT ####
 # Apparent power units
+class UnitOfApparentPower(StrEnum):
+    """Apparent power units."""
+
+    VOLT_AMPERE = "VA"
+
+
 POWER_VOLT_AMPERE: Final = "VA"
+"""Deprecated: please use UnitOfApparentPower.VOLT_AMPERE."""
 
 
 # Power units
@@ -694,9 +703,19 @@ PRESSURE_INHG: Final = "inHg"
 PRESSURE_PSI: Final = "psi"
 """Deprecated: please use UnitOfPressure.PSI"""
 
+
 # Sound pressure units
+class UnitOfSoundPressure(StrEnum):
+    """Sound pressure units."""
+
+    DECIBEL = "dB"
+    WEIGHTED_DECIBEL_A = "dBA"
+
+
 SOUND_PRESSURE_DB: Final = "dB"
+"""Deprecated: please use UnitOfSoundPressure.DECIBEL"""
 SOUND_PRESSURE_WEIGHTED_DBA: Final = "dBa"
+"""Deprecated: please use UnitOfSoundPressure.WEIGHTED_DECIBEL_A"""
 
 
 # Volume units
@@ -704,6 +723,7 @@ class UnitOfVolume(StrEnum):
     """Volume units."""
 
     CUBIC_FEET = "ft³"
+    CENTUM_CUBIC_FEET = "CCF"
     CUBIC_METERS = "m³"
     LITERS = "L"
     MILLILITERS = "mL"
@@ -731,9 +751,19 @@ VOLUME_GALLONS: Final = "gal"
 VOLUME_FLUID_OUNCE: Final = "fl. oz."
 """Deprecated: please use UnitOfVolume.FLUID_OUNCES"""
 
+
 # Volume Flow Rate units
+class UnitOfVolumeFlowRate(StrEnum):
+    """Volume flow rate units."""
+
+    CUBIC_METERS_PER_HOUR = "m³/h"
+    CUBIC_FEET_PER_MINUTE = "ft³/m"
+
+
 VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR: Final = "m³/h"
+"""Deprecated: please use UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR"""
 VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE: Final = "ft³/m"
+"""Deprecated: please use UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE"""
 
 # Area units
 AREA_SQUARE_METERS: Final = "m²"
@@ -749,6 +779,7 @@ class UnitOfMass(StrEnum):
     MICROGRAMS = "µg"
     OUNCES = "oz"
     POUNDS = "lb"
+    STONES = "st"
 
 
 MASS_GRAMS: Final = "g"
@@ -779,9 +810,20 @@ PERCENTAGE: Final = "%"
 # Rotational speed units
 REVOLUTIONS_PER_MINUTE: Final = "rpm"
 
+
+# Irradiance units
+class UnitOfIrradiance(StrEnum):
+    """Irradiance units."""
+
+    WATTS_PER_SQUARE_METER = "W/m²"
+    BTUS_PER_HOUR_SQUARE_FOOT = "BTU/(h⋅ft²)"
+
+
 # Irradiation units
 IRRADIATION_WATTS_PER_SQUARE_METER: Final = "W/m²"
+"""Deprecated: please use UnitOfIrradiance.WATTS_PER_SQUARE_METER"""
 IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT: Final = "BTU/(h×ft²)"
+"""Deprecated: please use UnitOfIrradiance.BTUS_PER_HOUR_SQUARE_FOOT"""
 
 
 class UnitOfVolumetricFlux(StrEnum):
@@ -792,16 +834,16 @@ class UnitOfVolumetricFlux(StrEnum):
     """
 
     INCHES_PER_DAY = "in/d"
-    """Derived from in³/(in².d)"""
+    """Derived from in³/(in²⋅d)"""
 
     INCHES_PER_HOUR = "in/h"
-    """Derived from in³/(in².h)"""
+    """Derived from in³/(in²⋅h)"""
 
     MILLIMETERS_PER_DAY = "mm/d"
-    """Derived from mm³/(mm².d)"""
+    """Derived from mm³/(mm²⋅d)"""
 
     MILLIMETERS_PER_HOUR = "mm/h"
-    """Derived from mm³/(mm².h)"""
+    """Derived from mm³/(mm²⋅h)"""
 
 
 class UnitOfPrecipitationDepth(StrEnum):

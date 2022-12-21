@@ -18,7 +18,7 @@ from homeassistant.const import (
     STATE_PROBLEM,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -138,7 +138,7 @@ class Plant(Entity):
             "min": CONF_MIN_BATTERY_LEVEL,
         },
         READING_TEMPERATURE: {
-            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
             "min": CONF_MIN_TEMPERATURE,
             "max": CONF_MAX_TEMPERATURE,
         },

@@ -365,8 +365,7 @@ class FitbitSensor(SensorEntity):
             self._attr_name = f"{self.extra.get('deviceVersion')} Battery"
             self._attr_unique_id = f"{self._attr_unique_id}_{self.extra.get('id')}"
 
-        if (unit_type := description.unit_type) == "":
-            split_resource = description.key.rsplit("/", maxsplit=1)[-1]
+        if description.unit_type:
             try:
                 measurement_system = FITBIT_MEASUREMENTS[self.client.system]
             except KeyError:
@@ -374,8 +373,9 @@ class FitbitSensor(SensorEntity):
                     measurement_system = FITBIT_MEASUREMENTS["metric"]
                 else:
                     measurement_system = FITBIT_MEASUREMENTS["en_US"]
+            split_resource = description.key.rsplit("/", maxsplit=1)[-1]
             unit_type = measurement_system[split_resource]
-        self._attr_native_unit_of_measurement = unit_type
+            self._attr_native_unit_of_measurement = unit_type
 
     @property
     def icon(self) -> str | None:
