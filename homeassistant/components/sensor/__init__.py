@@ -101,6 +101,87 @@ __all__ = [
     "SensorStateClass",
 ]
 
+DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass | None]] = {
+    SensorDeviceClass.APPARENT_POWER: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.AQI: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.ATMOSPHERIC_PRESSURE: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.BATTERY: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.CO: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.CO2: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.CURRENT: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.DATA_RATE: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.DATA_SIZE: {
+        None,
+        SensorStateClass.TOTAL,
+        SensorStateClass.TOTAL_INCREASING,
+    },
+    SensorDeviceClass.DATE: {None},
+    SensorDeviceClass.DISTANCE: {None}.union(set(SensorStateClass)),
+    SensorDeviceClass.DURATION: {None},
+    SensorDeviceClass.ENERGY: {
+        None,
+        SensorStateClass.TOTAL,
+        SensorStateClass.TOTAL_INCREASING,
+    },
+    SensorDeviceClass.ENUM: {None},
+    SensorDeviceClass.FREQUENCY: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.GAS: {
+        None,
+        SensorStateClass.TOTAL,
+        SensorStateClass.TOTAL_INCREASING,
+    },
+    SensorDeviceClass.HUMIDITY: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.ILLUMINANCE: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.IRRADIANCE: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.MOISTURE: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.MONETARY: {
+        None,
+        SensorStateClass.TOTAL,
+        SensorStateClass.TOTAL_INCREASING,
+    },
+    SensorDeviceClass.NITROGEN_DIOXIDE: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.NITROGEN_MONOXIDE: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.NITROUS_OXIDE: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.OZONE: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.PM1: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.PM10: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.PM25: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.POWER_FACTOR: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.POWER: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.PRECIPITATION: {
+        None,
+        SensorStateClass.TOTAL,
+        SensorStateClass.TOTAL_INCREASING,
+    },
+    SensorDeviceClass.PRECIPITATION_INTENSITY: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.PRESSURE: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.REACTIVE_POWER: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.SIGNAL_STRENGTH: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.SOUND_PRESSURE: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.SPEED: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.SULPHUR_DIOXIDE: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.TEMPERATURE: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.TIMESTAMP: {None},
+    SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.VOLTAGE: {None, SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.VOLUME: {
+        None,
+        SensorStateClass.TOTAL,
+        SensorStateClass.TOTAL_INCREASING,
+    },
+    SensorDeviceClass.WATER: {
+        None,
+        SensorStateClass.TOTAL,
+        SensorStateClass.TOTAL_INCREASING,
+    },
+    SensorDeviceClass.WEIGHT: {
+        None,
+        SensorStateClass.TOTAL,
+        SensorStateClass.TOTAL_INCREASING,
+    },
+    SensorDeviceClass.WIND_SPEED: {None, SensorStateClass.MEASUREMENT},
+}
+
 # mypy: disallow-any-generics
 
 
@@ -155,6 +236,7 @@ class SensorEntity(Entity):
     _attr_unit_of_measurement: None = (
         None  # Subclasses of SensorEntity should not set this
     )
+    _invalid_state_class_reported = False
     _invalid_unit_of_measurement_reported = False
     _last_reset_reported = False
     _sensor_option_unit_of_measurement: str | None | UndefinedType = UNDEFINED
@@ -410,24 +492,43 @@ class SensorEntity(Entity):
 
         # Sensors with device classes indicating a non-numeric value
         # should not have a state class or unit of measurement
-        if device_class in {
-            SensorDeviceClass.DATE,
-            SensorDeviceClass.ENUM,
-            SensorDeviceClass.TIMESTAMP,
-        }:
-            if self.state_class:
-                raise ValueError(
-                    f"Sensor {self.entity_id} has a state class and thus indicating "
-                    "it has a numeric value; however, it has the non-numeric "
-                    f"device class: {device_class}"
-                )
+        if (
+            device_class
+            in {
+                SensorDeviceClass.DATE,
+                SensorDeviceClass.ENUM,
+                SensorDeviceClass.TIMESTAMP,
+            }
+            and unit_of_measurement
+        ):
+            raise ValueError(
+                f"Sensor {self.entity_id} has a unit of measurement and thus "
+                "indicating it has a numeric value; however, it has the "
+                f"non-numeric device class: {device_class}"
+            )
 
-            if unit_of_measurement:
-                raise ValueError(
-                    f"Sensor {self.entity_id} has a unit of measurement and thus "
-                    "indicating it has a numeric value; however, it has the "
-                    f"non-numeric device class: {device_class}"
-                )
+        # Validate state class for sensors with a device class
+        if (
+            not self._invalid_state_class_reported
+            and device_class
+            and (classes := DEVICE_CLASS_STATE_CLASSES.get(device_class)) is not None
+            and state_class not in classes
+        ):
+            self._invalid_state_class_reported = True
+            report_issue = self._suggest_report_issue()
+
+            # This should raise in Home Assistant Core 2023.6
+            _LOGGER.warning(
+                "Entity %s (%s) is using state class '%s' which "
+                "is impossible considering device class ('%s') it is using; "
+                "Please update your configuration if your entity is manually "
+                "configured, otherwise %s",
+                self.entity_id,
+                type(self),
+                state_class,
+                device_class,
+                report_issue,
+            )
 
         # Checks below only apply if there is a value
         if value is None:

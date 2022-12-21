@@ -1104,40 +1104,6 @@ async def test_invalid_enumeration_entity_without_device_class(
         SensorDeviceClass.TIMESTAMP,
     ),
 )
-async def test_non_numeric_device_class_with_state_class(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
-    device_class: SensorDeviceClass,
-):
-    """Test error on numeric entities that provide an state class."""
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-    platform.ENTITIES["0"] = platform.MockSensor(
-        name="Test",
-        native_value=None,
-        device_class=device_class,
-        state_class=SensorStateClass.MEASUREMENT,
-        options=["option1", "option2"],
-    )
-
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
-    await hass.async_block_till_done()
-
-    assert (
-        "Sensor sensor.test has a state class and thus indicating it has a numeric "
-        f"value; however, it has the non-numeric device class: {device_class}"
-    ) in caplog.text
-
-
-@pytest.mark.parametrize(
-    "device_class",
-    (
-        SensorDeviceClass.DATE,
-        SensorDeviceClass.ENUM,
-        SensorDeviceClass.TIMESTAMP,
-    ),
-)
 async def test_non_numeric_device_class_with_unit_of_measurement(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -1365,3 +1331,32 @@ async def test_numeric_validation_ignores_custom_device_class(
         "thus indicating it has a numeric value; "
         f"however, it has the non-numeric value: {native_value}"
     ) not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "device_class",
+    list(SensorDeviceClass),
+)
+async def test_device_classes_with_invalid_state_class(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+    device_class: SensorDeviceClass,
+):
+    """Test error when unit of measurement is not valid for used device class."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=None,
+        state_class="INVALID!",
+        device_class=device_class,
+    )
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    assert (
+        "is using state class 'INVALID!' which is impossible considering device "
+        f"class ('{device_class}') it is using"
+    ) in caplog.text
