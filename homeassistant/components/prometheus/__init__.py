@@ -394,7 +394,7 @@ class PrometheusMetrics:
         metric.labels(**self._labels(state)).set(value)
 
     def _handle_climate_temp(self, state, attr, metric_name, metric_description):
-        if temp := state.attributes.get(attr):
+        if (temp := state.attributes.get(attr)) is not None:
             if self._climate_units == TEMP_FAHRENHEIT:
                 temp = TemperatureConverter.convert(temp, TEMP_FAHRENHEIT, TEMP_CELSIUS)
             metric = self._metric(
