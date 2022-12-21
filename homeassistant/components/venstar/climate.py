@@ -193,7 +193,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
         return {
             ATTR_FAN_STATE: self._client.fanstate,
             ATTR_HVAC_STATE: self._client.state,
-            ATTR_SCHED_PART: self._client.get_info("schedulepart")
+            ATTR_SCHED_PART: self._client.get_info("schedulepart"),
         }
 
     @property
