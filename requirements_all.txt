@@ -1817,7 +1817,7 @@ pyotgw==2.1.3
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
 # homeassistant.components.otp
-pyotp==2.7.0
+pyotp==2.8.0
 
 # homeassistant.components.overkiz
 pyoverkiz==1.7.2
