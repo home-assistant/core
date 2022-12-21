@@ -6,7 +6,7 @@ from unittest.mock import ANY, call, patch
 from aio_geojson_nsw_rfs_incidents import NswRuralFireServiceIncidentsFeed
 from freezegun import freeze_time
 
-from homeassistant.components import nsw_rural_fire_service_feed
+from homeassistant.components import geo_location, nsw_rural_fire_service_feed
 from homeassistant.components.geo_location import ATTR_SOURCE
 from homeassistant.components.nsw_rural_fire_service_feed.const import (
     DEFAULT_SCAN_INTERVAL,
@@ -51,6 +51,10 @@ CONFIG_WITH_CUSTOM_LOCATION = {
         CONF_LATITUDE: 15.1,
         CONF_LONGITUDE: 25.2,
     }
+}
+
+CONFIG_LEGACY = {
+    geo_location.DOMAIN: [{"platform": "nsw_rural_fire_service_feed", CONF_RADIUS: 190}]
 }
 
 
@@ -219,4 +223,32 @@ async def test_setup_with_custom_location(hass):
 
         assert mock_feed_manager.call_args == call(
             ANY, (15.1, 25.2), filter_categories=[], filter_radius=200.0
+        )
+
+
+async def test_setup_as_legacy_platform(hass):
+    """Test the setup with a custom location."""
+    # Set up some mock feed entries for this test.
+    mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 20.5, (-31.1, 150.1))
+
+    with patch(
+        "aio_geojson_nsw_rfs_incidents.feed_manager.NswRuralFireServiceIncidentsFeed",
+        wraps=NswRuralFireServiceIncidentsFeed,
+    ) as mock_feed_manager, patch(
+        "aio_geojson_client.feed.GeoJsonFeed.update"
+    ) as mock_feed_update:
+        mock_feed_update.return_value = "OK", [mock_entry_1]
+
+        assert await async_setup_component(hass, geo_location.DOMAIN, CONFIG_LEGACY)
+        await hass.async_block_till_done()
+
+        # Artificially trigger update.
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        # Collect events.
+        await hass.async_block_till_done()
+
+        assert len(hass.states.async_entity_ids("geo_location")) == 1
+
+        assert mock_feed_manager.call_args == call(
+            ANY, ANY, filter_categories=[], filter_radius=190.0
         )
