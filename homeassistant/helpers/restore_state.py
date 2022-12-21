@@ -1,7 +1,7 @@
 """Support for restoring entity states on startup."""
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 import asyncio
 from datetime import datetime, timedelta
 import logging
@@ -35,7 +35,7 @@ STATE_EXPIRATION = timedelta(days=7)
 _StoredStateSelfT = TypeVar("_StoredStateSelfT", bound="StoredState")
 
 
-class ExtraStoredData:
+class ExtraStoredData(ABC):
     """Object to hold extra stored data."""
 
     @abstractmethod

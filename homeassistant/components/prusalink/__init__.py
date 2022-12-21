@@ -1,7 +1,7 @@
 """The PrusaLink integration."""
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from datetime import timedelta
 import logging
 from time import monotonic
@@ -60,7 +60,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 T = TypeVar("T", PrinterInfo, JobInfo)
 
 
-class PrusaLinkUpdateCoordinator(DataUpdateCoordinator, Generic[T]):
+class PrusaLinkUpdateCoordinator(DataUpdateCoordinator, Generic[T], ABC):
     """Update coordinator for the printer."""
 
     config_entry: ConfigEntry

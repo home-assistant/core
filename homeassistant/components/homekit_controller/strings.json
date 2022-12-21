@@ -71,6 +71,15 @@
     }
   },
   "entity": {
+    "select": {
+      "ecobee_mode": {
+        "state": {
+          "away": "Away",
+          "home": "Home",
+          "sleep": "Sleep"
+        }
+      }
+    },
     "sensor": {
       "thread_node_capabilities": {
         "state": {

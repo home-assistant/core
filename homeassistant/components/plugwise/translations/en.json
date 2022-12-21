@@ -24,5 +24,26 @@
                 "title": "Connect to the Smile"
             }
         }
+    },
+    "entity": {
+        "select": {
+            "dhw_mode": {
+                "state": {
+                    "auto": "Auto",
+                    "boost": "Boost",
+                    "comfort": "Comfort",
+                    "off": "Off"
+                }
+            },
+            "regulation_mode": {
+                "state": {
+                    "bleeding_cold": "Bleeding cold",
+                    "bleeding_hot": "Bleeding hot",
+                    "cooling": "Cooling",
+                    "heating": "Heating",
+                    "off": "Off"
+                }
+            }
+        }
     }
 }

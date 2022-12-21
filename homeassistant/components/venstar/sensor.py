@@ -15,9 +15,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    TIME_MINUTES,
+    UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
@@ -106,9 +105,9 @@ async def async_setup_entry(
 
 def temperature_unit(coordinator: VenstarDataUpdateCoordinator) -> str:
     """Return the correct unit for temperature."""
-    unit = TEMP_CELSIUS
+    unit = UnitOfTemperature.CELSIUS
     if coordinator.client.tempunits == coordinator.client.TEMPUNITS_F:
-        unit = TEMP_FAHRENHEIT
+        unit = UnitOfTemperature.FAHRENHEIT
     return unit
 
 
@@ -207,7 +206,7 @@ SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
 RUNTIME_ENTITY = VenstarSensorEntityDescription(
     key="runtime",
     state_class=SensorStateClass.MEASUREMENT,
-    uom_fn=lambda _: TIME_MINUTES,
+    uom_fn=lambda _: UnitOfTime.MINUTES,
     value_fn=lambda coordinator, sensor_name: coordinator.runtimes[-1][sensor_name],
     name_fn=lambda coordinator, sensor_name: f"{coordinator.client.name} {RUNTIME_ATTRIBUTES[sensor_name]} Runtime",
 )

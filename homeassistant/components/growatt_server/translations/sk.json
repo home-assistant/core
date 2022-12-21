@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "no_plants": "Na tomto \u00fa\u010dte neboli n\u00e1jden\u00e9 \u017eiadne rastliny"
+        },
         "error": {
             "invalid_auth": "Neplatn\u00e9 overenie"
         },
@@ -7,7 +10,8 @@
             "plant": {
                 "data": {
                     "plant_id": "Rastlina"
-                }
+                },
+                "title": "Vyberte svoju rastlinu"
             },
             "user": {
                 "data": {

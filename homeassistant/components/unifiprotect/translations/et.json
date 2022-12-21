@@ -41,6 +41,15 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "license_plate": {
+                "state": {
+                    "none": "Puudub"
+                }
+            }
+        }
+    },
     "issues": {
         "deprecate_smart_sensor": {
             "description": "\u00dchtse \"Avastatud objekti\" andur arukate tuvastuste jaoks on n\u00fc\u00fcdseks kaotanud kehtivuse. See on asendatud iga aruka avastamise t\u00fc\u00fcbi jaoks eraldi aruka avastamise binaarsete anduritega. Palun ajakohasta vastavalt k\u00f5ik mallid v\u00f5i automaatika.",

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from functools import partial
 import logging
 
 from aioesphomeapi import APIClient
@@ -32,7 +33,8 @@ def _async_can_connect_factory(
         """Check if a given source can make another connection."""
         can_connect = bool(entry_data.available and entry_data.ble_connections_free)
         _LOGGER.debug(
-            "%s: Checking can connect, available=%s, ble_connections_free=%s result=%s",
+            "%s [%s]: Checking can connect, available=%s, ble_connections_free=%s result=%s",
+            entry_data.name,
             source,
             entry_data.available,
             entry_data.ble_connections_free,
@@ -57,13 +59,16 @@ async def async_connect_scanner(
     version = entry_data.device_info.bluetooth_proxy_version
     connectable = version >= 2
     _LOGGER.debug(
-        "%s: Connecting scanner version=%s, connectable=%s",
+        "%s [%s]: Connecting scanner version=%s, connectable=%s",
+        entry.title,
         source,
         version,
         connectable,
     )
     connector = HaBluetoothConnector(
-        client=ESPHomeClient,
+        # MyPy doesn't like partials, but this is correct
+        # https://github.com/python/mypy/issues/1484
+        client=partial(ESPHomeClient, config_entry=entry),  # type: ignore[arg-type]
         source=source,
         can_connect=_async_can_connect_factory(entry_data, source),
     )

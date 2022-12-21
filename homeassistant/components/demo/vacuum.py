@@ -105,6 +105,7 @@ class DemoVacuum(VacuumEntity):
     """Representation of a demo vacuum."""
 
     _attr_should_poll = False
+    _attr_translation_key = "model_s"
 
     def __init__(self, name: str, supported_features: VacuumEntityFeature) -> None:
         """Initialize the vacuum."""
@@ -247,6 +248,7 @@ class StateDemoVacuum(StateVacuumEntity):
 
     _attr_should_poll = False
     _attr_supported_features = SUPPORT_STATE_SERVICES
+    _attr_translation_key = "model_s"
 
     def __init__(self, name: str) -> None:
         """Initialize the vacuum."""

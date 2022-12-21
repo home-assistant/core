@@ -729,7 +729,7 @@ def async_track_template(
     ],
     variables: TemplateVarsType | None = None,
 ) -> CALLBACK_TYPE:
-    """Add a listener that fires when a a template evaluates to 'true'.
+    """Add a listener that fires when a template evaluates to 'true'.
 
     Listen for the result of the template becoming true, or a true-like
     string result, such as 'On', 'Open', or 'Yes'. If the template results

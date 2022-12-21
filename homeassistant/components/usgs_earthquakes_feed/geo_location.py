@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_START,
-    LENGTH_KILOMETERS,
+    UnitOfLength,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
@@ -48,7 +48,7 @@ CONF_MINIMUM_MAGNITUDE = "minimum_magnitude"
 
 DEFAULT_MINIMUM_MAGNITUDE = 0.0
 DEFAULT_RADIUS_IN_KM = 50.0
-DEFAULT_UNIT_OF_MEASUREMENT = LENGTH_KILOMETERS
+DEFAULT_UNIT_OF_MEASUREMENT = UnitOfLength.KILOMETERS
 
 SCAN_INTERVAL = timedelta(minutes=5)
 

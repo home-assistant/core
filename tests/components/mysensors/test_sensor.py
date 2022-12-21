@@ -105,7 +105,7 @@ async def test_sound_sensor(
 
     assert state
     assert state.state == "10"
-    assert state.attributes[ATTR_ICON] == "mdi:volume-high"
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.SOUND_PRESSURE
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "dB"
 
 

@@ -24,5 +24,26 @@
                 "title": "Hubungkan ke Smile"
             }
         }
+    },
+    "entity": {
+        "select": {
+            "dhw_mode": {
+                "state": {
+                    "auto": "Otomatis",
+                    "boost": "Kencang",
+                    "comfort": "Nyaman",
+                    "off": "Mati"
+                }
+            },
+            "regulation_mode": {
+                "state": {
+                    "bleeding_cold": "Dingin sekali",
+                    "bleeding_hot": "Panas sekali",
+                    "cooling": "Mendinginkan",
+                    "heating": "Memanaskan",
+                    "off": "Mati"
+                }
+            }
+        }
     }
 }

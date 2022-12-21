@@ -41,6 +41,15 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "license_plate": {
+                "state": {
+                    "none": "Limpar"
+                }
+            }
+        }
+    },
     "issues": {
         "deprecate_smart_sensor": {
             "description": "O sensor unificado de \"objeto detectado\" para detec\u00e7\u00f5es inteligentes agora est\u00e1 obsoleto. Ele foi substitu\u00eddo por sensores bin\u00e1rios de detec\u00e7\u00e3o inteligente individuais para cada tipo de detec\u00e7\u00e3o inteligente. Atualize quaisquer modelos ou automa\u00e7\u00f5es de acordo.",

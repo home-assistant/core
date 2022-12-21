@@ -16,16 +16,15 @@ from bleak.backends.bluezdbus.advertisement_monitor import OrPattern
 from bleak.backends.bluezdbus.scanner import BlueZScannerArgs
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData, AdvertisementDataCallback
+from bleak_retry_connector import restore_discoveries
 from bluetooth_adapters import DEFAULT_ADDRESS
 from dbus_fast import InvalidMessageError
 
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
+from homeassistant.core import HomeAssistant, callback as hass_callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util.dt import monotonic_time_coarse
 from homeassistant.util.package import is_docker_env
 
-from .base_scanner import BaseHaScanner
+from .base_scanner import MONOTONIC_TIME, BaseHaScanner
 from .const import (
     SCANNER_WATCHDOG_INTERVAL,
     SCANNER_WATCHDOG_TIMEOUT,
@@ -36,7 +35,6 @@ from .models import BluetoothScanningMode, BluetoothServiceInfoBleak
 from .util import async_reset_adapter
 
 OriginalBleakScanner = bleak.BleakScanner
-MONOTONIC_TIME = monotonic_time_coarse
 
 # or_patterns is a workaround for the fact that passive scanning
 # needs at least one matcher to be set. The below matcher
@@ -129,14 +127,13 @@ class HaScanner(BaseHaScanner):
         new_info_callback: Callable[[BluetoothServiceInfoBleak], None],
     ) -> None:
         """Init bluetooth discovery."""
+        self.mac_address = address
         source = address if address != DEFAULT_ADDRESS else adapter or SOURCE_LOCAL
         super().__init__(hass, source, adapter)
+        self.connectable = True
         self.mode = mode
         self.adapter = adapter
         self._start_stop_lock = asyncio.Lock()
-        self._cancel_watchdog: CALLBACK_TYPE | None = None
-        self._last_detection = 0.0
-        self._start_time = 0.0
         self._new_info_callback = new_info_callback
         self.scanning = False
 
@@ -164,10 +161,6 @@ class HaScanner(BaseHaScanner):
         base_diag = await super().async_diagnostics()
         return base_diag | {
             "adapter": self.adapter,
-            "source": self.source,
-            "name": self.name,
-            "last_detection": self._last_detection,
-            "start_time": self._start_time,
         }
 
     @hass_callback
@@ -314,25 +307,11 @@ class HaScanner(BaseHaScanner):
 
         self.scanning = True
         self._async_setup_scanner_watchdog()
-
-    @hass_callback
-    def _async_setup_scanner_watchdog(self) -> None:
-        """If Dbus gets restarted or updated, we need to restart the scanner."""
-        self._start_time = self._last_detection = MONOTONIC_TIME()
-        if not self._cancel_watchdog:
-            self._cancel_watchdog = async_track_time_interval(
-                self.hass, self._async_scanner_watchdog, SCANNER_WATCHDOG_INTERVAL
-            )
+        await restore_discoveries(self.scanner, self.adapter)
 
     async def _async_scanner_watchdog(self, now: datetime) -> None:
         """Check if the scanner is running."""
-        time_since_last_detection = MONOTONIC_TIME() - self._last_detection
-        _LOGGER.debug(
-            "%s: Scanner watchdog time_since_last_detection: %s",
-            self.name,
-            time_since_last_detection,
-        )
-        if time_since_last_detection < SCANNER_WATCHDOG_TIMEOUT:
+        if not self._async_watchdog_triggered():
             return
         if self._start_stop_lock.locked():
             _LOGGER.debug(
@@ -346,6 +325,7 @@ class HaScanner(BaseHaScanner):
             SCANNER_WATCHDOG_TIMEOUT,
         )
         async with self._start_stop_lock:
+            time_since_last_detection = MONOTONIC_TIME() - self._last_detection
             # Stop the scanner but not the watchdog
             # since we want to try again later if it's still quiet
             await self._async_stop_scanner()
@@ -373,15 +353,13 @@ class HaScanner(BaseHaScanner):
         # so we log at debug level. If we later come up with a repair
         # strategy, we will change this to raise a repair issue as well.
         _LOGGER.debug("%s: adapter stopped responding; executing reset", self.name)
-        result = await async_reset_adapter(self.adapter)
+        result = await async_reset_adapter(self.adapter, self.mac_address)
         _LOGGER.debug("%s: adapter reset result: %s", self.name, result)
 
     async def async_stop(self) -> None:
         """Stop bluetooth scanner."""
-        if self._cancel_watchdog:
-            self._cancel_watchdog()
-            self._cancel_watchdog = None
         async with self._start_stop_lock:
+            self._async_stop_scanner_watchdog()
             await self._async_stop_scanner()
 
     async def _async_stop_scanner(self) -> None:

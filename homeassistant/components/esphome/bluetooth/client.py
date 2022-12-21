@@ -23,6 +23,7 @@ from bleak.backends.service import BleakGATTServiceCollection
 from bleak.exc import BleakError
 
 from homeassistant.components.bluetooth import async_scanner_by_source
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 
 from ..domain_data import DomainData
@@ -77,7 +78,7 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
             with contextlib.suppress(asyncio.CancelledError):
                 await task
             raise BleakError(
-                f"{self._source}: {self._ble_device.name} - {self._ble_device.address}: "  # pylint: disable=protected-access
+                f"{self._source_name}: {self._ble_device.name} - {self._ble_device.address}: "  # pylint: disable=protected-access
                 "Disconnected during operation"
             )
         return next(iter(done)).result()
@@ -108,7 +109,7 @@ def api_error_as_bleak_error(func: _WrapFuncType) -> _WrapFuncType:
             if ex.error.error == -1:
                 _LOGGER.debug(
                     "%s: %s - %s: BLE device disconnected during %s operation",
-                    self._source,
+                    self._source_name,
                     self._ble_device.name,
                     self._ble_device.address,
                     func.__name__,
@@ -125,7 +126,11 @@ class ESPHomeClient(BaseBleakClient):
     """ESPHome Bleak Client."""
 
     def __init__(
-        self, address_or_ble_device: BLEDevice | str, *args: Any, **kwargs: Any
+        self,
+        address_or_ble_device: BLEDevice | str,
+        *args: Any,
+        config_entry: ConfigEntry,
+        **kwargs: Any,
     ) -> None:
         """Initialize the ESPHomeClient."""
         assert isinstance(address_or_ble_device, BLEDevice)
@@ -136,7 +141,6 @@ class ESPHomeClient(BaseBleakClient):
         assert self._ble_device.details is not None
         self._source = self._ble_device.details["source"]
         self.domain_data = DomainData.get(self._hass)
-        config_entry = self.domain_data.get_by_unique_id(self._source)
         self.entry_data = self.domain_data.get_entry_data(config_entry)
         self._client = self.entry_data.client
         self._is_connected = False
@@ -150,6 +154,7 @@ class ESPHomeClient(BaseBleakClient):
         assert device_info is not None
         self._connection_version = device_info.bluetooth_proxy_version
         self._address_type = address_or_ble_device.details["address_type"]
+        self._source_name = f"{config_entry.title} [{self._source}]"
 
     def __str__(self) -> str:
         """Return the string representation of the client."""
@@ -164,7 +169,7 @@ class ESPHomeClient(BaseBleakClient):
         except (AssertionError, ValueError) as ex:
             _LOGGER.debug(
                 "%s: %s - %s: Failed to unsubscribe from connection state (likely connection dropped): %s",
-                self._source,
+                self._source_name,
                 self._ble_device.name,
                 self._ble_device.address,
                 ex,
@@ -190,7 +195,7 @@ class ESPHomeClient(BaseBleakClient):
         if was_connected:
             _LOGGER.debug(
                 "%s: %s - %s: BLE device disconnected",
-                self._source,
+                self._source_name,
                 self._ble_device.name,
                 self._ble_device.address,
             )
@@ -200,7 +205,7 @@ class ESPHomeClient(BaseBleakClient):
         """Handle the esp32 client disconnecting from hass."""
         _LOGGER.debug(
             "%s: %s - %s: ESP device disconnected",
-            self._source,
+            self._source_name,
             self._ble_device.name,
             self._ble_device.address,
         )
@@ -225,12 +230,14 @@ class ESPHomeClient(BaseBleakClient):
             Boolean representing connection status.
         """
         await self._wait_for_free_connection_slot(CONNECT_FREE_SLOT_TIMEOUT)
+        domain_data = self.domain_data
         entry_data = self.entry_data
-        self._mtu = entry_data.get_gatt_mtu_cache(self._address_as_int)
+
+        self._mtu = domain_data.get_gatt_mtu_cache(self._address_as_int)
         has_cache = bool(
             dangerous_use_bleak_cache
             and self._connection_version >= MIN_BLUETOOTH_PROXY_VERSION_HAS_CACHE
-            and entry_data.get_gatt_services_cache(self._address_as_int)
+            and domain_data.get_gatt_services_cache(self._address_as_int)
             and self._mtu
         )
         connected_future: asyncio.Future[bool] = asyncio.Future()
@@ -241,7 +248,7 @@ class ESPHomeClient(BaseBleakClient):
             """Handle a connect or disconnect."""
             _LOGGER.debug(
                 "%s: %s - %s: Connection state changed to connected=%s mtu=%s error=%s",
-                self._source,
+                self._source_name,
                 self._ble_device.name,
                 self._ble_device.address,
                 connected,
@@ -252,7 +259,7 @@ class ESPHomeClient(BaseBleakClient):
                 self._is_connected = True
                 if not self._mtu:
                     self._mtu = mtu
-                    entry_data.set_gatt_mtu_cache(self._address_as_int, mtu)
+                    domain_data.set_gatt_mtu_cache(self._address_as_int, mtu)
             else:
                 self._async_ble_device_disconnected()
 
@@ -282,7 +289,7 @@ class ESPHomeClient(BaseBleakClient):
 
             _LOGGER.debug(
                 "%s: %s - %s: connected, registering for disconnected callbacks",
-                self._source,
+                self._source_name,
                 self._ble_device.name,
                 self._ble_device.address,
             )
@@ -291,7 +298,7 @@ class ESPHomeClient(BaseBleakClient):
 
         timeout = kwargs.get("timeout", self._timeout)
         if not (scanner := async_scanner_by_source(self._hass, self._source)):
-            raise BleakError("Scanner disappeared for {self._source}")
+            raise BleakError("Scanner disappeared for {self._source_name}")
         with scanner.connecting():
             try:
                 self._cancel_connection_state = (
@@ -348,7 +355,7 @@ class ESPHomeClient(BaseBleakClient):
             return
         _LOGGER.debug(
             "%s: %s - %s: Out of connection slots, waiting for a free one",
-            self._source,
+            self._source_name,
             self._ble_device.name,
             self._ble_device.address,
         )
@@ -387,17 +394,17 @@ class ESPHomeClient(BaseBleakClient):
            A :py:class:`bleak.backends.service.BleakGATTServiceCollection` with this device's services tree.
         """
         address_as_int = self._address_as_int
-        entry_data = self.entry_data
+        domain_data = self.domain_data
         # If the connection version >= 3, we must use the cache
         # because the esp has already wiped the services list to
         # save memory.
         if (
             self._connection_version >= MIN_BLUETOOTH_PROXY_VERSION_HAS_CACHE
             or dangerous_use_bleak_cache
-        ) and (cached_services := entry_data.get_gatt_services_cache(address_as_int)):
+        ) and (cached_services := domain_data.get_gatt_services_cache(address_as_int)):
             _LOGGER.debug(
                 "%s: %s - %s: Cached services hit",
-                self._source,
+                self._source_name,
                 self._ble_device.name,
                 self._ble_device.address,
             )
@@ -405,7 +412,7 @@ class ESPHomeClient(BaseBleakClient):
             return self.services
         _LOGGER.debug(
             "%s: %s - %s: Cached services miss",
-            self._source,
+            self._source_name,
             self._ble_device.name,
             self._ble_device.address,
         )
@@ -414,7 +421,7 @@ class ESPHomeClient(BaseBleakClient):
         )
         _LOGGER.debug(
             "%s: %s - %s: Got services: %s",
-            self._source,
+            self._source_name,
             self._ble_device.name,
             self._ble_device.address,
             esphome_services,
@@ -449,11 +456,11 @@ class ESPHomeClient(BaseBleakClient):
         self.services = services
         _LOGGER.debug(
             "%s: %s - %s: Cached services saved",
-            self._source,
+            self._source_name,
             self._ble_device.name,
             self._ble_device.address,
         )
-        entry_data.set_gatt_services_cache(address_as_int, services)
+        domain_data.set_gatt_services_cache(address_as_int, services)
         return services
 
     def _resolve_characteristic(
@@ -470,8 +477,8 @@ class ESPHomeClient(BaseBleakClient):
 
     async def clear_cache(self) -> None:
         """Clear the GATT cache."""
-        self.entry_data.clear_gatt_services_cache(self._address_as_int)
-        self.entry_data.clear_gatt_mtu_cache(self._address_as_int)
+        self.domain_data.clear_gatt_services_cache(self._address_as_int)
+        self.domain_data.clear_gatt_mtu_cache(self._address_as_int)
 
     @verify_connected
     @api_error_as_bleak_error
@@ -608,7 +615,7 @@ class ESPHomeClient(BaseBleakClient):
 
         _LOGGER.debug(
             "%s: %s - %s: Writing to CCD descriptor %s for notifications with properties=%s",
-            self._source,
+            self._source_name,
             self._ble_device.name,
             self._ble_device.address,
             cccd_descriptor.handle,
@@ -646,7 +653,7 @@ class ESPHomeClient(BaseBleakClient):
         if self._cancel_connection_state:
             _LOGGER.warning(
                 "%s: %s - %s: ESPHomeClient bleak client was not properly disconnected before destruction",
-                self._source,
+                self._source_name,
                 self._ble_device.name,
                 self._ble_device.address,
             )

@@ -2,10 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
-            "cannot_connect": "Verbindung fehlgeschlagen"
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "station_not_found": "Stations-ID bei zamg nicht gefunden"
         },
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen"
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "station_not_found": "Stations-ID bei zamg nicht gefunden"
         },
         "flow_title": "{name}",
         "step": {
