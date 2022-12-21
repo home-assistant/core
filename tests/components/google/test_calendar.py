@@ -915,7 +915,7 @@ async def test_websocket_create_all_day(
             "date": "1997-07-14",
         },
         "end": {"date": "1997-07-15"},
-        "recurrence": ["FREQ=YEARLY"],
+        "recurrence": ["RRULE:FREQ=YEARLY"],
     }
 
 
@@ -1001,6 +1001,7 @@ async def test_websocket_delete_recurring_event_instance(
     event = events[1]
     assert event["uid"] == "event-id-1@google.com"
     assert event["recurrence_id"] == "event-id-1_20221015"
+    assert event["rrule"] == "FREQ=WEEKLY"
 
     # Expect a delete request as well as a follow up to sync state from server
     aioclient_mock.clear_requests()
