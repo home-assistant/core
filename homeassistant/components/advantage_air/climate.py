@@ -15,7 +15,6 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
@@ -169,7 +168,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
         return ADVANTAGE_AIR_MYZONE
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         # MyTemp does not support setting a temperature of any kind
         if self.preset_mode == ADVANTAGE_AIR_MYTEMP:
@@ -222,11 +221,11 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the Temperature."""
         if ATTR_TEMPERATURE in kwargs:
-            await self.async_change(
+            await self.aircon(
                 {self.ac_key: {"info": {"setTemp": kwargs[ATTR_TEMPERATURE]}}}
             )
         if ATTR_TARGET_TEMP_LOW in kwargs and ATTR_TARGET_TEMP_HIGH in kwargs:
-            await self.async_change(
+            await self.aircon(
                 {
                     self.ac_key: {
                         "info": {
@@ -244,7 +243,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
             change[ADVANTAGE_AIR_MYTEMP_ENABLED] = preset_mode == ADVANTAGE_AIR_MYTEMP
         if ADVANTAGE_AIR_MYAUTO_ENABLED in self._ac:
             change[ADVANTAGE_AIR_MYAUTO_ENABLED] = preset_mode == ADVANTAGE_AIR_MYAUTO
-        await self.async_change({self.ac_key: {"info": change}})
+        await self.aircon({self.ac_key: {"info": change}})
 
 
 class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
@@ -284,7 +283,7 @@ class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC Mode and State."""
-        await self.async_change(
+        await self.aircon(
             {
                 self.ac_key: {
                     "zones": {
