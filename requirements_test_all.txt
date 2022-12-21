@@ -36,7 +36,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.29.1
+PySwitchbot==0.30.0
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -462,7 +462,7 @@ denonavr==0.10.12
 devolo-home-control-api==0.18.2
 
 # homeassistant.components.devolo_home_network
-devolo-plc-api==0.8.0
+devolo-plc-api==0.9.0
 
 # homeassistant.components.directv
 directv==0.4.0
@@ -1039,7 +1039,7 @@ pyMetno==0.9.0
 pyRFXtrx==0.30.0
 
 # homeassistant.components.tibber
-pyTibber==0.26.5
+pyTibber==0.26.6
 
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.5
