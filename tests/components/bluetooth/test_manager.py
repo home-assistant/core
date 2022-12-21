@@ -10,8 +10,8 @@ import pytest
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
-    BaseHaScanner,
     BaseHaRemoteScanner,
+    BaseHaScanner,
     BluetoothChange,
     BluetoothScanningMode,
     BluetoothServiceInfo,
