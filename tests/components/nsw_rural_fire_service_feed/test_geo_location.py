@@ -1,7 +1,7 @@
 """The tests for the NSW Rural Fire Service Feeds platform."""
 import datetime
 from datetime import timedelta
-from unittest.mock import ANY, MagicMock, call, patch
+from unittest.mock import ANY, call, patch
 
 from aio_geojson_nsw_rfs_incidents import NswRuralFireServiceIncidentsFeed
 
@@ -40,6 +40,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import assert_setup_component, async_fire_time_changed
+from tests.components.nsw_rural_fire_service_feed import _generate_mock_feed_entry
 
 CONFIG = {
     geo_location.DOMAIN: [{"platform": "nsw_rural_fire_service_feed", CONF_RADIUS: 200}]
@@ -55,41 +56,6 @@ CONFIG_WITH_CUSTOM_LOCATION = {
         }
     ]
 }
-
-
-def _generate_mock_feed_entry(
-    external_id,
-    title,
-    distance_to_home,
-    coordinates,
-    category=None,
-    location=None,
-    attribution=None,
-    publication_date=None,
-    council_area=None,
-    status=None,
-    entry_type=None,
-    fire=True,
-    size=None,
-    responsible_agency=None,
-):
-    """Construct a mock feed entry for testing purposes."""
-    feed_entry = MagicMock()
-    feed_entry.external_id = external_id
-    feed_entry.title = title
-    feed_entry.distance_to_home = distance_to_home
-    feed_entry.coordinates = coordinates
-    feed_entry.category = category
-    feed_entry.location = location
-    feed_entry.attribution = attribution
-    feed_entry.publication_date = publication_date
-    feed_entry.council_area = council_area
-    feed_entry.status = status
-    feed_entry.type = entry_type
-    feed_entry.fire = fire
-    feed_entry.size = size
-    feed_entry.responsible_agency = responsible_agency
-    return feed_entry
 
 
 async def test_setup(hass):
