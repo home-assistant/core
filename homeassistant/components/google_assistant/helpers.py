@@ -345,7 +345,10 @@ class AbstractConfig(ABC):
             not version or AwesomeVersion(version) < LOCAL_SDK_MIN_VERSION
         ):
             _LOGGER.warning(
-                "Local SDK version is too old (%s), check documentation on how to update to the latest version",
+                (
+                    "Local SDK version is too old (%s), check documentation on how to"
+                    " update to the latest version"
+                ),
                 version,
             )
             self._local_sdk_version_warn = True
@@ -364,7 +367,10 @@ class AbstractConfig(ABC):
             # No agent user linked to this webhook, means that the user has somehow unregistered
             # removing webhook and stopping processing of this request.
             _LOGGER.error(
-                "Cannot process request for webhook %s as no linked agent user is found:\n%s\n",
+                (
+                    "Cannot process request for webhook %s as no linked agent user is"
+                    " found:\n%s\n"
+                ),
                 webhook_id,
                 pprint.pformat(payload),
             )

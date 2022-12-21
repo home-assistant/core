@@ -427,16 +427,14 @@ def get_next_departure(
     if item["dest_arrival_time"] < item["origin_depart_time"]:
         dest_arrival += datetime.timedelta(days=1)
     dest_arrival_time = (
-        f"{dest_arrival.strftime(dt_util.DATE_STR_FORMAT)} "
-        f"{item['dest_arrival_time']}"
+        f"{dest_arrival.strftime(dt_util.DATE_STR_FORMAT)} {item['dest_arrival_time']}"
     )
 
     dest_depart = dest_arrival
     if item["dest_depart_time"] < item["dest_arrival_time"]:
         dest_depart += datetime.timedelta(days=1)
     dest_depart_time = (
-        f"{dest_depart.strftime(dt_util.DATE_STR_FORMAT)} "
-        f"{item['dest_depart_time']}"
+        f"{dest_depart.strftime(dt_util.DATE_STR_FORMAT)} {item['dest_depart_time']}"
     )
 
     depart_time = dt_util.parse_datetime(origin_depart_time)
@@ -638,9 +636,11 @@ class GTFSDepartureSensor(SensorEntity):
                     self._agency = self._pygtfs.agencies_by_id(self._route.agency_id)[0]
                 except IndexError:
                     _LOGGER.warning(
-                        "Agency ID '%s' was not found in agency table, "
-                        "you may want to update the routes database table "
-                        "to fix this missing reference",
+                        (
+                            "Agency ID '%s' was not found in agency table, "
+                            "you may want to update the routes database table "
+                            "to fix this missing reference"
+                        ),
                         self._route.agency_id,
                     )
                     self._agency = False
