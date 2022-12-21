@@ -23,7 +23,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfInformation
+from homeassistant.const import UnitOfInformation, UnitOfPower
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -158,6 +158,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiEntityDescription, ...] = (
         key="PoE port power sensor",
         device_class=SensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
         has_entity_name=True,
         entity_registry_enabled_default=False,
         allowed_fn=lambda controller, obj_id: True,
