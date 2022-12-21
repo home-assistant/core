@@ -421,8 +421,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             if last_triggered is not None:
                 self.action_script.last_triggered = parse_datetime(last_triggered)
             self._logger.debug(
-                "Loaded automation %s with state %s from state "
-                " storage last state %s",
+                "Loaded automation %s with state %s from state  storage last state %s",
                 self.entity_id,
                 enable_automation,
                 state,
@@ -438,8 +437,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         if self._initial_state is not None:
             enable_automation = self._initial_state
             self._logger.debug(
-                "Automation %s initial state %s overridden from "
-                "config initial_state",
+                "Automation %s initial state %s overridden from config initial_state",
                 self.entity_id,
                 enable_automation,
             )

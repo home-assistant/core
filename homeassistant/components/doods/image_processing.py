@@ -297,7 +297,10 @@ class Doods(ImageProcessingEntity):
 
         if self._aspect and abs((img_width / img_height) - self._aspect) > 0.1:
             _LOGGER.debug(
-                "The image aspect: %s and the detector aspect: %s differ by more than 0.1",
+                (
+                    "The image aspect: %s and the detector aspect: %s differ by more"
+                    " than 0.1"
+                ),
                 (img_width / img_height),
                 self._aspect,
             )
