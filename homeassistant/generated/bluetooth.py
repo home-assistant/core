@@ -265,10 +265,12 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "service_data_uuid": "0000fdcd-0000-1000-8000-00805f9b34fb",
     },
     {
+        "connectable": False,
         "domain": "ruuvitag_ble",
         "manufacturer_id": 1177,
     },
     {
+        "connectable": False,
         "domain": "ruuvitag_ble",
         "local_name": "Ruuvi *",
     },
