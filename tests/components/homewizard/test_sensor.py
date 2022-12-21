@@ -774,13 +774,3 @@ async def test_api_disabled(hass, mock_config_entry_data, mock_config_entry):
             ).state
             == "unavailable"
         )
-
-        api.data.side_effect = None
-        async_fire_time_changed(hass, utcnow + timedelta(seconds=10))
-        await hass.async_block_till_done()
-        assert (
-            hass.states.get(
-                "sensor.product_name_aabbccddeeff_total_power_import_t1"
-            ).state
-            == "1234.123"
-        )

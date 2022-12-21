@@ -10,7 +10,16 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 
-from .const import DOMAIN
+from .const import CONF_LANGUAGE_CODE, DOMAIN, SUPPORTED_LANGUAGE_CODES
+
+DEFAULT_LANGUAGE_CODES = {
+    "de": "de-DE",
+    "en": "en-US",
+    "es": "es-ES",
+    "fr": "fr-FR",
+    "it": "it-IT",
+    "pt": "pt-BR",
+}
 
 
 async def async_send_text_commands(commands: list[str], hass: HomeAssistant) -> None:
@@ -27,6 +36,15 @@ async def async_send_text_commands(commands: list[str], hass: HomeAssistant) -> 
         raise err
 
     credentials = Credentials(session.token[CONF_ACCESS_TOKEN])
-    with TextAssistant(credentials) as assistant:
+    language_code = entry.options.get(CONF_LANGUAGE_CODE, default_language_code(hass))
+    with TextAssistant(credentials, language_code) as assistant:
         for command in commands:
             assistant.assist(command)
+
+
+def default_language_code(hass: HomeAssistant):
+    """Get default language code based on Home Assistant config."""
+    language_code = f"{hass.config.language}-{hass.config.country}"
+    if language_code in SUPPORTED_LANGUAGE_CODES:
+        return language_code
+    return DEFAULT_LANGUAGE_CODES.get(hass.config.language, "en-US")
