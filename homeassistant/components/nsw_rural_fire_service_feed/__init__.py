@@ -120,7 +120,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload the NSW Rural Fire Service Feeds integration config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN][FEED].pop(entry.entry_id)
+        manager = hass.data[DOMAIN][FEED].pop(entry.entry_id)
+        await manager.async_stop()
     return unload_ok
 
 
