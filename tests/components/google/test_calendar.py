@@ -927,7 +927,7 @@ async def test_websocket_delete(
     mock_events_list_items: ApiResult,
     aioclient_mock,
 ):
-    """Test websocket delete command with recurring events."""
+    """Test websocket delete command."""
     mock_events_list_items(
         [
             {
