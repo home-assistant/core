@@ -54,7 +54,7 @@ CONFIG_SCHEMA = vol.Schema(
                 ),
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                ): cv.time_period,
+                ): cv.positive_int,
                 vol.Optional(CONF_CATEGORIES, default=[]): vol.All(
                     cv.ensure_list, [vol.In(VALID_CATEGORIES)]
                 ),
