@@ -21,9 +21,6 @@ NoneType = type(None)
 class KlyqaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Example config flow."""
 
-    # The schema version of the entries that it creates
-    # Home Assistant will call your migrate method if the version changes
-    # (this is not implemented yet)
     VERSION = 1
 
     def __init__(self) -> None:

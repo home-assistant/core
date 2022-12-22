@@ -34,7 +34,6 @@ SCAN_INTERVAL: timedelta = timedelta(seconds=120)
 
 """ Ignore type, because the Klyqa_account class is in another file and --follow-imports=strict is on"""
 
-
 class HAKlyqaAccount(api.Klyqa_account):  # type: ignore[misc]
     """HAKlyqaAccount."""
 
@@ -71,7 +70,6 @@ class HAKlyqaAccount(api.Klyqa_account):  # type: ignore[misc]
         """Update_account."""
 
         await self.request_account_settings()
-        # await self.request_account_settings_eco()
 
         await self.process_account_settings(device_type)
 

@@ -48,7 +48,6 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin,
 )
 
-# from klyqa_ctl.general.general import DeviceType
 from . import HAKlyqaAccount, KlyqaData
 from .const import DOMAIN, EVENT_KLYQA_NEW_LIGHT, EVENT_KLYQA_NEW_LIGHT_GROUP, LOGGER
 
@@ -564,7 +563,6 @@ class KlyqaLight(RestoreEntity, LightEntity):
 
         await self.async_update_klyqa()
 
-        # if self._added_klyqa:
         await self.send_to_bulbs(["--request"])
 
         if self.u_id in self._klyqa_account.devices:
