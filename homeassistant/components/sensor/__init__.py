@@ -16,6 +16,8 @@ import voluptuous as vol
 from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401, pylint: disable=[hass-deprecated-import]
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_MILLION,
     CONF_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_AQI,
     DEVICE_CLASS_BATTERY,
@@ -45,9 +47,30 @@ from homeassistant.const import (  # noqa: F401, pylint: disable=[hass-deprecate
     DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
     DEVICE_CLASS_VOLTAGE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    TEMP_KELVIN,
+    LIGHT_LUX,
+    PERCENTAGE,
+    POWER_VOLT_AMPERE_REACTIVE,
+    SIGNAL_STRENGTH_DECIBELS,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    UnitOfApparentPower,
+    UnitOfDataRate,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfFrequency,
+    UnitOfInformation,
+    UnitOfIrradiance,
+    UnitOfLength,
+    UnitOfMass,
+    UnitOfPower,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSoundPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+    UnitOfTime,
+    UnitOfVolume,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -455,6 +478,74 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.WIND_SPEED: SpeedConverter,
 }
 
+DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
+    SensorDeviceClass.APPARENT_POWER: set(UnitOfApparentPower),
+    SensorDeviceClass.AQI: {None},
+    SensorDeviceClass.ATMOSPHERIC_PRESSURE: set(UnitOfPressure),
+    SensorDeviceClass.BATTERY: {PERCENTAGE},
+    SensorDeviceClass.CO: {CONCENTRATION_PARTS_PER_MILLION},
+    SensorDeviceClass.CO2: {CONCENTRATION_PARTS_PER_MILLION},
+    SensorDeviceClass.CURRENT: {UnitOfElectricCurrent.AMPERE},
+    SensorDeviceClass.DATA_RATE: set(UnitOfDataRate),
+    SensorDeviceClass.DATA_SIZE: set(UnitOfInformation),
+    SensorDeviceClass.DISTANCE: set(UnitOfLength),
+    SensorDeviceClass.DURATION: {
+        UnitOfTime.DAYS,
+        UnitOfTime.HOURS,
+        UnitOfTime.MINUTES,
+        UnitOfTime.SECONDS,
+    },
+    SensorDeviceClass.ENERGY: set(UnitOfEnergy),
+    SensorDeviceClass.FREQUENCY: set(UnitOfFrequency),
+    SensorDeviceClass.GAS: {
+        UnitOfVolume.CENTUM_CUBIC_FEET,
+        UnitOfVolume.CUBIC_FEET,
+        UnitOfVolume.CUBIC_METERS,
+    },
+    SensorDeviceClass.HUMIDITY: {PERCENTAGE},
+    SensorDeviceClass.ILLUMINANCE: {LIGHT_LUX, "lm"},
+    SensorDeviceClass.IRRADIANCE: set(UnitOfIrradiance),
+    SensorDeviceClass.MOISTURE: {PERCENTAGE},
+    SensorDeviceClass.NITROGEN_DIOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    SensorDeviceClass.NITROGEN_MONOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    SensorDeviceClass.NITROUS_OXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    SensorDeviceClass.OZONE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    SensorDeviceClass.PM1: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    SensorDeviceClass.PM10: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    SensorDeviceClass.PM25: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    SensorDeviceClass.POWER_FACTOR: {PERCENTAGE},
+    SensorDeviceClass.POWER: {UnitOfPower.WATT, UnitOfPower.KILO_WATT},
+    SensorDeviceClass.PRECIPITATION: set(UnitOfPrecipitationDepth),
+    SensorDeviceClass.PRECIPITATION_INTENSITY: set(UnitOfVolumetricFlux),
+    SensorDeviceClass.PRESSURE: set(UnitOfPressure),
+    SensorDeviceClass.REACTIVE_POWER: {POWER_VOLT_AMPERE_REACTIVE},
+    SensorDeviceClass.SIGNAL_STRENGTH: {
+        SIGNAL_STRENGTH_DECIBELS,
+        SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    },
+    SensorDeviceClass.SOUND_PRESSURE: set(UnitOfSoundPressure),
+    SensorDeviceClass.SPEED: set(UnitOfSpeed).union(set(UnitOfVolumetricFlux)),
+    SensorDeviceClass.SULPHUR_DIOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    SensorDeviceClass.TEMPERATURE: {
+        UnitOfTemperature.CELSIUS,
+        UnitOfTemperature.FAHRENHEIT,
+    },
+    SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    },
+    SensorDeviceClass.VOLTAGE: {UnitOfElectricPotential.VOLT},
+    SensorDeviceClass.VOLUME: set(UnitOfVolume),
+    SensorDeviceClass.WATER: {
+        UnitOfVolume.CENTUM_CUBIC_FEET,
+        UnitOfVolume.CUBIC_FEET,
+        UnitOfVolume.CUBIC_METERS,
+        UnitOfVolume.GALLONS,
+        UnitOfVolume.LITERS,
+    },
+    SensorDeviceClass.WEIGHT: set(UnitOfMass),
+    SensorDeviceClass.WIND_SPEED: set(UnitOfSpeed),
+}
+
 # mypy: disallow-any-generics
 
 
@@ -508,6 +599,7 @@ class SensorEntity(Entity):
     _attr_unit_of_measurement: None = (
         None  # Subclasses of SensorEntity should not set this
     )
+    _invalid_unit_of_measurement_reported = False
     _last_reset_reported = False
     _sensor_option_unit_of_measurement: str | None = None
 
@@ -737,7 +829,8 @@ class SensorEntity(Entity):
 
         if (
             self.device_class == DEVICE_CLASS_TEMPERATURE
-            and native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
+            and native_unit_of_measurement
+            in {UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT}
         ):
             return self.hass.config.units.temperature_unit
 
@@ -862,6 +955,29 @@ class SensorEntity(Entity):
 
                 # Round to the wanted precision
                 value = round(value_f_new) if prec == 0 else round(value_f_new, prec)
+
+        # Validate unit of measurement used for sensors with a device class
+        if (
+            not self._invalid_unit_of_measurement_reported
+            and device_class
+            and (units := DEVICE_CLASS_UNITS.get(device_class)) is not None
+            and native_unit_of_measurement not in units
+        ):
+            self._invalid_unit_of_measurement_reported = True
+            report_issue = self._suggest_report_issue()
+
+            # This should raise in Home Assistant Core 2023.6
+            _LOGGER.warning(
+                "Entity %s (%s) is using native unit of measurement '%s' which "
+                "is not a valid unit for the device class ('%s') it is using; "
+                "Please update your configuration if your entity is manually "
+                "configured, otherwise %s",
+                self.entity_id,
+                type(self),
+                native_unit_of_measurement,
+                device_class,
+                report_issue,
+            )
 
         return value
 

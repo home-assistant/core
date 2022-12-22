@@ -1,5 +1,28 @@
 {
     "entity": {
+        "climate": {
+            "ubercool": {
+                "state_attributes": {
+                    "fan_mode": {
+                        "state": {
+                            "auto_high": "Autom\u00e0tic alt",
+                            "auto_low": "Autom\u00e0tic baix",
+                            "on_high": "ON alt",
+                            "on_low": "ON baix"
+                        }
+                    },
+                    "swing_mode": {
+                        "state": {
+                            "1": "1",
+                            "2": "2",
+                            "3": "3",
+                            "auto": "Autom\u00e0tic",
+                            "off": "OFF"
+                        }
+                    }
+                }
+            }
+        },
         "select": {
             "speed": {
                 "state": {
@@ -16,6 +39,15 @@
                     "comfort": "Confort",
                     "eco": "Eco",
                     "sleep": "Dormint"
+                }
+            }
+        },
+        "vacuum": {
+            "model_s": {
+                "state_attributes": {
+                    "cleaned_area": {
+                        "name": "\u00c0rea netejada"
+                    }
                 }
             }
         }

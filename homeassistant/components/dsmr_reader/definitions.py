@@ -557,4 +557,24 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         icon="mdi:currency-eur",
         native_unit_of_measurement=CURRENCY_EURO,
     ),
+    DSMRReaderSensorEntityDescription(
+        key="dsmr/consumption/quarter-hour-peak-electricity/average_delivered",
+        name="Previous quarter-hour peak usage",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+    ),
+    DSMRReaderSensorEntityDescription(
+        key="dsmr/consumption/quarter-hour-peak-electricity/read_at_start",
+        name="Quarter-hour peak start time",
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        state=dt_util.parse_datetime,
+    ),
+    DSMRReaderSensorEntityDescription(
+        key="dsmr/consumption/quarter-hour-peak-electricity/read_at_end",
+        name="Quarter-hour peak end time",
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        state=dt_util.parse_datetime,
+    ),
 )
