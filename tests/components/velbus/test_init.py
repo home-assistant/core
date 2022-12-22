@@ -1,6 +1,6 @@
 """Tests for the Velbus component initialisation."""
 from collections.abc import Generator
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -83,7 +83,10 @@ async def test_migrate_config_entry(hass: HomeAssistant) -> None:
     assert dict(entry.data) == legacy_config
     assert entry.version == 1
 
-    await hass.config_entries.async_setup(entry.entry_id)
-
-    assert dict(entry.data) == legacy_config
-    assert entry.version == 2
+    # test in case we do not have a cache
+    with patch("os.path.isdir", MagicMock(return_value=True)), patch(
+        "shutil.rmtree", MagicMock(return_value=True)
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        assert dict(entry.data) == legacy_config
+        assert entry.version == 2
