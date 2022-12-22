@@ -13,8 +13,9 @@ from homeassistant.components.sensor import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     STATE_CLASSES_SCHEMA,
-    SensorDeviceClass
+    SensorDeviceClass,
 )
+from homeassistant.components.sensor.helpers import async_parse_date_datetime
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ATTRIBUTE,
@@ -45,7 +46,6 @@ from homeassistant.helpers.template_entity import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.components.sensor.helpers import async_parse_date_datetime
 
 from .const import (
     CONF_INDEX,
@@ -249,12 +249,14 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], TemplateSensor):
         value = self._extract_value()
 
         if self._value_template is not None:
-            value = self._value_template.async_render_with_possible_json_value(value, None)            
-        
-        if(self.device_class not in {
-                SensorDeviceClass.DATE,
-                SensorDeviceClass.TIMESTAMP
-        }):
+            value = self._value_template.async_render_with_possible_json_value(
+                value, None
+            )
+
+        if self.device_class not in {
+            SensorDeviceClass.DATE,
+            SensorDeviceClass.TIMESTAMP,
+        }:
             self._attr_native_value = value
             return
 

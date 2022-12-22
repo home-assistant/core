@@ -96,21 +96,30 @@ SENSOR_SETUP = {
     vol.Optional(CONF_VALUE_TEMPLATE): TemplateSelector(),
     vol.Optional(CONF_DEVICE_CLASS): SelectSelector(
         SelectSelectorConfig(
-            options=[SelectOptionDict(value=item.value, label=item.value) for item in SensorDeviceClass],
+            options=[
+                SelectOptionDict(value=item.value, label=item.value)
+                for item in SensorDeviceClass
+            ],
             custom_value=True,
             mode=SelectSelectorMode.DROPDOWN,
         )
     ),
     vol.Optional(CONF_STATE_CLASS): SelectSelector(
         SelectSelectorConfig(
-            options=[SelectOptionDict(value=item.value, label=item.value) for item in SensorStateClass],
+            options=[
+                SelectOptionDict(value=item.value, label=item.value)
+                for item in SensorStateClass
+            ],
             custom_value=True,
             mode=SelectSelectorMode.DROPDOWN,
         )
     ),
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): SelectSelector(
         SelectSelectorConfig(
-            options=[SelectOptionDict(value=item.value, label=item.value) for item in UnitOfTemperature],
+            options=[
+                SelectOptionDict(value=item.value, label=item.value)
+                for item in UnitOfTemperature
+            ],
             custom_value=True,
             mode=SelectSelectorMode.DROPDOWN,
         )
@@ -141,9 +150,13 @@ async def validate_sensor_setup(
     user_input[CONF_INDEX] = int(user_input[CONF_INDEX])
     user_input[CONF_UNIQUE_ID] = str(uuid.uuid1())
 
-    validate_enum_state(CONF_DEVICE_CLASS, SensorDeviceClass, user_input, handler.options)
-    validate_enum_state(CONF_STATE_CLASS, SensorStateClass, user_input, handler.options)
-    validate_enum_state(CONF_UNIT_OF_MEASUREMENT, None, user_input, handler.options)
+    __validate_enum_state(
+        CONF_DEVICE_CLASS, SensorDeviceClass, user_input, handler.options
+    )
+    __validate_enum_state(
+        CONF_STATE_CLASS, SensorStateClass, user_input, handler.options
+    )
+    __validate_enum_state(CONF_UNIT_OF_MEASUREMENT, None, user_input, handler.options)
 
     # Standard behavior is to merge the result with the options.
     # In this case, we want to add a sub-item so we update the options directly.
@@ -182,9 +195,14 @@ async def get_edit_sensor_suggested_values(
     return handler.options[SENSOR_DOMAIN][idx]
 
 
-def validate_enum_state(key: str, validate_enum, user_input: dict[str, Any], sensor_options: dict[str, Any]):    
+def __validate_enum_state(
+    key: str, validate_enum, user_input: dict[str, Any], sensor_options: dict[str, Any]
+):
     # If the value is now unset, set the sensor to it's default None state. If we have a validate_enum, only allow those values
-    if not key in user_input or (validate_enum is not None and not user_input[key] in [item.value for item in validate_enum]):
+    if key not in user_input or (
+        validate_enum is not None
+        and not user_input[key] in [item.value for item in validate_enum]
+    ):
         sensor_options.pop(key, None)
         user_input.pop(key, None)
 
@@ -194,16 +212,20 @@ async def validate_sensor_edit(
 ) -> dict[str, Any]:
     """Update edited sensor."""
     user_input[CONF_INDEX] = int(user_input[CONF_INDEX])
-    
+
     # Standard behavior is to merge the result with the options.
     # In this case, we want to add a sub-item so we update the options directly.
     idx: int = handler.flow_state["_idx"]
     sensor_options = handler.options[SENSOR_DOMAIN][idx]
-    
-    validate_enum_state(CONF_DEVICE_CLASS, SensorDeviceClass, user_input, sensor_options)
-    validate_enum_state(CONF_STATE_CLASS, SensorStateClass, user_input, sensor_options)
-    validate_enum_state(CONF_UNIT_OF_MEASUREMENT, None, user_input, sensor_options)
-    
+
+    __validate_enum_state(
+        CONF_DEVICE_CLASS, SensorDeviceClass, user_input, sensor_options
+    )
+    __validate_enum_state(
+        CONF_STATE_CLASS, SensorStateClass, user_input, sensor_options
+    )
+    __validate_enum_state(CONF_UNIT_OF_MEASUREMENT, None, user_input, sensor_options)
+
     sensor_options.update(user_input)
     return {}
 
