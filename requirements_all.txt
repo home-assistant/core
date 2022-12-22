@@ -428,7 +428,7 @@ bimmer_connected==0.10.4
 bizkaibus==0.1.1
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==2.10.2
+bleak-retry-connector==2.12.0
 
 # homeassistant.components.bluetooth
 bleak==0.19.2
@@ -453,7 +453,7 @@ bluemaestro-ble==0.2.0
 # bluepy==1.3.0
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.14.1
+bluetooth-adapters==0.15.2
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==1.0.3
