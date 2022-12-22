@@ -10,7 +10,7 @@ from awesomeversion import AwesomeVersion
 from bleak_retry_connector import BleakSlotManager
 from bluetooth_adapters import (
     ADAPTER_ADDRESS,
-    ADAPTER_CONNECTIONS_SLOTS,
+    ADAPTER_CONNECTION_SLOTS,
     ADAPTER_HW_VERSION,
     ADAPTER_MANUFACTURER,
     ADAPTER_SW_VERSION,
@@ -322,7 +322,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from err
     adapters = await manager.async_get_bluetooth_adapters()
     details = adapters[adapter]
-    slots: int = details.get(ADAPTER_CONNECTIONS_SLOTS) or DEFAULT_CONNECTION_SLOTS
+    slots: int = details.get(ADAPTER_CONNECTION_SLOTS) or DEFAULT_CONNECTION_SLOTS
     entry.async_on_unload(async_register_scanner(hass, scanner, True, slots))
     await async_update_device(hass, entry, adapter, details)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = scanner
