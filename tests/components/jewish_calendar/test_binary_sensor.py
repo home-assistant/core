@@ -8,16 +8,10 @@ from homeassistant.components import jewish_calendar
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from . import (
-    HDATE_DEFAULT_ALTITUDE,
-    alter_time,
-    make_jerusalem_test_params,
-    make_nyc_test_params,
-)
+from . import alter_time, make_jerusalem_test_params, make_nyc_test_params
 
 from tests.common import async_fire_time_changed
 
