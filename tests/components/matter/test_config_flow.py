@@ -172,6 +172,7 @@ async def test_manual_already_configured(
     assert entry.data["url"] == "ws://localhost:5580/ws"
     assert entry.data["use_addon"] is False
     assert entry.data["integration_created_addon"] is False
+    assert entry.title == "Matter"
     assert setup_entry.call_count == 1
 
 
