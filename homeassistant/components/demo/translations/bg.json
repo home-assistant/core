@@ -1,5 +1,18 @@
 {
     "entity": {
+        "climate": {
+            "ubercool": {
+                "state_attributes": {
+                    "swing_mode": {
+                        "state": {
+                            "1": "1",
+                            "2": "2",
+                            "3": "3"
+                        }
+                    }
+                }
+            }
+        },
         "sensor": {
             "thermostat_mode": {
                 "state": {
