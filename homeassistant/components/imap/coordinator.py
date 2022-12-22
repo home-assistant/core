@@ -92,13 +92,15 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int]):
                     self.config_entry.data[CONF_SERVER],
                 )
                 self.imap_client = None
+                if self.idle_loop_task:
+                    self.idle_loop_task.cancel()
                 await self.async_request_refresh()
 
     async def retry_connection(self):
         """Retry the connection in case of error."""
         self.imap_client = await connect_to_server(dict(self.config_entry.data))
         if self.support_push:
-            asyncio.create_task(self.idle_loop())
+            self.idle_loop_task = asyncio.create_task(self.idle_loop())
 
     async def shutdown(self, *_) -> None:
         """Close resources."""
