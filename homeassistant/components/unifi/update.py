@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any, Generic
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
@@ -24,12 +24,15 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
-from .entity import DataT, HandlerT, UnifiEntity, UnifiEntityDescription
+from .entity import UnifiEntity, UnifiEntityDescription
 
 if TYPE_CHECKING:
     from .controller import UniFiController
 
 LOGGER = logging.getLogger(__name__)
+
+_DataT = TypeVar("_DataT", bound=Device)
+_HandlerT = TypeVar("_HandlerT", bound=Devices)
 
 
 @callback
@@ -59,18 +62,18 @@ def async_device_device_info_fn(api: aiounifi.Controller, obj_id: str) -> Device
 
 
 @dataclass
-class UnifiEntityLoader(Generic[HandlerT, DataT]):
+class UnifiEntityLoader(Generic[_HandlerT, _DataT]):
     """Validate and load entities from different UniFi handlers."""
 
     control_fn: Callable[[aiounifi.Controller, str], Coroutine[Any, Any, None]]
-    state_fn: Callable[[aiounifi.Controller, DataT], bool]
+    state_fn: Callable[[aiounifi.Controller, _DataT], bool]
 
 
 @dataclass
 class UnifiUpdateEntityDescription(
     UpdateEntityDescription,
-    UnifiEntityDescription[HandlerT, DataT],
-    UnifiEntityLoader[HandlerT, DataT],
+    UnifiEntityDescription[_HandlerT, _DataT],
+    UnifiEntityLoader[_HandlerT, _DataT],
 ):
     """Class describing UniFi update entity."""
 
@@ -108,10 +111,10 @@ async def async_setup_entry(
     )
 
 
-class UnifiDeviceUpdateEntity(UnifiEntity[HandlerT, DataT], UpdateEntity):
+class UnifiDeviceUpdateEntity(UnifiEntity[_HandlerT, _DataT], UpdateEntity):
     """Representation of a UniFi device update entity."""
 
-    entity_description: UnifiUpdateEntityDescription[HandlerT, DataT]
+    entity_description: UnifiUpdateEntityDescription[_HandlerT, _DataT]
 
     @callback
     def async_initiate_state(self) -> None:

@@ -4,13 +4,21 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Generic, TypeVar
+from typing import TYPE_CHECKING, Generic, TypeVar, Union
 
 import aiounifi
-from aiounifi.interfaces.api_handlers import CallbackType, ItemEvent, UnsubscribeType
-from aiounifi.interfaces.devices import Devices
-from aiounifi.models.device import Device
-from aiounifi.models.event import EventKey
+from aiounifi.interfaces.api_handlers import (
+    APIHandler,
+    CallbackType,
+    ItemEvent,
+    UnsubscribeType,
+)
+from aiounifi.interfaces.outlets import Outlets
+from aiounifi.interfaces.ports import Ports
+from aiounifi.models.api import APIItem
+from aiounifi.models.event import Event, EventKey
+from aiounifi.models.outlet import Outlet
+from aiounifi.models.port import Port
 
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
@@ -20,8 +28,8 @@ from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 if TYPE_CHECKING:
     from .controller import UniFiController
 
-DataT = TypeVar("DataT", bound=Device)
-HandlerT = TypeVar("HandlerT", bound=Devices)
+DataT = TypeVar("DataT", bound=Union[APIItem, Outlet, Port])
+HandlerT = TypeVar("HandlerT", bound=Union[APIHandler, Outlets, Ports])
 SubscriptionT = Callable[[CallbackType, ItemEvent], UnsubscribeType]
 
 
@@ -106,6 +114,15 @@ class UnifiEntity(Entity, Generic[HandlerT, DataT]):
             )
         )
 
+        # Subscribe to events if defined
+        if description.event_to_subscribe is not None:
+            self.async_on_remove(
+                self.controller.api.events.subscribe(
+                    self.async_event_callback,
+                    description.event_to_subscribe,
+                )
+            )
+
     @callback
     def async_signalling_callback(self, event: ItemEvent, obj_id: str) -> None:
         """Update the entity state."""
@@ -157,3 +174,11 @@ class UnifiEntity(Entity, Generic[HandlerT, DataT]):
 
         Perform additional actions updating platform entity child class state.
         """
+
+    @callback
+    def async_event_callback(self, event: Event) -> None:
+        """Update entity state based on subscribed event.
+
+        Perform additional action updating platform entity child class state.
+        """
+        raise NotImplementedError()
