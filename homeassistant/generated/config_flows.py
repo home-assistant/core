@@ -202,6 +202,7 @@ FLOWS = {
         "isy994",
         "izone",
         "jellyfin",
+        "jewish_calendar",
         "juicenet",
         "justnimbus",
         "kaleidescape",

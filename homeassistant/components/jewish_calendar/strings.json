@@ -1,0 +1,33 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "diaspora": "Outside of Israel?",
+          "language": "Language for Holidays and Dates",
+          "location": "[%key:common::config_flow::data::location%]",
+          "elevation": "[%key:common::config_flow::data::elevation%]",
+          "time_zone": "Time Zone"
+        }
+      }
+    },
+    "error": {
+      "name_exists": "Name already exists"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure options for Jewish Calendar",
+        "data": {
+          "candle_lighting_minutes_before_sunset": "Minutes before sunset for candle lighthing",
+          "havdalah_minutes_after_sunset": "Minutes after sunset for Havdalah"
+        }
+      }
+    }
+  }
+}
