@@ -75,12 +75,10 @@ async def async_setup_entry(
 class LocalFile(Camera):
     """Representation of a local file camera."""
 
-    _attr_has_entity_name = True
-
     def __init__(self, data: dict[str, Any], entry_id: str) -> None:
         """Initialize Local File Camera component."""
         super().__init__()
-
+        self._attr_name = data[CONF_NAME]
         self._file_path = data[CONF_FILE_PATH]
         # Set content type of local file
         content, _ = mimetypes.guess_type(self._file_path)
