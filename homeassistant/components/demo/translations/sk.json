@@ -50,16 +50,19 @@
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "description": "Po doplnen\u00ed kvapaliny do blika\u010da stla\u010dte SUBMIT"
+                        "description": "Po doplnen\u00ed kvapaliny do blika\u010da stla\u010dte SUBMIT",
+                        "title": "Kvapalinu blika\u010da treba doplni\u0165"
                     }
                 }
-            }
+            },
+            "title": "Kvapalina blika\u010da je pr\u00e1zdna a je potrebn\u00e9 ju doplni\u0165"
         },
         "transmogrifier_deprecated": {
             "description": "Komponent transmogrifier je teraz zastaran\u00fd z d\u00f4vodu nedostatku lok\u00e1lneho ovl\u00e1dania dostupn\u00e9ho v novom API",
             "title": "Komponent transmogrifier je zastaran\u00fd"
         },
         "unfixable_problem": {
+            "description": "Tento probl\u00e9m nikdy nezmizne.",
             "title": "Tento probl\u00e9m sa ned\u00e1 odstr\u00e1ni\u0165"
         }
     },
@@ -75,6 +78,7 @@
             },
             "options_1": {
                 "data": {
+                    "bool": "Volite\u013en\u00e1 booleovsk\u00e1 hodnota",
                     "constant": "Kon\u0161tanta",
                     "int": "\u010c\u00edseln\u00fd vstup"
                 }

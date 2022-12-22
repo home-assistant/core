@@ -61,7 +61,7 @@ SAVE_DELAY = 10
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 9
+STORAGE_VERSION_MINOR = 10
 STORAGE_KEY = "core.entity_registry"
 
 # Attributes relevant to describing entity
@@ -104,6 +104,7 @@ class RegistryEntry:
     entity_id: str = attr.ib()
     unique_id: str = attr.ib()
     platform: str = attr.ib()
+    aliases: set[str] = attr.ib(factory=set)
     area_id: str | None = attr.ib(default=None)
     capabilities: Mapping[str, Any] | None = attr.ib(default=None)
     config_entry_id: str | None = attr.ib(default=None)
@@ -172,32 +173,34 @@ class RegistryEntry:
         hass.states.async_set(self.entity_id, STATE_UNAVAILABLE, attrs)
 
 
-class EntityRegistryStore(storage.Store):
+class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
     """Store entity registry data."""
 
     async def _async_migrate_func(
-        self, old_major_version: int, old_minor_version: int, old_data: dict
+        self,
+        old_major_version: int,
+        old_minor_version: int,
+        old_data: dict[str, list[dict[str, Any]]],
     ) -> dict:
         """Migrate to the new version."""
         data = old_data
         if old_major_version == 1 and old_minor_version < 2:
-            # From version 1.1
+            # Version 1.2 implements migration and freezes the available keys
             for entity in data["entities"]:
-                # Populate all keys
-                entity["area_id"] = entity.get("area_id")
-                entity["capabilities"] = entity.get("capabilities") or {}
-                entity["config_entry_id"] = entity.get("config_entry_id")
-                entity["device_class"] = entity.get("device_class")
-                entity["device_id"] = entity.get("device_id")
-                entity["disabled_by"] = entity.get("disabled_by")
-                entity["entity_category"] = entity.get("entity_category")
-                entity["icon"] = entity.get("icon")
-                entity["name"] = entity.get("name")
-                entity["original_icon"] = entity.get("original_icon")
-                entity["original_name"] = entity.get("original_name")
-                entity["platform"] = entity["platform"]
-                entity["supported_features"] = entity.get("supported_features", 0)
-                entity["unit_of_measurement"] = entity.get("unit_of_measurement")
+                # Populate keys which were introduced before version 1.2
+                entity.setdefault("area_id", None)
+                entity.setdefault("capabilities", {})
+                entity.setdefault("config_entry_id", None)
+                entity.setdefault("device_class", None)
+                entity.setdefault("device_id", None)
+                entity.setdefault("disabled_by", None)
+                entity.setdefault("entity_category", None)
+                entity.setdefault("icon", None)
+                entity.setdefault("name", None)
+                entity.setdefault("original_icon", None)
+                entity.setdefault("original_name", None)
+                entity.setdefault("supported_features", 0)
+                entity.setdefault("unit_of_measurement", None)
 
         if old_major_version == 1 and old_minor_version < 3:
             # Version 1.3 adds original_device_class
@@ -238,7 +241,12 @@ class EntityRegistryStore(storage.Store):
         if old_major_version == 1 and old_minor_version < 9:
             # Version 1.9 adds translation_key
             for entity in data["entities"]:
-                entity["translation_key"] = entity.get("translation_key")
+                entity["translation_key"] = None
+
+        if old_major_version == 1 and old_minor_version < 10:
+            # Version 1.10 adds aliases
+            for entity in data["entities"]:
+                entity["aliases"] = []
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -588,6 +596,7 @@ class EntityRegistry:
         self,
         entity_id: str,
         *,
+        aliases: set[str] | UndefinedType = UNDEFINED,
         area_id: str | None | UndefinedType = UNDEFINED,
         capabilities: Mapping[str, Any] | None | UndefinedType = UNDEFINED,
         config_entry_id: str | None | UndefinedType = UNDEFINED,
@@ -639,6 +648,7 @@ class EntityRegistry:
             raise ValueError("entity_category must be a valid EntityCategory instance")
 
         for attr_name, value in (
+            ("aliases", aliases),
             ("area_id", area_id),
             ("capabilities", capabilities),
             ("config_entry_id", config_entry_id),
@@ -714,6 +724,7 @@ class EntityRegistry:
         self,
         entity_id: str,
         *,
+        aliases: set[str] | UndefinedType = UNDEFINED,
         area_id: str | None | UndefinedType = UNDEFINED,
         capabilities: Mapping[str, Any] | None | UndefinedType = UNDEFINED,
         config_entry_id: str | None | UndefinedType = UNDEFINED,
@@ -737,6 +748,7 @@ class EntityRegistry:
         """Update properties of an entity."""
         return self._async_update_entity(
             entity_id,
+            aliases=aliases,
             area_id=area_id,
             capabilities=capabilities,
             config_entry_id=config_entry_id,
@@ -819,6 +831,7 @@ class EntityRegistry:
                     entity["entity_category"] = None
 
                 entities[entity["entity_id"]] = RegistryEntry(
+                    aliases=set(entity["aliases"]),
                     area_id=entity["area_id"],
                     capabilities=entity["capabilities"],
                     config_entry_id=entity["config_entry_id"],
@@ -863,6 +876,7 @@ class EntityRegistry:
 
         data["entities"] = [
             {
+                "aliases": list(entry.aliases),
                 "area_id": entry.area_id,
                 "capabilities": entry.capabilities,
                 "config_entry_id": entry.config_entry_id,

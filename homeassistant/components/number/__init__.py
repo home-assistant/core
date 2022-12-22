@@ -14,12 +14,7 @@ import voluptuous as vol
 
 from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_MODE,
-    CONF_UNIT_OF_MEASUREMENT,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.const import ATTR_MODE, CONF_UNIT_OF_MEASUREMENT, UnitOfTemperature
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -134,7 +129,9 @@ class NumberDeviceClass(StrEnum):
     GAS = "gas"
     """Gas.
 
-    Unit of measurement: `m³`, `ft³`
+    Unit of measurement:
+    - SI / metric: `m³`
+    - USCS / imperial: `ft³`, `CCF`
     """
 
     HUMIDITY = "humidity"
@@ -307,7 +304,7 @@ class NumberDeviceClass(StrEnum):
 
     Unit of measurement: `VOLUME_*` units
     - SI / metric: `mL`, `L`, `m³`
-    - USCS / imperial: `fl. oz.`, `ft³`, `gal` (warning: volumes expressed in
+    - USCS / imperial: `ft³`, `CCF`, `fl. oz.`, `gal` (warning: volumes expressed in
     USCS/imperial units are currently assumed to be US volumes)
     """
 
@@ -316,7 +313,7 @@ class NumberDeviceClass(StrEnum):
 
     Unit of measurement:
     - SI / metric: `m³`, `L`
-    - USCS / imperial: `ft³`, `gal` (warning: volumes expressed in
+    - USCS / imperial: `ft³`, `CCF`, `gal` (warning: volumes expressed in
     USCS/imperial units are currently assumed to be US volumes)
     """
 
@@ -672,7 +669,8 @@ class NumberEntity(Entity):
 
         if (
             self.device_class == NumberDeviceClass.TEMPERATURE
-            and native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
+            and native_unit_of_measurement
+            in (UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT)
         ):
             return self.hass.config.units.temperature_unit
 

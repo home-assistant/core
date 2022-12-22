@@ -9,7 +9,7 @@ from tmb import IBus
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_NAME, TIME_MINUTES
+from homeassistant.const import CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -81,7 +81,7 @@ class TMBSensor(SensorEntity):
         self._stop = stop
         self._line = line.upper()
         self._name = name
-        self._unit = TIME_MINUTES
+        self._unit = UnitOfTime.MINUTES
         self._state = None
 
     @property

@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "invalid_webhook_url": "Home Assistant nie je spr\u00e1vne nakonfigurovan\u00fd na prij\u00edmanie aktualiz\u00e1ci\u00ed zo SmartThings. Webov\u00e1 adresa webhooku je neplatn\u00e1:\n > {webhook_url} \n\nAktualizujte svoju konfigur\u00e1ciu pod\u013ea [pokynov]({component_url}), re\u0161tartujte Home Assistant a sk\u00faste to znova.",
             "no_available_locations": "V aplik\u00e1cii Home Assistant nie s\u00fa k dispoz\u00edcii \u017eiadne umiestnenia SmartThings na nastavenie."
         },
         "error": {
@@ -18,6 +19,7 @@
                 "data": {
                     "access_token": "Pr\u00edstupov\u00fd token"
                 },
+                "description": "Zadajte [osobn\u00fd pr\u00edstupov\u00fd token] SmartThings ({token_url}), ktor\u00fd bol vytvoren\u00fd pod\u013ea [pokynov] ({component_url}). Toto sa pou\u017eije na vytvorenie integr\u00e1cie Home Assistant v r\u00e1mci v\u00e1\u0161ho \u00fa\u010dtu SmartThings.",
                 "title": "Zadajte osobn\u00fd pr\u00edstupov\u00fd token"
             },
             "select_location": {
@@ -28,6 +30,7 @@
                 "title": "Vyberte umiestnenie"
             },
             "user": {
+                "description": "SmartThings bude nakonfigurovan\u00fd na odosielanie aktualiz\u00e1ci\u00ed push do Home Asistent na adrese:\n > {webhook_url} \n\nAk to nie je spr\u00e1vne, aktualizujte svoju konfigur\u00e1ciu, re\u0161tartujte Home Assistant a sk\u00faste to znova.",
                 "title": "Potvr\u010fte URL sp\u00e4tn\u00e9ho volania"
             }
         }

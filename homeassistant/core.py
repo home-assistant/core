@@ -357,9 +357,12 @@ class HomeAssistant:
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                "Something is blocking Home Assistant from wrapping up the "
-                "start up phase. We're going to continue anyway. Please "
-                "report the following info at https://github.com/home-assistant/core/issues: %s",
+                (
+                    "Something is blocking Home Assistant from wrapping up the start up"
+                    " phase. We're going to continue anyway. Please report the"
+                    " following info at"
+                    " https://github.com/home-assistant/core/issues: %s"
+                ),
                 ", ".join(self.config.components),
             )
 
@@ -705,7 +708,8 @@ class HomeAssistant:
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                "Timed out waiting for shutdown stage 1 to complete, the shutdown will continue"
+                "Timed out waiting for shutdown stage 1 to complete, the shutdown will"
+                " continue"
             )
 
         # stage 2
@@ -716,7 +720,8 @@ class HomeAssistant:
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                "Timed out waiting for shutdown stage 2 to complete, the shutdown will continue"
+                "Timed out waiting for shutdown stage 2 to complete, the shutdown will"
+                " continue"
             )
 
         # stage 3
@@ -735,7 +740,8 @@ class HomeAssistant:
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                "Timed out waiting for shutdown stage 3 to complete, the shutdown will continue"
+                "Timed out waiting for shutdown stage 3 to complete, the shutdown will"
+                " continue"
             )
 
         self.exit_code = exit_code
@@ -825,7 +831,10 @@ class Event:
     def __repr__(self) -> str:
         """Return the representation."""
         if self.data:
-            return f"<Event {self.event_type}[{str(self.origin)[0]}]: {util.repr_helper(self.data)}>"
+            return (
+                f"<Event {self.event_type}[{str(self.origin)[0]}]:"
+                f" {util.repr_helper(self.data)}>"
+            )
 
         return f"<Event {self.event_type}[{str(self.origin)[0]}]>"
 
@@ -1419,7 +1428,8 @@ class StateMachine:
         entity_id = entity_id.lower()
         if entity_id in self._states or entity_id in self._reservations:
             raise HomeAssistantError(
-                "async_reserve must not be called once the state is in the state machine."
+                "async_reserve must not be called once the state is in the state"
+                " machine."
             )
 
         self._reservations.add(entity_id)

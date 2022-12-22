@@ -422,6 +422,19 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert config_entry.options == {CONF_IGNORED_SOURCES: ["HDMI 1", "HDMI 2"]}
 
+        # Test that saving with missing sources is ok
+        with patch(
+            "pybravia.BraviaTV.get_external_status",
+            return_value=BRAVIA_SOURCES[1:],
+        ):
+            result = await hass.config_entries.options.async_init(config_entry.entry_id)
+            result = await hass.config_entries.options.async_configure(
+                result["flow_id"], user_input={CONF_IGNORED_SOURCES: ["HDMI 1"]}
+            )
+            await hass.async_block_till_done()
+            assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+            assert config_entry.options == {CONF_IGNORED_SOURCES: ["HDMI 1"]}
+
 
 async def test_options_flow_error(hass: HomeAssistant) -> None:
     """Test config flow options."""

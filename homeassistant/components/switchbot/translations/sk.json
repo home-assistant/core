@@ -7,6 +7,12 @@
             "switchbot_unsupported_type": "Nepodporovan\u00fd typ Switchbot.",
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
+        "error": {
+            "few": "Pr\u00e1zdnych",
+            "many": "Pr\u00e1zdnych",
+            "one": "Pr\u00e1zdny",
+            "other": "Pr\u00e1zdny"
+        },
         "flow_title": "{name} ({address})",
         "step": {
             "confirm": {

@@ -6,7 +6,7 @@
         },
         "step": {
             "user": {
-                "description": "Vuoi iniziare la configurazione?",
+                "description": "Vuoi avviare la configurazione?",
                 "title": "Velocit\u00e0 della CPU"
             }
         }

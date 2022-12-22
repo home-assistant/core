@@ -16,8 +16,8 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONF_SHOW_ON_MAP,
     PERCENTAGE,
-    PRESSURE_PA,
-    TEMP_CELSIUS,
+    UnitOfPressure,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -33,7 +33,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="temperature",
         name="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -47,14 +47,14 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="pressure",
         name="Pressure",
-        native_unit_of_measurement=PRESSURE_PA,
+        native_unit_of_measurement=UnitOfPressure.PA,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="pressure_at_sealevel",
         name="Pressure at sealevel",
-        native_unit_of_measurement=PRESSURE_PA,
+        native_unit_of_measurement=UnitOfPressure.PA,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),

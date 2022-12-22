@@ -16,7 +16,7 @@
                     "password": "Passord",
                     "username": "Brukernavn"
                 },
-                "description": "Vil du konfigurere {name} ( {ip_address} )? Du trenger en lokal bruker opprettet i UniFi OS-konsollen for \u00e5 logge p\u00e5. Ubiquiti Cloud-brukere vil ikke fungere. For mer informasjon: {local_user_documentation_url}",
+                "description": "Vil du sette opp {name} ( {ip_address} )? Du trenger en lokal bruker opprettet i UniFi OS-konsollen for \u00e5 logge p\u00e5. Ubiquiti Cloud-brukere vil ikke fungere. For mer informasjon: {local_user_documentation_url}",
                 "title": "UniFi Protect oppdaget"
             },
             "reauth_confirm": {

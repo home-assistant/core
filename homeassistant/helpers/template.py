@@ -1675,7 +1675,7 @@ def average(*args: Any, default: Any = _SENTINEL) -> Any:
     if len(args) == 0:
         raise TypeError("average expected at least 1 argument, got 0")
 
-    # If first argument is iterable and more then 1 argument provided but not a named default,
+    # If first argument is iterable and more than 1 argument provided but not a named default,
     # then use 2nd argument as default.
     if isinstance(args[0], Iterable):
         average_list = args[0]

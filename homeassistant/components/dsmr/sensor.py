@@ -28,7 +28,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
-    VOLUME_CUBIC_METERS,
+    UnitOfVolume,
 )
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
@@ -55,7 +55,7 @@ from .const import (
     LOGGER,
 )
 
-UNIT_CONVERSION = {"m3": VOLUME_CUBIC_METERS}
+UNIT_CONVERSION = {"m3": UnitOfVolume.CUBIC_METERS}
 
 
 @dataclass
@@ -97,6 +97,9 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         name="Active tariff",
         obis_reference=obis_references.ELECTRICITY_ACTIVE_TARIFF,
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
+        device_class=SensorDeviceClass.ENUM,
+        options=["low", "normal"],
+        translation_key="electricity_tariff",
         icon="mdi:flash",
     ),
     DSMRSensorEntityDescription(

@@ -13,7 +13,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 
 from ..coordinator import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
@@ -54,7 +54,7 @@ TEMPERATURE_SENSOR_DEVICE_INDEX = 2
 class SomfyThermostat(OverkizEntity, ClimateEntity):
     """Representation of Somfy Smart Thermostat."""
 
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
