@@ -29,5 +29,14 @@
                 "title": "\u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "language_code": "\u8a9e\u8a00\u4ee3\u78bc"
+                }
+            }
+        }
     }
 }
