@@ -352,7 +352,10 @@ def _categorize_programs(hass_isy_data: dict, programs: Programs) -> None:
                 actions = entity_folder.get_by_name(KEY_ACTIONS)
                 if not actions or actions.protocol != PROTO_PROGRAM:
                     _LOGGER.warning(
-                        "Program %s entity '%s' not loaded, invalid/missing actions program",
+                        (
+                            "Program %s entity '%s' not loaded, invalid/missing actions"
+                            " program"
+                        ),
                         platform,
                         entity_folder.name,
                     )

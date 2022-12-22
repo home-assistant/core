@@ -1333,7 +1333,7 @@ pillow==9.3.0
 pizzapi==0.0.3
 
 # homeassistant.components.plex
-plexapi==4.13.1
+plexapi==4.13.2
 
 # homeassistant.components.plex
 plexauth==0.0.6
@@ -2611,13 +2611,13 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.3.9
 
 # homeassistant.components.yalexs_ble
-yalexs-ble==1.12.2
+yalexs-ble==1.12.3
 
 # homeassistant.components.august
 yalexs==1.2.6
 
 # homeassistant.components.august
-yalexs_ble==1.12.2
+yalexs_ble==1.12.3
 
 # homeassistant.components.yeelight
 yeelight==0.7.10
