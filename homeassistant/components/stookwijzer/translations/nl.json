@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dienst is al geconfigureerd"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Naam",
+                    "latitude": "Breedtegraad",
+                    "longitude": "Lengtegraad"
+                }
+            }
+        }
+    }
+}
