@@ -272,9 +272,7 @@ async def async_setup_entry(
             for disk in coordinator.data[description.type]:
                 _migrate_old_unique_ids(
                     hass,
-                    (
-                        f"{coordinator.host}-{name} {disk['mnt_point']} {description.name_suffix}"
-                    ),
+                    f"{coordinator.host}-{name} {disk['mnt_point']} {description.name_suffix}",
                     f"{disk['mnt_point']}-{description.key}",
                 )
                 entities.append(
@@ -291,9 +289,7 @@ async def async_setup_entry(
                 if sensor["type"] == description.key:
                     _migrate_old_unique_ids(
                         hass,
-                        (
-                            f"{coordinator.host}-{name} {sensor['label']} {description.name_suffix}"
-                        ),
+                        f"{coordinator.host}-{name} {sensor['label']} {description.name_suffix}",
                         f"{sensor['label']}-{description.key}",
                     )
                     entities.append(
@@ -308,9 +304,7 @@ async def async_setup_entry(
             for raid_device in coordinator.data[description.type]:
                 _migrate_old_unique_ids(
                     hass,
-                    (
-                        f"{coordinator.host}-{name} {raid_device} {description.name_suffix}"
-                    ),
+                    f"{coordinator.host}-{name} {raid_device} {description.name_suffix}",
                     f"{raid_device}-{description.key}",
                 )
                 entities.append(
