@@ -112,6 +112,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass | None]
     SensorDeviceClass.DATA_RATE: {None, SensorStateClass.MEASUREMENT},
     SensorDeviceClass.DATA_SIZE: {
         None,
+        SensorStateClass.MEASUREMENT,
         SensorStateClass.TOTAL,
         SensorStateClass.TOTAL_INCREASING,
     },
@@ -134,11 +135,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass | None]
     SensorDeviceClass.ILLUMINANCE: {None, SensorStateClass.MEASUREMENT},
     SensorDeviceClass.IRRADIANCE: {None, SensorStateClass.MEASUREMENT},
     SensorDeviceClass.MOISTURE: {None, SensorStateClass.MEASUREMENT},
-    SensorDeviceClass.MONETARY: {
-        None,
-        SensorStateClass.TOTAL,
-        SensorStateClass.TOTAL_INCREASING,
-    },
+    SensorDeviceClass.MONETARY: {None, SensorStateClass.TOTAL},
     SensorDeviceClass.NITROGEN_DIOXIDE: {None, SensorStateClass.MEASUREMENT},
     SensorDeviceClass.NITROGEN_MONOXIDE: {None, SensorStateClass.MEASUREMENT},
     SensorDeviceClass.NITROUS_OXIDE: {None, SensorStateClass.MEASUREMENT},
@@ -150,6 +147,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass | None]
     SensorDeviceClass.POWER: {None, SensorStateClass.MEASUREMENT},
     SensorDeviceClass.PRECIPITATION: {
         None,
+        SensorStateClass.MEASUREMENT,
         SensorStateClass.TOTAL,
         SensorStateClass.TOTAL_INCREASING,
     },
@@ -174,11 +172,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass | None]
         SensorStateClass.TOTAL,
         SensorStateClass.TOTAL_INCREASING,
     },
-    SensorDeviceClass.WEIGHT: {
-        None,
-        SensorStateClass.TOTAL,
-        SensorStateClass.TOTAL_INCREASING,
-    },
+    SensorDeviceClass.WEIGHT: {None, SensorStateClass.TOTAL},
     SensorDeviceClass.WIND_SPEED: {None, SensorStateClass.MEASUREMENT},
 }
 
