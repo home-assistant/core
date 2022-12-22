@@ -16,12 +16,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
     UnitOfTime,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
@@ -161,7 +161,7 @@ HEAT_METER_SENSOR_TYPES = (
     HeatMeterSensorEntityDescription(
         key="flowrate_max_m3ph",
         name="Flowrate max",
-        native_unit_of_measurement=VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         icon="mdi:water-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda value: value,
@@ -170,7 +170,7 @@ HEAT_METER_SENSOR_TYPES = (
     HeatMeterSensorEntityDescription(
         key="flowrate_max_previous_year_m3ph",
         name="Flowrate max previous year",
-        native_unit_of_measurement=VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         icon="mdi:water-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda value: value,
@@ -276,7 +276,7 @@ HEAT_METER_SENSOR_TYPES = (
     HeatMeterSensorEntityDescription(
         key="measuring_range_m3ph",
         name="Measuring range",
-        native_unit_of_measurement=VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         icon="mdi:water-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda value: value,
