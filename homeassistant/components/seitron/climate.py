@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from pyseitron.seitron_gateway import SeitronGateway
 from pyseitron.seitron_thermostat import SeitronThermostat
 
 from homeassistant.components.climate import (
@@ -33,14 +34,18 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the seitron climate entities from a config entry."""
-    coordinator: DataUpdateCoordinator[SeitronGateway] = hass.data[DOMAIN][entry.entry_id]
+    coordinator: DataUpdateCoordinator[SeitronGateway] = hass.data[DOMAIN][
+        entry.entry_id
+    ]
     async_add_entities(
         SeitronClimate(coordinator, thermostat)
         for thermostat in coordinator.data.devices
     )
 
 
-class SeitronClimate(CoordinatorEntity[DateUpdateCoordinator[SeitronGateway]], ClimateEntity):
+class SeitronClimate(
+    CoordinatorEntity[DataUpdateCoordinator[SeitronGateway]], ClimateEntity
+):
     """A Seitron IoT thermostat climate entity."""
 
     _attr_precision = PRECISION_TENTHS
@@ -54,7 +59,11 @@ class SeitronClimate(CoordinatorEntity[DateUpdateCoordinator[SeitronGateway]], C
     _attr_should_poll = True
     _attr_icon = "mdi:thermostat-box"
 
-    def __init__(self, coordinator: DataUpdateCoordinator[SeitronGateway], thermostat: SeitronThermostat) -> None:
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[SeitronGateway],
+        thermostat: SeitronThermostat,
+    ) -> None:
         """Initialize an Seitron climate device."""
         super().__init__(coordinator)
         self._thermostat = thermostat
