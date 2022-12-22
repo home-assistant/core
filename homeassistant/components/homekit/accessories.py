@@ -114,8 +114,10 @@ def get_accessory(  # noqa: C901
     """Take state and return an accessory object if supported."""
     if not aid:
         _LOGGER.warning(
-            'The entity "%s" is not supported, since it '
-            "generates an invalid aid, please change it",
+            (
+                'The entity "%s" is not supported, since it '
+                "generates an invalid aid, please change it"
+            ),
             state.entity_id,
         )
         return None
@@ -666,6 +668,7 @@ class HomeIIDManager(IIDManager):  # type: ignore[misc]
             )
         if iid in self.objs:
             raise RuntimeError(
-                f"Cannot assign IID {iid} to {obj} as it is already in use by: {self.objs[iid]}"
+                f"Cannot assign IID {iid} to {obj} as it is already in use by:"
+                f" {self.objs[iid]}"
             )
         return iid
