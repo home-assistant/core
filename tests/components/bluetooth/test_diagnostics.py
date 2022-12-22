@@ -86,6 +86,7 @@ async def test_diagnostics(
                     "product": "Bluetooth Adapter 5.0",
                     "product_id": "aa01",
                     "vendor_id": "cc01",
+                    "connection_slots": 1,
                 },
                 "hci1": {
                     "address": "00:00:00:00:00:02",
@@ -96,6 +97,7 @@ async def test_diagnostics(
                     "product": "Bluetooth Adapter 5.0",
                     "product_id": "aa01",
                     "vendor_id": "cc01",
+                    "connection_slots": 2,
                 },
             },
             "dbus": {
@@ -116,7 +118,7 @@ async def test_diagnostics(
             },
             "manager": {
                 "slot_manager": {
-                    "adapter_slots": {"hci0": 5, "hci1": 5},
+                    "adapter_slots": {"hci0": 5, "hci1": 2},
                     "allocations_by_adapter": {"hci0": [], "hci1": []},
                     "manager": False,
                 },
@@ -130,6 +132,7 @@ async def test_diagnostics(
                         "product": "Bluetooth Adapter 5.0",
                         "product_id": "aa01",
                         "vendor_id": "cc01",
+                        "connection_slots": 1,
                     },
                     "hci1": {
                         "address": "00:00:00:00:00:02",
@@ -140,6 +143,7 @@ async def test_diagnostics(
                         "product": "Bluetooth Adapter 5.0",
                         "product_id": "aa01",
                         "vendor_id": "cc01",
+                        "connection_slots": 2,
                     },
                 },
                 "advertisement_tracker": {
