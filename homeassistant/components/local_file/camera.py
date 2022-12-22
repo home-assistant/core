@@ -9,14 +9,14 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
-from homeassistant.components.repairs.issue_handler import async_create_issue
-from homeassistant.components.repairs.models import IssueSeverity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_FILE_PATH, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DEFAULT_NAME, DOMAIN, SERVICE_UPDATE_FILE_PATH
@@ -108,13 +108,10 @@ class LocalFile(Camera):
 
     async def async_update_file_path_service(self, file_path: str) -> None:
         """Update the file_path."""
-        if not os.access(file_path, os.R_OK):
-            _LOGGER.error(
-                "Could not read camera %s image from file: %s",
-                self.entity_id,
-                file_path,
+        if not await self.hass.async_add_executor_job(os.access, file_path, os.R_OK):
+            raise HomeAssistantError(
+                f"Could not read camera {self.entity_id} image from file: {file_path}"
             )
-            return
         self._file_path = file_path
         content, _ = mimetypes.guess_type(file_path)
         if content is not None:
