@@ -421,7 +421,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             if last_triggered is not None:
                 self.action_script.last_triggered = parse_datetime(last_triggered)
             self._logger.debug(
-                "Loaded automation %s with state %s from state  storage last state %s",
+                "Loaded automation %s with state %s from state storage last state %s",
                 self.entity_id,
                 enable_automation,
                 state,
