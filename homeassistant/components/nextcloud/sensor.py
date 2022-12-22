@@ -2,30 +2,14 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    DataUpdateCoordinator,
-)
-
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_URL,
-    CONF_USERNAME,
-    CONF_NAME,
-    CONF_LOCATION,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import NextcloudEntity, NextcloudMonitorWrapper
-
-from .const import (
-    DATA_KEY_API,
-    DOMAIN,
-    DATA_KEY_COORDINATOR,
-    SENSORS,
-)
+from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN, SENSORS
 
 
 async def async_setup_entry(
@@ -70,16 +54,16 @@ class NextcloudSensor(NextcloudEntity, SensorEntity):
         self._attr_unique_id = f"{DOMAIN}_{self._name}_{self._item}"
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon for this sensor."""
         return "mdi:cloud"
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name for this sensor."""
         return f"{DOMAIN}_{self._name}_{self._item}"
 
     @property
-    def native_value(self):
+    def native_value(self) -> str:
         """Return the state for this sensor."""
         return self.api.data[self._item]

@@ -7,14 +7,14 @@
           "name": "[%key:common::config_flow::data::name%]",
           "url": "[%key:common::config_flow::data::url%]",
           "username": "[%key:common::config_flow::data::username%]",
-		  "password": "[%key:common::config_flow::data::password%]",
-		  "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
       }
     },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-	    "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"

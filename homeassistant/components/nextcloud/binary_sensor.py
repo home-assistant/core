@@ -2,26 +2,14 @@
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    DataUpdateCoordinator,
-)
-
-from homeassistant.const import (
-    CONF_NAME,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import NextcloudEntity, NextcloudMonitorWrapper
-
-from .const import (
-    DATA_KEY_API,
-    DOMAIN,
-    DATA_KEY_COORDINATOR,
-    BINARY_SENSORS,
-    DOMAIN,
-)
+from .const import BINARY_SENSORS, DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN
 
 
 async def async_setup_entry(

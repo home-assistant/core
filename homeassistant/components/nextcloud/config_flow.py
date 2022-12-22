@@ -1,36 +1,22 @@
 """Config flow to configure the Pi-hole integration."""
 from __future__ import annotations
 
-import logging
-from typing import Optional
-
 import asyncio
 
-from nextcloudmonitor import NextcloudMonitorError, NextcloudMonitor
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
+    CONF_NAME,
     CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
     CONF_URL,
     CONF_USERNAME,
-    CONF_NAME,
     CONF_VERIFY_SSL,
 )
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from aiohttp import BasicAuth
 
 from . import _LOGGER, NextcloudMonitorWrapper
-
-from .const import (
-    DATA_KEY_API,
-    DATA_KEY_COORDINATOR,
-    DEFAULT_NAME,
-    SCAN_INTERVAL,
-    DOMAIN,
-)
+from .const import DEFAULT_NAME, DOMAIN
 
 
 class Nextcloud2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -45,14 +31,6 @@ class Nextcloud2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         ]
         return endpoint in existing_endpoints
 
-    async def helper_create_api(
-        self, url: str, user: str, password: str, verify_ssl: bool
-    ):
-        return NextcloudMonitor(url, user, password, verify_ssl)
-
-    async def create_api(self, url: str, user: str, password: str, verify_ssl: bool):
-        await self.helper_create_api(url, user, password, verify_ssl)
-
     async def _async_try_connect(
         self, url: str, user: str, password: str, verify_ssl: bool
     ) -> bool:
@@ -62,13 +40,12 @@ class Nextcloud2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await loop.run_in_executor(
                 None, NextcloudMonitorWrapper, url, user, password, verify_ssl
             )
-
         except Exception as e:
             _LOGGER.error(e)
             return False
         return True
 
-    async def async_step_user(self, user_input: Optional[dict] = None) -> FlowResult:
+    async def async_step_user(self, user_input: dict | None = None) -> FlowResult:
         """Handle the initial step."""
         errors = {}
 
