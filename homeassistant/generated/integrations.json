@@ -4207,6 +4207,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "pylontech_us": {
+      "name": "pylontech_us",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "python_script": {
       "name": "Python Scripts",
       "integration_type": "hub",
