@@ -48,8 +48,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data = {**entry.data, CONF_PORT: router.port, CONF_SSL: router.ssl}
         hass.config_entries.async_update_entry(entry, data=data)
         _LOGGER.info(
-            "Netgear port-SSL combination updated from (%i, %r) to (%i, %r), "
-            "this should only occur after a firmware update",
+            (
+                "Netgear port-SSL combination updated from (%i, %r) to (%i, %r), "
+                "this should only occur after a firmware update"
+            ),
             port,
             ssl,
             router.port,

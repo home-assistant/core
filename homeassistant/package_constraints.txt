@@ -16,7 +16,7 @@ bluetooth-adapters==0.14.1
 bluetooth-auto-recovery==1.0.3
 bluetooth-data-tools==0.3.1
 certifi>=2021.5.30
-ciso8601==2.2.0
+ciso8601==2.3.0
 cryptography==38.0.3
 dbus-fast==1.82.0
 fnvhash==0.1.0
@@ -44,7 +44,7 @@ typing-extensions>=4.4.0,<5.0
 voluptuous-serialize==2.5.0
 voluptuous==0.13.1
 yarl==1.8.1
-zeroconf==0.44.0
+zeroconf==0.47.0
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238

@@ -108,7 +108,10 @@ class BaseHaScanner(ABC):
         """
         if self._async_watchdog_triggered():
             _LOGGER.info(
-                "%s: Bluetooth scanner has gone quiet for %ss, check logs on the scanner device for more information",
+                (
+                    "%s: Bluetooth scanner has gone quiet for %ss, check logs on the"
+                    " scanner device for more information"
+                ),
                 self.name,
                 SCANNER_WATCHDOG_TIMEOUT,
             )

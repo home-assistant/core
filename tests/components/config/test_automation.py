@@ -93,7 +93,7 @@ async def test_update_automation_config_with_error(
 
     resp = await client.post(
         "/api/config/automation/config/moon",
-        data=json.dumps({}),
+        data=json.dumps({"action": []}),
     )
     await hass.async_block_till_done()
     assert sorted(hass.states.async_entity_ids("automation")) == []

@@ -263,7 +263,8 @@ class HaScanner(BaseHaScanner):
                     await self._async_reset_adapter()
                     continue
                 raise ScannerStartError(
-                    f"{self.name}: Timed out starting Bluetooth after {START_TIMEOUT} seconds"
+                    f"{self.name}: Timed out starting Bluetooth after"
+                    f" {START_TIMEOUT} seconds"
                 ) from ex
             except BleakError as ex:
                 error_str = str(ex)
