@@ -98,7 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # The central coordinator needs to be refreshed first since
     # the next two rely on data from it
     coordinator_cameras: SynologyDSMCameraUpdateCoordinator | None = None
-    if SynoSurveillanceStation.CAMERA_API_KEY in available_apis:
+    if api.surveillance_station is not None:
         coordinator_cameras = SynologyDSMCameraUpdateCoordinator(hass, entry, api)
         await coordinator_cameras.async_config_entry_first_refresh()
 

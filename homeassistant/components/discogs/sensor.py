@@ -127,7 +127,9 @@ class DiscogsSensor(SensorEntity):
             return {
                 "cat_no": self._attrs["labels"][0]["catno"],
                 "cover_image": self._attrs["cover_image"],
-                "format": f"{self._attrs['formats'][0]['name']} ({self._attrs['formats'][0]['descriptions'][0]})",
+                "format": (
+                    f"{self._attrs['formats'][0]['name']} ({self._attrs['formats'][0]['descriptions'][0]})"
+                ),
                 "label": self._attrs["labels"][0]["name"],
                 "released": self._attrs["year"],
                 ATTR_IDENTITY: self._discogs_data["user"],
@@ -146,7 +148,10 @@ class DiscogsSensor(SensorEntity):
             random_record = collection.releases[random_index].release
 
             self._attrs = random_record.data
-            return f"{random_record.data['artists'][0]['name']} - {random_record.data['title']}"
+            return (
+                f"{random_record.data['artists'][0]['name']} -"
+                f" {random_record.data['title']}"
+            )
 
         return None
 

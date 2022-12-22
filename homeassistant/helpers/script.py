@@ -1538,7 +1538,7 @@ class Script:
         self, update_state: bool = True, spare: _ScriptRun | None = None
     ) -> None:
         """Stop running script."""
-        # Collect a a list of script runs to stop. This must be done before calling
+        # Collect a list of script runs to stop. This must be done before calling
         # asyncio.shield as asyncio.shield yields to the event loop, which would cause
         # us to wait for script runs added after the call to async_stop.
         aws = [

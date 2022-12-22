@@ -5,7 +5,7 @@ from typing import Any
 
 from homeassistant.components.sensor import RestoreSensor, SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_WEBHOOK_ID, STATE_UNKNOWN, TEMP_CELSIUS
+from homeassistant.const import CONF_WEBHOOK_ID, STATE_UNKNOWN, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -92,7 +92,7 @@ class MobileAppSensor(MobileAppEntity, RestoreSensor):
                 self.device_class == SensorDeviceClass.TEMPERATURE
                 and sensor_unique_id == "battery_temperature"
             ):
-                self._config[ATTR_SENSOR_UOM] = TEMP_CELSIUS
+                self._config[ATTR_SENSOR_UOM] = UnitOfTemperature.CELSIUS
             return
 
         self._config[ATTR_SENSOR_STATE] = last_sensor_data.native_value

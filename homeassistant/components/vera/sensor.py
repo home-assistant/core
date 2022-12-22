@@ -15,10 +15,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
     Platform,
     UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -102,9 +101,9 @@ class VeraSensor(VeraDevice[veraApi.VeraSensor], SensorEntity):
             vera_temp_units = self.vera_device.vera_controller.temperature_units
 
             if vera_temp_units == "F":
-                self._temperature_units = TEMP_FAHRENHEIT
+                self._temperature_units = UnitOfTemperature.FAHRENHEIT
             else:
-                self._temperature_units = TEMP_CELSIUS
+                self._temperature_units = UnitOfTemperature.CELSIUS
 
         elif self.vera_device.category == veraApi.CATEGORY_LIGHT_SENSOR:
             self.current_value = self.vera_device.light

@@ -431,6 +431,12 @@ ZEROCONF = {
             "domain": "apple_tv",
         },
     ],
+    "_slzb-06._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "slzb-06*",
+        },
+    ],
     "_sonos._tcp.local.": [
         {
             "domain": "sonos",

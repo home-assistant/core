@@ -63,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     assert entry.unique_id is not None
     hass.data.setdefault(DOMAIN, {})
     if CONF_ADDRESS not in entry.data and CONF_MAC in entry.data:
-        # Bleak uses addresses not mac addresses which are are actually
+        # Bleak uses addresses not mac addresses which are actually
         # UUIDs on some platforms (MacOS).
         mac = entry.data[CONF_MAC]
         if "-" not in mac:
@@ -86,7 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     address: str = entry.data[CONF_ADDRESS]
     ble_device = bluetooth.async_ble_device_from_address(
         hass, address.upper(), connectable
-    ) or await switchbot.get_device(address)
+    )
     if not ble_device:
         raise ConfigEntryNotReady(
             f"Could not find Switchbot {sensor_type} with address {address}"

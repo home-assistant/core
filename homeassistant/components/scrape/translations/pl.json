@@ -112,6 +112,7 @@
                     "authentication": "Wybierz metod\u0119 uwierzytelniania",
                     "headers": "Nag\u0142\u00f3wki",
                     "method": "Metoda",
+                    "password": "Has\u0142o",
                     "resource": "Zas\u00f3b",
                     "timeout": "Limit czasu"
                 },

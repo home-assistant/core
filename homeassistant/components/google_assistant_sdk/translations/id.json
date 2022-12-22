@@ -29,5 +29,14 @@
                 "title": "Autentikasi Ulang Integrasi"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "language_code": "Kode bahasa"
+                }
+            }
+        }
     }
 }

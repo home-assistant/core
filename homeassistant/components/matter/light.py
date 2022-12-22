@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import partial
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from chip.clusters import Objects as clusters
 from matter_server.common.models import device_types
@@ -19,12 +19,9 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .entity import MatterEntity, MatterEntityDescriptionBaseClass
+from .helpers import get_matter
 from .util import renormalize
-
-if TYPE_CHECKING:
-    from .adapter import MatterAdapter
 
 
 async def async_setup_entry(
@@ -33,7 +30,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Matter Light from Config Entry."""
-    matter: MatterAdapter = hass.data[DOMAIN][config_entry.entry_id]
+    matter = get_matter(hass)
     matter.register_platform_handler(Platform.LIGHT, async_add_entities)
 
 

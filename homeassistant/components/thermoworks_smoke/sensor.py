@@ -24,7 +24,7 @@ from homeassistant.const import (
     CONF_EXCLUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_PASSWORD,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -115,7 +115,7 @@ class ThermoworksSmokeSensor(SensorEntity):
         self._attr_name = "{name} {sensor}".format(
             name=mgr.name(serial), sensor=SENSOR_TYPES[sensor_type]
         )
-        self._attr_native_unit_of_measurement = TEMP_FAHRENHEIT
+        self._attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
         self._attr_unique_id = f"{serial}-{sensor_type}"
         self._attr_device_class = SensorDeviceClass.TEMPERATURE
         self.update_unit()
