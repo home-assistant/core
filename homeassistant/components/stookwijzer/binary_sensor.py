@@ -58,8 +58,9 @@ class StookwijzerBinarySensor(BinarySensorEntity):
 
         if self._client.state is None:
             self._attr_is_on = None
-        else:
-            self._attr_is_on = self._client.state in ("Rood", "Oranje")
+            return
+
+        self._attr_is_on = self._client.state in ("Rood", "Oranje")
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
