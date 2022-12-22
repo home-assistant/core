@@ -354,6 +354,7 @@ FLOWS = {
         "scrape",
         "screenlogic",
         "season",
+        "seitron",
         "sense",
         "senseme",
         "sensibo",

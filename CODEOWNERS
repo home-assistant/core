@@ -1001,6 +1001,8 @@ build.json @home-assistant/supervisor
 /tests/components/search/ @home-assistant/core
 /homeassistant/components/season/ @frenck
 /tests/components/season/ @frenck
+/homeassistant/components/seitron/ @stefano-vardanega
+/tests/components/seitron/ @stefano-vardanega
 /homeassistant/components/select/ @home-assistant/core
 /tests/components/select/ @home-assistant/core
 /homeassistant/components/sense/ @kbickar

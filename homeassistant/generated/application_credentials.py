@@ -14,6 +14,7 @@ APPLICATION_CREDENTIALS = [
     "neato",
     "nest",
     "netatmo",
+    "seitron",
     "senz",
     "spotify",
     "withings",

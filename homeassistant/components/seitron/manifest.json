@@ -1,0 +1,12 @@
+{
+  "domain": "seitron",
+  "name": "Seitron",
+  "integration_type": "hub",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/seitron",
+  "requirements": ["pyseitron==0.0.1"],
+  "dependencies": ["application_credentials"],
+  "codeowners": ["@stefano-vardanega"],
+  "iot_class": "cloud_polling",
+  "loggers": ["pyseitron"]
+}
