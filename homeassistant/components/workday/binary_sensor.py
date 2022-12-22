@@ -4,8 +4,9 @@ from __future__ import annotations
 from datetime import date, timedelta
 from typing import Any
 
-import holidays
 from holidays import DateLike, HolidayBase
+from holidays import country_holidays, list_supported_countries
+from holidays import __version__ as python_holidays_version
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -43,7 +44,6 @@ from .const import (
 def valid_country(value: Any) -> str:
     """Validate that the given country is supported."""
     value = cv.string(value)
-    all_supported_countries = holidays.list_supported_countries()
 
     try:
         raw_value = value.encode("utf-8")
@@ -53,7 +53,7 @@ def valid_country(value: Any) -> str:
         ) from err
     if not raw_value:
         raise vol.Invalid("Country name or the abbreviation must not be empty.")
-    if value not in all_supported_countries:
+    if value not in list_supported_countries():
         raise vol.Invalid("Country is not supported.")
     return value
 
@@ -123,17 +123,17 @@ async def async_setup_entry(
     province: str | None = entry.options.get(CONF_PROVINCE)
     sensor_name: str = entry.options[CONF_NAME]
     workdays: list[str] = entry.options[CONF_WORKDAYS]
-
-    cls: HolidayBase = getattr(holidays, country)
     year: int = (dt_util.now() + timedelta(days=days_offset)).year
 
-    if province and province not in cls.subdivisions:
+    if country and country not in list_supported_countries():
+        LOGGER.error("There is no country %s", country)
+        return
+
+    if province and province not in list_supported_countries()[country]:
         LOGGER.error("There is no subdivision %s in country %s", province, country)
         return
 
-    obj_holidays = cls(
-        subdiv=province, years=year, language=cls.default_language
-    )  # type: ignore[operator]
+    obj_holidays: HolidayBase = country_holidays(country, subdiv=province, years=year)
 
     # Add custom holidays
     try:
@@ -209,7 +209,7 @@ class IsWorkdaySensor(BinarySensorEntity):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry_id)},
             manufacturer="python-holidays",
-            model=holidays.__version__,
+            model=python_holidays_version,
             name=name,
         )
 
