@@ -124,3 +124,10 @@ class MockRestData:
             self.data = None
         if self.count == 3:
             self.data = None
+        if self.payload == "test_scrape_timestamp":
+            self.data = (
+                # Default
+                "<div class='current-time'>"
+                "<h1>Current Time:</h1><span class='utc-time'>2022-12-22T13:15:30Z</span>"
+                "</div>"
+            )
