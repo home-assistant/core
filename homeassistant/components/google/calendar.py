@@ -89,6 +89,10 @@ SYNC_EVENT_MIN_TIME = timedelta(days=-90)
 # are not opaque are ignored by default.
 OPAQUE = "opaque"
 
+# Google calendar prefixes recurrence rules with RRULE: which
+# we need to strip when working with the frontend recurrence rule values
+RRULE_PREFIX = "RRULE:"
+
 _EVENT_IN_TYPES = vol.Schema(
     {
         vol.Exclusive(EVENT_IN_DAYS, EVENT_TYPES_CONF): cv.positive_int,
@@ -208,6 +212,7 @@ async def async_setup_entry(
             # Prefer calendar sync down of resources when possible. However, sync does not work
             # for search. Also free-busy calendars denormalize recurring events as individual
             # events which is not efficient for sync
+            support_write = calendar_item.access_role.is_writer
             if (
                 search := data.get(CONF_SEARCH)
                 or calendar_item.access_role == AccessRole.FREE_BUSY_READER
@@ -219,6 +224,7 @@ async def async_setup_entry(
                     calendar_id,
                     search,
                 )
+                support_write = False
             else:
                 request_template = SyncEventsRequest(
                     calendar_id=calendar_id,
@@ -242,7 +248,7 @@ async def async_setup_entry(
                     generate_entity_id(ENTITY_ID_FORMAT, entity_name, hass=hass),
                     unique_id,
                     entity_enabled,
-                    calendar_item.access_role.is_writer,
+                    support_write,
                 )
             )
 
@@ -526,7 +532,7 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
             }
         )
         if rrule := kwargs.get(EVENT_RRULE):
-            event.recurrence = [rrule]
+            event.recurrence = [f"{RRULE_PREFIX}{rrule}"]
 
         await self.coordinator.sync.store_service.async_add_event(event)
         await self.coordinator.async_refresh()
@@ -551,10 +557,13 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
 
 def _get_calendar_event(event: Event) -> CalendarEvent:
     """Return a CalendarEvent from an API event."""
+    rrule: str | None = None
+    if len(event.recurrence) == 1:
+        rrule = event.recurrence[0].lstrip(RRULE_PREFIX)
     return CalendarEvent(
         uid=event.ical_uuid,
         recurrence_id=event.id if event.recurring_event_id else None,
-        rrule=event.recurrence[0] if len(event.recurrence) == 1 else None,
+        rrule=rrule,
         summary=event.summary,
         start=event.start.value,
         end=event.end.value,

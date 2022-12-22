@@ -1,7 +1,8 @@
 """Distance util functions."""
 from __future__ import annotations
 
-from homeassistant.const import (  # pylint: disable=unused-import # noqa: F401
+# pylint: disable-next=unused-import,hass-deprecated-import
+from homeassistant.const import (  # noqa: F401
     SPEED,
     SPEED_FEET_PER_SECOND,
     SPEED_INCHES_PER_DAY,
