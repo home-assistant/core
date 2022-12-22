@@ -6,7 +6,6 @@ import pytest
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.jewish_calendar import const
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -179,8 +178,6 @@ async def test_issur_melacha_sensor(
     hass.config.set_time_zone(tzname)
     hass.config.latitude = latitude
     hass.config.longitude = longitude
-
-    registry = er.async_get(hass)
 
     with alter_time(test_time):
         assert await async_setup_component(
