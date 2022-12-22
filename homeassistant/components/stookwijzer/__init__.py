@@ -4,7 +4,7 @@ from __future__ import annotations
 from stookwijzer import Stookwijzer
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, Platform
+from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
@@ -15,7 +15,8 @@ PLATFORMS = [Platform.BINARY_SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Stookwijzer from a config entry."""
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = Stookwijzer(
-        entry.data[CONF_LATITUDE], entry.data[CONF_LONGITUDE]
+        entry.data[CONF_LOCATION][CONF_LATITUDE],
+        entry.data[CONF_LOCATION][CONF_LONGITUDE],
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

@@ -6,9 +6,9 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.data_entry_flow import FlowResult
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import LocationSelector
 
 from .const import DOMAIN
 
@@ -24,25 +24,23 @@ class StookwijzerFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
 
         if user_input is not None:
-            await self.async_set_unique_id(
-                f"{user_input[CONF_LATITUDE]}-{user_input[CONF_LONGITUDE]}"
-            )
+            lat: float = user_input[CONF_LOCATION][CONF_LATITUDE]
+            lon: float = user_input[CONF_LOCATION][CONF_LONGITUDE]
+
+            await self.async_set_unique_id(f"{lat}-{lon}")
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=f"{user_input[CONF_LATITUDE]}, {user_input[CONF_LONGITUDE]}",
+                title=f"{lat}-{lon}",
                 data=user_input,
             )
 
+        home_location = {
+            CONF_LATITUDE: self.hass.config.latitude,
+            CONF_LONGITUDE: self.hass.config.longitude,
+        }
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_LATITUDE, default=self.hass.config.latitude
-                    ): cv.latitude,
-                    vol.Optional(
-                        CONF_LONGITUDE, default=self.hass.config.longitude
-                    ): cv.longitude,
-                }
+                {vol.Required(CONF_LOCATION, default=home_location): LocationSelector()}
             ),
         )
