@@ -48,7 +48,6 @@ class StookwijzerBinarySensor(BinarySensorEntity):
             identifiers={(DOMAIN, f"{entry.entry_id}")},
             name=f"Stookwijzer {entry.data[CONF_NAME]}",
             manufacturer="stookwijzer.nu",
-            model="Stookwijzer",
             entry_type=DeviceEntryType.SERVICE,
             configuration_url="https://www.stookwijzer.nu",
         )
