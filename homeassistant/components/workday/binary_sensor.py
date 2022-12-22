@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 import holidays
-from holidays import DateLike, HolidayBase
+from holidays.holiday_base import DateLike, HolidayBase
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
