@@ -24,7 +24,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
-from .entity import DataT, HandlerT, SubscriptionT, UnifiEntity, UnifiEntityDescription
+from .entity import DataT, HandlerT, UnifiEntity, UnifiEntityDescription
 
 if TYPE_CHECKING:
     from .controller import UniFiController
@@ -73,8 +73,6 @@ class UnifiUpdateEntityDescription(
     UnifiEntityLoader[HandlerT, DataT],
 ):
     """Class describing UniFi update entity."""
-
-    custom_subscribe: Callable[[aiounifi.Controller], SubscriptionT] | None = None
 
 
 ENTITY_DESCRIPTIONS: tuple[UnifiUpdateEntityDescription, ...] = (
