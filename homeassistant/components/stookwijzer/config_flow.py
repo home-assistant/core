@@ -6,7 +6,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
@@ -24,7 +24,14 @@ class StookwijzerFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
 
         if user_input is not None:
-            return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+            await self.async_set_unique_id(
+                f"{user_input[CONF_LATITUDE]}-{user_input[CONF_LONGITUDE]}"
+            )
+            self._abort_if_unique_id_configured()
+            return self.async_create_entry(
+                title=f"{user_input[CONF_LATITUDE]}, {user_input[CONF_LONGITUDE]}",
+                data=user_input,
+            )
 
         return self.async_show_form(
             step_id="user",
@@ -36,9 +43,6 @@ class StookwijzerFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Optional(
                         CONF_LONGITUDE, default=self.hass.config.longitude
                     ): cv.longitude,
-                    vol.Optional(
-                        CONF_NAME, default=self.hass.config.location_name
-                    ): str,
                 }
             ),
         )

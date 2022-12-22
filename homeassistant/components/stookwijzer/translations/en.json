@@ -7,8 +7,7 @@
             "user": {
                 "data": {
                     "latitude": "Latitude",
-                    "longitude": "Longitude",
-                    "name": "Name"
+                    "longitude": "Longitude"
                 }
             }
         }

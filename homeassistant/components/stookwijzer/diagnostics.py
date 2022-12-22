@@ -16,4 +16,8 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     client: Stookwijzer = hass.data[DOMAIN][entry.entry_id]
-    return {"state": client.state}
+    return {
+        "state": client.state,
+        "lqi": client.lqi,
+        "windspeed": client.windspeed,
+    }

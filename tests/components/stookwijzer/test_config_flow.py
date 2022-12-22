@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from homeassistant.components.stookwijzer.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -25,20 +25,11 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={
-                CONF_LATITUDE: 52.3696776,
-                CONF_LONGITUDE: 4.896466,
-                CONF_NAME: "Home",
-            },
+            user_input={CONF_LATITUDE: 52.3696776, CONF_LONGITUDE: 4.896466},
         )
 
     assert result2.get("type") == FlowResultType.CREATE_ENTRY
-    assert result2.get("title") == "Home"
-    assert result2.get("data") == {
-        CONF_LATITUDE: 52.3696776,
-        CONF_LONGITUDE: 4.896466,
-        CONF_NAME: "Home",
-    }
+    assert result2.get("data") == {CONF_LATITUDE: 52.3696776, CONF_LONGITUDE: 4.896466}
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -47,11 +38,7 @@ async def test_already_configured(hass: HomeAssistant) -> None:
     """Test we abort if the Stookwijzer location is already configured."""
     MockConfigEntry(
         domain=DOMAIN,
-        data={
-            CONF_LATITUDE: 52.3696777,
-            CONF_LONGITUDE: 4.896467,
-            CONF_NAME: "Home",
-        },
+        data={CONF_LATITUDE: 52.3696777, CONF_LONGITUDE: 4.896467},
         unique_id="52.3696777-4.896467",
     ).add_to_hass(hass)
 
@@ -63,11 +50,7 @@ async def test_already_configured(hass: HomeAssistant) -> None:
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={
-            CONF_LATITUDE: 52.3696777,
-            CONF_LONGITUDE: 4.896467,
-            CONF_NAME: "Home",
-        },
+        user_input={CONF_LATITUDE: 52.3696777, CONF_LONGITUDE: 4.896467},
     )
 
     assert result2.get("type") == FlowResultType.ABORT

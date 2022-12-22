@@ -3,7 +3,6 @@
     "step": {
       "user": {
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]"
         }
