@@ -2,7 +2,15 @@
 import logging
 from typing import Final
 
+from homeassistant.backports.enum import StrEnum
+
 DOMAIN: Final = "stookwijzer"
 LOGGER = logging.getLogger(__package__)
 
-ATTR_STOOKWIJZER = "stookwijzer"
+
+class StookwijzerState(StrEnum):
+    """Stookwijzer states for sensor entity."""
+
+    BLUE = "Blauw"
+    ORANGE = "Oranje"
+    RED = "Rood"
