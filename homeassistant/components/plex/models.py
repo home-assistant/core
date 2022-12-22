@@ -78,8 +78,8 @@ class PlexSession:
             self.media_library_title = UNKNOWN_SECTION
             _LOGGER.warning(
                 (
-                    "Unknown library section ID (%s) for title '%s', please create an"
-                    " issue"
+                    "Unknown library section ID (%s) for title '%s',"
+                    " please create an issue"
                 ),
                 media.librarySectionID,
                 media.title,
@@ -96,7 +96,8 @@ class PlexSession:
             if media.index is not None:
                 self.media_episode = media.index
             self.sensor_title = (
-                f"{self.media_series_title} - {media.seasonEpisode} -"
+                f"{self.media_series_title} -"
+                f" {media.seasonEpisode} -"
                 f" {self.media_title}"
             )
         elif media.type == "movie":
