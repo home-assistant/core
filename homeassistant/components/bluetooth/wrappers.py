@@ -12,7 +12,12 @@ from bleak import BleakClient, BleakError
 from bleak.backends.client import BaseBleakClient, get_platform_client_backend_type
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementDataCallback, BaseBleakScanner
-from bleak_retry_connector import NO_RSSI_VALUE, ble_device_description, clear_cache
+from bleak_retry_connector import (
+    NO_RSSI_VALUE,
+    ble_device_description,
+    clear_cache,
+    device_source,
+)
 
 from homeassistant.core import CALLBACK_TYPE, callback as hass_callback
 from homeassistant.helpers.frame import report
@@ -25,15 +30,6 @@ _LOGGER = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from .manager import BluetoothManager
-
-
-def _device_source(device: BLEDevice) -> str | None:
-    """Return the device source."""
-    details = device.details
-    if not isinstance(details, dict) or "source" not in details:
-        return None
-    source: str = device.details["source"]
-    return source
 
 
 @dataclass
@@ -231,7 +227,7 @@ class HaBleakClientWrapper(BleakClient):
         self, manager: BluetoothManager, ble_device: BLEDevice
     ) -> _HaWrappedBleakBackend | None:
         """Get the backend for a BLEDevice."""
-        if not (source := _device_source(ble_device)):
+        if not (source := device_source(ble_device)):
             # If client is not defined in details
             # its the client for this platform
             if not manager.async_allocate_connection_slot(ble_device):
