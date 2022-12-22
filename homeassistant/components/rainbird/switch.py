@@ -82,7 +82,6 @@ async def async_setup_platform(
     except ConfigEntryNotReady as err:
         raise PlatformNotReady(f"Failed to load zone state: {str(err)}") from err
 
-    # async_add_entities(devices, True)
     async_add_entities(devices)
 
     async def start_irrigation(service: ServiceCall) -> None:
