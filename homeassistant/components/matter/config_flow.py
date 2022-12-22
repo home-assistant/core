@@ -34,7 +34,7 @@ from .const import (
 ADDON_SETUP_TIMEOUT = 5
 ADDON_SETUP_TIMEOUT_ROUNDS = 40
 DEFAULT_URL = "ws://localhost:5580/ws"
-DEFAULT_TITLE = ""  # empty string = same name as integration
+DEFAULT_TITLE = "Matter"
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
 
 
