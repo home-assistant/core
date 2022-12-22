@@ -24,10 +24,6 @@ class StookwijzerFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
 
         if user_input is not None:
-            await self.async_set_unique_id(
-                f"{user_input[CONF_LATITUDE]}-{user_input[CONF_LONGITUDE]}"
-            )
-            self._abort_if_unique_id_configured()
             return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
         return self.async_show_form(
