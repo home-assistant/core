@@ -97,16 +97,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Exclusive(
             CONF_AREA,
             "station_collection",
-            "Can only configure one specific station or "
-            "stations in a specific area pr sensor. "
-            "Please only configure station or area.",
+            (
+                "Can only configure one specific station or "
+                "stations in a specific area pr sensor. "
+                "Please only configure station or area."
+            ),
         ): vol.All(cv.string, vol.In(CONF_ALLOWED_AREAS)),
         vol.Exclusive(
             CONF_STATION,
             "station_collection",
-            "Can only configure one specific station or "
-            "stations in a specific area pr sensor. "
-            "Please only configure station or area.",
+            (
+                "Can only configure one specific station or "
+                "stations in a specific area pr sensor. "
+                "Please only configure station or area."
+            ),
         ): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
