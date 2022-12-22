@@ -9,10 +9,15 @@ from aioimaplib import IMAP4_SSL, AioImapException
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 
 from .const import DOMAIN
 from .coordinator import ImapDataUpdateCoordinator, connect_to_server
+from .errors import InvalidAuth, InvalidFolder
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -21,9 +26,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up imap from a config entry."""
     try:
         imap_client: IMAP4_SSL = await connect_to_server(dict(entry.data))
-    except AioImapException as err:
+    except InvalidAuth as err:
         raise ConfigEntryAuthFailed from err
-    except asyncio.TimeoutError as err:
+    except InvalidFolder as err:
+        raise ConfigEntryError("Selected mailbox folder is invalid.") from err
+    except (asyncio.TimeoutError, AioImapException) as err:
         raise ConfigEntryNotReady from err
 
     coordinator = ImapDataUpdateCoordinator(hass, imap_client)

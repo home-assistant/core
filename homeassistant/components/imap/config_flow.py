@@ -22,6 +22,7 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import connect_to_server
+from .errors import InvalidAuth, InvalidFolder
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -34,6 +35,32 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): str,
     }
 )
+
+
+async def validate_input(user_input: dict[str, Any]) -> dict[str, str]:
+    """Validate user input."""
+    errors = {}
+
+    try:
+        imap_client = await connect_to_server(user_input)
+        result, lines = await imap_client.search(
+            user_input[CONF_SEARCH],
+            charset=user_input[CONF_CHARSET],
+        )
+
+    except InvalidAuth:
+        errors[CONF_USERNAME] = errors[CONF_PASSWORD] = "invalid_auth"
+    except InvalidFolder:
+        errors[CONF_FOLDER] = "invalid_folder"
+    except (asyncio.TimeoutError, AioImapException, ConnectionRefusedError):
+        errors["base"] = "cannot_connect"
+    else:
+        if result != "OK":
+            if "The specified charset is not supported" in lines[0].decode("utf-8"):
+                errors[CONF_CHARSET] = "invalid_charset"
+            else:
+                errors[CONF_SEARCH] = "invalid_search"
+    return errors
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -59,15 +86,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-        errors = {}
-
-        try:
-            await connect_to_server(user_input)
-        except (asyncio.TimeoutError, ConnectionRefusedError):
-            errors["base"] = "cannot_connect"
-        except AioImapException:
-            errors["base"] = "invalid_auth"
-        else:
+        if not (errors := await validate_input(user_input)):
             # To be removed when YAML import is removed
             title = user_input.get(CONF_NAME, user_input[CONF_USERNAME])
 
@@ -96,13 +115,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._reauth_entry
         if user_input is not None:
             user_input = {**self._reauth_entry.data, **user_input}
-            try:
-                await connect_to_server(user_input)
-            except (asyncio.TimeoutError, ConnectionRefusedError):
-                errors["base"] = "cannot_connect"
-            except AioImapException:
-                errors["base"] = "invalid_auth"
-            else:
+            if not (errors := await validate_input(user_input)):
                 self.hass.config_entries.async_update_entry(
                     self._reauth_entry, data=user_input
                 )

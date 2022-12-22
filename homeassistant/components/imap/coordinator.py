@@ -5,7 +5,7 @@ import asyncio
 import logging
 from typing import Any
 
-from aioimaplib import IMAP4_SSL, AioImapException
+from aioimaplib import AUTH, IMAP4_SSL, SELECTED, AioImapException
 import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
@@ -14,6 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_CHARSET, CONF_FOLDER, CONF_SEARCH, CONF_SERVER, DOMAIN
+from .errors import InvalidAuth, InvalidFolder
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +24,11 @@ async def connect_to_server(data: dict[str, Any]) -> IMAP4_SSL:
     client = IMAP4_SSL(data[CONF_SERVER], data[CONF_PORT])
     await client.wait_hello_from_server()
     await client.login(data[CONF_USERNAME], data[CONF_PASSWORD])
+    if client.protocol.state != AUTH:
+        raise InvalidAuth
     await client.select(data[CONF_FOLDER])
+    if client.protocol.state != SELECTED:
+        raise InvalidFolder
     return client
 
 
