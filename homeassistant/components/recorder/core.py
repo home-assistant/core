@@ -319,10 +319,12 @@ class Recorder(threading.Thread):
         if size <= MAX_QUEUE_BACKLOG:
             return
         _LOGGER.error(
-            "The recorder backlog queue reached the maximum size of %s events; "
-            "usually, the system is CPU bound, I/O bound, or the database "
-            "is corrupt due to a disk problem; The recorder will stop "
-            "recording events to avoid running out of memory",
+            (
+                "The recorder backlog queue reached the maximum size of %s events; "
+                "usually, the system is CPU bound, I/O bound, or the database "
+                "is corrupt due to a disk problem; The recorder will stop "
+                "recording events to avoid running out of memory"
+            ),
             MAX_QUEUE_BACKLOG,
         )
         self._async_stop_queue_watcher_and_event_listener()
@@ -635,8 +637,10 @@ class Recorder(threading.Thread):
             else:
                 persistent_notification.create(
                     self.hass,
-                    "The database migration failed, check [the logs](/config/logs)."
-                    "Database Migration Failed",
+                    (
+                        "The database migration failed, check [the logs](/config/logs)."
+                        "Database Migration Failed"
+                    ),
                     "recorder_database_migration",
                 )
                 self.hass.add_job(self.async_set_db_ready)
@@ -722,7 +726,12 @@ class Recorder(threading.Thread):
         """Migrate schema to the latest version."""
         persistent_notification.create(
             self.hass,
-            "System performance will temporarily degrade during the database upgrade. Do not power down or restart the system until the upgrade completes. Integrations that read the database, such as logbook and history, may return inconsistent results until the upgrade completes.",
+            (
+                "System performance will temporarily degrade during the database"
+                " upgrade. Do not power down or restart the system until the upgrade"
+                " completes. Integrations that read the database, such as logbook and"
+                " history, may return inconsistent results until the upgrade completes."
+            ),
             "Database upgrade in progress",
             "recorder_database_migration",
         )
