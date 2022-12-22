@@ -73,6 +73,21 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+def get_unique_prefix(
+    location: Location,
+    language: str,
+) -> str:
+    """Create a prefix for unique ids."""
+    config_properties = [
+        location.latitude,
+        location.longitude,
+        location.diaspora,
+        language,
+    ]
+    prefix = "_".join(map(str, config_properties))
+    return f"{prefix}"
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Jewish Calendar component."""
     if DOMAIN not in config:
@@ -125,6 +140,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     location = Location(
         name=hass.config.location_name,
         diaspora=diaspora,
+        # If details of the location are not specified, use Hass's defaults.
         latitude=latitude,
         longitude=longitude,
         altitude=config_entry.data.get(CONF_ELEVATION, hass.config.elevation),
@@ -141,6 +157,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         ),
         "havdalah_offset": config_entry.options.get(
             CONF_HAVDALAH_OFFSET_MINUTES, DEFAULT_HAVDALAH_OFFSET_MINUTES
+        ),
+        "prefix": get_unique_prefix(
+            location,
+            language,
         ),
     }
 

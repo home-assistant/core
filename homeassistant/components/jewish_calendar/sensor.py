@@ -1,5 +1,4 @@
 """Support for Jewish calendar sensors."""
-
 from __future__ import annotations
 
 from datetime import date as Date
@@ -19,7 +18,7 @@ from homeassistant.const import SUN_EVENT_SUNSET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import get_astral_event_date
-from homeassistant.util import dt as dt_util, slugify
+import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 
