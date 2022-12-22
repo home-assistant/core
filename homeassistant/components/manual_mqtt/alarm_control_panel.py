@@ -369,7 +369,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         self._previous_state = self._state
         self._state = state
         self._state_ts = dt_util.utcnow()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
         pending_time = self._pending_time(state)
         if state == STATE_ALARM_TRIGGERED:
