@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Generator
+from typing import Any
 from unittest.mock import patch
 
 from pyrainbird import encryption
@@ -60,16 +61,23 @@ def platforms() -> list[Platform]:
 
 
 @pytest.fixture
+def yaml_config() -> dict[str, Any]:
+    """Fixture for configuration.yaml."""
+    return CONFIG
+
+
+@pytest.fixture
 async def setup_integration(
     hass: HomeAssistant,
     platforms: list[str],
+    yaml_config: dict[str, Any],
 ) -> Generator[ComponentSetup, None, None]:
     """Fixture for setting up the component."""
 
     with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms):
 
         async def func() -> bool:
-            result = await async_setup_component(hass, DOMAIN, CONFIG)
+            result = await async_setup_component(hass, DOMAIN, yaml_config)
             await hass.async_block_till_done()
             return result
 
