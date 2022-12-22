@@ -45,7 +45,15 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
 from .controller import UniFiController
-from .entity import DataT, HandlerT, SubscriptionT, UnifiEntity, UnifiEntityDescription
+from .entity import (
+    DataT,
+    HandlerT,
+    SubscriptionT,
+    UnifiEntity,
+    UnifiEntityDescription,
+    async_device_available_fn,
+    async_device_device_info_fn,
+)
 
 CLIENT_BLOCKED = (EventKey.WIRED_CLIENT_BLOCKED, EventKey.WIRELESS_CLIENT_BLOCKED)
 CLIENT_UNBLOCKED = (EventKey.WIRED_CLIENT_UNBLOCKED, EventKey.WIRELESS_CLIENT_UNBLOCKED)
@@ -65,14 +73,6 @@ def async_dpi_group_is_on_fn(
 
 
 @callback
-def async_sub_device_available_fn(controller: UniFiController, obj_id: str) -> bool:
-    """Check if sub device object is disabled."""
-    device_id = obj_id.partition("_")[0]
-    device = controller.api.devices[device_id]
-    return controller.available and not device.disabled
-
-
-@callback
 def async_client_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
     """Create device registry entry for client."""
     client = api.clients[obj_id]
@@ -80,23 +80,6 @@ def async_client_device_info_fn(api: aiounifi.Controller, obj_id: str) -> Device
         connections={(CONNECTION_NETWORK_MAC, obj_id)},
         default_manufacturer=client.oui,
         default_name=client.name or client.hostname,
-    )
-
-
-@callback
-def async_device_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
-    """Create device registry entry for device."""
-    if "_" in obj_id:  # Sub device
-        obj_id = obj_id.partition("_")[0]
-
-    device = api.devices[obj_id]
-    return DeviceInfo(
-        connections={(CONNECTION_NETWORK_MAC, device.mac)},
-        manufacturer=ATTR_MANUFACTURER,
-        model=device.model,
-        name=device.name or None,
-        sw_version=device.version,
-        hw_version=str(device.board_revision),
     )
 
 
@@ -152,7 +135,7 @@ async def async_poe_port_control_fn(
 
 
 @dataclass
-class UnifiEntityLoader(Generic[HandlerT, DataT]):
+class UnifiSwitchEntityDescriptionMixin(Generic[HandlerT, DataT]):
     """Validate and load entities from different UniFi handlers."""
 
     control_fn: Callable[[aiounifi.Controller, str, bool], Coroutine[Any, Any, None]]
@@ -163,7 +146,7 @@ class UnifiEntityLoader(Generic[HandlerT, DataT]):
 class UnifiSwitchEntityDescription(
     SwitchEntityDescription,
     UnifiEntityDescription[HandlerT, DataT],
-    UnifiEntityLoader[HandlerT, DataT],
+    UnifiSwitchEntityDescriptionMixin[HandlerT, DataT],
 ):
     """Class describing UniFi switch entity."""
 
@@ -216,7 +199,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         has_entity_name=True,
         allowed_fn=lambda controller, obj_id: True,
         api_handler_fn=lambda api: api.outlets,
-        available_fn=async_sub_device_available_fn,
+        available_fn=async_device_available_fn,
         control_fn=async_outlet_control_fn,
         device_info_fn=async_device_device_info_fn,
         event_is_on=None,
@@ -236,7 +219,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         icon="mdi:ethernet",
         allowed_fn=lambda controller, obj_id: True,
         api_handler_fn=lambda api: api.ports,
-        available_fn=async_sub_device_available_fn,
+        available_fn=async_device_available_fn,
         control_fn=async_poe_port_control_fn,
         device_info_fn=async_device_device_info_fn,
         event_is_on=None,

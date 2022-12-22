@@ -22,8 +22,11 @@ from aiounifi.models.port import Port
 
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
+
+from .const import ATTR_MANUFACTURER
 
 if TYPE_CHECKING:
     from .controller import UniFiController
@@ -31,6 +34,33 @@ if TYPE_CHECKING:
 DataT = TypeVar("DataT", bound=Union[APIItem, Outlet, Port])
 HandlerT = TypeVar("HandlerT", bound=Union[APIHandler, Outlets, Ports])
 SubscriptionT = Callable[[CallbackType, ItemEvent], UnsubscribeType]
+
+
+@callback
+def async_device_available_fn(controller: UniFiController, obj_id: str) -> bool:
+    """Check if device is available."""
+    if "_" in obj_id:  # Sub device (outlet or port)
+        obj_id = obj_id.partition("_")[0]
+
+    device = controller.api.devices[obj_id]
+    return controller.available and not device.disabled
+
+
+@callback
+def async_device_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
+    """Create device registry entry for device."""
+    if "_" in obj_id:  # Sub device (outlet or port)
+        obj_id = obj_id.partition("_")[0]
+
+    device = api.devices[obj_id]
+    return DeviceInfo(
+        connections={(CONNECTION_NETWORK_MAC, device.mac)},
+        manufacturer=ATTR_MANUFACTURER,
+        model=device.model,
+        name=device.name or None,
+        sw_version=device.version,
+        hw_version=str(device.board_revision),
+    )
 
 
 @dataclass

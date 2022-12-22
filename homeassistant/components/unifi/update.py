@@ -19,12 +19,15 @@ from homeassistant.components.update import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
-from .entity import UnifiEntity, UnifiEntityDescription
+from .const import DOMAIN as UNIFI_DOMAIN
+from .entity import (
+    UnifiEntity,
+    UnifiEntityDescription,
+    async_device_available_fn,
+    async_device_device_info_fn,
+)
 
 if TYPE_CHECKING:
     from .controller import UniFiController
@@ -35,30 +38,9 @@ _DataT = TypeVar("_DataT", bound=Device)
 _HandlerT = TypeVar("_HandlerT", bound=Devices)
 
 
-@callback
-def async_device_available_fn(controller: UniFiController, obj_id: str) -> bool:
-    """Check if device is available."""
-    device = controller.api.devices[obj_id]
-    return controller.available and not device.disabled
-
-
 async def async_device_control_fn(api: aiounifi.Controller, obj_id: str) -> None:
     """Control upgrade of device."""
     await api.request(DeviceUpgradeRequest.create(obj_id))
-
-
-@callback
-def async_device_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
-    """Create device registry entry for device."""
-    device = api.devices[obj_id]
-    return DeviceInfo(
-        connections={(CONNECTION_NETWORK_MAC, device.mac)},
-        manufacturer=ATTR_MANUFACTURER,
-        model=device.model,
-        name=device.name or None,
-        sw_version=device.version,
-        hw_version=str(device.board_revision),
-    )
 
 
 @dataclass
