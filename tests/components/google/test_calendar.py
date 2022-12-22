@@ -915,7 +915,7 @@ async def test_websocket_create_all_day(
             "date": "1997-07-14",
         },
         "end": {"date": "1997-07-15"},
-        "recurrence": ["FREQ=YEARLY"],
+        "recurrence": ["RRULE:FREQ=YEARLY"],
     }
 
 
@@ -1001,6 +1001,7 @@ async def test_websocket_delete_recurring_event_instance(
     event = events[1]
     assert event["uid"] == "event-id-1@google.com"
     assert event["recurrence_id"] == "event-id-1_20221015"
+    assert event["rrule"] == "FREQ=WEEKLY"
 
     # Expect a delete request as well as a follow up to sync state from server
     aioclient_mock.clear_requests()
@@ -1079,6 +1080,57 @@ async def test_readonly_websocket_create(
         "create",
         {
             "entity_id": TEST_ENTITY,
+            "event": {
+                "summary": "Bastille Day Party",
+                "dtstart": "1997-07-14T17:00:00+00:00",
+                "dtend": "1997-07-15T04:00:00+00:00",
+            },
+        },
+    )
+    assert result.get("error")
+    assert result["error"].get("code") == "not_supported"
+
+
+@pytest.mark.parametrize(
+    "calendars_config",
+    [
+        [
+            {
+                "cal_id": CALENDAR_ID,
+                "entities": [
+                    {
+                        "device_id": "backyard_light",
+                        "name": "Backyard Light",
+                        "search": "#Backyard",
+                    },
+                ],
+            }
+        ],
+    ],
+)
+async def test_readonly_search_calendar(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    mock_calendars_yaml,
+    mock_insert_event: Callable[[str, dict[str, Any]], None],
+    mock_events_list: ApiResult,
+    aioclient_mock: AiohttpClientMocker,
+    ws_client: ClientFixture,
+) -> None:
+    """Test calendar configured with yaml/search does not support mutation."""
+    mock_events_list({})
+    assert await component_setup()
+
+    aioclient_mock.clear_requests()
+    mock_insert_event(
+        calendar_id=CALENDAR_ID,
+    )
+
+    client = await ws_client()
+    result = await client.cmd(
+        "create",
+        {
+            "entity_id": TEST_YAML_ENTITY,
             "event": {
                 "summary": "Bastille Day Party",
                 "dtstart": "1997-07-14T17:00:00+00:00",

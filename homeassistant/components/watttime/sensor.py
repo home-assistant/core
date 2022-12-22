@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, MASS_POUNDS, PERCENTAGE
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, PERCENTAGE, UnitOfMass
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -37,7 +37,7 @@ REALTIME_EMISSIONS_SENSOR_DESCRIPTIONS = (
         key=SENSOR_TYPE_REALTIME_EMISSIONS_MOER,
         name="Marginal operating emissions rate",
         icon="mdi:blur",
-        native_unit_of_measurement=f"{MASS_POUNDS} CO2/MWh",
+        native_unit_of_measurement=f"{UnitOfMass.POUNDS} CO2/MWh",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(

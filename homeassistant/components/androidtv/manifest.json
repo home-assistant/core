@@ -1,6 +1,7 @@
 {
   "domain": "androidtv",
   "name": "Android TV",
+  "integration_type": "device",
   "documentation": "https://www.home-assistant.io/integrations/androidtv",
   "requirements": [
     "adb-shell[async]==0.4.3",

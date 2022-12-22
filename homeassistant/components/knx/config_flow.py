@@ -268,7 +268,7 @@ class KNXCommonFlow(ABC, FlowHandler):
                 if selected_tunnelling_type == CONF_KNX_TUNNELING_TCP_SECURE:
                     return self.async_show_menu(
                         step_id="secure_key_source",
-                        menu_options=["secure_knxkeys", "secure_routing_manual"],
+                        menu_options=["secure_knxkeys", "secure_tunnel_manual"],
                     )
                 return self.finish_flow(title=f"Tunneling @ {_host}")
 
@@ -399,7 +399,10 @@ class KNXCommonFlow(ABC, FlowHandler):
                     ],
                 )
                 return self.finish_flow(
-                    title=f"Secure Routing as {self.new_entry_data[CONF_KNX_INDIVIDUAL_ADDRESS]}"
+                    title=(
+                        "Secure Routing as"
+                        f" {self.new_entry_data[CONF_KNX_INDIVIDUAL_ADDRESS]}"
+                    )
                 )
 
         fields = {
@@ -464,7 +467,10 @@ class KNXCommonFlow(ABC, FlowHandler):
                     self.new_entry_data[CONF_KNX_CONNECTION_TYPE]
                     == CONF_KNX_ROUTING_SECURE
                 ):
-                    title = f"Secure Routing as {self.new_entry_data[CONF_KNX_INDIVIDUAL_ADDRESS]}"
+                    title = (
+                        "Secure Routing as"
+                        f" {self.new_entry_data[CONF_KNX_INDIVIDUAL_ADDRESS]}"
+                    )
                 else:
                     title = f"Secure Tunneling @ {self.new_entry_data[CONF_HOST]}"
                 return self.finish_flow(title=title)

@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import LENGTH_METERS, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT, UnitOfLength
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -58,7 +58,7 @@ SENSOR_DESCRIPTIONS = (
         key="estimated_distance",
         name="Estimated Distance",
         icon="mdi:signal-distance-variant",
-        native_unit_of_measurement=LENGTH_METERS,
+        native_unit_of_measurement=UnitOfLength.METERS,
         value_fn=lambda ibeacon_advertisement: ibeacon_advertisement.distance,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DISTANCE,

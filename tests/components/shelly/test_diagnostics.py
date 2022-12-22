@@ -127,6 +127,7 @@ async def test_rpc_config_entry_diagnostics(
                 "monotonic_time": ANY,
                 "name": "Mock Title (12:34:56:78:9A:BC)",
                 "scanning": True,
+                "start_time": ANY,
                 "source": "12:34:56:78:9A:BC",
                 "storage": None,
                 "time_since_last_device_detection": {"AA:BB:CC:DD:EE:FF": ANY},

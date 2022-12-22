@@ -84,8 +84,7 @@ def valid_subscribe_topic(topic: Any) -> str:
         if index != len(validated_topic) - 1:
             # If there are multiple wildcards, this will also trigger
             raise vol.Invalid(
-                "Multi-level wildcard must be the last "
-                "character in the topic filter."
+                "Multi-level wildcard must be the last character in the topic filter."
             )
         if len(validated_topic) > 1 and validated_topic[index - 1] != "/":
             raise vol.Invalid(
