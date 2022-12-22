@@ -1,5 +1,4 @@
 """Tests for the Velbus component initialisation."""
-from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
@@ -10,15 +9,6 @@ from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, mock_device_registry
-
-
-@pytest.fixture(name="config_flow_version")
-def config_flow_version_fixture() -> Generator[None, None, None]:
-    """Mock the config flow version."""
-    with patch(
-        "homeassistant.components.velbus.config_flow.VelbusConfigFlow.VERSION", 2
-    ):
-        yield
 
 
 @pytest.mark.usefixtures("controller")
@@ -73,7 +63,7 @@ async def test_device_identifier_migration(
     assert device_entry.sw_version == "module_sw_version"
 
 
-@pytest.mark.usefixtures("controller", "config_flow_version")
+@pytest.mark.usefixtures("controller")
 async def test_migrate_config_entry(hass: HomeAssistant) -> None:
     """Test successful migration of entry data."""
     legacy_config = {CONF_NAME: "fake_name", CONF_PORT: "1.2.3.4:5678"}
@@ -84,9 +74,7 @@ async def test_migrate_config_entry(hass: HomeAssistant) -> None:
     assert entry.version == 1
 
     # test in case we do not have a cache
-    with patch("os.path.isdir", return_value=True), patch(
-        "shutil.rmtree", return_value=True
-    ):
+    with patch("os.path.isdir", return_value=True), patch("shutil.rmtree"):
         await hass.config_entries.async_setup(entry.entry_id)
         assert dict(entry.data) == legacy_config
         assert entry.version == 2
