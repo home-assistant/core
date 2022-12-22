@@ -1333,7 +1333,7 @@ pillow==9.3.0
 pizzapi==0.0.3
 
 # homeassistant.components.plex
-plexapi==4.13.1
+plexapi==4.13.2
 
 # homeassistant.components.plex
 plexauth==0.0.6

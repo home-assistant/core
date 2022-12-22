@@ -211,6 +211,7 @@ async def _try_async_validate_config_item(
 
 async def async_validate_config_item(
     hass: HomeAssistant,
+    config_key: str,
     config: dict[str, Any],
 ) -> AutomationConfig | None:
     """Validate config item, called by EditAutomationConfigView."""

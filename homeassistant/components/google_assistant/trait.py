@@ -1043,7 +1043,7 @@ class TemperatureSettingTrait(_Trait):
                 raise SmartHomeError(
                     ERR_VALUE_OUT_OF_RANGE,
                     (
-                        f"Upper bound for temperature range should be between "
+                        "Upper bound for temperature range should be between "
                         f"{min_temp} and {max_temp}"
                     ),
                 )
@@ -1060,7 +1060,7 @@ class TemperatureSettingTrait(_Trait):
                 raise SmartHomeError(
                     ERR_VALUE_OUT_OF_RANGE,
                     (
-                        f"Lower bound for temperature range should be between "
+                        "Lower bound for temperature range should be between "
                         f"{min_temp} and {max_temp}"
                     ),
                 )

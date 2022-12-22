@@ -173,8 +173,9 @@ async def async_setup_entry(
             entity_enabled = data.get(CONF_TRACK, True)
             if not entity_enabled:
                 _LOGGER.warning(
-                    "The 'track' option in google_calendars.yaml has been deprecated. The setting "
-                    "has been imported to the UI, and should now be removed from google_calendars.yaml"
+                    "The 'track' option in google_calendars.yaml has been deprecated."
+                    " The setting has been imported to the UI, and should now be"
+                    " removed from google_calendars.yaml"
                 )
             entity_name = data[CONF_DEVICE_ID]
             # The unique id is based on the config entry and calendar id since multiple accounts

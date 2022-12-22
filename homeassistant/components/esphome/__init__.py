@@ -480,7 +480,10 @@ async def _register_service(
     )
 
     service_desc = {
-        "description": f"Calls the service {service.name} of the node {entry_data.device_info.name}",
+        "description": (
+            f"Calls the service {service.name} of the node"
+            f" {entry_data.device_info.name}"
+        ),
         "fields": fields,
     }
 
@@ -706,10 +709,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                (
-                    f"esphome_{self._entry_id}_remove_"
-                    f"{self._component_key}_{self._key}"
-                ),
+                f"esphome_{self._entry_id}_remove_{self._component_key}_{self._key}",
                 functools.partial(self.async_remove, force_remove=True),
             )
         )

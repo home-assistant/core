@@ -284,7 +284,8 @@ class HaBleakClientWrapper(BleakClient):
                 return backend
 
         raise BleakError(
-            f"No backend with an available connection slot that can reach address {address} was found"
+            "No backend with an available connection slot that can reach address"
+            f" {address} was found"
         )
 
     async def disconnect(self) -> bool:

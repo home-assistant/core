@@ -81,8 +81,10 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="authentication_error")
         except pypck.connection.PchkLicenseError:
             _LOGGER.warning(
-                'Maximum number of connections on PCHK "%s" was '
-                "reached. An additional license key is required",
+                (
+                    'Maximum number of connections on PCHK "%s" was '
+                    "reached. An additional license key is required"
+                ),
                 host_name,
             )
             return self.async_abort(reason="license_error")
