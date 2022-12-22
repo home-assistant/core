@@ -9,7 +9,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Final
 
 from bleak.backends.scanner import AdvertisementDataCallback
-from bleak_retry_connector import NO_RSSI_VALUE, RSSI_SWITCH_THRESHOLD
+from bleak_retry_connector import NO_RSSI_VALUE, RSSI_SWITCH_THRESHOLD, BleakSlotManager
 from bluetooth_adapters import (
     ADAPTER_ADDRESS,
     ADAPTER_PASSIVE_SCAN,
@@ -650,11 +650,13 @@ class BluetoothManager:
             self._advertisement_tracker.async_remove_source(scanner.source)
             scanners.remove(scanner)
             del self._sources[scanner.source]
-            self.slot_manager.remove_adapter(scanner.adapter)
+            if connection_slots:
+                self.slot_manager.remove_adapter(scanner.adapter)
 
         scanners.append(scanner)
         self._sources[scanner.source] = scanner
-        self.slot_manager.register_adapter(scanner.adapter, connection_slots)
+        if connection_slots:
+            self.slot_manager.register_adapter(scanner.adapter, connection_slots)
         return _unregister_scanner
 
     @hass_callback
@@ -682,19 +684,9 @@ class BluetoothManager:
     @hass_callback
     def async_release_connection_slot(self, device: BLEDevice) -> None:
         """Release a connection slot."""
-        # TODO: We check with the manager to make sure the device isn't actually
-        # connected, and if so we release the slot by removing the ble device
-        # path from whats being watched. slot manager keeps a dict of device
-        # watchers by device path
         self.slot_manager.release_slot(device)
 
     @hass_callback
     def async_allocate_connection_slot(self, device: BLEDevice) -> bool:
         """Allocate a connection slot."""
-        # TODO: slot manager checks if we have a free slot, saves
-        # the ble device, registers add device watcher
-        # and returns true
-        # https://github.com/hbldh/bleak/blob/b8f22bc156b8d661e453f9b6a33e98155a85dc50/bleak/backends/bluezdbus/manager.py#L510
-        # https://github.com/hbldh/bleak/blob/b8f22bc156b8d661e453f9b6a33e98155a85dc50/bleak/backends/bluezdbus/manager.py#L844
-        # if any of that fails we return false
-        self.slot_manager.allocate_slot(device)
+        return self.slot_manager.allocate_slot(device)

@@ -220,8 +220,6 @@ class HaBleakClientWrapper(BleakClient):
             # If we failed to connect and its a local adapter (no source)
             # we release the connection slot
             if not connected and not wrapped_backend.source:
-                # TODO: cancel the device watcher if we are not connected (it needs
-                # to check) and release the connection slot
                 models.MANAGER.async_release_connection_slot(wrapped_backend.device)
 
         if debug_logging:
@@ -236,12 +234,6 @@ class HaBleakClientWrapper(BleakClient):
         if not (source := _device_source(ble_device)):
             # If client is not defined in details
             # its the client for this platform
-
-            # TODO: allocate a connection slot if possible
-            # and install a device watcher in the manager
-            # so we can release the slot later, we need
-            # to build the connection manager in bleak
-            # retry connector
             if not manager.async_allocate_connection_slot(ble_device):
                 return None
             cls = get_platform_client_backend_type()
