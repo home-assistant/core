@@ -959,7 +959,7 @@ async def test_disarm_during_trigger_with_invalid_code(
                 "platform": "manual_mqtt",
                 "name": "test",
                 "pending_time": 5,
-                "code": f"{CODE}2",
+                "code": "12345",
                 "disarm_after_trigger": False,
                 "command_topic": "alarm/command",
                 "state_topic": "alarm/state",
@@ -971,6 +971,10 @@ async def test_disarm_during_trigger_with_invalid_code(
     entity_id = "alarm_control_panel.test"
 
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
+    assert (
+        hass.states.get(entity_id).attributes[alarm_control_panel.ATTR_CODE_FORMAT]
+        == alarm_control_panel.CodeFormat.NUMBER
+    )
 
     await common.async_alarm_trigger(hass)
     await hass.async_block_till_done()
