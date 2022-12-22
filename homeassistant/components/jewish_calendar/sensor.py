@@ -1,4 +1,4 @@
-"""Platform to retrieve Jewish calendar information for Home Assistant."""
+"""Support for Jewish calendar sensors."""
 
 from __future__ import annotations
 
@@ -14,18 +14,18 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import SUN_EVENT_SUNSET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import get_astral_event_date
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-INFO_SENSORS = (
+INFO_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="date",
         name="Date",
@@ -53,7 +53,7 @@ INFO_SENSORS = (
     ),
 )
 
-TIME_SENSORS = (
+TIME_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="first_light",
         name="Alot Hashachar",
@@ -142,22 +142,18 @@ TIME_SENSORS = (
 )
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Jewish calendar sensor platform."""
-    if discovery_info is None:
-        return
-
     sensors = [
-        JewishCalendarSensor(hass.data[DOMAIN], description)
+        JewishCalendarSensor(hass.data[DOMAIN][config_entry.entry_id], description)
         for description in INFO_SENSORS
     ]
     sensors.extend(
-        JewishCalendarTimeSensor(hass.data[DOMAIN], description)
+        JewishCalendarTimeSensor(hass.data[DOMAIN][config_entry.entry_id], description)
         for description in TIME_SENSORS
     )
 
