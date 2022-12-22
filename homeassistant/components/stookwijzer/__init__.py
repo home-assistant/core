@@ -14,8 +14,7 @@ PLATFORMS = [Platform.BINARY_SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Stookwijzer from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = Stookwijzer(
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = Stookwijzer(
         entry.data[CONF_LATITUDE], entry.data[CONF_LONGITUDE]
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
