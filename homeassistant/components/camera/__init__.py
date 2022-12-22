@@ -836,7 +836,10 @@ async def ws_camera_web_rtc_offer(
         connection.send_error(
             msg["id"],
             "web_rtc_offer_failed",
-            f"Camera does not support WebRTC, frontend_stream_type={camera.frontend_stream_type}",
+            (
+                "Camera does not support WebRTC,"
+                f" frontend_stream_type={camera.frontend_stream_type}"
+            ),
         )
         return
     try:

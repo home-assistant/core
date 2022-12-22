@@ -318,7 +318,10 @@ class BluetoothManager:
             # If the old advertisement is stale, any new advertisement is preferred
             if debug:
                 _LOGGER.debug(
-                    "%s (%s): Switching from %s to %s (time elapsed:%s > stale seconds:%s)",
+                    (
+                        "%s (%s): Switching from %s to %s (time elapsed:%s > stale"
+                        " seconds:%s)"
+                    ),
                     new.name,
                     new.address,
                     self._async_describe_source(old),
@@ -333,7 +336,10 @@ class BluetoothManager:
             # If new advertisement is RSSI_SWITCH_THRESHOLD more, the new one is preferred
             if debug:
                 _LOGGER.debug(
-                    "%s (%s): Switching from %s to %s (new rssi:%s - threshold:%s > old rssi:%s)",
+                    (
+                        "%s (%s): Switching from %s to %s (new rssi:%s - threshold:%s >"
+                        " old rssi:%s)"
+                    ),
                     new.name,
                     new.address,
                     self._async_describe_source(old),

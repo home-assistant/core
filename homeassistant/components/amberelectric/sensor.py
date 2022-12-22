@@ -227,7 +227,10 @@ async def async_setup_entry(
     for channel_type in current:
         description = SensorEntityDescription(
             key="descriptors",
-            name=f"{entry.title} - {friendly_channel_type(channel_type)} Price Descriptor",
+            name=(
+                f"{entry.title} - {friendly_channel_type(channel_type)} Price"
+                " Descriptor"
+            ),
             icon=ICONS[channel_type],
         )
         entities.append(
