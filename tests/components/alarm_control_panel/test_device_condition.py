@@ -114,17 +114,14 @@ async def test_get_conditions(
             {"supported_features": features_state},
         )
     expected_conditions = []
-    basic_condition_types = ["is_disarmed", "is_triggered"]
-    expected_conditions += [
-        {
-            "condition": "device",
-            "domain": DOMAIN,
-            "type": condition,
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
-            "metadata": {"secondary": False},
-        }
-        for condition in basic_condition_types
+    basic_condition_types = [
+        "is_disarmed",
+        "is_triggered",
+        "is_armed_home",
+        "is_armed_away",
+        "is_armed_night",
+        "is_armed_vacation",
+        "is_armed_custom_bypass",
     ]
     expected_conditions += [
         {
@@ -135,7 +132,7 @@ async def test_get_conditions(
             "entity_id": f"{DOMAIN}.test_5678",
             "metadata": {"secondary": False},
         }
-        for condition in expected_condition_types
+        for condition in basic_condition_types
     ]
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
@@ -174,6 +171,15 @@ async def test_get_conditions_hidden_auxiliary(
         entity_category=entity_category,
         hidden_by=hidden_by,
     )
+    basic_condition_types = [
+        "is_disarmed",
+        "is_triggered",
+        "is_armed_home",
+        "is_armed_away",
+        "is_armed_night",
+        "is_armed_vacation",
+        "is_armed_custom_bypass",
+    ]
     expected_conditions = [
         {
             "condition": "device",
@@ -183,7 +189,7 @@ async def test_get_conditions_hidden_auxiliary(
             "entity_id": f"{DOMAIN}.test_5678",
             "metadata": {"secondary": True},
         }
-        for condition in ["is_disarmed", "is_triggered"]
+        for condition in basic_condition_types
     ]
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id

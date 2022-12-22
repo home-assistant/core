@@ -55,7 +55,20 @@ def calls(hass):
 @pytest.mark.parametrize(
     "set_state,features_reg,features_state,expected_trigger_types",
     [
-        (False, 0, 0, ["triggered", "disarmed", "arming"]),
+        (
+            False,
+            0,
+            0,
+            [
+                "triggered",
+                "disarmed",
+                "arming",
+                "armed_home",
+                "armed_away",
+                "armed_night",
+                "armed_vacation",
+            ],
+        ),
         (
             False,
             47,
@@ -70,7 +83,20 @@ def calls(hass):
                 "armed_vacation",
             ],
         ),
-        (True, 0, 0, ["triggered", "disarmed", "arming"]),
+        (
+            True,
+            0,
+            0,
+            [
+                "triggered",
+                "disarmed",
+                "arming",
+                "armed_home",
+                "armed_away",
+                "armed_night",
+                "armed_vacation",
+            ],
+        ),
         (
             True,
             0,
@@ -175,7 +201,15 @@ async def test_get_triggers_hidden_auxiliary(
             "entity_id": f"{DOMAIN}.test_5678",
             "metadata": {"secondary": True},
         }
-        for trigger in ["triggered", "disarmed", "arming"]
+        for trigger in [
+            "triggered",
+            "disarmed",
+            "arming",
+            "armed_home",
+            "armed_away",
+            "armed_night",
+            "armed_vacation",
+        ]
     ]
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
@@ -199,7 +233,7 @@ async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert len(triggers) == 6
+    assert len(triggers) == 7
     for trigger in triggers:
         capabilities = await async_get_device_automation_capabilities(
             hass, DeviceAutomationType.TRIGGER, trigger
