@@ -5,6 +5,7 @@ import logging
 
 from pyrainbird import AvailableStations
 from pyrainbird.async_client import AsyncRainbirdController, RainbirdApiException
+from pyrainbird.data import States
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
@@ -16,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import CONF_ZONES, DOMAIN, RAINBIRD_CONTROLLER
+from .const import CONF_ZONES, DOMAIN, RAINBIRD_CONTROLLER
 from .coordinator import RainbirdUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -117,7 +118,7 @@ class RainBirdSwitch(CoordinatorEntity, SwitchEntity):
 
     def __init__(
         self,
-        coordinator: RainbirdUpdateCoordinator,
+        coordinator: RainbirdUpdateCoordinator[States],
         rainbird: AsyncRainbirdController,
         zone: int,
         time: int,

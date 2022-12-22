@@ -1,4 +1,4 @@
-"""Tests for RTSPtoWebRTC initialization."""
+"""Test fixtures for rainbird."""
 
 from __future__ import annotations
 

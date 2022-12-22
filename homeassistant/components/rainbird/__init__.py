@@ -11,8 +11,6 @@ from pyrainbird.async_client import (
 )
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import BinarySensorEntityDescription
-from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import (
     CONF_FRIENDLY_NAME,
     CONF_HOST,
@@ -26,47 +24,20 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
+from .const import (
+    CONF_ZONES,
+    RAINBIRD_CONTROLLER,
+    SENSOR_TYPE_RAINDELAY,
+    SENSOR_TYPE_RAINSENSOR,
+)
 from .coordinator import RainbirdUpdateCoordinator
-
-CONF_ZONES = "zones"
 
 PLATFORMS = [Platform.SWITCH, Platform.SENSOR, Platform.BINARY_SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
-RAINBIRD_CONTROLLER = "controller"
 DATA_RAINBIRD = "rainbird"
 DOMAIN = "rainbird"
-
-SENSOR_TYPE_RAINDELAY = "raindelay"
-SENSOR_TYPE_RAINSENSOR = "rainsensor"
-
-
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
-        key=SENSOR_TYPE_RAINSENSOR,
-        name="Rainsensor",
-        icon="mdi:water",
-    ),
-    SensorEntityDescription(
-        key=SENSOR_TYPE_RAINDELAY,
-        name="Raindelay",
-        icon="mdi:water-off",
-    ),
-)
-
-BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
-    BinarySensorEntityDescription(
-        key=SENSOR_TYPE_RAINSENSOR,
-        name="Rainsensor",
-        icon="mdi:water",
-    ),
-    BinarySensorEntityDescription(
-        key=SENSOR_TYPE_RAINDELAY,
-        name="Raindelay",
-        icon="mdi:water-off",
-    ),
-)
 
 TRIGGER_TIME_SCHEMA = vol.All(
     cv.time_period, cv.positive_timedelta, lambda td: (td.total_seconds() // 60)

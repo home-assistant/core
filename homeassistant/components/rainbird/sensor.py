@@ -12,9 +12,23 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from . import SENSOR_TYPES
+from .const import SENSOR_TYPE_RAINDELAY, SENSOR_TYPE_RAINSENSOR
 
 _LOGGER = logging.getLogger(__name__)
+
+
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=SENSOR_TYPE_RAINSENSOR,
+        name="Rainsensor",
+        icon="mdi:water",
+    ),
+    SensorEntityDescription(
+        key=SENSOR_TYPE_RAINDELAY,
+        name="Raindelay",
+        icon="mdi:water-off",
+    ),
+)
 
 
 async def async_setup_platform(
