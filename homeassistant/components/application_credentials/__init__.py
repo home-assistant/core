@@ -50,8 +50,8 @@ DEFAULT_IMPORT_NAME = "Import from configuration.yaml"
 
 CREATE_FIELDS = {
     vol.Required(CONF_DOMAIN): cv.string,
-    vol.Required(CONF_CLIENT_ID): cv.string,
-    vol.Required(CONF_CLIENT_SECRET): cv.string,
+    vol.Required(CONF_CLIENT_ID): vol.All(cv.string, vol.Strip),
+    vol.Required(CONF_CLIENT_SECRET): vol.All(cv.string, vol.Strip),
     vol.Optional(CONF_AUTH_DOMAIN): cv.string,
     vol.Optional(CONF_NAME): cv.string,
 }
