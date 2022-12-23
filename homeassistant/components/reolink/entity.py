@@ -2,6 +2,7 @@
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DOMAIN
 from .host import ReolinkHost
@@ -29,25 +30,25 @@ class ReolinkCoordinatorEntity(CoordinatorEntity):
         )
 
         if self._host.api.is_nvr and self._channel is not None:
-            return {
-                "identifiers": {(DOMAIN, f"{self._host.unique_id}_ch{self._channel}")},
-                "via_device": (DOMAIN, self._host.unique_id),
-                "name": self._host.api.camera_name(self._channel),
-                "model": self._host.api.camera_model(self._channel),
-                "manufacturer": self._host.api.manufacturer,
-                "configuration_url": conf_url,
-            }
+            return DeviceInfo(
+                identifiers = {(DOMAIN, f"{self._host.unique_id}_ch{self._channel}")},
+                via_device = (DOMAIN, self._host.unique_id),
+                name = self._host.api.camera_name(self._channel),
+                model = self._host.api.camera_model(self._channel),
+                manufacturer = self._host.api.manufacturer,
+                configuration_url = conf_url,
+            )
 
-        return {
-            "identifiers": {(DOMAIN, self._host.unique_id)},
-            "connections": {(CONNECTION_NETWORK_MAC, self._host.api.mac_address)},
-            "name": self._host.api.nvr_name,
-            "model": self._host.api.model,
-            "manufacturer": self._host.api.manufacturer,
-            "hw_version": self._host.api.hardware_version,
-            "sw_version": self._host.api.sw_version,
-            "configuration_url": conf_url,
-        }
+        return DeviceInfo(
+            identifiers = {(DOMAIN, self._host.unique_id)},
+            connections = {(CONNECTION_NETWORK_MAC, self._host.api.mac_address)},
+            name = self._host.api.nvr_name,
+            model = self._host.api.model,
+            manufacturer = self._host.api.manufacturer,
+            hw_version = self._host.api.hardware_version,
+            sw_version = self._host.api.sw_version,
+            configuration_url = conf_url,
+        )
 
     @property
     def available(self) -> bool:
