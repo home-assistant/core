@@ -53,7 +53,3 @@ class ReolinkCoordinatorEntity(CoordinatorEntity):
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._host.api.session_active
-
-    async def request_refresh(self):
-        """Call the coordinator to update the API."""
-        await self.coordinator.async_request_refresh()
