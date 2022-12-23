@@ -491,7 +491,10 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.BATTERY: {PERCENTAGE},
     SensorDeviceClass.CO: {CONCENTRATION_PARTS_PER_MILLION},
     SensorDeviceClass.CO2: {CONCENTRATION_PARTS_PER_MILLION},
-    SensorDeviceClass.CURRENT: {UnitOfElectricCurrent.AMPERE},
+    SensorDeviceClass.CURRENT: {
+        UnitOfElectricCurrent.AMPERE,
+        UnitOfElectricCurrent.MILLIAMPERE,
+    },
     SensorDeviceClass.DATA_RATE: set(UnitOfDataRate),
     SensorDeviceClass.DATA_SIZE: set(UnitOfInformation),
     SensorDeviceClass.DISTANCE: set(UnitOfLength),
