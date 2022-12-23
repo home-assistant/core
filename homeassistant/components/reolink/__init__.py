@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = ReolinkHost(hass, dict(entry.data), dict(entry.options))
 
     try:
-        if not await host.init():
+        if not await host.async_init():
             raise ConfigEntryNotReady(
                 f"Error while trying to setup {host.api.host}:{host.api.port}: failed to obtain data from device."
             )

@@ -60,7 +60,7 @@ async def test_config_flow_manual_success(hass):
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -73,7 +73,7 @@ async def test_config_flow_manual_success(hass):
         },
     )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_NVR_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
@@ -90,7 +90,7 @@ async def test_config_flow_errors(hass):
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -105,7 +105,7 @@ async def test_config_flow_errors(hass):
             },
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"host": "cannot_connect"}
 
@@ -120,7 +120,7 @@ async def test_config_flow_errors(hass):
             },
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"host": "unknown"}
 
@@ -135,7 +135,7 @@ async def test_config_flow_errors(hass):
             },
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"host": "invalid_auth"}
 
@@ -150,7 +150,7 @@ async def test_config_flow_errors(hass):
             },
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"host": "cannot_connect"}
 
@@ -165,7 +165,7 @@ async def test_config_flow_errors(hass):
         },
     )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_NVR_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
@@ -231,7 +231,7 @@ async def test_change_connection_settings(hass):
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -244,7 +244,7 @@ async def test_change_connection_settings(hass):
         },
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
     assert config_entry.data[CONF_HOST] == TEST_HOST2
     assert config_entry.data[CONF_USERNAME] == TEST_USERNAME2
     assert config_entry.data[CONF_PASSWORD] == TEST_PASSWORD2

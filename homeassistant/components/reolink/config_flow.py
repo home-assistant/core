@@ -115,7 +115,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host = ReolinkHost(hass, user_input, {})
 
         try:
-            if not await host.init():
+            if not await host.async_init():
                 _LOGGER.error(
                     "Error while performing initial setup of %s:%i: failed to obtain data from device",
                     host.api.host,
