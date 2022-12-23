@@ -6,6 +6,7 @@ from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DOMAIN
 from .host import ReolinkHost
+from . import ReolinkData
 
 
 class ReolinkCoordinatorEntity(CoordinatorEntity):
@@ -14,7 +15,7 @@ class ReolinkCoordinatorEntity(CoordinatorEntity):
     def __init__(self, hass, config):
         """Initialize ReolinkCoordinatorEntity."""
         self._hass = hass
-        entry_data: TYPE = self._hass.data[DOMAIN][config.entry_id]
+        entry_data: ReolinkData = self._hass.data[DOMAIN][config.entry_id]
         coordinator = entry_data.device_coordinator
         super().__init__(coordinator)
 
@@ -24,11 +25,8 @@ class ReolinkCoordinatorEntity(CoordinatorEntity):
     @property
     def device_info(self):
         """Information about this entity/device."""
-        conf_url = (
-            f"https://{self._host.api.host}:{self._host.api.port}"
-            if self._host.api.use_https
-            else f"http://{self._host.api.host}:{self._host.api.port}"
-        )
+        http_s = "https" if self._host.api.use_https else "http"
+        conf_url = f"{http_s}://{self._host.api.host}:{self._host.api.port}"
 
         if self._host.api.is_nvr and self._channel is not None:
             return DeviceInfo(
