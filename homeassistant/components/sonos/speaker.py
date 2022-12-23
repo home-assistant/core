@@ -658,8 +658,8 @@ class SonosSpeaker:
         if "BattChg" not in battery_dict:
             _LOGGER.debug(
                 (
-                    "Unknown device properties update for %s (%s), please report an"
-                    " issue: '%s'"
+                    "Unknown device properties update for %s (%s),"
+                    " please report an issue: '%s'"
                 ),
                 self.zone_name,
                 self.model_name,

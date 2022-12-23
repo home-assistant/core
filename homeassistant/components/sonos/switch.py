@@ -428,8 +428,8 @@ def async_migrate_speech_enhancement_entity_unique_id(
     if len(speech_enhancement_entries) > 1:
         _LOGGER.warning(
             (
-                "Migration of Speech Enhancement switches on %s failed, manual cleanup"
-                " required: %s"
+                "Migration of Speech Enhancement switches on %s failed,"
+                " manual cleanup required: %s"
             ),
             speaker.zone_name,
             [e.entity_id for e in speech_enhancement_entries],
