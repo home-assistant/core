@@ -405,7 +405,9 @@ async def test_trigger_no_pending(hass, mqtt_mock_entry_with_yaml_config):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == STATE_ALARM_TRIGGERED
+    state = hass.states.get(entity_id)
+    assert state.attributes["previous_state"] == STATE_ALARM_DISARMED
+    assert state.state == STATE_ALARM_TRIGGERED
 
 
 async def test_trigger_with_delay(hass, mqtt_mock_entry_with_yaml_config):
@@ -451,6 +453,7 @@ async def test_trigger_with_delay(hass, mqtt_mock_entry_with_yaml_config):
         await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
+    assert state.attributes["previous_state"] == STATE_ALARM_ARMED_AWAY
     assert state.state == STATE_ALARM_TRIGGERED
 
 
@@ -550,7 +553,9 @@ async def test_trigger_with_pending(hass, mqtt_mock_entry_with_yaml_config):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == STATE_ALARM_TRIGGERED
+    state = hass.states.get(entity_id)
+    assert state.attributes["previous_state"] == STATE_ALARM_DISARMED
+    assert state.state == STATE_ALARM_TRIGGERED
 
     future = dt_util.utcnow() + timedelta(seconds=5)
     with patch(
@@ -590,7 +595,9 @@ async def test_trigger_with_disarm_after_trigger(
 
     await common.async_alarm_trigger(hass, entity_id=entity_id)
 
-    assert hass.states.get(entity_id).state == STATE_ALARM_TRIGGERED
+    state = hass.states.get(entity_id)
+    assert state.attributes["previous_state"] == STATE_ALARM_DISARMED
+    assert state.state == STATE_ALARM_TRIGGERED
 
     future = dt_util.utcnow() + timedelta(seconds=5)
     with patch(
@@ -662,7 +669,9 @@ async def test_trigger_with_unused_zero_specific_trigger_time(
 
     await common.async_alarm_trigger(hass, entity_id=entity_id)
 
-    assert hass.states.get(entity_id).state == STATE_ALARM_TRIGGERED
+    state = hass.states.get(entity_id)
+    assert state.attributes["previous_state"] == STATE_ALARM_DISARMED
+    assert state.state == STATE_ALARM_TRIGGERED
 
     future = dt_util.utcnow() + timedelta(seconds=5)
     with patch(
@@ -702,7 +711,9 @@ async def test_trigger_with_specific_trigger_time(
 
     await common.async_alarm_trigger(hass, entity_id=entity_id)
 
-    assert hass.states.get(entity_id).state == STATE_ALARM_TRIGGERED
+    state = hass.states.get(entity_id)
+    assert state.attributes["previous_state"] == STATE_ALARM_DISARMED
+    assert state.state == STATE_ALARM_TRIGGERED
 
     future = dt_util.utcnow() + timedelta(seconds=5)
     with patch(
@@ -746,7 +757,9 @@ async def test_back_to_back_trigger_with_no_disarm_after_trigger(
 
     await common.async_alarm_trigger(hass, entity_id=entity_id)
 
-    assert hass.states.get(entity_id).state == STATE_ALARM_TRIGGERED
+    state = hass.states.get(entity_id)
+    assert state.attributes["previous_state"] == STATE_ALARM_ARMED_AWAY
+    assert state.state == STATE_ALARM_TRIGGERED
 
     future = dt_util.utcnow() + timedelta(seconds=5)
     with patch(
@@ -760,7 +773,9 @@ async def test_back_to_back_trigger_with_no_disarm_after_trigger(
 
     await common.async_alarm_trigger(hass, entity_id=entity_id)
 
-    assert hass.states.get(entity_id).state == STATE_ALARM_TRIGGERED
+    state = hass.states.get(entity_id)
+    assert state.attributes["previous_state"] == STATE_ALARM_ARMED_AWAY
+    assert state.state == STATE_ALARM_TRIGGERED
 
     future = dt_util.utcnow() + timedelta(seconds=5)
     with patch(
@@ -859,7 +874,9 @@ async def test_disarm_during_trigger_with_invalid_code(
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == STATE_ALARM_TRIGGERED
+    state = hass.states.get(entity_id)
+    assert state.attributes["previous_state"] == STATE_ALARM_DISARMED
+    assert state.state == STATE_ALARM_TRIGGERED
 
 
 async def test_trigger_with_unused_specific_delay(
@@ -908,6 +925,7 @@ async def test_trigger_with_unused_specific_delay(
         await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
+    assert state.attributes["previous_state"] == STATE_ALARM_ARMED_AWAY
     assert state.state == STATE_ALARM_TRIGGERED
 
 
@@ -955,6 +973,7 @@ async def test_trigger_with_specific_delay(hass, mqtt_mock_entry_with_yaml_confi
         await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
+    assert state.attributes["previous_state"] == STATE_ALARM_ARMED_AWAY
     assert state.state == STATE_ALARM_TRIGGERED
 
 
@@ -1014,6 +1033,7 @@ async def test_trigger_with_pending_and_delay(hass, mqtt_mock_entry_with_yaml_co
         await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
+    assert state.attributes["previous_state"] == STATE_ALARM_ARMED_AWAY
     assert state.state == STATE_ALARM_TRIGGERED
 
 
@@ -1076,6 +1096,7 @@ async def test_trigger_with_pending_and_specific_delay(
         await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
+    assert state.attributes["previous_state"] == STATE_ALARM_ARMED_AWAY
     assert state.state == STATE_ALARM_TRIGGERED
 
 
@@ -1113,7 +1134,9 @@ async def test_trigger_with_specific_pending(hass, mqtt_mock_entry_with_yaml_con
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == STATE_ALARM_TRIGGERED
+    state = hass.states.get(entity_id)
+    assert state.attributes["previous_state"] == STATE_ALARM_DISARMED
+    assert state.state == STATE_ALARM_TRIGGERED
 
     future = dt_util.utcnow() + timedelta(seconds=5)
     with patch(
@@ -1158,7 +1181,9 @@ async def test_trigger_with_no_disarm_after_trigger(
 
     await common.async_alarm_trigger(hass, entity_id=entity_id)
 
-    assert hass.states.get(entity_id).state == STATE_ALARM_TRIGGERED
+    state = hass.states.get(entity_id)
+    assert state.attributes["previous_state"] == STATE_ALARM_ARMED_AWAY
+    assert state.state == STATE_ALARM_TRIGGERED
 
     future = dt_util.utcnow() + timedelta(seconds=5)
     with patch(
@@ -1232,6 +1257,7 @@ async def test_arm_away_after_disabled_disarmed(hass, mqtt_mock_entry_with_yaml_
         await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
+    assert state.attributes["previous_state"] == STATE_ALARM_ARMED_AWAY
     assert state.state == STATE_ALARM_TRIGGERED
 
 
