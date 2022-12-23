@@ -12,7 +12,6 @@ from aioesphomeapi import (
     APIConnectionError,
     APIIntEnum,
     APIVersion,
-    BadNameAPIError,
     DeviceInfo as EsphomeDeviceInfo,
     EntityCategory as EsphomeEntityCategory,
     EntityInfo,
@@ -273,7 +272,6 @@ async def async_setup_entry(  # noqa: C901
             entry_data.api_version = cli.api_version
             entry_data.available = True
             if entry_data.device_info.name:
-                cli.expected_name = entry_data.device_info.name
                 reconnect_logic.name = entry_data.device_info.name
 
             if device_info.bluetooth_proxy_version:
@@ -315,12 +313,6 @@ async def async_setup_entry(  # noqa: C901
         """Start reauth flow if appropriate connect error type."""
         if isinstance(err, (RequiresEncryptionAPIError, InvalidEncryptionKeyAPIError)):
             entry.async_start_reauth(hass)
-        if isinstance(err, BadNameAPIError):
-            _LOGGER.warning(
-                "Name of device %s changed to %s, potentially due to IP reassignment",
-                cli.expected_name,
-                err.received_name,
-            )
 
     reconnect_logic = ReconnectLogic(
         client=cli,
@@ -336,11 +328,10 @@ async def async_setup_entry(  # noqa: C901
     await _setup_services(hass, entry_data, services)
 
     if entry_data.device_info is not None and entry_data.device_info.name:
-        cli.expected_name = entry_data.device_info.name
         reconnect_logic.name = entry_data.device_info.name
         if entry.unique_id is None:
             hass.config_entries.async_update_entry(
-                entry, unique_id=entry_data.device_info.name
+                entry, unique_id=format_mac(entry_data.device_info.mac_address)
             )
 
     await reconnect_logic.start()

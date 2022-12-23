@@ -52,7 +52,7 @@ class MatterAdapter:
             self._setup_node(node)
 
         self.config_entry.async_on_unload(
-            self.matter_client.subscribe(EventType.NODE_ADDED, node_added_callback)
+            self.matter_client.subscribe(node_added_callback, EventType.NODE_ADDED)
         )
 
     def _setup_node(self, node: MatterNode) -> None:

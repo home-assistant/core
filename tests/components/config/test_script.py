@@ -72,6 +72,36 @@ async def test_update_script_config(
 
 
 @pytest.mark.parametrize("script_config", ({},))
+async def test_update_script_config_with_error(
+    hass: HomeAssistant, hass_client, hass_config_store, caplog
+):
+    """Test updating script config with errors."""
+    with patch.object(config, "SECTIONS", ["script"]):
+        await async_setup_component(hass, "config", {})
+
+    assert sorted(hass.states.async_entity_ids("script")) == []
+
+    client = await hass_client()
+
+    orig_data = {"sun": {}, "moon": {}}
+    hass_config_store["scripts.yaml"] = orig_data
+
+    resp = await client.post(
+        "/api/config/script/config/moon",
+        data=json.dumps({}),
+    )
+    await hass.async_block_till_done()
+    assert sorted(hass.states.async_entity_ids("script")) == []
+
+    assert resp.status != HTTPStatus.OK
+    result = await resp.json()
+    validation_error = "required key not provided @ data['sequence']"
+    assert result == {"message": f"Message malformed: {validation_error}"}
+    # Assert the validation error is not logged
+    assert validation_error not in caplog.text
+
+
+@pytest.mark.parametrize("script_config", ({},))
 async def test_update_remove_key_script_config(
     hass: HomeAssistant, hass_client, hass_config_store
 ):

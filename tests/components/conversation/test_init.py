@@ -1,6 +1,6 @@
 """The tests for the Conversation component."""
 from http import HTTPStatus
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 import pytest
 
@@ -481,3 +481,55 @@ async def test_custom_agent(hass, hass_client, hass_admin_user):
     assert calls[0][1].user_id == hass_admin_user.id
     assert calls[0][2] == "test-conv-id"
     assert calls[0][3] == "test-language"
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {
+            "text": "Test Text",
+        },
+        {
+            "text": "Test Text",
+            "language": "test-language",
+        },
+        {
+            "text": "Test Text",
+            "conversation_id": "test-conv-id",
+        },
+        {
+            "text": "Test Text",
+            "conversation_id": None,
+        },
+        {
+            "text": "Test Text",
+            "conversation_id": "test-conv-id",
+            "language": "test-language",
+        },
+    ],
+)
+async def test_ws_api(hass, hass_ws_client, payload):
+    """Test the Websocket conversation API."""
+    assert await async_setup_component(hass, "conversation", {})
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 5, "type": "conversation/process", **payload})
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {
+        "response": {
+            "response_type": "error",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Sorry, I didn't understand that",
+                }
+            },
+            "language": payload.get("language", hass.config.language),
+            "data": {"code": "no_intent_match"},
+        },
+        "conversation_id": payload.get("conversation_id") or ANY,
+    }
