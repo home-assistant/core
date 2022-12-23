@@ -5,13 +5,18 @@ import asyncio
 from collections.abc import Callable
 import contextlib
 from dataclasses import dataclass
+from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, Final
 
 from bleak import BleakClient, BleakError
 from bleak.backends.client import BaseBleakClient, get_platform_client_backend_type
 from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementDataCallback, BaseBleakScanner
+from bleak.backends.scanner import (
+    AdvertisementData,
+    AdvertisementDataCallback,
+    BaseBleakScanner,
+)
 from bleak_retry_connector import (
     NO_RSSI_VALUE,
     ble_device_description,
@@ -23,6 +28,7 @@ from homeassistant.core import CALLBACK_TYPE, callback as hass_callback
 from homeassistant.helpers.frame import report
 
 from . import models
+from .base_scanner import BaseHaScanner
 
 FILTER_UUIDS: Final = "UUIDs"
 _LOGGER = logging.getLogger(__name__)
@@ -37,6 +43,7 @@ class _HaWrappedBleakBackend:
     """Wrap bleak backend to make it usable by Home Assistant."""
 
     device: BLEDevice
+    scanner: BaseHaScanner
     client: type[BaseBleakClient]
     source: str | None
 
@@ -140,6 +147,31 @@ class HaBleakScannerWrapper(BaseBleakScanner):
                 asyncio.get_running_loop().call_soon_threadsafe(self._detection_cancel)
 
 
+def _rssi_sorter(
+    scanner_device_advertisement_data: tuple[
+        BaseHaScanner, BLEDevice, AdvertisementData
+    ]
+) -> int:
+    """Get a sorted list of scanner, device, advertisement data."""
+    _, _, advertisement_data = scanner_device_advertisement_data
+    return advertisement_data.rssi or NO_RSSI_VALUE
+
+
+def _rssi_sorter_with_connection_failure_adjustment(
+    scanner_device_advertisement_data: tuple[
+        BaseHaScanner, BLEDevice, AdvertisementData
+    ],
+    connection_failure_count: dict[BaseHaScanner, int],
+    rssi_diff: int,
+) -> int:
+    """Get a sorted list of scanner, device, advertisement data."""
+    scanner, _, advertisement_data = scanner_device_advertisement_data
+    base_rssi = advertisement_data.rssi or NO_RSSI_VALUE
+    if connect_failures := connection_failure_count.get(scanner):
+        return base_rssi - max(1, rssi_diff) * connect_failures
+    return base_rssi
+
+
 class HaBleakClientWrapper(BleakClient):
     """Wrap the BleakClient to ensure it does not shutdown our scanner.
 
@@ -171,6 +203,7 @@ class HaBleakClientWrapper(BleakClient):
             self.__address = address_or_ble_device
         self.__disconnected_callback = disconnected_callback
         self.__timeout = timeout
+        self.__connect_failures: dict[BaseHaScanner, int] = {}
         self._backend: BaseBleakClient | None = None  # type: ignore[assignment]
 
     @property
@@ -215,8 +248,12 @@ class HaBleakClientWrapper(BleakClient):
         finally:
             # If we failed to connect and its a local adapter (no source)
             # we release the connection slot
-            if not connected and not wrapped_backend.source:
-                models.MANAGER.async_release_connection_slot(wrapped_backend.device)
+            if not connected:
+                scanner = wrapped_backend.scanner
+                connect_failures = self.__connect_failures
+                connect_failures[scanner] = connect_failures.get(scanner, 0) + 1
+                if wrapped_backend.source:
+                    models.MANAGER.async_release_connection_slot(wrapped_backend.device)
 
         if debug_logging:
             _LOGGER.debug("%s: Connected (last rssi: %s)", description, rssi)
@@ -224,7 +261,7 @@ class HaBleakClientWrapper(BleakClient):
 
     @hass_callback
     def _async_get_backend_for_ble_device(
-        self, manager: BluetoothManager, ble_device: BLEDevice
+        self, manager: BluetoothManager, scanner: BaseHaScanner, ble_device: BLEDevice
     ) -> _HaWrappedBleakBackend | None:
         """Get the backend for a BLEDevice."""
         if not (source := device_source(ble_device)):
@@ -233,18 +270,16 @@ class HaBleakClientWrapper(BleakClient):
             if not manager.async_allocate_connection_slot(ble_device):
                 return None
             cls = get_platform_client_backend_type()
-            return _HaWrappedBleakBackend(ble_device, cls, source)
+            return _HaWrappedBleakBackend(ble_device, scanner, cls, source)
 
         # Make sure the backend can connect to the device
         # as some backends have connection limits
-        if (
-            not (scanner := manager.async_scanner_by_source(source))
-            or not scanner.connector
-            or not scanner.connector.can_connect()
-        ):
+        if not scanner.connector or not scanner.connector.can_connect():
             return None
 
-        return _HaWrappedBleakBackend(ble_device, scanner.connector.client, source)
+        return _HaWrappedBleakBackend(
+            ble_device, scanner, scanner.connector.client, source
+        )
 
     @hass_callback
     def _async_get_best_available_backend_and_device(
@@ -257,17 +292,38 @@ class HaBleakClientWrapper(BleakClient):
         """
         assert models.MANAGER is not None
         address = self.__address
-        device_advertisement_datas = models.MANAGER.async_get_discovered_devices_and_advertisement_data_by_address(
+        scanner_device_advertisement_datas = models.MANAGER.async_get_scanner_discovered_devices_and_advertisement_data_by_address(
             address, True
         )
-        for device_advertisement_data in sorted(
-            device_advertisement_datas,
-            key=lambda device_advertisement_data: device_advertisement_data[1].rssi
-            or NO_RSSI_VALUE,
-            reverse=True,
+        sorted_scanner_device_advertisement_datas = sorted(
+            scanner_device_advertisement_datas, key=_rssi_sorter, reverse=True
+        )
+        if (
+            self.__connect_failures
+            and len(sorted_scanner_device_advertisement_datas) > 1
         ):
+            # If we have connection failures we adjust the rssi
+            # to prefer the scanner with the less failures so
+            # we don't keep trying to connect with a scanner
+            # that is failing
+            rssi_diff = (
+                sorted_scanner_device_advertisement_datas[0][2].rssi
+                - sorted_scanner_device_advertisement_datas[1][2].rssi
+            )
+            rssi_sorter = partial(
+                _rssi_sorter_with_connection_failure_adjustment,
+                connection_failure_count=self.__connect_failures,
+                rssi_diff=rssi_diff,
+            )
+            sorted_scanner_device_advertisement_datas = sorted(
+                scanner_device_advertisement_datas,
+                key=rssi_sorter,
+                reverse=True,
+            )
+
+        for (scanner, ble_device, _) in sorted_scanner_device_advertisement_datas:
             if backend := self._async_get_backend_for_ble_device(
-                models.MANAGER, device_advertisement_data[0]
+                models.MANAGER, scanner, ble_device
             ):
                 return backend
 
