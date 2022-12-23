@@ -168,7 +168,9 @@ def _rssi_sorter_with_connection_failure_penalty(
     scanner, _, advertisement_data = scanner_device_advertisement_data
     base_rssi = advertisement_data.rssi or NO_RSSI_VALUE
     if connect_failures := connection_failure_count.get(scanner):
-        return base_rssi - (max(1, rssi_diff) * connect_failures * 0.51)
+        if connect_failures > 1 and not rssi_diff:
+            rssi_diff = 1
+        return base_rssi - (rssi_diff * connect_failures * 0.51)
     return base_rssi
 
 
