@@ -48,7 +48,7 @@ class ReolinkCamera(ReolinkCoordinatorEntity, Camera):
 
         self._attr_name = f"{self._host.api.camera_name(self._channel)} {self._stream}"
         self._attr_unique_id = (
-            f"reolink_camera_{self._host.unique_id}_{self._channel}_{self._stream}"
+            f"{self._host.unique_id}_{self._channel}_{self._stream}"
         )
         self._attr_entity_registry_enabled_default = stream == "sub"
 
