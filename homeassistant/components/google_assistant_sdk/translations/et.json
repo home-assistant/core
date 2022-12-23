@@ -29,5 +29,14 @@
                 "title": "Taastuvasta sidumine"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "language_code": "Keele kood"
+                }
+            }
+        }
     }
 }

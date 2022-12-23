@@ -26,7 +26,7 @@
                 "description": "Vuoi configurare {device}? Se non hai mai collegato Home Assistant, dovresti vedere un popup sulla tua TV che chiede l'autorizzazione."
             },
             "reauth_confirm": {
-                "description": "Dopo l'invio, accetta la notifica su {device} richiedendo l'autorizzazione entro 30 secondi o digita il PIN."
+                "description": "Dopo l'invio, accetta la notifica su {device} richiedendo l'autorizzazione entro 30 secondi oppure inserisci il PIN."
             },
             "reauth_confirm_encrypted": {
                 "description": "Digita il PIN visualizzato su {device}."

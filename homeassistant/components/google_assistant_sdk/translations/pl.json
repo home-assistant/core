@@ -29,5 +29,14 @@
                 "title": "Ponownie uwierzytelnij integracj\u0119"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "language_code": "Kod j\u0119zyka"
+                }
+            }
+        }
     }
 }

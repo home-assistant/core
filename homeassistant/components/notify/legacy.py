@@ -151,8 +151,8 @@ def check_templates_warn(hass: HomeAssistant, tpl: template.Template) -> None:
 
     hass.data["notify_template_warned"] = True
     LOGGER.warning(
-        "Passing templates to notify service is deprecated and will be removed in 2021.12. "
-        "Automations and scripts handle templates automatically"
+        "Passing templates to notify service is deprecated and will be removed in"
+        " 2021.12. Automations and scripts handle templates automatically"
     )
 
 
@@ -301,7 +301,10 @@ class BaseNotificationService:
                 # Register the service description
                 service_desc = {
                     CONF_NAME: f"Send a notification via {target_name}",
-                    CONF_DESCRIPTION: f"Sends a notification message using the {target_name} integration.",
+                    CONF_DESCRIPTION: (
+                        "Sends a notification message using the"
+                        f" {target_name} integration."
+                    ),
                     CONF_FIELDS: self.services_dict[SERVICE_NOTIFY][CONF_FIELDS],
                 }
                 async_set_service_schema(self.hass, DOMAIN, target_name, service_desc)
@@ -326,7 +329,9 @@ class BaseNotificationService:
         # Register the service description
         service_desc = {
             CONF_NAME: f"Send a notification with {self._service_name}",
-            CONF_DESCRIPTION: f"Sends a notification message using the {self._service_name} service.",
+            CONF_DESCRIPTION: (
+                f"Sends a notification message using the {self._service_name} service."
+            ),
             CONF_FIELDS: self.services_dict[SERVICE_NOTIFY][CONF_FIELDS],
         }
         async_set_service_schema(self.hass, DOMAIN, self._service_name, service_desc)

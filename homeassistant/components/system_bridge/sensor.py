@@ -15,15 +15,13 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PORT,
-    ELECTRIC_POTENTIAL_VOLT,
-    FREQUENCY_GIGAHERTZ,
-    FREQUENCY_HERTZ,
-    FREQUENCY_MEGAHERTZ,
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
-    TEMP_CELSIUS,
+    UnitOfElectricPotential,
+    UnitOfFrequency,
     UnitOfInformation,
     UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -138,7 +136,8 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         key="cpu_speed",
         name="CPU Speed",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=FREQUENCY_GIGAHERTZ,
+        native_unit_of_measurement=UnitOfFrequency.GIGAHERTZ,
+        device_class=SensorDeviceClass.FREQUENCY,
         icon="mdi:speedometer",
         value=cpu_speed,
     ),
@@ -148,7 +147,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value=lambda data: data.cpu.temperature,
     ),
     SystemBridgeSensorEntityDescription(
@@ -157,7 +156,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         value=lambda data: data.cpu.voltage,
     ),
     SystemBridgeSensorEntityDescription(
@@ -347,7 +346,8 @@ async def async_setup_entry(
                     key=f"display_{display['name']}_refresh_rate",
                     name=f"Display {display['name']} Refresh Rate",
                     state_class=SensorStateClass.MEASUREMENT,
-                    native_unit_of_measurement=FREQUENCY_HERTZ,
+                    native_unit_of_measurement=UnitOfFrequency.HERTZ,
+                    device_class=SensorDeviceClass.FREQUENCY,
                     icon="mdi:monitor",
                     value=lambda data, k=display["key"]: getattr(
                         data.display, f"{k}_refresh_rate"
@@ -376,7 +376,8 @@ async def async_setup_entry(
                     name=f"{gpu['name']} Clock Speed",
                     entity_registry_enabled_default=False,
                     state_class=SensorStateClass.MEASUREMENT,
-                    native_unit_of_measurement=FREQUENCY_MEGAHERTZ,
+                    native_unit_of_measurement=UnitOfFrequency.MEGAHERTZ,
+                    device_class=SensorDeviceClass.FREQUENCY,
                     icon="mdi:speedometer",
                     value=lambda data, k=gpu["key"]: gpu_core_clock_speed(data, k),
                 ),
@@ -389,7 +390,8 @@ async def async_setup_entry(
                     name=f"{gpu['name']} Memory Clock Speed",
                     entity_registry_enabled_default=False,
                     state_class=SensorStateClass.MEASUREMENT,
-                    native_unit_of_measurement=FREQUENCY_MEGAHERTZ,
+                    native_unit_of_measurement=UnitOfFrequency.MEGAHERTZ,
+                    device_class=SensorDeviceClass.FREQUENCY,
                     icon="mdi:speedometer",
                     value=lambda data, k=gpu["key"]: gpu_memory_clock_speed(data, k),
                 ),
@@ -472,7 +474,7 @@ async def async_setup_entry(
                     entity_registry_enabled_default=False,
                     device_class=SensorDeviceClass.TEMPERATURE,
                     state_class=SensorStateClass.MEASUREMENT,
-                    native_unit_of_measurement=TEMP_CELSIUS,
+                    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
                     value=lambda data, k=gpu["key"]: getattr(
                         data.gpu, f"{k}_temperature"
                     ),

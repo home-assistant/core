@@ -1,15 +1,28 @@
 """The AirVisual Pro integration."""
 from __future__ import annotations
 
+import asyncio
+from contextlib import suppress
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
-from pyairvisual import NodeSamba
-from pyairvisual.node import NodeProError
+from pyairvisual.node import (
+    InvalidAuthenticationError,
+    NodeConnectionError,
+    NodeProError,
+    NodeSamba,
+)
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import (
+    CONF_IP_ADDRESS,
+    CONF_PASSWORD,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -24,18 +37,42 @@ PLATFORMS = [Platform.SENSOR]
 UPDATE_INTERVAL = timedelta(minutes=1)
 
 
+@dataclass
+class AirVisualProData:
+    """Define a data class."""
+
+    coordinator: DataUpdateCoordinator
+    node: NodeSamba
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up AirVisual Pro from a config entry."""
+    node = NodeSamba(entry.data[CONF_IP_ADDRESS], entry.data[CONF_PASSWORD])
+
+    try:
+        await node.async_connect()
+    except NodeProError as err:
+        raise ConfigEntryNotReady() from err
+
+    reload_task: asyncio.Task | None = None
 
     async def async_get_data() -> dict[str, Any]:
         """Get data from the device."""
         try:
-            async with NodeSamba(
-                entry.data[CONF_IP_ADDRESS], entry.data[CONF_PASSWORD]
-            ) as node:
-                return await node.async_get_latest_measurements()
+            data = await node.async_get_latest_measurements()
+        except InvalidAuthenticationError as err:
+            raise ConfigEntryAuthFailed("Invalid Samba password") from err
+        except NodeConnectionError as err:
+            nonlocal reload_task
+            if not reload_task:
+                reload_task = hass.async_create_task(
+                    hass.config_entries.async_reload(entry.entry_id)
+                )
+            raise UpdateFailed(f"Connection to Pro unit lost: {err}") from err
         except NodeProError as err:
             raise UpdateFailed(f"Error while retrieving data: {err}") from err
+
+        return data
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -46,7 +83,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = AirVisualProData(
+        coordinator=coordinator, node=node
+    )
+
+    async def async_shutdown(_: Event) -> None:
+        """Define an event handler to disconnect from the websocket."""
+        nonlocal reload_task
+        if reload_task:
+            with suppress(asyncio.CancelledError):
+                reload_task.cancel()
+        await node.async_disconnect()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_shutdown)
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -56,7 +107,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
+        data = hass.data[DOMAIN].pop(entry.entry_id)
+        await data.node.async_disconnect()
 
     return unload_ok
 
