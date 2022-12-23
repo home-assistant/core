@@ -38,6 +38,8 @@ async def async_setup_entry(
 class ReolinkCamera(ReolinkCoordinatorEntity, Camera):
     """An implementation of a Reolink IP camera."""
 
+    _attr_supported_features: CameraEntityFeature = cameraEntityFeature.STREAM
+
     def __init__(self, hass, config, channel, stream):
         """Initialize Reolink camera stream."""
         ReolinkCoordinatorEntity.__init__(self, hass, config)
