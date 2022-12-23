@@ -54,11 +54,6 @@ class ReolinkCamera(ReolinkCoordinatorEntity, Camera):
         )
         self._attr_entity_registry_enabled_default = stream == "sub"
 
-    @property
-    def supported_features(self) -> CameraEntityFeature:
-        """Flag supported features."""
-        return CameraEntityFeature.STREAM
-
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
         return await self._host.api.get_stream_source(self._channel, self._stream)
