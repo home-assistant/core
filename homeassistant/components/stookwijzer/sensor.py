@@ -52,7 +52,7 @@ class StookwijzerSensor(SensorEntity):
 
     @property
     def available(self) -> bool:
-        """Return True if entity is available."""
+        """Return if entity is available."""
         return self._client.state is not None
 
     @property
