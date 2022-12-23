@@ -1034,7 +1034,6 @@ omit =
     homeassistant/components/radiotherm/entity.py
     homeassistant/components/radiotherm/switch.py
     homeassistant/components/radiotherm/util.py
-    homeassistant/components/rainbird/*
     homeassistant/components/raincloud/*
     homeassistant/components/rainmachine/__init__.py
     homeassistant/components/rainmachine/binary_sensor.py
