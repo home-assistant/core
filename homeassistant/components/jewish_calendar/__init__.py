@@ -125,7 +125,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     location = Location(
         name=hass.config.location_name,
         diaspora=diaspora,
-        # If details of the location are not specified, use Hass's defaults.
         latitude=latitude,
         longitude=longitude,
         altitude=config_entry.data.get(CONF_ELEVATION, hass.config.elevation),

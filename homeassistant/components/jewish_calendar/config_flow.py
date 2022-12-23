@@ -7,7 +7,13 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
-from homeassistant.const import CONF_ELEVATION, CONF_LOCATION, CONF_NAME, CONF_TIME_ZONE
+from homeassistant.const import (
+    CONF_ELEVATION,
+    CONF_LANGUAGE,
+    CONF_LOCATION,
+    CONF_NAME,
+    CONF_TIME_ZONE,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
@@ -23,7 +29,6 @@ from .const import (
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_DIASPORA,
     CONF_HAVDALAH_OFFSET_MINUTES,
-    CONF_LANGUAGE,
     DEFAULT_CANDLE_LIGHT,
     DEFAULT_DIASPORA,
     DEFAULT_HAVDALAH_OFFSET_MINUTES,
@@ -93,7 +98,6 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_LANGUAGE, default=DEFAULT_LANGUAGE
                     ): SelectSelector(SelectSelectorConfig(options=LANGUAGE)),
-                    # Default is Hass defaults, unless user wants to override
                     vol.Required(
                         CONF_LOCATION,
                         default={
@@ -138,7 +142,6 @@ class JewishCalendarOptionsFlowHandler(OptionsFlow):
                     CONF_CANDLE_LIGHT_MINUTES, DEFAULT_CANDLE_LIGHT
                 ),
             ): int,
-            # Default of 0 means use 8.5 degrees / 'three_stars' time.
             vol.Optional(
                 CONF_HAVDALAH_OFFSET_MINUTES,
                 default=self.config_entry.options.get(
