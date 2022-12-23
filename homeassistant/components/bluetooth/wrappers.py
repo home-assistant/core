@@ -225,14 +225,13 @@ class HaBleakClientWrapper(BleakClient):
     async def connect(self, **kwargs: Any) -> bool:
         """Connect to the specified GATT server."""
         assert models.MANAGER is not None
-        wrapped_backend = self._async_get_best_available_backend_and_device(
-            models.MANAGER
-        )
+        manager = models.MANAGER
+        wrapped_backend = self._async_get_best_available_backend_and_device(manager)
         self._backend = wrapped_backend.client(
             wrapped_backend.device,
             disconnected_callback=self.__disconnected_callback,
             timeout=self.__timeout,
-            hass=models.MANAGER.hass,
+            hass=manager.hass,
         )
         if debug_logging := _LOGGER.isEnabledFor(logging.DEBUG):
             # Only lookup the description if we are going to log it
@@ -250,7 +249,7 @@ class HaBleakClientWrapper(BleakClient):
                     self.__connect_failures.get(wrapped_backend.scanner, 0) + 1
                 )
                 if not wrapped_backend.source:
-                    models.MANAGER.async_release_connection_slot(wrapped_backend.device)
+                    manager.async_release_connection_slot(wrapped_backend.device)
 
         if debug_logging:
             _LOGGER.debug("%s: Connected (last rssi: %s)", description, rssi)
