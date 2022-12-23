@@ -217,20 +217,19 @@ class BluetoothManager:
         uninstall_multiple_bleak_catcher()
 
     @hass_callback
-    def async_get_discovered_devices_and_advertisement_data_by_address(
+    def async_get_scanner_discovered_devices_and_advertisement_data_by_address(
         self, address: str, connectable: bool
-    ) -> list[tuple[BLEDevice, AdvertisementData]]:
-        """Get devices and advertisement_data by address."""
+    ) -> list[tuple[BaseHaScanner, BLEDevice, AdvertisementData]]:
+        """Get scanner, devices, and advertisement_data by address."""
         types_ = (True,) if connectable else (True, False)
-        return [
-            device_advertisement_data
-            for device_advertisement_data in (
-                scanner.discovered_devices_and_advertisement_data.get(address)
-                for type_ in types_
-                for scanner in self._get_scanners_by_type(type_)
-            )
-            if device_advertisement_data is not None
-        ]
+        results: list[tuple[BaseHaScanner, BLEDevice, AdvertisementData]] = []
+        for type_ in types_:
+            for scanner in self._get_scanners_by_type(type_):
+                if device_advertisement_data := scanner.discovered_devices_and_advertisement_data.get(
+                    address
+                ):
+                    results.append((scanner, *device_advertisement_data))
+        return results
 
     @hass_callback
     def _async_all_discovered_addresses(self, connectable: bool) -> Iterable[str]:
