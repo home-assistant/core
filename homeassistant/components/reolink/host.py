@@ -72,18 +72,18 @@ class ReolinkHost:
         enable_rtsp = None
 
         if not self._api.onvif_enabled:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "ONVIF is disabled on %s, trying to enable it", self._api.nvr_name
             )
             enable_onvif = True
 
         if not self._api.rtmp_enabled and self._api.protocol == "rtmp":
-            _LOGGER.info(
+            _LOGGER.debug(
                 "RTMP is disabled on %s, trying to enable it", self._api.nvr_name
             )
             enable_rtmp = True
         elif not self._api.rtsp_enabled and self._api.protocol == "rtsp":
-            _LOGGER.info(
+            _LOGGER.debug(
                 "RTSP is disabled on %s, trying to enable it", self._api.nvr_name
             )
             enable_rtsp = True
