@@ -259,7 +259,7 @@ async def test_flow_with_zeroconf_when_already_configured(hass):
 async def test_flow_with_zeroconf_when_device_unsupported(hass):
     """Test behaviour when device is not supported."""
     with patch(
-        "blebox_uniapi.box.Box.async_from_host",
+        "homeassistant.components.blebox.config_flow.Box.async_from_host",
         side_effect=blebox_uniapi.error.UnsupportedBoxVersion,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -283,7 +283,7 @@ async def test_flow_with_zeroconf_when_device_response_unsupported(hass):
     """Test behaviour when device returned unsupported response."""
 
     with patch(
-        "blebox_uniapi.box.Box.async_from_host",
+        "homeassistant.components.blebox.config_flow.Box.async_from_host",
         side_effect=blebox_uniapi.error.UnsupportedBoxResponse,
     ):
         result = await hass.config_entries.flow.async_init(
