@@ -153,17 +153,24 @@ def _rssi_sorter_with_connection_failure_penalty(
     ],
     connection_failure_count: dict[BaseHaScanner, int],
     rssi_diff: int,
-) -> int:
+) -> float:
     """Get a sorted list of scanner, device, advertisement data adjusting for previous connection failures.
 
     When a connection fails, we want to try the next best adapter so we
     apply a penalty to the RSSI value to make it less likely to be chosen
     for every previous connection failure.
+
+    We use the 51% of the RSSI difference between the first and second
+    best adapter as the penalty. This ensures we will always try the
+    best adapter twice before moving on to the next best adapter since
+    the first failure may be a transient service resolution issue.
     """
     scanner, _, advertisement_data = scanner_device_advertisement_data
     base_rssi = advertisement_data.rssi or NO_RSSI_VALUE
     if connect_failures := connection_failure_count.get(scanner):
-        return base_rssi - max(1, rssi_diff) * connect_failures
+        if connect_failures > 1 and not rssi_diff:
+            rssi_diff = 1
+        return base_rssi - (rssi_diff * connect_failures * 0.51)
     return base_rssi
 
 
