@@ -41,8 +41,6 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
             except WLEDConnectionError:
                 errors["base"] = "cannot_connect"
             else:
-                if device.info.leds.cct:
-                    return self.async_abort(reason="cct_unsupported")
                 await self.async_set_unique_id(device.info.mac_address)
                 self._abort_if_unique_id_configured(
                     updates={CONF_HOST: user_input[CONF_HOST]}
