@@ -89,7 +89,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     {
         "type": "conversation/process",
         "text": str,
-        vol.Optional("conversation_id"): str,
+        vol.Optional("conversation_id"): vol.Any(str, None),
         vol.Optional("language"): str,
     }
 )
