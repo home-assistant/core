@@ -48,10 +48,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    unique_id = None
-    host_name = None
-    port = None
-    use_https = None
+    host: ReolinkHost | None = None
 
     @staticmethod
     @callback
@@ -79,14 +76,14 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors[CONF_HOST] = "unknown"
 
             if not errors:
-                user_input[CONF_PORT] = self.port
-                user_input[CONF_USE_HTTPS] = self.use_https
+                user_input[CONF_PORT] = self.host.api.port
+                user_input[CONF_USE_HTTPS] = self.host.api.use_https
 
-                await self.async_set_unique_id(self.unique_id, raise_on_progress=False)
+                await self.async_set_unique_id(self.host.unique_id, raise_on_progress=False)
                 self._abort_if_unique_id_configured(updates=user_input)
 
                 return self.async_create_entry(
-                    title=str(self.host_name), data=user_input
+                    title=str(self.host.api.nvr_name), data=user_input
                 )
 
         data_schema = vol.Schema(
@@ -125,10 +122,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         finally:
             await host.stop()
 
-        self.host_name = host.api.nvr_name
-        self.unique_id = host.unique_id
-        self.port = host.api.port
-        self.use_https = host.api.use_https
+        self.host = host
 
 
 class CannotConnect(exceptions.HomeAssistantError):
