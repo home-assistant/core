@@ -33,22 +33,34 @@ class HomeKitButtonEntityDescription(ButtonEntityDescription):
 
     write_value: int | str | None = None
 
+"""
+HAA has 1 custom characteristic on F0000101-0218-2017-81BF-AF2B7C833922
+aid is 1 , iid : 65011.
+to trigger command you must write:
+- Update -> #HAA@trcmd0
+- Setup  -> #HAA@trcmd1
+- Reboot -> #HAA@trcmd2
+- Wifi Reconnection -> #HAA@trcmd3
 
+@ on aiohomekit VENDOR_HAA_UPDATE/VENDOR_HAA_SETUP has different chars but on new version the characteristic is only one
+To debug open a netcat: 
+nc -kulnw0 45678
+"""
 BUTTON_ENTITIES: dict[str, HomeKitButtonEntityDescription] = {
-    CharacteristicsTypes.VENDOR_HAA_SETUP: HomeKitButtonEntityDescription(
-        key=CharacteristicsTypes.VENDOR_HAA_SETUP,
+    CharacteristicsTypes.VENDOR_HAA_UPDATE: HomeKitButtonEntityDescription(
+        key=CharacteristicsTypes.VENDOR_HAA_UPDATE,
         name="Setup",
         icon="mdi:cog",
         entity_category=EntityCategory.CONFIG,
-        write_value="#HAA@trcmd",
+        write_value="#HAA@trcmd1",
     ),
-    CharacteristicsTypes.VENDOR_HAA_UPDATE: HomeKitButtonEntityDescription(
-        key=CharacteristicsTypes.VENDOR_HAA_UPDATE,
-        name="Update",
-        device_class=ButtonDeviceClass.UPDATE,
-        entity_category=EntityCategory.CONFIG,
-        write_value="#HAA@trcmd",
-    ),
+  #  CharacteristicsTypes.VENDOR_HAA_UPDATE: HomeKitButtonEntityDescription(
+  #      key=CharacteristicsTypes.VENDOR_HAA_UPDATE,
+  #      name="Update",
+  #      device_class=ButtonDeviceClass.UPDATE,
+  #     entity_category=EntityCategory.CONFIG,
+  #      write_value="#HAA@trcmd0",
+  #  ),
     CharacteristicsTypes.IDENTIFY: HomeKitButtonEntityDescription(
         key=CharacteristicsTypes.IDENTIFY,
         name="Identify",
