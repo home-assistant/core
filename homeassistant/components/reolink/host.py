@@ -5,7 +5,9 @@ import logging
 import ssl
 
 import aiohttp
+import asyncio
 from reolink_ip.api import Host
+from reolink_ip.exceptions import ApiError, CredentialsInvalidError, InvalidContentTypeError
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -122,34 +124,20 @@ class ReolinkHost:
 
     async def disconnect(self):
         """Disconnect from the API, so the connection will be released."""
-        try:
-            await self._api.unsubscribe_all()
-        except Exception as error:  # pylint: disable=broad-except
-            err = str(error)
-            if err:
-                _LOGGER.error(
-                    "Error while unsubscribing ONVIF events for %s: %s",
-                    self._api.nvr_name,
-                    err,
-                )
-            else:
-                _LOGGER.error(
-                    "Unknown error while unsubscribing ONVIF events for %s",
-                    self._api.nvr_name,
-                )
+        await self._api.unsubscribe_all()
 
         try:
             await self._api.logout()
-        except Exception as error:  # pylint: disable=broad-except
-            err = str(error)
-            if err:
-                _LOGGER.error(
-                    "Error while logging out of %s: %s", self._api.nvr_name, err
-                )
-            else:
-                _LOGGER.error(
-                    "Unknown error while logging out of %s", self._api.nvr_name
-                )
+        except aiohttp.ClientConnectorError as err:
+            _LOGGER.error("Reolink connection error while logging out for host %s:%s: %s", self._api.host, self._api.port, str(err))
+        except asyncio.TimeoutError:
+            _LOGGER.error("Reolink connection timeout while logging out for host %s:%s", self._api.host, self._api.port)
+        except ApiError as err:
+            _LOGGER.error("Reolink API error while logging out for host %s:%s: %s", self._api.host, self._api.port, str(err))
+        except CredentialsInvalidError:
+            _LOGGER.error("Reolink credentials error while logging out for host %s:%s", self._api.host, self._api.port)
+        except InvalidContentTypeError as err:
+            _LOGGER.error("Reolink content type error while logging out for host %s:%s: %s", self._api.host, self._api.port, str(err))
 
     async def stop(self, event=None):
         """Disconnect the API."""
