@@ -1049,7 +1049,7 @@ async def test_websocket_delete_recurring_event_instance(
     # Request to cancel all events after the second instance
     assert aioclient_mock.mock_calls[0][2] == {
         "id": "event-id-1",
-        "recurrence": ["RRULE:FREQ=WEEKLY;UNTIL=20221015"],
+        "recurrence": ["RRULE:FREQ=WEEKLY;UNTIL=20221014"],
     }
 
 
