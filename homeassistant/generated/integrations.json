@@ -5007,6 +5007,11 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "slow_pwm": {
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "calculated"
+    },
     "sma": {
       "name": "SMA Solar",
       "integration_type": "hub",
@@ -6625,6 +6630,7 @@
     "rpi_power",
     "schedule",
     "shopping_list",
+    "slow_pwm",
     "sun",
     "switch_as_x",
     "tag",

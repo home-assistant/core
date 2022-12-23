@@ -1106,6 +1106,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/slide/ @ualex73
 /homeassistant/components/slimproto/ @marcelveldt
 /tests/components/slimproto/ @marcelveldt
+/homeassistant/components/slow_pwm/ @antonverburg
+/tests/components/slow_pwm/ @antonverburg
 /homeassistant/components/sma/ @kellerza @rklomp
 /tests/components/sma/ @kellerza @rklomp
 /homeassistant/components/smappee/ @bsmappee

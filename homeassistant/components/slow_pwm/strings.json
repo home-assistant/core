@@ -1,0 +1,48 @@
+{
+  "title": "Use one or multiple switch outputs in Pulse-width-modulated mode",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Convert one or multiple switches",
+        "description": "Create a number that controls one or multiple switches with pulse width modulation.",
+        "data": {
+          "name": "Name",
+          "outputs": "Output switch entities",
+          "minimum": "Minimum",
+          "maximum": "Maximum",
+          "cycle_time": "Duration to execute a single controller cycle",
+          "minimal_switch_time": "Shortest possible time a switch should be on- or off",
+          "step": "Step size",
+          "mode": "Mode"
+        },
+        "data_description": {
+          "minimum": "Value of the number where all swiches will be continuously off.",
+          "maximum": "Value of the number where all switches will be continuously on.",
+          "step": "Step size of the number.",
+          "mode": "Mode of user interface elements"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "outputs": "[%key:component::slow_pwm::config::step::user::data::outputs%]",
+          "minimum": "[%key:component::slow_pwm::config::step::user::data::minimum%]",
+          "maximum": "[%key:component::slow_pwm::config::step::user::data::maximum%]",
+          "cycle_time": "[%key:component::slow_pwm::config::step::user::data::cycle_time%]",
+          "minmal_switch_time": "[%key:component::slow_pwm::config::step::user::data::minimal_switch_time%]",
+          "step": "[%key:component::slow_pwm::config::step::user::data::step%]",
+          "mode": "[%key:component::slow_pwm::config::step::user::data::mode%]"
+        },
+        "data_description": {
+          "minimum": "[%key:component::slow_pwm::config::step::user::data_description::minimum%]",
+          "maximum": "[%key:component::slow_pwm::config::step::user::data_description::maximum%]",
+          "step": "[%key:component::slow_pwm::config::step::user::data_description::step%]",
+          "mode": "[%key:component::slow_pwm::config::step::user::data_description::mode%]"
+        }
+      }
+    }
+  }
+}

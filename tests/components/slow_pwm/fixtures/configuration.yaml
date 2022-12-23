@@ -1,0 +1,6 @@
+number:
+  - platform: slow_pwm
+    outputs:
+      - switch.test_1
+      - switch.test_2
+    name: second_test
