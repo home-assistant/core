@@ -23,7 +23,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfInformation
+from homeassistant.const import UnitOfInformation, UnitOfPower
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -158,6 +158,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiEntityDescription, ...] = (
         key="PoE port power sensor",
         device_class=SensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
         has_entity_name=True,
         entity_registry_enabled_default=False,
         allowed_fn=lambda controller, obj_id: True,
@@ -296,11 +297,19 @@ class UnifiSensorEntity(SensorEntity, Generic[_HandlerT, _DataT]):
             self.hass.async_create_task(self.remove_item({self._obj_id}))
             return
 
+        update_state = False
         obj = description.object_fn(self.controller.api, self._obj_id)
         if (value := description.value_fn(self.controller, obj)) != self.native_value:
             self._attr_native_value = value
-        self._attr_available = description.available_fn(self.controller, self._obj_id)
-        self.async_write_ha_state()
+            update_state = True
+        if (
+            available := description.available_fn(self.controller, self._obj_id)
+        ) != self.available:
+            self._attr_available = available
+            update_state = True
+        if update_state:
+            print(self.name, self.native_value)
+            self.async_write_ha_state()
 
     @callback
     def async_signal_reachable_callback(self) -> None:
