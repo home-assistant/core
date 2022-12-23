@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_ELEVATION,
+    CONF_LANGUAGE,
     CONF_LATITUDE,
     CONF_LOCATION,
     CONF_LONGITUDE,
@@ -22,7 +23,6 @@ from .const import (
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_DIASPORA,
     CONF_HAVDALAH_OFFSET_MINUTES,
-    CONF_LANGUAGE,
     DEFAULT_CANDLE_LIGHT,
     DEFAULT_DIASPORA,
     DEFAULT_HAVDALAH_OFFSET_MINUTES,
@@ -124,7 +124,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     location = Location(
         name=hass.config.location_name,
         diaspora=diaspora,
-        # If details of the location are not specified, use Hass's defaults.
         latitude=latitude,
         longitude=longitude,
         altitude=config_entry.data.get(CONF_ELEVATION, hass.config.elevation),
