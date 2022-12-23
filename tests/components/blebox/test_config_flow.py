@@ -234,7 +234,10 @@ async def test_flow_with_zeroconf_when_already_configured(hass):
         "sensors",
         blebox_uniapi.sensor.Temperature,
     )
-    with patch("homeassistant.components.blebox.config_flow.Box.async_from_host", return_value=feature.product):
+    with patch(
+        "homeassistant.components.blebox.config_flow.Box.async_from_host",
+        return_value=feature.product,
+    ):
         result2 = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
