@@ -621,6 +621,7 @@ TIME_YEARS: Final = "y"
 class UnitOfLength(StrEnum):
     """Length units."""
 
+    MICROMETERS = "µm"
     MILLIMETERS = "mm"
     CENTIMETERS = "cm"
     METERS = "m"
