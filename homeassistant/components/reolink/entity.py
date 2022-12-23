@@ -18,7 +18,7 @@ class ReolinkCoordinatorEntity(CoordinatorEntity):
         coordinator = entry_data.device_coordinator
         super().__init__(coordinator)
 
-        self._host: ReolinkHost = self._hass.data[DOMAIN][config.entry_id].host
+        self._host = entry_data.host
         self._channel = None
 
     @property
