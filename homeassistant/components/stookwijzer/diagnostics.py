@@ -20,4 +20,6 @@ async def async_get_config_entry_diagnostics(
         "state": client.state,
         "lqi": client.lqi,
         "windspeed": client.windspeed,
+        "weather": client.weather,
+        "concentrations": client.concentrations,
     }
