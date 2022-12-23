@@ -147,14 +147,19 @@ class HaBleakScannerWrapper(BaseBleakScanner):
                 asyncio.get_running_loop().call_soon_threadsafe(self._detection_cancel)
 
 
-def _rssi_sorter_with_connection_failure_adjustment(
+def _rssi_sorter_with_connection_failure_penalty(
     scanner_device_advertisement_data: tuple[
         BaseHaScanner, BLEDevice, AdvertisementData
     ],
     connection_failure_count: dict[BaseHaScanner, int],
     rssi_diff: int,
 ) -> int:
-    """Get a sorted list of scanner, device, advertisement data adjusting for previous connection failures."""
+    """Get a sorted list of scanner, device, advertisement data adjusting for previous connection failures.
+
+    When a connection fails, we want to try the next best adapter so we
+    apply a penalty to the RSSI value to make it less likely to be chosen
+    for every previous connection failure.
+    """
     scanner, _, advertisement_data = scanner_device_advertisement_data
     base_rssi = advertisement_data.rssi or NO_RSSI_VALUE
     if connect_failures := connection_failure_count.get(scanner):
@@ -311,7 +316,7 @@ class HaBleakClientWrapper(BleakClient):
                 - sorted_scanner_device_advertisement_datas[1][2].rssi
             )
             adjusted_rssi_sorter = partial(
-                _rssi_sorter_with_connection_failure_adjustment,
+                _rssi_sorter_with_connection_failure_penalty,
                 connection_failure_count=self.__connect_failures,
                 rssi_diff=rssi_diff,
             )
