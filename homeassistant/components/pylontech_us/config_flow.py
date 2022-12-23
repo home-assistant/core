@@ -68,24 +68,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     hub = None
 
-    async def validate_input(
-        self, hass: HomeAssistant, data: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def validate_input(self, hass: HomeAssistant, data: dict[str, Any]) -> None:
         """Validate the user input allows us to connect.
 
-        Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
+        Throws exception on connect error.
         """
 
         self.hub = PylontechHub(config=data)
-        await hass.async_add_executor_job(
-            self.hub.validate_config_input
-        )  # !!! no Brackets !!!
-
-        return_data = data
-        return_data["title"] = "Pylontech"
-
-        # Return info that you want to store in the config entry.
-        return return_data
+        await hass.async_add_executor_job(self.hub.validate_config_input)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
