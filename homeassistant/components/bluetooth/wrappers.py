@@ -300,7 +300,7 @@ class HaBleakClientWrapper(BleakClient):
         )
 
         # If we have connection failures we adjust the rssi sorting
-        # to prefer the scanner with the less failures so
+        # to prefer the adapter/scanner with the less failures so
         # we don't keep trying to connect with an adapter
         # that is failing
         if (
