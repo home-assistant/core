@@ -19,7 +19,7 @@ from . import _LOGGER, NextcloudMonitorWrapper
 from .const import DEFAULT_NAME, DOMAIN
 
 
-class Nextcloud2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class NextCloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Nextcloud config flow."""
 
     VERSION = 1
@@ -41,7 +41,6 @@ class Nextcloud2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 None, NextcloudMonitorWrapper, url, user, password, verify_ssl
             )
         except Exception as e:
-            _LOGGER.error(e)
             return False
         return True
 
