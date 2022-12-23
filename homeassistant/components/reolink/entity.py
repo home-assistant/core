@@ -14,7 +14,8 @@ class ReolinkCoordinatorEntity(CoordinatorEntity):
     def __init__(self, hass, config):
         """Initialize ReolinkCoordinatorEntity."""
         self._hass = hass
-        coordinator = self._hass.data[DOMAIN][config.entry_id].device_coordinator
+        entry_data: TYPE = self._hass.data[DOMAIN][config.entry_id]
+        coordinator = entry_data.device_coordinator
         super().__init__(coordinator)
 
         self._host: ReolinkHost = self._hass.data[DOMAIN][config.entry_id].host
