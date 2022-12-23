@@ -144,7 +144,8 @@ class SwitchBeeCoverEntity(SwitchBeeDeviceEntity[SwitchBeeShutter], CoverEntity)
             await self.coordinator.api.set_state(self._device.id, kwargs[ATTR_POSITION])
         except (SwitchBeeError, SwitchBeeTokenError) as exp:
             raise HomeAssistantError(
-                f"Failed to set {self.name} position to {kwargs[ATTR_POSITION]}, error: {str(exp)}"
+                f"Failed to set {self.name} position to {kwargs[ATTR_POSITION]}, error:"
+                f" {str(exp)}"
             ) from exp
 
         self._get_coordinator_device().position = kwargs[ATTR_POSITION]

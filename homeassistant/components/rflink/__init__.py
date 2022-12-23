@@ -225,9 +225,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         keepalive_idle_timer = config[DOMAIN][CONF_KEEPALIVE_IDLE]
         if keepalive_idle_timer < 0:
             _LOGGER.error(
-                "A bogus TCP Keepalive IDLE timer was provided (%d secs), "
-                "it will be disabled. "
-                "Recommended values: 60-3600 (seconds)",
+                (
+                    "A bogus TCP Keepalive IDLE timer was provided (%d secs), "
+                    "it will be disabled. "
+                    "Recommended values: 60-3600 (seconds)"
+                ),
                 keepalive_idle_timer,
             )
             keepalive_idle_timer = None
