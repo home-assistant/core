@@ -63,4 +63,6 @@ class HiveSensorEntity(HiveEntity, SensorEntity):
         """Update all Node data from Hive."""
         await self.hive.session.updateData(self.device)
         self.device = await self.hive.sensor.getSensor(self.device)
-        self._attr_native_value = self.device["status"]["state"]
+        self._attr_native_value = self.device.get(
+            "status", {"status": {"state": 0}}
+        ).get("state", 0)
