@@ -57,7 +57,7 @@ class ReolinkHost:
         """Return the API object."""
         return self._api
 
-    async def init(self) -> bool:
+    async def async_init(self) -> bool:
         """Connect to Reolink host."""
         self._api.expire_session()
 
