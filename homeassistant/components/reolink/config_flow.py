@@ -122,8 +122,6 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     host.api.port,
                 )
                 raise CannotConnect
-        except Exception as error:  # pylint: disable=broad-except
-            raise error
         finally:
             await host.stop()
 
