@@ -2434,8 +2434,8 @@ def correct_db_schema(
                     # Using LOCK=EXCLUSIVE to prevent the database from corrupting
                     # https://github.com/home-assistant/core/issues/56104
                     text(
-                        "ALTER TABLE statistics_meta CONVERT TO "
-                        "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, LOCK=EXCLUSIVE"
+                        "ALTER TABLE statistics_meta CONVERT TO CHARACTER SET utf8mb4"
+                        " COLLATE utf8mb4_unicode_ci, LOCK=EXCLUSIVE"
                     )
                 )
 

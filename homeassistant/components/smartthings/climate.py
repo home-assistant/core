@@ -236,7 +236,10 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
                     modes.add(state)
                 else:
                     _LOGGER.debug(
-                        "Device %s (%s) returned an invalid supported thermostat mode: %s",
+                        (
+                            "Device %s (%s) returned an invalid supported thermostat"
+                            " mode: %s"
+                        ),
                         self._device.label,
                         self._device.device_id,
                         mode,

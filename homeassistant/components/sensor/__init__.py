@@ -756,11 +756,12 @@ class SensorEntity(Entity):
                 report_issue = self._suggest_report_issue()
                 # This should raise in Home Assistant Core 2022.5
                 _LOGGER.warning(
-                    "Entity %s (%s) with state_class %s has set last_reset. Setting "
-                    "last_reset for entities with state_class other than 'total' is "
-                    "not supported. "
-                    "Please update your configuration if state_class is manually "
-                    "configured, otherwise %s",
+                    (
+                        "Entity %s (%s) with state_class %s has set last_reset. Setting"
+                        " last_reset for entities with state_class other than 'total'"
+                        " is not supported. Please update your configuration if"
+                        " state_class is manually configured, otherwise %s"
+                    ),
                     self.entity_id,
                     type(self),
                     self.state_class,
@@ -968,10 +969,12 @@ class SensorEntity(Entity):
 
             # This should raise in Home Assistant Core 2023.6
             _LOGGER.warning(
-                "Entity %s (%s) is using native unit of measurement '%s' which "
-                "is not a valid unit for the device class ('%s') it is using; "
-                "Please update your configuration if your entity is manually "
-                "configured, otherwise %s",
+                (
+                    "Entity %s (%s) is using native unit of measurement '%s' which "
+                    "is not a valid unit for the device class ('%s') it is using; "
+                    "Please update your configuration if your entity is manually "
+                    "configured, otherwise %s"
+                ),
                 self.entity_id,
                 type(self),
                 native_unit_of_measurement,
