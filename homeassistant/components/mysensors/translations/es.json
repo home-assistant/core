@@ -34,7 +34,6 @@
             "invalid_serial": "Puerto serie no v\u00e1lido",
             "invalid_subscribe_topic": "Tema de suscripci\u00f3n no v\u00e1lido",
             "invalid_version": "Versi\u00f3n no v\u00e1lida de MySensors",
-            "mqtt_required": "La integraci\u00f3n MQTT no est\u00e1 configurada",
             "not_a_number": "Por favor, introduce un n\u00famero",
             "port_out_of_range": "El n\u00famero de puerto debe ser al menos 1 y como m\u00e1ximo 65535",
             "same_topic": "Los temas de suscripci\u00f3n y publicaci\u00f3n son los mismos",

@@ -1,7 +1,6 @@
 """Config flow for Yale Access Bluetooth integration."""
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
@@ -27,7 +26,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DOMAIN
-from .util import async_get_service_info, human_readable_name
+from .util import async_find_existing_service_info, human_readable_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -110,11 +109,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
                 raise AbortFlow(reason="already_configured")
 
-        try:
-            self._discovery_info = await async_get_service_info(
-                hass, local_name, address
-            )
-        except asyncio.TimeoutError:
+        self._discovery_info = async_find_existing_service_info(
+            hass, local_name, address
+        )
+        if not self._discovery_info:
             return self.async_abort(reason="no_devices_found")
 
         # Integration discovery should abort other flows unless they

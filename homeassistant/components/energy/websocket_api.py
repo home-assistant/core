@@ -272,8 +272,8 @@ async def ws_get_fossil_energy_consumption(
         end_time,
         statistic_ids,
         "hour",
-        True,
         {"energy": UnitOfEnergy.KILO_WATT_HOUR},
+        {"mean", "sum"},
     )
 
     def _combine_sum_statistics(

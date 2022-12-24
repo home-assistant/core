@@ -28,9 +28,9 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
-    VOLUME_CUBIC_METERS,
+    UnitOfVolume,
 )
-from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import EventType, StateType
@@ -55,7 +55,7 @@ from .const import (
     LOGGER,
 )
 
-UNIT_CONVERSION = {"m3": VOLUME_CUBIC_METERS}
+UNIT_CONVERSION = {"m3": UnitOfVolume.CUBIC_METERS}
 
 
 @dataclass
@@ -97,6 +97,9 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         name="Active tariff",
         obis_reference=obis_references.ELECTRICITY_ACTIVE_TARIFF,
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
+        device_class=SensorDeviceClass.ENUM,
+        options=["low", "normal"],
+        translation_key="electricity_tariff",
         icon="mdi:flash",
     ),
     DSMRSensorEntityDescription(
@@ -505,6 +508,15 @@ async def async_setup_entry(
     # Can't be hass.async_add_job because job runs forever
     task = asyncio.create_task(connect_and_reconnect())
 
+    @callback
+    async def _async_stop(_: Event) -> None:
+        task.cancel()
+
+    # Make sure task is cancelled on shutdown (or tests complete)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop)
+    )
+
     # Save the task to be able to cancel it when unloading
     hass.data[DOMAIN][entry.entry_id][DATA_TASK] = task
 
@@ -559,6 +571,7 @@ class DSMREntity(SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of sensor, if available, translate if needed."""
+        value: StateType
         if (value := self.get_dsmr_object_attr("value")) is None:
             return None
 
@@ -573,10 +586,7 @@ class DSMREntity(SensorEntity):
                 float(value), self._entry.data.get(CONF_PRECISION, DEFAULT_PRECISION)
             )
 
-        if value is not None:
-            return value
-
-        return None
+        return value
 
     @property
     def native_unit_of_measurement(self) -> str | None:

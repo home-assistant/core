@@ -45,8 +45,10 @@ async def test_unique_id(hass: HomeAssistant):
                 {
                     "platform": "statistics",
                     "name": "test",
-                    "entity_id": "sensor.test_monitored",
                     "unique_id": "uniqueid_sensor_test",
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "mean",
+                    "sampling_size": 20,
                 },
             ]
         },
@@ -71,6 +73,8 @@ async def test_sensor_defaults_numeric(hass: HomeAssistant):
                     "platform": "statistics",
                     "name": "test",
                     "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "mean",
+                    "sampling_size": 20,
                 },
             ]
         },
@@ -162,6 +166,8 @@ async def test_sensor_defaults_binary(hass: HomeAssistant):
                     "platform": "statistics",
                     "name": "test",
                     "entity_id": "binary_sensor.test_monitored",
+                    "state_characteristic": "count",
+                    "sampling_size": 20,
                 },
             ]
         },
@@ -199,12 +205,14 @@ async def test_sensor_source_with_force_update(hass: HomeAssistant):
                     "name": "test_normal",
                     "entity_id": "sensor.test_monitored_normal",
                     "state_characteristic": "mean",
+                    "sampling_size": 20,
                 },
                 {
                     "platform": "statistics",
                     "name": "test_force",
                     "entity_id": "sensor.test_monitored_force",
                     "state_characteristic": "mean",
+                    "sampling_size": 20,
                 },
             ]
         },
@@ -234,8 +242,8 @@ async def test_sensor_source_with_force_update(hass: HomeAssistant):
     assert state_force.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
 
 
-async def test_sampling_size_non_default(hass: HomeAssistant):
-    """Test rotation."""
+async def test_sampling_size_reduced(hass: HomeAssistant):
+    """Test limited buffer size."""
     assert await async_setup_component(
         hass,
         "sensor",
@@ -287,7 +295,7 @@ async def test_sampling_size_1(hass: HomeAssistant):
     )
     await hass.async_block_till_done()
 
-    for value in VALUES_NUMERIC[-3:]:  # just the last 3 will do
+    for value in VALUES_NUMERIC:
         hass.states.async_set(
             "sensor.test_monitored",
             str(value),
@@ -303,7 +311,7 @@ async def test_sampling_size_1(hass: HomeAssistant):
 
 
 async def test_age_limit_expiry(hass: HomeAssistant):
-    """Test that values are removed after certain age."""
+    """Test that values are removed with given max age."""
     now = dt_util.utcnow()
     mock_data = {
         "return_time": datetime(now.year + 1, 8, 2, 12, 23, tzinfo=dt_util.UTC)
@@ -325,6 +333,7 @@ async def test_age_limit_expiry(hass: HomeAssistant):
                         "name": "test",
                         "entity_id": "sensor.test_monitored",
                         "state_characteristic": "mean",
+                        "sampling_size": 20,
                         "max_age": {"minutes": 4},
                     },
                 ]
@@ -402,6 +411,7 @@ async def test_precision(hass: HomeAssistant):
                     "name": "test_precision_0",
                     "entity_id": "sensor.test_monitored",
                     "state_characteristic": "mean",
+                    "sampling_size": 20,
                     "precision": 0,
                 },
                 {
@@ -409,6 +419,7 @@ async def test_precision(hass: HomeAssistant):
                     "name": "test_precision_3",
                     "entity_id": "sensor.test_monitored",
                     "state_characteristic": "mean",
+                    "sampling_size": 20,
                     "precision": 3,
                 },
             ]
@@ -500,6 +511,7 @@ async def test_device_class(hass: HomeAssistant):
                     "name": "test_source_class",
                     "entity_id": "sensor.test_monitored",
                     "state_characteristic": "mean",
+                    "sampling_size": 20,
                 },
                 {
                     # Device class is set to None for characteristics with special meaning
@@ -507,6 +519,7 @@ async def test_device_class(hass: HomeAssistant):
                     "name": "test_none",
                     "entity_id": "sensor.test_monitored",
                     "state_characteristic": "count",
+                    "sampling_size": 20,
                 },
                 {
                     # Device class is set to timestamp for datetime characteristics
@@ -514,6 +527,7 @@ async def test_device_class(hass: HomeAssistant):
                     "name": "test_timestamp",
                     "entity_id": "sensor.test_monitored",
                     "state_characteristic": "datetime_oldest",
+                    "sampling_size": 20,
                 },
             ]
         },
@@ -554,12 +568,14 @@ async def test_state_class(hass: HomeAssistant):
                     "name": "test_normal",
                     "entity_id": "sensor.test_monitored",
                     "state_characteristic": "count",
+                    "sampling_size": 20,
                 },
                 {
                     "platform": "statistics",
                     "name": "test_nan",
                     "entity_id": "sensor.test_monitored",
                     "state_characteristic": "datetime_oldest",
+                    "sampling_size": 20,
                 },
             ]
         },
@@ -594,29 +610,35 @@ async def test_unitless_source_sensor(hass: HomeAssistant):
                     "name": "test_unitless_1",
                     "entity_id": "sensor.test_monitored_unitless",
                     "state_characteristic": "count",
+                    "sampling_size": 20,
                 },
                 {
                     "platform": "statistics",
                     "name": "test_unitless_2",
                     "entity_id": "sensor.test_monitored_unitless",
                     "state_characteristic": "mean",
+                    "sampling_size": 20,
                 },
                 {
                     "platform": "statistics",
                     "name": "test_unitless_3",
                     "entity_id": "sensor.test_monitored_unitless",
                     "state_characteristic": "change_second",
+                    "sampling_size": 20,
                 },
                 {
                     "platform": "statistics",
                     "name": "test_unitless_4",
                     "entity_id": "binary_sensor.test_monitored_unitless",
+                    "state_characteristic": "count",
+                    "sampling_size": 20,
                 },
                 {
                     "platform": "statistics",
                     "name": "test_unitless_5",
                     "entity_id": "binary_sensor.test_monitored_unitless",
                     "state_characteristic": "mean",
+                    "sampling_size": 20,
                 },
             ]
         },
@@ -1087,12 +1109,14 @@ async def test_invalid_state_characteristic(hass: HomeAssistant):
                     "name": "test_numeric",
                     "entity_id": "sensor.test_monitored",
                     "state_characteristic": "invalid",
+                    "sampling_size": 20,
                 },
                 {
                     "platform": "statistics",
                     "name": "test_binary",
                     "entity_id": "binary_sensor.test_monitored",
                     "state_characteristic": "variance",
+                    "sampling_size": 20,
                 },
             ]
         },
@@ -1192,8 +1216,8 @@ async def test_initialize_from_database_with_maxage(recorder_mock, hass: HomeAss
                         "platform": "statistics",
                         "name": "test",
                         "entity_id": "sensor.test_monitored",
-                        "sampling_size": 100,
                         "state_characteristic": "datetime_newest",
+                        "sampling_size": 100,
                         "max_age": {"hours": 3},
                     },
                 ]

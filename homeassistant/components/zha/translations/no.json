@@ -36,10 +36,10 @@
                 "title": "Velg en seriell port"
             },
             "confirm": {
-                "description": "Vil du konfigurere {name}?"
+                "description": "Vil du sette opp {name} ?"
             },
             "confirm_hardware": {
-                "description": "Vil du konfigurere {name} ?"
+                "description": "Vil du sette opp {name} ?"
             },
             "manual_pick_radio_type": {
                 "data": {
@@ -64,35 +64,12 @@
                 "description": "Sikkerhetskopien din har en annen IEEE-adresse enn radioen din. For at nettverket skal fungere ordentlig, b\u00f8r IEEE-adressen til radioen ogs\u00e5 endres. \n\n Dette er en permanent operasjon.",
                 "title": "Overskriv radio IEEE-adresse"
             },
-            "pick_radio": {
-                "data": {
-                    "radio_type": "Radio type"
-                },
-                "description": "Velg din type Zigbee-radio",
-                "title": "Radio type"
-            },
-            "port_config": {
-                "data": {
-                    "baudrate": "porthastighet",
-                    "flow_control": "data flytkontroll",
-                    "path": "Seriell enhetsbane"
-                },
-                "description": "Angi portspesifikke innstillinger",
-                "title": "Innstillinger"
-            },
             "upload_manual_backup": {
                 "data": {
                     "uploaded_backup_file": "Last opp en fil"
                 },
                 "description": "Gjenopprett nettverksinnstillingene fra en opplastet backup JSON-fil. Du kan laste ned en fra en annen ZHA-installasjon fra **Nettverksinnstillinger**, eller bruke en Zigbee2MQTT `coordinator_backup.json`-fil.",
                 "title": "Last opp en manuell sikkerhetskopiering"
-            },
-            "user": {
-                "data": {
-                    "path": "Seriell enhetsbane"
-                },
-                "description": "Velg seriell port for Zigbee radio",
-                "title": ""
             }
         }
     },

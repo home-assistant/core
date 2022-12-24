@@ -11,12 +11,6 @@
             "invalid_auth": "Autenticazione non valida"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "password": "Password"
-                },
-                "description": "I token di autenticazione non sono validi, esegui l'accesso per ricrearli."
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Password"

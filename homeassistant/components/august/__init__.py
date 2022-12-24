@@ -12,9 +12,9 @@ from yalexs.exceptions import AugustApiAIOHTTPError
 from yalexs.lock import Lock, LockDetail
 from yalexs.pubnub_activity import activities_from_pubnub_message
 from yalexs.pubnub_async import AugustPubNub, async_create_pubnub
+from yalexs_ble import YaleXSBLEDiscovery
 
-from homeassistant.components import yalexs_ble
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
@@ -22,7 +22,7 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     HomeAssistantError,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, discovery_flow
 
 from .activity import ActivityStream
 from .const import DOMAIN, MIN_TIME_BETWEEN_DETAIL_UPDATES, PLATFORMS
@@ -38,6 +38,7 @@ API_CACHED_ATTRS = {
     "lock_status",
     "lock_status_datetime",
 }
+YALEXS_BLE_DOMAIN = "yalexs_ble"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -100,9 +101,11 @@ def _async_trigger_ble_lock_discovery(
 ):
     """Update keys for the yalexs-ble integration if available."""
     for lock_detail in locks_with_offline_keys:
-        yalexs_ble.async_discovery(
+        discovery_flow.async_create_flow(
             hass,
-            yalexs_ble.YaleXSBLEDiscovery(
+            YALEXS_BLE_DOMAIN,
+            context={"source": SOURCE_INTEGRATION_DISCOVERY},
+            data=YaleXSBLEDiscovery(
                 {
                     "name": lock_detail.device_name,
                     "address": lock_detail.mac_address,
@@ -338,7 +341,7 @@ class AugustData(AugustSubscriberMixin):
         )
 
     async def async_status_async(self, device_id, hyper_bridge):
-        """Request status of the the device but do not wait for a response since it will come via pubnub."""
+        """Request status of the device but do not wait for a response since it will come via pubnub."""
         return await self._async_call_api_op_requires_bridge(
             device_id,
             self._api.async_status_async,
@@ -397,7 +400,10 @@ class AugustData(AugustSubscriberMixin):
             if self._device_detail_by_id.get(device_id):
                 continue
             _LOGGER.info(
-                "The doorbell %s could not be setup because the system could not fetch details about the doorbell",
+                (
+                    "The doorbell %s could not be setup because the system could not"
+                    " fetch details about the doorbell"
+                ),
                 doorbell.device_name,
             )
             del self._doorbells_by_id[device_id]
@@ -411,12 +417,18 @@ class AugustData(AugustSubscriberMixin):
             lock_detail = self._device_detail_by_id.get(device_id)
             if lock_detail is None:
                 _LOGGER.info(
-                    "The lock %s could not be setup because the system could not fetch details about the lock",
+                    (
+                        "The lock %s could not be setup because the system could not"
+                        " fetch details about the lock"
+                    ),
                     lock.device_name,
                 )
             elif lock_detail.bridge is None:
                 _LOGGER.info(
-                    "The lock %s could not be setup because it does not have a bridge (Connect)",
+                    (
+                        "The lock %s could not be setup because it does not have a"
+                        " bridge (Connect)"
+                    ),
                     lock.device_name,
                 )
                 del self._device_detail_by_id[device_id]

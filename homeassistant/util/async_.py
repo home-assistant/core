@@ -100,7 +100,7 @@ def check_loop(
     """Warn if called inside the event loop. Raise if `strict` is True.
 
     The default advisory message is 'Use `await hass.async_add_executor_job()'
-    Set `advise_msg` to an alternate message if the the solution differs.
+    Set `advise_msg` to an alternate message if the solution differs.
     """
     try:
         get_running_loop()

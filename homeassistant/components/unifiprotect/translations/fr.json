@@ -42,15 +42,11 @@
         }
     },
     "options": {
-        "error": {
-            "invalid_mac_list": "Doit \u00eatre une liste d'adresses MAC s\u00e9par\u00e9es par des virgules"
-        },
         "step": {
             "init": {
                 "data": {
                     "all_updates": "M\u00e9triques en temps r\u00e9el (AVERTISSEMENT\u00a0: augmente consid\u00e9rablement l'utilisation du processeur)",
                     "disable_rtsp": "D\u00e9sactiver le flux RTSP",
-                    "ignored_devices": "Liste s\u00e9par\u00e9e par des virgules des adresses MAC des appareils \u00e0 ignorer",
                     "max_media": "Nombre maximal d'\u00e9v\u00e9nements \u00e0 charger pour le navigateur multim\u00e9dia (augmente l'utilisation de la RAM)",
                     "override_connection_host": "Ignorer l'h\u00f4te de connexion"
                 },

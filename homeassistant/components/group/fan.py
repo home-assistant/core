@@ -110,17 +110,11 @@ class FanGroup(GroupEntity, FanEntity):
         self._percentage = None
         self._oscillating = None
         self._direction = None
-        self._supported_features = 0
         self._speed_count = 100
         self._is_on: bool | None = False
         self._attr_name = name
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entities}
         self._attr_unique_id = unique_id
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return self._supported_features
 
     @property
     def speed_count(self) -> int:
@@ -319,8 +313,10 @@ class FanGroup(GroupEntity, FanEntity):
             "_direction", FanEntityFeature.DIRECTION, ATTR_DIRECTION
         )
 
-        self._supported_features = reduce(
-            ior, [feature for feature in SUPPORTED_FLAGS if self._fans[feature]], 0
+        self._attr_supported_features = FanEntityFeature(
+            reduce(
+                ior, [feature for feature in SUPPORTED_FLAGS if self._fans[feature]], 0
+            )
         )
         self._attr_assumed_state |= any(
             state.attributes.get(ATTR_ASSUMED_STATE) for state in states

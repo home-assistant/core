@@ -16,7 +16,7 @@
                     "address": "Ger\u00e4teadresse",
                     "name": "Name"
                 },
-                "title": "MicroBot-Ger\u00e4t einrichten"
+                "title": "MicroBot Ger\u00e4t einrichten"
             },
             "link": {
                 "description": "Dr\u00fccke die Taste am MicroBot Push, wenn die LED durchgehend rosa oder gr\u00fcn leuchtet, um sich bei Home Assistant zu registrieren.",

@@ -13,19 +13,9 @@
                 "data": {
                     "host": "Host",
                     "password": "Salas\u00f5na",
-                    "switch_as_light": "L\u00e4htesta l\u00fclitid valgusolemitena",
                     "username": "Kasutajanimi"
                 },
                 "description": "Seadista SwitchBee sidumine Home Assistantiga."
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "devices": "Kaasatavad seadmed"
-                }
             }
         }
     }

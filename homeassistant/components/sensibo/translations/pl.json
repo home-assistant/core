@@ -29,5 +29,22 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "sensitivity": {
+                "state": {
+                    "n": "normalna",
+                    "s": "wysoka"
+                }
+            },
+            "smart_type": {
+                "state": {
+                    "feelslike": "odczuwalna",
+                    "humidity": "wilgotno\u015b\u0107",
+                    "temperature": "temperatura"
+                }
+            }
+        }
     }
 }

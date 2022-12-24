@@ -33,7 +33,7 @@
                 "data": {
                     "host": "Vert"
                 },
-                "description": "F\u00f8r du setter opp, m\u00e5 batteridrevne enheter vekkes, du kan n\u00e5 vekke enheten med en knapp p\u00e5 den."
+                "description": "F\u00f8r oppsett m\u00e5 batteridrevne enheter vekkes, du kan n\u00e5 vekke enheten ved \u00e5 bruke en knapp p\u00e5 den."
             }
         }
     },
@@ -57,6 +57,19 @@
             "single_long": "{subtype} enkeltklikket og deretter et lengre klikk",
             "single_push": "{subtype} enkelt trykk",
             "triple": "{subtype} trippelklikket"
+        }
+    },
+    "options": {
+        "abort": {
+            "ble_unsupported": "Bluetooth-st\u00f8tte krever fastvareversjon {ble_min_version} eller nyere."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "ble_scanner_mode": "Bluetooth-skannermodus"
+                },
+                "description": "Bluetooth-skanning kan v\u00e6re aktiv eller passiv. Med aktiv ber Shelly om data fra enheter i n\u00e6rheten; med passiv, mottar Shelly u\u00f8nsket data fra enheter i n\u00e6rheten."
+            }
         }
     }
 }

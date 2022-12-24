@@ -794,6 +794,57 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
+                b"\x40\x47\x87\x56",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_volume",
+                    "friendly_name": "Test Device 18B2 Volume",
+                    "unit_of_measurement": "L",
+                    "state_class": "measurement",
+                    "expected_state": "2215.1",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
+                b"\x40\x48\xDC\x87",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_volume",
+                    "friendly_name": "Test Device 18B2 Volume",
+                    "unit_of_measurement": "mL",
+                    "state_class": "measurement",
+                    "expected_state": "34780",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
+                b"\x40\x49\xDC\x87",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_volume_flow_rate",
+                    "friendly_name": "Test Device 18B2 Volume Flow Rate",
+                    "unit_of_measurement": "m³/h",
+                    "state_class": "measurement",
+                    "expected_state": "34.78",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
                 b"\x40\x02\xca\x09\x02\xcf\x09",
             ),
             None,
@@ -870,7 +921,7 @@ async def test_v1_sensors(
             "54:48:E6:8F:80:A5",
             make_bthome_v2_adv(
                 "54:48:E6:8F:80:A5",
-                b"\x41\xa4\x72\x66\xc9\x5f\x73\x00\x11\x22\x33\xb7\xce\xd8\xe5",
+                b"\x41\xa4\x72\x66\xc9\x5f\x73\x00\x11\x22\x33\x78\x23\x72\x14",
             ),
             "231d39c1d7cc1ab1aee224cd096db932",
             [

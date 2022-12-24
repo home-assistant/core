@@ -6,19 +6,12 @@ from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_METHOD,
-    CONF_NAME,
-    TIME_DAYS,
-    TIME_HOURS,
-    TIME_MINUTES,
-    TIME_SECONDS,
-)
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import CONF_METHOD, CONF_NAME, UnitOfTime
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
     SchemaFlowFormStep,
-    SchemaFlowMenuStep,
 )
 
 from .const import (
@@ -40,10 +33,10 @@ UNIT_PREFIXES = [
     selector.SelectOptionDict(value="T", label="T (tera)"),
 ]
 TIME_UNITS = [
-    selector.SelectOptionDict(value=TIME_SECONDS, label="s (seconds)"),
-    selector.SelectOptionDict(value=TIME_MINUTES, label="min (minutes)"),
-    selector.SelectOptionDict(value=TIME_HOURS, label="h (hours)"),
-    selector.SelectOptionDict(value=TIME_DAYS, label="d (days)"),
+    selector.SelectOptionDict(value=UnitOfTime.SECONDS, label="s (seconds)"),
+    selector.SelectOptionDict(value=UnitOfTime.MINUTES, label="min (minutes)"),
+    selector.SelectOptionDict(value=UnitOfTime.HOURS, label="h (hours)"),
+    selector.SelectOptionDict(value=UnitOfTime.DAYS, label="d (days)"),
 ]
 INTEGRATION_METHODS = [
     selector.SelectOptionDict(value=METHOD_TRAPEZOIDAL, label="Trapezoidal rule"),
@@ -65,7 +58,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): selector.TextSelector(),
         vol.Required(CONF_SOURCE_SENSOR): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain="sensor")
+            selector.EntitySelectorConfig(domain=SENSOR_DOMAIN)
         ),
         vol.Required(CONF_METHOD, default=METHOD_TRAPEZOIDAL): selector.SelectSelector(
             selector.SelectSelectorConfig(options=INTEGRATION_METHODS),
@@ -81,7 +74,7 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Required(CONF_UNIT_PREFIX, default="none"): selector.SelectSelector(
             selector.SelectSelectorConfig(options=UNIT_PREFIXES),
         ),
-        vol.Required(CONF_UNIT_TIME, default=TIME_HOURS): selector.SelectSelector(
+        vol.Required(CONF_UNIT_TIME, default=UnitOfTime.HOURS): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=TIME_UNITS, mode=selector.SelectSelectorMode.DROPDOWN
             ),
@@ -89,12 +82,12 @@ CONFIG_SCHEMA = vol.Schema(
     }
 )
 
-CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
-    "user": SchemaFlowFormStep(CONFIG_SCHEMA)
+CONFIG_FLOW = {
+    "user": SchemaFlowFormStep(CONFIG_SCHEMA),
 }
 
-OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
-    "init": SchemaFlowFormStep(OPTIONS_SCHEMA)
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
 }
 
 

@@ -30,7 +30,6 @@ class HomeKitEntity(Entity):
         self._aid = devinfo["aid"]
         self._iid = devinfo["iid"]
         self._char_name: str | None = None
-        self._features = 0
         self.setup()
 
         super().__init__()

@@ -11,7 +11,6 @@ from gcal_sync.api import GoogleCalendarService
 from gcal_sync.exceptions import ApiException, AuthException
 from gcal_sync.model import DateOrDatetime, Event
 import voluptuous as vol
-from voluptuous.error import Error as VoluptuousError
 import yaml
 
 from homeassistant.config_entries import ConfigEntry
@@ -142,6 +141,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Google from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {}
+
+    # Validate google_calendars.yaml (if present) as soon as possible to return
+    # helpful error messages.
+    try:
+        await hass.async_add_executor_job(load_config, hass.config.path(YAML_DEVICES))
+    except vol.Invalid as err:
+        _LOGGER.error("Configuration error in %s: %s", YAML_DEVICES, str(err))
+        return False
 
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -322,11 +329,7 @@ def load_config(path: str) -> dict[str, Any]:
         with open(path, encoding="utf8") as file:
             data = yaml.safe_load(file)
             for calendar in data:
-                try:
-                    calendars.update({calendar[CONF_CAL_ID]: DEVICE_SCHEMA(calendar)})
-                except VoluptuousError as exception:
-                    # keep going
-                    _LOGGER.warning("Calendar Invalid Data: %s", exception)
+                calendars[calendar[CONF_CAL_ID]] = DEVICE_SCHEMA(calendar)
     except FileNotFoundError as err:
         _LOGGER.debug("Error reading calendar configuration: %s", err)
         # When YAML file could not be loaded/did not contain a dict

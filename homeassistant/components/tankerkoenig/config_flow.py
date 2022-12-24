@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_RADIUS,
     CONF_SHOW_ON_MAP,
-    LENGTH_KILOMETERS,
+    UnitOfLength,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
@@ -118,9 +118,10 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if len(stations := data.get("stations", [])) == 0:
             return self._show_form_user(user_input, errors={CONF_RADIUS: "no_stations"})
         for station in stations:
-            self._stations[
-                station["id"]
-            ] = f"{station['brand']} {station['street']} {station['houseNumber']} - ({station['dist']}km)"
+            self._stations[station["id"]] = (
+                f"{station['brand']} {station['street']} {station['houseNumber']} -"
+                f" ({station['dist']}km)"
+            )
 
         self._data = user_input
 
@@ -204,7 +205,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                             min=1.0,
                             max=25,
                             step=0.1,
-                            unit_of_measurement=LENGTH_KILOMETERS,
+                            unit_of_measurement=UnitOfLength.KILOMETERS,
                         ),
                     ),
                 }
@@ -268,9 +269,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
         if stations := nearby_stations.get("stations"):
             for station in stations:
-                self._stations[
-                    station["id"]
-                ] = f"{station['brand']} {station['street']} {station['houseNumber']} - ({station['dist']}km)"
+                self._stations[station["id"]] = (
+                    f"{station['brand']} {station['street']} {station['houseNumber']} -"
+                    f" ({station['dist']}km)"
+                )
 
         # add possible extra selected stations from import
         for selected_station in self.config_entry.data[CONF_STATIONS]:

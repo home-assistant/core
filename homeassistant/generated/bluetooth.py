@@ -265,12 +265,24 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "service_data_uuid": "0000fdcd-0000-1000-8000-00805f9b34fb",
     },
     {
+        "connectable": False,
         "domain": "ruuvitag_ble",
         "manufacturer_id": 1177,
     },
     {
+        "connectable": False,
         "domain": "ruuvitag_ble",
         "local_name": "Ruuvi *",
+    },
+    {
+        "connectable": False,
+        "domain": "sensirion_ble",
+        "manufacturer_id": 1749,
+    },
+    {
+        "connectable": False,
+        "domain": "sensirion_ble",
+        "local_name": "MyCO2*",
     },
     {
         "connectable": False,
@@ -321,6 +333,21 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False,
         "domain": "switchbot",
         "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b",
+    },
+    {
+        "connectable": False,
+        "domain": "switchbot",
+        "manufacturer_id": 2409,
+    },
+    {
+        "connectable": True,
+        "domain": "switchbot",
+        "manufacturer_id": 89,
+    },
+    {
+        "connectable": True,
+        "domain": "switchbot",
+        "manufacturer_id": 741,
     },
     {
         "connectable": False,

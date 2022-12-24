@@ -2,8 +2,8 @@
   "domain": "rainbird",
   "name": "Rain Bird",
   "documentation": "https://www.home-assistant.io/integrations/rainbird",
-  "requirements": ["pyrainbird==0.6.2"],
-  "codeowners": ["@konikvranik"],
+  "requirements": ["pyrainbird==0.7.1"],
+  "codeowners": ["@konikvranik", "@allenporter"],
   "iot_class": "local_polling",
   "loggers": ["pyrainbird"]
 }

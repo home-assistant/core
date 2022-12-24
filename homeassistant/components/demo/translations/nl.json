@@ -1,4 +1,38 @@
 {
+    "entity": {
+        "climate": {
+            "ubercool": {
+                "state_attributes": {
+                    "fan_mode": {
+                        "state": {
+                            "auto_high": "Auto-hoog",
+                            "auto_low": "Auto-laag",
+                            "on_high": "Hoog",
+                            "on_low": "Laag"
+                        }
+                    },
+                    "swing_mode": {
+                        "state": {
+                            "1": "1",
+                            "2": "2",
+                            "3": "3",
+                            "auto": "Auto",
+                            "off": "Uit"
+                        }
+                    }
+                }
+            }
+        },
+        "vacuum": {
+            "model_s": {
+                "state_attributes": {
+                    "cleaned_area": {
+                        "name": "Schoongemaakt gebied"
+                    }
+                }
+            }
+        }
+    },
     "issues": {
         "bad_psu": {
             "fix_flow": {
@@ -9,6 +43,14 @@
                 }
             },
             "title": "De voeding is niet stabiel"
+        },
+        "cold_tea": {
+            "fix_flow": {
+                "abort": {
+                    "not_tea_time": "Kan op dit moment de thee niet opnieuw verwarmen"
+                }
+            },
+            "title": "De thee is koud"
         }
     },
     "options": {

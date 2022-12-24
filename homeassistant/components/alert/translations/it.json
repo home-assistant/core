@@ -1,0 +1,10 @@
+{
+    "state": {
+        "_": {
+            "idle": "Inattivo",
+            "off": "Riconosciuto",
+            "on": "Attivo"
+        }
+    },
+    "title": "Allarme"
+}

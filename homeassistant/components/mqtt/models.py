@@ -150,9 +150,9 @@ class MqttCommandTemplate:
         if self._entity:
             values[ATTR_ENTITY_ID] = self._entity.entity_id
             values[ATTR_NAME] = self._entity.name
-            if not self._template_state:
+            if not self._template_state and self._command_template.hass is not None:
                 self._template_state = template.TemplateStateFromEntityId(
-                    self._command_template.hass, self._entity.entity_id
+                    self._entity.hass, self._entity.entity_id
                 )
             values[ATTR_THIS] = self._template_state
 
@@ -200,6 +200,8 @@ class MqttValueTemplate:
         variables: TemplateVarsType = None,
     ) -> ReceivePayloadType:
         """Render with possible json value or pass-though a received MQTT value."""
+        rendered_payload: ReceivePayloadType
+
         if self._value_template is None:
             return payload
 
@@ -227,20 +229,27 @@ class MqttValueTemplate:
                 values,
                 self._value_template,
             )
-            return self._value_template.async_render_with_possible_json_value(
-                payload, variables=values
+            rendered_payload = (
+                self._value_template.async_render_with_possible_json_value(
+                    payload, variables=values
+                )
             )
+            return rendered_payload
 
         _LOGGER.debug(
-            "Rendering incoming payload '%s' with variables %s with default value '%s' and %s",
+            (
+                "Rendering incoming payload '%s' with variables %s with default value"
+                " '%s' and %s"
+            ),
             payload,
             values,
             default,
             self._value_template,
         )
-        return self._value_template.async_render_with_possible_json_value(
+        rendered_payload = self._value_template.async_render_with_possible_json_value(
             payload, default, variables=values
         )
+        return rendered_payload
 
 
 class EntityTopicState:

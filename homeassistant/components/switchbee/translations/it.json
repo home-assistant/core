@@ -13,19 +13,9 @@
                 "data": {
                     "host": "Host",
                     "password": "Password",
-                    "switch_as_light": "Inizializza gli interruttori come entit\u00e0 luce",
                     "username": "Nome utente"
                 },
-                "description": "Imposta l'integrazione di SwitchBee con Home Assistant."
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "devices": "Dispositivi da includere"
-                }
+                "description": "Configura l'integrazione SwitchBee con Home Assistant."
             }
         }
     }

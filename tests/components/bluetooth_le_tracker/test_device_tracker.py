@@ -31,7 +31,6 @@ class MockBleakClient:
 
     def __init__(self, *args, **kwargs):
         """Mock BleakClient."""
-        pass
 
     async def __aenter__(self, *args, **kwargs):
         """Mock BleakClient.__aenter__."""
@@ -39,7 +38,6 @@ class MockBleakClient:
 
     async def __aexit__(self, *args, **kwargs):
         """Mock BleakClient.__aexit__."""
-        pass
 
 
 class MockBleakClientTimesOut(MockBleakClient):

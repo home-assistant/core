@@ -8,7 +8,12 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any
 
-from gcal_sync.api import GoogleCalendarService, ListEventsRequest, SyncEventsRequest
+from gcal_sync.api import (
+    GoogleCalendarService,
+    ListEventsRequest,
+    Range,
+    SyncEventsRequest,
+)
 from gcal_sync.exceptions import ApiException
 from gcal_sync.model import AccessRole, DateOrDatetime, Event
 from gcal_sync.store import ScopedCalendarStore
@@ -18,7 +23,13 @@ import voluptuous as vol
 
 from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
+    EVENT_DESCRIPTION,
+    EVENT_END,
+    EVENT_RRULE,
+    EVENT_START,
+    EVENT_SUMMARY,
     CalendarEntity,
+    CalendarEntityFeature,
     CalendarEvent,
     extract_offset,
     is_offset_reached,
@@ -52,11 +63,9 @@ from . import (
     load_config,
     update_config,
 )
-from .api import get_feature_access
 from .const import (
     DATA_SERVICE,
     DATA_STORE,
-    EVENT_DESCRIPTION,
     EVENT_END_DATE,
     EVENT_END_DATETIME,
     EVENT_IN,
@@ -64,9 +73,7 @@ from .const import (
     EVENT_IN_WEEKS,
     EVENT_START_DATE,
     EVENT_START_DATETIME,
-    EVENT_SUMMARY,
     EVENT_TYPES_CONF,
-    FeatureAccess,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,6 +88,10 @@ SYNC_EVENT_MIN_TIME = timedelta(days=-90)
 # When an event is opaque, it means "Show me as busy" which is the default.  Events that
 # are not opaque are ignored by default.
 OPAQUE = "opaque"
+
+# Google calendar prefixes recurrence rules with RRULE: which
+# we need to strip when working with the frontend recurrence rule values
+RRULE_PREFIX = "RRULE:"
 
 _EVENT_IN_TYPES = vol.Schema(
     {
@@ -162,8 +173,9 @@ async def async_setup_entry(
             entity_enabled = data.get(CONF_TRACK, True)
             if not entity_enabled:
                 _LOGGER.warning(
-                    "The 'track' option in google_calendars.yaml has been deprecated. The setting "
-                    "has been imported to the UI, and should now be removed from google_calendars.yaml"
+                    "The 'track' option in google_calendars.yaml has been deprecated."
+                    " The setting has been imported to the UI, and should now be"
+                    " removed from google_calendars.yaml"
                 )
             entity_name = data[CONF_DEVICE_ID]
             # The unique id is based on the config entry and calendar id since multiple accounts
@@ -201,6 +213,7 @@ async def async_setup_entry(
             # Prefer calendar sync down of resources when possible. However, sync does not work
             # for search. Also free-busy calendars denormalize recurring events as individual
             # events which is not efficient for sync
+            support_write = calendar_item.access_role.is_writer
             if (
                 search := data.get(CONF_SEARCH)
                 or calendar_item.access_role == AccessRole.FREE_BUSY_READER
@@ -212,6 +225,7 @@ async def async_setup_entry(
                     calendar_id,
                     search,
                 )
+                support_write = False
             else:
                 request_template = SyncEventsRequest(
                     calendar_id=calendar_id,
@@ -235,6 +249,7 @@ async def async_setup_entry(
                     generate_entity_id(ENTITY_ID_FORMAT, entity_name, hass=hass),
                     unique_id,
                     entity_enabled,
+                    support_write,
                 )
             )
 
@@ -250,7 +265,7 @@ async def async_setup_entry(
         await hass.async_add_executor_job(append_calendars_to_config)
 
     platform = entity_platform.async_get_current_platform()
-    if get_feature_access(hass, config_entry) is FeatureAccess.read_write:
+    if any(calendar_item.access_role.is_writer for calendar_item in result.items):
         platform.async_register_entity_service(
             SERVICE_CREATE_EVENT,
             CREATE_EVENT_SCHEMA,
@@ -382,6 +397,7 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
         entity_id: str,
         unique_id: str | None,
         entity_enabled: bool,
+        supports_write: bool,
     ) -> None:
         """Create the Calendar event device."""
         super().__init__(coordinator)
@@ -395,6 +411,10 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
         self.entity_id = entity_id
         self._attr_unique_id = unique_id
         self._attr_entity_registry_enabled_default = entity_enabled
+        if supports_write:
+            self._attr_supported_features = (
+                CalendarEntityFeature.CREATE_EVENT | CalendarEntityFeature.DELETE_EVENT
+            )
 
     @property
     def should_poll(self) -> bool:
@@ -486,10 +506,65 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
         started, handled by CalendarEntity parent class.
         """
 
+    async def async_create_event(self, **kwargs: Any) -> None:
+        """Add a new event to calendar."""
+        dtstart = kwargs[EVENT_START]
+        dtend = kwargs[EVENT_END]
+        start: DateOrDatetime
+        end: DateOrDatetime
+        if isinstance(dtstart, datetime):
+            start = DateOrDatetime(
+                date_time=dt_util.as_local(dtstart),
+                timezone=str(dt_util.DEFAULT_TIME_ZONE),
+            )
+            end = DateOrDatetime(
+                date_time=dt_util.as_local(dtend),
+                timezone=str(dt_util.DEFAULT_TIME_ZONE),
+            )
+        else:
+            start = DateOrDatetime(date=dtstart)
+            end = DateOrDatetime(date=dtend)
+        event = Event.parse_obj(
+            {
+                EVENT_SUMMARY: kwargs[EVENT_SUMMARY],
+                "start": start,
+                "end": end,
+                EVENT_DESCRIPTION: kwargs.get(EVENT_DESCRIPTION),
+            }
+        )
+        if rrule := kwargs.get(EVENT_RRULE):
+            event.recurrence = [f"{RRULE_PREFIX}{rrule}"]
+
+        await self.coordinator.sync.store_service.async_add_event(event)
+        await self.coordinator.async_refresh()
+
+    async def async_delete_event(
+        self,
+        uid: str,
+        recurrence_id: str | None = None,
+        recurrence_range: str | None = None,
+    ) -> None:
+        """Delete an event on the calendar."""
+        range_value: Range = Range.NONE
+        if recurrence_range == Range.THIS_AND_FUTURE:
+            range_value = Range.THIS_AND_FUTURE
+        await self.coordinator.sync.store_service.async_delete_event(
+            ical_uuid=uid,
+            event_id=recurrence_id,
+            recurrence_range=range_value,
+        )
+        await self.coordinator.async_refresh()
+
 
 def _get_calendar_event(event: Event) -> CalendarEvent:
     """Return a CalendarEvent from an API event."""
+    rrule: str | None = None
+    if len(event.recurrence) == 1:
+        rrule = event.recurrence[0].lstrip(RRULE_PREFIX)
     return CalendarEvent(
+        uid=event.ical_uuid,
+        recurrence_id=event.id if event.recurring_event_id else None,
+        rrule=rrule,
         summary=event.summary,
         start=event.start.value,
         end=event.end.value,

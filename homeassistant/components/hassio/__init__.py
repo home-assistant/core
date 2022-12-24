@@ -241,7 +241,7 @@ HARDWARE_INTEGRATIONS = {
 
 @callback
 @bind_hass
-def get_info(hass):
+def get_info(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return generic information from Supervisor.
 
     Async friendly.
@@ -251,7 +251,7 @@ def get_info(hass):
 
 @callback
 @bind_hass
-def get_host_info(hass):
+def get_host_info(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return generic host information.
 
     Async friendly.
@@ -261,7 +261,7 @@ def get_host_info(hass):
 
 @callback
 @bind_hass
-def get_store(hass):
+def get_store(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return store information.
 
     Async friendly.
@@ -271,7 +271,7 @@ def get_store(hass):
 
 @callback
 @bind_hass
-def get_supervisor_info(hass):
+def get_supervisor_info(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return Supervisor information.
 
     Async friendly.
@@ -311,7 +311,7 @@ def get_addons_changelogs(hass):
 
 @callback
 @bind_hass
-def get_os_info(hass):
+def get_os_info(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return OS information.
 
     Async friendly.
@@ -321,7 +321,7 @@ def get_os_info(hass):
 
 @callback
 @bind_hass
-def get_core_info(hass):
+def get_core_info(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return Home Assistant Core information from Supervisor.
 
     Async friendly.
@@ -719,11 +719,11 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"Error on Supervisor API: {err}") from err
 
         new_data: dict[str, Any] = {}
-        supervisor_info = get_supervisor_info(self.hass)
+        supervisor_info = get_supervisor_info(self.hass) or {}
         addons_info = get_addons_info(self.hass)
         addons_stats = get_addons_stats(self.hass)
         addons_changelogs = get_addons_changelogs(self.hass)
-        store_data = get_store(self.hass)
+        store_data = get_store(self.hass) or {}
 
         repositories = {
             repo[ATTR_SLUG]: repo[ATTR_NAME]
@@ -866,6 +866,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         log_failures: bool = True,
         raise_on_auth_failed: bool = False,
         scheduled: bool = False,
+        raise_on_entry_error: bool = False,
     ) -> None:
         """Refresh data."""
         if not scheduled:
@@ -874,4 +875,6 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
                 await self.hassio.refresh_updates()
             except HassioAPIError as err:
                 _LOGGER.warning("Error on Supervisor API: %s", err)
-        await super()._async_refresh(log_failures, raise_on_auth_failed, scheduled)
+        await super()._async_refresh(
+            log_failures, raise_on_auth_failed, scheduled, raise_on_entry_error
+        )

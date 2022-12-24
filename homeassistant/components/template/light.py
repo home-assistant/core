@@ -254,9 +254,9 @@ class LightTemplate(TemplateEntity, LightEntity):
         return self._supported_color_modes
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> LightEntityFeature:
         """Flag supported features."""
-        supported_features = 0
+        supported_features = LightEntityFeature(0)
         if self._effect_script is not None:
             supported_features |= LightEntityFeature.EFFECT
         if self._supports_transition is True:

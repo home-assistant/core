@@ -17,6 +17,7 @@ from homeassistant.const import (
     WIND_SPEED,
     UnitOfLength,
     UnitOfMass,
+    UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -83,14 +84,14 @@ class UnitSystem:
         self,
         name: str,
         *,
-        accumulated_precipitation: str,
+        accumulated_precipitation: UnitOfPrecipitationDepth,
         conversions: dict[tuple[SensorDeviceClass | str | None, str | None], str],
-        length: str,
-        mass: str,
-        pressure: str,
-        temperature: str,
-        volume: str,
-        wind_speed: str,
+        length: UnitOfLength,
+        mass: UnitOfMass,
+        pressure: UnitOfPressure,
+        temperature: UnitOfTemperature,
+        volume: UnitOfVolume,
+        wind_speed: UnitOfSpeed,
     ) -> None:
         """Initialize the unit system object."""
         errors: str = ", ".join(
@@ -247,8 +248,14 @@ validate_unit_system = vol.All(
 
 METRIC_SYSTEM = UnitSystem(
     _CONF_UNIT_SYSTEM_METRIC,
-    accumulated_precipitation=UnitOfLength.MILLIMETERS,
+    accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
     conversions={
+        # Force atmospheric pressures to hPa
+        **{
+            ("atmospheric_pressure", unit): UnitOfPressure.HPA
+            for unit in UnitOfPressure
+            if unit != UnitOfPressure.HPA
+        },
         # Convert non-metric distances
         ("distance", UnitOfLength.FEET): UnitOfLength.METERS,
         ("distance", UnitOfLength.INCHES): UnitOfLength.MILLIMETERS,
@@ -256,6 +263,11 @@ METRIC_SYSTEM = UnitSystem(
         ("distance", UnitOfLength.YARDS): UnitOfLength.METERS,
         # Convert non-metric volumes of gas meters
         ("gas", UnitOfVolume.CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
+        # Convert non-metric precipitation
+        ("precipitation", UnitOfLength.INCHES): UnitOfLength.MILLIMETERS,
+        # Convert non-metric pressure
+        ("pressure", UnitOfPressure.PSI): UnitOfPressure.KPA,
+        ("pressure", UnitOfPressure.INHG): UnitOfPressure.HPA,
         # Convert non-metric speeds except knots to km/h
         ("speed", UnitOfSpeed.FEET_PER_SECOND): UnitOfSpeed.KILOMETERS_PER_HOUR,
         ("speed", UnitOfSpeed.MILES_PER_HOUR): UnitOfSpeed.KILOMETERS_PER_HOUR,
@@ -277,8 +289,14 @@ METRIC_SYSTEM = UnitSystem(
 
 US_CUSTOMARY_SYSTEM = UnitSystem(
     _CONF_UNIT_SYSTEM_US_CUSTOMARY,
-    accumulated_precipitation=UnitOfLength.INCHES,
+    accumulated_precipitation=UnitOfPrecipitationDepth.INCHES,
     conversions={
+        # Force atmospheric pressures to inHg
+        **{
+            ("atmospheric_pressure", unit): UnitOfPressure.INHG
+            for unit in UnitOfPressure
+            if unit != UnitOfPressure.INHG
+        },
         # Convert non-USCS distances
         ("distance", UnitOfLength.CENTIMETERS): UnitOfLength.INCHES,
         ("distance", UnitOfLength.KILOMETERS): UnitOfLength.MILES,
@@ -286,6 +304,16 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         ("distance", UnitOfLength.MILLIMETERS): UnitOfLength.INCHES,
         # Convert non-USCS volumes of gas meters
         ("gas", UnitOfVolume.CUBIC_METERS): UnitOfVolume.CUBIC_FEET,
+        # Convert non-USCS precipitation
+        ("precipitation", UnitOfLength.MILLIMETERS): UnitOfLength.INCHES,
+        # Convert non-USCS pressure
+        ("pressure", UnitOfPressure.MBAR): UnitOfPressure.PSI,
+        ("pressure", UnitOfPressure.CBAR): UnitOfPressure.PSI,
+        ("pressure", UnitOfPressure.BAR): UnitOfPressure.PSI,
+        ("pressure", UnitOfPressure.PA): UnitOfPressure.PSI,
+        ("pressure", UnitOfPressure.HPA): UnitOfPressure.PSI,
+        ("pressure", UnitOfPressure.KPA): UnitOfPressure.PSI,
+        ("pressure", UnitOfPressure.MMHG): UnitOfPressure.INHG,
         # Convert non-USCS speeds except knots to mph
         ("speed", UnitOfSpeed.METERS_PER_SECOND): UnitOfSpeed.MILES_PER_HOUR,
         ("speed", UnitOfSpeed.KILOMETERS_PER_HOUR): UnitOfSpeed.MILES_PER_HOUR,

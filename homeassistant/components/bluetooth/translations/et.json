@@ -9,9 +9,6 @@
             "bluetooth_confirm": {
                 "description": "Kas seadistada {name} ?"
             },
-            "enable_bluetooth": {
-                "description": "Kas soovid Bluetoothi seadistada?"
-            },
             "multiple_adapters": {
                 "data": {
                     "adapter": "Adapter"
@@ -19,7 +16,7 @@
                 "description": "Vali seadistamiseks Bluetooth-adapter"
             },
             "single_adapter": {
-                "description": "Kas seadistada Bluetooth-adapterit {nimi}?"
+                "description": "Kas seadistada Bluetooth-adapterit {name}?"
             },
             "user": {
                 "data": {
@@ -39,10 +36,8 @@
         "step": {
             "init": {
                 "data": {
-                    "adapter": "Sk\u00e4nnimiseks kasutatav Bluetoothi adapter",
                     "passive": "Passiivne sk\u00e4nnimine"
-                },
-                "description": "Passiivseks kuulamiseks on vaja BlueZ 5.63 v\u00f5i uuemat versiooni koos lubatud eksperimentaalsete funktsioonidega."
+                }
             }
         }
     }

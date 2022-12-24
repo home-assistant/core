@@ -10,7 +10,7 @@
         "flow_title": "{name} ({address})",
         "step": {
             "confirm": {
-                "description": "Do you want to setup {name}?"
+                "description": "Do you want to set up {name}?"
             },
             "password": {
                 "data": {
@@ -20,12 +20,8 @@
             },
             "user": {
                 "data": {
-                    "address": "Device address",
-                    "mac": "Device MAC address",
-                    "name": "Name",
-                    "password": "Password"
-                },
-                "title": "Setup Switchbot device"
+                    "address": "Device address"
+                }
             }
         }
     },
@@ -33,10 +29,7 @@
         "step": {
             "init": {
                 "data": {
-                    "retry_count": "Retry count",
-                    "retry_timeout": "Timeout between retries",
-                    "scan_timeout": "How long to scan for advertisement data",
-                    "update_time": "Time between updates (seconds)"
+                    "retry_count": "Retry count"
                 }
             }
         }

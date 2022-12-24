@@ -13,11 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components import frontend, websocket_api
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.recorder import (
-    get_instance,
-    history,
-    websocket_api as recorder_ws,
-)
+from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.recorder.filters import (
     Filters,
     sqlalchemy_filter_from_include_exclude_conf,
@@ -61,50 +57,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.http.register_view(HistoryPeriodView(filters, use_include_order))
     frontend.async_register_built_in_panel(hass, "history", "history", "hass:chart-box")
-    websocket_api.async_register_command(hass, ws_get_statistics_during_period)
-    websocket_api.async_register_command(hass, ws_get_list_statistic_ids)
     websocket_api.async_register_command(hass, ws_get_history_during_period)
 
     return True
-
-
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "history/statistics_during_period",
-        vol.Required("start_time"): str,
-        vol.Optional("end_time"): str,
-        vol.Optional("statistic_ids"): [str],
-        vol.Required("period"): vol.Any("5minute", "hour", "day", "month"),
-    }
-)
-@websocket_api.async_response
-async def ws_get_statistics_during_period(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Handle statistics websocket command."""
-    _LOGGER.warning(
-        "WS API 'history/statistics_during_period' is deprecated and will be removed in "
-        "Home Assistant Core 2022.12. Use 'recorder/statistics_during_period' instead"
-    )
-    await recorder_ws.ws_handle_get_statistics_during_period(hass, connection, msg)
-
-
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "history/list_statistic_ids",
-        vol.Optional("statistic_type"): vol.Any("sum", "mean"),
-    }
-)
-@websocket_api.async_response
-async def ws_get_list_statistic_ids(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Fetch a list of available statistic_id."""
-    _LOGGER.warning(
-        "WS API 'history/list_statistic_ids' is deprecated and will be removed in "
-        "Home Assistant Core 2022.12. Use 'recorder/list_statistic_ids' instead"
-    )
-    await recorder_ws.ws_handle_list_statistic_ids(hass, connection, msg)
 
 
 def _ws_get_significant_states(

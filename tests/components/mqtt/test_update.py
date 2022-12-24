@@ -30,6 +30,7 @@ from .test_common import (
     help_test_entity_device_info_with_connection,
     help_test_entity_device_info_with_identifier,
     help_test_entity_id_update_discovery_update,
+    help_test_reloadable,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setup_manual_entity_from_yaml,
@@ -109,6 +110,54 @@ async def test_run_update_setup(hass, mqtt_mock_entry_with_yaml_config):
     assert state.attributes.get("latest_version") == "2.0.0"
 
 
+async def test_run_update_setup_float(hass, mqtt_mock_entry_with_yaml_config):
+    """Test that it fetches the given payload when the version is parsable as a number."""
+    installed_version_topic = "test/installed-version"
+    latest_version_topic = "test/latest-version"
+    await async_setup_component(
+        hass,
+        mqtt.DOMAIN,
+        {
+            mqtt.DOMAIN: {
+                update.DOMAIN: {
+                    "state_topic": installed_version_topic,
+                    "latest_version_topic": latest_version_topic,
+                    "name": "Test Update",
+                    "release_summary": "Test release summary",
+                    "release_url": "https://example.com/release",
+                    "title": "Test Update Title",
+                    "entity_picture": "https://example.com/icon.png",
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+
+    async_fire_mqtt_message(hass, installed_version_topic, "1.9")
+    async_fire_mqtt_message(hass, latest_version_topic, "1.9")
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.test_update")
+    assert state.state == STATE_OFF
+    assert state.attributes.get("installed_version") == "1.9"
+    assert state.attributes.get("latest_version") == "1.9"
+    assert state.attributes.get("release_summary") == "Test release summary"
+    assert state.attributes.get("release_url") == "https://example.com/release"
+    assert state.attributes.get("title") == "Test Update Title"
+    assert state.attributes.get("entity_picture") == "https://example.com/icon.png"
+
+    async_fire_mqtt_message(hass, latest_version_topic, "2.0")
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.test_update")
+    assert state.state == STATE_ON
+    assert state.attributes.get("installed_version") == "1.9"
+    assert state.attributes.get("latest_version") == "2.0"
+
+
 async def test_value_template(hass, mqtt_mock_entry_with_yaml_config):
     """Test that it fetches the given payload with a template."""
     installed_version_topic = "test/installed-version"
@@ -153,6 +202,52 @@ async def test_value_template(hass, mqtt_mock_entry_with_yaml_config):
     assert state.state == STATE_ON
     assert state.attributes.get("installed_version") == "1.9.0"
     assert state.attributes.get("latest_version") == "2.0.0"
+
+
+async def test_value_template_float(hass, mqtt_mock_entry_with_yaml_config):
+    """Test that it fetches the given payload with a template when the version is parsable as a number."""
+    installed_version_topic = "test/installed-version"
+    latest_version_topic = "test/latest-version"
+    await async_setup_component(
+        hass,
+        mqtt.DOMAIN,
+        {
+            mqtt.DOMAIN: {
+                update.DOMAIN: {
+                    "state_topic": installed_version_topic,
+                    "value_template": "{{ value_json.installed }}",
+                    "latest_version_topic": latest_version_topic,
+                    "latest_version_template": "{{ value_json.latest }}",
+                    "name": "Test Update",
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+
+    async_fire_mqtt_message(hass, installed_version_topic, '{"installed":"1.9"}')
+    async_fire_mqtt_message(hass, latest_version_topic, '{"latest":"1.9"}')
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.test_update")
+    assert state.state == STATE_OFF
+    assert state.attributes.get("installed_version") == "1.9"
+    assert state.attributes.get("latest_version") == "1.9"
+    assert (
+        state.attributes.get("entity_picture")
+        == "https://brands.home-assistant.io/_/mqtt/icon.png"
+    )
+
+    async_fire_mqtt_message(hass, latest_version_topic, '{"latest":"2.0"}')
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.test_update")
+    assert state.state == STATE_ON
+    assert state.attributes.get("installed_version") == "1.9"
+    assert state.attributes.get("latest_version") == "2.0"
 
 
 async def test_empty_json_state_message(hass, mqtt_mock_entry_with_yaml_config):
@@ -203,8 +298,9 @@ async def test_json_state_message(hass, mqtt_mock_entry_with_yaml_config):
         hass,
         state_topic,
         '{"installed_version":"1.9.0","latest_version":"1.9.0",'
-        '"title":"Test Update Title","release_url":"https://example.com/release",'
-        '"release_summary":"Test release summary"}',
+        '"title":"Test Update 1 Title","release_url":"https://example.com/release1",'
+        '"release_summary":"Test release summary 1",'
+        '"entity_picture": "https://example.com/icon1.png"}',
     )
 
     await hass.async_block_till_done()
@@ -213,14 +309,16 @@ async def test_json_state_message(hass, mqtt_mock_entry_with_yaml_config):
     assert state.state == STATE_OFF
     assert state.attributes.get("installed_version") == "1.9.0"
     assert state.attributes.get("latest_version") == "1.9.0"
-    assert state.attributes.get("release_summary") == "Test release summary"
-    assert state.attributes.get("release_url") == "https://example.com/release"
-    assert state.attributes.get("title") == "Test Update Title"
+    assert state.attributes.get("release_summary") == "Test release summary 1"
+    assert state.attributes.get("release_url") == "https://example.com/release1"
+    assert state.attributes.get("title") == "Test Update 1 Title"
+    assert state.attributes.get("entity_picture") == "https://example.com/icon1.png"
 
     async_fire_mqtt_message(
         hass,
         state_topic,
-        '{"installed_version":"1.9.0","latest_version":"2.0.0","title":"Test Update Title"}',
+        '{"installed_version":"1.9.0","latest_version":"2.0.0",'
+        '"title":"Test Update 2 Title","entity_picture":"https://example.com/icon2.png"}',
     )
 
     await hass.async_block_till_done()
@@ -229,6 +327,7 @@ async def test_json_state_message(hass, mqtt_mock_entry_with_yaml_config):
     assert state.state == STATE_ON
     assert state.attributes.get("installed_version") == "1.9.0"
     assert state.attributes.get("latest_version") == "2.0.0"
+    assert state.attributes.get("entity_picture") == "https://example.com/icon2.png"
 
 
 async def test_json_state_message_with_template(hass, mqtt_mock_entry_with_yaml_config):
@@ -522,4 +621,13 @@ async def test_unload_entry(hass, mqtt_mock_entry_with_yaml_config, tmp_path):
     config = DEFAULT_CONFIG
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
+    )
+
+
+async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path):
+    """Test reloading the MQTT platform."""
+    domain = update.DOMAIN
+    config = DEFAULT_CONFIG
+    await help_test_reloadable(
+        hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
     )

@@ -56,7 +56,7 @@ async def test_step_import_existing_host(hass):
     mock_data.update({CONF_SK_NUM_TRIES: 3, CONF_DIM_MODE: 50})
     mock_entry = MockConfigEntry(domain=DOMAIN, data=mock_data)
     mock_entry.add_to_hass(hass)
-    # Inititalize a config flow with different data but same host address
+    # Initialize a config flow with different data but same host address
     with patch("pypck.connection.PchkConnectionManager.async_connect"):
         imported_data = IMPORT_DATA.copy()
         result = await hass.config_entries.flow.async_init(

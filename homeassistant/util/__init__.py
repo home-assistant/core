@@ -105,7 +105,7 @@ class Throttle:
     """A class for throttling the execution of tasks.
 
     This method decorator adds a cooldown to a method to prevent it from being
-    called more then 1 time within the timedelta interval `min_time` after it
+    called more than 1 time within the timedelta interval `min_time` after it
     returned its result.
 
     Calling a method a second time during the interval will return None.
@@ -156,7 +156,7 @@ class Throttle:
         # be prefixed by '.<locals>.' so we strip that out.
         is_func = (
             not hasattr(method, "__self__")
-            and "." not in method.__qualname__.split(".<locals>.")[-1]
+            and "." not in method.__qualname__.rpartition(".<locals>.")[-1]
         )
 
         @wraps(method)

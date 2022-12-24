@@ -45,6 +45,7 @@ def mock_addon_installed(
         "state": "stopped",
         "version": "1.0.0",
     }
+    addon_info.return_value["hostname"] = "core-test-addon"
     addon_info.return_value["state"] = "stopped"
     addon_info.return_value["version"] = "1.0.0"
     return addon_info
@@ -80,6 +81,7 @@ def addon_info_fixture() -> Generator[AsyncMock, None, None]:
         "homeassistant.components.hassio.addon_manager.async_get_addon_info",
     ) as addon_info:
         addon_info.return_value = {
+            "hostname": None,
             "options": {},
             "state": None,
             "update_available": False,
@@ -220,6 +222,7 @@ async def test_get_addon_info_not_installed(
 ) -> None:
     """Test get addon info when addon is not installed.."""
     assert await addon_manager.async_get_addon_info() == AddonInfo(
+        hostname=None,
         options={},
         state=AddonState.NOT_INSTALLED,
         update_available=False,
@@ -240,6 +243,7 @@ async def test_get_addon_info(
     """Test get addon info when addon is installed."""
     addon_installed.return_value["state"] = addon_info_state
     assert await addon_manager.async_get_addon_info() == AddonInfo(
+        hostname="core-test-addon",
         options={},
         state=addon_state,
         update_available=False,
@@ -337,6 +341,7 @@ async def test_schedule_install_addon(
     assert addon_manager.task_in_progress() is True
 
     assert await addon_manager.async_get_addon_info() == AddonInfo(
+        hostname="core-test-addon",
         options={},
         state=AddonState.INSTALLING,
         update_available=False,
@@ -671,6 +676,7 @@ async def test_schedule_update_addon(
     assert addon_manager.task_in_progress() is True
 
     assert await addon_manager.async_get_addon_info() == AddonInfo(
+        hostname="core-test-addon",
         options={},
         state=AddonState.UPDATING,
         update_available=True,
