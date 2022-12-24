@@ -13,14 +13,11 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "IP address / domain name / mDNS address",
+                    "host": "IP Address",
                     "port": "Port"
                 },
                 "description": "Set up your BleBox to integrate with Home Assistant.",
                 "title": "Set up your BleBox device"
-            },
-            "confirm_discovery": {
-                "description": "Would you like to configure {name} {host}:{port}?."
             }
         }
     }
