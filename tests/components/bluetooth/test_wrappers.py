@@ -43,6 +43,10 @@ class FakeScanner(BaseHaRemoteScanner):
         )
         self._details: dict[str, str | HaBluetoothConnector] = {}
 
+    def __repr__(self) -> str:
+        """Return the representation."""
+        return f"FakeScanner({self.name})"
+
     def inject_advertisement(
         self, device: BLEDevice, advertisement_data: AdvertisementData
     ) -> None:
@@ -65,6 +69,7 @@ class BaseFakeBleakClient:
     def __init__(self, address_or_ble_device: Union[BLEDevice, str], **kwargs):
         """Initialize the fake bleak client."""
         self._device_path = "/dev/test"
+        self._device = address_or_ble_device
         self._address = address_or_ble_device.address
 
     async def disconnect(self, *args, **kwargs):
@@ -100,7 +105,7 @@ class FakeBleakClientRaisesOnConnect(BaseFakeBleakClient):
 
 
 def _generate_ble_device_and_adv_data(
-    interface: str, mac: str
+    interface: str, mac: str, rssi: int
 ) -> tuple[BLEDevice, AdvertisementData]:
     """Generate a BLE device with adv data."""
     return (
@@ -110,7 +115,7 @@ def _generate_ble_device_and_adv_data(
             delegate="",
             details={"path": f"/org/bluez/{interface}/dev_{mac}"},
         ),
-        generate_advertisement_data(),
+        generate_advertisement_data(rssi=rssi),
     )
 
 
@@ -158,13 +163,13 @@ def _generate_scanners_with_fake_devices(hass):
     hci0_device_advs = {}
     for i in range(10):
         device, adv_data = _generate_ble_device_and_adv_data(
-            "hci0", f"00:00:00:00:00:{i:02x}"
+            "hci0", f"00:00:00:00:00:{i:02x}", rssi=-60
         )
         hci0_device_advs[device.address] = (device, adv_data)
     hci1_device_advs = {}
     for i in range(10):
         device, adv_data = _generate_ble_device_and_adv_data(
-            "hci1", f"00:00:00:00:00:{i:02x}"
+            "hci1", f"00:00:00:00:00:{i:02x}", rssi=-80
         )
         hci1_device_advs[device.address] = (device, adv_data)
 
@@ -294,5 +299,65 @@ async def test_release_slot_on_connect_exception(
         assert allocate_slot_mock.call_count == 1
         assert release_slot_mock.call_count == 1
 
+    cancel_hci0()
+    cancel_hci1()
+
+
+async def test_we_switch_adapters_on_failure(
+    hass,
+    two_adapters,
+    enable_bluetooth,
+    install_bleak_catcher,
+):
+    """Ensure we try the next best adapter after a failure."""
+    hci0_device_advs, cancel_hci0, cancel_hci1 = _generate_scanners_with_fake_devices(
+        hass
+    )
+    ble_device = hci0_device_advs["00:00:00:00:00:01"][0]
+    client = bleak.BleakClient(ble_device)
+
+    class FakeBleakClientFailsHCI0Only(BaseFakeBleakClient):
+        """Fake bleak client that fails to connect."""
+
+        async def connect(self, *args, **kwargs):
+            """Connect."""
+            if "/hci0/" in self._device.details["path"]:
+                return False
+            return True
+
+    with patch(
+        "homeassistant.components.bluetooth.wrappers.get_platform_client_backend_type",
+        return_value=FakeBleakClientFailsHCI0Only,
+    ):
+        assert await client.connect() is False
+
+    with patch(
+        "homeassistant.components.bluetooth.wrappers.get_platform_client_backend_type",
+        return_value=FakeBleakClientFailsHCI0Only,
+    ):
+        assert await client.connect() is False
+
+    # After two tries we should switch to hci1
+    with patch(
+        "homeassistant.components.bluetooth.wrappers.get_platform_client_backend_type",
+        return_value=FakeBleakClientFailsHCI0Only,
+    ):
+        assert await client.connect() is True
+
+    # ..and we remember that hci1 works as long as the client doesn't change
+    with patch(
+        "homeassistant.components.bluetooth.wrappers.get_platform_client_backend_type",
+        return_value=FakeBleakClientFailsHCI0Only,
+    ):
+        assert await client.connect() is True
+
+    # If we replace the client, we should try hci0 again
+    client = bleak.BleakClient(ble_device)
+
+    with patch(
+        "homeassistant.components.bluetooth.wrappers.get_platform_client_backend_type",
+        return_value=FakeBleakClientFailsHCI0Only,
+    ):
+        assert await client.connect() is False
     cancel_hci0()
     cancel_hci1()
