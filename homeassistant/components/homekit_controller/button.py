@@ -34,21 +34,39 @@ class HomeKitButtonEntityDescription(ButtonEntityDescription):
     write_value: int | str | None = None
 
 
-BUTTON_ENTITIES: dict[str, HomeKitButtonEntityDescription] = {
-    CharacteristicsTypes.VENDOR_HAA_SETUP: HomeKitButtonEntityDescription(
-        key=CharacteristicsTypes.VENDOR_HAA_SETUP,
-        name="Setup",
-        icon="mdi:cog",
-        entity_category=EntityCategory.CONFIG,
-        write_value="#HAA@trcmd",
-    ),
-    CharacteristicsTypes.VENDOR_HAA_UPDATE: HomeKitButtonEntityDescription(
-        key=CharacteristicsTypes.VENDOR_HAA_UPDATE,
-        name="Update",
-        device_class=ButtonDeviceClass.UPDATE,
-        entity_category=EntityCategory.CONFIG,
-        write_value="#HAA@trcmd",
-    ),
+BUTTON_ENTITIES: dict[
+    str, HomeKitButtonEntityDescription | list[HomeKitButtonEntityDescription]
+] = {
+    CharacteristicsTypes.VENDOR_HAA_SETUP: [
+        HomeKitButtonEntityDescription(
+            key=CharacteristicsTypes.VENDOR_HAA_UPDATE,
+            name="Update",
+            device_class=ButtonDeviceClass.UPDATE,
+            entity_category=EntityCategory.CONFIG,
+            write_value="#HAA@trcmd0",
+        ),
+        HomeKitButtonEntityDescription(
+            key=CharacteristicsTypes.VENDOR_HAA_SETUP,
+            name="Setup",
+            icon="mdi:cog",
+            entity_category=EntityCategory.CONFIG,
+            write_value="#HAA@trcmd1",
+        ),
+        HomeKitButtonEntityDescription(
+            key=CharacteristicsTypes.VENDOR_HAA_REBOOT,
+            name="Reboot",
+            device_class=ButtonDeviceClass.RESTART,
+            entity_category=EntityCategory.CONFIG,
+            write_value="#HAA@trcmd2",
+        ),
+        HomeKitButtonEntityDescription(
+            key=CharacteristicsTypes.VENDOR_HAA_WIFI_RECONNECT,
+            name="Reconnect WiFi",
+            device_class=ButtonDeviceClass.RESTART,
+            entity_category=EntityCategory.CONFIG,
+            write_value="#HAA@trcmd3",
+        ),
+    ],
     CharacteristicsTypes.IDENTIFY: HomeKitButtonEntityDescription(
         key=CharacteristicsTypes.IDENTIFY,
         name="Identify",
@@ -73,7 +91,11 @@ async def async_setup_entry(
         info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
 
         if description := BUTTON_ENTITIES.get(char.type):
-            entities.append(HomeKitButton(conn, info, char, description))
+            if isinstance(description, list):
+                for desc in description:
+                    entities.append(HomeKitButton(conn, info, char, desc))
+            else:
+                entities.append(HomeKitButton(conn, info, char, description))
         elif entity_type := BUTTON_ENTITY_CLASSES.get(char.type):
             entities.append(entity_type(conn, info, char))
         else:

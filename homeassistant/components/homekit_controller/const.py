@@ -75,7 +75,6 @@ CHARACTERISTIC_PLATFORMS = {
     CharacteristicsTypes.VENDOR_EVE_DEGREE_AIR_PRESSURE: "sensor",
     CharacteristicsTypes.VENDOR_EVE_DEGREE_ELEVATION: "number",
     CharacteristicsTypes.VENDOR_HAA_SETUP: "button",
-    CharacteristicsTypes.VENDOR_HAA_UPDATE: "button",
     CharacteristicsTypes.VENDOR_KOOGEEK_REALTIME_ENERGY: "sensor",
     CharacteristicsTypes.VENDOR_KOOGEEK_REALTIME_ENERGY_2: "sensor",
     CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: "number",
