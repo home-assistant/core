@@ -17,7 +17,6 @@ DOMAIN = "google_mail"
 
 MANUFACTURER = "Google, Inc."
 DEFAULT_ACCESS = [
-    "https://www.googleapis.com/auth/gmail.readonly",
     "https://www.googleapis.com/auth/gmail.compose",
     "https://www.googleapis.com/auth/gmail.settings.basic",
 ]

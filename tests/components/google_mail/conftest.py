@@ -23,10 +23,10 @@ ComponentSetup = Callable[[], Awaitable[None]]
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 SCOPES = [
-    "https://www.googleapis.com/auth/gmail.readonly",
     "https://www.googleapis.com/auth/gmail.compose",
     "https://www.googleapis.com/auth/gmail.settings.basic",
 ]
+SENSOR = "sensor.example_gmail_com_vacation_end_date"
 TITLE = "example@gmail.com"
 
 

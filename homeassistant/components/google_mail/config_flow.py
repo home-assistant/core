@@ -69,9 +69,7 @@ class OAuth2FlowHandler(
             users = build(  # pylint: disable=no-member
                 "gmail", "v1", credentials=credentials
             ).users()
-            res = users.getProfile(userId="me").execute()
-            logging.warning(res)
-            return res
+            return users.getProfile(userId="me").execute()
 
         email = (await self.hass.async_add_executor_job(_get_profile))["emailAddress"]
 
