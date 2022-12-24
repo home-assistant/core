@@ -1,23 +1,13 @@
 """The Nibe Heat Pump sensors."""
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
-
 from nibe.coil import Coil
-from nibe.coil_groups import (
-    UNIT_COILGROUPS,
-    WATER_HEATER_COILGROUPS,
-    UnitCoilGroup,
-    WaterHeaterCoilGroup,
-)
+from nibe.coil_groups import WATER_HEATER_COILGROUPS, WaterHeaterCoilGroup
 from nibe.exceptions import CoilNotFoundException
 
 from homeassistant.components.water_heater import (
-    ATTR_OPERATION_MODE,
     STATE_HEAT_PUMP,
     STATE_HIGH_DEMAND,
-    STATE_OFF,
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
@@ -28,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DOMAIN, LOGGER, Coordinator
-from .const import VALUES_PRIORITY_HOT_WATER, VALUES_TEMPORARY_LUX_INACTIVE
+from .const import VALUES_TEMPORARY_LUX_INACTIVE
 
 
 async def async_setup_entry(
@@ -40,48 +30,20 @@ async def async_setup_entry(
 
     coordinator: Coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    main_unit = UNIT_COILGROUPS.get(coordinator.series, {}).get("main")
-    if not main_unit:
-        LOGGER.debug("Skipping water_heaters - no main unit found")
-        return
-
     def water_heaters():
         for key, group in WATER_HEATER_COILGROUPS.get(coordinator.series, ()).items():
             try:
-                yield WaterHeater(coordinator, key, main_unit, group)
+                yield WaterHeater(coordinator, key, group)
             except CoilNotFoundException as exception:
                 LOGGER.debug("Skipping water heater: %r", exception)
 
     async_add_entities(water_heaters())
 
 
-class WaterHeaterEntityFixed(WaterHeaterEntity):
-    """Base class to disentangle the configuration of operation mode from the state."""
-
-    _attr_operation_mode: str | None
-
-    @property
-    def operation_mode(self) -> str | None:
-        """Return the operation modes currently configured."""
-        if hasattr(self, "_attr_operation_mode"):
-            return self._attr_operation_mode
-        return self.current_operation
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return extra state attributes."""
-        data: dict[str, Any] = {}
-        if (operation_mode := self.operation_mode) is not None:
-            data[ATTR_OPERATION_MODE] = operation_mode
-
-        return data
-
-
-class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntityFixed):
+class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntity):
     """Sensor entity."""
 
     _attr_entity_category = None
-    _attr_entity_registry_enabled_default = False
     _attr_has_entity_name = True
     _attr_supported_features = WaterHeaterEntityFeature.OPERATION_MODE
     _attr_max_temp = 35.0
@@ -91,7 +53,6 @@ class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntityFixed):
         self,
         coordinator: Coordinator,
         key: str,
-        unit: UnitCoilGroup,
         desc: WaterHeaterCoilGroup,
     ) -> None:
         """Initialize entity."""
@@ -103,7 +64,6 @@ class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntityFixed):
                 desc.hot_water_comfort_mode,
                 *set(desc.start_temperature.values()),
                 *set(desc.stop_temperature.values()),
-                unit.prio,
                 desc.active_accessory,
                 desc.temporary_lux,
             },
@@ -115,7 +75,6 @@ class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntityFixed):
         self._attr_device_info = coordinator.device_info
 
         self._attr_current_operation = None
-        self._attr_operation_mode = None
         self._attr_target_temperature_high = None
         self._attr_target_temperature_low = None
         self._attr_operation_list = [STATE_HEAT_PUMP]
@@ -129,7 +88,6 @@ class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntityFixed):
         self._coil_current = _get(desc.hot_water_load)
         self._coil_start_temperature = _map(desc.start_temperature)
         self._coil_stop_temperature = _map(desc.stop_temperature)
-        self._coil_prio = _get(unit.prio)
         self._coil_temporary_lux: Coil | None = None
         if desc.temporary_lux:
             self._coil_temporary_lux = _get(desc.temporary_lux)
@@ -177,17 +135,9 @@ class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntityFixed):
         if (
             mode := _get_value(self._coil_temporary_lux)
         ) is None or mode in VALUES_TEMPORARY_LUX_INACTIVE:
-            self._attr_operation_mode = STATE_HEAT_PUMP
+            self._attr_current_operation = STATE_HEAT_PUMP
         else:
-            self._attr_operation_mode = STATE_HIGH_DEMAND
-
-        if prio := _get_value(self._coil_prio):
-            if prio in VALUES_PRIORITY_HOT_WATER:
-                self._attr_current_operation = STATE_HEAT_PUMP
-            else:
-                self._attr_current_operation = STATE_OFF
-        else:
-            self._attr_current_operation = None
+            self._attr_current_operation = STATE_HIGH_DEMAND
 
         self.async_write_ha_state()
 
