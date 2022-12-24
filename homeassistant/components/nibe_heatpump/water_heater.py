@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DOMAIN, LOGGER, Coordinator
-from .const import VALUES_TEMPORARY_LUX_INACTIVE
+from .const import VALUES_TEMPORARY_LUX_INACTIVE, VALUES_TEMPORARY_LUX_ONE_TIME_INCREASE
 
 
 async def async_setup_entry(
@@ -98,7 +98,14 @@ class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntity):
         self._coil_hot_water_comfort_mode = _get(desc.hot_water_comfort_mode)
 
         if self._coil_temporary_lux:
-            self._attr_operation_list.append(STATE_HIGH_DEMAND)
+            if (
+                self._coil_temporary_lux.reverse_mappings
+                and VALUES_TEMPORARY_LUX_ONE_TIME_INCREASE
+                in self._coil_temporary_lux.reverse_mappings
+            ):
+                self._attr_operation_list.append(STATE_HIGH_DEMAND)
+            else:
+                LOGGER.warning("Skipping temporary lux since no mappings exist")
 
         self._attr_temperature_unit = self._coil_current.unit
 
@@ -133,11 +140,12 @@ class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntity):
             self._attr_target_temperature_high = None
 
         if (
-            mode := _get_value(self._coil_temporary_lux)
-        ) is None or mode in VALUES_TEMPORARY_LUX_INACTIVE:
-            self._attr_current_operation = STATE_HEAT_PUMP
-        else:
+            _get_value(self._coil_temporary_lux)
+            == VALUES_TEMPORARY_LUX_ONE_TIME_INCREASE
+        ):
             self._attr_current_operation = STATE_HIGH_DEMAND
+        else:
+            self._attr_current_operation = STATE_HEAT_PUMP
 
         self.async_write_ha_state()
 
@@ -163,10 +171,12 @@ class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntity):
             raise HomeAssistantError("Not supported")
 
         if operation_mode == STATE_HEAT_PUMP:
-            await self.coordinator.async_write_coil(self._coil_temporary_lux, "OFF")
+            await self.coordinator.async_write_coil(
+                self._coil_temporary_lux, VALUES_TEMPORARY_LUX_INACTIVE
+            )
         elif operation_mode == STATE_HIGH_DEMAND:
             await self.coordinator.async_write_coil(
-                self._coil_temporary_lux, "ONE TIME INCREASE"
+                self._coil_temporary_lux, VALUES_TEMPORARY_LUX_ONE_TIME_INCREASE
             )
         else:
             raise ValueError(f"Unsupported operation mode {operation_mode}")
