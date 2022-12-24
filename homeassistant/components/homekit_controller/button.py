@@ -37,7 +37,7 @@ class HomeKitButtonEntityDescription(ButtonEntityDescription):
 BUTTON_ENTITIES: dict[
     str, HomeKitButtonEntityDescription | list[HomeKitButtonEntityDescription]
 ] = {
-    CharacteristicsTypes.VENDOR_HAA_SETUP: [
+    CharacteristicsTypes.VENDOR_HAA_UPDATE: [
         HomeKitButtonEntityDescription(
             key=CharacteristicsTypes.VENDOR_HAA_UPDATE,
             name="Update",
@@ -46,21 +46,21 @@ BUTTON_ENTITIES: dict[
             write_value="#HAA@trcmd0",
         ),
         HomeKitButtonEntityDescription(
-            key=CharacteristicsTypes.VENDOR_HAA_SETUP,
+            key=CharacteristicsTypes.VENDOR_HAA_UPDATE,
             name="Setup",
             icon="mdi:cog",
             entity_category=EntityCategory.CONFIG,
             write_value="#HAA@trcmd1",
         ),
         HomeKitButtonEntityDescription(
-            key=CharacteristicsTypes.VENDOR_HAA_REBOOT,
+            key=CharacteristicsTypes.VENDOR_HAA_UPDATE,
             name="Reboot",
             device_class=ButtonDeviceClass.RESTART,
             entity_category=EntityCategory.CONFIG,
             write_value="#HAA@trcmd2",
         ),
         HomeKitButtonEntityDescription(
-            key=CharacteristicsTypes.VENDOR_HAA_WIFI_RECONNECT,
+            key=CharacteristicsTypes.VENDOR_HAA_UPDATE,
             name="Reconnect WiFi",
             device_class=ButtonDeviceClass.RESTART,
             entity_category=EntityCategory.CONFIG,
