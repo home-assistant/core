@@ -34,6 +34,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Elmax cover platform."""
     coordinator: ElmaxCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    # Add the cover feature only if supported by the current panel.
+    if coordinator.data is None or not coordinator.data.cover_feature:
+        _LOGGER.warning(
+            "Skipping setup of cover platform as it's not supported by the current Elmax Panel"
+        )
+        return
+
     known_devices = set()
 
     def _discover_new_devices():
