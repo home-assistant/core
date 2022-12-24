@@ -1,0 +1,6 @@
+notify:
+  - platform: mastodon
+    name: test_mastodon
+    access_token: ABC
+    client_id: XYZ-UVW
+    client_secret: KLM

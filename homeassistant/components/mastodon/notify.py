@@ -62,12 +62,17 @@ class MastodonNotificationService(BaseNotificationService):
         """Send a message as a user.
         Accepts additional arguments as listed in ACCEPTABLE_ADDITIONAL_PARAMS
         """
+        data = kwargs["data"] if "data" in kwargs else {}
+        params = {
+            param: value
+            for param, value in data.items()
+            if param in ACCEPTABLE_ADDITIONAL_PARAMS and value is not None
+        }
+        if len(params) != len(data):
+            ignored_params = set(data.keys()) - set(params.keys())
+            LOGGER.warning(f"ignoring additional parameters {ignored_params}")
+
         try:
-            params = {
-                param: value
-                for param, value in kwargs
-                if param in ACCEPTABLE_ADDITIONAL_PARAMS and value is not None
-            }
-            self._api.status_post(message, *params)
+            self._api.status_post(message, **params)
         except MastodonAPIError:
             LOGGER.error("Unable to send message")
