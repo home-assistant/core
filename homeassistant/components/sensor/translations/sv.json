@@ -6,6 +6,7 @@
             "is_carbon_dioxide": "Nuvarande {entity_name} koncentration av koldioxid",
             "is_carbon_monoxide": "Nuvarande {entity_name} koncentration av kolmonoxid",
             "is_current": "Nuvarande",
+            "is_distance": "Aktuellt avst\u00e5nd {entity_name}",
             "is_energy": "Nuvarande {entity_name} energi",
             "is_frequency": "Nuvarande frekvens",
             "is_gas": "Nuvarande {entity_name} gas",
@@ -24,11 +25,14 @@
             "is_pressure": "Aktuellt {entity_name} tryck",
             "is_reactive_power": "Nuvarande {entity_name} reaktiv effekt",
             "is_signal_strength": "Nuvarande {entity_name} signalstyrka",
+            "is_speed": "Aktuell hastighet {entity_name}",
             "is_sulphur_dioxide": "Nuvarande koncentration av svaveldioxid i {entity_name}.",
             "is_temperature": "Aktuell {entity_name} temperatur",
             "is_value": "Nuvarande {entity_name} v\u00e4rde",
             "is_volatile_organic_compounds": "Nuvarande {entity_name} koncentration av flyktiga organiska \u00e4mnen",
-            "is_voltage": "Nuvarande {entity_name} sp\u00e4nning"
+            "is_voltage": "Nuvarande {entity_name} sp\u00e4nning",
+            "is_volume": "Aktuell volym {entity_name}",
+            "is_weight": "Nuvarande vikt {entity_name}"
         },
         "trigger_type": {
             "apparent_power": "{entity_name} uppenbara effektf\u00f6r\u00e4ndringar",
@@ -36,6 +40,7 @@
             "carbon_dioxide": "{entity_name} f\u00f6r\u00e4ndringar av koldioxidkoncentrationen",
             "carbon_monoxide": "{entity_name} f\u00f6r\u00e4ndringar av kolmonoxidkoncentrationen",
             "current": "{entity_name} aktuella \u00e4ndringar",
+            "distance": "{entity_name} avst\u00e5ndsf\u00f6r\u00e4ndringar",
             "energy": "Energif\u00f6r\u00e4ndringar",
             "frequency": "{entity_name} frekvens\u00e4ndringar",
             "gas": "{entity_name} gasf\u00f6r\u00e4ndringar",
@@ -54,11 +59,14 @@
             "pressure": "{entity_name} tryckf\u00f6r\u00e4ndringar",
             "reactive_power": "{entity_name} reaktiv effekt\u00e4ndring",
             "signal_strength": "{entity_name} signalstyrka \u00e4ndras",
+            "speed": "{entity_name} hastighets\u00e4ndringar",
             "sulphur_dioxide": "{entity_name} f\u00f6r\u00e4ndringar av koncentrationen av svaveldioxid",
             "temperature": "{entity_name} temperaturf\u00f6r\u00e4ndringar",
             "value": "{entity_name} v\u00e4rde \u00e4ndras",
             "volatile_organic_compounds": "{entity_name} koncentrations\u00e4ndringar av flyktiga organiska \u00e4mnen",
-            "voltage": "{entity_name} sp\u00e4nningsf\u00f6r\u00e4ndringar"
+            "voltage": "{entity_name} sp\u00e4nningsf\u00f6r\u00e4ndringar",
+            "volume": "{entity_name} volymf\u00f6r\u00e4ndringar",
+            "weight": "{entity_name} viktf\u00f6r\u00e4ndringar"
         }
     },
     "state": {

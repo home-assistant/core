@@ -23,5 +23,14 @@
                 "title": "RTSPtoWebRTC konfigur\u00e1l\u00e1sa"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "stun_server": "Stun szerver c\u00edme (host:port)"
+                }
+            }
+        }
     }
 }

@@ -18,7 +18,7 @@ from tesla_powerwall import (
 from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -218,6 +218,17 @@ def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
         grid_services_active=power_wall.is_grid_services_active(),
         grid_status=power_wall.get_grid_status(),
         backup_reserve=backup_reserve,
+    )
+
+
+@callback
+def async_last_update_was_successful(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Return True if the last update was successful."""
+    return bool(
+        (domain_data := hass.data.get(DOMAIN))
+        and (entry_data := domain_data.get(entry.entry_id))
+        and (coordinator := entry_data.get(POWERWALL_COORDINATOR))
+        and coordinator.last_update_success
     )
 
 

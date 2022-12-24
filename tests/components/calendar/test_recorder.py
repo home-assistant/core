@@ -13,7 +13,7 @@ from tests.common import async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
 
 
-async def test_events_http_api(hass, recorder_mock):
+async def test_events_http_api(recorder_mock, hass):
     """Test the calendar demo view."""
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
     await hass.async_block_till_done()

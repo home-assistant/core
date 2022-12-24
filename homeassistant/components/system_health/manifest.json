@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/system_health",
   "dependencies": ["http"],
   "codeowners": [],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "integration_type": "system"
 }

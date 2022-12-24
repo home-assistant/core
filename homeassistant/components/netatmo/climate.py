@@ -23,7 +23,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_HALVES,
     STATE_OFF,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -134,7 +134,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
     _attr_preset_modes = SUPPORT_PRESET
     _attr_supported_features = SUPPORT_FLAGS
     _attr_target_temperature_step = PRECISION_HALVES
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, netatmo_device: NetatmoRoom) -> None:
         """Initialize the sensor."""
@@ -315,7 +315,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         elif preset_mode in (PRESET_BOOST, STATE_NETATMO_MAX):
             await self._room.async_therm_set(PRESET_MAP_NETATMO[preset_mode])
         elif preset_mode in (PRESET_SCHEDULE, PRESET_FROST_GUARD, PRESET_AWAY):
-            await self._room.async_therm_set(PRESET_MAP_NETATMO[preset_mode])
+            await self._room.home.async_set_thermmode(PRESET_MAP_NETATMO[preset_mode])
         else:
             _LOGGER.error("Preset mode '%s' not available", preset_mode)
 

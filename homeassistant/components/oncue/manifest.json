@@ -10,7 +10,7 @@
   ],
   "documentation": "https://www.home-assistant.io/integrations/oncue",
   "requirements": ["aiooncue==0.3.4"],
-  "codeowners": ["@bdraco"],
+  "codeowners": ["@bdraco", "@peterager"],
   "iot_class": "cloud_polling",
   "loggers": ["aiooncue"]
 }

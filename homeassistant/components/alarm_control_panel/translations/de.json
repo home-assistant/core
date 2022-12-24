@@ -5,7 +5,7 @@
             "arm_home": "Aktiviere {entity_name} Zuhause",
             "arm_night": "Aktiviere {entity_name} Nacht-Modus",
             "arm_vacation": "Aktiviere {entity_name} Urlaub",
-            "disarm": "Deaktivere {entity_name}",
+            "disarm": "Deaktiviere {entity_name}",
             "trigger": "Ausl\u00f6ser {entity_name}"
         },
         "condition_type": {

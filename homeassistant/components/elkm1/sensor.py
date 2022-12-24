@@ -16,7 +16,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ELECTRIC_POTENTIAL_VOLT
+from homeassistant.const import UnitOfElectricPotential
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
@@ -278,7 +278,7 @@ class ElkZone(ElkSensor):
         if self._element.definition == ZoneType.TEMPERATURE:
             return self._temperature_unit
         if self._element.definition == ZoneType.ANALOG_ZONE:
-            return ELECTRIC_POTENTIAL_VOLT
+            return UnitOfElectricPotential.VOLT
         return None
 
     def _element_changed(self, _: Element, changeset: Any) -> None:

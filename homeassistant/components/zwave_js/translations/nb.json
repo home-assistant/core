@@ -1,0 +1,12 @@
+{
+    "config": {
+        "error": {
+            "unknown": "Uventet feil"
+        }
+    },
+    "options": {
+        "error": {
+            "unknown": "Uventet feil"
+        }
+    }
+}

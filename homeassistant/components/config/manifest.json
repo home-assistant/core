@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/config",
   "dependencies": ["http"],
   "codeowners": ["@home-assistant/core"],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "integration_type": "system"
 }

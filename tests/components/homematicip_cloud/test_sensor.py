@@ -193,6 +193,50 @@ async def test_hmip_temperature_sensor3(hass, default_mock_hap_factory):
     assert ha_state.attributes[ATTR_TEMPERATURE_OFFSET] == 10
 
 
+async def test_hmip_thermostat_evo_heating(hass, default_mock_hap_factory):
+    """Test HomematicipHeatingThermostat for HmIP-eTRV-E."""
+    entity_id = "sensor.thermostat_evo_heating"
+    entity_name = "thermostat_evo Heating"
+    device_model = "HmIP-eTRV-E"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["thermostat_evo"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == "33"
+    await async_manipulate_test_data(hass, hmip_device, "valvePosition", 0.4)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert ha_state.state == "40"
+
+
+async def test_hmip_thermostat_evo_temperature(hass, default_mock_hap_factory):
+    """Test HomematicipTemperatureSensor."""
+    entity_id = "sensor.thermostat_evo_temperature"
+    entity_name = "thermostat_evo Temperature"
+    device_model = "HmIP-eTRV-E"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["thermostat_evo"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == "18.7"
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    await async_manipulate_test_data(hass, hmip_device, "valveActualTemperature", 23.5)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == "23.5"
+
+    await async_manipulate_test_data(hass, hmip_device, "temperatureOffset", 0.7)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.attributes[ATTR_TEMPERATURE_OFFSET] == 0.7
+
+
 async def test_hmip_power_sensor(hass, default_mock_hap_factory):
     """Test HomematicipPowerSensor."""
     entity_id = "sensor.flur_oben_power"

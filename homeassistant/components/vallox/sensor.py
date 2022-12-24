@@ -14,7 +14,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
-    TEMP_CELSIUS,
+    REVOLUTIONS_PER_MINUTE,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -28,7 +29,7 @@ from .const import (
     METRIC_KEY_MODE,
     MODE_ON,
     VALLOX_CELL_STATE_TO_STR,
-    VALLOX_PROFILE_TO_STR_REPORTABLE,
+    VALLOX_PROFILE_TO_PRESET_MODE_REPORTABLE,
 )
 
 
@@ -75,7 +76,7 @@ class ValloxProfileSensor(ValloxSensorEntity):
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         vallox_profile = self.coordinator.data.profile
-        return VALLOX_PROFILE_TO_STR_REPORTABLE.get(vallox_profile)
+        return VALLOX_PROFILE_TO_PRESET_MODE_REPORTABLE.get(vallox_profile)
 
 
 # There is a quirk with respect to the fan speed reporting. The device keeps on reporting the last
@@ -156,7 +157,7 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         metric_key="A_CYC_EXTR_FAN_SPEED",
         icon="mdi:fan",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="RPM",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         entity_type=ValloxFanSpeedSensor,
         entity_registry_enabled_default=False,
     ),
@@ -166,7 +167,7 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         metric_key="A_CYC_SUPP_FAN_SPEED",
         icon="mdi:fan",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="RPM",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         entity_type=ValloxFanSpeedSensor,
         entity_registry_enabled_default=False,
     ),
@@ -189,7 +190,7 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         metric_key="A_CYC_TEMP_EXTRACT_AIR",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     ValloxSensorEntityDescription(
         key="exhaust_air",
@@ -197,7 +198,7 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         metric_key="A_CYC_TEMP_EXHAUST_AIR",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     ValloxSensorEntityDescription(
         key="outdoor_air",
@@ -205,7 +206,7 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         metric_key="A_CYC_TEMP_OUTDOOR_AIR",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     ValloxSensorEntityDescription(
         key="supply_air",
@@ -213,7 +214,7 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         metric_key="A_CYC_TEMP_SUPPLY_AIR",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     ValloxSensorEntityDescription(
         key="supply_cell_air",
@@ -221,7 +222,7 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         metric_key="A_CYC_TEMP_SUPPLY_CELL_AIR",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     ValloxSensorEntityDescription(
         key="optional_air",
@@ -229,7 +230,7 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         metric_key="A_CYC_TEMP_OPTIONAL",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_registry_enabled_default=False,
     ),
     ValloxSensorEntityDescription(

@@ -23,7 +23,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -98,7 +98,7 @@ async def async_setup_entry(
 class MelCloudClimate(ClimateEntity):
     """Base climate device."""
 
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, device: MelCloudDevice) -> None:
         """Initialize the climate."""
@@ -240,7 +240,8 @@ class AtaDeviceClimate(MelCloudClimate):
         """Set horizontal vane position."""
         if position not in self._device.vane_horizontal_positions:
             raise ValueError(
-                f"Invalid horizontal vane position {position}. Valid positions: [{self._device.vane_horizontal_positions}]."
+                f"Invalid horizontal vane position {position}. Valid positions:"
+                f" [{self._device.vane_horizontal_positions}]."
             )
         await self._device.set({ata.PROPERTY_VANE_HORIZONTAL: position})
 
@@ -248,7 +249,8 @@ class AtaDeviceClimate(MelCloudClimate):
         """Set vertical vane position."""
         if position not in self._device.vane_vertical_positions:
             raise ValueError(
-                f"Invalid vertical vane position {position}. Valid positions: [{self._device.vane_vertical_positions}]."
+                f"Invalid vertical vane position {position}. Valid positions:"
+                f" [{self._device.vane_vertical_positions}]."
             )
         await self._device.set({ata.PROPERTY_VANE_VERTICAL: position})
 

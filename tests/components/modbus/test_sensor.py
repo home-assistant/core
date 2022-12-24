@@ -717,6 +717,7 @@ async def test_lazy_error_sensor(hass, mock_do_cycle, start_expect, end_expect):
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
+                    CONF_SCAN_INTERVAL: 1,
                 },
             ],
         },
@@ -758,6 +759,84 @@ async def test_lazy_error_sensor(hass, mock_do_cycle, start_expect, end_expect):
     ],
 )
 async def test_struct_sensor(hass, mock_do_cycle, expected):
+    """Run test for sensor struct."""
+    assert hass.states.get(ENTITY_ID).state == expected
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 201,
+                    CONF_SCAN_INTERVAL: 1,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "config_addon,register_words,expected",
+    [
+        (
+            {
+                CONF_COUNT: 1,
+                CONF_SWAP: CONF_SWAP_NONE,
+                CONF_DATA_TYPE: DataType.UINT16,
+            },
+            [0x0102],
+            "258",
+        ),
+        (
+            {
+                CONF_COUNT: 1,
+                CONF_SWAP: CONF_SWAP_BYTE,
+                CONF_DATA_TYPE: DataType.UINT16,
+            },
+            [0x0102],
+            "513",
+        ),
+        (
+            {
+                CONF_COUNT: 2,
+                CONF_SWAP: CONF_SWAP_NONE,
+                CONF_DATA_TYPE: DataType.UINT32,
+            },
+            [0x0102, 0x0304],
+            "16909060",
+        ),
+        (
+            {
+                CONF_COUNT: 2,
+                CONF_SWAP: CONF_SWAP_BYTE,
+                CONF_DATA_TYPE: DataType.UINT32,
+            },
+            [0x0102, 0x0304],
+            "33620995",
+        ),
+        (
+            {
+                CONF_COUNT: 2,
+                CONF_SWAP: CONF_SWAP_WORD,
+                CONF_DATA_TYPE: DataType.UINT32,
+            },
+            [0x0102, 0x0304],
+            "50594050",
+        ),
+        (
+            {
+                CONF_COUNT: 2,
+                CONF_SWAP: CONF_SWAP_WORD_BYTE,
+                CONF_DATA_TYPE: DataType.UINT32,
+            },
+            [0x0102, 0x0304],
+            "67305985",
+        ),
+    ],
+)
+async def test_wrap_sensor(hass, mock_do_cycle, expected):
     """Run test for sensor struct."""
     assert hass.states.get(ENTITY_ID).state == expected
 

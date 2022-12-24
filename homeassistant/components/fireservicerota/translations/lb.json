@@ -11,12 +11,6 @@
             "invalid_auth": "Ong\u00eblteg Authentifikatioun"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "password": "Passwuert"
-                },
-                "description": "Acc\u00e8s Jetons sin ong\u00eblteg, verbann dech fir se n\u00e9i z'erstellen"
-            },
             "user": {
                 "data": {
                     "password": "Passwuert",

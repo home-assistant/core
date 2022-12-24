@@ -165,7 +165,7 @@ class Events(Base):  # type: ignore[misc,valid-type]
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
-            f"<recorder.Events("
+            "<recorder.Events("
             f"id={self.event_id}, type='{self.event_type}', "
             f"origin_idx='{self.origin_idx}', time_fired='{self.time_fired}'"
             f", data_id={self.data_id})>"
@@ -222,9 +222,9 @@ class EventData(Base):  # type: ignore[misc,valid-type]
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
-            f"<recorder.EventData("
+            "<recorder.EventData("
             f"id={self.data_id}, hash='{self.hash}', data='{self.shared_data}'"
-            f")>"
+            ")>"
         )
 
     @staticmethod
@@ -290,12 +290,10 @@ class States(Base):  # type: ignore[misc,valid-type]
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
-            f"<recorder.States("
-            f"id={self.state_id}, entity_id='{self.entity_id}', "
-            f"state='{self.state}', event_id='{self.event_id}', "
-            f"last_updated='{self.last_updated.isoformat(sep=' ', timespec='seconds')}', "
-            f"old_state_id={self.old_state_id}, attributes_id={self.attributes_id}"
-            f")>"
+            f"<recorder.States(id={self.state_id}, entity_id='{self.entity_id}',"
+            f" state='{self.state}', event_id='{self.event_id}',"
+            f" last_updated='{self.last_updated.isoformat(sep=' ', timespec='seconds')}',"
+            f" old_state_id={self.old_state_id}, attributes_id={self.attributes_id})>"
         )
 
     @staticmethod
@@ -374,9 +372,8 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
-            f"<recorder.StateAttributes("
-            f"id={self.attributes_id}, hash='{self.hash}', attributes='{self.shared_attrs}'"
-            f")>"
+            f"<recorder.StateAttributes(id={self.attributes_id}, hash='{self.hash}',"
+            f" attributes='{self.shared_attrs}')>"
         )
 
     @staticmethod
@@ -511,10 +508,10 @@ class RecorderRuns(Base):  # type: ignore[misc,valid-type]
     __table_args__ = (Index("ix_recorder_runs_start_end", "start", "end"),)
     __tablename__ = TABLE_RECORDER_RUNS
     run_id = Column(Integer, Identity(), primary_key=True)
-    start = Column(DateTime(timezone=True), default=dt_util.utcnow)
-    end = Column(DateTime(timezone=True))
+    start = Column(DATETIME_TYPE, default=dt_util.utcnow)
+    end = Column(DATETIME_TYPE)
     closed_incorrect = Column(Boolean, default=False)
-    created = Column(DateTime(timezone=True), default=dt_util.utcnow)
+    created = Column(DATETIME_TYPE, default=dt_util.utcnow)
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -522,11 +519,10 @@ class RecorderRuns(Base):  # type: ignore[misc,valid-type]
             f"'{self.end.isoformat(sep=' ', timespec='seconds')}'" if self.end else None
         )
         return (
-            f"<recorder.RecorderRuns("
-            f"id={self.run_id}, start='{self.start.isoformat(sep=' ', timespec='seconds')}', "
-            f"end={end}, closed_incorrect={self.closed_incorrect}, "
-            f"created='{self.created.isoformat(sep=' ', timespec='seconds')}'"
-            f")>"
+            f"<recorder.RecorderRuns(id={self.run_id},"
+            f" start='{self.start.isoformat(sep=' ', timespec='seconds')}', end={end},"
+            f" closed_incorrect={self.closed_incorrect},"
+            f" created='{self.created.isoformat(sep=' ', timespec='seconds')}')>"
         )
 
     def entity_ids(self, point_in_time: datetime | None = None) -> list[str]:
@@ -561,15 +557,15 @@ class SchemaChanges(Base):  # type: ignore[misc,valid-type]
     __tablename__ = TABLE_SCHEMA_CHANGES
     change_id = Column(Integer, Identity(), primary_key=True)
     schema_version = Column(Integer)
-    changed = Column(DateTime(timezone=True), default=dt_util.utcnow)
+    changed = Column(DATETIME_TYPE, default=dt_util.utcnow)
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
-            f"<recorder.SchemaChanges("
+            "<recorder.SchemaChanges("
             f"id={self.change_id}, schema_version={self.schema_version}, "
             f"changed='{self.changed.isoformat(sep=' ', timespec='seconds')}'"
-            f")>"
+            ")>"
         )
 
 
@@ -578,14 +574,13 @@ class StatisticsRuns(Base):  # type: ignore[misc,valid-type]
 
     __tablename__ = TABLE_STATISTICS_RUNS
     run_id = Column(Integer, Identity(), primary_key=True)
-    start = Column(DateTime(timezone=True), index=True)
+    start = Column(DATETIME_TYPE, index=True)
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
-            f"<recorder.StatisticsRuns("
-            f"id={self.run_id}, start='{self.start.isoformat(sep=' ', timespec='seconds')}', "
-            f")>"
+            f"<recorder.StatisticsRuns(id={self.run_id},"
+            f" start='{self.start.isoformat(sep=' ', timespec='seconds')}', )>"
         )
 
 

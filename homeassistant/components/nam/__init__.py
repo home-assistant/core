@@ -56,6 +56,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await nam.async_check_credentials()
+    except ApiError as err:
+        raise ConfigEntryNotReady from err
     except AuthFailed as err:
         raise ConfigEntryAuthFailed from err
 

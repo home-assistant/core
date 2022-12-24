@@ -23,7 +23,7 @@
                 "title": "Authorize Sony Bravia TV"
             },
             "confirm": {
-                "description": "Do you want to start set up?"
+                "description": "Do you want to start setup?"
             },
             "reauth_confirm": {
                 "data": {
@@ -41,6 +41,9 @@
         }
     },
     "options": {
+        "abort": {
+            "failed_update": "An error occurred while updating the list of sources.\n\n Ensure that your TV is turned on before trying to set it up."
+        },
         "step": {
             "user": {
                 "data": {

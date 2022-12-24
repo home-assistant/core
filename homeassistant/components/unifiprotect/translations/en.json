@@ -16,7 +16,7 @@
                     "password": "Password",
                     "username": "Username"
                 },
-                "description": "Do you want to setup {name} ({ip_address})? You will need a local user created in your UniFi OS Console to log in with. Ubiquiti Cloud Users will not work. For more information: {local_user_documentation_url}",
+                "description": "Do you want to set up {name} ({ip_address})? You will need a local user created in your UniFi OS Console to log in with. Ubiquiti Cloud Users will not work. For more information: {local_user_documentation_url}",
                 "title": "UniFi Protect Discovered"
             },
             "reauth_confirm": {
@@ -41,16 +41,47 @@
             }
         }
     },
-    "options": {
-        "error": {
-            "invalid_mac_list": "Must be a list of MAC addresses seperated by commas"
+    "entity": {
+        "sensor": {
+            "license_plate": {
+                "state": {
+                    "none": "Clear"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecate_smart_sensor": {
+            "description": "The unified \"Detected Object\" sensor for smart detections is now deprecated. It has been replaced with individual smart detection binary sensors for each smart detection type. Please update any templates or automations accordingly.",
+            "title": "Smart Detection Sensor Deprecated"
         },
+        "ea_setup_failed": {
+            "description": "You are using v{version} of UniFi Protect which is an Early Access version. An unrecoverable error occurred while trying to load the integration. Please [downgrade to a stable version](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) of UniFi Protect to continue using the integration.\n\nError: {error}",
+            "title": "Setup error using Early Access version"
+        },
+        "ea_warning": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Are you sure you want to run unsupported versions of UniFi Protect? This may cause your Home Assistant integration to break.",
+                        "title": "v{version} is an Early Access version"
+                    },
+                    "start": {
+                        "description": "You are using v{version} of UniFi Protect which is an Early Access version. [Early Access versions are not supported by Home Assistant](https://www.home-assistant.io/integrations/unifiprotect#about-unifi-early-access) and it is recommended to go back to a stable release as soon as possible.\n\nBy submitting this form you have either [downgraded UniFi Protect](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) or you agree to run an unsupported version of UniFi Protect.",
+                        "title": "v{version} is an Early Access version"
+                    }
+                }
+            },
+            "title": "UniFi Protect v{version} is an Early Access version"
+        }
+    },
+    "options": {
         "step": {
             "init": {
                 "data": {
                     "all_updates": "Realtime metrics (WARNING: Greatly increases CPU usage)",
+                    "allow_ea": "Allow Early Access versions of Protect (WARNING: Will mark your integration as unsupported)",
                     "disable_rtsp": "Disable the RTSP stream",
-                    "ignored_devices": "Comma separated list of MAC addresses of devices to ignore",
                     "max_media": "Max number of event to load for Media Browser (increases RAM usage)",
                     "override_connection_host": "Override Connection Host"
                 },

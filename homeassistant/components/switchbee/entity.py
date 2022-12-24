@@ -3,8 +3,8 @@ import logging
 from typing import Generic, TypeVar, cast
 
 from switchbee import SWITCHBEE_BRAND
-from switchbee.api import SwitchBeeDeviceOfflineError, SwitchBeeError
-from switchbee.device import SwitchBeeBaseDevice
+from switchbee.api.central_unit import SwitchBeeDeviceOfflineError, SwitchBeeError
+from switchbee.device import DeviceType, SwitchBeeBaseDevice
 
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -46,12 +46,15 @@ class SwitchBeeDeviceEntity(SwitchBeeEntity[_DeviceTypeT]):
         """Initialize the Switchbee device."""
         super().__init__(device, coordinator)
         self._is_online: bool = True
+        identifier = (
+            device.id if device.type == DeviceType.Thermostat else device.unit_id
+        )
         self._attr_device_info = DeviceInfo(
-            name=f"SwitchBee {device.unit_id}",
+            name=device.zone,
             identifiers={
                 (
                     DOMAIN,
-                    f"{device.unit_id}-{coordinator.mac_formatted}",
+                    f"{identifier}-{coordinator.mac_formatted}",
                 )
             },
             manufacturer=SWITCHBEE_BRAND,
@@ -95,7 +98,10 @@ class SwitchBeeDeviceEntity(SwitchBeeEntity[_DeviceTypeT]):
 
         if self._is_online:
             _LOGGER.warning(
-                "%s device is not responding, check the status in the SwitchBee mobile app",
+                (
+                    "%s device is not responding, check the status in the SwitchBee"
+                    " mobile app"
+                ),
                 self.name,
             )
             self._is_online = False

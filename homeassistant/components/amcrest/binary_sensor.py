@@ -39,7 +39,7 @@ if TYPE_CHECKING:
 class AmcrestSensorEntityDescription(BinarySensorEntityDescription):
     """Describe Amcrest sensor entity."""
 
-    event_code: str | None = None
+    event_codes: set[str] | None = None
     should_poll: bool = False
 
 
@@ -51,7 +51,7 @@ _ONLINE_SCAN_INTERVAL = timedelta(seconds=60 - BINARY_SENSOR_SCAN_INTERVAL_SECS)
 _AUDIO_DETECTED_KEY = "audio_detected"
 _AUDIO_DETECTED_POLLED_KEY = "audio_detected_polled"
 _AUDIO_DETECTED_NAME = "Audio Detected"
-_AUDIO_DETECTED_EVENT_CODE = "AudioMutation"
+_AUDIO_DETECTED_EVENT_CODES = {"AudioMutation", "AudioIntensity"}
 
 _CROSSLINE_DETECTED_KEY = "crossline_detected"
 _CROSSLINE_DETECTED_POLLED_KEY = "crossline_detected_polled"
@@ -70,39 +70,39 @@ BINARY_SENSORS: tuple[AmcrestSensorEntityDescription, ...] = (
         key=_AUDIO_DETECTED_KEY,
         name=_AUDIO_DETECTED_NAME,
         device_class=BinarySensorDeviceClass.SOUND,
-        event_code=_AUDIO_DETECTED_EVENT_CODE,
+        event_codes=_AUDIO_DETECTED_EVENT_CODES,
     ),
     AmcrestSensorEntityDescription(
         key=_AUDIO_DETECTED_POLLED_KEY,
         name=_AUDIO_DETECTED_NAME,
         device_class=BinarySensorDeviceClass.SOUND,
-        event_code=_AUDIO_DETECTED_EVENT_CODE,
+        event_codes=_AUDIO_DETECTED_EVENT_CODES,
         should_poll=True,
     ),
     AmcrestSensorEntityDescription(
         key=_CROSSLINE_DETECTED_KEY,
         name=_CROSSLINE_DETECTED_NAME,
         device_class=BinarySensorDeviceClass.MOTION,
-        event_code=_CROSSLINE_DETECTED_EVENT_CODE,
+        event_codes={_CROSSLINE_DETECTED_EVENT_CODE},
     ),
     AmcrestSensorEntityDescription(
         key=_CROSSLINE_DETECTED_POLLED_KEY,
         name=_CROSSLINE_DETECTED_NAME,
         device_class=BinarySensorDeviceClass.MOTION,
-        event_code=_CROSSLINE_DETECTED_EVENT_CODE,
+        event_codes={_CROSSLINE_DETECTED_EVENT_CODE},
         should_poll=True,
     ),
     AmcrestSensorEntityDescription(
         key=_MOTION_DETECTED_KEY,
         name=_MOTION_DETECTED_NAME,
         device_class=BinarySensorDeviceClass.MOTION,
-        event_code=_MOTION_DETECTED_EVENT_CODE,
+        event_codes={_MOTION_DETECTED_EVENT_CODE},
     ),
     AmcrestSensorEntityDescription(
         key=_MOTION_DETECTED_POLLED_KEY,
         name=_MOTION_DETECTED_NAME,
         device_class=BinarySensorDeviceClass.MOTION,
-        event_code=_MOTION_DETECTED_EVENT_CODE,
+        event_codes={_MOTION_DETECTED_EVENT_CODE},
         should_poll=True,
     ),
     AmcrestSensorEntityDescription(
@@ -211,14 +211,16 @@ class AmcrestBinarySensor(BinarySensorEntity):
             log_update_error(_LOGGER, "update", self.name, "binary sensor", error)
             return
 
-        if (event_code := self.entity_description.event_code) is None:
-            _LOGGER.error("Binary sensor %s event code not set", self.name)
-            return
+        if not (event_codes := self.entity_description.event_codes):
+            raise ValueError(f"Binary sensor {self.name} event codes not set")
 
         try:
-            self._attr_is_on = (
-                len(await self._api.async_event_channels_happened(event_code)) > 0
-            )
+            for event_code in event_codes:
+                if await self._api.async_event_channels_happened(event_code):
+                    self._attr_is_on = True
+                    break
+            else:
+                self._attr_is_on = False
         except AmcrestError as error:
             log_update_error(_LOGGER, "update", self.name, "binary sensor", error)
             return
@@ -266,17 +268,17 @@ class AmcrestBinarySensor(BinarySensorEntity):
             )
 
         if (
-            self.entity_description.event_code
-            and not self.entity_description.should_poll
-        ):
-            self.async_on_remove(
-                async_dispatcher_connect(
-                    self.hass,
-                    service_signal(
-                        SERVICE_EVENT,
-                        self._signal_name,
-                        self.entity_description.event_code,
-                    ),
-                    self.async_event_received,
+            event_codes := self.entity_description.event_codes
+        ) and not self.entity_description.should_poll:
+            for event_code in event_codes:
+                self.async_on_remove(
+                    async_dispatcher_connect(
+                        self.hass,
+                        service_signal(
+                            SERVICE_EVENT,
+                            self._signal_name,
+                            event_code,
+                        ),
+                        self.async_event_received,
+                    )
                 )
-            )

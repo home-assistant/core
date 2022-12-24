@@ -1,4 +1,19 @@
 {
+    "issues": {
+        "legacy_subscription": {
+            "fix_flow": {
+                "abort": {
+                    "operation_took_too_long": "A m\u0171velet t\u00fal sok\u00e1ig tartott. K\u00e9rj\u00fck, pr\u00f3b\u00e1lja meg k\u00e9s\u0151bb \u00fajra."
+                },
+                "step": {
+                    "confirm_change_plan": {
+                        "description": "Nemr\u00e9g friss\u00edtett\u00fck el\u0151fizet\u00e9si rendszer\u00fcnket. A Home Assistant Cloud tov\u00e1bbi haszn\u00e1lat\u00e1hoz egyszeri alkalommal j\u00f3v\u00e1 kell hagynia a v\u00e1ltoz\u00e1st a PayPal rendszerben.\n\nEz 1 percet vesz ig\u00e9nybe, \u00e9s nem n\u00f6veli az \u00e1rat."
+                    }
+                }
+            },
+            "title": "R\u00e9gi t\u00edpus\u00fa el\u0151fizet\u00e9s \u00e9szlelve"
+        }
+    },
     "system_health": {
         "info": {
             "alexa_enabled": "Alexa enged\u00e9lyezve",

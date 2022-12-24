@@ -10,7 +10,8 @@
             "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "discovery_requires_supervisor": "El descobriment requereix el supervisor.",
-            "not_zwave_device": "El dispositiu descobert no \u00e9s un dispositiu Z-Wave."
+            "not_zwave_device": "El dispositiu descobert no \u00e9s un dispositiu Z-Wave.",
+            "not_zwave_js_addon": "El complement descobert no \u00e9s el complement oficial Z-Wave JS."
         },
         "error": {
             "addon_start_failed": "No s'ha pogut iniciar el complement Z-Wave JS. Comprova la configuraci\u00f3.",

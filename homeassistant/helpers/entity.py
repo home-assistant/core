@@ -144,7 +144,7 @@ def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
 
 
 def get_unit_of_measurement(hass: HomeAssistant, entity_id: str) -> str | None:
-    """Get unit of measurement class of an entity.
+    """Get unit of measurement of an entity.
 
     First try the statemachine, then entity registry.
     """
@@ -223,6 +223,7 @@ class EntityDescription:
     icon: str | None = None
     has_entity_name: bool = False
     name: str | None = None
+    translation_key: str | None = None
     unit_of_measurement: str | None = None
 
 
@@ -290,6 +291,7 @@ class Entity(ABC):
     _attr_should_poll: bool = True
     _attr_state: StateType = STATE_UNKNOWN
     _attr_supported_features: int | None = None
+    _attr_translation_key: str | None
     _attr_unique_id: str | None = None
     _attr_unit_of_measurement: str | None
 
@@ -339,6 +341,18 @@ class Entity(ABC):
         is lowercase snake_case.
         """
         return self._attr_capability_attributes
+
+    def get_initial_entity_options(self) -> er.EntityOptionsType | None:
+        """Return initial entity options.
+
+        These will be stored in the entity registry the first time the entity is seen,
+        and then never updated.
+
+        Implemented by component base class, should not be extended by integrations.
+
+        Note: Not a property to avoid calculating unless needed.
+        """
+        return None
 
     @property
     def state_attributes(self) -> dict[str, Any] | None:
@@ -472,6 +486,15 @@ class Entity(ABC):
             return self._attr_entity_category
         if hasattr(self, "entity_description"):
             return self.entity_description.entity_category
+        return None
+
+    @property
+    def translation_key(self) -> str | None:
+        """Return the translation key to translate the entity's states."""
+        if hasattr(self, "_attr_translation_key"):
+            return self._attr_translation_key
+        if hasattr(self, "entity_description"):
+            return self.entity_description.translation_key
         return None
 
     # DO NOT OVERWRITE
@@ -693,9 +716,9 @@ class Entity(ABC):
         try:
             task: asyncio.Future[None]
             if hasattr(self, "async_update"):
-                task = self.hass.async_create_task(self.async_update())  # type: ignore[attr-defined]
+                task = self.hass.async_create_task(self.async_update())
             elif hasattr(self, "update"):
-                task = self.hass.async_add_executor_job(self.update)  # type: ignore[attr-defined]
+                task = self.hass.async_add_executor_job(self.update)
             else:
                 return
 

@@ -9,7 +9,6 @@ from homeassistant.components.homekit_controller.const import (
     IDENTIFIER_ACCESSORY_ID,
     IDENTIFIER_LEGACY_ACCESSORY_ID,
     IDENTIFIER_LEGACY_SERIAL_NUMBER,
-    IDENTIFIER_SERIAL_NUMBER,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -36,7 +35,6 @@ DEVICE_MIGRATION_TESTS = [
         manufacturer="RYSE Inc.",
         before={
             (DOMAIN, IDENTIFIER_LEGACY_ACCESSORY_ID, "00:00:00:00:00:00"),
-            (DOMAIN, IDENTIFIER_LEGACY_SERIAL_NUMBER, "0401.3521.0679"),
         },
         after={(IDENTIFIER_ACCESSORY_ID, "00:00:00:00:00:00:aid:1")},
     ),
@@ -55,11 +53,9 @@ DEVICE_MIGRATION_TESTS = [
         manufacturer="Philips Lighting",
         before={
             (DOMAIN, IDENTIFIER_LEGACY_ACCESSORY_ID, "00:00:00:00:00:00"),
-            (DOMAIN, IDENTIFIER_LEGACY_SERIAL_NUMBER, "123456"),
         },
         after={
             (IDENTIFIER_ACCESSORY_ID, "00:00:00:00:00:00:aid:1"),
-            (IDENTIFIER_SERIAL_NUMBER, "123456"),
         },
     ),
     # Test migrating a Hue remote - it has a valid serial number
@@ -72,7 +68,6 @@ DEVICE_MIGRATION_TESTS = [
         },
         after={
             (IDENTIFIER_ACCESSORY_ID, "00:00:00:00:00:00:aid:6623462389072572"),
-            (IDENTIFIER_SERIAL_NUMBER, "6623462389072572"),
         },
     ),
     # Test migrating a Koogeek LS1. This is just for completeness (testing hub and hub-less devices)
@@ -85,7 +80,6 @@ DEVICE_MIGRATION_TESTS = [
         },
         after={
             (IDENTIFIER_ACCESSORY_ID, "00:00:00:00:00:00:aid:1"),
-            (IDENTIFIER_SERIAL_NUMBER, "AAAA011111111111"),
         },
     ),
 ]

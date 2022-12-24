@@ -198,7 +198,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Optional(CONF_FILTER, default=old_filter): cv.multi_select(
                         {
-                            key: f"{departure_filter['serviceName']}, {departure_filter['label']}"
+                            key: (
+                                f"{departure_filter['serviceName']},"
+                                f" {departure_filter['label']}"
+                            )
                             for key, departure_filter in self.departure_filters.items()
                         }
                     ),

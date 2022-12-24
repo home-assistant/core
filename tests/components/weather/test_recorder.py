@@ -15,7 +15,7 @@ from tests.common import async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
 
 
-async def test_exclude_attributes(hass: HomeAssistant, recorder_mock) -> None:
+async def test_exclude_attributes(recorder_mock, hass: HomeAssistant) -> None:
     """Test weather attributes to be excluded."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"platform": "demo"}})
     hass.config.units = METRIC_SYSTEM

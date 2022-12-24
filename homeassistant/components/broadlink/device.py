@@ -175,9 +175,11 @@ class BroadlinkDevice:
         self.authorized = False
 
         _LOGGER.error(
-            "%s (%s at %s) is locked. Click Configuration in the sidebar, "
-            "click Integrations, click Configure on the device and follow "
-            "the instructions to unlock it",
+            (
+                "%s (%s at %s) is locked. Click Configuration in the sidebar, "
+                "click Integrations, click Configure on the device and follow "
+                "the instructions to unlock it"
+            ),
             self.name,
             self.api.model,
             self.api.host[0],

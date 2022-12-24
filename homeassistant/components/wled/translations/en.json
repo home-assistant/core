@@ -22,6 +22,17 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "live_override": {
+                "state": {
+                    "0": "Off",
+                    "1": "On",
+                    "2": "Until device restarts"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

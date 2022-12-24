@@ -11,11 +11,11 @@
             "invalid_auth": "Ung\u00fcltige Authentifizierung"
         },
         "step": {
-            "reauth": {
+            "reauth_confirm": {
                 "data": {
                     "password": "Passwort"
                 },
-                "description": "Authentifizierungs-Tokens sind ung\u00fcltig, melde dich an, um sie neu zu erstellen."
+                "description": "Die Authentifizierungs-Tokens wurden ung\u00fcltig, melde dich an, um sie neu zu erstellen."
             },
             "user": {
                 "data": {

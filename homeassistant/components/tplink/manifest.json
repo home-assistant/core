@@ -20,6 +20,10 @@
     },
     {
       "hostname": "ep*",
+      "macaddress": "1C61B4*"
+    },
+    {
+      "hostname": "ep*",
       "macaddress": "003192*"
     },
     {

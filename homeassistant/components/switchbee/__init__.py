@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from switchbee.api import CentralUnitAPI, SwitchBeeError
+from switchbee.api.central_unit import SwitchBeeError
+from switchbee.api.polling import CentralUnitPolling
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
@@ -15,6 +16,7 @@ from .coordinator import SwitchBeeCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.BUTTON,
+    Platform.CLIMATE,
     Platform.COVER,
     Platform.LIGHT,
     Platform.SWITCH,
@@ -27,9 +29,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     central_unit = entry.data[CONF_HOST]
     user = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
-
     websession = async_get_clientsession(hass, verify_ssl=False)
-    api = CentralUnitAPI(central_unit, user, password, websession)
+    api = CentralUnitPolling(central_unit, user, password, websession)
     try:
         await api.connect()
     except SwitchBeeError as exp:

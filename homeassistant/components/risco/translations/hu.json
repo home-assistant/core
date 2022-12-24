@@ -24,11 +24,6 @@
                 }
             },
             "user": {
-                "data": {
-                    "password": "Jelsz\u00f3",
-                    "pin": "PIN-k\u00f3d",
-                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
-                },
                 "menu_options": {
                     "cloud": "Risco Cloud (aj\u00e1nlott)",
                     "local": "Helyi Risco panel (halad\u00f3)"

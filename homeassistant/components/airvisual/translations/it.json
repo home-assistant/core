@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "La posizione \u00e8 gi\u00e0 configurata o Node/Pro ID sono gi\u00e0 registrati.",
+            "already_configured": "La posizione \u00e8 gi\u00e0 configurata",
             "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
@@ -48,6 +48,36 @@
                 "description": "Scegli il tipo di dati AirVisual che desideri monitorare.",
                 "title": "Configura AirVisual"
             }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "pollutant_label": {
+                "state": {
+                    "co": "Monossido di carbonio",
+                    "n2": "Biossido di azoto",
+                    "o3": "Ozono",
+                    "p1": "PM10",
+                    "p2": "PM2.5",
+                    "s2": "Biossido di zolfo"
+                }
+            },
+            "pollutant_level": {
+                "state": {
+                    "good": "Buono",
+                    "hazardous": "Pericoloso",
+                    "moderate": "Moderato",
+                    "unhealthy": "Malsano",
+                    "unhealthy_sensitive": "Malsano per i gruppi sensibili",
+                    "very_unhealthy": "Molto malsano"
+                }
+            }
+        }
+    },
+    "issues": {
+        "airvisual_pro_migration": {
+            "description": "Le unit\u00e0 AirVisual Pro sono ora un'integrazione Home Assistant a s\u00e9 stante (invece di essere incluse nell'integrazione AirVisual originale che utilizza l'API cloud di AirVisual). Il dispositivo Pro situato all'indirizzo `{ip_address}` \u00e8 stato migrato automaticamente.\n\nCome parte della migrazione, l'ID del dispositivo Pro \u00e8 cambiato da `{old_device_id}` a `{new_device_id}`. Aggiorna le automazioni per utilizzare il nuovo ID dispositivo: {device_automations_string}.",
+            "title": "{ip_address} fa ora parte dell'integrazione AirVisual Pro"
         }
     },
     "options": {
