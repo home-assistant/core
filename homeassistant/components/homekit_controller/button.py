@@ -32,6 +32,7 @@ class HomeKitButtonEntityDescription(ButtonEntityDescription):
     """Describes Homekit button."""
 
     write_value: int | str | None = None
+    shared_key: bool = False
 
 
 BUTTON_ENTITIES: dict[
@@ -43,6 +44,7 @@ BUTTON_ENTITIES: dict[
             name="Update",
             device_class=ButtonDeviceClass.UPDATE,
             entity_category=EntityCategory.CONFIG,
+            shared_key=True,
             write_value="#HAA@trcmd0",
         ),
         HomeKitButtonEntityDescription(
@@ -50,6 +52,7 @@ BUTTON_ENTITIES: dict[
             name="Setup",
             icon="mdi:cog",
             entity_category=EntityCategory.CONFIG,
+            shared_key=True,
             write_value="#HAA@trcmd1",
         ),
         HomeKitButtonEntityDescription(
@@ -57,6 +60,7 @@ BUTTON_ENTITIES: dict[
             name="Reboot",
             device_class=ButtonDeviceClass.RESTART,
             entity_category=EntityCategory.CONFIG,
+            shared_key=True,
             write_value="#HAA@trcmd2",
         ),
         HomeKitButtonEntityDescription(
@@ -64,6 +68,7 @@ BUTTON_ENTITIES: dict[
             name="Reconnect WiFi",
             device_class=ButtonDeviceClass.RESTART,
             entity_category=EntityCategory.CONFIG,
+            shared_key=True,
             write_value="#HAA@trcmd3",
         ),
     ],
@@ -138,6 +143,15 @@ class HomeKitButton(CharacteristicEntity, ButtonEntity):
         if name := self.accessory.name:
             return f"{name} {self.entity_description.name}"
         return f"{self.entity_description.name}"
+
+    @property
+    def unique_id(self) -> str:
+        """Return the ID of this device."""
+        unique_id = super().unique_id
+        if self.entity_description.shared_key:
+            name = self.entity_description.name or ""
+            unique_id = f"{unique_id}_{name.lower().replace(' ', '')}"
+        return unique_id
 
     async def async_press(self) -> None:
         """Press the button."""
