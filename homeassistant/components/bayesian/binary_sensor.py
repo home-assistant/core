@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PLATFORM,
     CONF_STATE,
+    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -34,6 +35,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     TrackTemplate,
     TrackTemplateResult,
+    TrackTemplateResultInfo,
     async_track_state_change_event,
     async_track_template_result,
 )
@@ -99,6 +101,7 @@ TEMPLATE_SCHEMA = vol.Schema(
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): cv.string,
         vol.Required(CONF_OBSERVATIONS): vol.Schema(
             vol.All(
@@ -133,6 +136,7 @@ async def async_setup_platform(
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     name: str = config[CONF_NAME]
+    unique_id: str | None = config.get(CONF_UNIQUE_ID)
     observations: list[ConfigType] = config[CONF_OBSERVATIONS]
     prior: float = config[CONF_PRIOR]
     probability_threshold: float = config[CONF_PROBABILITY_THRESHOLD]
@@ -151,7 +155,12 @@ async def async_setup_platform(
     async_add_entities(
         [
             BayesianBinarySensor(
-                name, prior, observations, probability_threshold, device_class
+                name,
+                unique_id,
+                prior,
+                observations,
+                probability_threshold,
+                device_class,
             )
         ]
     )
@@ -165,6 +174,7 @@ class BayesianBinarySensor(BinarySensorEntity):
     def __init__(
         self,
         name: str,
+        unique_id: str | None,
         prior: float,
         observations: list[ConfigType],
         probability_threshold: float,
@@ -172,6 +182,7 @@ class BayesianBinarySensor(BinarySensorEntity):
     ) -> None:
         """Initialize the Bayesian sensor."""
         self._attr_name = name
+        self._attr_unique_id = unique_id and f"bayesian-{unique_id}"
         self._observations = [
             Observation(
                 entity_id=observation.get(CONF_ENTITY_ID),
@@ -189,7 +200,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         self._probability_threshold = probability_threshold
         self._attr_device_class = device_class
         self._attr_is_on = False
-        self._callbacks: list = []
+        self._callbacks: list[TrackTemplateResultInfo] = []
 
         self.prior = prior
         self.probability = prior
@@ -255,9 +266,7 @@ class BayesianBinarySensor(BinarySensorEntity):
             )
             if isinstance(result, TemplateError):
                 _LOGGER.error(
-                    "TemplateError('%s') "
-                    "while processing template '%s' "
-                    "in entity '%s'",
+                    "TemplateError('%s') while processing template '%s' in entity '%s'",
                     result,
                     template,
                     self.entity_id,
@@ -358,12 +367,18 @@ class BayesianBinarySensor(BinarySensorEntity):
             # observation.observed is None
             if observation.entity_id is not None:
                 _LOGGER.debug(
-                    "Observation for entity '%s' returned None, it will not be used for Bayesian updating",
+                    (
+                        "Observation for entity '%s' returned None, it will not be used"
+                        " for Bayesian updating"
+                    ),
                     observation.entity_id,
                 )
                 continue
             _LOGGER.debug(
-                "Observation for template entity returned None rather than a valid boolean, it will not be used for Bayesian updating",
+                (
+                    "Observation for template entity returned None rather than a valid"
+                    " boolean, it will not be used for Bayesian updating"
+                ),
             )
         # the prior has been updated and is now the posterior
         return prior

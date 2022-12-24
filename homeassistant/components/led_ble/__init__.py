@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-from led_ble import BLEAK_EXCEPTIONS, LEDBLE, get_device
+from led_ble import BLEAK_EXCEPTIONS, LEDBLE
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import ADDRESS, BluetoothCallbackMatcher
@@ -27,9 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up LED BLE from a config entry."""
     address: str = entry.data[CONF_ADDRESS]
-    ble_device = bluetooth.async_ble_device_from_address(
-        hass, address.upper(), True
-    ) or await get_device(address)
+    ble_device = bluetooth.async_ble_device_from_address(hass, address.upper(), True)
     if not ble_device:
         raise ConfigEntryNotReady(
             f"Could not find LED BLE device with address {address}"
@@ -43,7 +41,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         change: bluetooth.BluetoothChange,
     ) -> None:
         """Update from a ble callback."""
-        led_ble.set_ble_device(service_info.device)
+        led_ble.set_ble_device_and_advertisement_data(
+            service_info.device, service_info.advertisement
+        )
 
     entry.async_on_unload(
         bluetooth.async_register_callback(

@@ -1,11 +1,12 @@
 """Configuration for SSDP tests."""
 from __future__ import annotations
 
+from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, create_autospec, patch
 from urllib.parse import urlparse
 
 from async_upnp_client.client import UpnpDevice
-from async_upnp_client.profiles.igd import IgdDevice, StatusInfo
+from async_upnp_client.profiles.igd import IgdDevice, IgdState, StatusInfo
 import pytest
 
 from homeassistant.components import ssdp
@@ -65,16 +66,23 @@ def mock_igd_device() -> IgdDevice:
     mock_igd_device.udn = TEST_DISCOVERY.ssdp_udn
     mock_igd_device.device = mock_upnp_device
 
-    mock_igd_device.async_get_total_bytes_received.return_value = 0
-    mock_igd_device.async_get_total_bytes_sent.return_value = 0
-    mock_igd_device.async_get_total_packets_received.return_value = 0
-    mock_igd_device.async_get_total_packets_sent.return_value = 0
-    mock_igd_device.async_get_status_info.return_value = StatusInfo(
-        "Connected",
-        "",
-        10,
+    mock_igd_device.async_get_traffic_and_status_data.return_value = IgdState(
+        timestamp=datetime.now(),
+        bytes_received=0,
+        bytes_sent=0,
+        packets_received=0,
+        packets_sent=0,
+        status_info=StatusInfo(
+            "Connected",
+            "",
+            10,
+        ),
+        external_ip_address="8.9.10.11",
+        kibibytes_per_sec_received=None,
+        kibibytes_per_sec_sent=None,
+        packets_per_sec_received=None,
+        packets_per_sec_sent=None,
     )
-    mock_igd_device.async_get_external_ip_address.return_value = "8.9.10.11"
 
     with patch(
         "homeassistant.components.upnp.device.UpnpFactory.async_create_device"
@@ -122,6 +130,10 @@ async def silent_ssdp_scanner(hass):
         "homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"
     ), patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
         "homeassistant.components.ssdp.Scanner.async_scan"
+    ), patch(
+        "homeassistant.components.ssdp.Server._async_start_upnp_servers"
+    ), patch(
+        "homeassistant.components.ssdp.Server._async_stop_upnp_servers"
     ):
         yield
 

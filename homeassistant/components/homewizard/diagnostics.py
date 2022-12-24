@@ -27,6 +27,9 @@ async def async_get_config_entry_diagnostics(
         "state": asdict(coordinator.data["state"])
         if coordinator.data["state"] is not None
         else None,
+        "system": asdict(coordinator.data["system"])
+        if coordinator.data["system"] is not None
+        else None,
     }
 
     return {

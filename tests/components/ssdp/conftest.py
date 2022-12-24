@@ -1,6 +1,7 @@
 """Configuration for SSDP tests."""
 from unittest.mock import AsyncMock, patch
 
+from async_upnp_client.server import UpnpServer
 from async_upnp_client.ssdp_listener import SsdpListener
 import pytest
 
@@ -14,6 +15,15 @@ async def silent_ssdp_listener():
         # Fixtures are initialized before patches. When the component is started here,
         # certain functions/methods might not be patched in time.
         yield SsdpListener
+
+
+@pytest.fixture(autouse=True)
+async def disabled_upnp_server():
+    """Disable UPnpServer."""
+    with patch("homeassistant.components.ssdp.UpnpServer.async_start"), patch(
+        "homeassistant.components.ssdp.UpnpServer.async_stop"
+    ), patch("homeassistant.components.ssdp._async_find_next_available_port"):
+        yield UpnpServer
 
 
 @pytest.fixture

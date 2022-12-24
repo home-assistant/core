@@ -1,0 +1,6 @@
+{
+  "domain": "roborock",
+  "name": "Roborock",
+  "integration_type": "virtual",
+  "supported_by": "xiaomi_miio"
+}

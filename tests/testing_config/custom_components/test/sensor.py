@@ -70,7 +70,7 @@ def init(empty=False):
                 name=f"{device_class} sensor",
                 unique_id=f"unique_{device_class}",
                 device_class=device_class,
-                unit_of_measurement=UNITS_OF_MEASUREMENT.get(device_class),
+                native_unit_of_measurement=UNITS_OF_MEASUREMENT.get(device_class),
             )
             for device_class in DEVICE_CLASSES
         }
@@ -108,9 +108,19 @@ class MockSensor(MockEntity, SensorEntity):
         return self._handle("native_value")
 
     @property
+    def options(self):
+        """Return the options for this sensor."""
+        return self._handle("options")
+
+    @property
     def state_class(self):
         """Return the state class of this sensor."""
         return self._handle("state_class")
+
+    @property
+    def suggested_unit_of_measurement(self):
+        """Return the state class of this sensor."""
+        return self._handle("suggested_unit_of_measurement")
 
 
 class MockRestoreSensor(MockSensor, RestoreSensor):

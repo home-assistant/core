@@ -14,7 +14,7 @@
             "authentication_error": "Vale HomeKiti kood. Kontrolli seda ja proovi uuesti.",
             "insecure_setup_code": "Taotletud salas\u00f5na on ebaturvaline, sest see on liiga lihtne ning ei vasta p\u00f5hilistele turvan\u00f5uetele.",
             "max_peers_error": "Seade keeldus sidumist lisamast kuna puudub piisav salvestusruum.",
-            "pairing_failed": "Selle seadmega sidumise katsel ilmnes tundmatu t\u00f5rge. See v\u00f5ib olla ajutine t\u00f5rge v\u00f5i seadet ei toetata praegu.",
+            "pairing_failed": "Selle seadmega sidumise katsel ilmnes ootamatu t\u00f5rge. See v\u00f5ib olla ajutine rike v\u00f5i seadet ei toetata praegu: {error}",
             "unable_to_pair": "Ei saa siduda, proovi uuesti.",
             "unknown_error": "Seade teatas tundmatust t\u00f5rkest. Sidumine nurjus."
         },
@@ -67,6 +67,40 @@
             "double_press": "\" {subtype} \" tehtud topeltkl\u00f5ps",
             "long_press": "\" {subtype} \" on pikalt alla vajutatud",
             "single_press": "\" {subtype} \" on vajutatud"
+        }
+    },
+    "entity": {
+        "select": {
+            "ecobee_mode": {
+                "state": {
+                    "away": "Eemal",
+                    "home": "Kodus",
+                    "sleep": "Uneaeg"
+                }
+            }
+        },
+        "sensor": {
+            "thread_node_capabilities": {
+                "state": {
+                    "border_router_capable": "Piiriruuteri v\u00f5imekus",
+                    "full": "T\u00e4ielik l\u00f5ppseade",
+                    "minimal": "Minimaalne l\u00f5ppseade",
+                    "none": "Puudub",
+                    "router_eligible": "Ruuteriks sobiv l\u00f5ppseade",
+                    "sleepy": "Uinuv l\u00f5ppseade"
+                }
+            },
+            "thread_status": {
+                "state": {
+                    "border_router": "Rajaruuter",
+                    "child": "Alamseade",
+                    "detached": "Eraldatud",
+                    "disabled": "Keelatud",
+                    "joining": "Liitun",
+                    "leader": "Juhtseade",
+                    "router": "Ruuter"
+                }
+            }
         }
     },
     "title": "HomeKit kontroller"

@@ -3,20 +3,19 @@ from __future__ import annotations
 
 from typing import Any
 
-import glances_api
+from glances_api.exceptions import GlancesApiError
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries, exceptions
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
 from . import get_api
@@ -24,7 +23,6 @@ from .const import (
     CONF_VERSION,
     DEFAULT_HOST,
     DEFAULT_PORT,
-    DEFAULT_SCAN_INTERVAL,
     DEFAULT_VERSION,
     DOMAIN,
     SUPPORTED_VERSIONS,
@@ -43,12 +41,12 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect."""
+    api = get_api(hass, data)
     try:
-        api = get_api(hass, data)
         await api.get_data("all")
-    except glances_api.exceptions.GlancesApiConnectionError as err:
+    except GlancesApiError as err:
         raise CannotConnect from err
 
 
@@ -56,14 +54,6 @@ class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Glances config flow."""
 
     VERSION = 1
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> GlancesOptionsFlowHandler:
-        """Get the options flow for this handler."""
-        return GlancesOptionsFlowHandler(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -83,32 +73,6 @@ class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
-
-
-class GlancesOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle Glances client options."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize Glances options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Manage the Glances options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        options = {
-            vol.Optional(
-                CONF_SCAN_INTERVAL,
-                default=self.config_entry.options.get(
-                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                ),
-            ): int
-        }
-
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
 
 
 class CannotConnect(exceptions.HomeAssistantError):

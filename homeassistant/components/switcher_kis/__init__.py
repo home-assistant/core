@@ -29,7 +29,13 @@ from .const import (
 )
 from .utils import async_start_bridge, async_stop_bridge
 
-PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -135,7 +141,8 @@ class SwitcherDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
     async def _async_update_data(self) -> None:
         """Mark device offline if no data."""
         raise update_coordinator.UpdateFailed(
-            f"Device {self.name} did not send update for {MAX_UPDATE_INTERVAL_SEC} seconds"
+            f"Device {self.name} did not send update for"
+            f" {MAX_UPDATE_INTERVAL_SEC} seconds"
         )
 
     @property

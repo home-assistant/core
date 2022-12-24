@@ -10,9 +10,9 @@
         "step": {
             "repositories": {
                 "data": {
-                    "repositories": "Seleziona i repository da tracciare."
+                    "repositories": "Seleziona gli archivi digitali da monitorare."
                 },
-                "title": "Configura repository"
+                "title": "Configura gli archivi digitali"
             }
         }
     }

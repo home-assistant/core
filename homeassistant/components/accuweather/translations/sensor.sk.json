@@ -1,0 +1,9 @@
+{
+    "state": {
+        "accuweather__pressure_tendency": {
+            "falling": "Klesaj\u00faci",
+            "rising": "Padaj\u00faci",
+            "steady": "Stabiln\u00fd"
+        }
+    }
+}

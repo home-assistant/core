@@ -33,7 +33,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Prima della configurazione, i dispositivi alimentati a batteria devono essere riattivati, ora puoi riattivare il dispositivo utilizzando un pulsante su di esso."
+                "description": "Prima della configurazione, i dispositivi alimentati a batteria devono essere riattivati, ora \u00e8 possibile riattivare il dispositivo utilizzando un pulsante su di esso."
             }
         }
     },
@@ -57,6 +57,19 @@
             "single_long": "{subtype} premuto singolarmente e poi a lungo",
             "single_push": "{subtype} singola pressione",
             "triple": "{subtype} premuto tre volte"
+        }
+    },
+    "options": {
+        "abort": {
+            "ble_unsupported": "Il supporto Bluetooth richiede la versione del firmware {ble_min_version} o successiva."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "ble_scanner_mode": "Modalit\u00e0 scansione Bluetooth"
+                },
+                "description": "La scansione Bluetooth pu\u00f2 essere attiva o passiva. In caso di scansione attiva, lo Shelly richiede dati ai dispositivi vicini; in caso di scansione passiva, lo Shelly riceve dati non richiesti dai dispositivi vicini."
+            }
         }
     }
 }

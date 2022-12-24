@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+        },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "invalid_auth": "Neplatn\u00e9 overenie"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostite\u013e",
+                    "password": "Heslo",
+                    "port": "Port",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Konfigur\u00e1cia webovej kamery Android IP pomocou YAML sa odstra\u0148uje. \n\n Va\u0161a existuj\u00faca konfigur\u00e1cia YAML bola importovan\u00e1 do pou\u017e\u00edvate\u013esk\u00e9ho rozhrania automaticky. \n\n Ak chcete tento probl\u00e9m vyrie\u0161i\u0165, odstr\u00e1\u0148te konfigur\u00e1ciu YAML webovej kamery Android IP zo s\u00faboru configuration.yaml a re\u0161tartujte aplik\u00e1ciu Home Assistant.",
+            "title": "Konfigur\u00e1cia webovej kamery Android IP Webcam YAML sa odstra\u0148uje"
+        }
+    }
+}

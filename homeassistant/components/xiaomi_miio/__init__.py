@@ -153,9 +153,11 @@ def get_platforms(config_entry):
             if model.startswith(air_monitor_model):
                 return AIR_MONITOR_PLATFORMS
     _LOGGER.error(
-        "Unsupported device found! Please create an issue at "
-        "https://github.com/syssi/xiaomi_airpurifier/issues "
-        "and provide the following data: %s",
+        (
+            "Unsupported device found! Please create an issue at "
+            "https://github.com/syssi/xiaomi_airpurifier/issues "
+            "and provide the following data: %s"
+        ),
         model,
     )
     return []
@@ -336,9 +338,11 @@ async def async_create_miio_device_and_coordinator(
         device = Fan(host, token, model=model)
     else:
         _LOGGER.error(
-            "Unsupported device found! Please create an issue at "
-            "https://github.com/syssi/xiaomi_airpurifier/issues "
-            "and provide the following data: %s",
+            (
+                "Unsupported device found! Please create an issue at "
+                "https://github.com/syssi/xiaomi_airpurifier/issues "
+                "and provide the following data: %s"
+            ),
             model,
         )
         return
@@ -382,10 +386,6 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
     gateway_id = entry.unique_id
 
     assert gateway_id
-
-    # For backwards compat
-    if gateway_id.endswith("-gateway"):
-        hass.config_entries.async_update_entry(entry, unique_id=entry.data["mac"])
 
     # Connect to gateway
     gateway = ConnectXiaomiGateway(hass, entry)

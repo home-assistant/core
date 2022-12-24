@@ -70,7 +70,7 @@ async def async_setup_entry(
         | ISYBinarySensorHeartbeat
         | ISYBinarySensorProgramEntity,
     ] = {}
-    child_nodes: list[tuple[Node, str | None, str | None]] = []
+    child_nodes: list[tuple[Node, BinarySensorDeviceClass | None, str | None]] = []
     entity: ISYInsteonBinarySensorEntity | ISYBinarySensorEntity | ISYBinarySensorHeartbeat | ISYBinarySensorProgramEntity
 
     hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
@@ -116,8 +116,10 @@ async def async_setup_entry(
             parent_entity = entities_by_address.get(node.parent_node.address)
             if not parent_entity:
                 _LOGGER.error(
-                    "Node %s has a parent node %s, but no device "
-                    "was created for the parent. Skipping",
+                    (
+                        "Node %s has a parent node %s, but no device "
+                        "was created for the parent. Skipping"
+                    ),
                     node.address,
                     node.parent_node,
                 )
@@ -192,7 +194,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-def _detect_device_type_and_class(node: Group | Node) -> tuple[str | None, str | None]:
+def _detect_device_type_and_class(
+    node: Group | Node,
+) -> tuple[BinarySensorDeviceClass | None, str | None]:
     try:
         device_type = node.type
     except AttributeError:
@@ -220,7 +224,7 @@ class ISYBinarySensorEntity(ISYNodeEntity, BinarySensorEntity):
     def __init__(
         self,
         node: Node,
-        force_device_class: str | None = None,
+        force_device_class: BinarySensorDeviceClass | None = None,
         unknown_state: bool | None = None,
     ) -> None:
         """Initialize the ISY994 binary sensor device."""
@@ -235,7 +239,7 @@ class ISYBinarySensorEntity(ISYNodeEntity, BinarySensorEntity):
         return bool(self._node.status)
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the class of this device.
 
         This was discovered by parsing the device type code during init
@@ -255,7 +259,7 @@ class ISYInsteonBinarySensorEntity(ISYBinarySensorEntity):
     def __init__(
         self,
         node: Node,
-        force_device_class: str | None = None,
+        force_device_class: BinarySensorDeviceClass | None = None,
         unknown_state: bool | None = None,
     ) -> None:
         """Initialize the ISY994 binary sensor device."""
@@ -484,7 +488,7 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity):
         return bool(self._computed_state)
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass:
         """Get the class of this device."""
         return BinarySensorDeviceClass.BATTERY
 

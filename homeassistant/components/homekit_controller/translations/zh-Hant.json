@@ -14,7 +14,7 @@
             "authentication_error": "Homekit \u4ee3\u78bc\u932f\u8aa4\uff0c\u8acb\u78ba\u5b9a\u5f8c\u518d\u8a66\u4e00\u6b21\u3002",
             "insecure_setup_code": "\u7531\u65bc\u5176\u7463\u788e\u7279\u6027\u3001\u6240\u8acb\u6c42\u7684\u8a2d\u5b9a\u4ee3\u78bc\u4e0d\u5b89\u5168\u3002\u6b64\u914d\u4ef6\u7121\u6cd5\u9054\u5230\u6700\u4f4e\u5b89\u5168\u9700\u6c42\u3002",
             "max_peers_error": "\u88dd\u7f6e\u5df2\u7121\u5269\u9918\u914d\u5c0d\u7a7a\u9593\uff0c\u62d2\u7d55\u9032\u884c\u914d\u5c0d\u3002",
-            "pairing_failed": "\u7576\u8a66\u5716\u8207\u88dd\u7f6e\u914d\u5c0d\u6642\u767c\u751f\u7121\u6cd5\u8655\u7406\u932f\u8aa4\uff0c\u53ef\u80fd\u50c5\u70ba\u66ab\u6642\u5931\u6548\u3001\u6216\u8005\u88dd\u7f6e\u76ee\u524d\u4e0d\u652f\u63f4\u3002",
+            "pairing_failed": "\u7576\u8a66\u5716\u8207\u88dd\u7f6e\u914d\u5c0d\u6642\u767c\u751f\u7121\u6cd5\u8655\u7406\u932f\u8aa4\uff0c\u53ef\u80fd\u50c5\u70ba\u66ab\u6642\u5931\u6548\u3001\u6216\u8005\u88dd\u7f6e\u76ee\u524d\u4e0d\u652f\u63f4\uff1a{error}",
             "unable_to_pair": "\u7121\u6cd5\u914d\u5c0d\uff0c\u8acb\u518d\u8a66\u4e00\u6b21\u3002",
             "unknown_error": "\u88dd\u7f6e\u56de\u5831\u672a\u77e5\u932f\u8aa4\u3002\u914d\u5c0d\u5931\u6557\u3002"
         },
@@ -67,6 +67,40 @@
             "double_press": "\"{subtype}\" \u6309\u4e0b\u5169\u6b21",
             "long_press": "\"{subtype}\" \u6309\u4e0b\u4e26\u6309\u4f4f",
             "single_press": "\"{subtype}\" \u6309\u4e0b"
+        }
+    },
+    "entity": {
+        "select": {
+            "ecobee_mode": {
+                "state": {
+                    "away": "\u96e2\u5bb6",
+                    "home": "\u5728\u5bb6",
+                    "sleep": "\u7761\u7720"
+                }
+            }
+        },
+        "sensor": {
+            "thread_node_capabilities": {
+                "state": {
+                    "border_router_capable": "Border Router \u80fd\u529b",
+                    "full": "\u6240\u6709\u7d42\u7aef\u88dd\u7f6e",
+                    "minimal": "\u6700\u4f4e\u7d42\u7aef\u88dd\u7f6e",
+                    "none": "\u7121",
+                    "router_eligible": "Router \u7d42\u7aef\u88dd\u7f6e",
+                    "sleepy": "\u5f85\u547d\u7d42\u7aef\u88dd\u7f6e"
+                }
+            },
+            "thread_status": {
+                "state": {
+                    "border_router": "Border Router",
+                    "child": "Child",
+                    "detached": "Detached",
+                    "disabled": "\u5df2\u95dc\u9589",
+                    "joining": "\u52a0\u5165",
+                    "leader": "Leader",
+                    "router": "Router"
+                }
+            }
         }
     },
     "title": "HomeKit \u63a7\u5236\u5668"

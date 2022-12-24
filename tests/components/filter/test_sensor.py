@@ -21,9 +21,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfTemperature,
 )
 import homeassistant.core as ha
 from homeassistant.helpers import entity_registry as er
@@ -59,7 +61,7 @@ async def test_setup_fail(hass):
         await hass.async_block_till_done()
 
 
-async def test_chain(hass, recorder_mock, values):
+async def test_chain(recorder_mock, hass, values):
     """Test if filter chaining works."""
     config = {
         "sensor": {
@@ -87,7 +89,7 @@ async def test_chain(hass, recorder_mock, values):
 
 
 @pytest.mark.parametrize("missing", (True, False))
-async def test_chain_history(hass, recorder_mock, values, missing):
+async def test_chain_history(recorder_mock, hass, values, missing):
     """Test if filter chaining works, when a source is and isn't recorded."""
     config = {
         "sensor": {
@@ -141,7 +143,7 @@ async def test_chain_history(hass, recorder_mock, values, missing):
             assert state.state == "17.05"
 
 
-async def test_source_state_none(hass, recorder_mock, values):
+async def test_source_state_none(recorder_mock, hass, values):
     """Test is source sensor state is null and sets state to STATE_UNKNOWN."""
 
     config = {
@@ -201,7 +203,7 @@ async def test_source_state_none(hass, recorder_mock, values):
     assert state.state == STATE_UNKNOWN
 
 
-async def test_history_time(hass, recorder_mock):
+async def test_history_time(recorder_mock, hass):
     """Test loading from history based on a time window."""
     config = {
         "sensor": {
@@ -239,7 +241,7 @@ async def test_history_time(hass, recorder_mock):
         assert state.state == "18.0"
 
 
-async def test_setup(hass, recorder_mock):
+async def test_setup(recorder_mock, hass):
     """Test if filter attributes are inherited."""
     config = {
         "sensor": {
@@ -263,6 +265,7 @@ async def test_setup(hass, recorder_mock):
             {
                 "icon": "mdi:test",
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
                 ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
             },
         )
@@ -280,7 +283,7 @@ async def test_setup(hass, recorder_mock):
         assert entity_id == "sensor.test"
 
 
-async def test_invalid_state(hass, recorder_mock):
+async def test_invalid_state(recorder_mock, hass):
     """Test if filter attributes are inherited."""
     config = {
         "sensor": {
@@ -310,7 +313,7 @@ async def test_invalid_state(hass, recorder_mock):
         assert state.state == STATE_UNAVAILABLE
 
 
-async def test_timestamp_state(hass, recorder_mock):
+async def test_timestamp_state(recorder_mock, hass):
     """Test if filter state is a datetime."""
     config = {
         "sensor": {
@@ -469,7 +472,7 @@ def test_time_sma(values):
     assert filtered.state == 21.5
 
 
-async def test_reload(hass, recorder_mock):
+async def test_reload(recorder_mock, hass):
     """Verify we can reload filter sensors."""
     hass.states.async_set("sensor.test_monitored", 12345)
     await async_setup_component(

@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "integrations_diabled": "\u88dd\u7f6e\u4e26\u672a\u555f\u7528\u4efb\u4f55\u6574\u5408\uff0c\u8acb\u5148\u4f7f\u7528 App \u555f\u7528\u667a\u80fd\u5bb6\u5ead\u6574\u5408\u5f8c\u3001\u518d\u8a66\u4e00\u6b21\u3002",
+            "no_devices_found": "\u627e\u4e0d\u5230\u4efb\u4f55\u672a\u8a2d\u5b9a Aranet \u88dd\u7f6e\u3002",
+            "outdated_version": "\u88dd\u7f6e\u4f7f\u7528\u4e86\u904e\u820a\u7684\u97cc\u9ad4\uff0c\u8acb\u66f4\u65b0\u81f3 v1.2.0 \u7248\u4ee5\u4e0a\u4e26\u518d\u8a66\u4e00\u6b21\u3002"
+        },
+        "error": {
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name}\uff1f"
+            },
+            "user": {
+                "data": {
+                    "address": "\u88dd\u7f6e"
+                },
+                "description": "\u9078\u64c7\u6240\u8981\u8a2d\u5b9a\u7684\u88dd\u7f6e"
+            }
+        }
+    }
+}

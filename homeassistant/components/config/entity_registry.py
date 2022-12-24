@@ -36,14 +36,18 @@ async def async_setup(hass: HomeAssistant) -> bool:
         {vol.Required("type"): "config/entity_registry/list"}
     )
     @callback
-    def websocket_list_entities(hass, connection, msg):
+    def websocket_list_entities(
+        hass: HomeAssistant,
+        connection: websocket_api.ActiveConnection,
+        msg: dict[str, Any],
+    ) -> None:
         """Handle list registry entries command."""
         nonlocal cached_list_entities
         if not cached_list_entities:
             registry = er.async_get(hass)
             cached_list_entities = message_to_json(
                 websocket_api.result_message(
-                    IDEN_TEMPLATE,
+                    IDEN_TEMPLATE,  # type: ignore[arg-type]
                     [_entry_dict(entry) for entry in registry.entities.values()],
                 )
             )
@@ -70,7 +74,11 @@ async def async_setup(hass: HomeAssistant) -> bool:
     }
 )
 @callback
-def websocket_get_entity(hass, connection, msg):
+def websocket_get_entity(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Handle get entity registry entry command.
 
     Async friendly.
@@ -94,6 +102,7 @@ def websocket_get_entity(hass, connection, msg):
         vol.Required("type"): "config/entity_registry/update",
         vol.Required("entity_id"): cv.entity_id,
         # If passed in, we update value. Passing None will remove old value.
+        vol.Optional("aliases"): list,
         vol.Optional("area_id"): vol.Any(str, None),
         vol.Optional("device_class"): vol.Any(str, None),
         vol.Optional("icon"): vol.Any(str, None),
@@ -120,7 +129,11 @@ def websocket_get_entity(hass, connection, msg):
     }
 )
 @callback
-def websocket_update_entity(hass, connection, msg):
+def websocket_update_entity(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Handle update entity websocket command.
 
     Async friendly.
@@ -148,12 +161,16 @@ def websocket_update_entity(hass, connection, msg):
         if key in msg:
             changes[key] = msg[key]
 
+    if "aliases" in msg:
+        # Convert aliases to a set
+        changes["aliases"] = set(msg["aliases"])
+
     if "disabled_by" in msg and msg["disabled_by"] is None:
         # Don't allow enabling an entity of a disabled device
         if entity_entry.device_id:
             device_registry = dr.async_get(hass)
             device = device_registry.async_get(entity_entry.device_id)
-            if device.disabled:
+            if device and device.disabled:
                 connection.send_message(
                     websocket_api.error_message(
                         msg["id"], "invalid_info", "Device is disabled"
@@ -184,11 +201,14 @@ def websocket_update_entity(hass, connection, msg):
         )
         return
 
-    result = {"entity_entry": _entry_ext_dict(entity_entry)}
+    result: dict[str, Any] = {"entity_entry": _entry_ext_dict(entity_entry)}
     if "disabled_by" in changes and changes["disabled_by"] is None:
         # Enabling an entity requires a config entry reload, or HA restart
-        config_entry = hass.config_entries.async_get_entry(entity_entry.config_entry_id)
-        if config_entry and not config_entry.supports_unload:
+        if (
+            not (config_entry_id := entity_entry.config_entry_id)
+            or (config_entry := hass.config_entries.async_get_entry(config_entry_id))
+            and not config_entry.supports_unload
+        ):
             result["require_restart"] = True
         else:
             result["reload_delay"] = config_entries.RELOAD_AFTER_UPDATE_DELAY
@@ -203,7 +223,11 @@ def websocket_update_entity(hass, connection, msg):
     }
 )
 @callback
-def websocket_remove_entity(hass, connection, msg):
+def websocket_remove_entity(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Handle remove entity websocket command.
 
     Async friendly.
@@ -228,16 +252,17 @@ def _entry_dict(entry: er.RegistryEntry) -> dict[str, Any]:
         "config_entry_id": entry.config_entry_id,
         "device_id": entry.device_id,
         "disabled_by": entry.disabled_by,
-        "has_entity_name": entry.has_entity_name,
         "entity_category": entry.entity_category,
         "entity_id": entry.entity_id,
+        "has_entity_name": entry.has_entity_name,
         "hidden_by": entry.hidden_by,
         "icon": entry.icon,
         "id": entry.id,
-        "unique_id": entry.unique_id,
         "name": entry.name,
         "original_name": entry.original_name,
         "platform": entry.platform,
+        "translation_key": entry.translation_key,
+        "unique_id": entry.unique_id,
     }
 
 
@@ -245,6 +270,7 @@ def _entry_dict(entry: er.RegistryEntry) -> dict[str, Any]:
 def _entry_ext_dict(entry: er.RegistryEntry) -> dict[str, Any]:
     """Convert entry to API format."""
     data = _entry_dict(entry)
+    data["aliases"] = entry.aliases
     data["capabilities"] = entry.capabilities
     data["device_class"] = entry.device_class
     data["options"] = entry.options

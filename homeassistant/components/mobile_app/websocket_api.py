@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 from functools import wraps
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
 from .const import CONF_USER_ID, DATA_CONFIG_ENTRIES, DATA_PUSH_CHANNEL, DOMAIN
 from .push_notification import PushChannel
@@ -56,7 +57,11 @@ def _ensure_webhook_access(func):
         vol.Required("confirm_id"): str,
     }
 )
-def handle_push_notification_confirm(hass, connection, msg):
+def handle_push_notification_confirm(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Confirm receipt of a push notification."""
     channel: PushChannel | None = hass.data[DOMAIN][DATA_PUSH_CHANNEL].get(
         msg["webhook_id"]
@@ -88,7 +93,11 @@ def handle_push_notification_confirm(hass, connection, msg):
 )
 @_ensure_webhook_access
 @websocket_api.async_response
-async def handle_push_notification_channel(hass, connection, msg):
+async def handle_push_notification_channel(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Set up a direct push notification channel."""
     webhook_id = msg["webhook_id"]
     registered_channels: dict[str, PushChannel] = hass.data[DOMAIN][DATA_PUSH_CHANNEL]

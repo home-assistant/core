@@ -320,6 +320,8 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
 class TomorrowioEntity(CoordinatorEntity[TomorrowioDataUpdateCoordinator]):
     """Base Tomorrow.io Entity."""
 
+    _attr_attribution = ATTRIBUTION
+
     def __init__(
         self,
         config_entry: ConfigEntry,
@@ -346,8 +348,3 @@ class TomorrowioEntity(CoordinatorEntity[TomorrowioDataUpdateCoordinator]):
         """
         entry_id = self._config_entry.entry_id
         return self.coordinator.data[entry_id].get(CURRENT, {}).get(property_name)
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return ATTRIBUTION

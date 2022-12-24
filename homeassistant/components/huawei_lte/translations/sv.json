@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "not_huawei_lte": "Inte en Huawei LTE-enhet"
+            "not_huawei_lte": "Inte en Huawei LTE-enhet",
+            "reauth_successful": "\u00c5terautentisering lyckades"
         },
         "error": {
             "connection_timeout": "Timeout f\u00f6r anslutning",
@@ -15,6 +16,14 @@
         },
         "flow_title": "{name}",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "Anv\u00e4ndarnamn"
+                },
+                "description": "Logga in p\u00e5 enheten",
+                "title": "\u00c5terautentisera integrationen."
+            },
             "user": {
                 "data": {
                     "password": "L\u00f6senord",

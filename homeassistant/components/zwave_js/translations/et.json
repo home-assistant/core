@@ -10,7 +10,8 @@
             "already_in_progress": "Seadistamine on juba k\u00e4imas",
             "cannot_connect": "\u00dchendamine nurjus",
             "discovery_requires_supervisor": "Avastamine n\u00f5uab supervisorit.",
-            "not_zwave_device": "Avastatud seade ei ole Z-Wave seade."
+            "not_zwave_device": "Avastatud seade ei ole Z-Wave seade.",
+            "not_zwave_js_addon": "Avastatud lisandmoodul ei ole ametlik Z-Wave JS-i lisandmoodul."
         },
         "error": {
             "addon_start_failed": "Z-Wave JS lisandmooduli k\u00e4ivitamine nurjus. Kontrolli seadistusi.",

@@ -380,7 +380,7 @@ class MotionTiltOnlyDevice(MotionTiltDevice):
     _restore_tilt = False
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
         supported_features = (
             CoverEntityFeature.OPEN_TILT

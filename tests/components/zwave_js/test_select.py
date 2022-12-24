@@ -1,14 +1,18 @@
 """Test the Z-Wave JS number platform."""
 from unittest.mock import MagicMock
 
+from zwave_js_server.const import CURRENT_VALUE_PROPERTY, CommandClass
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
+from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 import homeassistant.helpers.entity_registry as er
+
+from .common import replace_value_of_zwave_value
 
 DEFAULT_TONE_SELECT_ENTITY = "select.indoor_siren_6_default_tone_2"
 PROTECTION_SELECT_ENTITY = "select.family_room_combo_local_protection_state"
@@ -265,3 +269,27 @@ async def test_multilevel_switch_select(hass, client, fortrezz_ssa1_siren, integ
 
     state = hass.states.get(MULTILEVEL_SWITCH_SELECT_ENTITY)
     assert state.state == "Strobe ONLY"
+
+
+async def test_multilevel_switch_select_no_value(
+    hass, client, fortrezz_ssa1_siren_state, integration
+):
+    """Test Multilevel Switch CC based select entity with primary value is None."""
+    node_state = replace_value_of_zwave_value(
+        fortrezz_ssa1_siren_state,
+        [
+            ZwaveValueMatcher(
+                property_=CURRENT_VALUE_PROPERTY,
+                command_class=CommandClass.SWITCH_MULTILEVEL,
+            )
+        ],
+        None,
+    )
+    node = Node(client, node_state)
+    client.driver.controller.emit("node added", {"node": node})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(MULTILEVEL_SWITCH_SELECT_ENTITY)
+
+    assert state
+    assert state.state == STATE_UNKNOWN

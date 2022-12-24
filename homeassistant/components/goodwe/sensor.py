@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
+import logging
 from typing import Any, cast
 
 from goodwe import Inverter, Sensor, SensorKind
@@ -16,13 +17,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_KILO_WATT_HOUR,
-    FREQUENCY_HERTZ,
     PERCENTAGE,
-    POWER_WATT,
-    TEMP_CELSIUS,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfFrequency,
+    UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
@@ -35,6 +36,8 @@ from homeassistant.helpers.update_coordinator import (
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN, KEY_COORDINATOR, KEY_DEVICE_INFO, KEY_INVERTER
+
+_LOGGER = logging.getLogger(__name__)
 
 # Sensor name of battery SoC
 BATTERY_SOC = "battery_soc"
@@ -83,25 +86,25 @@ _DESCRIPTIONS: dict[str, GoodweSensorEntityDescription] = {
         key="A",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     ),
     "V": GoodweSensorEntityDescription(
         key="V",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
     ),
     "W": GoodweSensorEntityDescription(
         key="W",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
     ),
     "kWh": GoodweSensorEntityDescription(
         key="kWh",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda prev, val: prev if not val else val,
         available=lambda entity: entity.coordinator.data is not None,
     ),
@@ -109,13 +112,13 @@ _DESCRIPTIONS: dict[str, GoodweSensorEntityDescription] = {
         key="C",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     "Hz": GoodweSensorEntityDescription(
         key="Hz",
-        device_class=SensorDeviceClass.VOLTAGE,
+        device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=FREQUENCY_HERTZ,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
     ),
     "%": GoodweSensorEntityDescription(
         key="%",
@@ -209,7 +212,10 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
             self._previous_value = 0
             self.coordinator.data[self._sensor.id_] = 0
             self.async_write_ha_state()
-        next_midnight = dt_util.start_of_local_day(dt_util.utcnow() + timedelta(days=1))
+            _LOGGER.debug("Goodwe reset %s to 0", self.name)
+        next_midnight = dt_util.start_of_local_day(
+            dt_util.now() + timedelta(days=1, minutes=1)
+        )
         self._stop_reset = async_track_point_in_time(
             self.hass, self.async_reset, next_midnight
         )
@@ -218,7 +224,7 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
         """Schedule reset task at midnight."""
         if self._sensor.id_ in DAILY_RESET:
             next_midnight = dt_util.start_of_local_day(
-                dt_util.utcnow() + timedelta(days=1)
+                dt_util.now() + timedelta(days=1)
             )
             self._stop_reset = async_track_point_in_time(
                 self.hass, self.async_reset, next_midnight

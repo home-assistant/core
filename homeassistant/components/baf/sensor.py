@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import PERCENTAGE, REVOLUTIONS_PER_MINUTE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -43,7 +43,7 @@ AUTO_COMFORT_SENSORS = (
     BAFSensorDescription(
         key="temperature",
         name="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: cast(Optional[float], device.temperature),
@@ -65,7 +65,7 @@ FAN_SENSORS = (
     BAFSensorDescription(
         key="current_rpm",
         name="Current RPM",
-        native_unit_of_measurement="RPM",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: cast(Optional[int], device.current_rpm),
@@ -73,7 +73,7 @@ FAN_SENSORS = (
     BAFSensorDescription(
         key="target_rpm",
         name="Target RPM",
-        native_unit_of_measurement="RPM",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: cast(Optional[int], device.target_rpm),

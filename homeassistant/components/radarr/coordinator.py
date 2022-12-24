@@ -1,7 +1,7 @@
 """Data update coordinator for the Radarr integration."""
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from datetime import timedelta
 from typing import Generic, TypeVar, Union, cast
 
@@ -28,7 +28,7 @@ T = TypeVar(
 )
 
 
-class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T]):
+class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T], ABC):
     """Data update coordinator for the Radarr integration."""
 
     config_entry: ConfigEntry

@@ -21,7 +21,11 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from tests.common import MockConfigEntry
 
@@ -101,7 +105,7 @@ async def test_sound_sensor(
 
     assert state
     assert state.state == "10"
-    assert state.attributes[ATTR_ICON] == "mdi:volume-high"
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.SOUND_PRESSURE
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "dB"
 
 
@@ -124,7 +128,7 @@ async def test_distance_sensor(
 
 @pytest.mark.parametrize(
     "unit_system, unit",
-    [(METRIC_SYSTEM, TEMP_CELSIUS), (IMPERIAL_SYSTEM, TEMP_FAHRENHEIT)],
+    [(METRIC_SYSTEM, TEMP_CELSIUS), (US_CUSTOMARY_SYSTEM, TEMP_FAHRENHEIT)],
 )
 async def test_temperature_sensor(
     hass: HomeAssistant,

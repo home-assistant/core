@@ -36,6 +36,12 @@ SWITCHES: tuple[SwitchEntityDescription, ...] = (
         name="Relay",
         device_class=SwitchDeviceClass.SWITCH,
     ),
+    SwitchEntityDescription(
+        key="cooling_ena_switch",
+        name="Cooling",
+        icon="mdi:snowflake-thermometer",
+        entity_category=EntityCategory.CONFIG,
+    ),
 )
 
 

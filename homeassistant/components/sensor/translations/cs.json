@@ -18,7 +18,8 @@
             "is_temperature": "Aktu\u00e1ln\u00ed teplota {entity_name}",
             "is_value": "Aktu\u00e1ln\u00ed hodnota {entity_name}",
             "is_voltage": "Aktu\u00e1ln\u00ed nap\u011bt\u00ed {entity_name}",
-            "is_volume": "Aktu\u00e1ln\u00ed objem {entity_name}"
+            "is_volume": "Aktu\u00e1ln\u00ed objem {entity_name}",
+            "is_water": "Aktu\u00e1ln\u00ed mno\u017estv\u00ed vody {entity_name}"
         },
         "trigger_type": {
             "battery_level": "P\u0159i zm\u011bn\u011b \u00farovn\u011b baterie {entity_name}",
@@ -38,7 +39,8 @@
             "temperature": "P\u0159i zm\u011bn\u011b teploty {entity_name}",
             "value": "P\u0159i zm\u011bn\u011b hodnoty {entity_name}",
             "voltage": "P\u0159i zm\u011bn\u011b nap\u011bt\u00ed {entity_name}",
-            "volume": "P\u0159i zm\u011bn\u011b objemu {entity_name}"
+            "volume": "P\u0159i zm\u011bn\u011b objemu {entity_name}",
+            "water": "P\u0159i zm\u011bn\u011b mno\u017estv\u00ed vody {entity_name}"
         }
     },
     "state": {

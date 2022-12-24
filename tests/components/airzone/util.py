@@ -30,6 +30,7 @@ from aioairzone.const import (
     API_THERMOS_RADIO,
     API_THERMOS_TYPE,
     API_UNITS,
+    API_VERSION,
     API_WIFI_CHANNEL,
     API_WIFI_RSSI,
     API_ZONE_ID,
@@ -189,6 +190,10 @@ HVAC_SYSTEMS_MOCK = {
             API_SYSTEM_TYPE: 1,
         }
     ]
+}
+
+HVAC_VERSION_MOCK = {
+    API_VERSION: "1.62",
 }
 
 HVAC_WEBSERVER_MOCK = {

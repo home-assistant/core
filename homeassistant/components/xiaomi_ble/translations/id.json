@@ -3,9 +3,6 @@
         "abort": {
             "already_configured": "Perangkat sudah dikonfigurasi",
             "already_in_progress": "Alur konfigurasi sedang berlangsung",
-            "decryption_failed": "Bindkey yang disediakan tidak berfungsi, data sensor tidak dapat didekripsi. Silakan periksa dan coba lagi.",
-            "expected_24_characters": "Diharapkan bindkey berupa 24 karakter heksadesimal.",
-            "expected_32_characters": "Diharapkan bindkey berupa 32 karakter heksadesimal.",
             "no_devices_found": "Tidak ada perangkat yang ditemukan di jaringan",
             "reauth_successful": "Autentikasi ulang berhasil"
         },
@@ -33,9 +30,6 @@
                     "bindkey": "Bindkey"
                 },
                 "description": "Data sensor yang disiarkan oleh sensor telah dienkripsi. Untuk mendekripsinya, diperlukan 24 karakter bindkey heksadesimal ."
-            },
-            "slow_confirm": {
-                "description": "Belum ada siaran dari perangkat ini dalam menit terakhir jadi kami tidak yakin apakah perangkat ini menggunakan enkripsi atau tidak. Ini mungkin terjadi karena perangkat menggunakan interval siaran yang lambat. Konfirmasikan sekarang untuk menambahkan perangkat ini, dan ketika siaran diterima nanti, Anda akan diminta untuk memasukkan kunci bind jika diperlukan."
             },
             "user": {
                 "data": {

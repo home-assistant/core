@@ -15,10 +15,9 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
-    PRECIPITATION_INCHES,
-    SPEED_KILOMETERS_PER_HOUR,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfPrecipitationDepth,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -57,7 +56,7 @@ SENSOR_DESCRIPTIONS = {
         name="Temperature",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     "Humidity": LaCrosseSensorEntityDescription(
         key="Humidity",
@@ -73,22 +72,23 @@ SENSOR_DESCRIPTIONS = {
         name="Heat index",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
     ),
     "WindSpeed": LaCrosseSensorEntityDescription(
         key="WindSpeed",
         name="Wind speed",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
-        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
-        device_class=SensorDeviceClass.SPEED,
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
     ),
     "Rain": LaCrosseSensorEntityDescription(
         key="Rain",
         name="Rain",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
-        native_unit_of_measurement=PRECIPITATION_INCHES,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
+        device_class=SensorDeviceClass.PRECIPITATION,
     ),
 }
 
@@ -111,7 +111,8 @@ async def async_setup_entry(
             if description is None:
                 message = (
                     f"Unsupported sensor field: {field}\nPlease create an issue on "
-                    "GitHub. https://github.com/home-assistant/core/issues/new?assignees=&la"
+                    "GitHub."
+                    " https://github.com/home-assistant/core/issues/new?assignees=&la"
                     "bels=&template=bug_report.yml&integration_name=LaCrosse%20View&integrat"
                     "ion_link=https://www.home-assistant.io/integrations/lacrosse_view/&addi"
                     f"tional_information=Field:%20{field}%0ASensor%20Model:%20{sensor.model}&"

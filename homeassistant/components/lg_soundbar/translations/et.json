@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
-            "existing_instance_updated": "V\u00e4rskendati olemasolevat konfiguratsiooni."
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
         },
         "error": {
-            "cannot_connect": "\u00dchendamine nurjus"
+            "cannot_connect": "\u00dchendamine nurjus",
+            "no_data": "Seade ei tagastanud kande jaoks vajalikke andmeid."
         },
         "step": {
             "user": {

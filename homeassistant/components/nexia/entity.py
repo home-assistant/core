@@ -80,6 +80,11 @@ class NexiaThermostatEntity(NexiaEntity):
             self.hass, f"{SIGNAL_THERMOSTAT_UPDATE}-{self._thermostat.thermostat_id}"
         )
 
+    @property
+    def available(self) -> bool:
+        """Return True if thermostat is available and data is available."""
+        return super().available and self._thermostat.is_online
+
 
 class NexiaThermostatZoneEntity(NexiaThermostatEntity):
     """Base class for nexia devices attached to a thermostat."""

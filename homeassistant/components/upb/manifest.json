@@ -6,9 +6,5 @@
   "codeowners": ["@gwww"],
   "config_flow": true,
   "iot_class": "local_push",
-  "loggers": ["upb_lib"],
-  "supported_brands": {
-    "pcs_lighting": "PCS Lighting",
-    "simply_automated": "Simply Automated"
-  }
+  "loggers": ["upb_lib"]
 }

@@ -21,7 +21,8 @@
     },
     "system_health": {
         "info": {
-            "can_reach_server": "Lze kontaktovat Airly server"
+            "can_reach_server": "Lze kontaktovat Airly server",
+            "requests_per_day": "Povolen\u00e9 po\u017eadavky za den"
         }
     }
 }

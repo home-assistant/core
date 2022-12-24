@@ -18,7 +18,7 @@ try:
     HAS_C_LOADER = True
 except ImportError:
     HAS_C_LOADER = False
-    from yaml import SafeLoader as FastestAvailableSafeLoader  # type: ignore[misc]
+    from yaml import SafeLoader as FastestAvailableSafeLoader  # type: ignore[assignment]
 
 from homeassistant.exceptions import HomeAssistantError
 
@@ -142,7 +142,7 @@ class SafeLineLoader(yaml.SafeLoader):
 
     def get_stream_name(self) -> str:
         """Get the name of the stream."""
-        return self.stream.name or ""
+        return getattr(self.stream, "name", "")
 
 
 LoaderType = Union[SafeLineLoader, SafeLoader]
