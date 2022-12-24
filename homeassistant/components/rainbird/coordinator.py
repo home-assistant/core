@@ -13,7 +13,8 @@ from pyrainbird.async_client import RainbirdApiException
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-TIMEOUT_SECONDS = 20
+from .const import TIMEOUT_SECONDS
+
 UPDATE_INTERVAL = datetime.timedelta(minutes=1)
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,13 +28,14 @@ class RainbirdUpdateCoordinator(DataUpdateCoordinator[_T]):
     def __init__(
         self,
         hass: HomeAssistant,
+        name: str,
         update_method: Callable[[], Awaitable[_T]],
     ) -> None:
         """Initialize ZoneStateUpdateCoordinator."""
         super().__init__(
             hass,
             _LOGGER,
-            name="Rainbird Zones",
+            name=name,
             update_method=update_method,
             update_interval=UPDATE_INTERVAL,
         )

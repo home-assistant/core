@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pyrainbird import AvailableStations
 from pyrainbird.async_client import AsyncRainbirdController, RainbirdApiException
@@ -9,23 +10,29 @@ from pyrainbird.data import States
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_FRIENDLY_NAME, CONF_TRIGGER_TIME
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_ZONES, DOMAIN, RAINBIRD_CONTROLLER
+from .const import (
+    ATTR_DURATION,
+    CONF_ZONES,
+    DEFAULT_TRIGGER_TIME,
+    DEVICE_INFO,
+    DOMAIN,
+    RAINBIRD_CONTROLLER,
+    SERIAL_NUMBER,
+)
 from .coordinator import RainbirdUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DURATION = "duration"
-
 SERVICE_START_IRRIGATION = "start_irrigation"
-SERVICE_SET_RAIN_DELAY = "set_rain_delay"
 
 SERVICE_SCHEMA_IRRIGATION = vol.Schema(
     {
@@ -41,18 +48,14 @@ SERVICE_SCHEMA_RAIN_DELAY = vol.Schema(
 )
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_devices: AddEntitiesCallback,
 ) -> None:
-    """Set up Rain Bird switches over a Rain Bird controller."""
-
-    if discovery_info is None:
-        return
-
-    controller: AsyncRainbirdController = discovery_info[RAINBIRD_CONTROLLER]
+    """Set up entry for a Rain Bird irrigation switches."""
+    data = hass.data[DOMAIN][config_entry.entry_id]
+    controller: AsyncRainbirdController = data[RAINBIRD_CONTROLLER]
     try:
         available_stations: AvailableStations = (
             await controller.get_available_stations()
@@ -61,55 +64,43 @@ async def async_setup_platform(
         raise PlatformNotReady(f"Failed to get stations: {str(err)}") from err
     if not (available_stations and available_stations.stations):
         return
-    coordinator = RainbirdUpdateCoordinator(hass, controller.get_zone_states)
+
+    coordinator = RainbirdUpdateCoordinator(
+        hass, "Zone States", controller.get_zone_states
+    )
+    await coordinator.async_config_entry_first_refresh()
+
+    config: dict[int | str, Any] = {
+        **config_entry.data,  # type: ignore[list-item]
+    }
+
     devices = []
     for zone in range(1, available_stations.stations.count + 1):
-        if available_stations.stations.active(zone):
-            zone_config = discovery_info.get(CONF_ZONES, {}).get(zone, {})
-            time = zone_config.get(CONF_TRIGGER_TIME, discovery_info[CONF_TRIGGER_TIME])
-            name = zone_config.get(CONF_FRIENDLY_NAME)
-            devices.append(
-                RainBirdSwitch(
-                    coordinator,
-                    controller,
-                    zone,
-                    time,
-                    name if name else f"Sprinkler {zone}",
-                )
+        if not available_stations.stations.active(zone):
+            continue
+        zone_config = config.get(CONF_ZONES, {}).get(zone, {})
+        devices.append(
+            RainBirdSwitch(
+                coordinator,
+                controller,
+                zone,
+                zone_config.get(
+                    CONF_TRIGGER_TIME,
+                    config.get(CONF_TRIGGER_TIME, DEFAULT_TRIGGER_TIME),
+                ),
+                zone_config.get(CONF_FRIENDLY_NAME, f"Sprinkler {zone}"),
+                data[SERIAL_NUMBER],
+                data[DEVICE_INFO],
             )
+        )
 
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except ConfigEntryNotReady as err:
-        raise PlatformNotReady(f"Failed to load zone state: {str(err)}") from err
+    async_add_devices(devices)
 
-    async_add_entities(devices)
-
-    async def start_irrigation(service: ServiceCall) -> None:
-        entity_id = service.data[ATTR_ENTITY_ID]
-        duration = service.data[ATTR_DURATION]
-
-        for device in devices:
-            if device.entity_id == entity_id:
-                await device.async_turn_on(duration=duration)
-
-    hass.services.async_register(
-        DOMAIN,
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
         SERVICE_START_IRRIGATION,
-        start_irrigation,
-        schema=SERVICE_SCHEMA_IRRIGATION,
-    )
-
-    async def set_rain_delay(service: ServiceCall) -> None:
-        duration = service.data[ATTR_DURATION]
-
-        await controller.set_rain_delay(duration)
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SET_RAIN_DELAY,
-        set_rain_delay,
-        schema=SERVICE_SCHEMA_RAIN_DELAY,
+        SERVICE_SCHEMA_IRRIGATION,
+        "async_turn_on",
     )
 
 
@@ -125,6 +116,8 @@ class RainBirdSwitch(
         zone: int,
         time: int,
         name: str,
+        serial_number: str,
+        device_info: DeviceInfo,
     ) -> None:
         """Initialize a Rain Bird Switch Device."""
         super().__init__(coordinator)
@@ -134,6 +127,8 @@ class RainBirdSwitch(
         self._state = None
         self._duration = time
         self._attributes = {ATTR_DURATION: self._duration, "zone": self._zone}
+        self._attr_unique_id = f"{serial_number}-{zone}"
+        self._attr_device_info = device_info
 
     @property
     def extra_state_attributes(self):

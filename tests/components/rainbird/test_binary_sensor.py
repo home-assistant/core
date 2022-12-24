@@ -49,6 +49,10 @@ async def test_rainsensor(
     rainsensor = hass.states.get("binary_sensor.rainsensor")
     assert rainsensor is not None
     assert rainsensor.state == expected_state
+    assert rainsensor.attributes == {
+        "friendly_name": "Rainsensor",
+        "icon": "mdi:water",
+    }
 
 
 @pytest.mark.parametrize(
@@ -76,3 +80,7 @@ async def test_raindelay(
     raindelay = hass.states.get("binary_sensor.raindelay")
     assert raindelay is not None
     assert raindelay.state == expected_state
+    assert raindelay.attributes == {
+        "friendly_name": "Raindelay",
+        "icon": "mdi:water-off",
+    }

@@ -16,6 +16,7 @@ from .conftest import (
     EMPTY_STATIONS_RESPONSE,
     HOST,
     PASSWORD,
+    SERIAL_RESPONSE,
     URL,
     ZONE_3_ON_RESPONSE,
     ZONE_5_ON_RESPONSE,
@@ -64,10 +65,20 @@ async def test_zones(
     zone = hass.states.get("switch.sprinkler_1")
     assert zone is not None
     assert zone.state == "off"
+    assert zone.attributes == {
+        "friendly_name": "Sprinkler 1",
+        "duration": 360,
+        "zone": 1,
+    }
 
     zone = hass.states.get("switch.sprinkler_2")
     assert zone is not None
     assert zone.state == "off"
+    assert zone.attributes == {
+        "friendly_name": "Sprinkler 2",
+        "duration": 360,
+        "zone": 2,
+    }
 
     zone = hass.states.get("switch.sprinkler_3")
     assert zone is not None
@@ -258,27 +269,30 @@ async def test_coordinator_unavailable(
     with caplog.at_level(logging.WARNING):
         assert await setup_integration()
 
-    assert "Failed to load zone state" in caplog.text
+    assert "Error while setting up rainbird platform for switch" in caplog.text
 
 
 @pytest.mark.parametrize(
-    "yaml_config",
+    "yaml_config,config_entry_data",
     [
-        {
-            DOMAIN: {
-                "host": HOST,
-                "password": PASSWORD,
-                "trigger_time": 360,
-                "zones": {
-                    1: {
-                        "friendly_name": "Garden Sprinkler",
+        (
+            {
+                DOMAIN: {
+                    "host": HOST,
+                    "password": PASSWORD,
+                    "trigger_time": 360,
+                    "zones": {
+                        1: {
+                            "friendly_name": "Garden Sprinkler",
+                        },
+                        2: {
+                            "friendly_name": "Back Yard",
+                        },
                     },
-                    2: {
-                        "friendly_name": "Back Yard",
-                    },
-                },
-            }
-        },
+                }
+            },
+            None,
+        )
     ],
 )
 async def test_yaml_config(
@@ -289,7 +303,11 @@ async def test_yaml_config(
     """Test switch platform with fake data that creates 7 zones with one enabled."""
 
     responses.extend(
-        [mock_response(AVAILABLE_STATIONS_RESPONSE), mock_response(ZONE_5_ON_RESPONSE)]
+        [
+            mock_response(SERIAL_RESPONSE),  # Issued during import
+            mock_response(AVAILABLE_STATIONS_RESPONSE),
+            mock_response(ZONE_5_ON_RESPONSE),
+        ],
     )
 
     assert await setup_integration()

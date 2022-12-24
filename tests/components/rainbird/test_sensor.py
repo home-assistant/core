@@ -43,7 +43,15 @@ async def test_sensors(
     rainsensor = hass.states.get("sensor.rainsensor")
     assert rainsensor is not None
     assert rainsensor.state == expected_state
+    assert rainsensor.attributes == {
+        "friendly_name": "Rainsensor",
+        "icon": "mdi:water",
+    }
 
     raindelay = hass.states.get("sensor.raindelay")
     assert raindelay is not None
     assert raindelay.state == "16"
+    assert raindelay.attributes == {
+        "friendly_name": "Raindelay",
+        "icon": "mdi:water-off",
+    }

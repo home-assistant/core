@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Generator
+from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
 
@@ -14,6 +15,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 ComponentSetup = Callable[[], Awaitable[bool]]
@@ -53,6 +55,16 @@ CONFIG = {
     }
 }
 
+CONFIG_ENTRY_DATA = {
+    "host": HOST,
+    "password": PASSWORD,
+}
+
+
+UNAVAILABLE_RESPONSE = AiohttpClientMockResponse(
+    "POST", URL, status=HTTPStatus.SERVICE_UNAVAILABLE
+)
+
 
 @pytest.fixture
 def platforms() -> list[Platform]:
@@ -63,7 +75,35 @@ def platforms() -> list[Platform]:
 @pytest.fixture
 def yaml_config() -> dict[str, Any]:
     """Fixture for configuration.yaml."""
-    return CONFIG
+    return {}
+
+
+@pytest.fixture
+async def config_entry_data() -> dict[str, Any]:
+    """Fixture for MockConfigEntry data."""
+    return CONFIG_ENTRY_DATA
+
+
+@pytest.fixture
+async def config_entry(
+    config_entry_data: dict[str, Any] | None
+) -> MockConfigEntry | None:
+    """Fixture for MockConfigEntry."""
+    if config_entry_data is None:
+        return None
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data=config_entry_data,
+    )
+
+
+@pytest.fixture(autouse=True)
+async def setup_config_entry(
+    hass: HomeAssistant, config_entry: MockConfigEntry | None
+) -> None:
+    """Fixture to set up the config entry."""
+    if config_entry:
+        config_entry.add_to_hass(hass)
 
 
 @pytest.fixture
