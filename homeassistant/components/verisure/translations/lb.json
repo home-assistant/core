@@ -1,0 +1,15 @@
+{
+    "options": {
+        "error": {
+            "code_format_mismatch": "De Standard-PIN-Code st\u00ebmmt net mat der n\u00e9ideger Unzuel un Zifferen iwwerteneen"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "lock_code_digits": "Unzuel vun Zifferen am PIN-Code fir Schl\u00e4sser",
+                    "lock_default_code": "Standard-PIN-Code fir Schl\u00e4sser: g\u00ebtt benotzt, wa keen ugi g\u00ebtt"
+                }
+            }
+        }
+    }
+}
