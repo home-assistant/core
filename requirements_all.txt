@@ -14,7 +14,7 @@ Adax-local==0.1.5
 HAP-python==4.6.0
 
 # homeassistant.components.mastodon
-Mastodon.py==1.5.1
+Mastodon.py==1.8.0
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2

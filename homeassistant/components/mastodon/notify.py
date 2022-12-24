@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_BASE_URL, DEFAULT_URL, LOGGER
+from .const import CONF_BASE_URL, DEFAULT_URL, LOGGER, ACCEPTABLE_ADDITIONAL_PARAMS
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -59,8 +59,15 @@ class MastodonNotificationService(BaseNotificationService):
         self._api = api
 
     def send_message(self, message: str = "", **kwargs: Any) -> None:
-        """Send a message to a user."""
+        """Send a message as a user.
+        Accepts additional arguments as listed in ACCEPTABLE_ADDITIONAL_PARAMS
+        """
         try:
-            self._api.toot(message)
+            params = {
+                param: value
+                for param, value in kwargs
+                if param in ACCEPTABLE_ADDITIONAL_PARAMS and value is not None
+            }
+            self._api.status_post(message, *params)
         except MastodonAPIError:
             LOGGER.error("Unable to send message")
