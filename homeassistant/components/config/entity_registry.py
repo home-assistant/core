@@ -1,7 +1,7 @@
 """HTTP views to interact with the entity registry."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Final
 
 import voluptuous as vol
 
@@ -9,11 +9,7 @@ from homeassistant import config_entries
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ERR_NOT_FOUND
 from homeassistant.components.websocket_api.decorators import require_admin
-from homeassistant.components.websocket_api.messages import (
-    IDEN_JSON_TEMPLATE,
-    IDEN_TEMPLATE,
-    message_to_json,
-)
+from homeassistant.components.websocket_api.messages import message_to_json
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
@@ -21,16 +17,24 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 
+RESULT_TEMPLATE: Final = "__RESULT__"
+RESULT_JSON_TEMPLATE: Final = '"__RESULT__"'
+
 
 async def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Entity Registry views."""
 
-    cached_list_entities: str | None = None
+    cached_list_entities: dict[str, str] = {}
 
     @callback
     def _async_clear_list_entities_cache(event: Event) -> None:
         nonlocal cached_list_entities
-        cached_list_entities = None
+
+        old_entity_id = event.data.get("old_entity_id")
+        if old_entity_id is None:
+            old_entity_id = event.data["entity_id"]
+
+        cached_list_entities.pop(old_entity_id)
 
     @websocket_api.websocket_command(
         {vol.Required("type"): "config/entity_registry/list"}
@@ -43,16 +47,24 @@ async def async_setup(hass: HomeAssistant) -> bool:
     ) -> None:
         """Handle list registry entries command."""
         nonlocal cached_list_entities
-        if not cached_list_entities:
-            registry = er.async_get(hass)
-            cached_list_entities = message_to_json(
-                websocket_api.result_message(
-                    IDEN_TEMPLATE,  # type: ignore[arg-type]
-                    [_entry_dict(entry) for entry in registry.entities.values()],
-                )
-            )
+        registry = er.async_get(hass)
+
+        def _get(entity_id: str, entry: er.RegistryEntry) -> str:
+            if data := cached_list_entities.get(entity_id):
+                return data
+
+            data = message_to_json(_entry_dict(entry))
+            cached_list_entities[entity_id] = data
+            return data
+
+        result = ",".join(
+            _get(entity_id, entry) for entity_id, entry in registry.entities.items()
+        )
+        message = message_to_json(
+            websocket_api.result_message(msg["id"], RESULT_TEMPLATE)
+        )
         connection.send_message(
-            cached_list_entities.replace(IDEN_JSON_TEMPLATE, str(msg["id"]), 1)
+            message.replace(RESULT_JSON_TEMPLATE, "[" + result + "]")
         )
 
     hass.bus.async_listen(
