@@ -92,5 +92,5 @@ async def test_invalid_config(hass: HomeAssistant) -> None:
 
     mock_platform(hass, f"{TEST_DOMAIN}.data_source", platform)
 
-    with pytest.raises(InvalidDataSourceConfig, match="required key not provided"):
+    with pytest.raises(vol.Invalid, match="required key not provided"):
         await async_get_data_source(hass, TEST_DOMAIN, {})

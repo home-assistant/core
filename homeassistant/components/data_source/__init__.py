@@ -8,7 +8,6 @@ This integration provides the APIs for actions and scripts to call data sources.
 """
 from __future__ import annotations
 
-import logging
 from typing import Any, Protocol, cast
 
 import voluptuous as vol
@@ -75,10 +74,5 @@ async def async_get_data_source(
 ) -> Any:
     """Populate data from a data source."""
     platform = await async_get_data_source_platform(hass, domain)
-    logging.debug(platform.DATA_SOURCE_SCHEMA)
-    platform.DATA_SOURCE_SCHEMA(config)
-    try:
-        config = cast(ConfigType, platform.DATA_SOURCE_SCHEMA(config))
-    except vol.Invalid as err:
-        raise InvalidDataSourceConfig(str(err)) from err
+    config = cast(ConfigType, platform.DATA_SOURCE_SCHEMA(config))
     return await platform.async_get_data(hass, config)
