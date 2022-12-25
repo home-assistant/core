@@ -18,6 +18,7 @@ async def async_get_config_entry_diagnostics(
     client: Stookwijzer = hass.data[DOMAIN][entry.entry_id]
     return {
         "state": client.state,
+        "last_updated": client.last_updated,
         "lqi": client.lqi,
         "windspeed": client.windspeed,
         "weather": client.weather,
