@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from switchbee.api import CentralUnitPolling, CentralUnitWsRPC
+from switchbee.api import CentralUnitPolling, CentralUnitWsRPC, is_wsrpc_api
 from switchbee.api.central_unit import SwitchBeeError
 
 from homeassistant.config_entries import ConfigEntry
@@ -42,8 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady("Failed to connect to the Central Unit") from exp
 
     # Check if websocket version
-    assert isinstance(api.version, str)
-    if "1.4.6" in api.version:
+    if is_wsrpc_api(api):
         api = CentralUnitWsRPC(central_unit, user, password, websession)
         await api.connect()
 
