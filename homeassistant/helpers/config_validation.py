@@ -1585,6 +1585,7 @@ _SCRIPT_DATA_SOURCES_SCHEMA = vol.Schema(
                     {
                         vol.Required(CONF_PLATFORM): string,
                         vol.Required(CONF_TYPE): string,
+                        str: template,
                     },
                     extra=vol.ALLOW_EXTRA,
                 )

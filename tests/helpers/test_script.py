@@ -5132,15 +5132,18 @@ async def test_data_source(hass: HomeAssistant):
     sequence = cv.SCRIPT_SCHEMA(
         [
             {
+                "variables": {"input_variable": "input value"},
+            },
+            {
                 "data_sources": {
-                    "variable": {
+                    "output_variable": {
                         "platform": "test_platform",
                         "type": "example",
-                        "arg": "arg value",
+                        "arg": "{{ input_variable }}",
                     },
                 }
             },
-            {"service": "test.script", "data": {"value": "{{ variable }}"}},
+            {"service": "test.script", "data": {"value": "{{ output_variable }}"}},
         ]
     )
     script_obj = script.Script(hass, sequence, "test script", "test_domain")
@@ -5151,8 +5154,8 @@ async def test_data_source(hass: HomeAssistant):
 
     async def provide_data(hass: HomeAssistant, config: ConfigType) -> Any:
         assert config.get("type") == "example"
-        assert config.get("arg") == "arg value"
-        return ["a", "b", "c"]
+        assert config.get("arg") == "input value"
+        return "data source result"
 
     data_source = Mock()
     data_source.async_get_data = provide_data
@@ -5162,23 +5165,24 @@ async def test_data_source(hass: HomeAssistant):
     await script_obj.async_run(context=Context())
     await hass.async_block_till_done()
 
-    assert mock_calls[0].data["value"] == ["a", "b", "c"]
+    assert mock_calls[0].data["value"] == "data source result"
 
     expected_trace = {
         "0": [{}],
-        "1": [
+        "1": [{"variables": {"input_variable": "input value"}}],
+        "2": [
             {
                 "result": {
                     "limit": SERVICE_CALL_LIMIT,
                     "params": {
                         "domain": "test",
                         "service": "script",
-                        "service_data": {"value": ["a", "b", "c"]},
+                        "service_data": {"value": "data source result"},
                         "target": {},
                     },
                     "running_script": False,
                 },
-                "variables": {"variable": ["a", "b", "c"]},
+                "variables": {"output_variable": "data source result"},
             }
         ],
     }
