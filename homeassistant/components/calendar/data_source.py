@@ -19,7 +19,8 @@ DATA_SOURCE_SCHEMA = vol.Schema(
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required("start"): cv.datetime,
         vol.Required("end"): cv.datetime,
-    }
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 

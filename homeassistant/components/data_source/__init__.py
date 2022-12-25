@@ -38,6 +38,11 @@ class DataSourceProtocol(Protocol):
         """Provide the data for the specified data source configuration."""
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Data Sources."""
+    return True
+
+
 async def async_get_data_source_platform(
     hass: HomeAssistant,
     domain: str,

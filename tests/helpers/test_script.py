@@ -7,8 +7,9 @@ from functools import reduce
 import logging
 import operator
 from types import MappingProxyType
+from typing import Any
 from unittest import mock
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from async_timeout import timeout
 import pytest
@@ -40,6 +41,7 @@ from homeassistant.helpers import (
     trace,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -47,6 +49,7 @@ from tests.common import (
     async_capture_events,
     async_fire_time_changed,
     async_mock_service,
+    mock_platform,
 )
 
 ENTITY_ID = "script.test"
@@ -5125,6 +5128,7 @@ async def test_condition_not_shorthand(hass, caplog):
 
 async def test_data_source(hass: HomeAssistant):
     """Test data sources define variables based on data source output."""
+
     sequence = cv.SCRIPT_SCHEMA(
         [
             {
@@ -5143,11 +5147,22 @@ async def test_data_source(hass: HomeAssistant):
 
     mock_calls = async_mock_service(hass, "test", "script")
 
+    hass.config.components.add("test_platform")
+
+    async def provide_data(hass: HomeAssistant, config: ConfigType) -> Any:
+        assert config.get("type") == "example"
+        assert config.get("arg") == "arg value"
+        return ["a", "b", "c"]
+
+    data_source = Mock()
+    data_source.async_get_data = provide_data
+    data_source.DATA_SOURCE_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
+    mock_platform(hass, "test_platform.data_source", data_source)
+
     await script_obj.async_run(context=Context())
     await hass.async_block_till_done()
 
-    assert mock_calls[0].data["value"] == 1
-    assert mock_calls[1].data["value"] == 2
+    assert mock_calls[0].data["value"] == ["a", "b", "c"]
 
     expected_trace = {
         "0": [{}],
@@ -5158,14 +5173,13 @@ async def test_data_source(hass: HomeAssistant):
                     "params": {
                         "domain": "test",
                         "service": "script",
-                        "service_data": {"value": 1},
+                        "service_data": {"value": ["a", "b", "c"]},
                         "target": {},
                     },
                     "running_script": False,
                 },
-                "variables": {"variable": "1"},
+                "variables": {"variable": ["a", "b", "c"]},
             }
         ],
-        "2": [{}],
     }
     assert_action_trace(expected_trace)
