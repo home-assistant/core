@@ -4369,6 +4369,16 @@ async def test_validate_action_config(hass):
         cv.SCRIPT_ACTION_PARALLEL: {
             "parallel": [templated_device_action("parallel_event")],
         },
+        cv.SCRIPT_ACTION_DATA_SOURCES: {
+            "data_sources": {
+                "today_usage": {
+                    "platform": "recorder",
+                    "type": "sum",
+                    "statistic": "sensor.total_energy_use",
+                    "period": "today",
+                },
+            },
+        },
     }
     expected_templates = {
         cv.SCRIPT_ACTION_CHECK_CONDITION: None,
@@ -5111,3 +5121,51 @@ async def test_condition_not_shorthand(hass, caplog):
             "2": [{"result": {"event": "test_event", "event_data": {}}}],
         }
     )
+
+
+async def test_data_source(hass: HomeAssistant):
+    """Test data sources define variables based on data source output."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "data_sources": {
+                    "variable": {
+                        "platform": "test_platform",
+                        "type": "example",
+                        "arg": "arg value",
+                    },
+                }
+            },
+            {"service": "test.script", "data": {"value": "{{ variable }}"}},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "test script", "test_domain")
+
+    mock_calls = async_mock_service(hass, "test", "script")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert mock_calls[0].data["value"] == 1
+    assert mock_calls[1].data["value"] == 2
+
+    expected_trace = {
+        "0": [{}],
+        "1": [
+            {
+                "result": {
+                    "limit": SERVICE_CALL_LIMIT,
+                    "params": {
+                        "domain": "test",
+                        "service": "script",
+                        "service_data": {"value": 1},
+                        "target": {},
+                    },
+                    "running_script": False,
+                },
+                "variables": {"variable": "1"},
+            }
+        ],
+        "2": [{}],
+    }
+    assert_action_trace(expected_trace)

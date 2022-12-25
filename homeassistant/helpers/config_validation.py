@@ -39,6 +39,7 @@ from homeassistant.const import (
     CONF_CONTINUE_ON_ERROR,
     CONF_CONTINUE_ON_TIMEOUT,
     CONF_COUNT,
+    CONF_DATA_SOURCES,
     CONF_DEFAULT,
     CONF_DELAY,
     CONF_DEVICE_ID,
@@ -71,6 +72,7 @@ from homeassistant.const import (
     CONF_TARGET,
     CONF_THEN,
     CONF_TIMEOUT,
+    CONF_TYPE,
     CONF_UNTIL,
     CONF_VALUE_TEMPLATE,
     CONF_VARIABLES,
@@ -1574,6 +1576,23 @@ _SCRIPT_PARALLEL_SCHEMA = vol.Schema(
     }
 )
 
+_SCRIPT_DATA_SOURCES_SCHEMA = vol.Schema(
+    {
+        **SCRIPT_ACTION_BASE_SCHEMA,
+        vol.Required(CONF_DATA_SOURCES): vol.All(
+            {
+                str: vol.Schema(
+                    {
+                        vol.Required(CONF_PLATFORM): string,
+                        vol.Required(CONF_TYPE): string,
+                    },
+                    extra=vol.ALLOW_EXTRA,
+                )
+            }
+        ),
+    }
+)
+
 
 SCRIPT_ACTION_DELAY = "delay"
 SCRIPT_ACTION_WAIT_TEMPLATE = "wait_template"
@@ -1589,6 +1608,7 @@ SCRIPT_ACTION_VARIABLES = "variables"
 SCRIPT_ACTION_STOP = "stop"
 SCRIPT_ACTION_IF = "if"
 SCRIPT_ACTION_PARALLEL = "parallel"
+SCRIPT_ACTION_DATA_SOURCES = "data_sources"
 
 
 def determine_script_action(action: dict[str, Any]) -> str:
@@ -1635,6 +1655,9 @@ def determine_script_action(action: dict[str, Any]) -> str:
     if CONF_PARALLEL in action:
         return SCRIPT_ACTION_PARALLEL
 
+    if CONF_DATA_SOURCES in action:
+        return SCRIPT_ACTION_DATA_SOURCES
+
     raise ValueError("Unable to determine action")
 
 
@@ -1653,6 +1676,7 @@ ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_STOP: _SCRIPT_STOP_SCHEMA,
     SCRIPT_ACTION_IF: _SCRIPT_IF_SCHEMA,
     SCRIPT_ACTION_PARALLEL: _SCRIPT_PARALLEL_SCHEMA,
+    SCRIPT_ACTION_DATA_SOURCES: _SCRIPT_DATA_SOURCES_SCHEMA,
 }
 
 
