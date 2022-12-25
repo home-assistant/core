@@ -9,12 +9,11 @@ from homeassistant.components.jewish_calendar.const import (
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_DIASPORA,
     CONF_HAVDALAH_OFFSET_MINUTES,
-    CONF_LANGUAGE,
     DEFAULT_DIASPORA,
     DEFAULT_LANGUAGE,
     DOMAIN,
 )
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_LANGUAGE, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 
 from tests.common import mock_coro
 
