@@ -8,6 +8,7 @@
     "bluetooth",
     "cloud",
     "counter",
+    "data_source",
     "dhcp",
     "energy",
     "frontend",

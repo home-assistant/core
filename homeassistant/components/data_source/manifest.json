@@ -1,0 +1,8 @@
+{
+  "domain": "data_source",
+  "name": "Data Sources",
+  "documentation": "https://www.home-assistant.io/integrations/data_source",
+  "codeowners": ["@home-assistant/core"],
+  "quality_scale": "internal",
+  "integration_type": "system"
+}

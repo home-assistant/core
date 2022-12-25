@@ -136,12 +136,12 @@ class CalendarEvent:
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the event."""
         return {
-            **dataclasses.asdict(self, dict_factory=_event_dict_factory),
+            **dataclasses.asdict(self, dict_factory=event_dict_factory),
             "all_day": self.all_day,
         }
 
 
-def _event_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, str]:
+def event_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, str]:
     """Convert CalendarEvent dataclass items to dictionary of attributes."""
     result: dict[str, str] = {}
     for name, value in obj:
