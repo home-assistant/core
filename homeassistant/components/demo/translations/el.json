@@ -1,5 +1,28 @@
 {
     "entity": {
+        "climate": {
+            "ubercool": {
+                "state_attributes": {
+                    "fan_mode": {
+                        "state": {
+                            "auto_high": "\u0391\u03c5\u03c4\u03cc\u03bc\u03b1\u03c4\u03bf \u03c5\u03c8\u03b7\u03bb\u03cc",
+                            "auto_low": "\u0391\u03c5\u03c4\u03cc\u03bc\u03b1\u03c4\u03bf \u03c7\u03b1\u03bc\u03b7\u03bb\u03cc",
+                            "on_high": "\u0395\u03bd\u03b5\u03c1\u03b3\u03cc \u03c5\u03c8\u03b7\u03bb\u03cc",
+                            "on_low": "\u0395\u03bd\u03b5\u03c1\u03b3\u03cc \u03c7\u03b1\u03bc\u03b7\u03bb\u03cc"
+                        }
+                    },
+                    "swing_mode": {
+                        "state": {
+                            "1": "1",
+                            "2": "2",
+                            "3": "3",
+                            "auto": "\u0391\u03c5\u03c4\u03cc\u03bc\u03b1\u03c4\u03bf",
+                            "off": "\u0391\u03bd\u03b5\u03bd\u03b5\u03c1\u03b3\u03cc"
+                        }
+                    }
+                }
+            }
+        },
         "select": {
             "speed": {
                 "state": {
@@ -16,6 +39,15 @@
                     "comfort": "\u0386\u03bd\u03b5\u03c3\u03b7",
                     "eco": "Eco",
                     "sleep": "\u038e\u03c0\u03bd\u03bf\u03c2"
+                }
+            }
+        },
+        "vacuum": {
+            "model_s": {
+                "state_attributes": {
+                    "cleaned_area": {
+                        "name": "\u039a\u03b1\u03b8\u03b1\u03c1\u03b9\u03c3\u03bc\u03ad\u03bd\u03b7 \u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ae"
+                    }
                 }
             }
         }

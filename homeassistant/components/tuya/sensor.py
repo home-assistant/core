@@ -14,12 +14,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_POTENTIAL_VOLT,
     PERCENTAGE,
     TIME_MINUTES,
     TIME_SECONDS,
     UnitOfElectricCurrent,
+    UnitOfElectricPotential,
     UnitOfPower,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -438,7 +439,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         TuyaSensorEntityDescription(
             key=DPCode.REMAIN_TIME,
             name="Remaining time",
-            native_unit_of_measurement=TIME_MINUTES,
+            native_unit_of_measurement=UnitOfTime.MINUTES,
             icon="mdi:timer",
         ),
     ),
@@ -712,7 +713,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             name="Phase A voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             subkey="voltage",
         ),
         TuyaSensorEntityDescription(
@@ -736,7 +737,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             name="Phase B voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             subkey="voltage",
         ),
         TuyaSensorEntityDescription(
@@ -760,7 +761,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             name="Phase C voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             subkey="voltage",
         ),
     ),
@@ -794,7 +795,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             name="Phase A voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             subkey="voltage",
         ),
         TuyaSensorEntityDescription(
@@ -818,7 +819,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             name="Phase B voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             subkey="voltage",
         ),
         TuyaSensorEntityDescription(
@@ -842,7 +843,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             name="Phase C voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             subkey="voltage",
         ),
     ),

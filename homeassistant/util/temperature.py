@@ -1,5 +1,6 @@
 """Temperature util functions."""
-from homeassistant.const import (  # pylint: disable=unused-import # noqa: F401
+# pylint: disable-next=unused-import,hass-deprecated-import
+from homeassistant.const import (  # noqa: F401
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TEMP_KELVIN,

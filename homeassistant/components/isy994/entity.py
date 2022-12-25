@@ -209,7 +209,8 @@ class ISYNodeEntity(ISYEntity):
         """Respond to an entity service command to request a Z-Wave device parameter from the ISY."""
         if not hasattr(self._node, "protocol") or self._node.protocol != PROTO_ZWAVE:
             raise HomeAssistantError(
-                f"Invalid service call: cannot request Z-Wave Parameter for non-Z-Wave device {self.entity_id}"
+                "Invalid service call: cannot request Z-Wave Parameter for non-Z-Wave"
+                f" device {self.entity_id}"
             )
         await self._node.get_zwave_parameter(parameter)
 
@@ -219,7 +220,8 @@ class ISYNodeEntity(ISYEntity):
         """Respond to an entity service command to set a Z-Wave device parameter via the ISY."""
         if not hasattr(self._node, "protocol") or self._node.protocol != PROTO_ZWAVE:
             raise HomeAssistantError(
-                f"Invalid service call: cannot set Z-Wave Parameter for non-Z-Wave device {self.entity_id}"
+                "Invalid service call: cannot set Z-Wave Parameter for non-Z-Wave"
+                f" device {self.entity_id}"
             )
         await self._node.set_zwave_parameter(parameter, value, size)
         await self._node.get_zwave_parameter(parameter)

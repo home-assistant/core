@@ -97,6 +97,9 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         name="Active tariff",
         obis_reference=obis_references.ELECTRICITY_ACTIVE_TARIFF,
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
+        device_class=SensorDeviceClass.ENUM,
+        options=["low", "normal"],
+        translation_key="electricity_tariff",
         icon="mdi:flash",
     ),
     DSMRSensorEntityDescription(

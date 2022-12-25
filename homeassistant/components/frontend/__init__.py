@@ -146,7 +146,9 @@ class Manifest:
 MANIFEST_JSON = Manifest(
     {
         "background_color": "#FFFFFF",
-        "description": "Home automation platform that puts local control and privacy first.",
+        "description": (
+            "Home automation platform that puts local control and privacy first."
+        ),
         "dir": "ltr",
         "display": "standalone",
         "icons": [

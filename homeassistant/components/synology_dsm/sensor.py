@@ -19,9 +19,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DISKS,
     PERCENTAGE,
-    TEMP_CELSIUS,
     UnitOfDataRate,
     UnitOfInformation,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -223,7 +223,7 @@ STORAGE_VOL_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoStorage.API_KEY,
         key="volume_disk_temp_avg",
         name="Average Disk Temp",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -231,7 +231,7 @@ STORAGE_VOL_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoStorage.API_KEY,
         key="volume_disk_temp_max",
         name="Maximum Disk Temp",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -257,7 +257,7 @@ STORAGE_DISK_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoStorage.API_KEY,
         key="disk_temp",
         name="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -269,7 +269,7 @@ INFORMATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoDSMInformation.API_KEY,
         key="temperature",
         name="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,

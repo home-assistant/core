@@ -11,11 +11,8 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
-    VOLUME_GALLONS,
-    VOLUME_LITERS,
     UnitOfEnergy,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 
@@ -47,7 +44,7 @@ GAS_USAGE_UNITS = {
         UnitOfEnergy.MEGA_WATT_HOUR,
         UnitOfEnergy.GIGA_JOULE,
     ),
-    sensor.SensorDeviceClass.GAS: (VOLUME_CUBIC_METERS, VOLUME_CUBIC_FEET),
+    sensor.SensorDeviceClass.GAS: (UnitOfVolume.CUBIC_METERS, UnitOfVolume.CUBIC_FEET),
 }
 GAS_PRICE_UNITS = tuple(
     f"/{unit}" for units in GAS_USAGE_UNITS.values() for unit in units
@@ -57,10 +54,10 @@ GAS_PRICE_UNIT_ERROR = "entity_unexpected_unit_gas_price"
 WATER_USAGE_DEVICE_CLASSES = (sensor.SensorDeviceClass.WATER,)
 WATER_USAGE_UNITS = {
     sensor.SensorDeviceClass.WATER: (
-        VOLUME_CUBIC_METERS,
-        VOLUME_CUBIC_FEET,
-        VOLUME_GALLONS,
-        VOLUME_LITERS,
+        UnitOfVolume.CUBIC_METERS,
+        UnitOfVolume.CUBIC_FEET,
+        UnitOfVolume.GALLONS,
+        UnitOfVolume.LITERS,
     ),
 }
 WATER_PRICE_UNITS = tuple(
