@@ -5127,7 +5127,7 @@ async def test_condition_not_shorthand(hass, caplog):
 
 
 async def test_data_source(hass: HomeAssistant):
-    """Test data sources define variables based on data source output."""
+    """Test data source outputs used as input to another action."""
 
     sequence = cv.SCRIPT_SCHEMA(
         [
@@ -5185,5 +5185,44 @@ async def test_data_source(hass: HomeAssistant):
                 "variables": {"output_variable": "data source result"},
             }
         ],
+    }
+    assert_action_trace(expected_trace)
+
+
+async def test_data_source_invalid_input_template(hass, caplog):
+    """Test data source with an invalid input template logs a warning."""
+
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "data_sources": {
+                    "new-source": {
+                        "platform": "test_platform",
+                        "type": "example",
+                        "arg": "{{ invalid }}",
+                    },
+                }
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "test script", "test_domain")
+
+    async def provide_data(hass: HomeAssistant, config: ConfigType) -> Any:
+        assert config.get("type") == "example"
+        assert config.get("arg") == ""
+        return "data source result"
+
+    data_source = Mock()
+    data_source.async_get_data = provide_data
+    data_source.DATA_SOURCE_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
+    mock_platform(hass, "test_platform.data_source", data_source)
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert "is undefined when rendering" in caplog.text
+
+    expected_trace = {
+        "0": [{"variables": {"input_variablefdfs": "input value"}}],
     }
     assert_action_trace(expected_trace)
