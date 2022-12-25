@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DATA_RATE_MEGABITS_PER_SECOND, DEGREE, TIME_MILLISECONDS
+from homeassistant.const import DEGREE, UnitOfDataRate, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -19,7 +19,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         name="Ping",
         icon="mdi:speedometer",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TIME_MILLISECONDS,
+        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         value_fn=lambda data: round(data["pop_ping_latency_ms"]),
     ),
     StarlinkSensorEntityDescription(
@@ -45,7 +45,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         name="Uplink throughput",
         icon="mdi:upload",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         value_fn=lambda data: round(data["uplink_throughput_bps"] / 1000000),
     ),
     StarlinkSensorEntityDescription(
@@ -53,7 +53,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         name="Downlink throughput",
         icon="mdi:download",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         value_fn=lambda data: round(data["downlink_throughput_bps"] / 1000000),
     ),
     StarlinkSensorEntityDescription(
