@@ -18,6 +18,7 @@ import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.components import scene
+from homeassistant.components.data_source import async_get_data_source
 from homeassistant.components.device_automation import action as device_action
 from homeassistant.components.logger import LOGSEVERITY
 from homeassistant.const import (
@@ -46,6 +47,7 @@ from homeassistant.const import (
     CONF_IF,
     CONF_MODE,
     CONF_PARALLEL,
+    CONF_PLATFORM,
     CONF_REPEAT,
     CONF_SCENE,
     CONF_SEQUENCE,
@@ -74,7 +76,7 @@ from homeassistant.core import (
 from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
 
-from . import condition, config_validation as cv, data_source, service, template
+from . import condition, config_validation as cv, service, template
 from .condition import ConditionCheckerType, trace_condition_function
 from .dispatcher import async_dispatcher_connect, async_dispatcher_send
 from .event import async_call_later, async_track_template
@@ -1029,11 +1031,10 @@ class _ScriptRun:
     async def _async_data_sources_step(self):
         """Handle data sources."""
         self._step_log("data sources")
-
         data_sources = self._action[CONF_DATA_SOURCES].items()
         results = await asyncio.gather(
             *(
-                data_source.async_provide_data_source(self._hass, config)
+                async_get_data_source(self._hass, config[CONF_PLATFORM], config)
                 for _, config in data_sources
             )
         )
