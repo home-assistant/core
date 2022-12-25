@@ -32,7 +32,7 @@ async def test_send_message(hass, mastodon_config):
             mastodon_config["name"],
             {
                 "message": "this is a test message",
-            }
+            },
         )
 
     mock_post.assert_called_once_with("this is a test message")
@@ -59,14 +59,13 @@ async def test_send_message_with_params(hass, mastodon_config):
                 "message": "this is a direct test message",
                 "data": {
                     "visibility": "direct",
-                }
-            }
+                },
+            },
         )
         await hass.async_block_till_done()
 
     mock_post.assert_called_once_with(
-        "this is a direct test message",
-        visibility="direct"
+        "this is a direct test message", visibility="direct"
     )
 
 
@@ -92,12 +91,11 @@ async def test_send_message_with_ignored_params(hass, mastodon_config):
                 "data": {
                     "visibility": "direct",
                     "should_be_ignored": 1,
-                }
-            }
+                },
+            },
         )
         await hass.async_block_till_done()
 
     mock_post.assert_called_once_with(
-        "this is a direct test message",
-        visibility="direct"
+        "this is a direct test message", visibility="direct"
     )
