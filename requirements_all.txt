@@ -2278,7 +2278,7 @@ satel_integra==0.3.7
 scapy==2.5.0
 
 # homeassistant.components.screenlogic
-screenlogicpy==0.5.4
+screenlogicpy==0.6.0
 
 # homeassistant.components.scsgate
 scsgate==0.1.0
