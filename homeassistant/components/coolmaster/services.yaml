@@ -1,0 +1,6 @@
+reset_filter:
+  description: Reset the timer of the filter.
+  fields:
+    entity_id:
+      description: Entity ID of the coolmaster climate entity.
+      example: climate.kitchen_ac

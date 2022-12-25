@@ -8,3 +8,5 @@ DOMAIN = "coolmaster"
 DEFAULT_PORT = 10102
 
 CONF_SUPPORTED_MODES = "supported_modes"
+
+RESET_FILTER = "reset_filter"
