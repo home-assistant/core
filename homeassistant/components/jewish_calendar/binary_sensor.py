@@ -78,6 +78,7 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
 
     _attr_should_poll = False
     entity_description: JewishCalendarBinarySensorEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -86,8 +87,7 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
     ) -> None:
         """Initialize the binary sensor."""
         self.entity_description = description
-        self._attr_name = f"{data['name']} {description.name}"
-        self._attr_unique_id = f"{DOMAIN}_{data['name']}_{description.key}"
+        self._attr_unique_id = f"{data['name']}_{description.key}"
         self._location = data["location"]
         self._hebrew = data["language"] == "hebrew"
         self._candle_lighting_offset = data["candle_lighting_offset"]
