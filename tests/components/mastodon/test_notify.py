@@ -1,5 +1,4 @@
-import time
-from unittest.mock import patch, create_autospec
+from unittest.mock import patch
 
 from mastodon import Mastodon
 

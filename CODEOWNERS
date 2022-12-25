@@ -669,6 +669,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/lyric/ @timmo001
 /tests/components/lyric/ @timmo001
 /homeassistant/components/mastodon/ @fabaff
+/tests/components/mastodon/ @fabaff
 /homeassistant/components/matrix/ @tinloaf
 /homeassistant/components/matter/ @home-assistant/matter
 /tests/components/matter/ @home-assistant/matter

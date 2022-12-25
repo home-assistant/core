@@ -70,7 +70,7 @@ class MastodonNotificationService(BaseNotificationService):
         }
         if len(params) != len(data):
             ignored_params = set(data.keys()) - set(params.keys())
-            LOGGER.warning(f"ignoring additional parameters {ignored_params}")
+            LOGGER.warning("ignoring additional parameters: {}".format(", ".join(ignored_params)))
 
         try:
             self._api.status_post(message, **params)
