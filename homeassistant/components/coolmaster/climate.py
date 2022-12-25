@@ -10,11 +10,18 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_SUPPORTED_MODES, DATA_COORDINATOR, DATA_INFO, DOMAIN
+from .const import (
+    CONF_SUPPORTED_MODES,
+    DATA_COORDINATOR,
+    DATA_INFO,
+    DOMAIN,
+    RESET_FILTER,
+)
 
 CM_TO_HA_STATE = {
     "heat": HVACMode.HEAT,
@@ -53,6 +60,9 @@ async def async_setup_entry(
     ]
 
     async_add_devices(all_devices)
+
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(RESET_FILTER, {}, "async_reset_filter")
 
 
 class CoolmasterClimate(CoordinatorEntity, ClimateEntity):
@@ -138,6 +148,14 @@ class CoolmasterClimate(CoordinatorEntity, ClimateEntity):
         """Return the list of available fan modes."""
         return FAN_MODES
 
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes."""
+        return {
+            "clean_filter": self._unit.clean_filter,
+            "error_code": self._unit.error_code,
+        }
+
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
@@ -171,4 +189,10 @@ class CoolmasterClimate(CoordinatorEntity, ClimateEntity):
         """Turn off."""
         _LOGGER.debug("Turning %s off", self.unique_id)
         self._unit = await self._unit.turn_off()
+        self.async_write_ha_state()
+
+    async def async_reset_filter(self) -> None:
+        """Reset the timer of the filter and set it as clean."""
+        _LOGGER.debug("Resetting filter of %s", self.unique_id)
+        self._unit = await self._unit.reset_filter()
         self.async_write_ha_state()
