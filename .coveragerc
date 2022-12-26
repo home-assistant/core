@@ -801,7 +801,6 @@ omit =
     homeassistant/components/mysensors/const.py
     homeassistant/components/mysensors/cover.py
     homeassistant/components/mysensors/device.py
-    homeassistant/components/mysensors/device_tracker.py
     homeassistant/components/mysensors/gateway.py
     homeassistant/components/mysensors/handler.py
     homeassistant/components/mysensors/helpers.py
