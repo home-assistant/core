@@ -6,7 +6,9 @@
                     "fan_mode": {
                         "state": {
                             "auto_high": "Tinggi Otomatis",
-                            "auto_low": "Rendah Otomatis"
+                            "auto_low": "Rendah Otomatis",
+                            "on_high": "Nyala Tinggi",
+                            "on_low": "Nyala Rendah"
                         }
                     },
                     "swing_mode": {
