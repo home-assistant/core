@@ -136,7 +136,7 @@ class RemootioCoverStateChangeListener(Listener[StateChange]):
             self._owner.unique_id,
             self._owner.state,
         )
-        self._owner.async_schedule_update_ha_state()
+        self._owner.async_write_ha_state()
 
 
 class RemootioCoverEventListener(Listener[Event]):
