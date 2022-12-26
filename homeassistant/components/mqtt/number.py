@@ -36,6 +36,7 @@ from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
+    CONF_PAYLOAD_RESET,
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
@@ -60,7 +61,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_MIN = "min"
 CONF_MAX = "max"
-CONF_PAYLOAD_RESET = "payload_reset"
 CONF_STEP = "step"
 
 DEFAULT_NAME = "MQTT Number"

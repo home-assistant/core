@@ -27,6 +27,7 @@ CONF_TRANSPORT = "transport"
 CONF_WS_PATH = "ws_path"
 CONF_WS_HEADERS = "ws_headers"
 CONF_WILL_MESSAGE = "will_message"
+CONF_PAYLOAD_RESET = "payload_reset"
 
 CONF_CERTIFICATE = "certificate"
 CONF_CLIENT_KEY = "client_key"

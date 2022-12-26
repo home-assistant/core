@@ -76,7 +76,10 @@ class ChromecastInfo:
                 )
 
                 _LOGGER.info(
-                    "Fetched cast details for unknown model '%s' manufacturer: '%s', type: '%s'. Please %s",
+                    (
+                        "Fetched cast details for unknown model '%s' manufacturer:"
+                        " '%s', type: '%s'. Please %s"
+                    ),
                     cast_info.model_name,
                     cast_info.manufacturer,
                     cast_info.cast_type,

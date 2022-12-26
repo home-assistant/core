@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator, Callable, Generator
+from copy import deepcopy
 import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -187,6 +188,20 @@ def update_gateway_nodes(
     """Update the gateway nodes."""
     gateway_nodes.update(nodes)
     return nodes
+
+
+@pytest.fixture(name="door_sensor_state", scope="session")
+def door_sensor_state_fixture() -> dict:
+    """Load the door sensor state."""
+    return load_nodes_state("mysensors/door_sensor_state.json")
+
+
+@pytest.fixture
+def door_sensor(gateway_nodes: dict[int, Sensor], door_sensor_state: dict) -> Sensor:
+    """Load the door sensor."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(door_sensor_state))
+    node = nodes[1]
+    return node
 
 
 @pytest.fixture(name="gps_sensor_state", scope="session")

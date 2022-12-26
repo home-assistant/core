@@ -28,7 +28,7 @@
                     "username": "Nome utente",
                     "verify_ssl": "Verifica il certificato SSL"
                 },
-                "description": "Vuoi impostare {name} ({host})?"
+                "description": "Vuoi configurare {name} ({host})?"
             },
             "reauth_confirm": {
                 "data": {

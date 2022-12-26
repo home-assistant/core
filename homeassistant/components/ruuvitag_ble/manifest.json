@@ -5,10 +5,12 @@
   "documentation": "https://www.home-assistant.io/integrations/ruuvitag_ble",
   "bluetooth": [
     {
-      "manufacturer_id": 1177
+      "manufacturer_id": 1177,
+      "connectable": false
     },
     {
-      "local_name": "Ruuvi *"
+      "local_name": "Ruuvi *",
+      "connectable": false
     }
   ],
   "requirements": ["ruuvitag-ble==0.1.1"],

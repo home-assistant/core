@@ -1,4 +1,29 @@
 {
+    "entity": {
+        "climate": {
+            "ubercool": {
+                "state_attributes": {
+                    "fan_mode": {
+                        "state": {
+                            "auto_high": "Auto h\u00e9ich",
+                            "auto_low": "Auto niddereg",
+                            "on_high": "Un H\u00e9ich",
+                            "on_low": "Un Niddereg"
+                        }
+                    },
+                    "swing_mode": {
+                        "state": {
+                            "1": "",
+                            "2": "",
+                            "3": "",
+                            "auto": "",
+                            "off": "Aus"
+                        }
+                    }
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "options_1": {
