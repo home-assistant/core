@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 from reolink_ip.exceptions import ApiError, CredentialsInvalidError
 import voluptuous as vol
@@ -73,18 +74,22 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except CredentialsInvalidError:
                 errors[CONF_HOST] = "invalid_auth"
             except ApiError as err:
-                placeholders["error"] = str(err) 
+                placeholders["error"] = str(err)
                 errors[CONF_HOST] = "api_error"
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
-                placeholders["error"] = str(err) 
+                placeholders["error"] = str(err)
                 errors[CONF_HOST] = "unknown"
+
+            self.host = cast(ReolinkHost, self.host)
 
             if not errors:
                 user_input[CONF_PORT] = self.host.api.port
                 user_input[CONF_USE_HTTPS] = self.host.api.use_https
 
-                await self.async_set_unique_id(self.host.unique_id, raise_on_progress=False)
+                await self.async_set_unique_id(
+                    self.host.unique_id, raise_on_progress=False
+                )
                 self._abort_if_unique_id_configured(updates=user_input)
 
                 return self.async_create_entry(

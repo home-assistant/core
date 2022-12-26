@@ -38,7 +38,7 @@ async def async_setup_entry(
 class ReolinkCamera(ReolinkCoordinatorEntity, Camera):
     """An implementation of a Reolink IP camera."""
 
-    _attr_supported_features: CameraEntityFeature = cameraEntityFeature.STREAM
+    _attr_supported_features: CameraEntityFeature = CameraEntityFeature.STREAM
 
     def __init__(self, hass, config, channel, stream):
         """Initialize Reolink camera stream."""
@@ -49,9 +49,7 @@ class ReolinkCamera(ReolinkCoordinatorEntity, Camera):
         self._stream = stream
 
         self._attr_name = f"{self._host.api.camera_name(self._channel)} {self._stream}"
-        self._attr_unique_id = (
-            f"{self._host.unique_id}_{self._channel}_{self._stream}"
-        )
+        self._attr_unique_id = f"{self._host.unique_id}_{self._channel}_{self._stream}"
         self._attr_entity_registry_enabled_default = stream == "sub"
 
     async def stream_source(self) -> str | None:
