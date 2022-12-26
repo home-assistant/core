@@ -61,6 +61,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle the initial step."""
         errors = {}
+        placeholders = {}
 
         if user_input is not None:
             try:
@@ -69,10 +70,12 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors[CONF_HOST] = "cannot_connect"
             except CredentialsInvalidError:
                 errors[CONF_HOST] = "invalid_auth"
-            except ApiError:
-                errors[CONF_HOST] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except ApiError as err:
+                placeholders["error"] = str(err) 
+                errors[CONF_HOST] = "api_error"
+            except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
+                placeholders["error"] = str(err) 
                 errors[CONF_HOST] = "unknown"
 
             if not errors:
@@ -102,7 +105,10 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors
+            step_id="user",
+            data_schema=data_schema,
+            errors=errors,
+            description_placeholders=placeholders,
         )
 
     async def async_obtain_host_settings(
@@ -113,11 +119,6 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             if not await host.async_init():
-                _LOGGER.error(
-                    "Error while performing initial setup of %s:%i: failed to obtain data from device",
-                    host.api.host,
-                    host.api.port,
-                )
                 raise CannotConnect
         finally:
             await host.stop()

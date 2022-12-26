@@ -4,9 +4,10 @@
             "already_configured": "This camera is already configured"
         },
         "error": {
+            "api_error": "API error occurred: {error}",
             "cannot_connect": "Failed to connect with the camera",
             "invalid_auth": "Invalid username or password",
-            "unknown": "Unexpected error"
+            "unknown": "Unexpected error: {error}"
         },
         "step": {
             "user": {
