@@ -16,6 +16,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 
 # Distance conversion constants
+_UM_TO_M = 0.000001  # 1 µm = 0.000001 m
 _MM_TO_M = 0.001  # 1 mm = 0.001 m
 _CM_TO_M = 0.01  # 1 cm = 0.01 m
 _KM_TO_M = 1000  # 1 km = 1000 m
@@ -93,6 +94,7 @@ class DistanceConverter(BaseUnitConverter):
     NORMALIZED_UNIT = UnitOfLength.METERS
     _UNIT_CONVERSION: dict[str, float] = {
         UnitOfLength.METERS: 1,
+        UnitOfLength.MICROMETERS: 1 / _UM_TO_M,
         UnitOfLength.MILLIMETERS: 1 / _MM_TO_M,
         UnitOfLength.CENTIMETERS: 1 / _CM_TO_M,
         UnitOfLength.KILOMETERS: 1 / _KM_TO_M,
@@ -108,6 +110,7 @@ class DistanceConverter(BaseUnitConverter):
         UnitOfLength.METERS,
         UnitOfLength.CENTIMETERS,
         UnitOfLength.MILLIMETERS,
+        UnitOfLength.MICROMETERS,
         UnitOfLength.INCHES,
         UnitOfLength.YARDS,
     }
