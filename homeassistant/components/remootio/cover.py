@@ -70,8 +70,6 @@ class RemootioCover(cover.CoverEntity):
         self._attr_device_info = DeviceInfo(
             name=name,
             manufacturer="Assemblabs Ltd",
-            suggested_area="The first end-to-end encrypted Wi-Fi and Bluetooth enabled smart remote controller, "
-            "that lets you control and monitor your gates and garage doors using your smartphone.",
         )
 
     async def async_added_to_hass(self) -> None:
