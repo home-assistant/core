@@ -64,7 +64,6 @@ class RemootioCover(cover.CoverEntity):
     ) -> None:
         """Initialize this cover entity."""
         super().__init__()
-        self._attr_name = name
         self._attr_unique_id = unique_id
         self._attr_device_class = device_class
         self._remootio_client = remootio_client
