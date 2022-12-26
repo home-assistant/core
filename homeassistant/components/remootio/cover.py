@@ -73,8 +73,6 @@ class RemootioCover(cover.CoverEntity):
             suggested_area="The first end-to-end encrypted Wi-Fi and Bluetooth enabled smart remote controller, "
             "that lets you control and monitor your gates and garage doors using your smartphone.",
         )
-        self._attr_should_poll = False
-        self._attr_supported_features = cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE
 
     async def async_added_to_hass(self) -> None:
         """Register listeners to the used Remootio client to be notified on state changes and events."""
