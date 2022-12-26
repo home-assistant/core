@@ -442,6 +442,9 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
             is_fixable=True,
             is_persistent=True,
             severity=ir.IssueSeverity.WARNING,
+            translation_placeholders={
+                "link": "https://www.home-assistant.io/integrations/text#service-textset_value"
+            },
             translation_key="deprecated_service_set_doorbell_message",
         )
 

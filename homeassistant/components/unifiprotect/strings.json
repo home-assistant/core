@@ -82,7 +82,7 @@
         "step": {
           "confirm": {
             "title": "set_doorbell_message is Deprecated",
-            "description": "The `unifiprotect.set_doorbell_message` service is deprecated in favor of the new Doorbell Text entity added to each Doorbell device. It will be removed in v2023.3.0. Please update to use the [`text.set_value` service](https://www.home-assistant.io/integrations/text#service-textset_value)."
+            "description": "The `unifiprotect.set_doorbell_message` service is deprecated in favor of the new Doorbell Text entity added to each Doorbell device. It will be removed in v2023.3.0. Please update to use the [`text.set_value` service]({link})."
           }
         }
       }
