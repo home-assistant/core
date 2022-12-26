@@ -84,6 +84,9 @@ advantage_air==0.4.1
 # homeassistant.components.agent_dvr
 agent-py==0.0.23
 
+# homeassistant.components.watts_vision
+aio-watts-vision==0.1.0
+
 # homeassistant.components.geo_json_events
 aio_geojson_generic_client==0.1
 

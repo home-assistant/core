@@ -460,6 +460,7 @@ FLOWS = {
         "volvooncall",
         "vulcan",
         "wallbox",
+        "watts_vision",
         "watttime",
         "waze_travel_time",
         "webostv",

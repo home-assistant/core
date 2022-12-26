@@ -1,0 +1,13 @@
+{
+  "domain": "watts_vision",
+  "name": "Watts Vision",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/watts_vision",
+  "requirements": ["aio-watts-vision==0.1.0"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@mjkl-gh"],
+  "iot_class": "cloud_polling"
+}
