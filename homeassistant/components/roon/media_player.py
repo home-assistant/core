@@ -415,7 +415,10 @@ class RoonDevice(MediaPlayerEntity):
                 return
             if name not in sync_available:
                 _LOGGER.error(
-                    "Can't join player %s with %s because it's not in the join available list %s",
+                    (
+                        "Can't join player %s with %s because it's not in the join"
+                        " available list %s"
+                    ),
                     name,
                     self.name,
                     list(sync_available),

@@ -42,6 +42,16 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "electricity_tariff": {
+                "state": {
+                    "low": "\u03a7\u03b1\u03bc\u03b7\u03bb\u03ae",
+                    "normal": "\u039a\u03b1\u03bd\u03bf\u03bd\u03b9\u03ba\u03ae"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

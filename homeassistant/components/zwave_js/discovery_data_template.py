@@ -96,8 +96,6 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
-    VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -111,6 +109,7 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfTime,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
     UnitOfVolumetricFlux,
 )
 
@@ -172,9 +171,9 @@ MULTILEVEL_SENSOR_UNIT_MAP: dict[str, set[MultilevelSensorScaleType]] = {
     UnitOfPower.BTU_PER_HOUR: UNIT_BTU_H,
     UnitOfTemperature.CELSIUS: UNIT_CELSIUS,
     UnitOfLength.CENTIMETERS: UNIT_CENTIMETER,
-    VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE: UNIT_CUBIC_FEET_PER_MINUTE,
+    UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE: UNIT_CUBIC_FEET_PER_MINUTE,
     UnitOfVolume.CUBIC_METERS: SENSOR_UNIT_CUBIC_METER,
-    VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR: UNIT_CUBIC_METER_PER_HOUR,
+    UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: UNIT_CUBIC_METER_PER_HOUR,
     SIGNAL_STRENGTH_DECIBELS: UNIT_DECIBEL,
     DEGREE: UNIT_DEGREES,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: {

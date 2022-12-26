@@ -30,7 +30,8 @@ def validate_apps(config: ConfigType) -> ConfigType:
         and config[CONF_DEVICE_CLASS] != MediaPlayerDeviceClass.TV
     ):
         raise vol.Invalid(
-            f"'{CONF_APPS}' can only be used if {CONF_DEVICE_CLASS}' is '{MediaPlayerDeviceClass.TV}'"
+            f"'{CONF_APPS}' can only be used if {CONF_DEVICE_CLASS}' is"
+            f" '{MediaPlayerDeviceClass.TV}'"
         )
 
     return config

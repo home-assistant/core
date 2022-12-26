@@ -13,7 +13,7 @@
         "step": {
             "pair_tv": {
                 "data": {
-                    "pin": "PIN Code"
+                    "pin": "PIN-Code"
                 },
                 "description": "Um TV sollt e Code ugewisen ginn. G\u00ebff d\u00ebse Code an d'Form a fuer weider mam n\u00e4chste Schr\u00ebtt fir d'Kopplung ofzeschl\u00e9issen.",
                 "title": "Kopplungs Prozess ofschl\u00e9issen"

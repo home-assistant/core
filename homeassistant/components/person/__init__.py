@@ -303,7 +303,8 @@ async def filter_yaml_data(hass: HomeAssistant, persons: list[dict]) -> list[dic
                 person_conf[CONF_ID],
             )
             person_invalid_user.append(
-                f"- Person {person_conf[CONF_NAME]} (id: {person_conf[CONF_ID]}) points at invalid user {user_id}"
+                f"- Person {person_conf[CONF_NAME]} (id: {person_conf[CONF_ID]}) points"
+                f" at invalid user {user_id}"
             )
             continue
 

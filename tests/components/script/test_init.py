@@ -38,6 +38,7 @@ from homeassistant.helpers.script import (
 )
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.setup import async_setup_component
+from homeassistant.util import yaml
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed, async_mock_service, mock_restore_cache
@@ -164,6 +165,67 @@ async def test_setup_with_invalid_configs(hass, value):
     ), f"Script loaded with wrong config {value}"
 
     assert len(hass.states.async_entity_ids("script")) == 0
+
+
+@pytest.mark.parametrize(
+    "object_id, broken_config, problem, details",
+    (
+        (
+            "Bad Script",
+            {},
+            "has invalid object id",
+            "invalid slug Bad Script",
+        ),
+        (
+            "bad_script",
+            {},
+            "could not be validated",
+            "required key not provided @ data['sequence']",
+        ),
+        (
+            "bad_script",
+            {
+                "sequence": {
+                    "condition": "state",
+                    # The UUID will fail being resolved to en entity_id
+                    "entity_id": "abcdabcdabcdabcdabcdabcdabcdabcd",
+                    "state": "blah",
+                },
+            },
+            "failed to setup actions",
+            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd.",
+        ),
+    ),
+)
+async def test_bad_config_validation(
+    hass: HomeAssistant, caplog, object_id, broken_config, problem, details
+):
+    """Test bad script configuration which can be detected during validation."""
+    assert await async_setup_component(
+        hass,
+        script.DOMAIN,
+        {
+            script.DOMAIN: {
+                object_id: {"alias": "bad_script", **broken_config},
+                "good_script": {
+                    "alias": "good_script",
+                    "sequence": {
+                        "service": "test.automation",
+                        "entity_id": "hello.world",
+                    },
+                },
+            }
+        },
+    )
+
+    # Check we get the expected error message
+    assert (
+        f"Script with alias 'bad_script' {problem} and has been disabled: {details}"
+        in caplog.text
+    )
+
+    # Make sure one bad automation does not prevent other automations from setting up
+    assert hass.states.async_entity_ids("script") == ["script.good_script"]
 
 
 @pytest.mark.parametrize("running", ["no", "same", "different"])
@@ -1248,3 +1310,81 @@ async def test_script_service_changed_entity_id(hass: HomeAssistant) -> None:
 
     assert len(calls) == 2
     assert calls[1].data["entity_id"] == "script.custom_entity_id_2"
+
+
+@pytest.mark.parametrize(
+    "blueprint_inputs, problem, details",
+    (
+        (
+            # No input
+            {},
+            "Failed to generate script from blueprint",
+            "Missing input service_to_call",
+        ),
+        (
+            # Missing input
+            {"a_number": 5},
+            "Failed to generate script from blueprint",
+            "Missing input service_to_call",
+        ),
+        (
+            # Wrong input
+            {
+                "trigger_event": "blueprint_event",
+                "service_to_call": {"dict": "not allowed"},
+                "a_number": 5,
+            },
+            "Blueprint 'Call service' generated invalid script",
+            "value should be a string for dictionary value @ data['sequence'][0]['service']",
+        ),
+    ),
+)
+async def test_blueprint_script_bad_config(
+    hass, caplog, blueprint_inputs, problem, details
+):
+    """Test blueprint script with bad inputs."""
+    assert await async_setup_component(
+        hass,
+        script.DOMAIN,
+        {
+            script.DOMAIN: {
+                "test_script": {
+                    "use_blueprint": {
+                        "path": "test_service.yaml",
+                        "input": blueprint_inputs,
+                    }
+                }
+            }
+        },
+    )
+    assert problem in caplog.text
+    assert details in caplog.text
+
+
+async def test_blueprint_script_fails_substitution(hass, caplog):
+    """Test blueprint script with bad inputs."""
+    with patch(
+        "homeassistant.components.blueprint.models.BlueprintInputs.async_substitute",
+        side_effect=yaml.UndefinedSubstitution("blah"),
+    ):
+        assert await async_setup_component(
+            hass,
+            script.DOMAIN,
+            {
+                script.DOMAIN: {
+                    "test_script": {
+                        "use_blueprint": {
+                            "path": "test_service.yaml",
+                            "input": {
+                                "service_to_call": "test.automation",
+                            },
+                        }
+                    }
+                }
+            },
+        )
+    assert (
+        "Blueprint 'Call service' failed to generate script with inputs "
+        "{'service_to_call': 'test.automation'}: No substitution found for input blah"
+        in caplog.text
+    )

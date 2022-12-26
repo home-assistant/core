@@ -26,11 +26,15 @@ OVERKIZ_TO_HVAC_MODE: dict[str, str] = {
     OverkizCommandParam.MANU: HVACMode.HEAT,
     OverkizCommandParam.HEATING: HVACMode.HEAT,
     OverkizCommandParam.STOP: HVACMode.OFF,
+    OverkizCommandParam.EXTERNAL_SCHEDULING: HVACMode.AUTO,
     OverkizCommandParam.INTERNAL_SCHEDULING: HVACMode.AUTO,
     OverkizCommandParam.COMFORT: HVACMode.HEAT,
 }
 
 HVAC_MODE_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_HVAC_MODE.items()}
+
+PRESET_EXTERNAL = "external"
+PRESET_FROST_PROTECTION = "frost_protection"
 
 OVERKIZ_TO_PRESET_MODES: dict[str, str] = {
     OverkizCommandParam.OFF: PRESET_ECO,
@@ -39,6 +43,8 @@ OVERKIZ_TO_PRESET_MODES: dict[str, str] = {
     OverkizCommandParam.COMFORT: PRESET_COMFORT,
     OverkizCommandParam.ABSENCE: PRESET_AWAY,
     OverkizCommandParam.ECO: PRESET_ECO,
+    OverkizCommandParam.FROSTPROTECTION: PRESET_FROST_PROTECTION,
+    OverkizCommandParam.EXTERNAL_SCHEDULING: PRESET_EXTERNAL,
     OverkizCommandParam.INTERNAL_SCHEDULING: PRESET_HOME,
 }
 
@@ -51,6 +57,8 @@ OVERKIZ_TO_PROFILE_MODES: dict[str, str] = {
     OverkizCommandParam.ABSENCE: PRESET_AWAY,
     OverkizCommandParam.MANU: PRESET_COMFORT,
     OverkizCommandParam.DEROGATION: PRESET_COMFORT,
+    OverkizCommandParam.EXTERNAL_SETPOINT: PRESET_EXTERNAL,
+    OverkizCommandParam.FROSTPROTECTION: PRESET_FROST_PROTECTION,
     OverkizCommandParam.COMFORT: PRESET_COMFORT,
 }
 

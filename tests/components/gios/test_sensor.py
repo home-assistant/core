@@ -60,7 +60,7 @@ async def test_sensor(hass):
     assert state.state == "252"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.CO
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)

@@ -1084,3 +1084,75 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
         "Sensor sensor.test has a unit of measurement and thus indicating it has "
         f"a numeric value; however, it has the non-numeric device class: {device_class}"
     ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    "device_class",
+    (
+        SensorDeviceClass.APPARENT_POWER,
+        SensorDeviceClass.AQI,
+        SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+        SensorDeviceClass.BATTERY,
+        SensorDeviceClass.CO,
+        SensorDeviceClass.CO2,
+        SensorDeviceClass.CURRENT,
+        SensorDeviceClass.DATA_RATE,
+        SensorDeviceClass.DATA_SIZE,
+        SensorDeviceClass.DISTANCE,
+        SensorDeviceClass.DURATION,
+        SensorDeviceClass.ENERGY,
+        SensorDeviceClass.FREQUENCY,
+        SensorDeviceClass.GAS,
+        SensorDeviceClass.HUMIDITY,
+        SensorDeviceClass.ILLUMINANCE,
+        SensorDeviceClass.IRRADIANCE,
+        SensorDeviceClass.MOISTURE,
+        SensorDeviceClass.NITROGEN_DIOXIDE,
+        SensorDeviceClass.NITROGEN_MONOXIDE,
+        SensorDeviceClass.NITROUS_OXIDE,
+        SensorDeviceClass.OZONE,
+        SensorDeviceClass.PM1,
+        SensorDeviceClass.PM10,
+        SensorDeviceClass.PM25,
+        SensorDeviceClass.POWER_FACTOR,
+        SensorDeviceClass.POWER,
+        SensorDeviceClass.PRECIPITATION_INTENSITY,
+        SensorDeviceClass.PRECIPITATION,
+        SensorDeviceClass.PRESSURE,
+        SensorDeviceClass.REACTIVE_POWER,
+        SensorDeviceClass.SIGNAL_STRENGTH,
+        SensorDeviceClass.SOUND_PRESSURE,
+        SensorDeviceClass.SPEED,
+        SensorDeviceClass.SULPHUR_DIOXIDE,
+        SensorDeviceClass.TEMPERATURE,
+        SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+        SensorDeviceClass.VOLTAGE,
+        SensorDeviceClass.VOLUME,
+        SensorDeviceClass.WATER,
+        SensorDeviceClass.WEIGHT,
+        SensorDeviceClass.WIND_SPEED,
+    ),
+)
+async def test_device_classes_with_invalid_unit_of_measurement(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+    device_class: SensorDeviceClass,
+):
+    """Test error when unit of measurement is not valid for used device class."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=None,
+        device_class=device_class,
+        native_unit_of_measurement="INVALID!",
+    )
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    assert (
+        "is using native unit of measurement 'INVALID!' which is not a valid "
+        f"unit for the device class ('{device_class}') it is using"
+    ) in caplog.text

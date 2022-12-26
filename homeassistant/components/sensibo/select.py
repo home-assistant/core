@@ -104,7 +104,8 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
         """Set state to the selected option."""
         if self.entity_description.key not in self.device_data.active_features:
             raise HomeAssistantError(
-                f"Current mode {self.device_data.hvac_mode} doesn't support setting {self.entity_description.name}"
+                f"Current mode {self.device_data.hvac_mode} doesn't support setting"
+                f" {self.entity_description.name}"
             )
 
         await self.async_send_api_call(

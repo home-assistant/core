@@ -51,10 +51,7 @@ AUTHORITIES = [
     "Westminster",
 ]
 
-URL = (
-    "http://api.erg.kcl.ac.uk/AirQuality/Hourly/"
-    "MonitoringIndex/GroupName=London/Json"
-)
+URL = "http://api.erg.kcl.ac.uk/AirQuality/Hourly/MonitoringIndex/GroupName=London/Json"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

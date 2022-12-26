@@ -75,8 +75,10 @@ async def async_setup_entry(
     for currency in desired_currencies:
         if currency not in provided_currencies:
             _LOGGER.warning(
-                "The currency %s is no longer provided by your account, please check "
-                "your settings in Coinbase's developer tools",
+                (
+                    "The currency %s is no longer provided by your account, please"
+                    " check your settings in Coinbase's developer tools"
+                ),
                 currency,
             )
             continue

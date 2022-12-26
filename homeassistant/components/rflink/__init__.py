@@ -225,9 +225,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         keepalive_idle_timer = config[DOMAIN][CONF_KEEPALIVE_IDLE]
         if keepalive_idle_timer < 0:
             _LOGGER.error(
-                "A bogus TCP Keepalive IDLE timer was provided (%d secs), "
-                "it will be disabled. "
-                "Recommended values: 60-3600 (seconds)",
+                (
+                    "A bogus TCP Keepalive IDLE timer was provided (%d secs), "
+                    "it will be disabled. "
+                    "Recommended values: 60-3600 (seconds)"
+                ),
                 keepalive_idle_timer,
             )
             keepalive_idle_timer = None
@@ -235,9 +237,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             keepalive_idle_timer = None
         elif keepalive_idle_timer <= 30:
             _LOGGER.warning(
-                "A very short TCP Keepalive IDLE timer was provided (%d secs) "
-                "and may produce unexpected disconnections from RFlink device."
-                " Recommended values: 60-3600 (seconds)",
+                (
+                    "A very short TCP Keepalive IDLE timer was provided (%d secs) "
+                    "and may produce unexpected disconnections from RFlink device."
+                    " Recommended values: 60-3600 (seconds)"
+                ),
                 keepalive_idle_timer,
             )
 

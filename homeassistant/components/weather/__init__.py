@@ -297,9 +297,11 @@ class WeatherEntity(Entity):
                         "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
                     )
                 _LOGGER.warning(
-                    "%s::%s is overriding deprecated methods on an instance of "
-                    "WeatherEntity, this is not valid and will be unsupported "
-                    "from Home Assistant 2023.1. Please %s",
+                    (
+                        "%s::%s is overriding deprecated methods on an instance of "
+                        "WeatherEntity, this is not valid and will be unsupported "
+                        "from Home Assistant 2023.1. Please %s"
+                    ),
                     cls.__module__,
                     cls.__name__,
                     report_issue,

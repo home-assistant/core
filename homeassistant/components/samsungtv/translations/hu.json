@@ -26,7 +26,7 @@
                 "description": "Szeretn\u00e9 be\u00e1ll\u00edtani {device} k\u00e9sz\u00fcl\u00e9k\u00e9t? Ha kor\u00e1bban m\u00e9g sosem csatlakoztatta Home Assistanthoz, akkor meg kell jelennie egy felugr\u00f3 ablaknak a TV k\u00e9perny\u0151j\u00e9n, ami j\u00f3v\u00e1hagy\u00e1sra v\u00e1r."
             },
             "reauth_confirm": {
-                "description": "A bek\u00fcld\u00e9s ut\u00e1n, fogadja el a {device} felugr\u00f3 ablak\u00e1ban l\u00e1that\u00f3 \u00fczenetet, mely 30 m\u00e1sodpercig \u00e1ll rendelkez\u00e9sre, vagy adja meg a PIN k\u00f3dot."
+                "description": "A bek\u00fcld\u00e9s ut\u00e1n, fogadja el a {device} k\u00e9perny\u0151j\u00e9n felugr\u00f3 ablakban l\u00e1that\u00f3 \u00fczenetet, vagy adja meg a PIN k\u00f3dot 30 m\u00e1sodpercen bel\u00fcl."
             },
             "reauth_confirm_encrypted": {
                 "description": "K\u00e9rem, adja meg az eszk\u00f6z\u00f6n megjelen\u0151 PIN-k\u00f3dot: {device}"

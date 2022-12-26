@@ -89,14 +89,16 @@ def purge_old_data(
         has_more_to_purge = False
         if _purging_legacy_format(session):
             _LOGGER.debug(
-                "Purge running in legacy format as there are states with event_id remaining"
+                "Purge running in legacy format as there are states with event_id"
+                " remaining"
             )
             has_more_to_purge |= _purge_legacy_format(
                 instance, session, purge_before, using_sqlite
             )
         else:
             _LOGGER.debug(
-                "Purge running in new format as there are NO states with event_id remaining"
+                "Purge running in new format as there are NO states with event_id"
+                " remaining"
             )
             # Once we are done purging legacy rows, we use the new method
             has_more_to_purge |= _purge_states_and_attributes_ids(

@@ -116,7 +116,9 @@ class SensorCommunitySensor(CoordinatorEntity, SensorEntity):
             ATTR_SENSOR_ID: sensor_id,
         }
         self._attr_device_info = DeviceInfo(
-            configuration_url=f"https://devices.sensor.community/sensors/{sensor_id}/settings",
+            configuration_url=(
+                f"https://devices.sensor.community/sensors/{sensor_id}/settings"
+            ),
             identifiers={(DOMAIN, str(sensor_id))},
             name=f"Sensor {sensor_id}",
             manufacturer="Sensor.Community",

@@ -185,7 +185,9 @@ def async_describe_events(
 
         return {
             LOGBOOK_ENTRY_NAME: name,
-            LOGBOOK_ENTRY_MESSAGE: f"'{ACTIONS[action]}' event for '{INTERFACES[interface]}' was fired",
+            LOGBOOK_ENTRY_MESSAGE: (
+                f"'{ACTIONS[action]}' event for '{INTERFACES[interface]}' was fired"
+            ),
         }
 
     async_describe_event(

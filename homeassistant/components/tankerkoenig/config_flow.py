@@ -118,9 +118,10 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if len(stations := data.get("stations", [])) == 0:
             return self._show_form_user(user_input, errors={CONF_RADIUS: "no_stations"})
         for station in stations:
-            self._stations[
-                station["id"]
-            ] = f"{station['brand']} {station['street']} {station['houseNumber']} - ({station['dist']}km)"
+            self._stations[station["id"]] = (
+                f"{station['brand']} {station['street']} {station['houseNumber']} -"
+                f" ({station['dist']}km)"
+            )
 
         self._data = user_input
 
@@ -268,9 +269,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
         if stations := nearby_stations.get("stations"):
             for station in stations:
-                self._stations[
-                    station["id"]
-                ] = f"{station['brand']} {station['street']} {station['houseNumber']} - ({station['dist']}km)"
+                self._stations[station["id"]] = (
+                    f"{station['brand']} {station['street']} {station['houseNumber']} -"
+                    f" ({station['dist']}km)"
+                )
 
         # add possible extra selected stations from import
         for selected_station in self.config_entry.data[CONF_STATIONS]:

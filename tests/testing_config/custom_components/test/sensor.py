@@ -70,7 +70,7 @@ def init(empty=False):
                 name=f"{device_class} sensor",
                 unique_id=f"unique_{device_class}",
                 device_class=device_class,
-                unit_of_measurement=UNITS_OF_MEASUREMENT.get(device_class),
+                native_unit_of_measurement=UNITS_OF_MEASUREMENT.get(device_class),
             )
             for device_class in DEVICE_CLASSES
         }

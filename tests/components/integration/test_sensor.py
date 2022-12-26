@@ -15,6 +15,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TIME_HOURS,
     TIME_SECONDS,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
@@ -422,16 +423,26 @@ async def test_device_class(hass):
     # include states of None and Unknown
     hass.states.async_set(entity_id, STATE_UNKNOWN, {})
     await hass.async_block_till_done()
-    hass.states.async_set(entity_id, 100, {"device_class": None})
+    hass.states.async_set(
+        entity_id, 100, {"device_class": None, "unit_of_measurement": None}
+    )
     await hass.async_block_till_done()
-    hass.states.async_set(entity_id, 200, {"device_class": None})
+    hass.states.async_set(
+        entity_id, 200, {"device_class": None, "unit_of_measurement": None}
+    )
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.integration")
     assert "device_class" not in state.attributes
 
     hass.states.async_set(
-        entity_id, 300, {"device_class": SensorDeviceClass.POWER}, force_update=True
+        entity_id,
+        300,
+        {
+            "device_class": SensorDeviceClass.POWER,
+            "unit_of_measurement": UnitOfPower.WATT,
+        },
+        force_update=True,
     )
     await hass.async_block_till_done()
 

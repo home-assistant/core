@@ -42,6 +42,16 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "electricity_tariff": {
+                "state": {
+                    "low": "Baixo",
+                    "normal": "Normal"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

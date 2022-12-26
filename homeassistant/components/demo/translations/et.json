@@ -1,5 +1,28 @@
 {
     "entity": {
+        "climate": {
+            "ubercool": {
+                "state_attributes": {
+                    "fan_mode": {
+                        "state": {
+                            "auto_high": "Automaatne k\u00f5rge",
+                            "auto_low": "Automaatne madal",
+                            "on_high": "K\u00f5rge",
+                            "on_low": "Madal"
+                        }
+                    },
+                    "swing_mode": {
+                        "state": {
+                            "1": "1",
+                            "2": "2",
+                            "3": "3",
+                            "auto": "Auto",
+                            "off": "V\u00e4ljas"
+                        }
+                    }
+                }
+            }
+        },
         "select": {
             "speed": {
                 "state": {
@@ -16,6 +39,15 @@
                     "comfort": "Mugav",
                     "eco": "\u00d6ko",
                     "sleep": "Uneaeg"
+                }
+            }
+        },
+        "vacuum": {
+            "model_s": {
+                "state_attributes": {
+                    "cleaned_area": {
+                        "name": "Puhastatud ala"
+                    }
                 }
             }
         }

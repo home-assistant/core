@@ -228,8 +228,10 @@ class GoogleWifiAPI:
                     self.data[attr_key] = sensor_value
             except KeyError:
                 _LOGGER.error(
-                    "Router does not support %s field. "
-                    "Please remove %s from monitored_conditions",
+                    (
+                        "Router does not support %s field. "
+                        "Please remove %s from monitored_conditions"
+                    ),
                     description.sensor_key,
                     attr_key,
                 )

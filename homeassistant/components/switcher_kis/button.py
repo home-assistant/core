@@ -153,6 +153,5 @@ class SwitcherThermostatButtonEntity(
             self.coordinator.last_update_success = False
             self.async_write_ha_state()
             raise HomeAssistantError(
-                f"Call api for {self.name} failed, "
-                f"response/error: {response or error}"
+                f"Call api for {self.name} failed, response/error: {response or error}"
             )

@@ -129,7 +129,7 @@ async def async_test_pressure(hass, cluster, entity_id):
 async def async_test_illuminance(hass, cluster, entity_id):
     """Test illuminance sensor."""
     await send_attributes_report(hass, cluster, {1: 1, 0: 10, 2: 20})
-    assert_state(hass, entity_id, "1.0", LIGHT_LUX)
+    assert_state(hass, entity_id, "1", LIGHT_LUX)
 
 
 async def async_test_metering(hass, cluster, entity_id):

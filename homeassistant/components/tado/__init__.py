@@ -282,7 +282,10 @@ class TadoConnector:
     ):
         """Set a zone overlay."""
         _LOGGER.debug(
-            "Set overlay for zone %s: overlay_mode=%s, temp=%s, duration=%s, type=%s, mode=%s fan_speed=%s swing=%s",
+            (
+                "Set overlay for zone %s: overlay_mode=%s, temp=%s, duration=%s,"
+                " type=%s, mode=%s fan_speed=%s swing=%s"
+            ),
             zone_id,
             overlay_mode,
             temperature,

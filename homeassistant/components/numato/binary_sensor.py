@@ -58,7 +58,10 @@ def setup_platform(
 
             except NumatoGpioError as err:
                 _LOGGER.error(
-                    "Failed to initialize binary sensor '%s' on Numato device %s port %s: %s",
+                    (
+                        "Failed to initialize binary sensor '%s' on Numato device %s"
+                        " port %s: %s"
+                    ),
                     port_name,
                     device_id,
                     port,

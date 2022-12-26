@@ -181,11 +181,13 @@ async def async_setup_entry(
         thermostat = data.ecobee.get_thermostat(index)
         if not thermostat["modelNumber"] in ECOBEE_MODEL_TO_NAME:
             _LOGGER.error(
-                "Model number for ecobee thermostat %s not recognized. "
-                "Please visit this link to open a new issue: "
-                "https://github.com/home-assistant/core/issues "
-                "and include the following information: "
-                "Unrecognized model number: %s",
+                (
+                    "Model number for ecobee thermostat %s not recognized. "
+                    "Please visit this link to open a new issue: "
+                    "https://github.com/home-assistant/core/issues "
+                    "and include the following information: "
+                    "Unrecognized model number: %s"
+                ),
                 thermostat["name"],
                 thermostat["modelNumber"],
             )
@@ -794,8 +796,10 @@ class Thermostat(ClimateEntity):
         }
 
         _LOGGER.debug(
-            "Creating a vacation on thermostat %s with name %s, cool temp %s, heat temp %s, "
-            "and the following other parameters: %s",
+            (
+                "Creating a vacation on thermostat %s with name %s, cool temp %s, heat"
+                " temp %s, and the following other parameters: %s"
+            ),
             self.name,
             vacation_name,
             cool_temp,

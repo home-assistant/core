@@ -138,7 +138,10 @@ def _decrypt_payload(secret, topic, ciphertext):
         return message
     except ValueError:
         _LOGGER.warning(
-            "Ignoring encrypted payload because unable to decrypt using key for topic %s",
+            (
+                "Ignoring encrypted payload because unable to decrypt using key for"
+                " topic %s"
+            ),
             topic,
         )
         return None

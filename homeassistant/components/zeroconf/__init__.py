@@ -579,7 +579,10 @@ def _suppress_invalid_properties(properties: dict) -> None:
 
         if len(prop_value.encode("utf-8")) > MAX_PROPERTY_VALUE_LEN:
             _LOGGER.error(
-                "The property '%s' was suppressed because it is longer than the maximum length of %d bytes: %s",
+                (
+                    "The property '%s' was suppressed because it is longer than the"
+                    " maximum length of %d bytes: %s"
+                ),
                 prop,
                 MAX_PROPERTY_VALUE_LEN,
                 prop_value,
@@ -593,7 +596,10 @@ def _truncate_location_name_to_valid(location_name: str) -> str:
         return location_name
 
     _LOGGER.warning(
-        "The location name was truncated because it is longer than the maximum length of %d bytes: %s",
+        (
+            "The location name was truncated because it is longer than the maximum"
+            " length of %d bytes: %s"
+        ),
         MAX_NAME_LEN,
         location_name,
     )

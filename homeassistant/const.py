@@ -751,9 +751,19 @@ VOLUME_GALLONS: Final = "gal"
 VOLUME_FLUID_OUNCE: Final = "fl. oz."
 """Deprecated: please use UnitOfVolume.FLUID_OUNCES"""
 
+
 # Volume Flow Rate units
+class UnitOfVolumeFlowRate(StrEnum):
+    """Volume flow rate units."""
+
+    CUBIC_METERS_PER_HOUR = "m³/h"
+    CUBIC_FEET_PER_MINUTE = "ft³/m"
+
+
 VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR: Final = "m³/h"
+"""Deprecated: please use UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR"""
 VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE: Final = "ft³/m"
+"""Deprecated: please use UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE"""
 
 # Area units
 AREA_SQUARE_METERS: Final = "m²"

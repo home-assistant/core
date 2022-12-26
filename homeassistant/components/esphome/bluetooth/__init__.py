@@ -33,7 +33,10 @@ def _async_can_connect_factory(
         """Check if a given source can make another connection."""
         can_connect = bool(entry_data.available and entry_data.ble_connections_free)
         _LOGGER.debug(
-            "%s [%s]: Checking can connect, available=%s, ble_connections_free=%s result=%s",
+            (
+                "%s [%s]: Checking can connect, available=%s, ble_connections_free=%s"
+                " result=%s"
+            ),
             entry_data.name,
             source,
             entry_data.available,

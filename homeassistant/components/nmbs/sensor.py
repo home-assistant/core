@@ -296,8 +296,7 @@ class NMBSSensor(SensorEntity):
 
         if self._excl_vias and self.is_via_connection:
             _LOGGER.debug(
-                "Skipping update of NMBSSensor \
-                because this connection is a via"
+                "Skipping update of NMBSSensor because this connection is a via"
             )
             return
 

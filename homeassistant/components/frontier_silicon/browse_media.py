@@ -87,7 +87,9 @@ async def browse_top_level(current_mode, afsapi: AFSAPI):
             title=name,
             media_class=MediaClass.DIRECTORY,
             media_content_type=MediaType.CHANNELS,
-            media_content_id=f"{current_mode or 'unknown'}/{top_level_media_content_id}",
+            media_content_id=(
+                f"{current_mode or 'unknown'}/{top_level_media_content_id}"
+            ),
             can_play=False,
             can_expand=True,
         )

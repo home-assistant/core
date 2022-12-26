@@ -32,7 +32,7 @@ dependencies    = [
     "awesomeversion==22.9.0",
     "bcrypt==3.1.7",
     "certifi>=2021.5.30",
-    "ciso8601==2.2.0",
+    "ciso8601==2.3.0",
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
     "httpx==0.23.1",

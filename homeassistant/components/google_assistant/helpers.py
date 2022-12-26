@@ -52,7 +52,11 @@ LOCAL_SDK_MIN_VERSION = AwesomeVersion("2.1.5")
 @callback
 def _get_registry_entries(
     hass: HomeAssistant, entity_id: str
-) -> tuple[device_registry.DeviceEntry | None, area_registry.AreaEntry | None]:
+) -> tuple[
+    entity_registry.RegistryEntry | None,
+    device_registry.DeviceEntry | None,
+    area_registry.AreaEntry | None,
+]:
     """Get registry entries."""
     ent_reg = entity_registry.async_get(hass)
     dev_reg = device_registry.async_get(hass)
@@ -75,7 +79,7 @@ def _get_registry_entries(
     else:
         area_entry = None
 
-    return device_entry, area_entry
+    return entity_entry, device_entry, area_entry
 
 
 class AbstractConfig(ABC):
@@ -345,7 +349,10 @@ class AbstractConfig(ABC):
             not version or AwesomeVersion(version) < LOCAL_SDK_MIN_VERSION
         ):
             _LOGGER.warning(
-                "Local SDK version is too old (%s), check documentation on how to update to the latest version",
+                (
+                    "Local SDK version is too old (%s), check documentation on how to"
+                    " update to the latest version"
+                ),
                 version,
             )
             self._local_sdk_version_warn = True
@@ -364,7 +371,10 @@ class AbstractConfig(ABC):
             # No agent user linked to this webhook, means that the user has somehow unregistered
             # removing webhook and stopping processing of this request.
             _LOGGER.error(
-                "Cannot process request for webhook %s as no linked agent user is found:\n%s\n",
+                (
+                    "Cannot process request for webhook %s as no linked agent user is"
+                    " found:\n%s\n"
+                ),
                 webhook_id,
                 pprint.pformat(payload),
             )
@@ -588,7 +598,9 @@ class GoogleEntity:
         name = (entity_config.get(CONF_NAME) or state.name).strip()
 
         # Find entity/device/area registry entries
-        device_entry, area_entry = _get_registry_entries(self.hass, self.entity_id)
+        entity_entry, device_entry, area_entry = _get_registry_entries(
+            self.hass, self.entity_id
+        )
 
         # Build the device info
         device = {
@@ -603,8 +615,12 @@ class GoogleEntity:
         }
 
         # Add aliases
-        if aliases := entity_config.get(CONF_ALIASES):
-            device["name"]["nicknames"] = [name] + aliases
+        if (config_aliases := entity_config.get(CONF_ALIASES, [])) or (
+            entity_entry and entity_entry.aliases
+        ):
+            device["name"]["nicknames"] = [name] + config_aliases
+            if entity_entry:
+                device["name"]["nicknames"].extend(entity_entry.aliases)
 
         # Add local SDK info if enabled
         if self.config.is_local_sdk_active and self.should_expose_local():

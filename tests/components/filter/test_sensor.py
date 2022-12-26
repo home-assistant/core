@@ -21,9 +21,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfTemperature,
 )
 import homeassistant.core as ha
 from homeassistant.helpers import entity_registry as er
@@ -263,6 +265,7 @@ async def test_setup(recorder_mock, hass):
             {
                 "icon": "mdi:test",
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
                 ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
             },
         )

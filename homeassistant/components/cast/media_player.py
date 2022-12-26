@@ -396,9 +396,11 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                     url_description = f" from internal_url ({internal_url})"
 
             _LOGGER.error(
-                "Failed to cast media %s%s. Please make sure the URL is: "
-                "Reachable from the cast device and either a publicly resolvable "
-                "hostname or an IP address",
+                (
+                    "Failed to cast media %s%s. Please make sure the URL is: "
+                    "Reachable from the cast device and either a publicly resolvable "
+                    "hostname or an IP address"
+                ),
                 media_status.content_id,
                 url_description,
             )

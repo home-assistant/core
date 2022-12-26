@@ -80,7 +80,9 @@ class DelugeEntity(CoordinatorEntity[DelugeDataUpdateCoordinator]):
         super().__init__(coordinator)
         self._server_unique_id = coordinator.config_entry.entry_id
         self._attr_device_info = DeviceInfo(
-            configuration_url=f"http://{coordinator.api.host}:{coordinator.api.web_port}",
+            configuration_url=(
+                f"http://{coordinator.api.host}:{coordinator.api.web_port}"
+            ),
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             manufacturer=DEFAULT_NAME,

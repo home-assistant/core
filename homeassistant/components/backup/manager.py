@@ -129,7 +129,10 @@ class BackupManager:
 
         if not backup.path.exists():
             LOGGER.debug(
-                "Removing tracked backup (%s) that does not exists on the expected path %s",
+                (
+                    "Removing tracked backup (%s) that does not exists on the expected"
+                    " path %s"
+                ),
                 backup.slug,
                 backup.path,
             )

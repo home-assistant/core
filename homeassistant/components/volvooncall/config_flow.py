@@ -92,7 +92,9 @@ class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ): vol.In(
                     {
                         UNIT_SYSTEM_METRIC: "Metric",
-                        UNIT_SYSTEM_SCANDINAVIAN_MILES: "Metric with Scandinavian Miles",
+                        UNIT_SYSTEM_SCANDINAVIAN_MILES: (
+                            "Metric with Scandinavian Miles"
+                        ),
                         UNIT_SYSTEM_IMPERIAL: "Imperial",
                     }
                 ),

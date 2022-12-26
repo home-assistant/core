@@ -6,16 +6,16 @@
         "step": {
             "init": {
                 "data": {
-                    "icon": "Ikone",
+                    "icon": "Ikon",
                     "latitude": "Breedegrad",
                     "longitude": "L\u00e4ngegrad",
                     "name": "Numm",
                     "passive": "Passif",
                     "radius": "Radius"
                 },
-                "title": "D\u00e9fin\u00e9iert Zone Parameter"
+                "title": "D\u00e9fin\u00e9ier d'Zoneparameter"
             }
         },
-        "title": "Zone"
+        "title": "Zon"
     }
 }

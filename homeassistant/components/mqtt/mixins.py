@@ -244,9 +244,11 @@ def warn_for_legacy_schema(domain: str) -> Callable[[ConfigType], ConfigType]:
             return config
 
         _LOGGER.error(
-            "Manually configured MQTT %s(s) found under platform key '%s', "
-            "please move to the mqtt integration key, see "
-            "https://www.home-assistant.io/integrations/%s.mqtt/#new_format",
+            (
+                "Manually configured MQTT %s(s) found under platform key '%s', "
+                "please move to the mqtt integration key, see "
+                "https://www.home-assistant.io/integrations/%s.mqtt/#new_format"
+            ),
             domain,
             domain,
             domain,
@@ -316,8 +318,10 @@ async def async_setup_entry_helper(
         """Discover and add an MQTT entity, automation or tag."""
         if not mqtt_config_entry_enabled(hass):
             _LOGGER.warning(
-                "MQTT integration is disabled, skipping setup of discovered item "
-                "MQTT %s, payload %s",
+                (
+                    "MQTT integration is disabled, skipping setup of discovered item "
+                    "MQTT %s, payload %s"
+                ),
                 domain,
                 discovery_payload,
             )

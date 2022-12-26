@@ -292,6 +292,7 @@ async def test_template_attribute_missing(hass, start_ha):
                 "sensors": {
                     "test1": {
                         "value_template": "{{ states.sensor.test_sensor.state }}",
+                        "unit_of_measurement": "°C",
                         "device_class": "temperature",
                     },
                     "test2": {

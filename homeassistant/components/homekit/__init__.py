@@ -653,10 +653,12 @@ class HomeKit:
             if self._exclude_accessory_mode:
                 return None
             _LOGGER.warning(
-                "The bridge %s has entity %s. For best performance, "
-                "and to prevent unexpected unavailability, create and "
-                "pair a separate HomeKit instance in accessory mode for "
-                "this entity",
+                (
+                    "The bridge %s has entity %s. For best performance, "
+                    "and to prevent unexpected unavailability, create and "
+                    "pair a separate HomeKit instance in accessory mode for "
+                    "this entity"
+                ),
                 self._name,
                 state.entity_id,
             )
@@ -685,7 +687,10 @@ class HomeKit:
         assert self.bridge is not None
         if len(self.bridge.accessories) + 1 >= MAX_DEVICES:
             _LOGGER.warning(
-                "Cannot add %s as this would exceed the %d device limit. Consider using the filter option",
+                (
+                    "Cannot add %s as this would exceed the %d device limit. Consider"
+                    " using the filter option"
+                ),
                 name,
                 MAX_DEVICES,
             )
@@ -920,7 +925,10 @@ class HomeKit:
         for device_id in self._devices:
             if not dev_reg.async_get(device_id):
                 _LOGGER.warning(
-                    "HomeKit %s cannot add device %s because it is missing from the device registry",
+                    (
+                        "HomeKit %s cannot add device %s because it is missing from the"
+                        " device registry"
+                    ),
                     self._name,
                     device_id,
                 )
@@ -941,7 +949,10 @@ class HomeKit:
                     await async_validate_trigger_config(self.hass, trigger)
                 except vol.Invalid as ex:
                     _LOGGER.debug(
-                        "%s: cannot add unsupported trigger %s because it requires additional inputs which are not supported by HomeKit: %s",
+                        (
+                            "%s: cannot add unsupported trigger %s because it requires"
+                            " additional inputs which are not supported by HomeKit: %s"
+                        ),
                         self._name,
                         trigger,
                         ex,

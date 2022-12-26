@@ -277,8 +277,10 @@ CORE_CONFIG_SCHEMA = vol.All(
                         {
                             CONF_TYPE: vol.NotIn(
                                 ["insecure_example"],
-                                "The insecure_example auth provider"
-                                " is for testing only.",
+                                (
+                                    "The insecure_example auth provider"
+                                    " is for testing only."
+                                ),
                             )
                         }
                     )
@@ -900,7 +902,10 @@ async def async_process_component_config(  # noqa: C901
             continue
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
-                "Unknown error validating %s platform config with %s component platform schema",
+                (
+                    "Unknown error validating %s platform config with %s component"
+                    " platform schema"
+                ),
                 p_name,
                 domain,
             )
@@ -940,7 +945,10 @@ async def async_process_component_config(  # noqa: C901
                 continue
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception(
-                    "Unknown error validating config for %s platform for %s component with PLATFORM_SCHEMA",
+                    (
+                        "Unknown error validating config for %s platform for %s"
+                        " component with PLATFORM_SCHEMA"
+                    ),
                     p_name,
                     domain,
                 )

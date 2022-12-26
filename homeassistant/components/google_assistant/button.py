@@ -49,5 +49,6 @@ class SyncButton(ButtonEntity):
         result = await self._google_config.async_sync_entities(agent_user_id)
         if result != 200:
             raise HomeAssistantError(
-                f"Unable to sync devices with result code: {result}, check log for more info."
+                f"Unable to sync devices with result code: {result}, check log for more"
+                " info."
             )

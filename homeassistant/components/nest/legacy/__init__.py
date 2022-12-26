@@ -192,8 +192,10 @@ async def async_setup_legacy_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
                     eta_window = service.data.get(ATTR_ETA_WINDOW, timedelta(minutes=1))
                     eta_end = eta_begin + eta_window
                     _LOGGER.info(
-                        "Setting ETA for trip: %s, "
-                        "ETA window starts at: %s and ends at: %s",
+                        (
+                            "Setting ETA for trip: %s, "
+                            "ETA window starts at: %s and ends at: %s"
+                        ),
                         trip_id,
                         eta_begin,
                         eta_end,
@@ -221,8 +223,7 @@ async def async_setup_legacy_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
                     structure.cancel_eta(trip_id)
                 else:
                     _LOGGER.info(
-                        "No thermostats found in structure: %s, "
-                        "unable to cancel ETA",
+                        "No thermostats found in structure: %s, unable to cancel ETA",
                         structure.name,
                     )
 
@@ -333,9 +334,11 @@ class NestLegacyDevice:
                         device.name_long
                     except KeyError:
                         _LOGGER.warning(
-                            "Cannot retrieve device name for [%s]"
-                            ", please check your Nest developer "
-                            "account permission settings",
+                            (
+                                "Cannot retrieve device name for [%s]"
+                                ", please check your Nest developer "
+                                "account permission settings"
+                            ),
                             device.serial,
                         )
                         continue

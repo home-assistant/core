@@ -277,7 +277,8 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         if device.changeableValues.autoChangeoverActive:
             if target_temp_low is None or target_temp_high is None:
                 raise HomeAssistantError(
-                    "Could not find target_temp_low and/or target_temp_high in arguments"
+                    "Could not find target_temp_low and/or target_temp_high in"
+                    " arguments"
                 )
             _LOGGER.debug("Set temperature: %s - %s", target_temp_low, target_temp_high)
             try:

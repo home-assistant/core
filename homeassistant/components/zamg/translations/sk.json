@@ -2,10 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
-            "cannot_connect": "Nepodarilo sa pripoji\u0165"
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "station_not_found": "ID stanice sa nena\u0161lo na zamg"
         },
         "error": {
-            "cannot_connect": "Nepodarilo sa pripoji\u0165"
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "station_not_found": "ID stanice sa nena\u0161lo na zamg"
         },
         "flow_title": "{name}",
         "step": {

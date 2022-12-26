@@ -290,8 +290,10 @@ class EmonCmsData:
                 self.data = req.json()
             else:
                 _LOGGER.error(
-                    "Please verify if the specified configuration value "
-                    "'%s' is correct! (HTTP Status_code = %d)",
+                    (
+                        "Please verify if the specified configuration value "
+                        "'%s' is correct! (HTTP Status_code = %d)"
+                    ),
                     CONF_URL,
                     req.status_code,
                 )

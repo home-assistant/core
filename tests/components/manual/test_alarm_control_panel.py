@@ -1055,7 +1055,7 @@ async def test_disarm_during_trigger_with_invalid_code(hass):
                 "platform": "manual",
                 "name": "test",
                 "delay_time": 5,
-                "code": CODE + "2",
+                "code": "12345",
                 "disarm_after_trigger": False,
             }
         },
@@ -1065,6 +1065,10 @@ async def test_disarm_during_trigger_with_invalid_code(hass):
     entity_id = "alarm_control_panel.test"
 
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
+    assert (
+        hass.states.get(entity_id).attributes[alarm_control_panel.ATTR_CODE_FORMAT]
+        == alarm_control_panel.CodeFormat.NUMBER
+    )
 
     await common.async_alarm_trigger(hass)
 

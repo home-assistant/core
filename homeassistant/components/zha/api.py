@@ -821,7 +821,10 @@ async def websocket_read_zigbee_cluster_attributes(
             [attribute], allow_cache=False, only_cache=False, manufacturer=manufacturer
         )
     _LOGGER.debug(
-        "Read attribute for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s],",
+        (
+            "Read attribute for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s]"
+            " %s: [%s],"
+        ),
         ATTR_CLUSTER_ID,
         cluster_id,
         ATTR_CLUSTER_TYPE,
@@ -1286,7 +1289,10 @@ def async_load_api(hass: HomeAssistant) -> None:
                 manufacturer=manufacturer,
             )
         _LOGGER.debug(
-            "Set attribute for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s]",
+            (
+                "Set attribute for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s:"
+                " [%s] %s: [%s]"
+            ),
             ATTR_CLUSTER_ID,
             cluster_id,
             ATTR_CLUSTER_TYPE,
@@ -1338,7 +1344,10 @@ def async_load_api(hass: HomeAssistant) -> None:
                 manufacturer=manufacturer,
             )
             _LOGGER.debug(
-                "Issued command for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s]",
+                (
+                    "Issued command for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s]"
+                    " %s: [%s] %s: [%s] %s: [%s]"
+                ),
                 ATTR_CLUSTER_ID,
                 cluster_id,
                 ATTR_CLUSTER_TYPE,

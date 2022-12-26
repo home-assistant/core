@@ -470,9 +470,11 @@ async def async_setup_other_entry(hass, config_entry, async_add_entities):
             hass.data[DATA_KEY][host] = device
         else:
             _LOGGER.error(
-                "Unsupported device found! Please create an issue at "
-                "https://github.com/rytilahti/python-miio/issues "
-                "and provide the following data: %s",
+                (
+                    "Unsupported device found! Please create an issue at "
+                    "https://github.com/rytilahti/python-miio/issues "
+                    "and provide the following data: %s"
+                ),
                 model,
             )
 

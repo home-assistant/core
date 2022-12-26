@@ -240,7 +240,8 @@ class PulseCounter(GEMSensor):
 
         # Config schema should have ensured it is one of the above values
         raise Exception(
-            f"Invalid value for time unit: {self._time_unit}. Expected one of {UnitOfTime.SECONDS}, {UnitOfTime.MINUTES}, or {UnitOfTime.HOURS}"
+            f"Invalid value for time unit: {self._time_unit}. Expected one of"
+            f" {UnitOfTime.SECONDS}, {UnitOfTime.MINUTES}, or {UnitOfTime.HOURS}"
         )
 
     @property

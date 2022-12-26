@@ -307,7 +307,8 @@ class InputNumber(collection.CollectionEntity, RestoreEntity):
 
         if num_value < self._minimum or num_value > self._maximum:
             raise vol.Invalid(
-                f"Invalid value for {self.entity_id}: {value} (range {self._minimum} - {self._maximum})"
+                f"Invalid value for {self.entity_id}: {value} (range {self._minimum} -"
+                f" {self._maximum})"
             )
 
         self._current_value = num_value

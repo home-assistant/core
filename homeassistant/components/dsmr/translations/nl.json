@@ -44,6 +44,16 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "electricity_tariff": {
+                "state": {
+                    "low": "Laag",
+                    "normal": "Normaal"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

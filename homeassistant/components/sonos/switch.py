@@ -255,7 +255,10 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        return f"{self.alarm.recurrence.capitalize()} alarm {str(self.alarm.start_time)[:5]}"
+        return (
+            f"{self.alarm.recurrence.capitalize()} alarm"
+            f" {str(self.alarm.start_time)[:5]}"
+        )
 
     async def _async_fallback_poll(self) -> None:
         """Call the central alarm polling method."""
@@ -424,7 +427,10 @@ def async_migrate_speech_enhancement_entity_unique_id(
 
     if len(speech_enhancement_entries) > 1:
         _LOGGER.warning(
-            "Migration of Speech Enhancement switches on %s failed, manual cleanup required: %s",
+            (
+                "Migration of Speech Enhancement switches on %s failed,"
+                " manual cleanup required: %s"
+            ),
             speaker.zone_name,
             [e.entity_id for e in speech_enhancement_entries],
         )

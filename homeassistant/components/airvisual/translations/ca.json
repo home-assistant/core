@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "La ubicaci\u00f3 ja est\u00e0 configurada o el Node/Pro ID ja est\u00e0 registrat.",
+            "already_configured": "La ubicaci\u00f3 ja est\u00e0 configurada",
             "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {

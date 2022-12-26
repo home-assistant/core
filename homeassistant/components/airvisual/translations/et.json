@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Asukoht on juba m\u00e4\u00e4ratud v\u00f5i Node/Pro ID on juba registreeritud.",
+            "already_configured": "Asukoht on juba m\u00e4\u00e4ratud",
             "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
@@ -72,6 +72,12 @@
                     "very_unhealthy": "V\u00e4ga ebatervislik"
                 }
             }
+        }
+    },
+    "issues": {
+        "airvisual_pro_migration": {
+            "description": "AirVisual Pro seadmed on n\u00fc\u00fcd nende enda Home Assistanti sidumise (erinevalt sellest, et need on kaasatud algsesse AirVisuali sidumisse mis kasutab AirVisuali pilve API-d). Pro-seade, mis asub aadressil ` {ip_address} `, on automaatselt \u00fcle viidud. \n\n Osana sellest \u00fcleviimisest on pro seadme ID {old_device_id} muutunud v\u00e4\u00e4rtuseks {new_device_id} . V\u00e4rskendage neid automatiseerimisi, et kasutada uut seadme ID-d: {device_automations_string} .",
+            "title": "{ip_address} on n\u00fc\u00fcd osa AirVisual Pro sidumisest"
         }
     },
     "options": {

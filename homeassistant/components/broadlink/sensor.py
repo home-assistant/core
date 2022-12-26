@@ -44,7 +44,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="light",
         name="Light",
-        device_class=SensorDeviceClass.ILLUMINANCE,
     ),
     SensorEntityDescription(
         key="noise",

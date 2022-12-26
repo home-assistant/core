@@ -180,7 +180,8 @@ async def async_setup_entry(
             await isy.initialize()
     except asyncio.TimeoutError as err:
         raise ConfigEntryNotReady(
-            f"Timed out initializing the ISY; device may be busy, trying again later: {err}"
+            "Timed out initializing the ISY; device may be busy, trying again later:"
+            f" {err}"
         ) from err
     except ISYInvalidAuthError as err:
         raise ConfigEntryAuthFailed(f"Invalid credentials for the ISY: {err}") from err
@@ -190,7 +191,8 @@ async def async_setup_entry(
         ) from err
     except ISYResponseParseError as err:
         raise ConfigEntryNotReady(
-            f"Invalid XML response from ISY; Ensure the ISY is running the latest firmware: {err}"
+            "Invalid XML response from ISY; Ensure the ISY is running the latest"
+            f" firmware: {err}"
         ) from err
     except TypeError as err:
         raise ConfigEntryNotReady(

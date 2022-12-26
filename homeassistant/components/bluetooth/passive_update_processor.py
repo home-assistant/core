@@ -286,7 +286,8 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
         if not isinstance(new_data, PassiveBluetoothDataUpdate):
             self.last_update_success = False  # type: ignore[unreachable]
             raise ValueError(
-                f"The update_method for {self.coordinator.name} returned {new_data} instead of a PassiveBluetoothDataUpdate"
+                f"The update_method for {self.coordinator.name} returned"
+                f" {new_data} instead of a PassiveBluetoothDataUpdate"
             )
 
         if not self.last_update_success:

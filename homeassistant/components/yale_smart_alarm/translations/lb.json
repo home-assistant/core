@@ -1,0 +1,11 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "lock_code_digits": "Anzuel vun Zifferen am PIN-Code fir Schl\u00e4sser"
+                }
+            }
+        }
+    }
+}

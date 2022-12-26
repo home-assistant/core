@@ -182,9 +182,11 @@ def _create_index(
     index = index_list[0]
     _LOGGER.debug("Creating %s index", index_name)
     _LOGGER.warning(
-        "Adding index `%s` to database. Note: this can take several "
-        "minutes on large databases and slow computers. Please "
-        "be patient!",
+        (
+            "Adding index `%s` to database. Note: this can take several "
+            "minutes on large databases and slow computers. Please "
+            "be patient!"
+        ),
         index_name,
     )
     with session_scope(session=session_maker()) as session:
@@ -271,9 +273,11 @@ def _drop_index(
             return
 
         _LOGGER.warning(
-            "Failed to drop index %s from table %s. Schema "
-            "Migration will continue; this is not a "
-            "critical operation",
+            (
+                "Failed to drop index %s from table %s. Schema "
+                "Migration will continue; this is not a "
+                "critical operation"
+            ),
             index_name,
             table_name,
         )
@@ -284,9 +288,11 @@ def _add_columns(
 ) -> None:
     """Add columns to a table."""
     _LOGGER.warning(
-        "Adding columns %s to table %s. Note: this can take several "
-        "minutes on large databases and slow computers. Please "
-        "be patient!",
+        (
+            "Adding columns %s to table %s. Note: this can take several "
+            "minutes on large databases and slow computers. Please "
+            "be patient!"
+        ),
         ", ".join(column.split(" ")[0] for column in columns_def),
         table_name,
     )
@@ -338,18 +344,22 @@ def _modify_columns(
     """Modify columns in a table."""
     if engine.dialect.name == SupportedDialect.SQLITE:
         _LOGGER.debug(
-            "Skipping to modify columns %s in table %s; "
-            "Modifying column length in SQLite is unnecessary, "
-            "it does not impose any length restrictions",
+            (
+                "Skipping to modify columns %s in table %s; "
+                "Modifying column length in SQLite is unnecessary, "
+                "it does not impose any length restrictions"
+            ),
             ", ".join(column.split(" ")[0] for column in columns_def),
             table_name,
         )
         return
 
     _LOGGER.warning(
-        "Modifying columns %s in table %s. Note: this can take several "
-        "minutes on large databases and slow computers. Please "
-        "be patient!",
+        (
+            "Modifying columns %s in table %s. Note: this can take several "
+            "minutes on large databases and slow computers. Please "
+            "be patient!"
+        ),
         ", ".join(column.split(" ")[0] for column in columns_def),
         table_name,
     )
@@ -636,9 +646,11 @@ def _apply_update(  # noqa: C901
         if engine.dialect.name == SupportedDialect.MYSQL:
             for table in ("events", "states", "statistics_meta"):
                 _LOGGER.warning(
-                    "Updating character set and collation of table %s to utf8mb4. "
-                    "Note: this can take several minutes on large databases and slow "
-                    "computers. Please be patient!",
+                    (
+                        "Updating character set and collation of table %s to utf8mb4."
+                        " Note: this can take several minutes on large databases and"
+                        " slow computers. Please be patient!"
+                    ),
                     table,
                 )
                 with contextlib.suppress(SQLAlchemyError):
@@ -648,8 +660,8 @@ def _apply_update(  # noqa: C901
                             # Using LOCK=EXCLUSIVE to prevent the database from corrupting
                             # https://github.com/home-assistant/core/issues/56104
                             text(
-                                f"ALTER TABLE {table} CONVERT TO "
-                                "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, LOCK=EXCLUSIVE"
+                                f"ALTER TABLE {table} CONVERT TO CHARACTER SET utf8mb4"
+                                " COLLATE utf8mb4_unicode_ci, LOCK=EXCLUSIVE"
                             )
                         )
     elif new_version == 22:

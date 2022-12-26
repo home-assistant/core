@@ -199,8 +199,10 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
         else:
             _LOGGER.error(
-                "Could not get serial number of host %s, "
-                "unique_id's will not be available",
+                (
+                    "Could not get serial number of host %s, "
+                    "unique_id's will not be available"
+                ),
                 self.host,
             )
             self._async_abort_entries_match({CONF_HOST: self.host})

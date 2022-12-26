@@ -18,7 +18,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
@@ -99,21 +98,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _LOGGER.debug("Setting up %s integration with host %s", DOMAIN, host)
 
-    try:
-        session = async_get_clientsession(hass, verify_tls)
-        api = Hole(
-            host,
-            session,
-            location=location,
-            tls=use_tls,
-            api_token=api_key,
-        )
-        await api.get_data()
-        await api.get_versions()
-
-    except HoleError as ex:
-        _LOGGER.warning("Failed to connect: %s", ex)
-        raise ConfigEntryNotReady from ex
+    session = async_get_clientsession(hass, verify_tls)
+    api = Hole(
+        host,
+        session,
+        location=location,
+        tls=use_tls,
+        api_token=api_key,
+    )
 
     async def async_update_data() -> None:
         """Fetch data from API endpoint."""
@@ -134,6 +126,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_KEY_API: api,
         DATA_KEY_COORDINATOR: coordinator,
     }
+
+    await coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, _async_platforms(entry))
 

@@ -205,7 +205,10 @@ async def async_webhook_handler(
     data_manager = get_data_manager_by_webhook_id(hass, webhook_id)
     if not data_manager:
         _LOGGER.error(
-            "Webhook id %s not handled by data manager. This is a bug and should be reported",
+            (
+                "Webhook id %s not handled by data manager. This is a bug and should be"
+                " reported"
+            ),
             webhook_id,
         )
         return json_message_response("User not found", message_code=1)

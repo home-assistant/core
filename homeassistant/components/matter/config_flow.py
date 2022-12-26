@@ -34,6 +34,7 @@ from .const import (
 ADDON_SETUP_TIMEOUT = 5
 ADDON_SETUP_TIMEOUT_ROUNDS = 40
 DEFAULT_URL = "ws://localhost:5580/ws"
+DEFAULT_TITLE = "Matter"
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
 
 
@@ -306,7 +307,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_USE_ADDON: self.use_addon,
                     CONF_INTEGRATION_CREATED_ADDON: self.integration_created_addon,
                 },
-                title=self.ws_address,
+                title=DEFAULT_TITLE,
             )
             await self.hass.config_entries.async_reload(config_entry.entry_id)
             raise AbortFlow("reconfiguration_successful")
@@ -316,7 +317,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass.config_entries.flow.async_abort(progress["flow_id"])
 
         return self.async_create_entry(
-            title=self.ws_address,
+            title=DEFAULT_TITLE,
             data={
                 CONF_URL: self.ws_address,
                 CONF_USE_ADDON: self.use_addon,

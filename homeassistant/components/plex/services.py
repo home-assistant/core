@@ -36,8 +36,9 @@ async def async_setup_services(hass):
 
     async def async_scan_clients_service(_: ServiceCall) -> None:
         _LOGGER.warning(
-            "This service is deprecated in favor of the scan_clients button entity. "
-            "Service calls will still work for now but the service will be removed in a future release"
+            "This service is deprecated in favor of the scan_clients button entity."
+            " Service calls will still work for now but the service will be removed in"
+            " a future release"
         )
         for server_id in hass.data[DOMAIN][SERVERS]:
             async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
@@ -103,7 +104,8 @@ def get_plex_server(hass, plex_server_name=None, plex_server_id=None):
 
     friendly_names = [x.friendly_name for x in plex_servers]
     raise HomeAssistantError(
-        f"Multiple Plex servers configured, choose with 'plex_server' key: {friendly_names}"
+        "Multiple Plex servers configured, choose with 'plex_server' key:"
+        f" {friendly_names}"
     )
 
 

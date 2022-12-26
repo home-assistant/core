@@ -116,8 +116,10 @@ async def async_setup_entry(
             parent_entity = entities_by_address.get(node.parent_node.address)
             if not parent_entity:
                 _LOGGER.error(
-                    "Node %s has a parent node %s, but no device "
-                    "was created for the parent. Skipping",
+                    (
+                        "Node %s has a parent node %s, but no device "
+                        "was created for the parent. Skipping"
+                    ),
                     node.address,
                     node.parent_node,
                 )

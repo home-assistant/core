@@ -261,9 +261,11 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     # their configuration.yaml or to proceed with config flow pairing. We
                     # will also provide contextual message to user explaining why
                     _LOGGER.warning(
-                        "Couldn't complete configuration.yaml import: '%s' key is "
-                        "missing. Either provide '%s' key in configuration.yaml or "
-                        "finish setup by completing configuration via frontend",
+                        (
+                            "Couldn't complete configuration.yaml import: '%s' key is "
+                            "missing. Either provide '%s' key in configuration.yaml or "
+                            "finish setup by completing configuration via frontend"
+                        ),
                         CONF_ACCESS_TOKEN,
                         CONF_ACCESS_TOKEN,
                     )

@@ -89,8 +89,10 @@ MONITOR_SCHEMA = vol.Schema(
             vol.Length(
                 min=8,
                 max=8,
-                msg="GEM serial number must be specified as an 8-character "
-                "string (including leading zeroes).",
+                msg=(
+                    "GEM serial number must be specified as an 8-character "
+                    "string (including leading zeroes)."
+                ),
             ),
             vol.Coerce(int),
         ),

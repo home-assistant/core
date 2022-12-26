@@ -75,7 +75,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 # Create Entry
                 return self.async_create_entry(
-                    title=f"AirNow Sensor at {user_input[CONF_LATITUDE]}, {user_input[CONF_LONGITUDE]}",
+                    title=(
+                        f"AirNow Sensor at {user_input[CONF_LATITUDE]},"
+                        f" {user_input[CONF_LONGITUDE]}"
+                    ),
                     data=user_input,
                 )
 

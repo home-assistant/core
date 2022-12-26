@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 from collections.abc import Generator, Sequence
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
-
-import attr
 
 if TYPE_CHECKING:
     from .core import Context
@@ -33,12 +32,11 @@ class TemplateError(HomeAssistantError):
             super().__init__(f"{exception.__class__.__name__}: {exception}")
 
 
-@attr.s
+@dataclass
 class ConditionError(HomeAssistantError):
     """Error during condition evaluation."""
 
-    # The type of the failed condition, such as 'and' or 'numeric_state'
-    type: str = attr.ib()
+    type: str
 
     @staticmethod
     def _indent(indent: int, message: str) -> str:
@@ -54,28 +52,28 @@ class ConditionError(HomeAssistantError):
         return "\n".join(list(self.output(indent=0)))
 
 
-@attr.s
+@dataclass
 class ConditionErrorMessage(ConditionError):
     """Condition error message."""
 
     # A message describing this error
-    message: str = attr.ib()
+    message: str
 
     def output(self, indent: int) -> Generator[str, None, None]:
         """Yield an indented representation."""
         yield self._indent(indent, f"In '{self.type}' condition: {self.message}")
 
 
-@attr.s
+@dataclass
 class ConditionErrorIndex(ConditionError):
     """Condition error with index."""
 
     # The zero-based index of the failed condition, for conditions with multiple parts
-    index: int = attr.ib()
+    index: int
     # The total number of parts in this condition, including non-failed parts
-    total: int = attr.ib()
+    total: int
     # The error that this error wraps
-    error: ConditionError = attr.ib()
+    error: ConditionError
 
     def output(self, indent: int) -> Generator[str, None, None]:
         """Yield an indented representation."""
@@ -89,12 +87,12 @@ class ConditionErrorIndex(ConditionError):
         yield from self.error.output(indent + 1)
 
 
-@attr.s
+@dataclass
 class ConditionErrorContainer(ConditionError):
     """Condition error with subconditions."""
 
     # List of ConditionErrors that this error wraps
-    errors: Sequence[ConditionError] = attr.ib()
+    errors: Sequence[ConditionError]
 
     def output(self, indent: int) -> Generator[str, None, None]:
         """Yield an indented representation."""

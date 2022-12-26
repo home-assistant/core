@@ -1,5 +1,6 @@
 """Test device_registry API."""
 import pytest
+from pytest_unordered import unordered
 
 from homeassistant.components.config import device_registry
 from homeassistant.helpers import device_registry as helpers_dr
@@ -52,6 +53,7 @@ async def test_list_devices(hass, client, registry):
 
     assert msg["result"] == [
         {
+            "aliases": [],
             "area_id": None,
             "config_entries": ["1234"],
             "configuration_url": None,
@@ -68,6 +70,7 @@ async def test_list_devices(hass, client, registry):
             "via_device_id": None,
         },
         {
+            "aliases": [],
             "area_id": None,
             "config_entries": ["1234"],
             "configuration_url": None,
@@ -93,6 +96,7 @@ async def test_list_devices(hass, client, registry):
 
     assert msg["result"] == [
         {
+            "aliases": [],
             "area_id": None,
             "config_entries": ["1234"],
             "configuration_url": None,
@@ -158,6 +162,42 @@ async def test_update_device(hass, client, registry, payload_key, payload_value)
     assert getattr(device, payload_key) == payload_value
 
     assert isinstance(device.disabled_by, (helpers_dr.DeviceEntryDisabler, type(None)))
+
+
+@pytest.mark.parametrize("aliases", (["alias_1", "alias_2"], ["alias_1", "alias_1"]))
+async def test_update_aliases(hass, client, registry, aliases):
+    """Test update entry."""
+    device = registry.async_get_or_create(
+        config_entry_id="1234",
+        connections={("ethernet", "12:34:56:78:90:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    assert not device.aliases == {}
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "config/device_registry/update",
+            "device_id": device.id,
+            "aliases": aliases,
+        }
+    )
+
+    msg = await client.receive_json()
+    await hass.async_block_till_done()
+    assert len(registry.devices) == 1
+
+    device = registry.async_get_device(
+        identifiers={("bridgeid", "0123")},
+        connections={("ethernet", "12:34:56:78:90:AB:CD:EF")},
+    )
+
+    # Test that the aliases list is stored by the registry as a set
+    assert msg["result"]["aliases"] == unordered(list(set(aliases)))
+    assert device.aliases == set(aliases)
 
 
 async def test_remove_config_entry_from_device(hass, hass_ws_client):

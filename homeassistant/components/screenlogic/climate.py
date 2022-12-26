@@ -142,7 +142,8 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
             await self._async_refresh()
         else:
             raise HomeAssistantError(
-                f"Failed to set_temperature {temperature} on body {self.body['body_type']['value']}"
+                f"Failed to set_temperature {temperature} on body"
+                f" {self.body['body_type']['value']}"
             )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -156,7 +157,8 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
             await self._async_refresh()
         else:
             raise HomeAssistantError(
-                f"Failed to set_hvac_mode {mode} on body {self.body['body_type']['value']}"
+                f"Failed to set_hvac_mode {mode} on body"
+                f" {self.body['body_type']['value']}"
             )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -170,7 +172,8 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
             await self._async_refresh()
         else:
             raise HomeAssistantError(
-                f"Failed to set_preset_mode {mode} on body {self.body['body_type']['value']}"
+                f"Failed to set_preset_mode {mode} on body"
+                f" {self.body['body_type']['value']}"
             )
 
     async def async_added_to_hass(self) -> None:

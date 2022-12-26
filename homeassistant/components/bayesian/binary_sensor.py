@@ -266,9 +266,7 @@ class BayesianBinarySensor(BinarySensorEntity):
             )
             if isinstance(result, TemplateError):
                 _LOGGER.error(
-                    "TemplateError('%s') "
-                    "while processing template '%s' "
-                    "in entity '%s'",
+                    "TemplateError('%s') while processing template '%s' in entity '%s'",
                     result,
                     template,
                     self.entity_id,
@@ -369,12 +367,18 @@ class BayesianBinarySensor(BinarySensorEntity):
             # observation.observed is None
             if observation.entity_id is not None:
                 _LOGGER.debug(
-                    "Observation for entity '%s' returned None, it will not be used for Bayesian updating",
+                    (
+                        "Observation for entity '%s' returned None, it will not be used"
+                        " for Bayesian updating"
+                    ),
                     observation.entity_id,
                 )
                 continue
             _LOGGER.debug(
-                "Observation for template entity returned None rather than a valid boolean, it will not be used for Bayesian updating",
+                (
+                    "Observation for template entity returned None rather than a valid"
+                    " boolean, it will not be used for Bayesian updating"
+                ),
             )
         # the prior has been updated and is now the posterior
         return prior

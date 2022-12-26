@@ -292,8 +292,10 @@ class HyperionBaseLight(LightEntity):
                 component = const.KEY_COMPONENTID_FROM_NAME[effect]
             else:
                 _LOGGER.warning(
-                    "Use of Hyperion effect '%s' is deprecated and will be removed "
-                    "in a future release. Please use '%s' instead",
+                    (
+                        "Use of Hyperion effect '%s' is deprecated and will be removed "
+                        "in a future release. Please use '%s' instead"
+                    ),
                     effect,
                     const.KEY_COMPONENTID_TO_NAME[effect],
                 )
@@ -433,8 +435,10 @@ class HyperionBaseLight(LightEntity):
         self._update_effect_list()
 
         _LOGGER.debug(
-            "Hyperion full state update: On=%s,Brightness=%i,Effect=%s "
-            "(%i effects total),Color=%s",
+            (
+                "Hyperion full state update: On=%s,Brightness=%i,Effect=%s "
+                "(%i effects total),Color=%s"
+            ),
             self.is_on,
             self._brightness,
             self._effect,

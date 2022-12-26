@@ -32,7 +32,8 @@ def _can_use_icmp_lib_with_privilege() -> None | bool:
             icmp_ping("127.0.0.1", count=0, timeout=0, privileged=False)
         except SocketPermissionError:
             _LOGGER.debug(
-                "Cannot use icmplib because privileges are insufficient to create the socket"
+                "Cannot use icmplib because privileges are insufficient to create the"
+                " socket"
             )
             return None
         else:

@@ -475,7 +475,10 @@ async def async_api_unlock(
 ) -> AlexaResponse:
     """Process an unlock request."""
     if config.locale not in {"de-DE", "en-US", "ja-JP"}:
-        msg = f"The unlock directive is not supported for the following locales: {config.locale}"
+        msg = (
+            "The unlock directive is not supported for the following locales:"
+            f" {config.locale}"
+        )
         raise AlexaInvalidDirectiveError(msg)
 
     entity = directive.entity

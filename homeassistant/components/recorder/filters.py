@@ -92,7 +92,8 @@ class Filters:
     def __repr__(self) -> str:
         """Return human readable excludes/includes."""
         return (
-            f"<Filters excluded_entities={self.excluded_entities} excluded_domains={self.excluded_domains} "
+            "<Filters"
+            f" excluded_entities={self.excluded_entities} excluded_domains={self.excluded_domains} "
             f"excluded_entity_globs={self.excluded_entity_globs} "
             f"included_entities={self.included_entities} included_domains={self.included_domains} "
             f"included_entity_globs={self.included_entity_globs}>"

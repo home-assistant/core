@@ -101,7 +101,9 @@ class IPPMarkerSensor(IPPSensor):
             unique_id=unique_id,
             icon="mdi:water",
             key=f"marker_{marker_index}",
-            name=f"{coordinator.data.info.name} {coordinator.data.markers[marker_index].name}",
+            name=(
+                f"{coordinator.data.info.name} {coordinator.data.markers[marker_index].name}"
+            ),
             unit_of_measurement=PERCENTAGE,
         )
 

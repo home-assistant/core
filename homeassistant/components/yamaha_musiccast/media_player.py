@@ -463,7 +463,8 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             await self.coordinator.musiccast.tuner_previous_station()
         else:
             raise HomeAssistantError(
-                "Service previous track is not supported for non NetUSB or Tuner sources."
+                "Service previous track is not supported for non NetUSB or Tuner"
+                " sources."
             )
 
     async def async_media_next_track(self) -> None:
@@ -720,7 +721,10 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
                     network_join = await client.async_client_join(group, self)
                 except MusicCastGroupException:
                     _LOGGER.warning(
-                        "%s is struggling to update its group data. Will retry perform the update",
+                        (
+                            "%s is struggling to update its group data. Will retry"
+                            " perform the update"
+                        ),
                         client.entity_id,
                     )
                     network_join = await client.async_client_join(group, self)
@@ -786,8 +790,10 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         if self.musiccast_zone_entity.is_server:
             # If one of the zones of the device is a server, we need to unjoin first.
             _LOGGER.debug(
-                "%s is a server of a group and has to stop distribution "
-                "to use MusicCast for %s",
+                (
+                    "%s is a server of a group and has to stop distribution "
+                    "to use MusicCast for %s"
+                ),
                 self.musiccast_zone_entity.entity_id,
                 self.entity_id,
             )

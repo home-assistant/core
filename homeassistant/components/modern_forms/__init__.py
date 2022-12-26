@@ -145,5 +145,8 @@ class ModernFormsDeviceEntity(CoordinatorEntity[ModernFormsDataUpdateCoordinator
             name=self.coordinator.data.info.device_name,
             manufacturer="Modern Forms",
             model=self.coordinator.data.info.fan_type,
-            sw_version=f"{self.coordinator.data.info.firmware_version} / {self.coordinator.data.info.main_mcu_firmware_version}",
+            sw_version=(
+                f"{self.coordinator.data.info.firmware_version} /"
+                f" {self.coordinator.data.info.main_mcu_firmware_version}"
+            ),
         )

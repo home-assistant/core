@@ -449,8 +449,10 @@ class AuthStore:
             created_at = dt_util.parse_datetime(rt_dict["created_at"])
             if created_at is None:
                 getLogger(__name__).error(
-                    "Ignoring refresh token %(id)s with invalid created_at "
-                    "%(created_at)s for user_id %(user_id)s",
+                    (
+                        "Ignoring refresh token %(id)s with invalid created_at "
+                        "%(created_at)s for user_id %(user_id)s"
+                    ),
                     rt_dict,
                 )
                 continue

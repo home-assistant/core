@@ -134,8 +134,10 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         devices = Discovery().poll(ip=discovery_info.host)
         if not devices:
             _LOGGER.debug(
-                "Could not find MAC-address for %s,"
-                " make sure the required UDP ports are open (see integration documentation)",
+                (
+                    "Could not find MAC-address for %s, make sure the required UDP"
+                    " ports are open (see integration documentation)"
+                ),
                 discovery_info.host,
             )
             return self.async_abort(reason="cannot_connect")

@@ -179,13 +179,16 @@ def adb_decorator(
             except LockNotAcquiredException:
                 # If the ADB lock could not be acquired, skip this command
                 _LOGGER.info(
-                    "ADB command not executed because the connection is currently in use"
+                    "ADB command not executed because the connection is currently"
+                    " in use"
                 )
                 return None
             except self.exceptions as err:
                 _LOGGER.error(
-                    "Failed to execute an ADB command. ADB connection re-"
-                    "establishing attempt in the next update. Error: %s",
+                    (
+                        "Failed to execute an ADB command. ADB connection re-"
+                        "establishing attempt in the next update. Error: %s"
+                    ),
                     err,
                 )
                 await self.aftv.adb_close()
@@ -427,7 +430,10 @@ class ADBDevice(MediaPlayerEntity):
             self._attr_extra_state_attributes[ATTR_ADB_RESPONSE] = output
             self.async_write_ha_state()
 
-            msg = f"Output from service '{SERVICE_LEARN_SENDEVENT}' from {self.entity_id}: '{output}'"
+            msg = (
+                f"Output from service '{SERVICE_LEARN_SENDEVENT}' from"
+                f" {self.entity_id}: '{output}'"
+            )
             persistent_notification.async_create(
                 self.hass,
                 msg,

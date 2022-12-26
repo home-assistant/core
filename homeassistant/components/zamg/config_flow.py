@@ -96,7 +96,10 @@ class ZamgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             if station_id not in await self._client.zamg_stations():
                 LOGGER.warning(
-                    "Configured station_id %s could not be found at zamg, trying to add nearest weather station instead",
+                    (
+                        "Configured station_id %s could not be found at zamg, trying to"
+                        " add nearest weather station instead"
+                    ),
                     station_id,
                 )
                 latitude = config.get(CONF_LATITUDE) or self.hass.config.latitude

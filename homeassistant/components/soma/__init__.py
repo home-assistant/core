@@ -88,7 +88,10 @@ def soma_api_call(api_call):
                 if self.is_available:
                     self.is_available = False
                     _LOGGER.warning(
-                        "Device is unreachable (%s). Error while fetching the state: %s",
+                        (
+                            "Device is unreachable (%s). Error while fetching the"
+                            " state: %s"
+                        ),
                         self.name,
                         response_from_api["msg"],
                     )

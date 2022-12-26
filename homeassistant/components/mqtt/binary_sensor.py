@@ -145,7 +145,10 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                 self.hass, self._value_is_expired, expiration_at
             )
             _LOGGER.debug(
-                "State recovered after reload for %s, remaining time before expiring %s",
+                (
+                    "State recovered after reload for %s, remaining time before"
+                    " expiring %s"
+                ),
                 self.entity_id,
                 expiration_at - time_now,
             )
@@ -215,7 +218,10 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
             payload = self._value_template(msg.payload)
             if not payload.strip():  # No output from template, ignore
                 _LOGGER.debug(
-                    "Empty template output for entity: %s with state topic: %s. Payload: '%s', with value template '%s'",
+                    (
+                        "Empty template output for entity: %s with state topic: %s."
+                        " Payload: '%s', with value template '%s'"
+                    ),
                     self._config[CONF_NAME],
                     self._config[CONF_STATE_TOPIC],
                     msg.payload,
@@ -232,9 +238,15 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
             else:  # Payload is not for this entity
                 template_info = ""
                 if self._config.get(CONF_VALUE_TEMPLATE) is not None:
-                    template_info = f", template output: '{str(payload)}', with value template '{str(self._config.get(CONF_VALUE_TEMPLATE))}'"
+                    template_info = (
+                        f", template output: '{str(payload)}', with value template"
+                        f" '{str(self._config.get(CONF_VALUE_TEMPLATE))}'"
+                    )
                 _LOGGER.info(
-                    "No matching payload found for entity: %s with state topic: %s. Payload: '%s'%s",
+                    (
+                        "No matching payload found for entity: %s with state topic: %s."
+                        " Payload: '%s'%s"
+                    ),
                     self._config[CONF_NAME],
                     self._config[CONF_STATE_TOPIC],
                     msg.payload,

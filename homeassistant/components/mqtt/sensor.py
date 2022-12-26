@@ -198,7 +198,10 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 self.hass, self._value_is_expired, expiration_at
             )
             _LOGGER.debug(
-                "State recovered after reload for %s, remaining time before expiring %s",
+                (
+                    "State recovered after reload for %s, remaining time before"
+                    " expiring %s"
+                ),
                 self.entity_id,
                 expiration_at - time_now,
             )

@@ -52,7 +52,8 @@ async def async_setup_platform(
 ) -> None:
     """Set up from legacy configuration file. Obsolete."""
     _LOGGER.error(
-        "Configuring Songpal through media_player platform is no longer supported. Convert to songpal platform or UI configuration"
+        "Configuring Songpal through media_player platform is no longer supported."
+        " Convert to songpal platform or UI configuration"
     )
 
 

@@ -91,7 +91,10 @@ class CloudProvider(Provider):
         self, metadata: SpeechMetadata, stream: StreamReader
     ) -> SpeechResult:
         """Process an audio stream to STT service."""
-        content = f"audio/{metadata.format!s}; codecs=audio/{metadata.codec!s}; samplerate=16000"
+        content = (
+            f"audio/{metadata.format!s}; codecs=audio/{metadata.codec!s};"
+            " samplerate=16000"
+        )
 
         # Process STT
         try:

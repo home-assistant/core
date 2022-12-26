@@ -35,6 +35,7 @@ def websocket_list_areas(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "config/area_registry/create",
+        vol.Optional("aliases"): list,
         vol.Required("name"): str,
         vol.Optional("picture"): vol.Any(str, None),
     }
@@ -52,6 +53,10 @@ def websocket_create_area(
     data = dict(msg)
     data.pop("type")
     data.pop("id")
+
+    if "aliases" in data:
+        # Convert aliases to a set
+        data["aliases"] = set(data["aliases"])
 
     try:
         entry = registry.async_create(**data)
@@ -88,6 +93,7 @@ def websocket_delete_area(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "config/area_registry/update",
+        vol.Optional("aliases"): list,
         vol.Required("area_id"): str,
         vol.Optional("name"): str,
         vol.Optional("picture"): vol.Any(str, None),
@@ -107,6 +113,10 @@ def websocket_update_area(
     data.pop("type")
     data.pop("id")
 
+    if "aliases" in data:
+        # Convert aliases to a set
+        data["aliases"] = set(data["aliases"])
+
     try:
         entry = registry.async_update(**data)
     except ValueError as err:
@@ -118,4 +128,9 @@ def websocket_update_area(
 @callback
 def _entry_dict(entry):
     """Convert entry to API format."""
-    return {"area_id": entry.id, "name": entry.name, "picture": entry.picture}
+    return {
+        "aliases": entry.aliases,
+        "area_id": entry.id,
+        "name": entry.name,
+        "picture": entry.picture,
+    }

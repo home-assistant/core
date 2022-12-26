@@ -2,10 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
-            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "station_not_found": "Az \u00e1llom\u00e1sazonos\u00edt\u00f3 nem tal\u00e1lhat\u00f3 a zamg-n\u00e1l"
         },
         "error": {
-            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "station_not_found": "Az \u00e1llom\u00e1sazonos\u00edt\u00f3 nem tal\u00e1lhat\u00f3 a zamg-n\u00e1l"
         },
         "flow_title": "{name}",
         "step": {

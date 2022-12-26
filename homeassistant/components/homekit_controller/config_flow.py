@@ -167,7 +167,9 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required("device"): vol.In(
                         {
-                            key: f"{key} ({formatted_category(discovery.description.category)})"
+                            key: (
+                                f"{key} ({formatted_category(discovery.description.category)})"
+                            )
                             for key, discovery in self.devices.items()
                         }
                     )
@@ -232,7 +234,10 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # This can happen if the TXT record is received after the PTR record
             # we will wait for the next update in this case
             _LOGGER.debug(
-                "HomeKit device %s: id not exposed; TXT record may have not yet been received",
+                (
+                    "HomeKit device %s: id not exposed; TXT record may have not yet"
+                    " been received"
+                ),
                 properties,
             )
             return self.async_abort(reason="invalid_properties")
@@ -291,7 +296,10 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await pairing.list_accessories_and_characteristics()
             except AuthenticationError:
                 _LOGGER.debug(
-                    "%s (%s - %s) is unpaired. Removing invalid pairing for this device",
+                    (
+                        "%s (%s - %s) is unpaired. Removing invalid pairing for this"
+                        " device"
+                    ),
                     name,
                     model,
                     hkid,
@@ -299,9 +307,11 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.hass.config_entries.async_remove(existing.entry_id)
             else:
                 _LOGGER.debug(
-                    "%s (%s - %s) claims to be unpaired but isn't. "
-                    "It's implementation of HomeKit is defective "
-                    "or a zeroconf relay is broadcasting stale data",
+                    (
+                        "%s (%s - %s) claims to be unpaired but isn't. "
+                        "It's implementation of HomeKit is defective "
+                        "or a zeroconf relay is broadcasting stale data"
+                    ),
                     name,
                     model,
                     hkid,

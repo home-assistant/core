@@ -1008,7 +1008,10 @@ class BaseTelegramBotEntity:
         if from_user in self.allowed_chat_ids or from_chat in self.allowed_chat_ids:
             return True
         _LOGGER.error(
-            "Unauthorized update - neither user id %s nor chat id %s is in allowed chats: %s",
+            (
+                "Unauthorized update - neither user id %s nor chat id %s is in allowed"
+                " chats: %s"
+            ),
             from_user,
             from_chat,
             self.allowed_chat_ids,

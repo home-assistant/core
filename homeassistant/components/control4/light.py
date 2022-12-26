@@ -115,7 +115,10 @@ async def async_setup_entry(
             director = entry_data[CONF_DIRECTOR]
             item_variables = await director.getItemVariables(item_id)
             _LOGGER.warning(
-                "Couldn't get light state data for %s, skipping setup. Available variables from Control4: %s",
+                (
+                    "Couldn't get light state data for %s, skipping setup. Available"
+                    " variables from Control4: %s"
+                ),
                 item_name,
                 item_variables,
             )

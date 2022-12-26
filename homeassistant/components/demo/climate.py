@@ -104,6 +104,7 @@ class DemoClimate(ClimateEntity):
     """Representation of a demo climate device."""
 
     _attr_should_poll = False
+    _attr_translation_key = "ubercool"
 
     def __init__(
         self,
@@ -157,9 +158,9 @@ class DemoClimate(ClimateEntity):
         self._hvac_mode = hvac_mode
         self._aux = aux
         self._current_swing_mode = swing_mode
-        self._fan_modes = ["On Low", "On High", "Auto Low", "Auto High", "Off"]
+        self._fan_modes = ["on_low", "on_high", "auto_low", "auto_high", "off"]
         self._hvac_modes = hvac_modes
-        self._swing_modes = ["Auto", "1", "2", "3", "Off"]
+        self._swing_modes = ["auto", "1", "2", "3", "off"]
         self._target_temperature_high = target_temp_high
         self._target_temperature_low = target_temp_low
 

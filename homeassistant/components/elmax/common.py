@@ -96,7 +96,8 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
                 # reconfigure it in order to  make it work again
                 if not panel:
                     raise ConfigEntryAuthFailed(
-                        f"Panel ID {self._panel_id} is no more linked to this user account"
+                        f"Panel ID {self._panel_id} is no more linked to this user"
+                        " account"
                     )
 
                 self._panel_entry = panel

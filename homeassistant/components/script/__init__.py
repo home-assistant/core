@@ -7,10 +7,9 @@ import logging
 from typing import Any, cast
 
 import voluptuous as vol
-from voluptuous.humanize import humanize_error
 
 from homeassistant.components import websocket_api
-from homeassistant.components.blueprint import CONF_USE_BLUEPRINT, BlueprintInputs
+from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -53,7 +52,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime
 
-from .config import ScriptConfig, async_validate_config_item
+from .config import ScriptConfig
 from .const import (
     ATTR_LAST_ACTION,
     ATTR_LAST_TRIGGERED,
@@ -249,32 +248,11 @@ async def _prepare_script_config(
     """Parse configuration and prepare script entity configuration."""
     script_configs: list[ScriptEntityConfig] = []
 
-    conf: dict[str, dict[str, Any] | BlueprintInputs] = config[DOMAIN]
+    conf: dict[str, ConfigType] = config[DOMAIN]
 
     for key, config_block in conf.items():
-        raw_blueprint_inputs = None
-        raw_config = None
-
-        if isinstance(config_block, BlueprintInputs):
-            blueprint_inputs = config_block
-            raw_blueprint_inputs = blueprint_inputs.config_with_inputs
-
-            try:
-                raw_config = blueprint_inputs.async_substitute()
-                config_block = cast(
-                    dict[str, Any],
-                    await async_validate_config_item(hass, raw_config),
-                )
-            except vol.Invalid as err:
-                LOGGER.error(
-                    "Blueprint %s generated invalid script with input %s: %s",
-                    blueprint_inputs.blueprint.name,
-                    blueprint_inputs.inputs,
-                    humanize_error(config_block, err),
-                )
-                continue
-        else:
-            raw_config = cast(ScriptConfig, config_block).raw_config
+        raw_config = cast(ScriptConfig, config_block).raw_config
+        raw_blueprint_inputs = cast(ScriptConfig, config_block).raw_blueprint_inputs
 
         script_configs.append(
             ScriptEntityConfig(config_block, key, raw_blueprint_inputs, raw_config)

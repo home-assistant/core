@@ -9,7 +9,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
-    TIME_SECONDS,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
@@ -288,7 +287,7 @@ class SendKeys(LcnServiceCall):
                 vol.Upper, vol.In(SENDKEYCOMMANDS)
             ),
             vol.Optional(CONF_TIME, default=0): cv.positive_int,
-            vol.Optional(CONF_TIME_UNIT, default=TIME_SECONDS): vol.All(
+            vol.Optional(CONF_TIME_UNIT, default="S"): vol.All(
                 vol.Upper, vol.In(TIME_UNITS)
             ),
         }
@@ -330,7 +329,7 @@ class LockKeys(LcnServiceCall):
             ),
             vol.Required(CONF_STATE): is_states_string,
             vol.Optional(CONF_TIME, default=0): cv.positive_int,
-            vol.Optional(CONF_TIME_UNIT, default=TIME_SECONDS): vol.All(
+            vol.Optional(CONF_TIME_UNIT, default="S"): vol.All(
                 vol.Upper, vol.In(TIME_UNITS)
             ),
         }

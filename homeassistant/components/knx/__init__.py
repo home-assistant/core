@@ -495,7 +495,10 @@ class KNXModule:
                         value = transcoder.from_knx(data)
                     except ConversionError as err:
                         _LOGGER.warning(
-                            "Error in `knx_event` at decoding type '%s' from telegram %s\n%s",
+                            (
+                                "Error in `knx_event` at decoding type '%s' from"
+                                " telegram %s\n%s"
+                            ),
                             transcoder.__name__,
                             telegram,
                             err,
@@ -584,7 +587,10 @@ class KNXModule:
         if group_address in self.service_exposures:
             replaced_exposure = self.service_exposures.pop(group_address)
             _LOGGER.warning(
-                "Service exposure_register replacing already registered exposure for '%s' - %s",
+                (
+                    "Service exposure_register replacing already registered exposure"
+                    " for '%s' - %s"
+                ),
                 group_address,
                 replaced_exposure.device.name,
             )
