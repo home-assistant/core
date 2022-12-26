@@ -84,17 +84,21 @@ class ProtectEventMixin(ProtectRequiredKeysMixin[T]):
             event = self.get_event_obj(obj)
             value = event is not None
             if not value:
-                _LOGGER.debug(f"{self.name} ({obj.mac}): missing event")
+                _LOGGER.debug("%s (%s): missing event", self.name, obj.mac)
 
             if event is not None and self.ufp_smart_type is not None:
                 value = self.ufp_smart_type in event.smart_detect_types
                 if not value:
                     _LOGGER.debug(
-                        f"{self.name} ({obj.mac}): {self.ufp_smart_type} not in {event.smart_detect_types}"
+                        "%s (%s): %s not in %s",
+                        self.name,
+                        obj.mac,
+                        self.ufp_smart_type,
+                        event.smart_detect_types,
                     )
 
         if value:
-            _LOGGER.debug(f"{self.name} ({obj.mac}): value is on")
+            _LOGGER.debug("%s (%s): value is on", self.name, obj.mac)
         return value
 
 
