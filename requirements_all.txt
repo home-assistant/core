@@ -40,7 +40,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.30.0
+PySwitchbot==0.31.0
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -368,7 +368,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.32.3
+async-upnp-client==0.33.0
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -428,7 +428,7 @@ bimmer_connected==0.10.4
 bizkaibus==0.1.1
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==2.10.2
+bleak-retry-connector==2.13.0
 
 # homeassistant.components.bluetooth
 bleak==0.19.2
@@ -453,7 +453,7 @@ bluemaestro-ble==0.2.0
 # bluepy==1.3.0
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.14.1
+bluetooth-adapters==0.15.2
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==1.0.3
@@ -744,7 +744,7 @@ gTTS==2.2.4
 gassist-text==0.0.5
 
 # homeassistant.components.google
-gcal-sync==4.0.4
+gcal-sync==4.1.0
 
 # homeassistant.components.geniushub
 geniushub-client==0.6.30
@@ -882,7 +882,7 @@ hkavr==0.0.5
 hlk-sw16==0.0.9
 
 # homeassistant.components.pi_hole
-hole==0.7.0
+hole==0.8.0
 
 # homeassistant.components.workday
 holidays==0.17.2
@@ -930,7 +930,7 @@ ibm-watson==5.2.2
 ibmiotf==0.3.4
 
 # homeassistant.components.local_calendar
-ical==4.2.4
+ical==4.2.8
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -1173,7 +1173,7 @@ nextcord==2.0.0a8
 nextdns==1.2.2
 
 # homeassistant.components.nibe_heatpump
-nibe==1.5.0
+nibe==1.6.0
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
@@ -1333,7 +1333,7 @@ pillow==9.3.0
 pizzapi==0.0.3
 
 # homeassistant.components.plex
-plexapi==4.13.1
+plexapi==4.13.2
 
 # homeassistant.components.plex
 plexauth==0.0.6
@@ -2611,13 +2611,13 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.3.9
 
 # homeassistant.components.yalexs_ble
-yalexs-ble==1.12.2
+yalexs-ble==1.12.5
 
 # homeassistant.components.august
 yalexs==1.2.6
 
 # homeassistant.components.august
-yalexs_ble==1.12.2
+yalexs_ble==1.12.5
 
 # homeassistant.components.yeelight
 yeelight==0.7.10
@@ -2635,13 +2635,13 @@ youless-api==0.16
 youtube_dl==2021.12.17
 
 # homeassistant.components.zamg
-zamg==0.2.1
+zamg==0.2.2
 
 # homeassistant.components.zengge
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.44.0
+zeroconf==0.47.1
 
 # homeassistant.components.zha
 zha-quirks==0.0.89

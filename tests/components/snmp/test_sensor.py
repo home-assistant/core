@@ -60,7 +60,7 @@ async def test_entity_config(hass: HomeAssistant) -> None:
             "name": "{{'SNMP' + ' ' + 'Sensor'}}",
             "state_class": "measurement",
             "unique_id": "very_unique",
-            "unit_of_measurement": "beardsecond",
+            "unit_of_measurement": "°C",
         },
     }
 
@@ -78,5 +78,5 @@ async def test_entity_config(hass: HomeAssistant) -> None:
         "friendly_name": "SNMP Sensor",
         "icon": "mdi:one_two_three",
         "state_class": "measurement",
-        "unit_of_measurement": "beardsecond",
+        "unit_of_measurement": "°C",
     }

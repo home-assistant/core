@@ -142,7 +142,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from error
     except plexapi.exceptions.Unauthorized as ex:
         raise ConfigEntryAuthFailed(
-            f"Token not accepted, please reauthenticate Plex server '{entry.data[CONF_SERVER]}'"
+            "Token not accepted, please reauthenticate Plex server"
+            f" '{entry.data[CONF_SERVER]}'"
         ) from ex
     except (
         plexapi.exceptions.BadRequest,
