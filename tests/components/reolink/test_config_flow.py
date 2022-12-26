@@ -152,7 +152,7 @@ async def test_config_flow_errors(hass):
 
     assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"host": "cannot_connect"}
+    assert result["errors"] == {"host": "api_error"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
