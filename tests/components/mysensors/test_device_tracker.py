@@ -18,8 +18,9 @@ async def test_gps_sensor(
     """Test a gps sensor."""
     entity_id = "device_tracker.gps_sensor_1_1"
     altitude = 0
-    new_coords = "40.742,-73.989"
-    message_string = f"1;1;1;0;49;{new_coords},{altitude}\n"
+    latitude = "40.742"
+    longitude = "-73.989"
+    message_string = f"1;1;1;0;49;{latitude},{longitude},{altitude}\n"
 
     receive_message(message_string)
     # the integration adds multiple jobs to do the update currently
@@ -32,11 +33,12 @@ async def test_gps_sensor(
     assert state
     assert state.state == STATE_NOT_HOME
     assert state.attributes[ATTR_SOURCE_TYPE] == SourceType.GPS
-    assert state.attributes[ATTR_LATITUDE] == float(new_coords.partition(",")[0])
-    assert state.attributes[ATTR_LONGITUDE] == float(new_coords.partition(",")[2])
+    assert state.attributes[ATTR_LATITUDE] == float(latitude)
+    assert state.attributes[ATTR_LONGITUDE] == float(longitude)
 
-    new_coords = "40.782,-73.965"
-    message_string = f"1;1;1;0;49;{new_coords},{altitude}\n"
+    latitude = "40.782"
+    longitude = "-73.965"
+    message_string = f"1;1;1;0;49;{latitude},{longitude},{altitude}\n"
 
     receive_message(message_string)
     # the integration adds multiple jobs to do the update currently
@@ -49,5 +51,5 @@ async def test_gps_sensor(
     assert state
     assert state.state == STATE_NOT_HOME
     assert state.attributes[ATTR_SOURCE_TYPE] == SourceType.GPS
-    assert state.attributes[ATTR_LATITUDE] == float(new_coords.partition(",")[0])
-    assert state.attributes[ATTR_LONGITUDE] == float(new_coords.partition(",")[2])
+    assert state.attributes[ATTR_LATITUDE] == float(latitude)
+    assert state.attributes[ATTR_LONGITUDE] == float(longitude)
