@@ -85,6 +85,8 @@ CONF_AWAY_MODE_COMMAND_TOPIC = "away_mode_command_topic"
 CONF_AWAY_MODE_STATE_TEMPLATE = "away_mode_state_template"
 CONF_AWAY_MODE_STATE_TOPIC = "away_mode_state_topic"
 
+CONF_CURRENT_HUMIDITY_TEMPLATE = "current_humidity_template"
+CONF_CURRENT_HUMIDITY_TOPIC = "current_humidity_topic"
 CONF_CURRENT_TEMP_TEMPLATE = "current_temperature_template"
 CONF_CURRENT_TEMP_TOPIC = "current_temperature_topic"
 CONF_FAN_MODE_COMMAND_TEMPLATE = "fan_mode_command_template"
@@ -164,6 +166,7 @@ MQTT_CLIMATE_ATTRIBUTES_BLOCKED = frozenset(
 
 VALUE_TEMPLATE_KEYS = (
     CONF_AUX_STATE_TEMPLATE,
+    CONF_CURRENT_HUMIDITY_TEMPLATE,
     CONF_CURRENT_TEMP_TEMPLATE,
     CONF_FAN_MODE_STATE_TEMPLATE,
     CONF_MODE_STATE_TEMPLATE,
@@ -191,6 +194,7 @@ TOPIC_KEYS = (
     CONF_ACTION_TOPIC,
     CONF_AUX_COMMAND_TOPIC,
     CONF_AUX_STATE_TOPIC,
+    CONF_CURRENT_HUMIDITY_TOPIC,
     CONF_CURRENT_TEMP_TOPIC,
     CONF_FAN_MODE_COMMAND_TOPIC,
     CONF_FAN_MODE_STATE_TOPIC,
@@ -223,6 +227,8 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_AUX_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_AUX_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_AUX_STATE_TOPIC): valid_subscribe_topic,
+        vol.Optional(CONF_CURRENT_HUMIDITY_TEMPLATE): cv.template,
+        vol.Optional(CONF_CURRENT_HUMIDITY_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_CURRENT_TEMP_TEMPLATE): cv.template,
         vol.Optional(CONF_CURRENT_TEMP_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_FAN_MODE_COMMAND_TEMPLATE): cv.template,
@@ -612,6 +618,18 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
         add_subscription(
             topics, CONF_TEMP_HIGH_STATE_TOPIC, handle_temperature_high_received
+        )
+
+        @callback
+        @log_messages(self.hass, self.entity_id)
+        def handle_current_humidity_received(msg: ReceiveMessage) -> None:
+            """Handle current humidity coming via MQTT."""
+            handle_temperature_received(
+                msg, CONF_CURRENT_HUMIDITY_TEMPLATE, "_attr_current_humidity"
+            )
+
+        add_subscription(
+            topics, CONF_CURRENT_HUMIDITY_TOPIC, handle_current_humidity_received
         )
 
         @callback

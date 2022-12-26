@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.components import climate, mqtt
 from homeassistant.components.climate import (
     ATTR_AUX_HEAT,
+    ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_HVAC_ACTION,
@@ -652,6 +653,19 @@ async def test_receive_mqtt_temperature(hass, mqtt_mock_entry_with_yaml_config):
     assert state.attributes.get("current_temperature") == 47
 
 
+async def test_receive_mqtt_humidity(hass, mqtt_mock_entry_with_yaml_config):
+    """Test getting the current humidity via MQTT."""
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
+    config["climate"]["current_humidity_topic"] = "current_humidity"
+    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+
+    async_fire_mqtt_message(hass, "current_humidity", "35")
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("current_humidity") == 35
+
+
 async def test_handle_action_received(hass, mqtt_mock_entry_with_yaml_config):
     """Test getting the action received via MQTT."""
     config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
@@ -953,6 +967,7 @@ async def test_get_with_templates(hass, mqtt_mock_entry_with_yaml_config, caplog
     config["climate"]["temperature_state_topic"] = "temperature-state"
     config["climate"]["aux_state_topic"] = "aux-state"
     config["climate"]["current_temperature_topic"] = "current-temperature"
+    config["climate"]["current_humidity_topic"] = "current-humidity"
     config["climate"]["preset_mode_state_topic"] = "current-preset-mode"
     assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
     await hass.async_block_till_done()
@@ -1017,6 +1032,11 @@ async def test_get_with_templates(hass, mqtt_mock_entry_with_yaml_config, caplog
     async_fire_mqtt_message(hass, "current-temperature", '"74656"')
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("current_temperature") == 74656
+
+    # Current humidity
+    async_fire_mqtt_message(hass, "current-humidity", '"35"')
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("current_humidity") == 35
 
     # Action
     async_fire_mqtt_message(hass, "action", '"cooling"')
@@ -1269,6 +1289,7 @@ async def test_unique_id(hass, mqtt_mock_entry_with_yaml_config):
         ("action_topic", "cooling", ATTR_HVAC_ACTION, "cooling"),
         ("aux_state_topic", "ON", ATTR_AUX_HEAT, "on"),
         ("current_temperature_topic", "22.1", ATTR_CURRENT_TEMPERATURE, 22.1),
+        ("current_humidity_topic", "60.4", ATTR_CURRENT_HUMIDITY, 60.4),
         ("fan_mode_state_topic", "low", ATTR_FAN_MODE, "low"),
         ("mode_state_topic", "cool", None, None),
         ("mode_state_topic", "fan_only", None, None),
