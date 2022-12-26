@@ -96,7 +96,7 @@ def async_create_clientsession(
     if verify_ssl is not None:
         ssl_context = verify_ssl
         _LOGGER.error(
-            "The 'verify_ssl' argument of 'async_create_clientsession' is deprecated and replaced by the 'ssl_context' parameter."
+            "The 'verify_ssl' argument of 'async_create_clientsession' is deprecated and replaced by the 'ssl_context' parameter"
         )
 
     auto_cleanup_method = None
