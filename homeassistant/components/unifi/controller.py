@@ -451,7 +451,7 @@ async def get_unifi_controller(
             sslcontext = ssl.create_default_context(cafile=verify_ssl)
     else:
         session = aiohttp_client.async_create_clientsession(
-            hass, verify_ssl=verify_ssl, cookie_jar=CookieJar(unsafe=True)
+            hass, ssl_context=verify_ssl, cookie_jar=CookieJar(unsafe=True)
         )
 
     controller = aiounifi.Controller(

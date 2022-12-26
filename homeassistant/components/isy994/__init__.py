@@ -152,7 +152,7 @@ async def async_setup_entry(
         https = False
         port = host.port or 80
         session = aiohttp_client.async_create_clientsession(
-            hass, verify_ssl=False, cookie_jar=CookieJar(unsafe=True)
+            hass, ssl_context=False, cookie_jar=CookieJar(unsafe=True)
         )
     elif host.scheme == "https":
         https = True

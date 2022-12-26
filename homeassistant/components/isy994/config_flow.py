@@ -72,7 +72,7 @@ async def validate_input(
         https = False
         port = host.port or HTTP_PORT
         session = aiohttp_client.async_create_clientsession(
-            hass, verify_ssl=False, cookie_jar=CookieJar(unsafe=True)
+            hass, ssl_context=False, cookie_jar=CookieJar(unsafe=True)
         )
     elif host.scheme == SCHEME_HTTPS:
         https = True
