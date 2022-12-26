@@ -2,18 +2,21 @@
   "config": {
     "step": {
       "connection_type": {
+        "title": "KNX connection",
         "description": "Please enter the connection type we should use for your KNX connection. \n AUTOMATIC - The integration takes care of the connectivity to your KNX Bus by performing a gateway scan. \n TUNNELING - The integration will connect to your KNX bus via tunneling. \n ROUTING - The integration will connect to your KNX bus via routing.",
         "data": {
           "connection_type": "KNX Connection Type"
         }
       },
       "tunnel": {
+        "title": "Tunnel",
         "description": "Please select a gateway from the list.",
         "data": {
           "gateway": "KNX Tunnel Connection"
         }
       },
       "manual_tunnel": {
+        "title": "Tunnel settings",
         "description": "Please enter the connection information of your tunneling device.",
         "data": {
           "tunneling_type": "KNX Tunneling Type",
@@ -30,6 +33,7 @@
         }
       },
       "secure_key_source": {
+        "title": "KNX IP-Secure",
         "description": "Select how you want to configure KNX/IP Secure.",
         "menu_options": {
           "secure_knxkeys": "Use a `.knxkeys` file containing IP secure keys",
@@ -38,6 +42,7 @@
         }
       },
       "secure_knxkeys": {
+        "title": "Keyfile",
         "description": "Please enter the information for your `.knxkeys` file.",
         "data": {
           "knxkeys_filename": "The filename of your `.knxkeys` file (including extension)",
@@ -49,6 +54,7 @@
         }
       },
       "secure_tunnel_manual": {
+        "title": "Secure tunnelling",
         "description": "Please enter your IP secure information.",
         "data": {
           "user_id": "User ID",
@@ -62,6 +68,7 @@
         }
       },
       "secure_routing_manual": {
+        "title": "Secure routing",
         "description": "Please enter your IP secure information.",
         "data": {
           "backbone_key": "Backbone key",
@@ -73,6 +80,7 @@
         }
       },
       "routing": {
+        "title": "Routing",
         "description": "Please configure the routing options.",
         "data": {
           "individual_address": "Individual address",
@@ -108,12 +116,14 @@
   "options": {
     "step": {
       "options_init": {
+        "title": "KNX Settings",
         "menu_options": {
           "connection_type": "Configure KNX interface",
           "communication_settings": "Communication settings"
         }
       },
       "communication_settings": {
+        "title": "Communication settings",
         "data": {
           "state_updater": "State updater",
           "rate_limit": "Rate limit"
@@ -124,18 +134,21 @@
         }
       },
       "connection_type": {
+        "title": "[%key:component::knx::config::step::connection_type::title%]",
         "description": "Please enter the connection type we should use for your KNX connection. \n AUTOMATIC - The integration takes care of the connectivity to your KNX Bus by performing a gateway scan. \n TUNNELING - The integration will connect to your KNX bus via tunneling. \n ROUTING - The integration will connect to your KNX bus via routing.",
         "data": {
           "connection_type": "KNX Connection Type"
         }
       },
       "tunnel": {
+        "title": "[%key:component::knx::config::step::tunnel::title%]",
         "description": "[%key:component::knx::config::step::tunnel::description%]",
         "data": {
           "gateway": "[%key:component::knx::config::step::tunnel::data::gateway%]"
         }
       },
       "manual_tunnel": {
+        "title": "[%key:component::knx::config::step::manual_tunnel::title%]",
         "description": "[%key:component::knx::config::step::manual_tunnel::description%]",
         "data": {
           "tunneling_type": "[%key:component::knx::config::step::manual_tunnel::data::tunneling_type%]",
@@ -152,6 +165,7 @@
         }
       },
       "secure_key_source": {
+        "title": "[%key:component::knx::config::step::secure_key_source::title%]",
         "description": "[%key:component::knx::config::step::secure_key_source::description%]",
         "menu_options": {
           "secure_knxkeys": "[%key:component::knx::config::step::secure_key_source::menu_options::secure_knxkeys%]",
@@ -160,6 +174,7 @@
         }
       },
       "secure_knxkeys": {
+        "title": "[%key:component::knx::config::step::secure_knxkeys::title%]",
         "description": "[%key:component::knx::config::step::secure_knxkeys::description%]",
         "data": {
           "knxkeys_filename": "[%key:component::knx::config::step::secure_knxkeys::data::knxkeys_filename%]",
@@ -171,6 +186,7 @@
         }
       },
       "secure_tunnel_manual": {
+        "title": "[%key:component::knx::config::step::secure_tunnel_manual::title%]",
         "description": "[%key:component::knx::config::step::secure_tunnel_manual::description%]",
         "data": {
           "user_id": "[%key:component::knx::config::step::secure_tunnel_manual::data::user_id%]",
@@ -184,6 +200,7 @@
         }
       },
       "secure_routing_manual": {
+        "title": "[%key:component::knx::config::step::secure_routing_manual::title%]",
         "description": "[%key:component::knx::config::step::secure_routing_manual::description%]",
         "data": {
           "backbone_key": "[%key:component::knx::config::step::secure_routing_manual::data::backbone_key%]",
@@ -195,6 +212,7 @@
         }
       },
       "routing": {
+        "title": "[%key:component::knx::config::step::routing::title%]",
         "description": "[%key:component::knx::config::step::routing::description%]",
         "data": {
           "individual_address": "[%key:component::knx::config::step::routing::data::individual_address%]",
