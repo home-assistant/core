@@ -282,7 +282,11 @@ class Coordinator(ContextCoordinator[dict[int, Coil], int]):
                 result[coil.address] = coil
                 self.seed.pop(coil.address, None)
         except CoilReadException as exception:
-            raise UpdateFailed(f"Failed to update: {exception}") from exception
+            if not result:
+                raise UpdateFailed(f"Failed to update: {exception}") from exception
+            self.logger.debug(
+                "Some coils failed to update, and may be unsupported: %s", exception
+            )
 
         return result
 

@@ -68,8 +68,7 @@
             "fix_flow": {
                 "abort": {
                     "not_tea_time": "Can not re-heat the tea at this time"
-                },
-                "step": {}
+                }
             },
             "title": "The tea is cold"
         },
@@ -95,9 +94,6 @@
     },
     "options": {
         "step": {
-            "init": {
-                "data": {}
-            },
             "options_1": {
                 "data": {
                     "bool": "Optional boolean",

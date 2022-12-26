@@ -72,7 +72,10 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
         _LOGGER.debug(
-            "Requesting route for origin: %s, destination: %s, route_mode: %s, mode: %s, arrival: %s, departure: %s",
+            (
+                "Requesting route for origin: %s, destination: %s, route_mode: %s,"
+                " mode: %s, arrival: %s, departure: %s"
+            ),
             origin,
             destination,
             route_mode,
@@ -167,7 +170,10 @@ class HERETransitDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
         _LOGGER.debug(
-            "Requesting transit route for origin: %s, destination: %s, arrival: %s, departure: %s",
+            (
+                "Requesting transit route for origin: %s, destination: %s, arrival: %s,"
+                " departure: %s"
+            ),
             origin,
             destination,
             arrival,

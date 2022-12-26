@@ -145,8 +145,7 @@ PLATFORM_CONFIG_SCHEMA_BASE = vol.Schema(
 
 
 CLIENT_KEY_AUTH_MSG = (
-    "client_key and client_cert must both be present in "
-    "the MQTT broker configuration"
+    "client_key and client_cert must both be present in the MQTT broker configuration"
 )
 
 CONFIG_SCHEMA_ENTRY = vol.Schema(

@@ -100,7 +100,8 @@ def cmd(
         except WEBOSTV_EXCEPTIONS as exc:
             if self.state != MediaPlayerState.OFF:
                 raise HomeAssistantError(
-                    f"Error calling {func.__name__} on entity {self.entity_id}, state:{self.state}"
+                    f"Error calling {func.__name__} on entity {self.entity_id},"
+                    f" state:{self.state}"
                 ) from exc
             _LOGGER.warning(
                 "Error calling %s on entity %s, state:%s, error: %r",

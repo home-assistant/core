@@ -797,7 +797,6 @@ omit =
     homeassistant/components/myq/cover.py
     homeassistant/components/myq/light.py
     homeassistant/components/mysensors/__init__.py
-    homeassistant/components/mysensors/binary_sensor.py
     homeassistant/components/mysensors/climate.py
     homeassistant/components/mysensors/const.py
     homeassistant/components/mysensors/cover.py
@@ -1033,7 +1032,6 @@ omit =
     homeassistant/components/radiotherm/entity.py
     homeassistant/components/radiotherm/switch.py
     homeassistant/components/radiotherm/util.py
-    homeassistant/components/rainbird/*
     homeassistant/components/raincloud/*
     homeassistant/components/rainmachine/__init__.py
     homeassistant/components/rainmachine/binary_sensor.py
