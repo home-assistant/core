@@ -278,6 +278,36 @@ def distance_sensor(
     return node
 
 
+@pytest.fixture(name="ir_transceiver_state", scope="session")
+def ir_transceiver_state_fixture() -> dict:
+    """Load the ir transceiver state."""
+    return load_nodes_state("mysensors/ir_transceiver_state.json")
+
+
+@pytest.fixture
+def ir_transceiver(
+    gateway_nodes: dict[int, Sensor], ir_transceiver_state: dict
+) -> Sensor:
+    """Load the ir transceiver child node."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(ir_transceiver_state))
+    node = nodes[1]
+    return node
+
+
+@pytest.fixture(name="relay_node_state", scope="session")
+def relay_node_state_fixture() -> dict:
+    """Load the relay node state."""
+    return load_nodes_state("mysensors/relay_node_state.json")
+
+
+@pytest.fixture
+def relay_node(gateway_nodes: dict[int, Sensor], relay_node_state: dict) -> Sensor:
+    """Load the relay child node."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(relay_node_state))
+    node = nodes[1]
+    return node
+
+
 @pytest.fixture(name="temperature_sensor_state", scope="session")
 def temperature_sensor_state_fixture() -> dict:
     """Load the temperature sensor state."""
