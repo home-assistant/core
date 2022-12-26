@@ -45,13 +45,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.serial = None
         self.model = None
 
-    @callback
-    def _async_generate_schema(self):
-        """Generate schema."""
-        schema = {vol.Required(CONF_HOST): str}
-
-        return vol.Schema(schema)
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -77,7 +70,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=self._async_generate_schema(),
+            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
             errors=errors,
         )
 
