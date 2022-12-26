@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from functools import partial
+from itertools import chain
 import logging
 from typing import Any, cast
 
@@ -69,10 +70,10 @@ async def _deprecate_smart_sensor(
                 scripts[entity.entity_id] = entity_scripts
 
     if automations or scripts:
-        _LOGGER.debug(
-            "Found usage of Detected Object sensor\nPotientally used automations: %s\nPotientally used scripts: %s",
-            automations,
-            scripts,
+        items = sorted(
+            set(
+                chain.from_iterable(list(automations.values()) + list(scripts.values()))
+            )
         )
         ir.async_create_issue(
             hass,
@@ -82,6 +83,7 @@ async def _deprecate_smart_sensor(
             breaks_in_ha_version="2023.3.0",
             severity=IssueSeverity.WARNING,
             translation_key="deprecate_smart_sensor",
+            translation_placeholders={"items": "* `" + "`\n* `".join(items) + "`\n"},
         )
     else:
         _LOGGER.debug("No found usages of Detected Object sensor")

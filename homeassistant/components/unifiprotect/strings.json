@@ -78,7 +78,7 @@
     },
     "deprecate_smart_sensor": {
       "title": "Smart Detection Sensor Deprecated",
-      "description": "The unified \"Detected Object\" sensor for smart detections is now deprecated. It has been replaced with individual smart detection binary sensors for each smart detection type. Please update any templates, automations or scripts accordingly."
+      "description": "The unified \"Detected Object\" sensor for smart detections is now deprecated. It has been replaced with individual smart detection binary sensors for each smart detection type.\n\nBelow are the detected automations or scripts that use one or more of the deprecated entities:\n{items}\nThe above list may be incomplete and it does not include any template usages inside of dashboards. Please update any templates, automations or scripts accordingly."
     }
   },
   "entity": {
