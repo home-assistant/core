@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable
 from contextlib import suppress
+import logging
 from ssl import SSLContext
 import sys
 from types import MappingProxyType
@@ -27,6 +28,7 @@ from .json import json_dumps, json_loads
 if TYPE_CHECKING:
     from aiohttp.typedefs import JSONDecoder
 
+_LOGGER = logging.getLogger(__name__)
 
 DATA_CONNECTOR = "aiohttp_connector"
 DATA_CONNECTOR_NOTVERIFY = "aiohttp_connector_notverify"
@@ -77,6 +79,7 @@ def async_get_clientsession(
 @bind_hass
 def async_create_clientsession(
     hass: HomeAssistant,
+    verify_ssl: bool | None = None,
     ssl_context: bool | SSLContext = True,
     auto_cleanup: bool = True,
     **kwargs: Any,
@@ -90,6 +93,12 @@ def async_create_clientsession(
 
     This method must be run in the event loop.
     """
+    if verify_ssl is not None:
+        ssl_context = verify_ssl
+        _LOGGER.error(
+            "The 'verify_ssl' argument of 'async_create_clientsession' is deprecated and replaced by the 'ssl_context' parameter."
+        )
+
     auto_cleanup_method = None
     if auto_cleanup:
         auto_cleanup_method = _async_register_clientsession_shutdown
