@@ -6,7 +6,6 @@ import logging
 from typing import Any
 
 from aioimaplib import AUTH, IMAP4_SSL, SELECTED, AioImapException
-import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_USERNAME
@@ -80,21 +79,20 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int]):
         """Wait for data pushed from server."""
         while True:
             try:
-                idle = await self.imap_client.idle_start()
+                idle: asyncio.Future = await self.imap_client.idle_start()
                 await self.imap_client.wait_server_push()
                 self.imap_client.idle_done()
-                async with async_timeout.timeout(10):
-                    await idle
-                await self.async_request_refresh()
+                await asyncio.wait_for(idle, 30)
+                await self.async_refresh()
+
             except (AioImapException, asyncio.TimeoutError):
                 _LOGGER.warning(
                     "Lost %s (will attempt to reconnect)",
                     self.config_entry.data[CONF_SERVER],
                 )
                 self.imap_client = None
-                if self.idle_loop_task:
-                    self.idle_loop_task.cancel()
-                await self.async_request_refresh()
+                break
+        self.hass.async_create_task(self.async_request_refresh())
 
     async def retry_connection(self):
         """Retry the connection in case of error."""
