@@ -11,8 +11,8 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_POTENTIAL_VOLT,
     Platform,
+    UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
 )
@@ -66,7 +66,7 @@ def build_mtu_sensor_descs(name: str, stype: str, is_net: bool):
         SensorEntityDescription(
             key="mtu_power_voltage",
             name="{name} Voltage",
-            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             device_class=SensorDeviceClass.VOLTAGE,
         ),
     ]
