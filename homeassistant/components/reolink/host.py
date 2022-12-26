@@ -46,7 +46,6 @@ class ReolinkHost:
             use_https=config.get(CONF_USE_HTTPS),
             protocol=cur_protocol,
             timeout=DEFAULT_TIMEOUT,
-            aiohttp_get_session_callback=self.get_iohttp_session,
         )
 
     @property
@@ -142,23 +141,3 @@ class ReolinkHost:
     async def stop(self, event=None):
         """Disconnect the API."""
         await self.disconnect()
-
-    def get_iohttp_session(self) -> aiohttp.ClientSession | None:
-        """Return the iohttp session."""
-        if self._clientsession is None or self._clientsession.closed:
-            context = ssl.create_default_context()
-            context.set_ciphers("DEFAULT")
-            context.check_hostname = False
-            context.verify_mode = ssl.CERT_NONE
-
-            self._clientsession = async_create_clientsession(
-                self._hass, verify_ssl=False
-            )
-
-            # If ssl context is not overwritten this error occurs:
-            # [[SSL: SSLV3_ALERT_HANDSHAKE_FAILURE] sslv3 alert handshake failure (_ssl.c:992)]
-            self._clientsession.connector._ssl = (  # type: ignore[union-attr] # pylint: disable=protected-access
-                context
-            )
-
-        return self._clientsession
