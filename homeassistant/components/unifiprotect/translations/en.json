@@ -51,6 +51,10 @@
         }
     },
     "issues": {
+        "deprecate_smart_sensor": {
+            "description": "The unified \"Detected Object\" sensor for smart detections is now deprecated. It has been replaced with individual smart detection binary sensors for each smart detection type.\n\nBelow are the detected automations or scripts that use one or more of the deprecated entities:\n{items}\nThe above list may be incomplete and it does not include any template usages inside of dashboards. Please update any templates, automations or scripts accordingly.",
+            "title": "Smart Detection Sensor Deprecated"
+        },
         "deprecated_service_set_doorbell_message": {
             "fix_flow": {
                 "step": {
