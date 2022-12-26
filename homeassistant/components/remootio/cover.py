@@ -68,7 +68,7 @@ class RemootioCover(cover.CoverEntity):
         self._attr_device_class = device_class
         self._remootio_client = remootio_client
         self._attr_device_info = DeviceInfo(
-            name="Remootio",
+            name=name,
             manufacturer="Assemblabs Ltd",
             suggested_area="The first end-to-end encrypted Wi-Fi and Bluetooth enabled smart remote controller, "
             "that lets you control and monitor your gates and garage doors using your smartphone.",
