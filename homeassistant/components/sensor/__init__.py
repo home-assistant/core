@@ -202,7 +202,7 @@ class SensorDeviceClass(StrEnum):
     """Generic distance.
 
     Unit of measurement: `LENGTH_*` units
-    - SI /metric: `mm`, `cm`, `m`, `km`
+    - SI /metric: `µm`, `mm`, `cm`, `m`, `km`
     - USCS / imperial: `in`, `ft`, `yd`, `mi`
     """
 
