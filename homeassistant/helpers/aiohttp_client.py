@@ -77,7 +77,7 @@ def async_get_clientsession(
 @bind_hass
 def async_create_clientsession(
     hass: HomeAssistant,
-    ssl_context: bool | SSLContext = True
+    ssl_context: bool | SSLContext = True,
     auto_cleanup: bool = True,
     **kwargs: Any,
 ) -> aiohttp.ClientSession:
@@ -107,7 +107,7 @@ def async_create_clientsession(
 @callback
 def _async_create_clientsession(
     hass: HomeAssistant,
-    ssl_context: bool | SSLContext = True
+    ssl_context: bool | SSLContext = True,
     auto_cleanup_method: Callable[[HomeAssistant, aiohttp.ClientSession], None]
     | None = None,
     **kwargs: Any,
@@ -247,13 +247,13 @@ def _async_get_connector(
     """
     key = None
     if isinstance(ssl_context, bool):
-        key = DATA_CONNECTOR if verify_ssl else DATA_CONNECTOR_NOTVERIFY
+        key = DATA_CONNECTOR if ssl_context else DATA_CONNECTOR_NOTVERIFY
 
         if key in hass.data:
             return cast(aiohttp.BaseConnector, hass.data[key])
 
     if ssl_context is True:
-        ssl_context: bool | SSLContext = ssl_util.client_context()
+        ssl_context = ssl_util.client_context()
 
     connector = aiohttp.TCPConnector(enable_cleanup_closed=True, ssl=ssl_context)
     if key is not None:
