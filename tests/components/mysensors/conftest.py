@@ -213,7 +213,7 @@ def gps_sensor_state_fixture() -> dict:
 @pytest.fixture
 def gps_sensor(gateway_nodes: dict[int, Sensor], gps_sensor_state: dict) -> Sensor:
     """Load the gps sensor."""
-    nodes = update_gateway_nodes(gateway_nodes, gps_sensor_state)
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(gps_sensor_state))
     node = nodes[1]
     return node
 
