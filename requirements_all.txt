@@ -1173,7 +1173,7 @@ nextcord==2.0.0a8
 nextdns==1.2.2
 
 # homeassistant.components.nibe_heatpump
-nibe==1.5.0
+nibe==1.6.0
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
@@ -2635,7 +2635,7 @@ youless-api==0.16
 youtube_dl==2021.12.17
 
 # homeassistant.components.zamg
-zamg==0.2.1
+zamg==0.2.2
 
 # homeassistant.components.zengge
 zengge==0.2

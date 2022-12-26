@@ -860,7 +860,7 @@ nextcord==2.0.0a8
 nextdns==1.2.2
 
 # homeassistant.components.nibe_heatpump
-nibe==1.5.0
+nibe==1.6.0
 
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
@@ -1845,7 +1845,7 @@ yolink-api==0.1.5
 youless-api==0.16
 
 # homeassistant.components.zamg
-zamg==0.2.1
+zamg==0.2.2
 
 # homeassistant.components.zeroconf
 zeroconf==0.47.1
