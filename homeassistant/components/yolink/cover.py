@@ -12,7 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_COORDINATORS, ATTR_DEVICE_DOOR_SENSOR, DOMAIN
+from .const import ATTR_COORDINATORS, ATTR_GARAGE_DOOR_CONTROLLER, DOMAIN
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
@@ -27,15 +27,15 @@ async def async_setup_entry(
     entities = [
         YoLinkCoverEntity(config_entry, device_coordinator)
         for device_coordinator in device_coordinators.values()
-        if device_coordinator.device.device_type == ATTR_DEVICE_DOOR_SENSOR
-        and device_coordinator.device.parent_id is not None
-        and device_coordinator.device.parent_id != "null"
+        if device_coordinator.device.device_type == ATTR_GARAGE_DOOR_CONTROLLER
     ]
     async_add_entities(entities)
 
 
 class YoLinkCoverEntity(YoLinkEntity, CoverEntity):
     """YoLink Cover Entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -44,8 +44,7 @@ class YoLinkCoverEntity(YoLinkEntity, CoverEntity):
     ) -> None:
         """Init YoLink garage door entity."""
         super().__init__(config_entry, coordinator)
-        self._attr_unique_id = f"{coordinator.device.device_id}_door_state"
-        self._attr_name = f"{coordinator.device.device_name} (State)"
+        self._attr_unique_id = f"{coordinator.device.device_id}"
         self._attr_device_class = CoverDeviceClass.GARAGE
         self._attr_supported_features = (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
@@ -59,23 +58,7 @@ class YoLinkCoverEntity(YoLinkEntity, CoverEntity):
 
     async def toggle_garage_state(self, state: str) -> None:
         """Toggle Garage door state."""
-        # make sure current state is correct
-        await self.coordinator.async_refresh()
-        if state == "open" and self.is_closed is False:
-            return
-        if state == "close" and self.is_closed is True:
-            return
-        # get paired controller
-        door_controller_coordinator = self.hass.data[DOMAIN][
-            self.config_entry.entry_id
-        ][ATTR_COORDINATORS].get(self.coordinator.device.parent_id)
-        if door_controller_coordinator is None:
-            raise ValueError(
-                "This device has not been paired with a garage door controller"
-            )
-        # call controller api open/close garage door
-        await door_controller_coordinator.device.call_device_http_api("toggle", None)
-        await self.coordinator.async_refresh()
+        await self.call_device_api("toggle", {})
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open garage door."""

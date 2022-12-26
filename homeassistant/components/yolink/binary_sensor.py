@@ -47,13 +47,6 @@ SENSOR_DEVICE_TYPE = [
 ]
 
 
-def is_door_sensor(device: YoLinkDevice) -> bool:
-    """Check Door Sensor type."""
-    return device.device_type == ATTR_DEVICE_DOOR_SENSOR and (
-        device.parent_id is None or device.parent_id == "null"
-    )
-
-
 SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
     YoLinkBinarySensorEntityDescription(
         key="door_state",
@@ -61,7 +54,7 @@ SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.DOOR,
         name="State",
         value=lambda value: value == "open" if value is not None else None,
-        exists_fn=is_door_sensor,
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_DOOR_SENSOR,
     ),
     YoLinkBinarySensorEntityDescription(
         key="motion_state",
@@ -153,4 +146,17 @@ class YoLinkBinarySensorEntity(YoLinkEntity, BinarySensorEntity):
         self._attr_is_on = self.entity_description.value(
             state.get(self.entity_description.state_key)
         )
+        # check door sensor paired device
+        if (
+            self.coordinator.device.parent_id is not None
+            and self.coordinator.device.parent_id != "null"
+            and self.coordinator.device.device_type == ATTR_DEVICE_DOOR_SENSOR
+        ):
+            paired_device_coordinator = self.hass.data[DOMAIN][
+                self.config_entry.entry_id
+            ][ATTR_COORDINATORS].get(self.coordinator.device.parent_id)
+            if paired_device_coordinator is not None:
+                paired_device_coordinator.async_set_updated_data(
+                    {"state": state.get(self.entity_description.state_key)}
+                )
         self.async_write_ha_state()
