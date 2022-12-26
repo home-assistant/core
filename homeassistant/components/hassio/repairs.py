@@ -1,6 +1,7 @@
 """Supervisor events monitor."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
@@ -29,6 +30,8 @@ from .const import (
     UPDATE_KEY_SUPERVISOR,
 )
 from .handler import HassIO
+
+_LOGGER = logging.getLogger(__name__)
 
 ISSUE_ID_UNHEALTHY = "unhealthy_system"
 ISSUE_ID_UNSUPPORTED = "unsupported_system"
@@ -154,9 +157,14 @@ class SupervisorRepairs:
 
     async def update(self) -> None:
         """Update repairs from Supervisor resolution center."""
-        data = await self._client.get_resolution_info()
-        self.unhealthy_reasons = set(data[ATTR_UNHEALTHY])
-        self.unsupported_reasons = set(data[ATTR_UNSUPPORTED])
+        try:
+            data = await self._client.get_resolution_info()
+            self.unhealthy_reasons = set(data[ATTR_UNHEALTHY])
+            self.unsupported_reasons = set(data[ATTR_UNSUPPORTED])
+        except HassioAPIError as e:
+            _LOGGER.error("Error during updating repairs from Supervisor", e)
+            self.unhealthy_reasons = set()
+            self.unsupported_reasons = set()
 
     @callback
     def _supervisor_events_to_repairs(self, event: dict[str, Any]) -> None:
