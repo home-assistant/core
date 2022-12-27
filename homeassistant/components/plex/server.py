@@ -198,7 +198,8 @@ class PlexServer:
                             config_entry_update_needed = True
                         else:
                             raise Unauthorized(  # pylint: disable=raise-missing-from
-                                "New certificate cannot be validated with provided token"
+                                "New certificate cannot be validated"
+                                " with provided token"
                             )
                     else:
                         raise
@@ -212,7 +213,8 @@ class PlexServer:
             shared_users = self.account.users() if self.account else []
         except Unauthorized:
             _LOGGER.warning(
-                "Plex account has limited permissions, shared account filtering will not be available"
+                "Plex account has limited permissions,"
+                " shared account filtering will not be available"
             )
         else:
             self._accounts = []

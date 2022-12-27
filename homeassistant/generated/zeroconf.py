@@ -152,6 +152,11 @@ ZEROCONF = {
             },
         },
     ],
+    "_bbxsrv._tcp.local.": [
+        {
+            "domain": "blebox",
+        },
+    ],
     "_bond._tcp.local.": [
         {
             "domain": "bond",

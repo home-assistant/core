@@ -1380,7 +1380,7 @@ async def test_automation_not_trigger_on_bootstrap(hass):
 async def test_automation_bad_config_validation(
     hass: HomeAssistant, caplog, broken_config, problem, details
 ):
-    """Test bad trigger configuration which can be detected during validation."""
+    """Test bad automation configuration which can be detected during validation."""
     assert await async_setup_component(
         hass,
         automation.DOMAIN,

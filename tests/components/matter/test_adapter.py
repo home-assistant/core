@@ -92,9 +92,9 @@ async def test_node_added_subscription(
 ) -> None:
     """Test subscription to new devices work."""
     assert matter_client.subscribe.call_count == 1
-    assert matter_client.subscribe.call_args[0][0] == EventType.NODE_ADDED
+    assert matter_client.subscribe.call_args[0][1] == EventType.NODE_ADDED
 
-    node_added_callback = matter_client.subscribe.call_args[0][1]
+    node_added_callback = matter_client.subscribe.call_args[0][0]
     node_data = load_and_parse_node_fixture("onoff-light")
     node = dataclass_from_dict(
         MatterNode,

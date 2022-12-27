@@ -403,9 +403,9 @@ class Illuminance(Sensor):
     _attr_name: str = "Illuminance"
     _attr_native_unit_of_measurement = LIGHT_LUX
 
-    def formatter(self, value: int) -> float:
+    def formatter(self, value: int) -> int:
         """Convert illumination data."""
-        return round(pow(10, ((value - 1) / 10000)), 1)
+        return round(pow(10, ((value - 1) / 10000)))
 
 
 @MULTI_MATCH(
