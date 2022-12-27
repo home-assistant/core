@@ -192,6 +192,38 @@ def update_gateway_nodes(
     return nodes
 
 
+@pytest.fixture(name="cover_node_binary_state", scope="session")
+def cover_node_binary_state_fixture() -> dict:
+    """Load the cover node state."""
+    return load_nodes_state("cover_node_binary_state.json")
+
+
+@pytest.fixture
+def cover_node_binary(
+    gateway_nodes: dict[int, Sensor], cover_node_binary_state: dict
+) -> Sensor:
+    """Load the cover child node."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(cover_node_binary_state))
+    node = nodes[1]
+    return node
+
+
+@pytest.fixture(name="cover_node_percentage_state", scope="session")
+def cover_node_percentage_state_fixture() -> dict:
+    """Load the cover node state."""
+    return load_nodes_state("cover_node_percentage_state.json")
+
+
+@pytest.fixture
+def cover_node_percentage(
+    gateway_nodes: dict[int, Sensor], cover_node_percentage_state: dict
+) -> Sensor:
+    """Load the cover child node."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(cover_node_percentage_state))
+    node = nodes[1]
+    return node
+
+
 @pytest.fixture(name="door_sensor_state", scope="session")
 def door_sensor_state_fixture() -> dict:
     """Load the door sensor state."""
