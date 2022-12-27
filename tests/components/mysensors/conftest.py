@@ -148,12 +148,20 @@ async def integration_fixture(
         "homeassistant.components.mysensors.device.Debouncer", autospec=True
     ) as debouncer_class:
 
-        async def call_debouncer():
-            """Mock call to debouncer."""
-            update_function = debouncer_class.call_args.kwargs["function"]
-            update_function()
+        def debouncer(
+            *args: Any, function: Callable | None = None, **kwargs: Any
+        ) -> MagicMock:
+            """Mock the debouncer."""
 
-        debouncer_class.return_value.async_call.side_effect = call_debouncer
+            async def call_debouncer():
+                """Mock call to debouncer."""
+                function()
+
+            debounce_instance = MagicMock()
+            debounce_instance.async_call.side_effect = call_debouncer
+            return debounce_instance
+
+        debouncer_class.side_effect = debouncer
 
         await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
