@@ -1,6 +1,6 @@
 {
   "requirements": ["nextcloudmonitor==1.2.0"],
-  "codeowners": ["@devPeete", "@Hadatko"],
+  "codeowners": ["@devPeete"],
   "config_flow": true,
   "iot_class": "local_polling",
   "domain": "nextcloud",
