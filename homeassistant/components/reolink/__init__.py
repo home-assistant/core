@@ -71,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Fetch initial data so we have data when entities subscribe
     await coordinator_device_config_update.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = ReolinkData(
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = ReolinkData(
         host=host,
         device_coordinator=coordinator_device_config_update,
     )
