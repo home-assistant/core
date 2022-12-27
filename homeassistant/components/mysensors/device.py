@@ -10,6 +10,7 @@ from mysensors.sensor import ChildSensor
 
 from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
@@ -55,7 +56,7 @@ class MySensorsDevice(ABC):
         self.value_type: int = value_type  # value_type as int. string variant can be looked up in gateway consts
         self.child_type = self._child.type
         self._values: dict[int, Any] = {}
-        self._update_scheduled = False
+        self._debouncer: Debouncer | None = None
 
     @property
     def dev_id(self) -> DevId:
@@ -184,24 +185,18 @@ class MySensorsDevice(ABC):
     def _async_update_callback(self) -> None:
         """Update the device."""
 
-    @callback
-    def async_update_callback(self) -> None:
+    async def async_update_callback(self) -> None:
         """Update the device after delay."""
-        if self._update_scheduled:
-            return
+        if not self._debouncer:
+            self._debouncer = Debouncer(
+                self.hass,
+                _LOGGER,
+                cooldown=UPDATE_DELAY,
+                immediate=False,
+                function=self._async_update_callback,
+            )
 
-        @callback
-        def async_update() -> None:
-            """Perform update."""
-            try:
-                self._async_update_callback()
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Error updating %s", self.name)
-            finally:
-                self._update_scheduled = False
-
-        self._update_scheduled = True
-        self.hass.loop.call_later(UPDATE_DELAY, async_update)
+        await self._debouncer.async_call()
 
 
 def get_mysensors_devices(
