@@ -151,6 +151,9 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
             ):
                 self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
 
+            if LightCapability.MANUAL_WHITE in capabilities:
+                self._attr_supported_color_modes.add(ColorMode.WHITE)
+
             if not self._attr_supported_color_modes:
                 self._attr_supported_color_modes.add(ColorMode.ONOFF)
 

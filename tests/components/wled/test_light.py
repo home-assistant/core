@@ -422,6 +422,10 @@ async def test_single_segment_with_keep_master_light(
             | LightCapability.WHITE_CHANNEL,
             [ColorMode.COLOR_TEMP, ColorMode.RGB, ColorMode.WHITE],
         ),
+        (
+            LightCapability.COLOR_TEMPERATURE | LightCapability.MANUAL_WHITE,
+            [ColorMode.COLOR_TEMP, ColorMode.WHITE],
+        ),
     ],
 )
 async def test_segment_light_capabilities(
