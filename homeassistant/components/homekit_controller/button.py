@@ -117,13 +117,13 @@ async def async_setup_entry(
         info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
         characteristics = [c.type for c in char.service.characteristics]
 
-        def check_desc(d: HomeKitButtonEntityDescription) -> bool:
-            if d.required_characteristics and not all(
-                c in characteristics for c in d.required_characteristics
+        def check_desc(dsc: HomeKitButtonEntityDescription) -> bool:
+            if dsc.required_characteristics and not all(
+                c in characteristics for c in dsc.required_characteristics
             ):
                 return False
-            if d.excluded_characteristics and any(
-                c in characteristics for c in d.excluded_characteristics
+            if dsc.excluded_characteristics and any(
+                c in characteristics for c in dsc.excluded_characteristics
             ):
                 return False
             return True
