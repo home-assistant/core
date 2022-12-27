@@ -6,14 +6,17 @@ import pytest
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ACCUMULATED_PRECIPITATION,
+    AREA,
     LENGTH,
     MASS,
     PRESSURE,
     TEMPERATURE,
     VOLUME,
     WIND_SPEED,
+    UnitOfArea,
     UnitOfLength,
     UnitOfMass,
+    UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -40,9 +43,10 @@ def test_invalid_units():
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            accumulated_precipitation=UnitOfLength.MILLIMETERS,
+            accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
             conversions={},
             length=UnitOfLength.METERS,
+            area=UnitOfArea.SQUARE_METERS,
             mass=UnitOfMass.GRAMS,
             pressure=UnitOfPressure.PA,
             temperature=INVALID_UNIT,
@@ -53,9 +57,10 @@ def test_invalid_units():
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            accumulated_precipitation=UnitOfLength.MILLIMETERS,
+            accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
             conversions={},
             length=INVALID_UNIT,
+            area=UnitOfArea.SQUARE_METERS,
             mass=UnitOfMass.GRAMS,
             pressure=UnitOfPressure.PA,
             temperature=UnitOfTemperature.CELSIUS,
@@ -66,9 +71,10 @@ def test_invalid_units():
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            accumulated_precipitation=UnitOfLength.MILLIMETERS,
+            accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
             conversions={},
             length=UnitOfLength.METERS,
+            area=UnitOfArea.SQUARE_METERS,
             mass=UnitOfMass.GRAMS,
             pressure=UnitOfPressure.PA,
             temperature=UnitOfTemperature.CELSIUS,
@@ -79,9 +85,10 @@ def test_invalid_units():
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            accumulated_precipitation=UnitOfLength.MILLIMETERS,
+            accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
             conversions={},
             length=UnitOfLength.METERS,
+            area=UnitOfArea.SQUARE_METERS,
             mass=UnitOfMass.GRAMS,
             pressure=UnitOfPressure.PA,
             temperature=UnitOfTemperature.CELSIUS,
@@ -92,9 +99,10 @@ def test_invalid_units():
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            accumulated_precipitation=UnitOfLength.MILLIMETERS,
+            accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
             conversions={},
             length=UnitOfLength.METERS,
+            area=UnitOfArea.SQUARE_METERS,
             mass=INVALID_UNIT,
             pressure=UnitOfPressure.PA,
             temperature=UnitOfTemperature.CELSIUS,
@@ -105,9 +113,10 @@ def test_invalid_units():
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            accumulated_precipitation=UnitOfLength.MILLIMETERS,
+            accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
             conversions={},
             length=UnitOfLength.METERS,
+            area=UnitOfArea.SQUARE_METERS,
             mass=UnitOfMass.GRAMS,
             pressure=INVALID_UNIT,
             temperature=UnitOfTemperature.CELSIUS,
@@ -121,6 +130,21 @@ def test_invalid_units():
             accumulated_precipitation=INVALID_UNIT,
             conversions={},
             length=UnitOfLength.METERS,
+            area=UnitOfArea.SQUARE_METERS,
+            mass=UnitOfMass.GRAMS,
+            pressure=UnitOfPressure.PA,
+            temperature=UnitOfTemperature.CELSIUS,
+            volume=UnitOfVolume.LITERS,
+            wind_speed=UnitOfSpeed.METERS_PER_SECOND,
+        )
+
+    with pytest.raises(ValueError):
+        UnitSystem(
+            SYSTEM_NAME,
+            accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
+            conversions={},
+            length=UnitOfLength.METERS,
+            area=INVALID_UNIT,
             mass=UnitOfMass.GRAMS,
             pressure=UnitOfPressure.PA,
             temperature=UnitOfTemperature.CELSIUS,
@@ -133,6 +157,8 @@ def test_invalid_value():
     """Test no conversion happens if value is non-numeric."""
     with pytest.raises(TypeError):
         METRIC_SYSTEM.length("25a", UnitOfLength.KILOMETERS)
+    with pytest.raises(TypeError):
+        METRIC_SYSTEM.length("25x", UnitOfArea.SQUARE_KILOMETERS)
     with pytest.raises(TypeError):
         METRIC_SYSTEM.temperature("50K", UnitOfTemperature.CELSIUS)
     with pytest.raises(TypeError):
@@ -149,6 +175,7 @@ def test_as_dict():
     """Test that the as_dict() method returns the expected dictionary."""
     expected = {
         LENGTH: UnitOfLength.KILOMETERS,
+        AREA: UnitOfLength.KILOMETERS,
         WIND_SPEED: UnitOfSpeed.METERS_PER_SECOND,
         TEMPERATURE: UnitOfTemperature.CELSIUS,
         VOLUME: UnitOfVolume.LITERS,
@@ -405,6 +432,17 @@ def test_get_unit_system_invalid(key: str) -> None:
         (SensorDeviceClass.DISTANCE, UnitOfLength.YARDS, UnitOfLength.METERS),
         (SensorDeviceClass.DISTANCE, UnitOfLength.KILOMETERS, None),
         (SensorDeviceClass.DISTANCE, "very_long", None),
+        # Test area conversion
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_FEET, UnitOfArea.SQUARE_METERS),
+        (
+            SensorDeviceClass.AREA,
+            UnitOfArea.SQUARE_INCHES,
+            UnitOfArea.SQUARE_MILLIMETERS,
+        ),
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_MILES, UnitOfArea.SQUARE_KILOMETERS),
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_YARDS, UnitOfArea.SQUARE_METERS),
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_KILOMETERS, None),
+        (SensorDeviceClass.AREA, "very_much", None),
         # Test gas meter conversion
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS),
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_METERS, None),
@@ -482,6 +520,21 @@ def test_get_metric_converted_unit_(
         (SensorDeviceClass.DISTANCE, UnitOfLength.MILLIMETERS, UnitOfLength.INCHES),
         (SensorDeviceClass.DISTANCE, UnitOfLength.MILES, None),
         (SensorDeviceClass.DISTANCE, "very_long", None),
+        # Test area conversion
+        (
+            SensorDeviceClass.AREA,
+            UnitOfArea.SQUARE_CENTIMETERS,
+            UnitOfArea.SQUARE_INCHES,
+        ),
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_KILOMETERS, UnitOfArea.SQUARE_MILES),
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_METERS, UnitOfArea.SQUARE_FEET),
+        (
+            SensorDeviceClass.AREA,
+            UnitOfArea.SQUARE_MILLIMETERS,
+            UnitOfArea.SQUARE_INCHES,
+        ),
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_MILES, None),
+        (SensorDeviceClass.AREA, "very_much", None),
         # Test gas meter conversion
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_METERS, UnitOfVolume.CUBIC_FEET),
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_FEET, None),

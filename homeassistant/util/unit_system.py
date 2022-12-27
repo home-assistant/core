@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ACCUMULATED_PRECIPITATION,
+    AREA,
     LENGTH,
     MASS,
     PRESSURE,
@@ -15,6 +16,7 @@ from homeassistant.const import (
     UNIT_NOT_RECOGNIZED_TEMPLATE,
     VOLUME,
     WIND_SPEED,
+    UnitOfArea,
     UnitOfLength,
     UnitOfMass,
     UnitOfPrecipitationDepth,
@@ -26,6 +28,7 @@ from homeassistant.const import (
 from homeassistant.helpers.frame import report
 
 from .unit_conversion import (
+    AreaConverter,
     DistanceConverter,
     PressureConverter,
     SpeedConverter,
@@ -41,6 +44,8 @@ _CONF_UNIT_SYSTEM_METRIC: Final = "metric"
 _CONF_UNIT_SYSTEM_US_CUSTOMARY: Final = "us_customary"
 
 LENGTH_UNITS = DistanceConverter.VALID_UNITS
+
+AREA_UNITS = AreaConverter.VALID_UNITS
 
 MASS_UNITS: set[str] = {
     UnitOfMass.POUNDS,
@@ -62,6 +67,8 @@ def _is_valid_unit(unit: str, unit_type: str) -> bool:
     """Check if the unit is valid for it's type."""
     if unit_type == LENGTH:
         return unit in LENGTH_UNITS
+    if unit_type == AREA:
+        return unit in AREA_UNITS
     if unit_type == ACCUMULATED_PRECIPITATION:
         return unit in LENGTH_UNITS
     if unit_type == WIND_SPEED:
@@ -87,6 +94,7 @@ class UnitSystem:
         accumulated_precipitation: UnitOfPrecipitationDepth,
         conversions: dict[tuple[SensorDeviceClass | str | None, str | None], str],
         length: UnitOfLength,
+        area: UnitOfArea,
         mass: UnitOfMass,
         pressure: UnitOfPressure,
         temperature: UnitOfTemperature,
@@ -100,6 +108,7 @@ class UnitSystem:
                 (accumulated_precipitation, ACCUMULATED_PRECIPITATION),
                 (temperature, TEMPERATURE),
                 (length, LENGTH),
+                (area, AREA),
                 (wind_speed, WIND_SPEED),
                 (volume, VOLUME),
                 (mass, MASS),
@@ -115,6 +124,7 @@ class UnitSystem:
         self.accumulated_precipitation_unit = accumulated_precipitation
         self.temperature_unit = temperature
         self.length_unit = length
+        self.area_unit = area
         self.mass_unit = mass
         self.pressure_unit = pressure
         self.volume_unit = volume
@@ -209,6 +219,7 @@ class UnitSystem:
         """Convert the unit system to a dictionary."""
         return {
             LENGTH: self.length_unit,
+            AREA: self.area_unit,
             ACCUMULATED_PRECIPITATION: self.accumulated_precipitation_unit,
             MASS: self.mass_unit,
             PRESSURE: self.pressure_unit,
@@ -265,6 +276,11 @@ METRIC_SYSTEM = UnitSystem(
         ("distance", UnitOfLength.INCHES): UnitOfLength.MILLIMETERS,
         ("distance", UnitOfLength.MILES): UnitOfLength.KILOMETERS,
         ("distance", UnitOfLength.YARDS): UnitOfLength.METERS,
+        # Convert non-metric areas
+        ("area", UnitOfArea.SQUARE_FEET): UnitOfArea.SQUARE_METERS,
+        ("area", UnitOfArea.SQUARE_INCHES): UnitOfArea.SQUARE_MILLIMETERS,
+        ("area", UnitOfArea.SQUARE_MILES): UnitOfArea.SQUARE_KILOMETERS,
+        ("area", UnitOfArea.SQUARE_YARDS): UnitOfArea.SQUARE_METERS,
         # Convert non-metric volumes of gas meters
         ("gas", UnitOfVolume.CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         # Convert non-metric precipitation
@@ -284,6 +300,7 @@ METRIC_SYSTEM = UnitSystem(
         ("water", UnitOfVolume.GALLONS): UnitOfVolume.LITERS,
     },
     length=UnitOfLength.KILOMETERS,
+    area=UnitOfArea.SQUARE_KILOMETERS,
     mass=UnitOfMass.GRAMS,
     pressure=UnitOfPressure.PA,
     temperature=UnitOfTemperature.CELSIUS,
@@ -306,6 +323,11 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         ("distance", UnitOfLength.KILOMETERS): UnitOfLength.MILES,
         ("distance", UnitOfLength.METERS): UnitOfLength.FEET,
         ("distance", UnitOfLength.MILLIMETERS): UnitOfLength.INCHES,
+        # Convert non-USCS areas
+        ("area", UnitOfArea.SQUARE_CENTIMETERS): UnitOfArea.SQUARE_INCHES,
+        ("area", UnitOfArea.SQUARE_KILOMETERS): UnitOfArea.SQUARE_MILES,
+        ("area", UnitOfArea.SQUARE_METERS): UnitOfArea.SQUARE_FEET,
+        ("area", UnitOfArea.SQUARE_MILLIMETERS): UnitOfArea.SQUARE_INCHES,
         # Convert non-USCS volumes of gas meters
         ("gas", UnitOfVolume.CUBIC_METERS): UnitOfVolume.CUBIC_FEET,
         # Convert non-USCS precipitation
@@ -330,6 +352,7 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         ("water", UnitOfVolume.LITERS): UnitOfVolume.GALLONS,
     },
     length=UnitOfLength.MILES,
+    area=UnitOfArea.SQUARE_MILES,
     mass=UnitOfMass.POUNDS,
     pressure=UnitOfPressure.PSI,
     temperature=UnitOfTemperature.FAHRENHEIT,

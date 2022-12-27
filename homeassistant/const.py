@@ -765,9 +765,22 @@ VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR: Final = "m³/h"
 VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE: Final = "ft³/m"
 """Deprecated: please use UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE"""
 
-# Area units
-AREA_SQUARE_METERS: Final = "m²"
 
+# Area units
+class UnitOfArea(StrEnum):
+    """Area units."""
+
+    SQUARE_MILLIMETERS = "mm²"
+    SQUARE_CENTIMETERS = "cm²"
+    SQUARE_METERS = "m²"
+    SQUARE_KILOMETERS = "km²"
+    SQUARE_INCHES = "in²"
+    SQUARE_FEET = "ft²"
+    SQUARE_YARDS = "yd²"
+    SQUARE_MILES = "mi²"
+
+"""Deprecated: please use UnitOfArea.SQUARE_METERS."""
+AREA_SQUARE_METERS: Final = "m²"
 
 # Mass units
 class UnitOfMass(StrEnum):
@@ -1116,6 +1129,7 @@ RESTART_EXIT_CODE: Final = 100
 UNIT_NOT_RECOGNIZED_TEMPLATE: Final = "{} is not a recognized {} unit."
 
 LENGTH: Final = "length"
+AREA: Final = "area"
 MASS: Final = "mass"
 PRESSURE: Final = "pressure"
 VOLUME: Final = "volume"

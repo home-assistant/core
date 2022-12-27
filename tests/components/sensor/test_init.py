@@ -1099,6 +1099,7 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
         SensorDeviceClass.DATA_RATE,
         SensorDeviceClass.DATA_SIZE,
         SensorDeviceClass.DISTANCE,
+        SensorDeviceClass.AREA,
         SensorDeviceClass.DURATION,
         SensorDeviceClass.ENERGY,
         SensorDeviceClass.FREQUENCY,

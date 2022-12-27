@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from homeassistant.const import (
     UNIT_NOT_RECOGNIZED_TEMPLATE,
+    UnitOfArea,
     UnitOfEnergy,
     UnitOfLength,
     UnitOfMass,
@@ -110,6 +111,33 @@ class DistanceConverter(BaseUnitConverter):
         UnitOfLength.MILLIMETERS,
         UnitOfLength.INCHES,
         UnitOfLength.YARDS,
+    }
+
+
+class AreaConverter(BaseUnitConverter):
+    """Utility to convert area values."""
+
+    UNIT_CLASS = "area"
+    NORMALIZED_UNIT = UnitOfArea.SQUARE_METERS
+    _UNIT_CONVERSION: dict[str, float] = {
+        UnitOfArea.SQUARE_METERS: 1,
+        UnitOfArea.SQUARE_MILLIMETERS: 1 / _MM_TO_M**2,
+        UnitOfArea.SQUARE_CENTIMETERS: 1 / _CM_TO_M**2,
+        UnitOfArea.SQUARE_KILOMETERS: 1 / _KM_TO_M**2,
+        UnitOfArea.SQUARE_INCHES: 1 / _IN_TO_M**2,
+        UnitOfArea.SQUARE_FEET: 1 / _FOOT_TO_M**2,
+        UnitOfArea.SQUARE_YARDS: 1 / _YARD_TO_M**2,
+        UnitOfArea.SQUARE_MILES: 1 / _MILE_TO_M**2,
+    }
+    VALID_UNITS = {
+        UnitOfArea.SQUARE_KILOMETERS,
+        UnitOfArea.SQUARE_MILES,
+        UnitOfArea.SQUARE_FEET,
+        UnitOfArea.SQUARE_METERS,
+        UnitOfArea.SQUARE_CENTIMETERS,
+        UnitOfArea.SQUARE_MILLIMETERS,
+        UnitOfArea.SQUARE_INCHES,
+        UnitOfArea.SQUARE_YARDS,
     }
 
 

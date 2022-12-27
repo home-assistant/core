@@ -2,6 +2,7 @@
 import pytest
 
 from homeassistant.const import (
+    UnitOfArea,
     UnitOfEnergy,
     UnitOfLength,
     UnitOfMass,
@@ -14,6 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.unit_conversion import (
+    AreaConverter,
     BaseUnitConverter,
     DistanceConverter,
     EnergyConverter,
@@ -39,6 +41,14 @@ INVALID_SYMBOL = "bob"
         (DistanceConverter, UnitOfLength.YARDS),
         (DistanceConverter, UnitOfLength.FEET),
         (DistanceConverter, UnitOfLength.INCHES),
+        (AreaConverter, UnitOfArea.SQUARE_KILOMETERS),
+        (AreaConverter, UnitOfArea.SQUARE_METERS),
+        (AreaConverter, UnitOfArea.SQUARE_CENTIMETERS),
+        (AreaConverter, UnitOfArea.SQUARE_MILLIMETERS),
+        (AreaConverter, UnitOfArea.SQUARE_MILES),
+        (AreaConverter, UnitOfArea.SQUARE_YARDS),
+        (AreaConverter, UnitOfArea.SQUARE_FEET),
+        (AreaConverter, UnitOfArea.SQUARE_INCHES),
         (EnergyConverter, UnitOfEnergy.WATT_HOUR),
         (EnergyConverter, UnitOfEnergy.KILO_WATT_HOUR),
         (EnergyConverter, UnitOfEnergy.MEGA_WATT_HOUR),
@@ -86,6 +96,7 @@ def test_convert_same_unit(converter: type[BaseUnitConverter], valid_unit: str) 
     "converter,valid_unit",
     [
         (DistanceConverter, UnitOfLength.KILOMETERS),
+        (AreaConverter, UnitOfArea.SQUARE_KILOMETERS),
         (EnergyConverter, UnitOfEnergy.KILO_WATT_HOUR),
         (MassConverter, UnitOfMass.GRAMS),
         (PowerConverter, UnitOfPower.WATT),
@@ -112,6 +123,7 @@ def test_convert_invalid_unit(
     "converter,from_unit,to_unit",
     [
         (DistanceConverter, UnitOfLength.KILOMETERS, UnitOfLength.METERS),
+        (AreaConverter, UnitOfArea.SQUARE_KILOMETERS, UnitOfArea.SQUARE_METERS),
         (EnergyConverter, UnitOfEnergy.WATT_HOUR, UnitOfEnergy.KILO_WATT_HOUR),
         (MassConverter, UnitOfMass.GRAMS, UnitOfMass.KILOGRAMS),
         (PowerConverter, UnitOfPower.WATT, UnitOfPower.KILO_WATT),
@@ -133,6 +145,12 @@ def test_convert_nonnumeric_value(
     "converter,from_unit,to_unit,expected",
     [
         (DistanceConverter, UnitOfLength.KILOMETERS, UnitOfLength.METERS, 1 / 1000),
+        (
+            AreaConverter,
+            UnitOfArea.SQUARE_KILOMETERS,
+            UnitOfArea.SQUARE_METERS,
+            1 / 1000**2,
+        ),
         (EnergyConverter, UnitOfEnergy.WATT_HOUR, UnitOfEnergy.KILO_WATT_HOUR, 1000),
         (PowerConverter, UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
         (
@@ -282,6 +300,337 @@ def test_distance_convert(
 ) -> None:
     """Test conversion to other units."""
     assert DistanceConverter.convert(value, from_unit, to_unit) == expected
+
+
+@pytest.mark.parametrize(
+    "value,from_unit,expected,to_unit",
+    [
+        (
+            5,
+            UnitOfArea.SQUARE_MILES,
+            pytest.approx(8.04672),
+            UnitOfArea.SQUARE_KILOMETERS,
+        ),
+        (5, UnitOfArea.SQUARE_MILES, pytest.approx(8046.72), UnitOfArea.SQUARE_METERS),
+        (
+            5,
+            UnitOfArea.SQUARE_MILES,
+            pytest.approx(804672.0),
+            UnitOfArea.SQUARE_CENTIMETERS,
+        ),
+        (
+            5,
+            UnitOfArea.SQUARE_MILES,
+            pytest.approx(8046720.0),
+            UnitOfArea.SQUARE_MILLIMETERS,
+        ),
+        (5, UnitOfArea.SQUARE_MILES, pytest.approx(8800.0), UnitOfArea.SQUARE_YARDS),
+        (
+            5,
+            UnitOfArea.SQUARE_MILES,
+            pytest.approx(26400.0008448),
+            UnitOfArea.SQUARE_FEET,
+        ),
+        (
+            5,
+            UnitOfArea.SQUARE_MILES,
+            pytest.approx(316800.171072),
+            UnitOfArea.SQUARE_INCHES,
+        ),
+        (
+            5,
+            UnitOfArea.SQUARE_YARDS,
+            pytest.approx(0.0045720000000000005),
+            UnitOfArea.SQUARE_KILOMETERS,
+        ),
+        (5, UnitOfArea.SQUARE_YARDS, pytest.approx(4.572), UnitOfArea.SQUARE_METERS),
+        (
+            5,
+            UnitOfArea.SQUARE_YARDS,
+            pytest.approx(457.2),
+            UnitOfArea.SQUARE_CENTIMETERS,
+        ),
+        (
+            5,
+            UnitOfArea.SQUARE_YARDS,
+            pytest.approx(4572),
+            UnitOfArea.SQUARE_MILLIMETERS,
+        ),
+        (
+            5,
+            UnitOfArea.SQUARE_YARDS,
+            pytest.approx(0.002840908212),
+            UnitOfArea.SQUARE_MILES,
+        ),
+        (
+            5,
+            UnitOfArea.SQUARE_YARDS,
+            pytest.approx(15.00000048),
+            UnitOfArea.SQUARE_FEET,
+        ),
+        (
+            5,
+            UnitOfArea.SQUARE_YARDS,
+            pytest.approx(180.0000972),
+            UnitOfArea.SQUARE_INCHES,
+        ),
+        (
+            5000,
+            UnitOfArea.SQUARE_FEET,
+            pytest.approx(1.524),
+            UnitOfArea.SQUARE_KILOMETERS,
+        ),
+        (5000, UnitOfArea.SQUARE_FEET, pytest.approx(1524), UnitOfArea.SQUARE_METERS),
+        (
+            5000,
+            UnitOfArea.SQUARE_FEET,
+            pytest.approx(152400.0),
+            UnitOfArea.SQUARE_CENTIMETERS,
+        ),
+        (
+            5000,
+            UnitOfArea.SQUARE_FEET,
+            pytest.approx(1524000.0),
+            UnitOfArea.SQUARE_MILLIMETERS,
+        ),
+        (
+            5000,
+            UnitOfArea.SQUARE_FEET,
+            pytest.approx(0.9469694040000001),
+            UnitOfArea.SQUARE_MILES,
+        ),
+        (
+            5000,
+            UnitOfArea.SQUARE_FEET,
+            pytest.approx(1666.66667),
+            UnitOfArea.SQUARE_YARDS,
+        ),
+        (
+            5000,
+            UnitOfArea.SQUARE_FEET,
+            pytest.approx(60000.032400000004),
+            UnitOfArea.SQUARE_INCHES,
+        ),
+        (
+            5000,
+            UnitOfArea.SQUARE_INCHES,
+            pytest.approx(0.127),
+            UnitOfArea.SQUARE_KILOMETERS,
+        ),
+        (
+            5000,
+            UnitOfArea.SQUARE_INCHES,
+            pytest.approx(127.0),
+            UnitOfArea.SQUARE_METERS,
+        ),
+        (
+            5000,
+            UnitOfArea.SQUARE_INCHES,
+            pytest.approx(12700.0),
+            UnitOfArea.SQUARE_CENTIMETERS,
+        ),
+        (
+            5000,
+            UnitOfArea.SQUARE_INCHES,
+            pytest.approx(127000.0),
+            UnitOfArea.SQUARE_MILLIMETERS,
+        ),
+        (
+            5000,
+            UnitOfArea.SQUARE_INCHES,
+            pytest.approx(0.078914117),
+            UnitOfArea.SQUARE_MILES,
+        ),
+        (
+            5000,
+            UnitOfArea.SQUARE_INCHES,
+            pytest.approx(138.88889),
+            UnitOfArea.SQUARE_YARDS,
+        ),
+        (
+            5000,
+            UnitOfArea.SQUARE_INCHES,
+            pytest.approx(416.66668),
+            UnitOfArea.SQUARE_FEET,
+        ),
+        (
+            5,
+            UnitOfArea.SQUARE_KILOMETERS,
+            pytest.approx(5000),
+            UnitOfArea.SQUARE_METERS,
+        ),
+        (
+            5,
+            UnitOfArea.SQUARE_KILOMETERS,
+            pytest.approx(500000),
+            UnitOfArea.SQUARE_CENTIMETERS,
+        ),
+        (
+            5,
+            UnitOfArea.SQUARE_KILOMETERS,
+            pytest.approx(5000000),
+            UnitOfArea.SQUARE_MILLIMETERS,
+        ),
+        (
+            5,
+            UnitOfArea.SQUARE_KILOMETERS,
+            pytest.approx(3.106855),
+            UnitOfArea.SQUARE_MILES,
+        ),
+        (
+            5,
+            UnitOfArea.SQUARE_KILOMETERS,
+            pytest.approx(5468.066),
+            UnitOfArea.SQUARE_YARDS,
+        ),
+        (
+            5,
+            UnitOfArea.SQUARE_KILOMETERS,
+            pytest.approx(16404.2),
+            UnitOfArea.SQUARE_FEET,
+        ),
+        (
+            5,
+            UnitOfArea.SQUARE_KILOMETERS,
+            pytest.approx(196850.5),
+            UnitOfArea.SQUARE_INCHES,
+        ),
+        (
+            5000,
+            UnitOfArea.SQUARE_METERS,
+            pytest.approx(5),
+            UnitOfArea.SQUARE_KILOMETERS,
+        ),
+        (
+            5000,
+            UnitOfArea.SQUARE_METERS,
+            pytest.approx(500000),
+            UnitOfArea.SQUARE_CENTIMETERS,
+        ),
+        (
+            5000,
+            UnitOfArea.SQUARE_METERS,
+            pytest.approx(5000000),
+            UnitOfArea.SQUARE_MILLIMETERS,
+        ),
+        (
+            5000,
+            UnitOfArea.SQUARE_METERS,
+            pytest.approx(3.106855),
+            UnitOfArea.SQUARE_MILES,
+        ),
+        (
+            5000,
+            UnitOfArea.SQUARE_METERS,
+            pytest.approx(5468.066),
+            UnitOfArea.SQUARE_YARDS,
+        ),
+        (
+            5000,
+            UnitOfArea.SQUARE_METERS,
+            pytest.approx(16404.2),
+            UnitOfArea.SQUARE_FEET,
+        ),
+        (
+            5000,
+            UnitOfArea.SQUARE_METERS,
+            pytest.approx(196850.5),
+            UnitOfArea.SQUARE_INCHES,
+        ),
+        (
+            500000,
+            UnitOfArea.SQUARE_CENTIMETERS,
+            pytest.approx(5),
+            UnitOfArea.SQUARE_KILOMETERS,
+        ),
+        (
+            500000,
+            UnitOfArea.SQUARE_CENTIMETERS,
+            pytest.approx(5000),
+            UnitOfArea.SQUARE_METERS,
+        ),
+        (
+            500000,
+            UnitOfArea.SQUARE_CENTIMETERS,
+            pytest.approx(5000000),
+            UnitOfArea.SQUARE_MILLIMETERS,
+        ),
+        (
+            500000,
+            UnitOfArea.SQUARE_CENTIMETERS,
+            pytest.approx(3.106855),
+            UnitOfArea.SQUARE_MILES,
+        ),
+        (
+            500000,
+            UnitOfArea.SQUARE_CENTIMETERS,
+            pytest.approx(5468.066),
+            UnitOfArea.SQUARE_YARDS,
+        ),
+        (
+            500000,
+            UnitOfArea.SQUARE_CENTIMETERS,
+            pytest.approx(16404.2),
+            UnitOfArea.SQUARE_FEET,
+        ),
+        (
+            500000,
+            UnitOfArea.SQUARE_CENTIMETERS,
+            pytest.approx(196850.5),
+            UnitOfArea.SQUARE_INCHES,
+        ),
+        (
+            5000000,
+            UnitOfArea.SQUARE_MILLIMETERS,
+            pytest.approx(5),
+            UnitOfArea.SQUARE_KILOMETERS,
+        ),
+        (
+            5000000,
+            UnitOfArea.SQUARE_MILLIMETERS,
+            pytest.approx(5000),
+            UnitOfArea.SQUARE_METERS,
+        ),
+        (
+            5000000,
+            UnitOfArea.SQUARE_MILLIMETERS,
+            pytest.approx(500000),
+            UnitOfArea.SQUARE_CENTIMETERS,
+        ),
+        (
+            5000000,
+            UnitOfArea.SQUARE_MILLIMETERS,
+            pytest.approx(3.106855),
+            UnitOfArea.SQUARE_MILES,
+        ),
+        (
+            5000000,
+            UnitOfArea.SQUARE_MILLIMETERS,
+            pytest.approx(5468.066),
+            UnitOfArea.SQUARE_YARDS,
+        ),
+        (
+            5000000,
+            UnitOfArea.SQUARE_MILLIMETERS,
+            pytest.approx(16404.2),
+            UnitOfArea.SQUARE_FEET,
+        ),
+        (
+            5000000,
+            UnitOfArea.SQUARE_MILLIMETERS,
+            pytest.approx(196850.5),
+            UnitOfArea.SQUARE_INCHES,
+        ),
+    ],
+)
+def test_area_convert(
+    value: float,
+    from_unit: str,
+    expected: float,
+    to_unit: str,
+) -> None:
+    """Test conversion to other units."""
+    assert AreaConverter.convert(value, from_unit, to_unit) == expected
 
 
 @pytest.mark.parametrize(

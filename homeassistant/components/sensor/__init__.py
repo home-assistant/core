@@ -206,6 +206,14 @@ class SensorDeviceClass(StrEnum):
     - USCS / imperial: `in`, `ft`, `yd`, `mi`
     """
 
+    AREA = "area"
+    """Generic area.
+
+    Unit of measurement: `AREA_*` units
+    - SI /metric: `mm²`, `cm²`, `m²`, `km²`
+    - USCS / imperial: `in²`, `ft²`, `yd²`, `mi²`
+    """
+
     ENERGY = "energy"
     """Energy.
 
