@@ -407,7 +407,10 @@ async def async_setup_sensor_registry_updates(
         """Update all sensors in one executor jump."""
         if _update_lock.locked():
             _LOGGER.warning(
-                "Updating systemmonitor took longer than the scheduled update interval %s",
+                (
+                    "Updating systemmonitor took longer than the scheduled update"
+                    " interval %s"
+                ),
                 scan_interval,
             )
             return

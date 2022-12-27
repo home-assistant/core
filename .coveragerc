@@ -797,12 +797,9 @@ omit =
     homeassistant/components/myq/cover.py
     homeassistant/components/myq/light.py
     homeassistant/components/mysensors/__init__.py
-    homeassistant/components/mysensors/binary_sensor.py
     homeassistant/components/mysensors/climate.py
-    homeassistant/components/mysensors/const.py
     homeassistant/components/mysensors/cover.py
     homeassistant/components/mysensors/device.py
-    homeassistant/components/mysensors/device_tracker.py
     homeassistant/components/mysensors/gateway.py
     homeassistant/components/mysensors/handler.py
     homeassistant/components/mysensors/helpers.py
@@ -1052,6 +1049,11 @@ omit =
     homeassistant/components/rejseplanen/sensor.py
     homeassistant/components/remember_the_milk/__init__.py
     homeassistant/components/remote_rpi_gpio/*
+    homeassistant/components/reolink/__init__.py
+    homeassistant/components/reolink/camera.py
+    homeassistant/components/reolink/const.py
+    homeassistant/components/reolink/entity.py
+    homeassistant/components/reolink/host.py
     homeassistant/components/repetier/__init__.py
     homeassistant/components/repetier/sensor.py
     homeassistant/components/rest/notify.py

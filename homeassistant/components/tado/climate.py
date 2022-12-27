@@ -598,7 +598,10 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             )
 
         _LOGGER.debug(
-            "Switching to %s for zone %s (%d) with temperature %s °C and duration %s using overlay %s",
+            (
+                "Switching to %s for zone %s (%d) with temperature %s °C and duration"
+                " %s using overlay %s"
+            ),
             self._current_tado_hvac_mode,
             self.zone_name,
             self.zone_id,

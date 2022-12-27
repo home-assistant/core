@@ -1409,8 +1409,8 @@ def raise_no_default(function: str, value: Any) -> NoReturn:
     """Log warning if no default is specified."""
     template, action = template_cv.get() or ("", "rendering or compiling")
     raise ValueError(
-        f"Template error: {function} got invalid input '{value}' when {action} template '{template}' "
-        "but no default was specified"
+        f"Template error: {function} got invalid input '{value}' when {action} template"
+        f" '{template}' but no default was specified"
     )
 
 
@@ -1800,7 +1800,11 @@ def struct_pack(value: Any | None, format_string: str) -> bytes | None:
         return pack(format_string, value)
     except StructError:
         _LOGGER.warning(
-            "Template warning: 'pack' unable to pack object '%s' with type '%s' and format_string '%s' see https://docs.python.org/3/library/struct.html for more information",
+            (
+                "Template warning: 'pack' unable to pack object '%s' with type '%s' and"
+                " format_string '%s' see https://docs.python.org/3/library/struct.html"
+                " for more information"
+            ),
             str(value),
             type(value).__name__,
             format_string,
@@ -1814,7 +1818,11 @@ def struct_unpack(value: bytes, format_string: str, offset: int = 0) -> Any | No
         return unpack_from(format_string, value, offset)[0]
     except StructError:
         _LOGGER.warning(
-            "Template warning: 'unpack' unable to unpack object '%s' with format_string '%s' and offset %s see https://docs.python.org/3/library/struct.html for more information",
+            (
+                "Template warning: 'unpack' unable to unpack object '%s' with"
+                " format_string '%s' and offset %s see"
+                " https://docs.python.org/3/library/struct.html for more information"
+            ),
             value,
             format_string,
             offset,

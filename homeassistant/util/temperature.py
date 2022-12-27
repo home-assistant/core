@@ -39,9 +39,11 @@ def convert(
 ) -> float:
     """Convert a temperature from one unit to another."""
     report(
-        "uses temperature utility. This is deprecated since 2022.10 and will "
-        "stop working in Home Assistant 2023.4, it should be updated to use "
-        "unit_conversion.TemperatureConverter instead",
+        (
+            "uses temperature utility. This is deprecated since 2022.10 and will "
+            "stop working in Home Assistant 2023.4, it should be updated to use "
+            "unit_conversion.TemperatureConverter instead"
+        ),
         error_if_core=False,
     )
     if interval:
