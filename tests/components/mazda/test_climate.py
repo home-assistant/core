@@ -253,7 +253,9 @@ async def test_climate_state(
     assert state.attributes.get(ATTR_MIN_TEMP) == expected_min_temp
     assert state.attributes.get(ATTR_MAX_TEMP) == expected_max_temp
     assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == round(
-        hass.config.units.temperature(current_temperature_celsius, UnitOfTemperature.CELSIUS)
+        hass.config.units.temperature(
+            current_temperature_celsius, UnitOfTemperature.CELSIUS
+        )
     )
     assert state.attributes.get(ATTR_TEMPERATURE) == target_temperature
     assert state.attributes.get(ATTR_PRESET_MODE) == expected_preset_mode

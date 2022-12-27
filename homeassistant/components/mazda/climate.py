@@ -130,7 +130,9 @@ class MazdaClimateEntity(MazdaEntity, ClimateEntity):
         ]
         if self.data["hvacSetting"]["temperatureUnit"] == "F":
             self._attr_current_temperature = convert_temperature(
-                current_temperature_celsius, UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT
+                current_temperature_celsius,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
             )
         else:
             self._attr_current_temperature = current_temperature_celsius
