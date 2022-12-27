@@ -258,7 +258,6 @@ async def test_get_trigger_capabilities(hass: HomeAssistant) -> None:
             "name": "for",
             "optional": True,
             "type": "positive_time_period_dict",
-            "optional": True,
         },
     ]
 
@@ -288,6 +287,5 @@ async def test_get_trigger_capabilities(hass: HomeAssistant) -> None:
             "name": "for",
             "optional": True,
             "type": "positive_time_period_dict",
-            "optional": True,
         },
     ]
