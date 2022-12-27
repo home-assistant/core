@@ -1,4 +1,7 @@
 """Config flow for growatt server integration."""
+import random
+import string
+
 import growattServer
 import voluptuous as vol
 
@@ -22,7 +25,12 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialise growatt server flow."""
-        self.api = growattServer.GrowattApi()
+        rand_num = random.randint(1, 50)
+        random_identifier = "".join(
+            random.choices(string.ascii_uppercase + string.digits, k=rand_num)
+        )
+
+        self.api = growattServer.GrowattApi(agent_identifier=random_identifier)
         self.user_id = None
         self.data = {}
 
