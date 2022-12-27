@@ -126,9 +126,10 @@ class GoveeBluetoothSensorEntity(
     @property
     def available(self) -> bool:
         """Return False if sensor is in error."""
-        if self.processor.entity_data.get(self.entity_key) == ERROR:
-            return False
-        return super().available
+        return (
+            self.processor.entity_data.get(self.entity_key) != ERROR
+            and super().available
+        )
 
     @property
     def native_value(self) -> int | float | None:
