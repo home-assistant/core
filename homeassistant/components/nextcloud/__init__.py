@@ -70,7 +70,9 @@ class NextcloudMonitorWrapper:
         verify_ssl (bool): Allow bypassing ssl verification, but verify by default
     """
 
-    def __init__(self, url: str, user: str, app_password: str, verify_ssl: bool):
+    def __init__(
+        self, url: str, user: str, app_password: str, verify_ssl: bool
+    ) -> None:
         """Init Method for NextcloudMonitorWrapper class.
 
         Attributes:
@@ -79,7 +81,7 @@ class NextcloudMonitorWrapper:
         app_password (str): App password generated from Nextcloud security settings page
         verify_ssl (bool): Allow bypassing ssl verification, but verify by default
         """
-        self.data = {}
+        self.data: dict[str, str] = {}
         self.url = url
         self.user = user
         self.password = app_password
@@ -91,7 +93,9 @@ class NextcloudMonitorWrapper:
         self.api = NextcloudMonitor(self.url, self.user, self.password, self.verify_ssl)
         self.data = self.get_data_points(self.api.data)
 
-    def get_data_points(self, api_data: dict, key_path="", leaf=False) -> dict:
+    def get_data_points(
+        self, api_data: dict, key_path: str = "", leaf: bool = False
+    ) -> dict:
         """Use Recursion to discover data-points and values.
 
         Get dictionary of data-points by recursing through dict returned by api until
@@ -147,11 +151,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.warning("Nextcloud setup failed - Check configuration")
         raise ConfigEntryNotReady from ex
 
-    async def async_update_data() -> None:
+    async def async_update_data() -> bool:
         """Update data from nextcloud api."""
         try:
             await hass.async_add_executor_job(ncmw.update)
             _LOGGER.info("Updating NC API")
+            return True
         except NextcloudMonitorError:
             _LOGGER.error("Nextcloud update failed")
             return False
@@ -188,7 +193,7 @@ class NextcloudEntity(CoordinatorEntity):
     ) -> None:
         """Initialize a Pi-hole entity."""
         super().__init__(coordinator)
-        self.api = api
+        self.api: NextcloudMonitorWrapper = api
         self._name = name
         self._server_unique_id = server_unique_id
 

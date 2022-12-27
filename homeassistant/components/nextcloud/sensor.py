@@ -45,7 +45,7 @@ class NextcloudSensor(NextcloudEntity, SensorEntity):
         name: str,
         server_unique_id: str,
         item: str,
-    ):
+    ) -> None:
         """Initialize the Nextcloud sensor."""
         super().__init__(api, coordinator, name, server_unique_id)
 
