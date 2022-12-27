@@ -37,10 +37,10 @@ from homeassistant.const import (
     CONF_EMAIL,
     CONF_PASSWORD,
     CONF_REGION,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import init_integration
 
@@ -180,7 +180,7 @@ async def test_climate_state(
 ):
     """Test getting the state of the climate entity."""
     if temperature_unit == "F":
-        hass.config.units = IMPERIAL_SYSTEM
+        hass.config.units = US_CUSTOMARY_SYSTEM
 
     get_vehicles_fixture = json.loads(load_fixture("mazda/get_vehicles.json"))
     get_vehicles_fixture[0]["isElectric"] = True
@@ -253,7 +253,7 @@ async def test_climate_state(
     assert state.attributes.get(ATTR_MIN_TEMP) == expected_min_temp
     assert state.attributes.get(ATTR_MAX_TEMP) == expected_max_temp
     assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == round(
-        hass.config.units.temperature(current_temperature_celsius, TEMP_CELSIUS)
+        hass.config.units.temperature(current_temperature_celsius, UnitOfTemperature.CELSIUS)
     )
     assert state.attributes.get(ATTR_TEMPERATURE) == target_temperature
     assert state.attributes.get(ATTR_PRESET_MODE) == expected_preset_mode

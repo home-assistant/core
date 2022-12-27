@@ -15,8 +15,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_HALVES,
     PRECISION_WHOLE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -94,12 +93,12 @@ class MazdaClimateEntity(MazdaEntity, ClimateEntity):
 
         if self.data["hvacSetting"]["temperatureUnit"] == "F":
             self._attr_precision = PRECISION_WHOLE
-            self._attr_temperature_unit = TEMP_FAHRENHEIT
+            self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
             self._attr_min_temp = 61.0
             self._attr_max_temp = 83.0
         else:
             self._attr_precision = PRECISION_HALVES
-            self._attr_temperature_unit = TEMP_CELSIUS
+            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
             if region == "MJO":
                 self._attr_min_temp = 18.5
                 self._attr_max_temp = 31.5
@@ -131,7 +130,7 @@ class MazdaClimateEntity(MazdaEntity, ClimateEntity):
         ]
         if self.data["hvacSetting"]["temperatureUnit"] == "F":
             self._attr_current_temperature = convert_temperature(
-                current_temperature_celsius, TEMP_CELSIUS, TEMP_FAHRENHEIT
+                current_temperature_celsius, UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT
             )
         else:
             self._attr_current_temperature = current_temperature_celsius
