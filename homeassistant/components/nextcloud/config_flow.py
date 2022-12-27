@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 
+from nextcloudmonitor import NextcloudMonitorError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -15,7 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.data_entry_flow import FlowResult
 
-from . import _LOGGER, NextcloudMonitorWrapper
+from . import NextcloudMonitorWrapper
 from .const import DEFAULT_NAME, DOMAIN
 
 
@@ -40,7 +41,7 @@ class NextCloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await loop.run_in_executor(
                 None, NextcloudMonitorWrapper, url, user, password, verify_ssl
             )
-        except Exception as e:
+        except NextcloudMonitorError:
             return False
         return True
 

@@ -45,7 +45,7 @@ class NextcloudBinarySensor(NextcloudEntity, BinarySensorEntity):
         name: str,
         server_unique_id: str,
         item: str,
-    ):
+    ) -> None:
         """Initialize the Nextcloud binary sensor."""
 
         super().__init__(api, coordinator, name, server_unique_id)
@@ -55,16 +55,16 @@ class NextcloudBinarySensor(NextcloudEntity, BinarySensorEntity):
         self._attr_unique_id = f"{DOMAIN}_{self._name}_{self._item}"
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon for this binary sensor."""
         return "mdi:cloud"
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name for this binary sensor."""
         return f"{DOMAIN}_{self._name}_{self._item}"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.api.data[self._item] == "yes"
