@@ -50,9 +50,6 @@ async def test_cover_node_percentage(
 
     receive_message("1;1;1;0;29;1\n")
     receive_message("1;1;1;0;3;50\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -75,9 +72,6 @@ async def test_cover_node_percentage(
 
     receive_message("1;1;1;0;31;1\n")
     receive_message("1;1;1;0;3;50\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -101,9 +95,6 @@ async def test_cover_node_percentage(
     receive_message("1;1;1;0;31;0\n")
     receive_message("1;1;1;0;29;1\n")
     receive_message("1;1;1;0;3;75\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -114,9 +105,6 @@ async def test_cover_node_percentage(
 
     receive_message("1;1;1;0;29;0\n")
     receive_message("1;1;1;0;3;100\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -139,9 +127,6 @@ async def test_cover_node_percentage(
 
     receive_message("1;1;1;0;30;1\n")
     receive_message("1;1;1;0;3;50\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -152,9 +137,6 @@ async def test_cover_node_percentage(
 
     receive_message("1;1;1;0;30;0\n")
     receive_message("1;1;1;0;3;0\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -176,9 +158,6 @@ async def test_cover_node_percentage(
     assert transport_write.call_args == call("1;1;1;1;3;25\n")
 
     receive_message("1;1;1;0;3;25\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -214,9 +193,6 @@ async def test_cover_node_binary(
 
     receive_message("1;1;1;0;29;1\n")
     receive_message("1;1;1;0;2;1\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -237,9 +213,6 @@ async def test_cover_node_binary(
     assert transport_write.call_args == call("1;1;1;1;31;1\n")
 
     receive_message("1;1;1;0;31;1\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -261,9 +234,6 @@ async def test_cover_node_binary(
 
     receive_message("1;1;1;0;31;0\n")
     receive_message("1;1;1;0;29;1\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -273,9 +243,6 @@ async def test_cover_node_binary(
 
     receive_message("1;1;1;0;29;0\n")
     receive_message("1;1;1;0;2;1\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -296,9 +263,6 @@ async def test_cover_node_binary(
     assert transport_write.call_args == call("1;1;1;1;30;1\n")
 
     receive_message("1;1;1;0;30;1\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -308,9 +272,6 @@ async def test_cover_node_binary(
 
     receive_message("1;1;1;0;30;0\n")
     receive_message("1;1;1;0;2;0\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
