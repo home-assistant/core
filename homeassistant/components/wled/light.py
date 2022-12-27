@@ -131,19 +131,23 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
                 segment
             ]
             self._attr_supported_color_modes: set[ColorMode] = set()
+
+            if LightCapability.COLOR_TEMPERATURE in capabilities:
+                self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
+                self._attr_color_mode = ColorMode.COLOR_TEMP
+                if LightCapability.WHITE_CHANNEL in capabilities:
+                    self._attr_supported_color_modes.add(ColorMode.WHITE)
+
             if (
                 LightCapability.RGB_COLOR in capabilities
                 and LightCapability.WHITE_CHANNEL in capabilities
                 and LightCapability.COLOR_TEMPERATURE not in capabilities
             ):
                 self._attr_supported_color_modes.add(ColorMode.RGBW)
+                self._attr_color_mode = ColorMode.RGBW
             elif LightCapability.RGB_COLOR in capabilities:
                 self._attr_supported_color_modes.add(ColorMode.RGB)
-
-            if LightCapability.COLOR_TEMPERATURE in capabilities:
-                self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
-                if LightCapability.WHITE_CHANNEL in capabilities:
-                    self._attr_supported_color_modes.add(ColorMode.WHITE)
+                self._attr_color_mode = ColorMode.RGB
 
             if (
                 not self._attr_supported_color_modes
@@ -156,6 +160,7 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
 
             if not self._attr_supported_color_modes:
                 self._attr_supported_color_modes.add(ColorMode.ONOFF)
+                self._attr_color_mode = ColorMode.ONOFF
 
         # WLED < v0.13.1
         else:
