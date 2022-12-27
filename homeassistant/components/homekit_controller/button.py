@@ -9,7 +9,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
-from packaging import version
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -34,8 +33,8 @@ class HomeKitButtonEntityDescription(ButtonEntityDescription):
 
     write_value: int | str | None = None
     shared_key: bool = False
-    min_firmware_version: str | None = None
-    max_firmware_version: str | None = None
+    required_characteristics: list[str] | None = None
+    excluded_characteristics: list[str] | None = None
 
 
 BUTTON_ENTITIES: dict[
@@ -47,7 +46,6 @@ BUTTON_ENTITIES: dict[
         icon="mdi:cog",
         entity_category=EntityCategory.CONFIG,
         write_value="#HAA@trcmd",
-        max_firmware_version="9.5.1b",
     ),
     CharacteristicsTypes.VENDOR_HAA_UPDATE: [
         HomeKitButtonEntityDescription(
@@ -56,7 +54,7 @@ BUTTON_ENTITIES: dict[
             device_class=ButtonDeviceClass.UPDATE,
             entity_category=EntityCategory.CONFIG,
             write_value="#HAA@trcmd",
-            max_firmware_version="9.5.1b",
+            required_characteristics=[CharacteristicsTypes.VENDOR_HAA_SETUP],
         ),
         HomeKitButtonEntityDescription(
             key=CharacteristicsTypes.VENDOR_HAA_UPDATE,
@@ -65,7 +63,7 @@ BUTTON_ENTITIES: dict[
             entity_category=EntityCategory.CONFIG,
             shared_key=True,
             write_value="#HAA@trcmd0",
-            min_firmware_version="10.0.0",
+            excluded_characteristics=[CharacteristicsTypes.VENDOR_HAA_SETUP],
         ),
         HomeKitButtonEntityDescription(
             key=CharacteristicsTypes.VENDOR_HAA_UPDATE,
@@ -74,7 +72,7 @@ BUTTON_ENTITIES: dict[
             entity_category=EntityCategory.CONFIG,
             shared_key=True,
             write_value="#HAA@trcmd1",
-            min_firmware_version="10.0.0",
+            excluded_characteristics=[CharacteristicsTypes.VENDOR_HAA_SETUP],
         ),
         HomeKitButtonEntityDescription(
             key=CharacteristicsTypes.VENDOR_HAA_UPDATE,
@@ -83,7 +81,7 @@ BUTTON_ENTITIES: dict[
             entity_category=EntityCategory.CONFIG,
             shared_key=True,
             write_value="#HAA@trcmd2",
-            min_firmware_version="10.0.0",
+            excluded_characteristics=[CharacteristicsTypes.VENDOR_HAA_SETUP],
         ),
         HomeKitButtonEntityDescription(
             key=CharacteristicsTypes.VENDOR_HAA_UPDATE,
@@ -92,7 +90,7 @@ BUTTON_ENTITIES: dict[
             entity_category=EntityCategory.CONFIG,
             shared_key=True,
             write_value="#HAA@trcmd3",
-            min_firmware_version="10.0.0",
+            excluded_characteristics=[CharacteristicsTypes.VENDOR_HAA_SETUP],
         ),
     ],
     CharacteristicsTypes.IDENTIFY: HomeKitButtonEntityDescription(
@@ -117,36 +115,25 @@ async def async_setup_entry(
     def async_add_characteristic(char: Characteristic) -> bool:
         entities: list[HomeKitButton | HomeKitEcobeeClearHoldButton] = []
         info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
-        firmware_version = version.parse(
-            char.service.accessory.firmware_revision or "0.0.0"
-        )
+        characteristics = [c.type for c in char.service.characteristics]
+
+        def check_desc(d: HomeKitButtonEntityDescription) -> bool:
+            if d.required_characteristics and not all(
+                [c in characteristics for c in d.required_characteristics]
+            ):
+                return False
+            if d.excluded_characteristics and any(
+                [c in characteristics for c in d.excluded_characteristics]
+            ):
+                return False
+            return True
 
         if description := BUTTON_ENTITIES.get(char.type):
-            if isinstance(description, list):
-                for desc in description:
-                    if desc.min_firmware_version and firmware_version < version.parse(
-                        desc.min_firmware_version
-                    ):
-                        continue
-                    if desc.max_firmware_version and firmware_version > version.parse(
-                        desc.max_firmware_version
-                    ):
-                        continue
+            if not isinstance(description, list):
+                description = [description]
+            for desc in description:
+                if check_desc(desc):
                     entities.append(HomeKitButton(conn, info, char, desc))
-            else:
-                if (
-                    description.min_firmware_version
-                    and firmware_version
-                    < version.parse(description.min_firmware_version)
-                ):
-                    return False
-                if (
-                    description.max_firmware_version
-                    and firmware_version
-                    > version.parse(description.max_firmware_version)
-                ):
-                    return False
-                entities.append(HomeKitButton(conn, info, char, description))
         elif entity_type := BUTTON_ENTITY_CLASSES.get(char.type):
             entities.append(entity_type(conn, info, char))
 
