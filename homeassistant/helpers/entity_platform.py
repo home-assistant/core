@@ -146,8 +146,10 @@ class EntityPlatform:
     def __repr__(self) -> str:
         """Represent an EntityPlatform."""
         return (
-            "<EntityPlatform"
-            f" domain={self.domain} platform_name={self.platform_name} config_entry={self.config_entry}>"
+            "<EntityPlatform "
+            f"domain={self.domain} "
+            f"platform_name={self.platform_name} "
+            f"config_entry={self.config_entry}>"
         )
 
     @callback
