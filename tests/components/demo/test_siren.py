@@ -3,7 +3,7 @@ from unittest.mock import call, patch
 
 import pytest
 
-from homeassistant.components.siren.const import (
+from homeassistant.components.siren import (
     ATTR_AVAILABLE_TONES,
     ATTR_TONE,
     ATTR_VOLUME_LEVEL,

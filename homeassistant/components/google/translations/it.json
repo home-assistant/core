@@ -11,7 +11,8 @@
             "invalid_access_token": "Token di accesso non valido",
             "missing_configuration": "Il componente non \u00e8 configurato. Segui la documentazione.",
             "oauth_error": "Ricevuti dati token non validi.",
-            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente",
+            "timeout_connect": "Tempo scaduto per stabile la connessione."
         },
         "create_entry": {
             "default": "Autenticazione riuscita"

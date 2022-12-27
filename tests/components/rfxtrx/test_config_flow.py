@@ -867,6 +867,9 @@ async def test_options_configure_rfy_cover_device(hass):
         entry.data["devices"]["0C1a0000010203010000000000"]["venetian_blind_mode"]
         == "EU"
     )
+    assert isinstance(
+        entry.data["devices"]["0C1a0000010203010000000000"]["device_id"], list
+    )
 
     device_registry = dr.async_get(hass)
     device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
@@ -903,6 +906,9 @@ async def test_options_configure_rfy_cover_device(hass):
     assert (
         entry.data["devices"]["0C1a0000010203010000000000"]["venetian_blind_mode"]
         == "EU"
+    )
+    assert isinstance(
+        entry.data["devices"]["0C1a0000010203010000000000"]["device_id"], list
     )
 
 

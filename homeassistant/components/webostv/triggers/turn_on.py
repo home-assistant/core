@@ -3,18 +3,25 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
+    CONF_DEVICE_ID,
+    CONF_DOMAIN,
+    CONF_PLATFORM,
+    CONF_TYPE,
 )
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.trigger import (
+    PluggableAction,
+    TriggerActionType,
+    TriggerInfo,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from ..const import DOMAIN
 from ..helpers import (
-    async_get_client_wrapper_by_device_entry,
     async_get_device_entry_by_device_id,
     async_get_device_id_from_entity_id,
 )
@@ -36,11 +43,22 @@ TRIGGER_SCHEMA = vol.All(
 )
 
 
+def async_get_turn_on_trigger(device_id: str) -> dict[str, str]:
+    """Return data for a turn on trigger."""
+
+    return {
+        CONF_PLATFORM: "device",
+        CONF_DEVICE_ID: device_id,
+        CONF_DOMAIN: DOMAIN,
+        CONF_TYPE: PLATFORM_TYPE,
+    }
+
+
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
     *,
     platform_type: str = PLATFORM_TYPE,
 ) -> CALLBACK_TYPE | None:
@@ -57,7 +75,7 @@ async def async_attach_trigger(
             }
         )
 
-    trigger_data = automation_info["trigger_data"]
+    trigger_data = trigger_info["trigger_data"]
 
     unsubs = []
 
@@ -72,10 +90,12 @@ async def async_attach_trigger(
             "description": f"webostv turn on trigger for {device_name}",
         }
 
-        client_wrapper = async_get_client_wrapper_by_device_entry(hass, device)
+        turn_on_trigger = async_get_turn_on_trigger(device_id)
 
         unsubs.append(
-            client_wrapper.turn_on.async_attach(action, {"trigger": variables})
+            PluggableAction.async_attach_trigger(
+                hass, turn_on_trigger, action, {"trigger": variables}
+            )
         )
 
     @callback

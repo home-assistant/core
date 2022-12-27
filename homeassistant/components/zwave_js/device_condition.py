@@ -126,13 +126,16 @@ async def async_get_conditions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device conditions for Z-Wave JS devices."""
-    conditions = []
+    conditions: list[dict] = []
     base_condition = {
         CONF_CONDITION: "device",
         CONF_DEVICE_ID: device_id,
         CONF_DOMAIN: DOMAIN,
     }
     node = async_get_node_from_device_id(hass, device_id)
+
+    if node.client.driver and node.client.driver.controller.own_node_id == node.node_id:
+        return conditions
 
     # Any value's value condition
     conditions.append({**base_condition, CONF_TYPE: VALUE_TYPE})
@@ -196,7 +199,6 @@ def async_condition_from_config(
     raise HomeAssistantError(f"Unhandled condition type {condition_type}")
 
 
-@callback
 async def async_get_condition_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:

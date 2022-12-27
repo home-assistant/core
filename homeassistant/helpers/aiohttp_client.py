@@ -7,7 +7,7 @@ from contextlib import suppress
 from ssl import SSLContext
 import sys
 from types import MappingProxyType
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import aiohttp
 from aiohttp import web
@@ -16,23 +16,40 @@ from aiohttp.web_exceptions import HTTPBadGateway, HTTPGatewayTimeout
 import async_timeout
 
 from homeassistant import config_entries
-from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, __version__
+from homeassistant.const import APPLICATION_NAME, EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.loader import bind_hass
 from homeassistant.util import ssl as ssl_util
 
 from .frame import warn_use
-from .json import json_dumps
+from .json import json_dumps, json_loads
+
+if TYPE_CHECKING:
+    from aiohttp.typedefs import JSONDecoder
+
 
 DATA_CONNECTOR = "aiohttp_connector"
 DATA_CONNECTOR_NOTVERIFY = "aiohttp_connector_notverify"
 DATA_CLIENTSESSION = "aiohttp_clientsession"
 DATA_CLIENTSESSION_NOTVERIFY = "aiohttp_clientsession_notverify"
-SERVER_SOFTWARE = "HomeAssistant/{0} aiohttp/{1} Python/{2[0]}.{2[1]}".format(
-    __version__, aiohttp.__version__, sys.version_info
+SERVER_SOFTWARE = "{0}/{1} aiohttp/{2} Python/{3[0]}.{3[1]}".format(
+    APPLICATION_NAME, __version__, aiohttp.__version__, sys.version_info
 )
 
 WARN_CLOSE_MSG = "closes the Home Assistant aiohttp session"
+
+
+class HassClientResponse(aiohttp.ClientResponse):
+    """aiohttp.ClientResponse with a json method that uses json_loads by default."""
+
+    async def json(
+        self,
+        *args: Any,
+        loads: JSONDecoder = json_loads,
+        **kwargs: Any,
+    ) -> Any:
+        """Send a json request and parse the json response."""
+        return await super().json(*args, loads=loads, **kwargs)
 
 
 @callback
@@ -99,6 +116,7 @@ def _async_create_clientsession(
     clientsession = aiohttp.ClientSession(
         connector=_async_get_connector(hass, verify_ssl),
         json_serialize=json_dumps,
+        response_class=HassClientResponse,
         **kwargs,
     )
     # Prevent packages accidentally overriding our default headers

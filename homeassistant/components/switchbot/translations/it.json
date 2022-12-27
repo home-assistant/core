@@ -11,15 +11,21 @@
             "one": "Vuoto",
             "other": "Vuoti"
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({address})",
         "step": {
-            "user": {
+            "confirm": {
+                "description": "Vuoi configurare {name}?"
+            },
+            "password": {
                 "data": {
-                    "mac": "Indirizzo MAC del dispositivo",
-                    "name": "Nome",
                     "password": "Password"
                 },
-                "title": "Imposta il dispositivo Switchbot"
+                "description": "Il dispositivo {name} richiede una password"
+            },
+            "user": {
+                "data": {
+                    "address": "Indirizzo del dispositivo"
+                }
             }
         }
     },
@@ -27,10 +33,7 @@
         "step": {
             "init": {
                 "data": {
-                    "retry_count": "Conteggio dei tentativi di ripetizione",
-                    "retry_timeout": "Tempo scaduto tra i tentativi",
-                    "scan_timeout": "Per quanto tempo eseguire la scansione dei dati pubblicitari",
-                    "update_time": "Tempo tra gli aggiornamenti (secondi)"
+                    "retry_count": "Conteggio dei tentativi di ripetizione"
                 }
             }
         }

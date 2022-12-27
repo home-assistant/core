@@ -7,15 +7,21 @@
             "switchbot_unsupported_type": "Tipus de Switchbot no compatible.",
             "unknown": "Error inesperat"
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({address})",
         "step": {
-            "user": {
+            "confirm": {
+                "description": "Vols configurar {name}?"
+            },
+            "password": {
                 "data": {
-                    "mac": "Adre\u00e7a MAC del dispositiu",
-                    "name": "Nom",
                     "password": "Contrasenya"
                 },
-                "title": "Configuraci\u00f3 de dispositiu Switchbot"
+                "description": "El dispositiu {name} necessita una contrasenya"
+            },
+            "user": {
+                "data": {
+                    "address": "Adre\u00e7a del dispositiu"
+                }
             }
         }
     },
@@ -23,10 +29,7 @@
         "step": {
             "init": {
                 "data": {
-                    "retry_count": "Nombre de reintents",
-                    "retry_timeout": "Temps d'espera entre reintents",
-                    "scan_timeout": "Quant de temps s'ha d'escanejar en busca de dades d'alerta",
-                    "update_time": "Temps entre actualitzacions (segons)"
+                    "retry_count": "Nombre de reintents"
                 }
             }
         }

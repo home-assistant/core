@@ -39,6 +39,12 @@
                 },
                 "title": "Herkomst kiezen"
             },
+            "origin_menu": {
+                "menu_options": {
+                    "origin_coordinates": "Een kaartlocatie gebruiken",
+                    "origin_entity": "Een entiteit gebruiken"
+                }
+            },
             "user": {
                 "data": {
                     "api_key": "API-sleutel",

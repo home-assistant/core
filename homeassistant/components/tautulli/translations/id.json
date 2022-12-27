@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "reauth_successful": "Autentikasi ulang berhasil",
-            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
+            "already_configured": "Layanan sudah dikonfigurasi",
+            "reauth_successful": "Autentikasi ulang berhasil"
         },
         "error": {
             "cannot_connect": "Gagal terhubung",

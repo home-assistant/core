@@ -15,7 +15,7 @@
                     "port": "Porto",
                     "site": "Site ID",
                     "username": "Nome do utilizador",
-                    "verify_ssl": "Controlador com certificados adequados"
+                    "verify_ssl": "Verificar o certificado SSL"
                 },
                 "title": "Configurar o controlador UniFi"
             }

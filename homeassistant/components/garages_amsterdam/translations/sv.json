@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "cannot_connect": "Det gick inte att ansluta.",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "garage_name": "Garagenamn"
+                },
+                "title": "V\u00e4lj ett garage att \u00f6vervaka"
+            }
+        }
+    },
+    "title": "Garage Amsterdam"
+}

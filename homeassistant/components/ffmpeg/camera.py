@@ -1,6 +1,7 @@
 """Support for Cameras with FFmpeg as decoder."""
 from __future__ import annotations
 
+from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
 from haffmpeg.tools import IMAGE_JPEG
 import voluptuous as vol
@@ -66,7 +67,9 @@ class FFmpegCamera(Camera):
             extra_cmd=self._extra_arguments,
         )
 
-    async def handle_async_mjpeg_stream(self, request):
+    async def handle_async_mjpeg_stream(
+        self, request: web.Request
+    ) -> web.StreamResponse:
         """Generate an HTTP MJPEG stream from the camera."""
 
         stream = CameraMjpeg(self._manager.binary)

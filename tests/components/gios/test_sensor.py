@@ -28,8 +28,9 @@ from homeassistant.const import (
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
+from . import init_integration
+
 from tests.common import async_fire_time_changed, load_fixture
-from tests.components.gios import init_integration
 
 
 async def test_sensor(hass):
@@ -59,7 +60,7 @@ async def test_sensor(hass):
     assert state.state == "252"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.CO
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)

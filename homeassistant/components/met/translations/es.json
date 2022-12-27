@@ -9,12 +9,12 @@
         "step": {
             "user": {
                 "data": {
-                    "elevation": "Altitud",
+                    "elevation": "Elevaci\u00f3n",
                     "latitude": "Latitud",
                     "longitude": "Longitud",
                     "name": "Nombre"
                 },
-                "description": "Instituto de meteorolog\u00eda",
+                "description": "Meteorologisk institutt",
                 "title": "Ubicaci\u00f3n"
             }
         }

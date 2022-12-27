@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 import json
+from typing import NamedTuple
 from unittest.mock import Mock, patch
 
 import pytest
@@ -13,8 +14,9 @@ from homeassistant.const import (
 from homeassistant.core import CoreState
 from homeassistant.helpers import storage
 from homeassistant.util import dt
+from homeassistant.util.color import RGBColor
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, async_test_home_assistant
 
 MOCK_VERSION = 1
 MOCK_VERSION_2 = 2
@@ -392,13 +394,13 @@ async def test_migration(hass, hass_storage, store_v_1_2):
     }
     assert calls == 0
 
-    legacy_store = CustomStore(hass, 2, store_v_1_2.key, minor_version=1)
-    data = await legacy_store.async_load()
+    custom_store = CustomStore(hass, 2, store_v_1_2.key, minor_version=1)
+    data = await custom_store.async_load()
     assert calls == 1
     assert hass_storage[store_v_1_2.key]["data"] == data
 
-    await legacy_store.async_save(MOCK_DATA)
-    assert hass_storage[legacy_store.key] == {
+    # Assert the migrated data has been saved
+    assert hass_storage[custom_store.key] == {
         "key": MOCK_KEY,
         "version": 2,
         "minor_version": 1,
@@ -431,7 +433,7 @@ async def test_legacy_migration(hass, hass_storage, store_v_1_2):
     assert calls == 1
     assert hass_storage[store_v_1_2.key]["data"] == data
 
-    await legacy_store.async_save(MOCK_DATA)
+    # Assert the migrated data has been saved
     assert hass_storage[legacy_store.key] == {
         "key": MOCK_KEY,
         "version": 2,
@@ -460,3 +462,47 @@ async def test_changing_delayed_written_data(hass, store, hass_storage):
         "key": MOCK_KEY,
         "data": {"hello": "world"},
     }
+
+
+async def test_saving_load_round_trip(tmpdir):
+    """Test saving and loading round trip."""
+    loop = asyncio.get_running_loop()
+    hass = await async_test_home_assistant(loop)
+
+    hass.config.config_dir = await hass.async_add_executor_job(
+        tmpdir.mkdir, "temp_storage"
+    )
+
+    class NamedTupleSubclass(NamedTuple):
+        """A NamedTuple subclass."""
+
+        name: str
+
+    nts = NamedTupleSubclass("a")
+
+    data = {
+        "named_tuple_subclass": nts,
+        "rgb_color": RGBColor(255, 255, 0),
+        "set": {1, 2, 3},
+        "list": [1, 2, 3],
+        "tuple": (1, 2, 3),
+        "dict_with_int": {1: 1, 2: 2},
+        "dict_with_named_tuple": {1: nts, 2: nts},
+    }
+
+    store = storage.Store(
+        hass, MOCK_VERSION_2, MOCK_KEY, minor_version=MOCK_MINOR_VERSION_1
+    )
+    await store.async_save(data)
+    load = await store.async_load()
+    assert load == {
+        "dict_with_int": {"1": 1, "2": 2},
+        "dict_with_named_tuple": {"1": ["a"], "2": ["a"]},
+        "list": [1, 2, 3],
+        "named_tuple_subclass": ["a"],
+        "rgb_color": [255, 255, 0],
+        "set": [1, 2, 3],
+        "tuple": [1, 2, 3],
+    }
+
+    await hass.async_stop(force=True)

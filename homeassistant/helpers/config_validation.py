@@ -63,14 +63,14 @@ from homeassistant.const import (
     CONF_SCENE,
     CONF_SEQUENCE,
     CONF_SERVICE,
+    CONF_SERVICE_DATA,
+    CONF_SERVICE_DATA_TEMPLATE,
     CONF_SERVICE_TEMPLATE,
     CONF_STATE,
     CONF_STOP,
     CONF_TARGET,
     CONF_THEN,
     CONF_TIMEOUT,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC,
     CONF_UNTIL,
     CONF_VALUE_TEMPLATE,
     CONF_VARIABLES,
@@ -82,12 +82,14 @@ from homeassistant.const import (
     ENTITY_MATCH_NONE,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
     WEEKDAYS,
+    UnitOfTemperature,
 )
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
+from homeassistant.generated import currencies
+from homeassistant.generated.countries import COUNTRIES
+from homeassistant.generated.languages import LANGUAGES
 from homeassistant.util import raise_if_invalid_path, slugify as util_slugify
 import homeassistant.util.dt as dt_util
 
@@ -576,19 +578,14 @@ def string_with_no_html(value: Any) -> str:
     return str(value)
 
 
-def temperature_unit(value: Any) -> str:
+def temperature_unit(value: Any) -> UnitOfTemperature:
     """Validate and transform temperature unit."""
     value = str(value).upper()
     if value == "C":
-        return TEMP_CELSIUS
+        return UnitOfTemperature.CELSIUS
     if value == "F":
-        return TEMP_FAHRENHEIT
+        return UnitOfTemperature.FAHRENHEIT
     raise vol.Invalid("invalid temperature unit (expected C or F)")
-
-
-unit_system = vol.All(
-    vol.Lower, vol.Any(CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL)
-)
 
 
 def template(value: Any | None) -> template_helper.Template:
@@ -598,7 +595,7 @@ def template(value: Any | None) -> template_helper.Template:
     if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid("template value should be a string")
 
-    template_value = template_helper.Template(str(value))  # type: ignore[no-untyped-call]
+    template_value = template_helper.Template(str(value))
 
     try:
         template_value.ensure_valid()
@@ -616,7 +613,7 @@ def dynamic_template(value: Any | None) -> template_helper.Template:
     if not template_helper.is_template_string(str(value)):
         raise vol.Invalid("template value does not contain a dynamic template")
 
-    template_value = template_helper.Template(str(value))  # type: ignore[no-untyped-call]
+    template_value = template_helper.Template(str(value))
     try:
         template_value.ensure_valid()
         return template_value
@@ -918,9 +915,9 @@ def key_value_schemas(
             with contextlib.suppress(vol.Invalid):
                 return cast(dict[Hashable, Any], default_schema(value))
 
-        alternatives = ", ".join(str(key) for key in value_schemas)
+        alternatives = ", ".join(str(alternative) for alternative in value_schemas)
         if default_description:
-            alternatives += ", " + default_description
+            alternatives = f"{alternatives}, {default_description}"
         raise vol.Invalid(
             f"Unexpected value for {key}: '{key_value}'. Expected {alternatives}"
         )
@@ -1119,8 +1116,10 @@ SERVICE_SCHEMA = vol.All(
             vol.Exclusive(CONF_SERVICE_TEMPLATE, "service name"): vol.Any(
                 service, dynamic_template
             ),
-            vol.Optional("data"): vol.Any(template, vol.All(dict, template_complex)),
-            vol.Optional("data_template"): vol.Any(
+            vol.Optional(CONF_SERVICE_DATA): vol.Any(
+                template, vol.All(dict, template_complex)
+            ),
+            vol.Optional(CONF_SERVICE_DATA_TEMPLATE): vol.Any(
                 template, vol.All(dict, template_complex)
             ),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
@@ -1425,6 +1424,7 @@ CONDITION_ACTION_SCHEMA: vol.Schema = vol.Schema(
 
 TRIGGER_BASE_SCHEMA = vol.Schema(
     {
+        vol.Optional(CONF_ALIAS): str,
         vol.Required(CONF_PLATFORM): str,
         vol.Optional(CONF_ID): str,
         vol.Optional(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,
@@ -1656,167 +1656,14 @@ ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
 }
 
 
-# Validate currencies adopted by countries
 currency = vol.In(
-    {
-        "AED",
-        "AFN",
-        "ALL",
-        "AMD",
-        "ANG",
-        "AOA",
-        "ARS",
-        "AUD",
-        "AWG",
-        "AZN",
-        "BAM",
-        "BBD",
-        "BDT",
-        "BGN",
-        "BHD",
-        "BIF",
-        "BMD",
-        "BND",
-        "BOB",
-        "BRL",
-        "BSD",
-        "BTN",
-        "BWP",
-        "BYN",
-        "BYR",
-        "BZD",
-        "CAD",
-        "CDF",
-        "CHF",
-        "CLP",
-        "CNY",
-        "COP",
-        "CRC",
-        "CUP",
-        "CVE",
-        "CZK",
-        "DJF",
-        "DKK",
-        "DOP",
-        "DZD",
-        "EGP",
-        "ERN",
-        "ETB",
-        "EUR",
-        "FJD",
-        "FKP",
-        "GBP",
-        "GEL",
-        "GHS",
-        "GIP",
-        "GMD",
-        "GNF",
-        "GTQ",
-        "GYD",
-        "HKD",
-        "HNL",
-        "HRK",
-        "HTG",
-        "HUF",
-        "IDR",
-        "ILS",
-        "INR",
-        "IQD",
-        "IRR",
-        "ISK",
-        "JMD",
-        "JOD",
-        "JPY",
-        "KES",
-        "KGS",
-        "KHR",
-        "KMF",
-        "KPW",
-        "KRW",
-        "KWD",
-        "KYD",
-        "KZT",
-        "LAK",
-        "LBP",
-        "LKR",
-        "LRD",
-        "LSL",
-        "LTL",
-        "LYD",
-        "MAD",
-        "MDL",
-        "MGA",
-        "MKD",
-        "MMK",
-        "MNT",
-        "MOP",
-        "MRO",
-        "MUR",
-        "MVR",
-        "MWK",
-        "MXN",
-        "MYR",
-        "MZN",
-        "NAD",
-        "NGN",
-        "NIO",
-        "NOK",
-        "NPR",
-        "NZD",
-        "OMR",
-        "PAB",
-        "PEN",
-        "PGK",
-        "PHP",
-        "PKR",
-        "PLN",
-        "PYG",
-        "QAR",
-        "RON",
-        "RSD",
-        "RUB",
-        "RWF",
-        "SAR",
-        "SBD",
-        "SCR",
-        "SDG",
-        "SEK",
-        "SGD",
-        "SHP",
-        "SLL",
-        "SOS",
-        "SRD",
-        "SSP",
-        "STD",
-        "SYP",
-        "SZL",
-        "THB",
-        "TJS",
-        "TMT",
-        "TND",
-        "TOP",
-        "TRY",
-        "TTD",
-        "TWD",
-        "TZS",
-        "UAH",
-        "UGX",
-        "USD",
-        "UYU",
-        "UZS",
-        "VEF",
-        "VND",
-        "VUV",
-        "WST",
-        "XAF",
-        "XCD",
-        "XOF",
-        "XPF",
-        "YER",
-        "ZAR",
-        "ZMK",
-        "ZMW",
-        "ZWL",
-    },
-    msg="invalid ISO 4217 formatted currency",
+    currencies.ACTIVE_CURRENCIES, msg="invalid ISO 4217 formatted currency"
 )
+
+historic_currency = vol.In(
+    currencies.HISTORIC_CURRENCIES, msg="invalid ISO 4217 formatted historic currency"
+)
+
+country = vol.In(COUNTRIES, msg="invalid ISO 3166 formatted country")
+
+language = vol.In(LANGUAGES, msg="invalid RFC 5646 formatted language")

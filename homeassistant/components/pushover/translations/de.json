@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Der Dienst ist bereits konfiguriert",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_api_key": "Ung\u00fcltiger API-Schl\u00fcssel",
+            "invalid_user_key": "Ung\u00fcltiger Benutzerschl\u00fcssel"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel"
+                },
+                "title": "Integration erneut authentifizieren"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel",
+                    "name": "Name",
+                    "user_key": "Benutzerschl\u00fcssel"
+                }
+            }
+        }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "Das Konfigurieren von Pushover mit YAML wurde entfernt. \n\nDeine vorhandene YAML-Konfiguration wird von Home Assistant nicht verwendet. \n\nEntferne die Pushover-YAML-Konfiguration aus deiner configuration.yaml-Datei und starte Home Assistant neu, um dieses Problem zu beheben.",
+            "title": "Die Pushover YAML-Konfiguration wurde entfernt"
+        }
+    }
+}

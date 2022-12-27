@@ -1,0 +1,28 @@
+{
+    "config": {
+        "error": {
+            "api_ratelimit": "Limite de taxa da API excedido",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida"
+        },
+        "step": {
+            "coordinates": {
+                "data": {
+                    "latitude": "Latitude",
+                    "longitude": "Longitude"
+                }
+            },
+            "country": {
+                "data": {
+                    "country_code": "C\u00f3digo do Pa\u00eds"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "Token de Acesso",
+                    "location": "Obter dados para"
+                },
+                "description": "Visite https://co2signal.com/ para solicitar um token."
+            }
+        }
+    }
+}

@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "integrations_diabled": "Denne enheten har ikke integrasjoner aktivert. Aktiver smarthus-integrasjoner ved hjelp av appen og pr\u00f8v igjen.",
+            "no_devices_found": "Fant ingen ukonfigurerte Aranet-enheter.",
+            "outdated_version": "Denne enheten bruker utdatert fastvare. Oppdater den til minst v1.2.0 og pr\u00f8v igjen."
+        },
+        "error": {
+            "unknown": "Uventet feil"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Vil du sette opp {name} ?"
+            },
+            "user": {
+                "data": {
+                    "address": "Enhet"
+                },
+                "description": "Velg en enhet du vil konfigurere"
+            }
+        }
+    }
+}

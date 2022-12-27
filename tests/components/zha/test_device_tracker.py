@@ -7,7 +7,7 @@ import pytest
 import zigpy.profiles.zha
 import zigpy.zcl.clusters.general as general
 
-from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
+from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.zha.core.registries import (
     SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE,
 )
@@ -101,7 +101,7 @@ async def test_device_tracker(hass, zha_device_joined_restored, zigpy_device_dt)
     entity = hass.data[Platform.DEVICE_TRACKER].get_entity(entity_id)
 
     assert entity.is_connected is True
-    assert entity.source_type == SOURCE_TYPE_ROUTER
+    assert entity.source_type == SourceType.ROUTER
     assert entity.battery_level == 100
 
     # test adding device tracker to the network and HA

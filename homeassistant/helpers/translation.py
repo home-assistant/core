@@ -9,13 +9,11 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import (
-    MAX_LOAD_CONCURRENTLY,
     Integration,
     async_get_config_flows,
-    async_get_integration,
+    async_get_integrations,
     bind_hass,
 )
-from homeassistant.util.async_ import gather_with_concurrency
 from homeassistant.util.json import load_json
 
 _LOGGER = logging.getLogger(__name__)
@@ -99,10 +97,7 @@ def _merge_resources(
     # Build response
     resources: dict[str, dict[str, Any]] = {}
     for component in components:
-        if "." not in component:
-            domain = component
-        else:
-            domain = component.split(".", 1)[0]
+        domain = component.partition(".")[0]
 
         domain_resources = resources.setdefault(domain, {})
 
@@ -123,7 +118,10 @@ def _merge_resources(
             domain_resources.update(new_value)
         else:
             _LOGGER.error(
-                "An integration providing translations for %s provided invalid data: %s",
+                (
+                    "An integration providing translations for %s provided invalid"
+                    " data: %s"
+                ),
                 domain,
                 new_value,
             )
@@ -150,17 +148,14 @@ async def async_get_component_strings(
     hass: HomeAssistant, language: str, components: set[str]
 ) -> dict[str, Any]:
     """Load translations."""
-    domains = list({loaded.split(".")[-1] for loaded in components})
-    integrations = dict(
-        zip(
-            domains,
-            await gather_with_concurrency(
-                MAX_LOAD_CONCURRENTLY,
-                *(async_get_integration(hass, domain) for domain in domains),
-            ),
-        )
-    )
+    domains = list({loaded.rpartition(".")[-1] for loaded in components})
 
+    integrations: dict[str, Integration] = {}
+    ints_or_excs = await async_get_integrations(hass, domains)
+    for domain, int_or_exc in ints_or_excs.items():
+        if isinstance(int_or_exc, Exception):
+            raise int_or_exc
+        integrations[domain] = int_or_exc
     translations: dict[str, Any] = {}
 
     # Determine paths of missing components/platforms

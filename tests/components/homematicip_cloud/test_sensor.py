@@ -193,6 +193,50 @@ async def test_hmip_temperature_sensor3(hass, default_mock_hap_factory):
     assert ha_state.attributes[ATTR_TEMPERATURE_OFFSET] == 10
 
 
+async def test_hmip_thermostat_evo_heating(hass, default_mock_hap_factory):
+    """Test HomematicipHeatingThermostat for HmIP-eTRV-E."""
+    entity_id = "sensor.thermostat_evo_heating"
+    entity_name = "thermostat_evo Heating"
+    device_model = "HmIP-eTRV-E"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["thermostat_evo"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == "33"
+    await async_manipulate_test_data(hass, hmip_device, "valvePosition", 0.4)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert ha_state.state == "40"
+
+
+async def test_hmip_thermostat_evo_temperature(hass, default_mock_hap_factory):
+    """Test HomematicipTemperatureSensor."""
+    entity_id = "sensor.thermostat_evo_temperature"
+    entity_name = "thermostat_evo Temperature"
+    device_model = "HmIP-eTRV-E"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["thermostat_evo"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == "18.7"
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    await async_manipulate_test_data(hass, hmip_device, "valveActualTemperature", 23.5)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == "23.5"
+
+    await async_manipulate_test_data(hass, hmip_device, "temperatureOffset", 0.7)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.attributes[ATTR_TEMPERATURE_OFFSET] == 0.7
+
+
 async def test_hmip_power_sensor(hass, default_mock_hap_factory):
     """Test HomematicipPowerSensor."""
     entity_id = "sensor.flur_oben_power"
@@ -338,6 +382,81 @@ async def test_hmip_today_rain_sensor(hass, default_mock_hap_factory):
     await async_manipulate_test_data(hass, hmip_device, "todayRainCounter", 14.2)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "14.2"
+
+
+async def test_hmip_temperature_external_sensor_channel_1(
+    hass, default_mock_hap_factory
+):
+    """Test HomematicipTemperatureDifferenceSensor Channel 1 HmIP-STE2-PCB."""
+    entity_id = "sensor.ste2_channel_1_temperature"
+    entity_name = "STE2 Channel 1 Temperature"
+    device_model = "HmIP-STE2-PCB"
+
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(test_devices=["STE2"])
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    hmip_device = mock_hap.hmip_device_by_entity_id.get(entity_id)
+
+    await async_manipulate_test_data(hass, hmip_device, "temperatureExternalOne", 25.4)
+
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == "25.4"
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    await async_manipulate_test_data(hass, hmip_device, "temperatureExternalOne", 23.5)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == "23.5"
+
+
+async def test_hmip_temperature_external_sensor_channel_2(
+    hass, default_mock_hap_factory
+):
+    """Test HomematicipTemperatureDifferenceSensor Channel 2 HmIP-STE2-PCB."""
+    entity_id = "sensor.ste2_channel_2_temperature"
+    entity_name = "STE2 Channel 2 Temperature"
+    device_model = "HmIP-STE2-PCB"
+
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(test_devices=["STE2"])
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    hmip_device = mock_hap.hmip_device_by_entity_id.get(entity_id)
+
+    await async_manipulate_test_data(hass, hmip_device, "temperatureExternalTwo", 22.4)
+
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == "22.4"
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    await async_manipulate_test_data(hass, hmip_device, "temperatureExternalTwo", 23.4)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == "23.4"
+
+
+async def test_hmip_temperature_external_sensor_delta(hass, default_mock_hap_factory):
+    """Test HomematicipTemperatureDifferenceSensor Delta HmIP-STE2-PCB."""
+    entity_id = "sensor.ste2_delta_temperature"
+    entity_name = "STE2 Delta Temperature"
+    device_model = "HmIP-STE2-PCB"
+
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(test_devices=["STE2"])
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    hmip_device = mock_hap.hmip_device_by_entity_id.get(entity_id)
+
+    await async_manipulate_test_data(hass, hmip_device, "temperatureExternalDelta", 0.4)
+
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == "0.4"
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    await async_manipulate_test_data(
+        hass, hmip_device, "temperatureExternalDelta", -0.5
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == "-0.5"
 
 
 async def test_hmip_passage_detector_delta_counter(hass, default_mock_hap_factory):

@@ -89,7 +89,7 @@ class ImapSensor(SensorEntity):
         self._does_push = None
         self._idle_loop_task = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle when an entity is about to be added to Home Assistant."""
         if not self.should_poll:
             self._idle_loop_task = self.hass.loop.create_task(self.idle_loop())
@@ -110,12 +110,12 @@ class ImapSensor(SensorEntity):
         return self._email_count
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return the availability of the device."""
         return self._connection is not None
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """Return if polling is needed."""
         return not self._does_push
 
@@ -151,7 +151,7 @@ class ImapSensor(SensorEntity):
             except (AioImapException, asyncio.TimeoutError):
                 self.disconnected()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Periodic polling of state."""
         try:
             if await self.connection():

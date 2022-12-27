@@ -2,10 +2,34 @@
 import pytest
 
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, TEMP_KELVIN
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.temperature as temperature_util
 
 INVALID_SYMBOL = "bob"
 VALID_SYMBOL = TEMP_CELSIUS
+
+
+def test_raise_deprecation_warning(caplog: pytest.LogCaptureFixture) -> None:
+    """Ensure that a warning is raised on use of convert."""
+    assert temperature_util.convert(2, TEMP_CELSIUS, TEMP_CELSIUS) == 2
+    assert "use unit_conversion.TemperatureConverter instead" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "function_name, value, expected",
+    [
+        ("fahrenheit_to_celsius", 75.2, 24),
+        ("kelvin_to_celsius", 297.65, 24.5),
+        ("celsius_to_fahrenheit", 23, 73.4),
+        ("celsius_to_kelvin", 23, 296.15),
+    ],
+)
+def test_deprecated_functions(
+    function_name: str, value: float, expected: float
+) -> None:
+    """Test that deprecated function still work."""
+    convert = getattr(temperature_util, function_name)
+    assert convert(value) == expected
 
 
 def test_convert_same_unit():
@@ -17,10 +41,10 @@ def test_convert_same_unit():
 
 def test_convert_invalid_unit():
     """Test exception is thrown for invalid units."""
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         temperature_util.convert(5, INVALID_SYMBOL, VALID_SYMBOL)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         temperature_util.convert(5, VALID_SYMBOL, INVALID_SYMBOL)
 
 

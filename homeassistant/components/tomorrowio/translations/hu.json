@@ -3,7 +3,7 @@
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "invalid_api_key": "\u00c9rv\u00e9nytelen API kulcs",
-            "rate_limited": "Jelenleg korl\u00e1tozott a hozz\u00e1f\u00e9r\u00e9s, k\u00e9rj\u00fck, pr\u00f3b\u00e1lja meg k\u00e9s\u0151bb \u00fajra.",
+            "rate_limited": "Jelenleg korl\u00e1tozott a hozz\u00e1f\u00e9r\u00e9s, k\u00e9rem, pr\u00f3b\u00e1lja meg k\u00e9s\u0151bb \u00fajra.",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "step": {
@@ -14,6 +14,39 @@
                     "name": "Elnevez\u00e9s"
                 },
                 "description": "API-kulcs beszerz\u00e9s\u00e9hez regisztr\u00e1ljon a [Tomorrow.io] (https://app.tomorrow.io/signup) oldalon."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "health_concern": {
+                "state": {
+                    "good": "J\u00f3",
+                    "hazardous": "Vesz\u00e9lyes",
+                    "moderate": "M\u00e9rs\u00e9kelt",
+                    "unhealthy": "Eg\u00e9szs\u00e9gtelen",
+                    "unhealthy_for_sensitive_groups": "Eg\u00e9szs\u00e9gtelen \u00e9rz\u00e9keny csoportok sz\u00e1m\u00e1ra",
+                    "very_unhealthy": "Nagyon eg\u00e9szs\u00e9gtelen"
+                }
+            },
+            "pollen_index": {
+                "state": {
+                    "high": "Magas",
+                    "low": "Alacsony",
+                    "medium": "K\u00f6zepes",
+                    "none": "Nincs",
+                    "very_high": "Nagyon magas",
+                    "very_low": "Nagyon alacsony"
+                }
+            },
+            "precipitation_type": {
+                "state": {
+                    "freezing_rain": "Havas es\u0151",
+                    "ice_pellets": "\u00d3nos es\u0151",
+                    "none": "Nincs",
+                    "rain": "Es\u0151",
+                    "snow": "Havaz\u00e1s"
+                }
             }
         }
     },

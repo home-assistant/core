@@ -1,5 +1,10 @@
 {
     "config": {
+        "error": {
+            "invalid_api_token": "Vigane API v\u00f5ti",
+            "no_site": "Saiti pole pakutud",
+            "unknown_error": "Ootamatu t\u00f5rge"
+        },
         "step": {
             "site": {
                 "data": {

@@ -6,6 +6,7 @@ from typing import cast
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_NATIVE_PRECIPITATION,
+    ATTR_FORECAST_NATIVE_PRESSURE,
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_TEMP_LOW,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
@@ -17,10 +18,10 @@ from homeassistant.components.weather import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    LENGTH_MILLIMETERS,
-    PRESSURE_HPA,
-    SPEED_METERS_PER_SECOND,
-    TEMP_CELSIUS,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -33,6 +34,7 @@ from .const import (
     ATTR_API_FORECAST_CONDITION,
     ATTR_API_FORECAST_PRECIPITATION,
     ATTR_API_FORECAST_PRECIPITATION_PROBABILITY,
+    ATTR_API_FORECAST_PRESSURE,
     ATTR_API_FORECAST_TEMP,
     ATTR_API_FORECAST_TEMP_LOW,
     ATTR_API_FORECAST_TIME,
@@ -56,6 +58,7 @@ FORECAST_MAP = {
     ATTR_API_FORECAST_CONDITION: ATTR_FORECAST_CONDITION,
     ATTR_API_FORECAST_PRECIPITATION: ATTR_FORECAST_NATIVE_PRECIPITATION,
     ATTR_API_FORECAST_PRECIPITATION_PROBABILITY: ATTR_FORECAST_PRECIPITATION_PROBABILITY,
+    ATTR_API_FORECAST_PRESSURE: ATTR_FORECAST_NATIVE_PRESSURE,
     ATTR_API_FORECAST_TEMP_LOW: ATTR_FORECAST_NATIVE_TEMP_LOW,
     ATTR_API_FORECAST_TEMP: ATTR_FORECAST_NATIVE_TEMP,
     ATTR_API_FORECAST_TIME: ATTR_FORECAST_TIME,
@@ -86,10 +89,10 @@ class OpenWeatherMapWeather(WeatherEntity):
     _attr_attribution = ATTRIBUTION
     _attr_should_poll = False
 
-    _attr_native_precipitation_unit = LENGTH_MILLIMETERS
-    _attr_native_pressure_unit = PRESSURE_HPA
-    _attr_native_temperature_unit = TEMP_CELSIUS
-    _attr_native_wind_speed_unit = SPEED_METERS_PER_SECOND
+    _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
+    _attr_native_pressure_unit = UnitOfPressure.HPA
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
 
     def __init__(
         self,

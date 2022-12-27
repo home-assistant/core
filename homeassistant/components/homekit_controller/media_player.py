@@ -16,27 +16,24 @@ from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    STATE_IDLE,
-    STATE_OK,
-    STATE_PAUSED,
-    STATE_PLAYING,
-    STATE_PROBLEM,
-)
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import KNOWN_DEVICES, HomeKitEntity
+from . import KNOWN_DEVICES
+from .connection import HKDevice
+from .entity import HomeKitEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
 HK_TO_HA_STATE = {
-    CurrentMediaStateValues.PLAYING: STATE_PLAYING,
-    CurrentMediaStateValues.PAUSED: STATE_PAUSED,
-    CurrentMediaStateValues.STOPPED: STATE_IDLE,
+    CurrentMediaStateValues.PLAYING: MediaPlayerState.PLAYING,
+    CurrentMediaStateValues.PAUSED: MediaPlayerState.PAUSED,
+    CurrentMediaStateValues.STOPPED: MediaPlayerState.IDLE,
 }
 
 
@@ -46,15 +43,19 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Homekit television."""
-    hkid = config_entry.data["AccessoryPairingID"]
-    conn = hass.data[KNOWN_DEVICES][hkid]
+    hkid: str = config_entry.data["AccessoryPairingID"]
+    conn: HKDevice = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
     def async_add_service(service: Service) -> bool:
         if service.type != ServicesTypes.TELEVISION:
             return False
         info = {"aid": service.accessory.aid, "iid": service.iid}
-        async_add_entities([HomeKitTelevision(conn, info)], True)
+        entity = HomeKitTelevision(conn, info)
+        conn.async_migrate_unique_id(
+            entity.old_unique_id, entity.unique_id, Platform.MEDIA_PLAYER
+        )
+        async_add_entities([entity])
         return True
 
     conn.add_listener(async_add_service)
@@ -79,9 +80,9 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerEntity):
         ]
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
-        features = 0
+        features = MediaPlayerEntityFeature(0)
 
         if self.service.has(CharacteristicsTypes.ACTIVE_IDENTIFIER):
             features |= MediaPlayerEntityFeature.SELECT_SOURCE
@@ -162,21 +163,21 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerEntity):
         return char.value
 
     @property
-    def state(self) -> str:
+    def state(self) -> MediaPlayerState:
         """State of the tv."""
         active = self.service.value(CharacteristicsTypes.ACTIVE)
         if not active:
-            return STATE_PROBLEM
+            return MediaPlayerState.OFF
 
         homekit_state = self.service.value(CharacteristicsTypes.CURRENT_MEDIA_STATE)
         if homekit_state is not None:
-            return HK_TO_HA_STATE.get(homekit_state, STATE_OK)
+            return HK_TO_HA_STATE.get(homekit_state, MediaPlayerState.ON)
 
-        return STATE_OK
+        return MediaPlayerState.ON
 
     async def async_media_play(self) -> None:
         """Send play command."""
-        if self.state == STATE_PLAYING:
+        if self.state == MediaPlayerState.PLAYING:
             _LOGGER.debug("Cannot play while already playing")
             return
 
@@ -191,7 +192,7 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerEntity):
 
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        if self.state == STATE_PAUSED:
+        if self.state == MediaPlayerState.PAUSED:
             _LOGGER.debug("Cannot pause while already paused")
             return
 
@@ -206,7 +207,7 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerEntity):
 
     async def async_media_stop(self) -> None:
         """Send stop command."""
-        if self.state == STATE_IDLE:
+        if self.state == MediaPlayerState.IDLE:
             _LOGGER.debug("Cannot stop when already idle")
             return
 

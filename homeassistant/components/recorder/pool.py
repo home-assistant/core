@@ -81,9 +81,11 @@ class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
 
     def _do_get_db_connection_protected(self) -> Any:
         report(
-            "accesses the database without the database executor; "
-            f"{ADVISE_MSG} "
-            "for faster database operations",
+            (
+                "accesses the database without the database executor; "
+                f"{ADVISE_MSG} "
+                "for faster database operations"
+            ),
             exclude_integrations={"recorder"},
             error_if_core=False,
         )
@@ -128,6 +130,7 @@ class MutexPool(StaticPool):  # type: ignore[misc]
 
         if DEBUG_MUTEX_POOL:
             _LOGGER.debug("%s wait conn%s", threading.current_thread().name, trace_msg)
+        # pylint: disable-next=consider-using-with
         got_lock = MutexPool.pool_lock.acquire(timeout=1)
         if not got_lock:
             raise SQLAlchemyError

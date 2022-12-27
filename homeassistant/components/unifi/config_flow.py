@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import socket
+from types import MappingProxyType
 from typing import Any
 from urllib.parse import urlparse
 
@@ -36,17 +37,15 @@ from .const import (
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
-    CONF_POE_CLIENTS,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
     DEFAULT_DPI_RESTRICTIONS,
-    DEFAULT_POE_CLIENTS,
     DOMAIN as UNIFI_DOMAIN,
 )
-from .controller import UniFiController, get_controller
+from .controller import UniFiController, get_unifi_controller
 from .errors import AuthenticationRequired, CannotConnect
 
 DEFAULT_PORT = 443
@@ -99,16 +98,9 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
             }
 
             try:
-                controller = await get_controller(
-                    self.hass,
-                    host=self.config[CONF_HOST],
-                    username=self.config[CONF_USERNAME],
-                    password=self.config[CONF_PASSWORD],
-                    port=self.config[CONF_PORT],
-                    site=self.config[CONF_SITE_ID],
-                    verify_ssl=self.config[CONF_VERIFY_SSL],
+                controller = await get_unifi_controller(
+                    self.hass, MappingProxyType(self.config)
                 )
-
                 sites = await controller.sites()
 
             except AuthenticationRequired:
@@ -402,10 +394,6 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_BLOCK_CLIENT, default=selected_clients_to_block
                     ): cv.multi_select(clients_to_block),
-                    vol.Optional(
-                        CONF_POE_CLIENTS,
-                        default=self.options.get(CONF_POE_CLIENTS, DEFAULT_POE_CLIENTS),
-                    ): bool,
                     vol.Optional(
                         CONF_DPI_RESTRICTIONS,
                         default=self.options.get(

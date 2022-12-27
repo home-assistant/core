@@ -8,7 +8,7 @@ echo '================================================='
 echo '=                FILES CHANGED                  ='
 echo '================================================='
 if [ -z "$files" ] ; then
-  echo "No python file changed. Rather use: tox -e lint\n"
+  echo "No python file changed.\n"
   exit
 fi
 printf "%s\n" $files

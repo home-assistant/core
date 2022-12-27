@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tj\u00e4nsten \u00e4r redan konfigurerad",
+            "cannot_connect": "Det gick inte att ansluta.",
+            "reauth_successful": "\u00c5terautentisering lyckades",
+            "timeout_connect": "Timeout uppr\u00e4ttar anslutning"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_auth": "Ogiltig autentisering",
+            "timeout_connect": "Timeout uppr\u00e4ttar anslutning",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-nyckel",
+                    "base": "Basvaluta"
+                },
+                "data_description": {
+                    "base": "Att anv\u00e4nda en annan basvaluta \u00e4n USD kr\u00e4ver en [betald plan]( {signup} )."
+                }
+            }
+        }
+    }
+}

@@ -1,6 +1,7 @@
 """Provides a light for Home Connect."""
 import logging
 from math import ceil
+from typing import Any
 
 from homeconnect.api import HomeConnectError
 
@@ -92,7 +93,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
         """Return the color property."""
         return self._hs_color
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Switch the light on, change brightness, change color."""
         if self._ambient:
             _LOGGER.debug("Switching ambient light on for: %s", self.name)
@@ -120,7 +121,9 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                     hs_color = kwargs.get(ATTR_HS_COLOR, self._hs_color)
 
                     if hs_color is not None:
-                        rgb = color_util.color_hsv_to_RGB(*hs_color, brightness)
+                        rgb = color_util.color_hsv_to_RGB(
+                            hs_color[0], hs_color[1], brightness
+                        )
                         hex_val = color_util.color_rgb_to_hex(rgb[0], rgb[1], rgb[2])
                         try:
                             await self.hass.async_add_executor_job(
@@ -153,7 +156,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
 
         self.async_entity_update()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Switch the light off."""
         _LOGGER.debug("Switching light off for: %s", self.name)
         try:
@@ -164,7 +167,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
             _LOGGER.error("Error while trying to turn off light: %s", err)
         self.async_entity_update()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the light's status."""
         if self.device.appliance.status.get(self._key, {}).get(ATTR_VALUE) is True:
             self._state = True

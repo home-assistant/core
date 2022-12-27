@@ -3,13 +3,10 @@ import asyncio
 from unittest.mock import ANY, call, patch
 
 import pytest
+from pytest_unordered import unordered
 
 from homeassistant.components import camera
-from homeassistant.components.climate.const import (
-    ATTR_MAX_TEMP,
-    ATTR_MIN_TEMP,
-    HVAC_MODE_HEAT,
-)
+from homeassistant.components.climate import ATTR_MAX_TEMP, ATTR_MIN_TEMP, HVACMode
 from homeassistant.components.demo.binary_sensor import DemoBinarySensor
 from homeassistant.components.demo.cover import DemoCover
 from homeassistant.components.demo.light import LIGHT_EFFECT_LIST, DemoLight
@@ -105,10 +102,21 @@ async def test_async_handle_message(hass):
     await hass.async_block_till_done()
 
 
-async def test_sync_message(hass):
+async def test_sync_message(hass, registries):
     """Test a sync message."""
+    entity = registries.entity.async_get_or_create(
+        "light",
+        "test",
+        "unique-demo-light",
+        suggested_object_id="demo_light",
+    )
+    registries.entity.async_update_entity(
+        entity.entity_id,
+        aliases={"Stay", "Healthy"},
+    )
+
     light = DemoLight(
-        None,
+        "unique-demo-light",
         "Demo Light",
         state=False,
         hs_color=(180, 75),
@@ -154,7 +162,15 @@ async def test_sync_message(hass):
                     "id": "light.demo_light",
                     "name": {
                         "name": "Demo Light",
-                        "nicknames": ["Demo Light", "Hello", "World"],
+                        "nicknames": unordered(
+                            [
+                                "Demo Light",
+                                "Hello",
+                                "World",
+                                "Stay",
+                                "Healthy",
+                            ]
+                        ),
                     },
                     "traits": [
                         trait.TRAIT_BRIGHTNESS,
@@ -185,7 +201,10 @@ async def test_sync_message(hass):
                                     {
                                         "setting_name": "none",
                                         "setting_values": [
-                                            {"lang": "en", "setting_synonym": ["none"]}
+                                            {
+                                                "lang": "en",
+                                                "setting_synonym": ["none"],
+                                            }
                                         ],
                                     },
                                 ],
@@ -232,7 +251,9 @@ async def test_sync_in_area(area_on_device, hass, registries):
         "1235",
         suggested_object_id="demo_light",
         device_id=device.id,
-        area_id=area.id if not area_on_device else None,
+    )
+    entity = registries.entity.async_update_entity(
+        entity.entity_id, area_id=area.id if not area_on_device else None
     )
 
     light = DemoLight(
@@ -381,7 +402,7 @@ async def test_query_message(hass):
         "payload": {
             "devices": {
                 "light.non_existing": {"online": False},
-                "light.demo_light": {"on": False, "online": True, "brightness": 0},
+                "light.demo_light": {"on": False, "online": True},
                 "light.another_light": {
                     "on": True,
                     "online": True,
@@ -725,7 +746,6 @@ async def test_execute_times_out(hass, report_state, on, brightness, value):
                     "states": {
                         "on": on,
                         "online": True,
-                        "brightness": brightness,
                     },
                 },
                 {
@@ -806,7 +826,7 @@ async def test_raising_error_trait(hass):
     """Test raising an error while executing a trait command."""
     hass.states.async_set(
         "climate.bla",
-        HVAC_MODE_HEAT,
+        HVACMode.HEAT,
         {ATTR_MIN_TEMP: 15, ATTR_MAX_TEMP: 30, ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
     )
 

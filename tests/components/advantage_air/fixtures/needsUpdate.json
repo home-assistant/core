@@ -1,0 +1,49 @@
+{
+  "aircons": {
+    "ac1": {
+      "info": {
+        "climateControlModeIsRunning": false,
+        "countDownToOff": 10,
+        "countDownToOn": 0,
+        "fan": "high",
+        "filterCleanStatus": 0,
+        "freshAirStatus": "off",
+        "mode": "vent",
+        "myZone": 1,
+        "name": "AC One",
+        "setTemp": 24,
+        "state": "on"
+      },
+      "zones": {
+        "z01": {
+          "error": 0,
+          "maxDamper": 100,
+          "measuredTemp": 25,
+          "minDamper": 0,
+          "motion": 20,
+          "motionConfig": 2,
+          "name": "Zone open with Sensor",
+          "number": 1,
+          "rssi": 40,
+          "setTemp": 24,
+          "state": "open",
+          "type": 1,
+          "value": 100
+        }
+      }
+    }
+  },
+  "system": {
+    "hasAircons": false,
+    "hasLights": false,
+    "hasSensors": false,
+    "hasThings": false,
+    "hasThingsBOG": false,
+    "hasThingsLight": false,
+    "needsUpdate": true,
+    "name": "testname",
+    "rid": "uniqueid",
+    "sysType": "e-zone",
+    "myAppRev": "1.234"
+  }
+}

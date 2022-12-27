@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "\u00c5terautentisering lyckades",
+            "single_instance_allowed": "Redan konfigurerad. Endast en konfiguration m\u00f6jlig.",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_auth": "Ogiltig autentisering",
+            "invalid_zone": "Ogiltig zon"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_token": "API  Token",
+                    "description": "Autentisera p\u00e5 nytt med ditt Cloudflare-konto."
+                }
+            },
+            "records": {
+                "data": {
+                    "records": "Poster"
+                },
+                "title": "V\u00e4lj de poster som ska uppdateras"
+            },
+            "user": {
+                "data": {
+                    "api_token": "API  Token"
+                },
+                "description": "Den h\u00e4r integrationen kr\u00e4ver en API-token som skapats med beh\u00f6righeter f\u00f6r Zone:Zone:Read och Zone:DNS:Edit f\u00f6r alla zoner i ditt konto.",
+                "title": "Anslut till Cloudflare"
+            },
+            "zone": {
+                "data": {
+                    "zone": "Zon"
+                },
+                "title": "V\u00e4lj den zon som ska uppdateras"
+            }
+        }
+    }
+}

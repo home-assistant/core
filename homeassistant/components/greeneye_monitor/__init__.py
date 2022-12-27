@@ -12,10 +12,8 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_TEMPERATURE_UNIT,
     EVENT_HOMEASSISTANT_STOP,
-    TIME_HOURS,
-    TIME_MINUTES,
-    TIME_SECONDS,
     Platform,
+    UnitOfTime,
 )
 from homeassistant.core import Event, HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -66,8 +64,8 @@ PULSE_COUNTER_SCHEMA = vol.Schema(
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_COUNTED_QUANTITY): cv.string,
         vol.Optional(CONF_COUNTED_QUANTITY_PER_PULSE, default=1.0): vol.Coerce(float),
-        vol.Optional(CONF_TIME_UNIT, default=TIME_SECONDS): vol.Any(
-            TIME_SECONDS, TIME_MINUTES, TIME_HOURS
+        vol.Optional(CONF_TIME_UNIT, default=UnitOfTime.SECONDS): vol.Any(
+            UnitOfTime.SECONDS.value, UnitOfTime.MINUTES.value, UnitOfTime.HOURS.value
         ),
     }
 )
@@ -91,8 +89,10 @@ MONITOR_SCHEMA = vol.Schema(
             vol.Length(
                 min=8,
                 max=8,
-                msg="GEM serial number must be specified as an 8-character "
-                "string (including leading zeroes).",
+                msg=(
+                    "GEM serial number must be specified as an 8-character "
+                    "string (including leading zeroes)."
+                ),
             ),
             vol.Coerce(int),
         ),

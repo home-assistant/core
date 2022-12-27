@@ -6,12 +6,13 @@ from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DATA_RATE_KILOBYTES_PER_SECOND, STATE_IDLE, Platform
+from homeassistant.const import STATE_IDLE, Platform, UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.typing import StateType
@@ -52,15 +53,17 @@ SENSOR_TYPES: tuple[DelugeSensorEntityDescription, ...] = (
     ),
     DelugeSensorEntityDescription(
         key=DOWNLOAD_SPEED,
-        name="Down Speed",
-        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+        name="Down speed",
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: get_state(data, DOWNLOAD_SPEED),
     ),
     DelugeSensorEntityDescription(
         key=UPLOAD_SPEED,
-        name="Up Speed",
-        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+        name="Up speed",
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: get_state(data, UPLOAD_SPEED),
     ),
@@ -92,7 +95,6 @@ class DelugeSensor(DelugeEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = f"{coordinator.config_entry.title} {description.name}"
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
 
     @property

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass, field
 import functools
 import logging
 import math
@@ -13,7 +12,6 @@ from aioesphomeapi import (
     APIConnectionError,
     APIIntEnum,
     APIVersion,
-    BadNameAPIError,
     DeviceInfo as EsphomeDeviceInfo,
     EntityCategory as EsphomeEntityCategory,
     EntityInfo,
@@ -25,10 +23,11 @@ from aioesphomeapi import (
     UserService,
     UserServiceArgType,
 )
+from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
 from homeassistant import const
-from homeassistant.components import zeroconf
+from homeassistant.components import tag, zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -43,71 +42,66 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.service import async_set_service_schema
-from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import Template
+
+from .bluetooth import async_connect_scanner
+from .domain_data import DOMAIN, DomainData
 
 # Import config flow so that it's added to the registry
 from .entry_data import RuntimeEntryData
 
-DOMAIN = "esphome"
 CONF_NOISE_PSK = "noise_psk"
 _LOGGER = logging.getLogger(__name__)
-_T = TypeVar("_T")
+_R = TypeVar("_R")
 
-STORAGE_VERSION = 1
+STABLE_BLE_VERSION_STR = "2022.12.0"
+STABLE_BLE_VERSION = AwesomeVersion(STABLE_BLE_VERSION_STR)
+PROJECT_URLS = {
+    "esphome.bluetooth-proxy": "https://esphome.github.io/bluetooth-proxies/",
+}
+DEFAULT_URL = f"https://esphome.io/changelog/{STABLE_BLE_VERSION_STR}.html"
 
 
-@dataclass
-class DomainData:
-    """Define a class that stores global esphome data in hass.data[DOMAIN]."""
-
-    _entry_datas: dict[str, RuntimeEntryData] = field(default_factory=dict)
-    _stores: dict[str, Store] = field(default_factory=dict)
-
-    def get_entry_data(self, entry: ConfigEntry) -> RuntimeEntryData:
-        """Return the runtime entry data associated with this config entry.
-
-        Raises KeyError if the entry isn't loaded yet.
-        """
-        return self._entry_datas[entry.entry_id]
-
-    def set_entry_data(self, entry: ConfigEntry, entry_data: RuntimeEntryData) -> None:
-        """Set the runtime entry data associated with this config entry."""
-        if entry.entry_id in self._entry_datas:
-            raise ValueError("Entry data for this entry is already set")
-        self._entry_datas[entry.entry_id] = entry_data
-
-    def pop_entry_data(self, entry: ConfigEntry) -> RuntimeEntryData:
-        """Pop the runtime entry data instance associated with this config entry."""
-        return self._entry_datas.pop(entry.entry_id)
-
-    def is_entry_loaded(self, entry: ConfigEntry) -> bool:
-        """Check whether the given entry is loaded."""
-        return entry.entry_id in self._entry_datas
-
-    def get_or_create_store(self, hass: HomeAssistant, entry: ConfigEntry) -> Store:
-        """Get or create a Store instance for the given config entry."""
-        return self._stores.setdefault(
-            entry.entry_id,
-            Store(
-                hass, STORAGE_VERSION, f"esphome.{entry.entry_id}", encoder=JSONEncoder
-            ),
-        )
-
-    @classmethod
-    def get(cls: type[_T], hass: HomeAssistant) -> _T:
-        """Get the global DomainData instance stored in hass.data."""
-        # Don't use setdefault - this is a hot code path
-        if DOMAIN in hass.data:
-            return cast(_T, hass.data[DOMAIN])
-        ret = hass.data[DOMAIN] = cls()
-        return ret
+@callback
+def _async_check_firmware_version(
+    hass: HomeAssistant, device_info: EsphomeDeviceInfo
+) -> None:
+    """Create or delete an the ble_firmware_outdated issue."""
+    # ESPHome device_info.mac_address is the unique_id
+    issue = f"ble_firmware_outdated-{device_info.mac_address}"
+    if (
+        not device_info.bluetooth_proxy_version
+        # If the device has a project name its up to that project
+        # to tell them about the firmware version update so we don't notify here
+        or (device_info.project_name and device_info.project_name not in PROJECT_URLS)
+        or AwesomeVersion(device_info.esphome_version) >= STABLE_BLE_VERSION
+    ):
+        async_delete_issue(hass, DOMAIN, issue)
+        return
+    async_create_issue(
+        hass,
+        DOMAIN,
+        issue,
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        learn_more_url=PROJECT_URLS.get(device_info.project_name, DEFAULT_URL),
+        translation_key="ble_firmware_outdated",
+        translation_placeholders={
+            "name": device_info.name,
+            "version": STABLE_BLE_VERSION_STR,
+        },
+    )
 
 
 async def async_setup_entry(  # noqa: C901
@@ -159,8 +153,7 @@ async def async_setup_entry(  # noqa: C901
         if service.data_template:
             try:
                 data_template = {
-                    key: Template(value)  # type: ignore[no-untyped-call]
-                    for key, value in service.data_template.items()
+                    key: Template(value) for key, value in service.data_template.items()
                 }
                 template.attach(hass, data_template)
                 service_data.update(
@@ -181,11 +174,8 @@ async def async_setup_entry(  # noqa: C901
 
             # Call native tag scan
             if service_name == "tag_scanned" and device_id is not None:
-                # Importing tag via hass.components in case it is overridden
-                # in a custom_components (custom_components.tag)
-                tag = hass.components.tag
                 tag_id = service_data["tag_id"]
-                hass.async_create_task(tag.async_scan_tag(tag_id, device_id))
+                hass.async_create_task(tag.async_scan_tag(hass, tag_id, device_id))
                 return
 
             hass.bus.async_fire(
@@ -268,13 +258,27 @@ async def async_setup_entry(  # noqa: C901
         """Subscribe to states and list entities on successful API login."""
         nonlocal device_id
         try:
-            entry_data.device_info = await cli.device_info()
+            device_info = await cli.device_info()
+
+            # Migrate config entry to new unique ID if necessary
+            # This was changed in 2023.1
+            if entry.unique_id != format_mac(device_info.mac_address):
+                hass.config_entries.async_update_entry(
+                    entry, unique_id=format_mac(device_info.mac_address)
+                )
+
+            entry_data.device_info = device_info
             assert cli.api_version is not None
             entry_data.api_version = cli.api_version
             entry_data.available = True
             if entry_data.device_info.name:
-                cli.expected_name = entry_data.device_info.name
                 reconnect_logic.name = entry_data.device_info.name
+
+            if device_info.bluetooth_proxy_version:
+                entry_data.disconnect_callbacks.append(
+                    await async_connect_scanner(hass, entry, cli, entry_data)
+                )
+
             device_id = _async_setup_device_registry(
                 hass, entry, entry_data.device_info
             )
@@ -292,9 +296,13 @@ async def async_setup_entry(  # noqa: C901
             _LOGGER.warning("Error getting initial data for %s: %s", host, err)
             # Re-connection logic will trigger after this
             await cli.disconnect()
+        else:
+            _async_check_firmware_version(hass, device_info)
 
     async def on_disconnect() -> None:
         """Run disconnect callbacks on API disconnect."""
+        name = entry_data.device_info.name if entry_data.device_info else host
+        _LOGGER.debug("%s: %s disconnected, running disconnected callbacks", name, host)
         for disconnect_cb in entry_data.disconnect_callbacks:
             disconnect_cb()
         entry_data.disconnect_callbacks = []
@@ -305,12 +313,6 @@ async def async_setup_entry(  # noqa: C901
         """Start reauth flow if appropriate connect error type."""
         if isinstance(err, (RequiresEncryptionAPIError, InvalidEncryptionKeyAPIError)):
             entry.async_start_reauth(hass)
-        if isinstance(err, BadNameAPIError):
-            _LOGGER.warning(
-                "Name of device %s changed to %s, potentially due to IP reassignment",
-                cli.expected_name,
-                err.received_name,
-            )
 
     reconnect_logic = ReconnectLogic(
         client=cli,
@@ -326,8 +328,11 @@ async def async_setup_entry(  # noqa: C901
     await _setup_services(hass, entry_data, services)
 
     if entry_data.device_info is not None and entry_data.device_info.name:
-        cli.expected_name = entry_data.device_info.name
         reconnect_logic.name = entry_data.device_info.name
+        if entry.unique_id is None:
+            hass.config_entries.async_update_entry(
+                entry, unique_id=format_mac(entry_data.device_info.mac_address)
+            )
 
     await reconnect_logic.start()
     entry_data.cleanup_callbacks.append(reconnect_logic.stop_callback)
@@ -349,6 +354,8 @@ def _async_setup_device_registry(
         configuration_url = f"http://{entry.data['host']}:{device_info.webserver_port}"
 
     manufacturer = "espressif"
+    if device_info.manufacturer:
+        manufacturer = device_info.manufacturer
     model = device_info.model
     hw_version = None
     if device_info.project_name:
@@ -464,7 +471,10 @@ async def _register_service(
     )
 
     service_desc = {
-        "description": f"Calls the service {service.name} of the node {entry_data.device_info.name}",
+        "description": (
+            f"Calls the service {service.name} of the node"
+            f" {entry_data.device_info.name}"
+        ),
         "fields": fields,
     }
 
@@ -510,6 +520,7 @@ async def _cleanup_instance(
     """Cleanup the esphome client if it exists."""
     domain_data = DomainData.get(hass)
     data = domain_data.pop_entry_data(entry)
+    data.available = False
     for disconnect_cb in data.disconnect_callbacks:
         disconnect_cb()
     data.disconnect_callbacks = []
@@ -562,13 +573,11 @@ async def platform_async_setup_entry(
         """Update entities of this platform when entities are listed."""
         old_infos = entry_data.info[component_key]
         new_infos: dict[int, EntityInfo] = {}
-        add_entities = []
+        add_entities: list[_EntityT] = []
         for info in infos:
             if not isinstance(info, info_type):
                 # Filter out infos that don't belong to this platform.
                 continue
-            # cast back to upper type, otherwise mypy gets confused
-            info = cast(EntityInfo, info)
 
             if info.key in old_infos:
                 # Update existing entity
@@ -597,20 +606,18 @@ async def platform_async_setup_entry(
     )
 
 
-_PropT = TypeVar("_PropT", bound=Callable[..., Any])
-
-
-def esphome_state_property(func: _PropT) -> _PropT:
+def esphome_state_property(
+    func: Callable[[_EntityT], _R]
+) -> Callable[[_EntityT], _R | None]:
     """Wrap a state property of an esphome entity.
 
     This checks if the state object in the entity is set, and
     prevents writing NAN values to the Home Assistant state machine.
     """
 
-    @property  # type: ignore[misc]
     @functools.wraps(func)
-    def _wrapper(self):  # type: ignore[no-untyped-def]
-        # pylint: disable=protected-access
+    def _wrapper(self: _EntityT) -> _R | None:
+        # pylint: disable-next=protected-access
         if not self._has_state:
             return None
         val = func(self)
@@ -620,7 +627,7 @@ def esphome_state_property(func: _PropT) -> _PropT:
             return None
         return val
 
-    return cast(_PropT, _wrapper)
+    return _wrapper
 
 
 _EnumT = TypeVar("_EnumT", bound=APIIntEnum)
@@ -673,6 +680,8 @@ ENTITY_CATEGORIES: EsphomeEnumMapper[
 class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     """Define a base esphome entity."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         entry_data: RuntimeEntryData,
@@ -691,10 +700,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                (
-                    f"esphome_{self._entry_id}_remove_"
-                    f"{self._component_key}_{self._key}"
-                ),
+                f"esphome_{self._entry_id}_remove_{self._component_key}_{self._key}",
                 functools.partial(self.async_remove, force_remove=True),
             )
         )
@@ -801,11 +807,6 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
             return None
 
         return cast(str, ICON_SCHEMA(self._static_info.icon))
-
-    @property
-    def should_poll(self) -> bool:
-        """Disable polling."""
-        return False
 
     @property
     def entity_registry_enabled_default(self) -> bool:

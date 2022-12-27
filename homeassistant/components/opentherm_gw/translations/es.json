@@ -3,7 +3,8 @@
         "error": {
             "already_configured": "El dispositivo ya est\u00e1 configurado",
             "cannot_connect": "No se pudo conectar",
-            "id_exists": "El ID del Gateway ya existe"
+            "id_exists": "El ID de la puerta de enlace ya existe",
+            "timeout_connect": "Tiempo de espera agotado para establecer la conexi\u00f3n"
         },
         "step": {
             "init": {
@@ -22,7 +23,7 @@
                     "floor_temperature": "Temperatura del suelo",
                     "read_precision": "Leer precisi\u00f3n",
                     "set_precision": "Establecer precisi\u00f3n",
-                    "temporary_override_mode": "Modo de anulaci\u00f3n temporal del punto de ajuste"
+                    "temporary_override_mode": "Modo de anulaci\u00f3n temporal de la consigna"
                 }
             }
         }

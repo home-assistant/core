@@ -15,7 +15,7 @@
                     "unit_prefix": "La salida se escalar\u00e1 seg\u00fan el prefijo m\u00e9trico seleccionado.",
                     "unit_time": "La salida se escalar\u00e1 seg\u00fan la unidad de tiempo seleccionada."
                 },
-                "description": "Cree un sensor que calcule una suma de Riemann para estimar la integral de un sensor.",
+                "description": "Crea un sensor que calcule una suma de Riemann para estimar la integral de un sensor.",
                 "title": "A\u00f1adir sensor integral de suma de Riemann"
             }
         }
@@ -32,5 +32,5 @@
             }
         }
     },
-    "title": "Integraci\u00f3n - Sensor integral de suma de Riemann"
+    "title": "Integraci\u00f3n - Sensor de suma integral de Riemann"
 }

@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "unknown_license_plate": "Ok\u00e4nd registreringsskylt"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "license_plate": "Registreringsskylt"
+                }
+            }
+        }
+    }
+}

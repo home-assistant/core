@@ -167,6 +167,8 @@ class FFmpegManager:
 class FFmpegBase(Entity):
     """Interface object for FFmpeg."""
 
+    _attr_should_poll = False
+
     def __init__(self, initial_state=True):
         """Initialize ffmpeg base object."""
         self.ffmpeg = None
@@ -200,11 +202,6 @@ class FFmpegBase(Entity):
     def available(self):
         """Return True if entity is available."""
         return self.ffmpeg.is_running
-
-    @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state."""
-        return False
 
     async def _async_start_ffmpeg(self, entity_ids):
         """Start a FFmpeg process.

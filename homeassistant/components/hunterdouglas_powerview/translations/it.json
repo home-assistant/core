@@ -10,7 +10,7 @@
         "flow_title": "{name} ({host})",
         "step": {
             "link": {
-                "description": "Vuoi impostare {name} ({host})?",
+                "description": "Vuoi configurare {name} ({host})?",
                 "title": "Connettiti all'Hub PowerView"
             },
             "user": {

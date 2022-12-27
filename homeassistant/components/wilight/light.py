@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from pywilight.const import ITEM_LIGHT, LIGHT_COLOR, LIGHT_DIMMER, LIGHT_ON_OFF
-from pywilight.wilight_device import Device as PyWiLightDevice
+from pywilight.wilight_device import PyWiLightDevice
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,

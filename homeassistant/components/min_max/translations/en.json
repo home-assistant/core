@@ -9,10 +9,10 @@
                     "type": "Statistic characteristic"
                 },
                 "data_description": {
-                    "round_digits": "Controls the number of decimal digits in the output when the statistics characteristic is mean or median."
+                    "round_digits": "Controls the number of decimal digits in the output when the statistics characteristic is mean, median or sum."
                 },
-                "description": "Create a sensor that calculates a min, max, mean or median value from a list of input sensors.",
-                "title": "Add min / max / mean / median sensor"
+                "description": "Create a sensor that calculates a min, max, mean, median or sum from a list of input sensors.",
+                "title": "Combine the state of several sensors"
             }
         }
     },
@@ -25,10 +25,10 @@
                     "type": "Statistic characteristic"
                 },
                 "data_description": {
-                    "round_digits": "Controls the number of decimal digits in the output when the statistics characteristic is mean or median."
+                    "round_digits": "Controls the number of decimal digits in the output when the statistics characteristic is mean, median or sum."
                 }
             }
         }
     },
-    "title": "Min / max / mean / median sensor"
+    "title": "Combine the state of several sensors"
 }

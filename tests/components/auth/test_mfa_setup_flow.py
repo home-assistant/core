@@ -44,7 +44,13 @@ async def test_ws_setup_depose_mfa(hass, hass_ws_client):
 
     client = await hass_ws_client(hass, access_token)
 
-    await client.send_json({"id": 10, "type": mfa_setup_flow.WS_TYPE_SETUP_MFA})
+    await client.send_json(
+        {
+            "id": 10,
+            "type": mfa_setup_flow.WS_TYPE_SETUP_MFA,
+            "mfa_module_id": "invalid_module",
+        }
+    )
 
     result = await client.receive_json()
     assert result["id"] == 10

@@ -1,0 +1,8 @@
+{
+    "issues": {
+        "replaced": {
+            "description": "Die Integration des Xiaomi Mijia BLE Temperatur- und Luftfeuchtigkeitssensors funktioniert in Home Assistant 2022.7 nicht mehr und wurde in der Version 2022.8 durch die Xiaomi BLE Integration ersetzt.\n\nEs ist kein Migrationspfad m\u00f6glich, daher musst du dein Xiaomi Mijia BLE-Ger\u00e4t mit der neuen Integration manuell hinzuf\u00fcgen.\n\nDeine bestehende Xiaomi Mijia BLE Temperatur- und Luftfeuchtigkeitssensor YAML-Konfiguration wird von Home Assistant nicht mehr verwendet. Entferne die YAML-Konfiguration aus deiner configuration.yaml-Datei und starte Home Assistant neu, um dieses Problem zu beheben.",
+            "title": "Die Integration des Xiaomi Mijia BLE Temperatur- und Luftfeuchtigkeitssensors wurde ersetzt"
+        }
+    }
+}

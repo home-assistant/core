@@ -9,7 +9,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.components.ipp import init_integration, mock_connection
+from . import init_integration, mock_connection
+
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 

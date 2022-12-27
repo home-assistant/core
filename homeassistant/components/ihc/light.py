@@ -1,6 +1,8 @@
 """Support for IHC lights."""
 from __future__ import annotations
 
+from typing import Any
+
 from ihcsdk.ihccontroller import IHCController
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
@@ -90,7 +92,7 @@ class IhcLight(IHCDevice, LightEntity):
         """Return true if light is on."""
         return self._state
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
@@ -108,7 +110,7 @@ class IhcLight(IHCDevice, LightEntity):
             else:
                 await async_set_bool(self.hass, self.ihc_controller, self.ihc_id, True)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         if self._dimmable:
             await async_set_int(self.hass, self.ihc_controller, self.ihc_id, 0)

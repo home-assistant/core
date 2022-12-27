@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "not_huawei_lte": "\u4e26\u975e\u83ef\u70ba LTE \u88dd\u7f6e"
+            "not_huawei_lte": "\u4e26\u975e\u83ef\u70ba LTE \u88dd\u7f6e",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
         },
         "error": {
             "connection_timeout": "\u9023\u7dda\u903e\u6642",
@@ -15,6 +16,14 @@
         },
         "flow_title": "{name}",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "\u5bc6\u78bc",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "description": "\u8f38\u5165\u88dd\u7f6e\u5b58\u53d6\u6191\u8b49\u3002",
+                "title": "\u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
+            },
             "user": {
                 "data": {
                     "password": "\u5bc6\u78bc",

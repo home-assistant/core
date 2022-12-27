@@ -2,8 +2,8 @@
 from homeassistant.const import CONF_ICON, CONF_UNIT_OF_MEASUREMENT, POWER_KILO_WATT
 from homeassistant.core import HomeAssistant
 
-from tests.components.wallbox import entry, setup_integration
-from tests.components.wallbox.const import (
+from . import entry, setup_integration
+from .const import (
     MOCK_SENSOR_CHARGING_POWER_ID,
     MOCK_SENSOR_CHARGING_SPEED_ID,
     MOCK_SENSOR_MAX_AVAILABLE_POWER,

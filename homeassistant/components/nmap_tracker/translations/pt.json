@@ -1,0 +1,11 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "interval_seconds": "Intervalo de varrimento"
+                }
+            }
+        }
+    }
+}

@@ -128,7 +128,7 @@ def mock_entry(
     """Mock ProtectApiClient for testing."""
 
     with _patch_discovery(no_device=True), patch(
-        "homeassistant.components.unifiprotect.ProtectApiClient"
+        "homeassistant.components.unifiprotect.utils.ProtectApiClient"
     ) as mock_api:
         ufp_config_entry.add_to_hass(hass)
 
@@ -209,6 +209,7 @@ def doorbell_fixture(camera: Camera, fixed_now: datetime):
         SmartDetectObjectType.PERSON,
         SmartDetectObjectType.VEHICLE,
     ]
+    doorbell.has_speaker = True
     doorbell.feature_flags.has_hdr = True
     doorbell.feature_flags.has_lcd_screen = True
     doorbell.feature_flags.has_speaker = True

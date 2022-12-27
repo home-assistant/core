@@ -2,10 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "La ubicaci\u00f3n ya est\u00e1 configurada",
-            "cannot_connect": "Fall\u00f3 la conexi\u00f3n",
+            "cannot_connect": "No se pudo conectar",
             "max_regions": "Se pueden configurar un m\u00e1ximo de 5 regiones",
             "rate_limit": "Demasiadas peticiones",
-            "timeout": "Tiempo m\u00e1ximo de espera para establecer la conexi\u00f3n agotado",
+            "timeout": "Tiempo de espera agotado para establecer la conexi\u00f3n",
             "unknown": "Error inesperado"
         },
         "step": {
@@ -13,19 +13,19 @@
                 "data": {
                     "region": "Regi\u00f3n"
                 },
-                "description": "Si desea monitorear no solo el estado y el distrito, elija su comunidad espec\u00edfica"
+                "description": "Si quieres supervisar no solo el estado y el distrito, elige tu comunidad espec\u00edfica"
             },
             "district": {
                 "data": {
                     "region": "Regi\u00f3n"
                 },
-                "description": "Si quieres monitorear no s\u00f3lo el estado, elige el distrito espec\u00edfico"
+                "description": "Si quieres supervisar no s\u00f3lo el estado, elige el distrito espec\u00edfico"
             },
             "user": {
                 "data": {
                     "region": "Regi\u00f3n"
                 },
-                "description": "Escoja el estado a monitorear"
+                "description": "Elige el estado para supervisar"
             }
         }
     }

@@ -14,7 +14,7 @@ from pyunifiprotect.data import (
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TIME_SECONDS
+from homeassistant.const import PERCENTAGE, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
@@ -82,8 +82,9 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_min=0,
         ufp_max=100,
         ufp_step=1,
-        ufp_required_field="feature_flags.has_mic",
+        ufp_required_field="has_mic",
         ufp_value="mic_volume",
+        ufp_enabled="feature_flags.has_mic",
         ufp_set_method="set_mic_volume",
         ufp_perm=PermRequired.WRITE,
     ),
@@ -123,7 +124,7 @@ LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         name="Auto-shutoff Duration",
         icon="mdi:camera-timer",
         entity_category=EntityCategory.CONFIG,
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         ufp_min=15,
         ufp_max=900,
         ufp_step=15,
@@ -157,7 +158,7 @@ DOORLOCK_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         name="Auto-lock Timeout",
         icon="mdi:walk",
         entity_category=EntityCategory.CONFIG,
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         ufp_min=0,
         ufp_max=3600,
         ufp_step=15,

@@ -25,5 +25,106 @@
             "off": "Spento"
         }
     },
+    "state_attributes": {
+        "_": {
+            "aux_heat": {
+                "name": "Riscaldamento ausiliario"
+            },
+            "current_humidity": {
+                "name": "Umidit\u00e0 attuale"
+            },
+            "current_temperature": {
+                "name": "Temperatura attuale"
+            },
+            "fan_mode": {
+                "name": "Modalit\u00e0 ventilatore",
+                "state": {
+                    "auto": "Automatico",
+                    "diffuse": "Diffuso",
+                    "focus": "Messa a fuoco",
+                    "high": "Alto",
+                    "low": "Basso",
+                    "medium": "Medio",
+                    "middle": "Mezzo",
+                    "off": "Spento",
+                    "on": "Acceso",
+                    "top": "Superiore"
+                }
+            },
+            "fan_modes": {
+                "name": "Modalit\u00e0 di ventilazione"
+            },
+            "humidity": {
+                "name": "Umidit\u00e0 desiderata"
+            },
+            "hvac_action": {
+                "name": "Azione in corso",
+                "state": {
+                    "cooling": "Raffreddamento",
+                    "drying": "Deumidificazione",
+                    "fan": "Ventilatore",
+                    "heating": "Riscaldamento",
+                    "idle": "Inattivo",
+                    "off": "Spento"
+                }
+            },
+            "hvac_modes": {
+                "name": "Modalit\u00e0 HVAC"
+            },
+            "max_humidity": {
+                "name": "Umidit\u00e0 desiderata massima"
+            },
+            "max_temp": {
+                "name": "Temperatura desiderata massima"
+            },
+            "min_humidity": {
+                "name": "Umidit\u00e0 desiderata minima"
+            },
+            "min_temp": {
+                "name": "Temperatura desiderata minima"
+            },
+            "preset_mode": {
+                "name": "Preimpostato",
+                "state": {
+                    "activity": "Attivit\u00e0",
+                    "away": "Fuori casa",
+                    "boost": "Velocizza",
+                    "comfort": "Comfort",
+                    "eco": "Eco",
+                    "home": "In casa",
+                    "none": "Nessuno",
+                    "sleep": "Notte"
+                }
+            },
+            "preset_modes": {
+                "name": "Preimpostazioni"
+            },
+            "swing_mode": {
+                "name": "Modalit\u00e0 di oscillazione",
+                "state": {
+                    "both": "Entrambi",
+                    "horizontal": "Orizzontale",
+                    "off": "Spento",
+                    "on": "Acceso",
+                    "vertical": "Verticale"
+                }
+            },
+            "swing_modes": {
+                "name": "Modalit\u00e0 di oscillazione"
+            },
+            "target_temp_high": {
+                "name": "Temperatura obiettivo pi\u00f9 alta"
+            },
+            "target_temp_low": {
+                "name": "Temperatura obiettivo pi\u00f9 bassa"
+            },
+            "target_temp_step": {
+                "name": "passo di temperatura obiettivo"
+            },
+            "temperature": {
+                "name": "Temperatura obiettivo"
+            }
+        }
+    },
     "title": "Termostato"
 }

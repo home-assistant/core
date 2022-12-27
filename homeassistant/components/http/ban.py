@@ -2,17 +2,18 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Coroutine
 from contextlib import suppress
 from datetime import datetime
 from http import HTTPStatus
 from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
 from socket import gethostbyaddr, herror
-from typing import Any, Final
+from typing import Any, Final, TypeVar
 
-from aiohttp.web import Application, Request, StreamResponse, middleware
+from aiohttp.web import Application, Request, Response, StreamResponse, middleware
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
+from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
@@ -23,6 +24,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util, yaml
 
 from .view import HomeAssistantView
+
+_HassViewT = TypeVar("_HassViewT", bound=HomeAssistantView)
+_P = ParamSpec("_P")
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -47,12 +51,11 @@ def setup_bans(hass: HomeAssistant, app: Application, login_threshold: int) -> N
     app.middlewares.append(ban_middleware)
     app[KEY_FAILED_LOGIN_ATTEMPTS] = defaultdict(int)
     app[KEY_LOGIN_THRESHOLD] = login_threshold
+    app[KEY_BAN_MANAGER] = IpBanManager(hass)
 
     async def ban_startup(app: Application) -> None:
         """Initialize bans when app starts up."""
-        ban_manager = IpBanManager(hass)
-        await ban_manager.async_load()
-        app[KEY_BAN_MANAGER] = ban_manager
+        await app[KEY_BAN_MANAGER].async_load()
 
     app.on_startup.append(ban_startup)
 
@@ -82,13 +85,13 @@ async def ban_middleware(
 
 
 def log_invalid_auth(
-    func: Callable[..., Awaitable[StreamResponse]]
-) -> Callable[..., Awaitable[StreamResponse]]:
+    func: Callable[Concatenate[_HassViewT, Request, _P], Awaitable[Response]]
+) -> Callable[Concatenate[_HassViewT, Request, _P], Coroutine[Any, Any, Response]]:
     """Decorate function to handle invalid auth or failed login attempts."""
 
     async def handle_req(
-        view: HomeAssistantView, request: Request, *args: Any, **kwargs: Any
-    ) -> StreamResponse:
+        view: _HassViewT, request: Request, *args: _P.args, **kwargs: _P.kwargs
+    ) -> Response:
         """Try to log failed login attempts if response status >= BAD_REQUEST."""
         resp = await func(view, request, *args, **kwargs)
         if resp.status >= HTTPStatus.BAD_REQUEST:
@@ -113,11 +116,14 @@ async def process_wrong_login(request: Request) -> None:
             gethostbyaddr, request.remote
         )
 
-    base_msg = f"Login attempt or request with invalid authentication from {remote_host} ({remote_addr})."
+    base_msg = (
+        "Login attempt or request with invalid authentication from"
+        f" {remote_host} ({remote_addr})."
+    )
 
     # The user-agent is unsanitized input so we only include it in the log
     user_agent = request.headers.get("user-agent")
-    log_msg = f"{base_msg} ({user_agent})"
+    log_msg = f"{base_msg} Requested URL: '{request.rel_url}'. ({user_agent})"
 
     notification_msg = f"{base_msg} See the log for details."
 

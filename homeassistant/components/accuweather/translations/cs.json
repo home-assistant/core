@@ -19,13 +19,22 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "pressure_tendency": {
+                "state": {
+                    "steady": "Stabiln\u00ed"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
-            "user": {
+            "init": {
                 "data": {
                     "forecast": "P\u0159edpov\u011b\u010f po\u010das\u00ed"
                 },
-                "description": "Kdy\u017e povol\u00edte p\u0159edpov\u011b\u010f po\u010das\u00ed, budou aktualizace dat prov\u00e1d\u011bny ka\u017ed\u00fdch 80 minut nam\u00edsto 40 minut z d\u016fvodu omezen\u00ed bezplatn\u00e9 verze AccuWeather."
+                "description": "Vzhledem k omezen\u00edm bezplatn\u00e9 verze kl\u00ed\u010de AccuWeather API, kdy\u017e povol\u00edte p\u0159edpov\u011b\u010f po\u010das\u00ed, aktualizace dat se budou prov\u00e1d\u011bt ka\u017ed\u00fdch 80 minut m\u00edsto ka\u017ed\u00fdch 40 minut."
             }
         }
     },

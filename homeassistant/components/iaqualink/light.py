@@ -1,6 +1,8 @@
 """Support for Aqualink pool lights."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
@@ -46,7 +48,7 @@ class HassAqualinkLight(AqualinkEntity, LightEntity):
         return self.dev.is_on
 
     @refresh_system
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light.
 
         This handles brightness and light effects for lights that do support
@@ -63,7 +65,7 @@ class HassAqualinkLight(AqualinkEntity, LightEntity):
             await await_or_reraise(self.dev.turn_on())
 
     @refresh_system
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         await await_or_reraise(self.dev.turn_off())
 
@@ -83,24 +85,24 @@ class HassAqualinkLight(AqualinkEntity, LightEntity):
     @property
     def effect_list(self) -> list:
         """Return supported light effects."""
-        return list(self.dev.supported_light_effects)
+        return list(self.dev.supported_effects)
 
     @property
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
-        if self.dev.is_dimmer:
+        if self.dev.supports_brightness:
             return ColorMode.BRIGHTNESS
         return ColorMode.ONOFF
 
     @property
-    def supported_color_modes(self) -> set[str] | None:
+    def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
         return {self.color_mode}
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> LightEntityFeature:
         """Return the list of features supported by the light."""
-        if self.dev.is_color:
+        if self.dev.supports_effect:
             return LightEntityFeature.EFFECT
 
-        return 0
+        return LightEntityFeature(0)

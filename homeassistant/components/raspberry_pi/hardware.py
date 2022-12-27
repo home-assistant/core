@@ -32,23 +32,31 @@ MODELS = {
 
 
 @callback
-def async_info(hass: HomeAssistant) -> HardwareInfo:
+def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
     """Return board info."""
     if (os_info := get_os_info(hass)) is None:
         raise HomeAssistantError
-    board: str
+    board: str | None
     if (board := os_info.get("board")) is None:
         raise HomeAssistantError
     if not board.startswith("rpi"):
         raise HomeAssistantError
 
-    return HardwareInfo(
-        board=BoardInfo(
-            hassio_board_id=board,
-            manufacturer=DOMAIN,
-            model=MODELS.get(board),
-            revision=None,
-        ),
-        name=BOARD_NAMES.get(board, f"Unknown Raspberry Pi model '{board}'"),
-        url=None,
-    )
+    config_entries = [
+        entry.entry_id for entry in hass.config_entries.async_entries(DOMAIN)
+    ]
+
+    return [
+        HardwareInfo(
+            board=BoardInfo(
+                hassio_board_id=board,
+                manufacturer=DOMAIN,
+                model=MODELS.get(board),
+                revision=None,
+            ),
+            config_entries=config_entries,
+            dongle=None,
+            name=BOARD_NAMES.get(board, f"Unknown Raspberry Pi model '{board}'"),
+            url=None,
+        )
+    ]

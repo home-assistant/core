@@ -18,3 +18,4 @@ STATES_MAP: Final[dict[str, str]] = {
 
 DOMAIN = "aladdin_connect"
 SUPPORTED_FEATURES: Final = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+CLIENT_ID = "1000"

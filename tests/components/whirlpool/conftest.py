@@ -12,19 +12,31 @@ MOCK_SAID2 = "said2"
 
 @pytest.fixture(name="mock_auth_api")
 def fixture_mock_auth_api():
-    """Set up air conditioner Auth fixture."""
+    """Set up Auth fixture."""
     with mock.patch("homeassistant.components.whirlpool.Auth") as mock_auth:
         mock_auth.return_value.do_auth = AsyncMock()
         mock_auth.return_value.is_access_token_valid.return_value = True
-        mock_auth.return_value.get_said_list.return_value = [MOCK_SAID1, MOCK_SAID2]
         yield mock_auth
+
+
+@pytest.fixture(name="mock_appliances_manager_api")
+def fixture_mock_appliances_manager_api():
+    """Set up AppliancesManager fixture."""
+    with mock.patch(
+        "homeassistant.components.whirlpool.AppliancesManager"
+    ) as mock_appliances_manager:
+        mock_appliances_manager.return_value.fetch_appliances = AsyncMock()
+        mock_appliances_manager.return_value.aircons = [
+            {"SAID": MOCK_SAID1, "NAME": "TestZone"},
+            {"SAID": MOCK_SAID2, "NAME": "TestZone"},
+        ]
+        yield mock_appliances_manager
 
 
 def get_aircon_mock(said):
     """Get a mock of an air conditioner."""
     mock_aircon = mock.Mock(said=said)
     mock_aircon.connect = AsyncMock()
-    mock_aircon.fetch_name = AsyncMock(return_value="TestZone")
     mock_aircon.get_online.return_value = True
     mock_aircon.get_power_on.return_value = True
     mock_aircon.get_mode.return_value = whirlpool.aircon.Mode.Cool
@@ -47,13 +59,13 @@ def get_aircon_mock(said):
 
 
 @pytest.fixture(name="mock_aircon1_api", autouse=True)
-def fixture_mock_aircon1_api(mock_auth_api):
+def fixture_mock_aircon1_api(mock_auth_api, mock_appliances_manager_api):
     """Set up air conditioner API fixture."""
     yield get_aircon_mock(MOCK_SAID1)
 
 
 @pytest.fixture(name="mock_aircon2_api", autouse=True)
-def fixture_mock_aircon2_api(mock_auth_api):
+def fixture_mock_aircon2_api(mock_auth_api, mock_appliances_manager_api):
     """Set up air conditioner API fixture."""
     yield get_aircon_mock(MOCK_SAID2)
 

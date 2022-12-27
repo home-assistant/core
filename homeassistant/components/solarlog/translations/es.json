@@ -11,9 +11,9 @@
             "user": {
                 "data": {
                     "host": "Host",
-                    "name": "El prefijo que se utilizar\u00e1 para los sensores Solar-Log"
+                    "name": "El prefijo que se usar\u00e1 para tus sensores Solar-Log"
                 },
-                "title": "Defina su conexi\u00f3n Solar-Log"
+                "title": "Define tu conexi\u00f3n Solar-Log"
             }
         }
     }

@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1,
+    "name": "Frenck's LaMetric",
+    "state": "configured",
+    "serial_number": "SA110405124500W00BS9",
+    "api_key": "mock-api-key",
+    "ipv4_internal": "127.0.0.1",
+    "mac": "AA:BB:CC:DD:EE:FF",
+    "wifi_ssid": "IoT",
+    "created_at": "2015-08-12T15:15:55+00:00",
+    "updated_at": "2016-08-13T18:16:17+00:00"
+  },
+  {
+    "id": 21,
+    "name": "Blackjack",
+    "state": "configured",
+    "serial_number": "SA140100002200W00B21",
+    "api_key": "8adaa0c98278dbb1ecb218d1c3e11f9312317ba474ab3361f80c0bd4f13a6721",
+    "ipv4_internal": "192.168.1.21",
+    "mac": "AA:BB:CC:DD:EE:21",
+    "wifi_ssid": "AllYourBaseAreBelongToUs",
+    "created_at": "2015-03-06T15:15:55+00:00",
+    "updated_at": "2016-06-14T18:27:13+00:00"
+  },
+  {
+    "id": 42,
+    "name": "The Answer",
+    "state": "configured",
+    "serial_number": "SA140100002200W00B42",
+    "api_key": "8adaa0c98278dbb1ecb218d1c3e11f9312317ba474ab3361f80c0bd4f13a6742",
+    "ipv4_internal": "192.168.1.42",
+    "mac": "AA:BB:CC:DD:EE:42",
+    "wifi_ssid": "AllYourBaseAreBelongToUs",
+    "created_at": "2015-03-06T15:15:55+00:00",
+    "updated_at": "2016-06-14T18:27:13+00:00"
+  }
+]

@@ -144,7 +144,7 @@ async def test_state_problem_if_unavailable(hass):
     assert state.attributes[plant.READING_MOISTURE] == STATE_UNAVAILABLE
 
 
-async def test_load_from_db(hass, recorder_mock):
+async def test_load_from_db(recorder_mock, hass):
     """Test bootstrapping the brightness history from the database.
 
     This test can should only be executed if the loading of the history

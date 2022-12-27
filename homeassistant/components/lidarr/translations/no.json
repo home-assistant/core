@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tjenesten er allerede konfigurert",
+            "reauth_successful": "Re-autentisering var vellykket"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil",
+            "wrong_app": "Feil s\u00f8knad er n\u00e5dd. V\u00e6r s\u00e5 snill, pr\u00f8v p\u00e5 nytt",
+            "zeroconf_failed": "Finner ikke API-n\u00f8kkel. Vennligst skriv det inn manuelt"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel"
+                },
+                "description": "Lidarr-integrasjonen m\u00e5 re-autentiseres manuelt med Lidarr API",
+                "title": "Godkjenne integrering p\u00e5 nytt"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel",
+                    "url": "URL",
+                    "verify_ssl": "Verifisere SSL-sertifikat"
+                },
+                "description": "API-n\u00f8kkel kan hentes automatisk hvis p\u00e5loggingsinformasjon ikke ble angitt i applikasjonen.\n API-n\u00f8kkelen din finner du i Innstillinger > Generelt i Lidarr Web UI."
+            }
+        }
+    }
+}

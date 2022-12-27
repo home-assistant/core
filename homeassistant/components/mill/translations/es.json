@@ -21,9 +21,9 @@
             },
             "user": {
                 "data": {
-                    "connection_type": "Seleccione el tipo de conexi\u00f3n"
+                    "connection_type": "Selecciona el tipo de conexi\u00f3n"
                 },
-                "description": "Seleccione el tipo de conexi\u00f3n. Local requiere calentadores de generaci\u00f3n 3"
+                "description": "Selecciona el tipo de conexi\u00f3n. Local requiere calentadores de generaci\u00f3n 3"
             }
         }
     }

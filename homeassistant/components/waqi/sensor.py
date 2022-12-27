@@ -183,7 +183,7 @@ class WaqiSensor(SensorEntity):
             except (IndexError, KeyError):
                 return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data and updates the states."""
         if self.uid:
             result = await self._client.get_station_by_number(self.uid)

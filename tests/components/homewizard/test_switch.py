@@ -2,10 +2,10 @@
 
 from unittest.mock import AsyncMock, patch
 
-from homewizard_energy.models import State
+from homewizard_energy.models import State, System
 
 from homeassistant.components import switch
-from homeassistant.components.switch import DEVICE_CLASS_OUTLET, DEVICE_CLASS_SWITCH
+from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -39,7 +39,7 @@ async def test_switch_entity_not_loaded_when_not_available(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state_power_on = hass.states.get("sensor.product_name_aabbccddeeff_switch")
+    state_power_on = hass.states.get("sensor.product_name_aabbccddeeff")
     state_switch_lock = hass.states.get("sensor.product_name_aabbccddeeff_switch_lock")
 
     assert state_power_on is None
@@ -67,10 +67,8 @@ async def test_switch_loads_entities(hass, mock_config_entry_data, mock_config_e
 
     entity_registry = er.async_get(hass)
 
-    state_power_on = hass.states.get("switch.product_name_aabbccddeeff_switch")
-    entry_power_on = entity_registry.async_get(
-        "switch.product_name_aabbccddeeff_switch"
-    )
+    state_power_on = hass.states.get("switch.product_name_aabbccddeeff")
+    entry_power_on = entity_registry.async_get("switch.product_name_aabbccddeeff")
     assert state_power_on
     assert entry_power_on
     assert entry_power_on.unique_id == "aabbccddeeff_power_on"
@@ -78,9 +76,9 @@ async def test_switch_loads_entities(hass, mock_config_entry_data, mock_config_e
     assert state_power_on.state == STATE_OFF
     assert (
         state_power_on.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Product Name (aabbccddeeff) Switch"
+        == "Product Name (aabbccddeeff)"
     )
-    assert state_power_on.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_OUTLET
+    assert state_power_on.attributes.get(ATTR_DEVICE_CLASS) == SwitchDeviceClass.OUTLET
     assert ATTR_ICON not in state_power_on.attributes
 
     state_switch_lock = hass.states.get("switch.product_name_aabbccddeeff_switch_lock")
@@ -95,9 +93,11 @@ async def test_switch_loads_entities(hass, mock_config_entry_data, mock_config_e
     assert state_switch_lock.state == STATE_OFF
     assert (
         state_switch_lock.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Product Name (aabbccddeeff) Switch Lock"
+        == "Product Name (aabbccddeeff) Switch lock"
     )
-    assert state_switch_lock.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_SWITCH
+    assert (
+        state_switch_lock.attributes.get(ATTR_DEVICE_CLASS) == SwitchDeviceClass.SWITCH
+    )
     assert ATTR_ICON not in state_switch_lock.attributes
 
 
@@ -127,38 +127,30 @@ async def test_switch_power_on_off(hass, mock_config_entry_data, mock_config_ent
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        assert (
-            hass.states.get("switch.product_name_aabbccddeeff_switch").state
-            == STATE_OFF
-        )
+        assert hass.states.get("switch.product_name_aabbccddeeff").state == STATE_OFF
 
         # Turn power_on on
         await hass.services.async_call(
             switch.DOMAIN,
             SERVICE_TURN_ON,
-            {"entity_id": "switch.product_name_aabbccddeeff_switch"},
+            {"entity_id": "switch.product_name_aabbccddeeff"},
             blocking=True,
         )
 
         await hass.async_block_till_done()
         assert len(api.state_set.mock_calls) == 1
-        assert (
-            hass.states.get("switch.product_name_aabbccddeeff_switch").state == STATE_ON
-        )
+        assert hass.states.get("switch.product_name_aabbccddeeff").state == STATE_ON
 
         # Turn power_on off
         await hass.services.async_call(
             switch.DOMAIN,
             SERVICE_TURN_OFF,
-            {"entity_id": "switch.product_name_aabbccddeeff_switch"},
+            {"entity_id": "switch.product_name_aabbccddeeff"},
             blocking=True,
         )
 
         await hass.async_block_till_done()
-        assert (
-            hass.states.get("switch.product_name_aabbccddeeff_switch").state
-            == STATE_OFF
-        )
+        assert hass.states.get("switch.product_name_aabbccddeeff").state == STATE_OFF
         assert len(api.state_set.mock_calls) == 2
 
 
@@ -254,9 +246,7 @@ async def test_switch_lock_sets_power_on_unavailable(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        assert (
-            hass.states.get("switch.product_name_aabbccddeeff_switch").state == STATE_ON
-        )
+        assert hass.states.get("switch.product_name_aabbccddeeff").state == STATE_ON
         assert (
             hass.states.get("switch.product_name_aabbccddeeff_switch_lock").state
             == STATE_OFF
@@ -273,7 +263,7 @@ async def test_switch_lock_sets_power_on_unavailable(
         await hass.async_block_till_done()
         assert len(api.state_set.mock_calls) == 1
         assert (
-            hass.states.get("switch.product_name_aabbccddeeff_switch").state
+            hass.states.get("switch.product_name_aabbccddeeff").state
             == STATE_UNAVAILABLE
         )
         assert (
@@ -290,11 +280,69 @@ async def test_switch_lock_sets_power_on_unavailable(
         )
 
         await hass.async_block_till_done()
-        assert (
-            hass.states.get("switch.product_name_aabbccddeeff_switch").state == STATE_ON
-        )
+        assert hass.states.get("switch.product_name_aabbccddeeff").state == STATE_ON
         assert (
             hass.states.get("switch.product_name_aabbccddeeff_switch_lock").state
             == STATE_OFF
         )
         assert len(api.state_set.mock_calls) == 2
+
+
+async def test_cloud_connection_on_off(hass, mock_config_entry_data, mock_config_entry):
+    """Test entity turns switch on and off."""
+
+    api = get_mock_device(product_type="HWE-SKT", firmware_version="3.02")
+    api.system = AsyncMock(return_value=System.from_dict({"cloud_enabled": False}))
+
+    def system_set(cloud_enabled):
+        api.system = AsyncMock(
+            return_value=System.from_dict({"cloud_enabled": cloud_enabled})
+        )
+
+    api.system_set = AsyncMock(side_effect=system_set)
+
+    with patch(
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
+        return_value=api,
+    ):
+        entry = mock_config_entry
+        entry.data = mock_config_entry_data
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert (
+            hass.states.get("switch.product_name_aabbccddeeff_cloud_connection").state
+            == STATE_OFF
+        )
+
+        # Enable cloud
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_ON,
+            {"entity_id": "switch.product_name_aabbccddeeff_cloud_connection"},
+            blocking=True,
+        )
+
+        await hass.async_block_till_done()
+        assert len(api.system_set.mock_calls) == 1
+        assert (
+            hass.states.get("switch.product_name_aabbccddeeff_cloud_connection").state
+            == STATE_ON
+        )
+
+        # Disable cloud
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_OFF,
+            {"entity_id": "switch.product_name_aabbccddeeff_cloud_connection"},
+            blocking=True,
+        )
+
+        await hass.async_block_till_done()
+        assert (
+            hass.states.get("switch.product_name_aabbccddeeff_cloud_connection").state
+            == STATE_OFF
+        )
+        assert len(api.system_set.mock_calls) == 2

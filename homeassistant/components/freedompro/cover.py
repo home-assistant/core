@@ -18,6 +18,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import FreedomproDataUpdateCoordinator
 from .const import DOMAIN
 
 DEVICE_CLASS_MAP = {
@@ -35,8 +36,8 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Freedompro cover."""
-    api_key = entry.data[CONF_API_KEY]
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    api_key: str = entry.data[CONF_API_KEY]
+    coordinator: FreedomproDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         Device(hass, api_key, device, coordinator)
         for device in coordinator.data
@@ -47,7 +48,13 @@ async def async_setup_entry(
 class Device(CoordinatorEntity, CoverEntity):
     """Representation of an Freedompro cover."""
 
-    def __init__(self, hass, api_key, device, coordinator):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        api_key: str,
+        device: dict[str, Any],
+        coordinator: FreedomproDataUpdateCoordinator,
+    ) -> None:
         """Initialize the Freedompro cover."""
         super().__init__(coordinator)
         self._session = aiohttp_client.async_get_clientsession(hass)
@@ -56,7 +63,7 @@ class Device(CoordinatorEntity, CoverEntity):
         self._attr_unique_id = device["uid"]
         self._attr_device_info = DeviceInfo(
             identifiers={
-                (DOMAIN, self.unique_id),
+                (DOMAIN, device["uid"]),
             },
             manufacturer="Freedompro",
             model=device["type"],

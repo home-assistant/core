@@ -18,6 +18,8 @@ from . import UkraineAlarmDataUpdateCoordinator
 from .const import (
     ALERT_TYPE_AIR,
     ALERT_TYPE_ARTILLERY,
+    ALERT_TYPE_CHEMICAL,
+    ALERT_TYPE_NUCLEAR,
     ALERT_TYPE_UNKNOWN,
     ALERT_TYPE_URBAN_FIGHTS,
     ATTRIBUTION,
@@ -48,6 +50,18 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
         name="Artillery",
         device_class=BinarySensorDeviceClass.SAFETY,
         icon="mdi:tank",
+    ),
+    BinarySensorEntityDescription(
+        key=ALERT_TYPE_CHEMICAL,
+        name="Chemical",
+        device_class=BinarySensorDeviceClass.SAFETY,
+        icon="mdi:chemical-weapon",
+    ),
+    BinarySensorEntityDescription(
+        key=ALERT_TYPE_NUCLEAR,
+        name="Nuclear",
+        device_class=BinarySensorDeviceClass.SAFETY,
+        icon="mdi:nuke",
     ),
 )
 
@@ -98,6 +112,7 @@ class UkraineAlarmSensor(
             identifiers={(DOMAIN, unique_id)},
             manufacturer=MANUFACTURER,
             name=name,
+            configuration_url="https://siren.pp.ua/",
         )
 
     @property

@@ -22,6 +22,8 @@ MOCK_CONFIG = {
     "access_token": "ABC",
     "user_id": "123",
     "monitor_id": "456",
+    "device_id": "789",
+    "refresh_token": "XYZ",
 }
 
 
@@ -36,6 +38,8 @@ def mock_sense():
         mock_sense.return_value.sense_access_token = "ABC"
         mock_sense.return_value.sense_user_id = "123"
         mock_sense.return_value.sense_monitor_id = "456"
+        mock_sense.return_value.device_id = "789"
+        mock_sense.return_value.refresh_token = "XYZ"
         yield mock_sense
 
 

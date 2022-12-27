@@ -17,11 +17,11 @@ from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(hass, config, unique_id):
+def config_entry_fixture(hass, config):
     """Define a config entry fixture."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=unique_id,
+        unique_id=f"{config[CONF_LATITUDE]}, {config[CONF_LONGITUDE]}",
         data=config,
         options={CONF_FROM_WINDOW: 3.5, CONF_TO_WINDOW: 3.5},
     )
@@ -40,13 +40,13 @@ def config_fixture(hass):
     }
 
 
-@pytest.fixture(name="data_protection_window", scope="session")
+@pytest.fixture(name="data_protection_window", scope="package")
 def data_protection_window_fixture():
     """Define a fixture to return UV protection window data."""
     return json.loads(load_fixture("protection_window_data.json", "openuv"))
 
 
-@pytest.fixture(name="data_uv_index", scope="session")
+@pytest.fixture(name="data_uv_index", scope="package")
 def data_uv_index_fixture():
     """Define a fixture to return UV index data."""
     return json.loads(load_fixture("uv_index_data.json", "openuv"))
@@ -66,9 +66,3 @@ async def setup_openuv_fixture(hass, config, data_protection_window, data_uv_ind
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
         yield
-
-
-@pytest.fixture(name="unique_id")
-def unique_id_fixture(hass):
-    """Define a config entry unique ID fixture."""
-    return "51.528308, -0.3817765"

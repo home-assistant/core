@@ -1,0 +1,8 @@
+{
+    "config": {
+        "error": {
+            "not_allowed": "Cesta nen\u00ed povolena",
+            "not_valid": "Cesta nen\u00ed platn\u00e1"
+        }
+    }
+}

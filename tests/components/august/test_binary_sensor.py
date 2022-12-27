@@ -17,14 +17,15 @@ from homeassistant.const import (
 from homeassistant.helpers import device_registry as dr
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed
-from tests.components.august.mocks import (
+from .mocks import (
     _create_august_with_devices,
     _mock_activities_from_fixture,
     _mock_doorbell_from_fixture,
     _mock_doorsense_enabled_august_lock_detail,
     _mock_lock_from_fixture,
 )
+
+from tests.common import async_fire_time_changed
 
 
 def _timetoken():

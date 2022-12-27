@@ -10,12 +10,24 @@
             "unknown": "Erreur inattendue"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Mot de passe"
+                },
+                "description": "Veuillez mettre \u00e0 jour votre mot de passe pour {email}",
+                "title": "R\u00e9-authentifier l'int\u00e9gration"
+            },
             "user": {
                 "data": {
                     "email": "Courriel",
                     "password": "Mot de passe"
                 }
             }
+        }
+    },
+    "issues": {
+        "removed_yaml": {
+            "title": "La configuration YAML pour Skybell a \u00e9t\u00e9 supprim\u00e9e"
         }
     }
 }

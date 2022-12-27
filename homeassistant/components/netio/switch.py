@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections import namedtuple
 from datetime import timedelta
 import logging
+from typing import Any
 
 from pynetio import Netio
 import voluptuous as vol
@@ -148,15 +149,15 @@ class NetioSwitch(SwitchEntity):
         return self._name
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return true if entity is available."""
         return not hasattr(self, "telnet")
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
         self._set(True)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
         self._set(False)
 
@@ -172,6 +173,6 @@ class NetioSwitch(SwitchEntity):
         """Return the switch's status."""
         return self.netio.states[int(self.outlet) - 1]
 
-    def update(self):
+    def update(self) -> None:
         """Update the state."""
         self.netio.update()

@@ -3,7 +3,8 @@
         "error": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "id_exists": "Identyfikator bramki ju\u017c istnieje"
+            "id_exists": "Identyfikator bramki ju\u017c istnieje",
+            "timeout_connect": "Limit czasu na nawi\u0105zanie po\u0142\u0105czenia"
         },
         "step": {
             "init": {

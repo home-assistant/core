@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Ya configurado. Solo es posible una \u00fanica configuraci\u00f3n.",
+            "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n.",
             "unknown": "Error inesperado"
         },
         "error": {
@@ -14,9 +14,9 @@
                     "client_id": "Clave API",
                     "heating_type": "Tipo de calefacci\u00f3n",
                     "password": "Contrase\u00f1a",
-                    "username": "Email"
+                    "username": "Correo electr\u00f3nico"
                 },
-                "description": "Configure la integraci\u00f3n de ViCare. Para generar la clave API, vaya a https://developer.viessmann.com"
+                "description": "Configura la integraci\u00f3n de ViCare. Para generar la clave API, ve a https://developer.viessmann.com"
             }
         }
     }

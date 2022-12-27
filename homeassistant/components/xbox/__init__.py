@@ -29,6 +29,7 @@ from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
 )
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -74,9 +75,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             config[DOMAIN][CONF_CLIENT_ID], config[DOMAIN][CONF_CLIENT_SECRET]
         ),
     )
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2022.9.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
     _LOGGER.warning(
         "Configuration of Xbox integration in YAML is deprecated and "
-        "will be removed in a future release; Your existing configuration "
+        "will be removed in Home Assistant 2022.9.; Your existing configuration "
         "(including OAuth Application Credentials) has been imported into "
         "the UI automatically and can be safely removed from your "
         "configuration.yaml file"

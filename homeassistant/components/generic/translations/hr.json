@@ -1,0 +1,32 @@
+{
+    "config": {
+        "step": {
+            "user_confirm_still": {
+                "data": {
+                    "confirmed_ok": "Ova slika izgleda dobro."
+                },
+                "description": "![Pregled fotografije s kamere]( {preview_url} )",
+                "title": "Pregled"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "confirm_still": {
+                "data": {
+                    "confirmed_ok": "Ova slika izgleda dobro."
+                },
+                "description": "![Pregled fotografije s kamere]({preview_url})",
+                "title": "Pregled"
+            },
+            "init": {
+                "data": {
+                    "password": "Lozinka",
+                    "rtsp_transport": "RTSP transportni protokol",
+                    "username": "Korisni\u010dko ime",
+                    "verify_ssl": "Provjera SSL certifikata"
+                }
+            }
+        }
+    }
+}

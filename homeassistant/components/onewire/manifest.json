@@ -1,6 +1,7 @@
 {
   "domain": "onewire",
   "name": "1-Wire",
+  "integration_type": "hub",
   "documentation": "https://www.home-assistant.io/integrations/onewire",
   "config_flow": true,
   "requirements": ["pyownet==0.10.0.post1"],

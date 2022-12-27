@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from pywilight.wilight_device import Device as PyWiLightDevice
+from pywilight.wilight_device import PyWiLightDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -15,7 +15,7 @@ from .parent_device import WiLightParent
 DOMAIN = "wilight"
 
 # List the platforms that you want to support.
-PLATFORMS = [Platform.COVER, Platform.FAN, Platform.LIGHT]
+PLATFORMS = [Platform.COVER, Platform.FAN, Platform.LIGHT, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

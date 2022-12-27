@@ -7,15 +7,21 @@
             "switchbot_unsupported_type": "Toetamata Switchboti t\u00fc\u00fcp.",
             "unknown": "Ootamatu t\u00f5rge"
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({address})",
         "step": {
-            "user": {
+            "confirm": {
+                "description": "Kas seadistada {name} ?"
+            },
+            "password": {
                 "data": {
-                    "mac": "Seadme MAC-aadress",
-                    "name": "Nimi",
                     "password": "Salas\u00f5na"
                 },
-                "title": "Switchbot seadme seadistamine"
+                "description": "Seade {name} n\u00f5uab salas\u00f5na"
+            },
+            "user": {
+                "data": {
+                    "address": "Seadme aadress"
+                }
             }
         }
     },
@@ -23,10 +29,7 @@
         "step": {
             "init": {
                 "data": {
-                    "retry_count": "Korduskatsete arv",
-                    "retry_timeout": "Korduskatsete vaheline aeg",
-                    "scan_timeout": "Kui kaua andmeid otsida",
-                    "update_time": "V\u00e4rskenduste vaheline aeg (sekundites)"
+                    "retry_count": "Korduskatsete arv"
                 }
             }
         }

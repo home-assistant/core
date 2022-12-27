@@ -14,11 +14,21 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Stel uw WLED-integratie in met Home Assistant."
+                "description": "Stel je WLED-integratie in met Home Assistant."
             },
             "zeroconf_confirm": {
                 "description": "Wil je de WLED genaamd `{name}` toevoegen aan Home Assistant?",
                 "title": "Ontdekt WLED-apparaat"
+            }
+        }
+    },
+    "entity": {
+        "select": {
+            "live_override": {
+                "state": {
+                    "0": "Uit",
+                    "1": "Aan"
+                }
             }
         }
     },
