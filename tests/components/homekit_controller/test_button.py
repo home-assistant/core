@@ -10,9 +10,8 @@ from .common import Helper, get_next_aid, setup_test_component
 def create_switch_with_setup_button(accessory):
     """Define setup button characteristics."""
     service = accessory.add_service(ServicesTypes.OUTLET)
-    accessory.firmware_revision = "10.0.0"
 
-    setup = service.add_char(CharacteristicsTypes.VENDOR_HAA_UPDATE)
+    setup = service.add_char(CharacteristicsTypes.VENDOR_HAA_SETUP)
 
     setup.value = ""
     setup.format = "string"
@@ -60,7 +59,7 @@ async def test_press_button(hass):
     button.async_assert_service_values(
         ServicesTypes.OUTLET,
         {
-            CharacteristicsTypes.VENDOR_HAA_UPDATE: "#HAA@trcmd0",
+            CharacteristicsTypes.VENDOR_HAA_SETUP: "#HAA@trcmd",
         },
     )
 
