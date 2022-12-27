@@ -234,6 +234,54 @@ def dimmer_node(gateway_nodes: dict[int, Sensor], dimmer_node_state: dict) -> Se
     return node
 
 
+@pytest.fixture(name="hvac_node_auto_state", scope="session")
+def hvac_node_auto_state_fixture() -> dict:
+    """Load the hvac node auto state."""
+    return load_nodes_state("hvac_node_auto_state.json")
+
+
+@pytest.fixture
+def hvac_node_auto(
+    gateway_nodes: dict[int, Sensor], hvac_node_auto_state: dict
+) -> Sensor:
+    """Load the hvac auto child node."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(hvac_node_auto_state))
+    node = nodes[1]
+    return node
+
+
+@pytest.fixture(name="hvac_node_cool_state", scope="session")
+def hvac_node_cool_state_fixture() -> dict:
+    """Load the hvac node cool state."""
+    return load_nodes_state("hvac_node_cool_state.json")
+
+
+@pytest.fixture
+def hvac_node_cool(
+    gateway_nodes: dict[int, Sensor], hvac_node_cool_state: dict
+) -> Sensor:
+    """Load the hvac cool child node."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(hvac_node_cool_state))
+    node = nodes[1]
+    return node
+
+
+@pytest.fixture(name="hvac_node_heat_state", scope="session")
+def hvac_node_heat_state_fixture() -> dict:
+    """Load the hvac node heat state."""
+    return load_nodes_state("hvac_node_heat_state.json")
+
+
+@pytest.fixture
+def hvac_node_heat(
+    gateway_nodes: dict[int, Sensor], hvac_node_heat_state: dict
+) -> Sensor:
+    """Load the hvac heat child node."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(hvac_node_heat_state))
+    node = nodes[1]
+    return node
+
+
 @pytest.fixture(name="power_sensor_state", scope="session")
 def power_sensor_state_fixture() -> dict:
     """Load the power sensor state."""
