@@ -1,17 +1,23 @@
 """Entity for the opengarage.io component."""
+from __future__ import annotations
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN
+from . import DOMAIN, OpenGarageDataUpdateCoordinator
 
 
-class OpenGarageEntity(CoordinatorEntity):
+class OpenGarageEntity(CoordinatorEntity[OpenGarageDataUpdateCoordinator]):
     """Representation of a OpenGarage entity."""
 
-    def __init__(self, open_garage_data_coordinator, device_id, description=None):
+    def __init__(
+        self,
+        open_garage_data_coordinator: OpenGarageDataUpdateCoordinator,
+        device_id: str | None,
+        description: EntityDescription | None = None,
+    ) -> None:
         """Initialize the entity."""
         super().__init__(open_garage_data_coordinator)
 

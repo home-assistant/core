@@ -14,6 +14,7 @@ from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_O
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import OpenGarageDataUpdateCoordinator
 from .const import DOMAIN
 from .entity import OpenGarageEntity
 
@@ -37,12 +38,14 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
     _attr_device_class = CoverDeviceClass.GARAGE
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
-    def __init__(self, open_garage_data_coordinator, device_id):
+    def __init__(
+        self, coordinator: OpenGarageDataUpdateCoordinator, device_id: str | None
+    ) -> None:
         """Initialize the cover."""
-        self._state = None
-        self._state_before_move = None
+        self._state: str | None = None
+        self._state_before_move: str | None = None
 
-        super().__init__(open_garage_data_coordinator, device_id)
+        super().__init__(coordinator, device_id)
 
     @property
     def is_closed(self) -> bool | None:
@@ -87,7 +90,7 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         status = self.coordinator.data
 
         self._attr_name = status["name"]
-        state = STATES_MAP.get(status.get("door"))
+        state = STATES_MAP.get(status.get("door"))  # type: ignore[arg-type]
         if self._state_before_move is not None:
             if self._state_before_move != state:
                 self._state = state

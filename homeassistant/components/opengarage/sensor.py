@@ -20,6 +20,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import OpenGarageDataUpdateCoordinator
 from .const import DOMAIN
 from .entity import OpenGarageEntity
 
@@ -59,7 +60,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the OpenGarage sensors."""
-    open_garage_data_coordinator = hass.data[DOMAIN][entry.entry_id]
+    open_garage_data_coordinator: OpenGarageDataUpdateCoordinator = hass.data[DOMAIN][
+        entry.entry_id
+    ]
     async_add_entities(
         [
             OpenGarageSensor(
