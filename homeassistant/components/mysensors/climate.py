@@ -82,7 +82,10 @@ class MySensorsHVAC(MySensorsChildEntity, ClimateEntity):
             and set_req.V_HVAC_SETPOINT_HEAT in self._values
         ):
             features = features | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-        else:
+        elif (
+            set_req.V_HVAC_SETPOINT_COOL in self._values
+            or set_req.V_HVAC_SETPOINT_HEAT in self._values
+        ):
             features = features | ClimateEntityFeature.TARGET_TEMPERATURE
         return features
 
@@ -108,13 +111,11 @@ class MySensorsHVAC(MySensorsChildEntity, ClimateEntity):
 
     @property
     def target_temperature(self) -> float | None:
-        """Return the temperature we try to reach."""
+        """Return the temperature we try to reach.
+
+        Either V_HVAC_SETPOINT_COOL or V_HVAC_SETPOINT_HEAT may be used.
+        """
         set_req = self.gateway.const.SetReq
-        if (
-            set_req.V_HVAC_SETPOINT_COOL in self._values
-            and set_req.V_HVAC_SETPOINT_HEAT in self._values
-        ):
-            return None
         temp = self._values.get(set_req.V_HVAC_SETPOINT_COOL)
         if temp is None:
             temp = self._values.get(set_req.V_HVAC_SETPOINT_HEAT)
@@ -124,21 +125,13 @@ class MySensorsHVAC(MySensorsChildEntity, ClimateEntity):
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         set_req = self.gateway.const.SetReq
-        if set_req.V_HVAC_SETPOINT_HEAT in self._values:
-            temp = self._values.get(set_req.V_HVAC_SETPOINT_COOL)
-            return float(temp) if temp is not None else None
-
-        return None
+        return float(self._values[set_req.V_HVAC_SETPOINT_COOL])
 
     @property
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         set_req = self.gateway.const.SetReq
-        if set_req.V_HVAC_SETPOINT_COOL in self._values:
-            temp = self._values.get(set_req.V_HVAC_SETPOINT_HEAT)
-            return float(temp) if temp is not None else None
-
-        return None
+        return float(self._values[set_req.V_HVAC_SETPOINT_HEAT])
 
     @property
     def hvac_mode(self) -> HVACMode:
