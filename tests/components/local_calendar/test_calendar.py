@@ -326,7 +326,6 @@ async def test_upcoming_event(
         "all_day": False,
         "description": "",
         "location": "",
-        "message": "Evening lights",
         "start_time": start.strftime(DATE_STR_FORMAT),
         "end_time": end.strftime(DATE_STR_FORMAT),
         "supported_features": 3,
