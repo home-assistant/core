@@ -87,7 +87,7 @@ class AuthManagerFlowManager(data_entry_flow.FlowManager):
 
     async def async_create_flow(
         self,
-        handler_key: Any,
+        handler_key: str,
         *,
         context: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
@@ -534,7 +534,8 @@ class AuthManager:
         )
         if provider is None:
             raise InvalidProvider(
-                f"Auth provider {refresh_token.credential.auth_provider_type}, {refresh_token.credential.auth_provider_id} not available"
+                f"Auth provider {refresh_token.credential.auth_provider_type},"
+                f" {refresh_token.credential.auth_provider_id} not available"
             )
         return provider
 

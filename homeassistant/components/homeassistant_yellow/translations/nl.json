@@ -23,14 +23,14 @@
                 "data": {
                     "enable_multi_pan": "Inschakelen multi-protocol ondersteuning"
                 },
-                "description": "Wanneer multi-protocol ondersteuning is ingeschakeld, zal het Home Assistant Yellow IEEE 802.15.4 toegangspunt gelijktijdig voor zowel Zigbee als Thread (gebruikt door Matter) ingezet worden. Als het toegangspunt als wordt gebruikt door de ZHA Zigbee integratie, dan zal, ZHA worden be ge-reconfigureerd om de multi-protocol firmware te gaan gebruiken.\n\nOpmerking: Dit is een experimentele functie.",
+                "description": "Wanneer multi-protocol ondersteuning is ingeschakeld, zal het Home Assistant Yellow IEEE 802.15.4 toegangspunt gelijktijdig voor zowel Zigbee als Thread (gebruikt door Matter) ingezet worden. Als het toegangspunt al wordt gebruikt door de ZHA Zigbee integratie, dan zal ZHA worden geconfigureerd om de multi-protocol firmware te gaan gebruiken.\n\nOpmerking: Dit is een experimentele functionaliteit.",
                 "title": "Inschakelen multi-protocol ondersteuning op het IEEE 802.15.4 toegangspunt"
             },
             "install_addon": {
                 "title": "De Silicon Labs Multiprotocol add-on is gestart"
             },
             "show_revert_guide": {
-                "description": "Als je naar Zigbee-only firmware wilt overstappen, voltooi dan de volgende handmatig stappen:\n\n  * Verwijderd de Silicon Labs Multiprotocol addon\n\n  * Flash de Zigbee-only firmware, volg de aanwijzigingen op https://github.com/NabuCasa/silabs-firmware/wiki/Flash-Silicon-Labs-radio-firmware-manually\n\n  * Herconfigureer ZHA om de instellingen te migreren naar het ge-reflashed toegangspunt"
+                "description": "Als je naar Zigbee-only firmware wilt overstappen, voltooi dan de volgende handmatig stappen:\n\n  * Verwijderd de Silicon Labs multi-protocol add-on\n\n  * Flash de Zigbee-only firmware, volg de aanwijzigingen op https://github.com/NabuCasa/silabs-firmware/wiki/Flash-Silicon-Labs-radio-firmware-manually\n\n  * Herconfigureer ZHA om de instellingen te migreren naar het ge-reflashed toegangspunt"
             },
             "start_addon": {
                 "title": "De Silicon Labs Multiprotocol add-on is aan het opstarten."

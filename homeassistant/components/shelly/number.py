@@ -117,7 +117,8 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, NumberEntity):
         except DeviceConnectionError as err:
             self.coordinator.last_update_success = False
             raise HomeAssistantError(
-                f"Setting state for entity {self.name} failed, state: {params}, error: {repr(err)}"
+                f"Setting state for entity {self.name} failed, state: {params}, error:"
+                f" {repr(err)}"
             ) from err
         except InvalidAuthError:
             self.coordinator.entry.async_start_reauth(self.hass)

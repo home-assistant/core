@@ -14,14 +14,13 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import AirVisualProEntity
+from . import AirVisualProData, AirVisualProEntity
 from .const import DOMAIN
 
 SENSOR_KIND_AQI = "air_quality_index"
@@ -88,7 +87,7 @@ SENSOR_DESCRIPTIONS = (
         key=SENSOR_KIND_TEMPERATURE,
         name="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -113,10 +112,10 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up AirVisual sensors based on a config entry."""
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    data: AirVisualProData = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        AirVisualProSensor(coordinator, description)
+        AirVisualProSensor(data.coordinator, description)
         for description in SENSOR_DESCRIPTIONS
     )
 

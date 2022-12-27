@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -190,7 +190,7 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         metric_key="A_CYC_TEMP_EXTRACT_AIR",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     ValloxSensorEntityDescription(
         key="exhaust_air",
@@ -198,7 +198,7 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         metric_key="A_CYC_TEMP_EXHAUST_AIR",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     ValloxSensorEntityDescription(
         key="outdoor_air",
@@ -206,7 +206,7 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         metric_key="A_CYC_TEMP_OUTDOOR_AIR",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     ValloxSensorEntityDescription(
         key="supply_air",
@@ -214,7 +214,7 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         metric_key="A_CYC_TEMP_SUPPLY_AIR",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     ValloxSensorEntityDescription(
         key="supply_cell_air",
@@ -222,7 +222,7 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         metric_key="A_CYC_TEMP_SUPPLY_CELL_AIR",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     ValloxSensorEntityDescription(
         key="optional_air",
@@ -230,7 +230,7 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         metric_key="A_CYC_TEMP_OPTIONAL",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_registry_enabled_default=False,
     ),
     ValloxSensorEntityDescription(

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator, Callable, Generator
+from copy import deepcopy
 import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -189,6 +190,20 @@ def update_gateway_nodes(
     return nodes
 
 
+@pytest.fixture(name="door_sensor_state", scope="session")
+def door_sensor_state_fixture() -> dict:
+    """Load the door sensor state."""
+    return load_nodes_state("mysensors/door_sensor_state.json")
+
+
+@pytest.fixture
+def door_sensor(gateway_nodes: dict[int, Sensor], door_sensor_state: dict) -> Sensor:
+    """Load the door sensor."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(door_sensor_state))
+    node = nodes[1]
+    return node
+
+
 @pytest.fixture(name="gps_sensor_state", scope="session")
 def gps_sensor_state_fixture() -> dict:
     """Load the gps sensor state."""
@@ -198,7 +213,21 @@ def gps_sensor_state_fixture() -> dict:
 @pytest.fixture
 def gps_sensor(gateway_nodes: dict[int, Sensor], gps_sensor_state: dict) -> Sensor:
     """Load the gps sensor."""
-    nodes = update_gateway_nodes(gateway_nodes, gps_sensor_state)
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(gps_sensor_state))
+    node = nodes[1]
+    return node
+
+
+@pytest.fixture(name="dimmer_node_state", scope="session")
+def dimmer_node_state_fixture() -> dict:
+    """Load the dimmer node state."""
+    return load_nodes_state("mysensors/dimmer_node_state.json")
+
+
+@pytest.fixture
+def dimmer_node(gateway_nodes: dict[int, Sensor], dimmer_node_state: dict) -> Sensor:
+    """Load the dimmer child node."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(dimmer_node_state))
     node = nodes[1]
     return node
 
@@ -213,6 +242,34 @@ def power_sensor_state_fixture() -> dict:
 def power_sensor(gateway_nodes: dict[int, Sensor], power_sensor_state: dict) -> Sensor:
     """Load the power sensor."""
     nodes = update_gateway_nodes(gateway_nodes, power_sensor_state)
+    node = nodes[1]
+    return node
+
+
+@pytest.fixture(name="rgb_node_state", scope="session")
+def rgb_node_state_fixture() -> dict:
+    """Load the rgb node state."""
+    return load_nodes_state("mysensors/rgb_node_state.json")
+
+
+@pytest.fixture
+def rgb_node(gateway_nodes: dict[int, Sensor], rgb_node_state: dict) -> Sensor:
+    """Load the rgb child node."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(rgb_node_state))
+    node = nodes[1]
+    return node
+
+
+@pytest.fixture(name="rgbw_node_state", scope="session")
+def rgbw_node_state_fixture() -> dict:
+    """Load the rgbw node state."""
+    return load_nodes_state("mysensors/rgbw_node_state.json")
+
+
+@pytest.fixture
+def rgbw_node(gateway_nodes: dict[int, Sensor], rgbw_node_state: dict) -> Sensor:
+    """Load the rgbw child node."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(rgbw_node_state))
     node = nodes[1]
     return node
 
@@ -259,6 +316,36 @@ def distance_sensor(
 ) -> Sensor:
     """Load the distance sensor."""
     nodes = update_gateway_nodes(gateway_nodes, distance_sensor_state)
+    node = nodes[1]
+    return node
+
+
+@pytest.fixture(name="ir_transceiver_state", scope="session")
+def ir_transceiver_state_fixture() -> dict:
+    """Load the ir transceiver state."""
+    return load_nodes_state("mysensors/ir_transceiver_state.json")
+
+
+@pytest.fixture
+def ir_transceiver(
+    gateway_nodes: dict[int, Sensor], ir_transceiver_state: dict
+) -> Sensor:
+    """Load the ir transceiver child node."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(ir_transceiver_state))
+    node = nodes[1]
+    return node
+
+
+@pytest.fixture(name="relay_node_state", scope="session")
+def relay_node_state_fixture() -> dict:
+    """Load the relay node state."""
+    return load_nodes_state("mysensors/relay_node_state.json")
+
+
+@pytest.fixture
+def relay_node(gateway_nodes: dict[int, Sensor], relay_node_state: dict) -> Sensor:
+    """Load the relay child node."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(relay_node_state))
     node = nodes[1]
     return node
 

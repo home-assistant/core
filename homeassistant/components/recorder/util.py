@@ -295,7 +295,10 @@ def run_checks_on_open_db(dbpath: str, cursor: CursorFetchStrategy) -> None:
 
     if not last_run_was_clean:
         _LOGGER.warning(
-            "The system could not validate that the sqlite3 database at %s was shutdown cleanly",
+            (
+                "The system could not validate that the sqlite3 database at %s was"
+                " shutdown cleanly"
+            ),
             dbpath,
         )
 
@@ -307,7 +310,10 @@ def move_away_broken_database(dbfile: str) -> None:
     corrupt_postfix = f".corrupt.{isotime}"
 
     _LOGGER.error(
-        "The system will rename the corrupt database file %s to %s in order to allow startup to proceed",
+        (
+            "The system will rename the corrupt database file %s to %s in order to"
+            " allow startup to proceed"
+        ),
         dbfile,
         f"{dbfile}{corrupt_postfix}",
     )
@@ -338,9 +344,11 @@ def query_on_connection(dbapi_connection: Any, statement: str) -> Any:
 def _fail_unsupported_dialect(dialect_name: str) -> None:
     """Warn about unsupported database version."""
     _LOGGER.error(
-        "Database %s is not supported; Home Assistant supports %s. "
-        "Starting with Home Assistant 2022.6 this prevents the recorder from "
-        "starting. Please migrate your database to a supported software",
+        (
+            "Database %s is not supported; Home Assistant supports %s. "
+            "Starting with Home Assistant 2022.6 this prevents the recorder from "
+            "starting. Please migrate your database to a supported software"
+        ),
         dialect_name,
         "MariaDB ≥ 10.3, MySQL ≥ 8.0, PostgreSQL ≥ 12, SQLite ≥ 3.31.0",
     )
@@ -352,9 +360,11 @@ def _fail_unsupported_version(
 ) -> None:
     """Warn about unsupported database version."""
     _LOGGER.error(
-        "Version %s of %s is not supported; minimum supported version is %s. "
-        "Starting with Home Assistant 2022.6 this prevents the recorder from "
-        "starting. Please upgrade your database software",
+        (
+            "Version %s of %s is not supported; minimum supported version is %s. "
+            "Starting with Home Assistant 2022.6 this prevents the recorder from "
+            "starting. Please upgrade your database software"
+        ),
         server_version,
         dialect_name,
         minimum_version,

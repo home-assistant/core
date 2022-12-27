@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Umiestnenie u\u017e je nakonfigurovan\u00e9 alebo ID uzla/Pro je u\u017e zaregistrovan\u00e9.",
+            "already_configured": "Umiestnenie u\u017e je nakonfigurovan\u00e9",
             "reauth_successful": "Op\u00e4tovn\u00e9 overenie bolo \u00faspe\u0161n\u00e9"
         },
         "error": {
@@ -72,6 +72,12 @@
                     "very_unhealthy": "Ve\u013emi nezdrav\u00e9"
                 }
             }
+        }
+    },
+    "issues": {
+        "airvisual_pro_migration": {
+            "description": "Jednotky AirVisual Pro s\u00fa teraz vlastnou integr\u00e1ciou dom\u00e1ceho asistenta (na rozdiel od p\u00f4vodnej integr\u00e1cie AirVisual, ktor\u00e1 vyu\u017e\u00edva cloudov\u00e9 API AirVisual). Zariadenie Pro umiestnen\u00e9 na adrese `{ip_address}` bolo automaticky migrovan\u00e9. \n\n V r\u00e1mci tejto migr\u00e1cie sa ID zariadenia profesion\u00e1la zmenilo z `{old_device_id}` na `{new_device_id}`. Aktualizujte tieto automatiz\u00e1cie, aby pou\u017e\u00edvali nov\u00e9 ID zariadenia: {device_automations_string}.",
+            "title": "{ip_address} je teraz s\u00fa\u010das\u0165ou integr\u00e1cie AirVisual Pro"
         }
     },
     "options": {

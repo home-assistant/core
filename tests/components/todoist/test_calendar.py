@@ -57,7 +57,7 @@ def mock_state() -> dict[str, Any]:
     return {
         "collaborators": [],
         "labels": [{"name": "label1", "id": 1}],
-        "projects": [{"id": 12345, "name": "Name"}],
+        "projects": [{"id": "12345", "name": "Name"}],
     }
 
 
@@ -80,7 +80,7 @@ async def test_calendar_entity_unique_id(todoist_api, hass, state):
 
     registry = entity_registry.async_get(hass)
     entity = registry.async_get("calendar.name")
-    assert 12345 == entity.unique_id
+    assert "12345" == entity.unique_id
 
 
 @patch("homeassistant.components.todoist.calendar.TodoistAPI")
