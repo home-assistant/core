@@ -520,7 +520,7 @@ async def handle_calendar_event_delete(
         vol.Required(EVENT_UID): cv.string,
         vol.Optional(EVENT_RECURRENCE_ID): cv.string,
         vol.Optional(EVENT_RECURRENCE_RANGE): cv.string,
-        CONF_EVENT: vol.Schema(
+        vol.Required(CONF_EVENT): vol.Schema(
             vol.All(
                 {
                     vol.Required(EVENT_START): vol.Any(cv.date, cv.datetime),
