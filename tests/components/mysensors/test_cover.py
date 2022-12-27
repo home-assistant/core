@@ -317,5 +317,3 @@ async def test_cover_node_binary(
 
     assert state
     assert state.state == STATE_CLOSED
-
-    transport_write.reset_mock()
