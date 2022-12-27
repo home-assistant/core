@@ -49,6 +49,7 @@ async def test_sensors(hass):
         state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Fuel distance remaining"
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:gas-station"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DISTANCE
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == LENGTH_KILOMETERS
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.state == "381"
@@ -61,6 +62,7 @@ async def test_sensors(hass):
     assert state
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Odometer"
     assert state.attributes.get(ATTR_ICON) == "mdi:speedometer"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DISTANCE
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == LENGTH_KILOMETERS
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
     assert state.state == "2795"
@@ -185,6 +187,7 @@ async def test_electric_vehicle_sensors(hass):
     assert state
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Remaining range"
     assert state.attributes.get(ATTR_ICON) == "mdi:ev-station"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DISTANCE
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == LENGTH_KILOMETERS
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.state == "218"
