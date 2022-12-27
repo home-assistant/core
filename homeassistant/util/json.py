@@ -87,9 +87,7 @@ def save_json(
         formatted_data = format_unserializable_data(
             find_paths_unserializable_data(data, dump=dump)
         )
-        msg = (
-            f"Failed to serialize to JSON: {filename}. Bad data at {formatted_data}"
-        )
+        msg = f"Failed to serialize to JSON: {filename}. Bad data at {formatted_data}"
         _LOGGER.error(msg)
         raise SerializationError(msg) from error
 
