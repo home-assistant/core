@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ScreenlogicEntity
@@ -56,8 +57,11 @@ SUPPORTED_SCG_SENSORS = (
 SUPPORTED_PUMP_SENSORS = ("currentWatts", "currentRPM", "currentGPM")
 
 SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS = {
-    DEVICE_TYPE.TEMPERATURE: SensorDeviceClass.TEMPERATURE,
+    DEVICE_TYPE.DURATION: SensorDeviceClass.DURATION,
     DEVICE_TYPE.ENERGY: SensorDeviceClass.POWER,
+    DEVICE_TYPE.POWER: SensorDeviceClass.POWER,
+    DEVICE_TYPE.TEMPERATURE: SensorDeviceClass.TEMPERATURE,
+    DEVICE_TYPE.VOLUME: SensorDeviceClass.VOLUME,
 }
 
 
@@ -129,10 +133,12 @@ async def async_setup_entry(
 class ScreenLogicSensor(ScreenlogicEntity, SensorEntity):
     """Representation of the basic ScreenLogic sensor entity."""
 
+    _attr_has_entity_name = True
+
     @property
     def name(self):
         """Name of the sensor."""
-        return f"{self.gateway_name} {self.sensor['name']}"
+        return self.sensor["name"]
 
     @property
     def native_unit_of_measurement(self):
@@ -144,6 +150,13 @@ class ScreenLogicSensor(ScreenlogicEntity, SensorEntity):
         """Device class of the sensor."""
         device_type = self.sensor.get("device_type")
         return SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS.get(device_type)
+
+    @property
+    def entity_category(self):
+        """Entity Category of the sensor."""
+        return (
+            None if self._data_key == "air_temperature" else EntityCategory.DIAGNOSTIC
+        )
 
     @property
     def state_class(self):

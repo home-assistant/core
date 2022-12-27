@@ -7,6 +7,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ScreenlogicEntity
@@ -64,16 +65,23 @@ async def async_setup_entry(
 class ScreenLogicBinarySensor(ScreenlogicEntity, BinarySensorEntity):
     """Representation of the basic ScreenLogic binary sensor entity."""
 
+    _attr_has_entity_name = True
+
     @property
     def name(self):
         """Return the sensor name."""
-        return f"{self.gateway_name} {self.sensor['name']}"
+        return self.sensor["name"]
 
     @property
     def device_class(self):
         """Return the device class."""
         device_type = self.sensor.get("device_type")
         return SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS.get(device_type)
+
+    @property
+    def entity_category(self) -> EntityCategory:
+        """Entity Category of the sensor."""
+        return EntityCategory.DIAGNOSTIC
 
     @property
     def is_on(self) -> bool:

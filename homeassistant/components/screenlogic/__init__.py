@@ -219,6 +219,7 @@ class ScreenlogicEntity(CoordinatorEntity[ScreenlogicDataUpdateCoordinator]):
             equipment_model = f"Unknown Model C:{controller_type} H:{hardware_type}"
         return DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, self.mac)},
+            identifiers={(DOMAIN, self.mac)},
             manufacturer="Pentair",
             model=equipment_model,
             name=self.gateway_name,
@@ -240,10 +241,12 @@ class ScreenlogicEntity(CoordinatorEntity[ScreenlogicDataUpdateCoordinator]):
 class ScreenLogicCircuitEntity(ScreenlogicEntity):
     """ScreenLogic circuit entity."""
 
+    _attr_has_entity_name = True
+
     @property
     def name(self):
         """Get the name of the switch."""
-        return f"{self.gateway_name} {self.circuit['name']}"
+        return self.circuit["name"]
 
     @property
     def is_on(self) -> bool:
