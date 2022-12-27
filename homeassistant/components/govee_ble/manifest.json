@@ -75,6 +75,6 @@
   ],
   "requirements": ["govee-ble==0.19.3"],
   "dependencies": ["bluetooth"],
-  "codeowners": ["@bdraco"],
+  "codeowners": ["@bdraco", "@PierreAronnax"],
   "iot_class": "local_push"
 }
