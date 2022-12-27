@@ -248,10 +248,8 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], TemplateSensor):
         """Update state from the rest data."""
         value = self._extract_value()
 
-        if self._value_template is not None:
-            value = self._value_template.async_render_with_possible_json_value(
-                value, None
-            )
+        if (template := self._value_template) is not None:
+            value = template.async_render_with_possible_json_value(value, None)
 
         if self.device_class not in {
             SensorDeviceClass.DATE,

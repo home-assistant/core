@@ -411,7 +411,7 @@ async def test_scrape_sensor_device_timestamp(hass: HomeAssistant) -> None:
         ]
     }
 
-    mocker = MockRestData("test_scrape_timestamp")
+    mocker = MockRestData("test_scrape_sensor")
     with patch(
         "homeassistant.components.rest.RestData",
         return_value=mocker,
@@ -439,7 +439,7 @@ async def test_scrape_sensor_device_timestamp_error(hass: HomeAssistant) -> None
         ]
     }
 
-    mocker = MockRestData("test_scrape_timestamp")
+    mocker = MockRestData("test_scrape_sensor")
     with patch(
         "homeassistant.components.rest.RestData",
         return_value=mocker,
