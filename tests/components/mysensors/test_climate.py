@@ -49,9 +49,6 @@ async def test_hvac_node_auto(
     assert transport_write.call_args == call("1;1;1;1;21;AutoChangeOver\n")
 
     receive_message("1;1;1;0;21;AutoChangeOver\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -83,9 +80,6 @@ async def test_hvac_node_auto(
 
     receive_message("1;1;1;0;45;20.0\n")
     receive_message("1;1;1;0;44;22.0\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -113,9 +107,6 @@ async def test_hvac_node_auto(
     assert transport_write.call_args == call("1;1;1;1;22;Max\n")
 
     receive_message("1;1;1;0;22;Max\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -138,9 +129,6 @@ async def test_hvac_node_auto(
     assert transport_write.call_args == call("1;1;1;1;21;Off\n")
 
     receive_message("1;1;1;0;21;Off\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -175,9 +163,6 @@ async def test_hvac_node_heat(
     assert transport_write.call_args == call("1;1;1;1;21;HeatOn\n")
 
     receive_message("1;1;1;0;21;HeatOn\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -205,9 +190,6 @@ async def test_hvac_node_heat(
     assert transport_write.call_args == call("1;1;1;1;45;20.0\n")
 
     receive_message("1;1;1;0;45;20.0\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -234,9 +216,6 @@ async def test_hvac_node_heat(
     assert transport_write.call_args == call("1;1;1;1;22;Min\n")
 
     receive_message("1;1;1;0;22;Min\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -259,9 +238,6 @@ async def test_hvac_node_heat(
     assert transport_write.call_args == call("1;1;1;1;21;Off\n")
 
     receive_message("1;1;1;0;21;Off\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -296,9 +272,6 @@ async def test_hvac_node_cool(
     assert transport_write.call_args == call("1;1;1;1;21;CoolOn\n")
 
     receive_message("1;1;1;0;21;CoolOn\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -326,9 +299,6 @@ async def test_hvac_node_cool(
     assert transport_write.call_args == call("1;1;1;1;44;20.0\n")
 
     receive_message("1;1;1;0;44;20.0\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -355,9 +325,6 @@ async def test_hvac_node_cool(
     assert transport_write.call_args == call("1;1;1;1;22;Auto\n")
 
     receive_message("1;1;1;0;22;Auto\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -380,9 +347,6 @@ async def test_hvac_node_cool(
     assert transport_write.call_args == call("1;1;1;1;21;Off\n")
 
     receive_message("1;1;1;0;21;Off\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)

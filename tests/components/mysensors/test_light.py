@@ -42,9 +42,6 @@ async def test_dimmer_node(
 
     receive_message("1;1;1;0;2;1\n")
     receive_message("1;1;1;0;3;100\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -68,9 +65,6 @@ async def test_dimmer_node(
 
     receive_message("1;1;1;0;2;1\n")
     receive_message("1;1;1;0;3;50\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -93,9 +87,6 @@ async def test_dimmer_node(
     assert transport_write.call_args == call("1;1;1;1;2;0\n")
 
     receive_message("1;1;1;0;2;0\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -132,9 +123,6 @@ async def test_rgb_node(
     receive_message("1;1;1;0;2;1\n")
     receive_message("1;1;1;0;3;100\n")
     receive_message("1;1;1;0;40;ffffff\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -160,9 +148,6 @@ async def test_rgb_node(
     receive_message("1;1;1;0;2;1\n")
     receive_message("1;1;1;0;3;50\n")
     receive_message("1;1;1;0;40;ffffff\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -186,9 +171,6 @@ async def test_rgb_node(
     assert transport_write.call_args == call("1;1;1;1;2;0\n")
 
     receive_message("1;1;1;0;2;0\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -213,9 +195,6 @@ async def test_rgb_node(
     receive_message("1;1;1;0;2;1\n")
     receive_message("1;1;1;0;3;50\n")
     receive_message("1;1;1;0;40;ff0000\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -254,9 +233,6 @@ async def test_rgbw_node(
     receive_message("1;1;1;0;2;1\n")
     receive_message("1;1;1;0;3;100\n")
     receive_message("1;1;1;0;41;ffffffff\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -282,9 +258,6 @@ async def test_rgbw_node(
     receive_message("1;1;1;0;2;1\n")
     receive_message("1;1;1;0;3;50\n")
     receive_message("1;1;1;0;41;ffffffff\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -308,9 +281,6 @@ async def test_rgbw_node(
     assert transport_write.call_args == call("1;1;1;1;2;0\n")
 
     receive_message("1;1;1;0;2;0\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -335,9 +305,6 @@ async def test_rgbw_node(
     receive_message("1;1;1;0;2;1\n")
     receive_message("1;1;1;0;3;50\n")
     receive_message("1;1;1;0;41;ff000000\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
