@@ -34,7 +34,7 @@ async def async_setup(hass: HomeAssistant) -> bool:
         if old_entity_id is None:
             old_entity_id = event.data["entity_id"]
 
-        cached_list_entities.pop(old_entity_id)
+        cached_list_entities.pop(old_entity_id, None)
 
     @websocket_api.websocket_command(
         {vol.Required("type"): "config/entity_registry/list"}
