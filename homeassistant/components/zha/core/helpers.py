@@ -349,10 +349,7 @@ def retryable_req(
                     if delay:
                         delay = uniform(delay * 0.75, delay * 1.25)
                         channel.debug(
-                            (
-                                "%s: retryable request #%d failed: %s. "
-                                "Retrying in %ss"
-                            ),
+                            "%s: retryable request #%d failed: %s. Retrying in %ss",
                             func.__name__,
                             try_count,
                             ex,

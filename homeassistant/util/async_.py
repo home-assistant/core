@@ -155,8 +155,11 @@ def check_loop(
         extra = ""
 
     _LOGGER.warning(
-        "Detected blocking call to %s inside the event loop. This is causing stability issues. "
-        "Please report issue%s for %s doing blocking calls at %s, line %s: %s",
+        (
+            "Detected blocking call to %s inside the event loop. This is causing"
+            " stability issues. Please report issue%s for %s doing blocking calls at"
+            " %s, line %s: %s"
+        ),
         func.__name__,
         extra,
         integration,
@@ -166,9 +169,10 @@ def check_loop(
     )
     if strict:
         raise RuntimeError(
-            "Blocking calls must be done in the executor or a separate thread; "
-            f"{advise_msg or 'Use `await hass.async_add_executor_job()`'}; "
-            f"at {found_frame.filename[index:]}, line {found_frame.lineno}: {(found_frame.line or '?').strip()}"
+            "Blocking calls must be done in the executor or a separate thread;"
+            f" {advise_msg or 'Use `await hass.async_add_executor_job()`'}; at"
+            f" {found_frame.filename[index:]}, line {found_frame.lineno}:"
+            f" {(found_frame.line or '?').strip()}"
         )
 
 

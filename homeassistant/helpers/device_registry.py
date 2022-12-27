@@ -345,9 +345,11 @@ class DeviceRegistry:
 
         if isinstance(entry_type, str) and not isinstance(entry_type, DeviceEntryType):
             report(  # type: ignore[unreachable]
-                "uses str for device registry entry_type. This is deprecated and will "
-                "stop working in Home Assistant 2022.3, it should be updated to use "
-                "DeviceEntryType instead",
+                (
+                    "uses str for device registry entry_type. This is deprecated and"
+                    " will stop working in Home Assistant 2022.3, it should be updated"
+                    " to use DeviceEntryType instead"
+                ),
                 error_if_core=False,
             )
             entry_type = DeviceEntryType(entry_type)
@@ -417,9 +419,11 @@ class DeviceRegistry:
             disabled_by, DeviceEntryDisabler
         ):
             report(  # type: ignore[unreachable]
-                "uses str for device registry disabled_by. This is deprecated and will "
-                "stop working in Home Assistant 2022.3, it should be updated to use "
-                "DeviceEntryDisabler instead",
+                (
+                    "uses str for device registry disabled_by. This is deprecated and"
+                    " will stop working in Home Assistant 2022.3, it should be updated"
+                    " to use DeviceEntryDisabler instead"
+                ),
                 error_if_core=False,
             )
             disabled_by = DeviceEntryDisabler(disabled_by)
@@ -698,7 +702,8 @@ async def async_get_registry(hass: HomeAssistant) -> DeviceRegistry:
     This is deprecated and will be removed in the future. Use async_get instead.
     """
     report(
-        "uses deprecated `async_get_registry` to access device registry, use async_get instead"
+        "uses deprecated `async_get_registry` to access device registry, use async_get"
+        " instead"
     )
     return async_get(hass)
 
