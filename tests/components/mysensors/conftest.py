@@ -218,6 +218,20 @@ def gps_sensor(gateway_nodes: dict[int, Sensor], gps_sensor_state: dict) -> Sens
     return node
 
 
+@pytest.fixture(name="dimmer_node_state", scope="session")
+def dimmer_node_state_fixture() -> dict:
+    """Load the dimmer node state."""
+    return load_nodes_state("mysensors/dimmer_node_state.json")
+
+
+@pytest.fixture
+def dimmer_node(gateway_nodes: dict[int, Sensor], dimmer_node_state: dict) -> Sensor:
+    """Load the dimmer child node."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(dimmer_node_state))
+    node = nodes[1]
+    return node
+
+
 @pytest.fixture(name="power_sensor_state", scope="session")
 def power_sensor_state_fixture() -> dict:
     """Load the power sensor state."""
@@ -228,6 +242,34 @@ def power_sensor_state_fixture() -> dict:
 def power_sensor(gateway_nodes: dict[int, Sensor], power_sensor_state: dict) -> Sensor:
     """Load the power sensor."""
     nodes = update_gateway_nodes(gateway_nodes, power_sensor_state)
+    node = nodes[1]
+    return node
+
+
+@pytest.fixture(name="rgb_node_state", scope="session")
+def rgb_node_state_fixture() -> dict:
+    """Load the rgb node state."""
+    return load_nodes_state("mysensors/rgb_node_state.json")
+
+
+@pytest.fixture
+def rgb_node(gateway_nodes: dict[int, Sensor], rgb_node_state: dict) -> Sensor:
+    """Load the rgb child node."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(rgb_node_state))
+    node = nodes[1]
+    return node
+
+
+@pytest.fixture(name="rgbw_node_state", scope="session")
+def rgbw_node_state_fixture() -> dict:
+    """Load the rgbw node state."""
+    return load_nodes_state("mysensors/rgbw_node_state.json")
+
+
+@pytest.fixture
+def rgbw_node(gateway_nodes: dict[int, Sensor], rgbw_node_state: dict) -> Sensor:
+    """Load the rgbw child node."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(rgbw_node_state))
     node = nodes[1]
     return node
 
