@@ -1,0 +1,9 @@
+{
+  "domain": "v2c",
+  "name": "V2C",
+  "requirements": ["v2c-trydan-jesus79==0.0.1"],
+  "documentation": "https://www.home-assistant.io/integrations/v2charge",
+  "codeowners": ["@V2Charge"],
+  "iot_class": "local_polling",
+  "loggers": ["v2cpython"]
+}
