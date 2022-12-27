@@ -6,6 +6,7 @@ import collections
 from collections.abc import Callable
 from datetime import timedelta
 from enum import Enum
+import errno
 import itertools
 import logging
 import re
@@ -24,6 +25,7 @@ from homeassistant import __path__ as HOMEASSISTANT_PATH
 from homeassistant.components.system_log import LogEntry, _figure_out_source
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
@@ -180,6 +182,13 @@ class ZHAGateway:
                     STARTUP_RETRIES,
                     exc_info=exc,
                 )
+
+                # Allow Core to retry reloading ZHA if the network is down
+                if (
+                    isinstance(exc, OSError)
+                    and exc.errno == errno.ENETUNREACH  # pylint: disable=no-member
+                ):
+                    raise ConfigEntryNotReady from exc
 
                 if attempt == STARTUP_RETRIES - 1:
                     raise exc
