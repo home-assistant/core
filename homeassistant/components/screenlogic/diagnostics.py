@@ -20,4 +20,5 @@ async def async_get_config_entry_diagnostics(
     return {
         "config_entry": config_entry.as_dict(),
         "data": coordinator.data,
+        "debug": coordinator.gateway.get_debug(),
     }
