@@ -155,7 +155,8 @@ async def integration_fixture(
 
             async def call_debouncer():
                 """Mock call to debouncer."""
-                function()
+                if function is not None:
+                    function()
 
             debounce_instance = MagicMock()
             debounce_instance.async_call.side_effect = call_debouncer
