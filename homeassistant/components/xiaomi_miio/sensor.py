@@ -246,7 +246,6 @@ SENSOR_TYPES = {
         key=ATTR_ILLUMINANCE,
         name="Illuminance",
         native_unit_of_measurement=UNIT_LUMEN,
-        device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ATTR_ILLUMINANCE_LUX: XiaomiMiioSensorDescription(

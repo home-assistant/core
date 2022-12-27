@@ -803,7 +803,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.19.3
+govee-ble==0.21.0
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -2594,7 +2594,7 @@ xboxapi==2.0.1
 xiaomi-ble==0.12.2
 
 # homeassistant.components.knx
-xknx==2.1.0
+xknx==2.2.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
