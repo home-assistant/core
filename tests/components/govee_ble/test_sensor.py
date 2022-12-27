@@ -3,7 +3,11 @@
 
 from homeassistant.components.govee_ble.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS
-from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    ATTR_UNIT_OF_MEASUREMENT,
+    STATE_UNAVAILABLE,
+)
 
 from . import GVH5075_SERVICE_INFO, GVH5178_SERVICE_INFO_ERROR
 
@@ -55,7 +59,7 @@ async def test_gvh5178_error(hass):
     assert len(hass.states.async_all()) == 4
 
     temp_sensor = hass.states.get("sensor.b51782bc8_remote_temperature")
-    assert temp_sensor.state == "unavailable"
+    assert temp_sensor.state == STATE_UNAVAILABLE
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
