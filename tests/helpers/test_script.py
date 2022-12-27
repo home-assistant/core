@@ -5136,36 +5136,56 @@ async def test_data_source(hass: HomeAssistant):
             },
             {
                 "data_sources": {
-                    "output_variable": {
-                        "platform": "test_platform",
-                        "type": "example",
-                        "arg": "{{ input_variable }}",
+                    "source_1": {
+                        "platform": "test_platform_1",
+                        "type": "example_1",
+                        "arg1": "{{ input_variable }}",
+                    },
+                    "source_2": {
+                        "platform": "test_platform_2",
+                        "type": "example_2",
+                        "arg2": "{{ source_1 }}",
                     },
                 }
             },
-            {"service": "test.script", "data": {"value": "{{ output_variable }}"}},
+            {
+                "service": "test.script",
+                "data": {"value_1": "{{ source_1 }}", "value_2": "{{ source_2 }}"},
+            },
         ]
     )
     script_obj = script.Script(hass, sequence, "test script", "test_domain")
 
     mock_calls = async_mock_service(hass, "test", "script")
 
-    hass.config.components.add("test_platform")
+    hass.config.components.add("test_platform_1")
+    hass.config.components.add("test_platform_2")
 
-    async def provide_data(hass: HomeAssistant, config: ConfigType) -> Any:
-        assert config.get("type") == "example"
-        assert config.get("arg") == "input value"
-        return "data source result"
+    async def provide_data_1(hass: HomeAssistant, config: ConfigType) -> Any:
+        assert config.get("type") == "example_1"
+        assert config.get("arg1") == "input value"
+        return "result_1"
 
-    data_source = Mock()
-    data_source.async_get_data = provide_data
-    data_source.DATA_SOURCE_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
-    mock_platform(hass, "test_platform.data_source", data_source)
+    async def provide_data_2(hass: HomeAssistant, config: ConfigType) -> Any:
+        assert config.get("type") == "example_2"
+        assert config.get("arg2") == "result_1"
+        return "result_2"
+
+    data_source_1 = Mock()
+    data_source_1.async_get_data = provide_data_1
+    data_source_1.DATA_SOURCE_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
+    mock_platform(hass, "test_platform_1.data_source", data_source_1)
+
+    data_source_2 = Mock()
+    data_source_2.async_get_data = provide_data_2
+    data_source_2.DATA_SOURCE_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
+    mock_platform(hass, "test_platform_2.data_source", data_source_2)
 
     await script_obj.async_run(context=Context())
     await hass.async_block_till_done()
 
-    assert mock_calls[0].data["value"] == "data source result"
+    assert mock_calls[0].data["value_1"] == "result_1"
+    assert mock_calls[0].data["value_2"] == "result_2"
 
     expected_trace = {
         "0": [{}],
@@ -5177,12 +5197,12 @@ async def test_data_source(hass: HomeAssistant):
                     "params": {
                         "domain": "test",
                         "service": "script",
-                        "service_data": {"value": "data source result"},
+                        "service_data": {"value_1": "result_1", "value_2": "result_2"},
                         "target": {},
                     },
                     "running_script": False,
                 },
-                "variables": {"output_variable": "data source result"},
+                "variables": {"source_1": "result_1", "source_2": "result_2"},
             }
         ],
     }

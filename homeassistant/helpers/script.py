@@ -1031,9 +1031,8 @@ class _ScriptRun:
     async def _async_data_sources_step(self):
         """Handle data sources."""
         self._step_log("data sources")
-        data_sources = self._action[CONF_DATA_SOURCES]
-        tasks = []
-        for _, config in data_sources.items():
+        # These are run serially to allow output to be used as input to follow up sources
+        for variable, config in self._action[CONF_DATA_SOURCES].items():
             try:
                 items = template.render_complex(config, self._variables)
             except (exceptions.TemplateError, ValueError) as ex:
@@ -1044,10 +1043,9 @@ class _ScriptRun:
                     level=logging.ERROR,
                 )
                 raise _AbortScript from ex
-            tasks.append(async_get_data_source(self._hass, items[CONF_PLATFORM], items))
-        results = await asyncio.gather(*tasks)
-        result_dict = dict(zip(data_sources.keys(), results))
-        self._variables.update(result_dict)
+            self._variables[variable] = await async_get_data_source(
+                self._hass, items[CONF_PLATFORM], items
+            )
 
     async def _async_run_script(self, script: Script) -> None:
         """Execute a script."""
