@@ -26,6 +26,14 @@ async def async_setup(hass: HomeAssistant) -> bool:
 
     cached_list_entities: dict[str, str] = {}
 
+    def _async_get_cached_entity(entity_id: str, entry: er.RegistryEntry) -> str:
+        if data := cached_list_entities.get(entity_id):
+            return data
+
+        data = message_to_json(_entry_dict(entry))
+        cached_list_entities[entity_id] = data
+        return data
+
     @callback
     def _async_clear_list_entities_cache(event: Event) -> None:
         nonlocal cached_list_entities
@@ -46,25 +54,17 @@ async def async_setup(hass: HomeAssistant) -> bool:
         msg: dict[str, Any],
     ) -> None:
         """Handle list registry entries command."""
-        nonlocal cached_list_entities
         registry = er.async_get(hass)
 
-        def _get(entity_id: str, entry: er.RegistryEntry) -> str:
-            if data := cached_list_entities.get(entity_id):
-                return data
-
-            data = message_to_json(_entry_dict(entry))
-            cached_list_entities[entity_id] = data
-            return data
-
         result = ",".join(
-            _get(entity_id, entry) for entity_id, entry in registry.entities.items()
+            _async_get_cached_entity(entity_id, entry)
+            for entity_id, entry in registry.entities.items()
         )
         message = message_to_json(
             websocket_api.result_message(msg["id"], RESULT_TEMPLATE)
         )
         connection.send_message(
-            message.replace(RESULT_JSON_TEMPLATE, "[" + result + "]")
+            message.replace(RESULT_JSON_TEMPLATE, "[" + result + "]", 1)
         )
 
     hass.bus.async_listen(
