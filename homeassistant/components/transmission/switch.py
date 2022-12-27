@@ -38,23 +38,13 @@ class TransmissionSwitch(SwitchEntity):
 
     def __init__(self, switch_type, switch_name, tm_client, name):
         """Initialize the Transmission switch."""
-        self._name = switch_name
-        self.client_name = name
+        self._attr_name = f"{name} {switch_name}"
         self.type = switch_type
         self._tm_client = tm_client
         self._state = STATE_OFF
         self._data = None
         self.unsub_update = None
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return f"{self.client_name} {self._name}"
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the entity."""
-        return f"{self._tm_client.api.host}-{self.name}"
+        self._attr_unique_id = f"{tm_client.config_entry.entry_id}-{switch_type}"
 
     @property
     def is_on(self):
