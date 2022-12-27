@@ -119,11 +119,11 @@ async def async_setup_entry(
 
         def check_desc(d: HomeKitButtonEntityDescription) -> bool:
             if d.required_characteristics and not all(
-                [c in characteristics for c in d.required_characteristics]
+                c in characteristics for c in d.required_characteristics
             ):
                 return False
             if d.excluded_characteristics and any(
-                [c in characteristics for c in d.excluded_characteristics]
+                c in characteristics for c in d.excluded_characteristics
             ):
                 return False
             return True
