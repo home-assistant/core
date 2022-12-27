@@ -235,7 +235,7 @@ class SensorDeviceClass(StrEnum):
     ILLUMINANCE = "illuminance"
     """Illuminance.
 
-    Unit of measurement: `lx`, `lm`
+    Unit of measurement: `lx`
     """
 
     IRRADIANCE = "irradiance"
@@ -503,7 +503,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
         UnitOfVolume.CUBIC_METERS,
     },
     SensorDeviceClass.HUMIDITY: {PERCENTAGE},
-    SensorDeviceClass.ILLUMINANCE: {LIGHT_LUX, "lm"},
+    SensorDeviceClass.ILLUMINANCE: {LIGHT_LUX},
     SensorDeviceClass.IRRADIANCE: set(UnitOfIrradiance),
     SensorDeviceClass.MOISTURE: {PERCENTAGE},
     SensorDeviceClass.NITROGEN_DIOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
