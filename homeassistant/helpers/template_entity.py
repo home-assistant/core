@@ -106,9 +106,11 @@ class _TemplateAttribute:
         """Handle a template result event callback."""
         if isinstance(result, TemplateError):
             _LOGGER.error(
-                "TemplateError('%s') "
-                "while processing template '%s' "
-                "for attribute '%s' in entity '%s'",
+                (
+                    "TemplateError('%s') "
+                    "while processing template '%s' "
+                    "for attribute '%s' in entity '%s'"
+                ),
                 result,
                 self.template,
                 self._attribute,
@@ -130,10 +132,12 @@ class _TemplateAttribute:
             validated = self.validator(result)
         except vol.Invalid as ex:
             _LOGGER.error(
-                "Error validating template result '%s' "
-                "from template '%s' "
-                "for attribute '%s' in entity %s "
-                "validation message '%s'",
+                (
+                    "Error validating template result '%s' "
+                    "from template '%s' "
+                    "for attribute '%s' in entity %s "
+                    "validation message '%s'"
+                ),
                 result,
                 self.template,
                 self._attribute,
@@ -310,7 +314,10 @@ class TemplateEntity(Entity):
         if self._self_ref_update_count > len(self._template_attrs):
             for update in updates:
                 _LOGGER.warning(
-                    "Template loop detected while processing event: %s, skipping template render for Template[%s]",
+                    (
+                        "Template loop detected while processing event: %s, skipping"
+                        " template render for Template[%s]"
+                    ),
                     event,
                     update.template.template,
                 )

@@ -258,7 +258,6 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         key="illuminance",
         name="Illuminance",
         native_unit_of_measurement=UNIT_LUMEN,
-        device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
