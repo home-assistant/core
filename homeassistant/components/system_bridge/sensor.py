@@ -278,7 +278,7 @@ async def async_setup_entry(
                     name=f"{partition} Space Free",
                     entity_registry_enabled_default=False,
                     state_class=SensorStateClass.MEASUREMENT,
-                    native_unit_of_measurement=DATA_GIGABYTES,
+                    native_unit_of_measurement=UnitOfInformation.GIGABYTES,
                     icon="mdi:harddisk",
                     value=lambda data, p=partition: filesystem_free(data, p),
                 ),
