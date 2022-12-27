@@ -257,6 +257,7 @@ homeassistant.components.sensirion_ble.*
 homeassistant.components.sensor.*
 homeassistant.components.senz.*
 homeassistant.components.shelly.*
+homeassistant.components.simplepush.*
 homeassistant.components.simplisafe.*
 homeassistant.components.skybell.*
 homeassistant.components.slack.*
