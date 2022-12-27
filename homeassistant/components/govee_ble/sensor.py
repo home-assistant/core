@@ -117,7 +117,7 @@ async def async_setup_entry(
 
 class GoveeBluetoothSensorEntity(
     PassiveBluetoothProcessorEntity[
-        PassiveBluetoothDataProcessor[Optional[Union[float, int]]]
+        PassiveBluetoothDataProcessor[Optional[Union[float, int, str]]]
     ],
     SensorEntity,
 ):
@@ -132,6 +132,6 @@ class GoveeBluetoothSensorEntity(
         )
 
     @property
-    def native_value(self) -> int | float | None:
+    def native_value(self) -> float | int | str | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)
