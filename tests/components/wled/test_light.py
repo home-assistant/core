@@ -403,28 +403,80 @@ async def test_single_segment_with_keep_master_light(
 @pytest.mark.parametrize(
     "capabilities,color_modes",
     [
-        (LightCapability.NONE, [ColorMode.ONOFF]),
-        (LightCapability.WHITE_CHANNEL, [ColorMode.BRIGHTNESS]),
-        (LightCapability.RGB_COLOR, [ColorMode.RGB]),
-        (LightCapability.RGB_COLOR | LightCapability.WHITE_CHANNEL, [ColorMode.RGBW]),
-        (LightCapability.COLOR_TEMPERATURE, [ColorMode.COLOR_TEMP]),
-        (
-            LightCapability.COLOR_TEMPERATURE | LightCapability.WHITE_CHANNEL,
-            [ColorMode.COLOR_TEMP, ColorMode.WHITE],
+        (  # 0
+            LightCapability.NONE,
+            [ColorMode.ONOFF],
         ),
-        (
+        (  # 1
+            LightCapability.RGB_COLOR,
+            [ColorMode.RGB],
+        ),
+        (  # 2
+            LightCapability.WHITE_CHANNEL,
+            [ColorMode.BRIGHTNESS],
+        ),
+        (  # 3
+            LightCapability.RGB_COLOR | LightCapability.WHITE_CHANNEL,
+            [ColorMode.RGB],
+        ),
+        (  # 4
+            LightCapability.COLOR_TEMPERATURE,
+            [ColorMode.COLOR_TEMP],
+        ),
+        (  # 5
             LightCapability.RGB_COLOR | LightCapability.COLOR_TEMPERATURE,
-            [ColorMode.COLOR_TEMP, ColorMode.RGB],
+            [ColorMode.RGBWW],
         ),
-        (
+        (  # 6
+            LightCapability.WHITE_CHANNEL | LightCapability.COLOR_TEMPERATURE,
+            [ColorMode.COLOR_TEMP],
+        ),
+        (  # 7
             LightCapability.RGB_COLOR
-            | LightCapability.COLOR_TEMPERATURE
-            | LightCapability.WHITE_CHANNEL,
-            [ColorMode.COLOR_TEMP, ColorMode.RGB, ColorMode.WHITE],
+            | LightCapability.WHITE_CHANNEL
+            | LightCapability.COLOR_TEMPERATURE,
+            [ColorMode.RGB, ColorMode.COLOR_TEMP],
         ),
-        (
+        (  # 8
+            LightCapability.MANUAL_WHITE,
+            [ColorMode.BRIGHTNESS],
+        ),
+        (  # 9
+            LightCapability.RGB_COLOR | LightCapability.MANUAL_WHITE,
+            [ColorMode.RGBW],
+        ),
+        (  # 10
+            LightCapability.WHITE_CHANNEL | LightCapability.MANUAL_WHITE,
+            [ColorMode.BRIGHTNESS],
+        ),
+        (  # 11
+            LightCapability.RGB_COLOR
+            | LightCapability.WHITE_CHANNEL
+            | LightCapability.MANUAL_WHITE,
+            [ColorMode.RGBW],
+        ),
+        (  # 12
             LightCapability.COLOR_TEMPERATURE | LightCapability.MANUAL_WHITE,
             [ColorMode.COLOR_TEMP, ColorMode.WHITE],
+        ),
+        (  # 13
+            LightCapability.RGB_COLOR
+            | LightCapability.COLOR_TEMPERATURE
+            | LightCapability.MANUAL_WHITE,
+            [ColorMode.RGBW, ColorMode.COLOR_TEMP],
+        ),
+        (  # 14
+            LightCapability.WHITE_CHANNEL
+            | LightCapability.COLOR_TEMPERATURE
+            | LightCapability.MANUAL_WHITE,
+            [ColorMode.COLOR_TEMP, ColorMode.WHITE],
+        ),
+        (  # 15
+            LightCapability.RGB_COLOR
+            | LightCapability.WHITE_CHANNEL
+            | LightCapability.COLOR_TEMPERATURE
+            | LightCapability.MANUAL_WHITE,
+            [ColorMode.RGBW, ColorMode.COLOR_TEMP],
         ),
     ],
 )
