@@ -130,11 +130,15 @@ async def test_sensors(hass):
     assert entry.unique_id == "JM000000000000000_rear_right_tire_pressure"
 
 
-async def test_sensors_imperial_units(hass):
-    """Test that the sensors work properly with imperial units."""
+async def test_sensors_us_customary_units(hass):
+    """Test that the sensors work properly with US customary units."""
     hass.config.units = US_CUSTOMARY_SYSTEM
 
     await init_integration(hass)
+
+    # In the US, miles are used for vehicle odometers.
+    # These tests verify that the unit conversion logic for the distance
+    # sensor device class automatically converts the unit to miles.
 
     # Fuel Distance Remaining
     state = hass.states.get("sensor.my_mazda3_fuel_distance_remaining")
