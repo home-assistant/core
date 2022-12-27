@@ -22,6 +22,21 @@ def create_switch_with_setup_button(accessory):
     return service
 
 
+def create_switch_with_shared_key_button(accessory):
+    """Define setup button characteristics."""
+    service = accessory.add_service(ServicesTypes.OUTLET)
+
+    setup = service.add_char(CharacteristicsTypes.VENDOR_HAA_UPDATE)
+
+    setup.value = ""
+    setup.format = "string"
+
+    cur_state = service.add_char(CharacteristicsTypes.ON)
+    cur_state.value = True
+
+    return service
+
+
 def create_switch_with_ecobee_clear_hold_button(accessory):
     """Define setup button characteristics."""
     service = accessory.add_service(ServicesTypes.OUTLET)
@@ -60,6 +75,33 @@ async def test_press_button(hass):
         ServicesTypes.OUTLET,
         {
             CharacteristicsTypes.VENDOR_HAA_SETUP: "#HAA@trcmd",
+        },
+    )
+
+
+async def test_shared_button_key(hass):
+    """Test a switch service that has a button characteristic with shared key correctly handled."""
+    helper = await setup_test_component(hass, create_switch_with_shared_key_button)
+
+    # Helper will be for the primary entity, which is the outlet. Make a helper for the button.
+    button = Helper(
+        hass,
+        "button.testdevice_update",
+        helper.pairing,
+        helper.accessory,
+        helper.config_entry,
+    )
+
+    await hass.services.async_call(
+        "button",
+        "press",
+        {"entity_id": "button.testdevice_update"},
+        blocking=True,
+    )
+    button.async_assert_service_values(
+        ServicesTypes.OUTLET,
+        {
+            CharacteristicsTypes.VENDOR_HAA_UPDATE: "#HAA@trcmd0",
         },
     )
 
