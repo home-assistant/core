@@ -3,10 +3,12 @@ import json
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_unordered import unordered
 from wled import Device as WLEDDevice, LightCapability, WLEDConnectionError, WLEDError
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_MODE,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_RGB_COLOR,
@@ -403,81 +405,22 @@ async def test_single_segment_with_keep_master_light(
 @pytest.mark.parametrize(
     "capabilities,color_modes",
     [
-        (  # 0
-            LightCapability.NONE,
-            [ColorMode.ONOFF],
-        ),
-        (  # 1
-            LightCapability.RGB_COLOR,
-            [ColorMode.RGB],
-        ),
-        (  # 2
-            LightCapability.WHITE_CHANNEL,
-            [ColorMode.BRIGHTNESS],
-        ),
-        (  # 3
-            LightCapability.RGB_COLOR | LightCapability.WHITE_CHANNEL,
-            [ColorMode.RGB],
-        ),
-        (  # 4
-            LightCapability.COLOR_TEMPERATURE,
-            [ColorMode.COLOR_TEMP],
-        ),
-        (  # 5
-            LightCapability.RGB_COLOR | LightCapability.COLOR_TEMPERATURE,
-            [ColorMode.RGBWW],
-        ),
-        (  # 6
-            LightCapability.WHITE_CHANNEL | LightCapability.COLOR_TEMPERATURE,
-            [ColorMode.COLOR_TEMP],
-        ),
-        (  # 7
-            LightCapability.RGB_COLOR
-            | LightCapability.WHITE_CHANNEL
-            | LightCapability.COLOR_TEMPERATURE,
-            [ColorMode.RGB, ColorMode.COLOR_TEMP],
-        ),
-        (  # 8
-            LightCapability.MANUAL_WHITE,
-            [ColorMode.BRIGHTNESS],
-        ),
-        (  # 9
-            LightCapability.RGB_COLOR | LightCapability.MANUAL_WHITE,
-            [ColorMode.RGBW],
-        ),
-        (  # 10
-            LightCapability.WHITE_CHANNEL | LightCapability.MANUAL_WHITE,
-            [ColorMode.BRIGHTNESS],
-        ),
-        (  # 11
-            LightCapability.RGB_COLOR
-            | LightCapability.WHITE_CHANNEL
-            | LightCapability.MANUAL_WHITE,
-            [ColorMode.RGBW],
-        ),
-        (  # 12
-            LightCapability.COLOR_TEMPERATURE | LightCapability.MANUAL_WHITE,
-            [ColorMode.COLOR_TEMP, ColorMode.WHITE],
-        ),
-        (  # 13
-            LightCapability.RGB_COLOR
-            | LightCapability.COLOR_TEMPERATURE
-            | LightCapability.MANUAL_WHITE,
-            [ColorMode.RGBW, ColorMode.COLOR_TEMP],
-        ),
-        (  # 14
-            LightCapability.WHITE_CHANNEL
-            | LightCapability.COLOR_TEMPERATURE
-            | LightCapability.MANUAL_WHITE,
-            [ColorMode.COLOR_TEMP, ColorMode.WHITE],
-        ),
-        (  # 15
-            LightCapability.RGB_COLOR
-            | LightCapability.WHITE_CHANNEL
-            | LightCapability.COLOR_TEMPERATURE
-            | LightCapability.MANUAL_WHITE,
-            [ColorMode.RGBW, ColorMode.COLOR_TEMP],
-        ),
+        (0, [ColorMode.ONOFF]),
+        (1, [ColorMode.RGB]),
+        (2, [ColorMode.BRIGHTNESS]),
+        (3, [ColorMode.RGB]),
+        (4, [ColorMode.COLOR_TEMP]),
+        (5, [ColorMode.RGBWW]),
+        (6, [ColorMode.COLOR_TEMP]),
+        (7, [ColorMode.RGB, ColorMode.COLOR_TEMP]),
+        (8, [ColorMode.BRIGHTNESS]),
+        (9, [ColorMode.RGBW]),
+        (10, [ColorMode.BRIGHTNESS]),
+        (11, [ColorMode.RGBW]),
+        (12, [ColorMode.COLOR_TEMP, ColorMode.WHITE]),
+        (13, [ColorMode.RGBW, ColorMode.COLOR_TEMP]),
+        (14, [ColorMode.COLOR_TEMP, ColorMode.WHITE]),
+        (15, [ColorMode.RGBW, ColorMode.COLOR_TEMP]),
     ],
 )
 async def test_segment_light_capabilities(
@@ -489,7 +432,8 @@ async def test_segment_light_capabilities(
 ) -> None:
     """Test segment light capabilities of WLED lights."""
     update: WLEDDevice = mock_wled.update.return_value
-    update.info.leds.segment_light_capabilities = [capabilities]
+    update.info.leds.segment_light_capabilities = [LightCapability(capabilities)]
+    update.state.segments[0].color_primary = (255, 0, 0, 0)
 
     mock_config_entry.add_to_hass(hass)
 
@@ -499,4 +443,5 @@ async def test_segment_light_capabilities(
     state = hass.states.get("light.wled_rgb_light")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == color_modes
+    assert state.attributes.get(ATTR_COLOR_MODE) == color_modes[0]
+    assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == unordered(color_modes)

@@ -4,8 +4,6 @@ from __future__ import annotations
 from functools import partial
 from typing import Any, cast
 
-from wled import LightCapability
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
@@ -20,7 +18,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_COLOR_PRIMARY, ATTR_ON, ATTR_SEGMENT_ID, DOMAIN
+from .const import (
+    ATTR_COLOR_PRIMARY,
+    ATTR_ON,
+    ATTR_SEGMENT_ID,
+    DOMAIN,
+    LIGHT_CAPABILITIES_COLOR_MODE_MAPPING,
+)
 from .coordinator import WLEDDataUpdateCoordinator
 from .helpers import wled_exception_handler
 from .models import WLEDEntity
@@ -126,43 +130,19 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         )
 
         # WLED >= v0.13.1, light capabilities per segment
-        if coordinator.data.info.leds.segment_light_capabilities is not None:
-            capabilities = coordinator.data.info.leds.segment_light_capabilities[
-                segment
-            ]
-            self._attr_supported_color_modes: set[ColorMode] = set()
+        if (
+            coordinator.data.info.leds.segment_light_capabilities is not None
+            and (
+                color_modes := LIGHT_CAPABILITIES_COLOR_MODE_MAPPING.get(
+                    coordinator.data.info.leds.segment_light_capabilities[segment]
+                )
+            )
+            is not None
+        ):
+            self._attr_color_mode = color_modes[0]
+            self._attr_supported_color_modes = set(color_modes)
 
-            if LightCapability.COLOR_TEMPERATURE in capabilities:
-                self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
-                self._attr_color_mode = ColorMode.COLOR_TEMP
-                if LightCapability.WHITE_CHANNEL in capabilities:
-                    self._attr_supported_color_modes.add(ColorMode.WHITE)
-
-            if (
-                LightCapability.RGB_COLOR in capabilities
-                and LightCapability.WHITE_CHANNEL in capabilities
-                and LightCapability.COLOR_TEMPERATURE not in capabilities
-            ):
-                self._attr_supported_color_modes.add(ColorMode.RGBW)
-                self._attr_color_mode = ColorMode.RGBW
-            elif LightCapability.RGB_COLOR in capabilities:
-                self._attr_supported_color_modes.add(ColorMode.RGB)
-                self._attr_color_mode = ColorMode.RGB
-
-            if (
-                not self._attr_supported_color_modes
-                and LightCapability.WHITE_CHANNEL in capabilities
-            ):
-                self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
-
-            if LightCapability.MANUAL_WHITE in capabilities:
-                self._attr_supported_color_modes.add(ColorMode.WHITE)
-
-            if not self._attr_supported_color_modes:
-                self._attr_supported_color_modes.add(ColorMode.ONOFF)
-                self._attr_color_mode = ColorMode.ONOFF
-
-        # WLED < v0.13.1
+        # WLED < v0.13.1 or unknown color mode combination
         else:
             self._attr_color_mode = ColorMode.RGB
             self._attr_supported_color_modes = {ColorMode.RGB}
