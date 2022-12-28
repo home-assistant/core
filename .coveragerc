@@ -1256,6 +1256,7 @@ omit =
     homeassistant/components/switchbot/humidifier.py
     homeassistant/components/switchbot/light.py
     homeassistant/components/switchbot/switch.py
+    homeassistant/components/switchbot/lock.py
     homeassistant/components/switchmate/switch.py
     homeassistant/components/syncthing/__init__.py
     homeassistant/components/syncthing/sensor.py
