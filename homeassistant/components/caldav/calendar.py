@@ -184,7 +184,7 @@ class WebDavCalendarData:
                 continue
             event_list.append(
                 CalendarEvent(
-                    summary=vevent.summary.value,
+                    summary=self.get_attr_value(vevent, "summary") or "",
                     start=vevent.dtstart.value,
                     end=self.get_end_date(vevent),
                     location=self.get_attr_value(vevent, "location"),
@@ -264,7 +264,9 @@ class WebDavCalendarData:
             return
 
         # Populate the entity attributes with the event values
-        (summary, offset) = extract_offset(vevent.summary.value, OFFSET)
+        (summary, offset) = extract_offset(
+            self.get_attr_value(vevent, "summary") or "", OFFSET
+        )
         self.event = CalendarEvent(
             summary=summary,
             start=vevent.dtstart.value,
