@@ -17,7 +17,7 @@
         }
       },
       "lock_key": {
-        "description": "The {name} device requires encryption key, details on how to obtain it can be found in the [documentation]({url}).",
+        "description": "The {name} device requires encryption key, details on how to obtain it can be found in the documentation.",
         "data": {
           "key_id": "Key ID",
           "encryption_key": "Encryption key"

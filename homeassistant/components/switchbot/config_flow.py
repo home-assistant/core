@@ -181,7 +181,6 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             description_placeholders={
                 "name": name_from_discovery(self._discovered_adv),
-                "url": "https://www.home-assistant.io/integrations/switchbot#lock-encryption-key",
             },
         )
 
