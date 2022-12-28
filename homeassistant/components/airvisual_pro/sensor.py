@@ -159,6 +159,6 @@ class AirVisualProSensor(AirVisualProEntity, SensorEntity):
         elif self.entity_description.key == SENSOR_KIND_BATTERY_LEVEL:
             self._attr_native_value = self.status["battery"]
         else:
-            self._attr_native_value = self.MEASUREMENTS_KEY_TO_VALUE[
-                self.entity_description.key
+            self._attr_native_value = self.measurements[
+                self.MEASUREMENTS_KEY_TO_VALUE[self.entity_description.key]
             ]
