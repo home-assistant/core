@@ -86,6 +86,7 @@ from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    DataRateConverter,
     DistanceConverter,
     MassConverter,
     PressureConverter,
@@ -466,6 +467,7 @@ STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 # Note: this needs to be aligned with frontend: OVERRIDE_SENSOR_UNITS in
 # `entity-registry-settings.ts`
 UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] = {
+    SensorDeviceClass.DATA_RATE: DataRateConverter,
     SensorDeviceClass.DISTANCE: DistanceConverter,
     SensorDeviceClass.GAS: VolumeConverter,
     SensorDeviceClass.PRECIPITATION: DistanceConverter,
