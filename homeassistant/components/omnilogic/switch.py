@@ -23,7 +23,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the light platform."""
 
-    coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
+    coordinator: OmniLogicUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
+        COORDINATOR
+    ]
     entities = []
 
     for item_id, item in coordinator.data.items():
