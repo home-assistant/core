@@ -179,17 +179,8 @@ class TransmissionClient:
         """Return the TransmissionData object."""
         return self._tm_data
 
-    async def async_setup(self) -> None:
-        """Set up the Transmission client."""
-
-        try:
-            self.tm_api = await get_api(self.hass, self.config_entry.data)
-        except CannotConnect as error:
-            raise ConfigEntryNotReady from error
-        except (AuthenticationError, UnknownError) as error:
-            raise ConfigEntryAuthFailed from error
-
-        self._tm_data = TransmissionData(self.hass, self.config_entry, self.tm_api)
+    async def migrate_unique_ids(self) -> None:
+        """Migrate old unique ids to current format."""
 
         @callback
         def update_unique_id(
@@ -227,6 +218,20 @@ class TransmissionClient:
         await entity_registry.async_migrate_entries(
             self.hass, self.config_entry.entry_id, update_unique_id
         )
+
+    async def async_setup(self) -> None:
+        """Set up the Transmission client."""
+
+        try:
+            self.tm_api = await get_api(self.hass, self.config_entry.data)
+        except CannotConnect as error:
+            raise ConfigEntryNotReady from error
+        except (AuthenticationError, UnknownError) as error:
+            raise ConfigEntryAuthFailed from error
+
+        self._tm_data = TransmissionData(self.hass, self.config_entry, self.tm_api)
+
+        await self.migrate_unique_ids()
 
         await self.hass.async_add_executor_job(self._tm_data.init_torrent_list)
         await self.hass.async_add_executor_job(self._tm_data.update)
