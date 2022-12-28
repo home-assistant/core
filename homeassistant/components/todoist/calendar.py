@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timedelta
 from itertools import chain
 import logging
 from typing import Any
@@ -12,7 +12,7 @@ import requests
 from todoist_api_python.api_async import TodoistAPIAsync
 from todoist_api_python.endpoints import get_sync_url
 from todoist_api_python.http_requests import post
-from todoist_api_python.models import Due, Label, Task
+from todoist_api_python.models import Label, Task
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
@@ -36,7 +36,6 @@ from .const import (
     CONF_PROJECT_DUE_DATE,
     CONF_PROJECT_LABEL_WHITELIST,
     CONF_PROJECT_WHITELIST,
-    CONF_UTC_OFFSET_HOURS,
     CONTENT,
     DESCRIPTION,
     DOMAIN,
@@ -82,9 +81,6 @@ NEW_TASK_SERVICE_SCHEMA = vol.Schema(
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_TOKEN): cv.string,
-        vol.Optional(CONF_UTC_OFFSET_HOURS): vol.All(
-            vol.Coerce(int), vol.Range(min=-12, max=14)
-        ),
         vol.Optional(CONF_EXTRA_PROJECTS, default=[]): vol.All(
             cv.ensure_list,
             vol.Schema(
@@ -110,26 +106,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 SCAN_INTERVAL = timedelta(minutes=1)
 
 
-def get_system_utc_offset_hours(time_zone: str | None) -> int:
-    """Get the utc offset hours configured for the HA instance.
-
-    This will return 0 if a timezone is not configured.
-    """
-    if time_zone is None:
-        # Default to UTC if no timezone is specified.
-        return 0
-    zone_info = dt.get_time_zone(time_zone)
-    if zone_info is None:
-        # Default to UTC if no timezone specified can not be found.
-        return 0
-
-    utc_offset_delta = zone_info.utcoffset(datetime.utcnow())
-    if utc_offset_delta is None:
-        return 0
-
-    return int(utc_offset_delta.total_seconds() / 60 / 60)
-
-
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -138,9 +114,6 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Todoist platform."""
     token = config[CONF_TOKEN]
-    utc_offset_hours: int = config.get(
-        CONF_UTC_OFFSET_HOURS, get_system_utc_offset_hours(hass.config.time_zone)
-    )
 
     # Look up IDs based on (lowercase) names.
     project_id_lookup = {}
@@ -166,11 +139,7 @@ async def async_setup_platform(
         # Project is an object, not a dict!
         # Because of that, we convert what we need to a dict.
         project_data: ProjectData = {CONF_NAME: project.name, CONF_ID: project.id}
-        project_devices.append(
-            TodoistProjectEntity(
-                project_data, labels, api, utc_offset_hours=utc_offset_hours
-            )
-        )
+        project_devices.append(TodoistProjectEntity(project_data, labels, api))
         # Cache the names so we can easily look up name->ID.
         project_id_lookup[project.name.lower()] = project.id
 
@@ -206,7 +175,6 @@ async def async_setup_platform(
                 {"id": None, "name": extra_project["name"]},
                 labels,
                 api,
-                utc_offset_hours=utc_offset_hours,
                 due_date_days=project_due_date,
                 whitelisted_labels=project_label_filter,
                 whitelisted_projects=project_id_filter,
@@ -309,18 +277,6 @@ async def async_setup_platform(
     )
 
 
-def _parse_due_date(data: Due, timezone_offset: int) -> datetime | None:
-    """Parse the due date dict into a datetime object in UTC.
-
-    This function will always return a timezone aware datetime if it can be parsed.
-    """
-    if not (nowtime := dt.parse_datetime(data.date)):
-        return None
-    if nowtime.tzinfo is None:
-        nowtime = nowtime.replace(tzinfo=timezone(timedelta(hours=timezone_offset)))
-    return dt.as_utc(nowtime)
-
-
 class TodoistProjectEntity(CalendarEntity):
     """A device for getting the next Task from a Todoist Project."""
 
@@ -329,7 +285,6 @@ class TodoistProjectEntity(CalendarEntity):
         data: ProjectData,
         labels: list[Label],
         api: TodoistAPIAsync,
-        utc_offset_hours: int,
         due_date_days: int | None = None,
         whitelisted_labels: list[str] | None = None,
         whitelisted_projects: list[str] | None = None,
@@ -339,7 +294,6 @@ class TodoistProjectEntity(CalendarEntity):
             data,
             labels,
             api,
-            utc_offset_hours=utc_offset_hours,
             due_date_days=due_date_days,
             whitelisted_labels=whitelisted_labels,
             whitelisted_projects=whitelisted_projects,
@@ -375,7 +329,7 @@ class TodoistProjectEntity(CalendarEntity):
         end_date: datetime,
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
-        return await self.data.async_get_events(hass, start_date, end_date)
+        return await self.data.async_get_events(start_date, end_date)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -431,7 +385,6 @@ class TodoistProjectData:
         project_data: ProjectData,
         labels: list[Label],
         api: TodoistAPIAsync,
-        utc_offset_hours: int,
         due_date_days: int | None = None,
         whitelisted_labels: list[str] | None = None,
         whitelisted_projects: list[str] | None = None,
@@ -441,7 +394,6 @@ class TodoistProjectData:
 
         self._api = api
         self._name = project_data[CONF_NAME]
-        self._utc_offset_hours = utc_offset_hours
         # If no ID is defined, fetch all tasks.
         self._id = project_data.get(CONF_ID)
 
@@ -476,7 +428,7 @@ class TodoistProjectData:
         end = self.event[END]
         if self.event.get(ALL_DAY):
             return self.create_all_day_event(self.event)
-        elif end is None:
+        if end is None:
             return self.create_all_day_event(self.event)
 
         return CalendarEvent(
@@ -529,10 +481,10 @@ class TodoistProjectData:
         # complete the task.
         # Generally speaking, that means right now.
         if data.due is not None:
-            task[END] = _parse_due_date(
-                data.due,
-                self._utc_offset_hours,
+            end = dt.parse_datetime(
+                data.due.datetime if data.due.datetime else data.due.date
             )
+            task[END] = dt.as_utc(end) if end is not None else end
             if task[END] is not None:
                 if self._due_date_days is not None and (
                     task[END] > dt.utcnow() + self._due_date_days
@@ -635,7 +587,7 @@ class TodoistProjectData:
         return event
 
     async def async_get_events(
-        self, hass: HomeAssistant, start_date: datetime, end_date: datetime
+        self, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all tasks in a specific time frame."""
         if self._id is None:
@@ -653,23 +605,15 @@ class TodoistProjectData:
         for task in project_task_data:
             if task.due is None:
                 continue
-            # @NOTE: _parse_due_date always returns the date in UTC time.
-            due_date: datetime | None = _parse_due_date(
-                task.due, self._utc_offset_hours
+            due_date = dt.parse_datetime(
+                task.due.datetime if task.due.datetime else task.due.date
             )
             if not due_date:
                 continue
-            gmt_string = f"{'-' if self._utc_offset_hours < 0 else '+'}{abs(self._utc_offset_hours):02}:00"
-            local_midnight = dt.parse_datetime(
-                due_date.strftime(f"%Y-%m-%dT00:00:00{gmt_string}")
-            )
-            if local_midnight is not None:
-                midnight = dt.as_utc(local_midnight)
-            else:
-                midnight = due_date.replace(hour=0, minute=0, second=0, microsecond=0)
-
-            if start_date < due_date < end_date:
+            due_date = dt.as_utc(due_date)
+            if start_date <= due_date < end_date:
                 due_date_value: datetime | date = due_date
+                midnight = dt.start_of_local_day(due_date)
                 if due_date == midnight:
                     # If the due date has no time data, return just the date so that it
                     # will render correctly as an all day event on a calendar.

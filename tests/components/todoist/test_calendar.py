@@ -1,19 +1,40 @@
 """Unit tests for the Todoist calendar platform."""
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from todoist_api_python.models import Due, Label, Project
+from todoist_api_python.models import Due, Label, Project, Task
 
 from homeassistant import setup
-from homeassistant.components.todoist.calendar import (
-    DOMAIN,
-    _parse_due_date,
-    get_system_utc_offset_hours,
-)
+from homeassistant.components.calendar import CalendarEvent
+from homeassistant.components.todoist.calendar import DOMAIN, TodoistProjectData
 from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers import entity_registry
-from homeassistant.util import dt
+
+
+@pytest.fixture(name="task")
+def mock_task() -> Task:
+    """Mock a todoist Task instance."""
+    return Task(
+        assignee_id="1",
+        assigner_id="1",
+        comment_count=0,
+        is_completed=False,
+        content="A task",
+        created_at="2021-10-01T00:00:00",
+        creator_id="1",
+        description="A task",
+        due=Due(is_recurring=False, date="2022-01-01", string="today"),
+        id="1",
+        labels=[],
+        order=1,
+        parent_id=None,
+        priority=1,
+        project_id="12345",
+        section_id=None,
+        url="https://todoist.com",
+        sync_id=None,
+    )
 
 
 @pytest.fixture(name="api")
@@ -41,26 +62,6 @@ def mock_api() -> AsyncMock:
     ]
     api.get_collaborators.return_value = []
     return api
-
-
-def test_parse_due_date_invalid():
-    """Test None is returned if the due date can't be parsed."""
-    data = Due(date="invalid", is_recurring=False, string="")
-    assert _parse_due_date(data, timezone_offset=-8) is None
-
-
-def test_parse_due_date_with_no_time_data():
-    """Test due date is parsed correctly when it has no time data."""
-    data = Due(date="2022-02-02", is_recurring=False, string="Feb 2 2:00 PM")
-    actual = _parse_due_date(data, timezone_offset=-8)
-    assert datetime(2022, 2, 2, 8, 0, 0, tzinfo=dt.UTC) == actual
-
-
-def test_parse_due_date_without_timezone_uses_offset():
-    """Test due date uses user local timezone offset when it has no timezone."""
-    data = Due(date="2022-02-02T14:00:00", is_recurring=False, string="Feb 2 2:00 PM")
-    actual = _parse_due_date(data, timezone_offset=-8)
-    assert datetime(2022, 2, 2, 22, 0, 0, tzinfo=dt.UTC) == actual
 
 
 @patch("homeassistant.components.todoist.calendar.TodoistAPIAsync")
@@ -109,16 +110,62 @@ async def test_calendar_custom_project_unique_id(todoist_api, hass, api):
     assert state.state == "off"
 
 
-def test_get_system_utc_offset_hours_none():
-    """Test 0 is returned if time_zone param is None."""
-    assert get_system_utc_offset_hours(None) == 0
+async def test_async_get_events_no_due_date(api, task):
+    """Test an event without a due date is ignored."""
+    task.due = None
+    api.get_tasks.return_value = [task]
+    project_data = {"name": "test", "id": "12345"}
+    todoist_project_data = TodoistProjectData(project_data, labels=[], api=api)
+
+    start_date = datetime(2022, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    end_date = datetime(2022, 1, 2, 0, 0, 0, tzinfo=timezone.utc)
+    events = await todoist_project_data.async_get_events(start_date, end_date)
+
+    assert [] == events
 
 
-def test_get_system_utc_offset_hours_timezone_invalid():
-    """Test 0 is returned if time_zone param is not a valid value."""
-    assert get_system_utc_offset_hours("invalid") == 0
+async def test_async_get_events_no_time_data(api, task):
+    """Test an event with a due date between start/end without time data is returned."""
+    task.due = Due(date="2022-01-01", is_recurring=False, string="")
+    api.get_tasks.return_value = [task]
+    project_data = {"name": "test", "id": "12345"}
+    todoist_project_data = TodoistProjectData(
+        project_data,
+        labels=[],
+        api=api,
+    )
+
+    start_date = datetime(2022, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    end_date = datetime(2022, 1, 2, 0, 0, 0, tzinfo=timezone.utc)
+    events = await todoist_project_data.async_get_events(start_date, end_date)
+
+    expected = [
+        CalendarEvent(
+            summary=task.content, start=start_date.date(), end=start_date.date()
+        )
+    ]
+    assert expected == events
 
 
-def test_get_system_utc_offset_hours_valid_timezone():
-    """Test offset is returned if time_zone param is a valid value."""
-    assert get_system_utc_offset_hours("America/Los_Angeles") == -8
+async def test_async_get_events_with_time_data(api, task):
+    """Test an event with a due date between start/end with time data is returned."""
+    task.due = Due(
+        date="2022-01-01", datetime="2022-01-01T16:00:00", is_recurring=False, string=""
+    )
+    api.get_tasks.return_value = [task]
+    project_data = {"name": "test", "id": "12345"}
+    todoist_project_data = TodoistProjectData(project_data, labels=[], api=api)
+
+    start_date = datetime(2022, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    end_date = datetime(2022, 1, 2, 0, 0, 0, tzinfo=timezone.utc)
+    events = await todoist_project_data.async_get_events(start_date, end_date)
+
+    expected_due_date = datetime(2022, 1, 1, 16, 0, 0, tzinfo=timezone.utc)
+    expected = [
+        CalendarEvent(
+            summary=task.content,
+            start=expected_due_date,
+            end=expected_due_date,
+        )
+    ]
+    assert expected == events
