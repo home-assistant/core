@@ -14,16 +14,16 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_URL
 import homeassistant.helpers.config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
+from .const import ATTR_FILE_URL
 
-ATTR_FILE_URL = "image_url"
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_URL): cv.url})
 
 
 def get_service(hass, config, discovery_info=None):
     """Get the Microsoft Teams notification service."""
-    webhook_url = config.get(CONF_URL)
+    webhook_url = discovery_info[CONF_URL]
 
     try:
         return MSTeamsNotificationService(webhook_url)
@@ -42,7 +42,6 @@ class MSTeamsNotificationService(BaseNotificationService):
 
     def send_message(self, message=None, **kwargs):
         """Send a message to the webhook."""
-
         teams_message = pymsteams.connectorcard(self._webhook_url)
 
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
