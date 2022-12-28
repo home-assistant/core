@@ -117,7 +117,7 @@ class NumberDeviceClass(StrEnum):
     ENERGY = "energy"
     """Energy.
 
-    Unit of measurement: `Wh`, `kWh`, `MWh`, `GJ`
+    Unit of measurement: `Wh`, `kWh`, `MWh`, `GJ`, `GWh`, `TWh`
     """
 
     FREQUENCY = "frequency"
