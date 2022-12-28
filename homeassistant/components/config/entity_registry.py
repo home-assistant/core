@@ -61,11 +61,9 @@ async def async_setup(hass: HomeAssistant) -> bool:
             for entity_id, entry in registry.entities.items()
         )
         message = message_to_json(
-            websocket_api.result_message(msg["id"], RESULT_TEMPLATE)
+            websocket_api.result_message(msg["id"], [RESULT_TEMPLATE])
         )
-        connection.send_message(
-            message.replace(RESULT_JSON_TEMPLATE, "[" + result + "]", 1)
-        )
+        connection.send_message(message.replace(RESULT_JSON_TEMPLATE, result, 1))
 
     hass.bus.async_listen(
         er.EVENT_ENTITY_REGISTRY_UPDATED,
