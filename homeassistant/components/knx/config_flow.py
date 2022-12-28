@@ -11,7 +11,7 @@ from xknx.exceptions.exception import CommunicationError, InvalidSecureConfigura
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.io.gateway_scanner import GatewayDescriptor, GatewayScanner
 from xknx.io.self_description import request_description
-from xknx.secure import load_keyring
+from xknx.secure.keyring import XMLInterface, load_keyring
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -96,6 +96,7 @@ class KNXCommonFlow(ABC, FlowHandler):
         self._found_gateways: list[GatewayDescriptor] = []
         self._found_tunnels: list[GatewayDescriptor] = []
         self._selected_tunnel: GatewayDescriptor | None = None
+        self._tunnel_endpoints: list[XMLInterface] = []
 
         self._gatewayscanner: GatewayScanner | None = None
         self._async_scan_gen: AsyncGenerator[GatewayDescriptor, None] | None = None
@@ -459,12 +460,11 @@ class KNXCommonFlow(ABC, FlowHandler):
                     connection_type == CONF_KNX_TUNNELING_TCP_SECURE
                     and self._selected_tunnel is not None
                 ):
-                    tunnel_endpoints = []
                     if host_ia := self._selected_tunnel.individual_address:
-                        tunnel_endpoints = keyring.get_tunnel_interfaces_by_host(
+                        self._tunnel_endpoints = keyring.get_tunnel_interfaces_by_host(
                             host=host_ia
                         )
-                    if not tunnel_endpoints:
+                    if not self._tunnel_endpoints:
                         errors["base"] = "keyfile_no_tunnel_for_host"
                         description_placeholders = {CONF_HOST: str(host_ia)}
 
@@ -483,13 +483,13 @@ class KNXCommonFlow(ABC, FlowHandler):
                     user_password=None,
                 )
                 if connection_type == CONF_KNX_ROUTING_SECURE:
-                    title = (
-                        "Secure Routing as"
-                        f" {self.new_entry_data[CONF_KNX_INDIVIDUAL_ADDRESS]}"
+                    return self.finish_flow(
+                        title=(
+                            "Secure Routing as"
+                            f" {self.new_entry_data[CONF_KNX_INDIVIDUAL_ADDRESS]}"
+                        )
                     )
-                else:
-                    title = f"Secure Tunneling @ {self.new_entry_data[CONF_HOST]}"
-                return self.finish_flow(title=title)
+                return await self.async_step_knxkeys_tunnel_select()
 
         if _default_filename := self.initial_data.get(CONF_KNX_KNXKEY_FILENAME):
             _default_filename = _default_filename.lstrip(CONST_KNX_STORAGE_KEY)
@@ -508,6 +508,48 @@ class KNXCommonFlow(ABC, FlowHandler):
             data_schema=vol.Schema(fields),
             errors=errors,
             description_placeholders=description_placeholders,
+        )
+
+    async def async_step_knxkeys_tunnel_select(
+        self, user_input: dict | None = None
+    ) -> FlowResult:
+        """Select if a specific tunnel should be used from knxkeys file."""
+        if user_input is not None:
+            if user_input[CONF_KNX_SECURE_USER_ID] == CONF_KNX_AUTOMATIC:
+                selected_user_id = None
+            else:
+                selected_user_id = int(user_input[CONF_KNX_SECURE_USER_ID])
+            self.new_entry_data |= KNXConfigEntryData(user_id=selected_user_id)
+            return self.finish_flow(
+                title=f"Secure Tunneling @ {self.new_entry_data[CONF_HOST]}"
+            )
+
+        tunnel_endpoint_options = [
+            selector.SelectOptionDict(
+                value=CONF_KNX_AUTOMATIC, label=CONF_KNX_AUTOMATIC.capitalize()
+            )
+        ]
+        for endpoint in self._tunnel_endpoints:
+            tunnel_endpoint_options.append(
+                selector.SelectOptionDict(
+                    value=str(endpoint.user_id),
+                    label=f"{endpoint.individual_address} (User ID: {endpoint.user_id})",
+                )
+            )
+        return self.async_show_form(
+            step_id="knxkeys_tunnel_select",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_KNX_SECURE_USER_ID, default=CONF_KNX_AUTOMATIC
+                    ): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=tunnel_endpoint_options,
+                            mode=selector.SelectSelectorMode.LIST,
+                        )
+                    ),
+                }
+            ),
         )
 
     async def async_step_routing(self, user_input: dict | None = None) -> FlowResult:
