@@ -7,7 +7,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import CoolmasterEntity, async_add_entities_for_platform
+from .const import DATA_COORDINATOR, DATA_INFO, DOMAIN
+from .entity import CoolmasterEntity
 
 
 async def async_setup_entry(
@@ -16,8 +17,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the CoolMasterNet button platform."""
-    async_add_entities_for_platform(
-        hass, config_entry, async_add_entities, CoolmasterResetFilter
+    info = hass.data[DOMAIN][config_entry.entry_id][DATA_INFO]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
+    async_add_entities(
+        [
+            CoolmasterResetFilter(coordinator, unit_id, info)
+            for unit_id in coordinator.data
+        ]
     )
 
 

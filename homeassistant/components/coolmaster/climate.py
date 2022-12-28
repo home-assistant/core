@@ -12,8 +12,8 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_SUPPORTED_MODES
-from .entity import CoolmasterEntity, async_add_entities_for_platform
+from .const import CONF_SUPPORTED_MODES, DATA_COORDINATOR, DATA_INFO, DOMAIN
+from .entity import CoolmasterEntity
 
 CM_TO_HA_STATE = {
     "heat": HVACMode.HEAT,
@@ -36,13 +36,14 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the CoolMasterNet climate platform."""
+    info = hass.data[DOMAIN][config_entry.entry_id][DATA_INFO]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
     supported_modes = config_entry.data.get(CONF_SUPPORTED_MODES)
-    async_add_entities_for_platform(
-        hass,
-        config_entry,
-        async_add_entities,
-        CoolmasterClimate,
-        supported_modes=supported_modes,
+    async_add_entities(
+        [
+            CoolmasterClimate(coordinator, unit_id, info, supported_modes)
+            for unit_id in coordinator.data
+        ]
     )
 
 

@@ -1,16 +1,12 @@
 """Base entity for Coolmaster integration."""
-from typing import Any
-
 from pycoolmasternet_async.coolmasternet import CoolMasterNetUnit
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import CoolmasterDataUpdateCoordinator
-from .const import DATA_COORDINATOR, DATA_INFO, DOMAIN
+from .const import DOMAIN
 
 
 class CoolmasterEntity(CoordinatorEntity[CoolmasterDataUpdateCoordinator]):
@@ -40,18 +36,3 @@ class CoolmasterEntity(CoordinatorEntity[CoolmasterDataUpdateCoordinator]):
     def _handle_coordinator_update(self) -> None:
         self._unit = self.coordinator.data[self._unit_id]
         super()._handle_coordinator_update()
-
-
-def async_add_entities_for_platform(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-    cls: type[CoolmasterEntity],
-    **kwargs: Any,
-) -> None:
-    """Add CoolMasterNet platform entities."""
-    info = hass.data[DOMAIN][config_entry.entry_id][DATA_INFO]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
-    async_add_entities(
-        [cls(coordinator, unit_id, info, **kwargs) for unit_id in coordinator.data]
-    )
