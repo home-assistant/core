@@ -174,7 +174,7 @@ WOLOCK_SERVICE_INFO = BluetoothServiceInfoBleak(
     manufacturer_data={2409: b"\xf1\t\x9fE\x1a]\xda\x83\x00 "},
     service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"o\x80d"},
     service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
-    address="798A8547-2A3D-C609-55FF-73FA824B923B",
+    address="aa:bb:cc:dd:ee:ff",
     rssi=-60,
     source="local",
     advertisement=generate_advertisement_data(
@@ -183,7 +183,7 @@ WOLOCK_SERVICE_INFO = BluetoothServiceInfoBleak(
         service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"o\x80d"},
         service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
     ),
-    device=BLEDevice("798A8547-2A3D-C609-55FF-73FA824B923B", "WoLock"),
+    device=BLEDevice("aa:bb:cc:dd:ee:ff", "WoLock"),
     time=0,
     connectable=True,
 )
