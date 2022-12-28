@@ -4,14 +4,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from bleak import BLEDevice
 from switchbot import (
     SwitchBotAdvertisement,
     SwitchbotLock,
     SwitchbotModel,
     parse_advertisement_data,
 )
-from switchbot.devices.device import SwitchbotOperationError
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
@@ -160,8 +158,10 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         assert self._discovered_adv is not None
         if user_input is not None:
-            if not await SwitchbotConfigFlow._verify_lock_configuration(
-                self._discovered_adv.device, user_input
+            if not await SwitchbotLock.verify_encryption_key(
+                self._discovered_adv.device,
+                user_input.get(CONF_KEY_ID),
+                user_input.get(CONF_ENCRYPTION_KEY),
             ):
                 errors = {
                     CONF_KEY_ID: "key_id_invalid",
@@ -261,23 +261,6 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    @staticmethod
-    async def _verify_lock_configuration(device: BLEDevice, user_input: dict) -> bool:
-        try:
-            lock = SwitchbotLock(
-                device,
-                user_input.get(CONF_KEY_ID),
-                user_input.get(CONF_ENCRYPTION_KEY),
-            )
-        except ValueError:
-            return False
-        try:
-            lock_info = await lock.get_basic_info()
-        except SwitchbotOperationError:
-            return False
-
-        return lock_info is not None
 
 
 class SwitchbotOptionsFlowHandler(OptionsFlow):
