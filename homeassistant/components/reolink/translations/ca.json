@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "api_error": "S'ha produ\u00eft un error a l'API: {error}",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "unknown": "Error inesperat: {error}"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "password": "Contrasenya",
+                    "port": "Port",
+                    "use_https": "Activa HTTPS",
+                    "username": "Nom d'usuari"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "protocol": "Protocol"
+                }
+            }
+        }
+    }
+}
