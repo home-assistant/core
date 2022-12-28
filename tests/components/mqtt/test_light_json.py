@@ -1117,9 +1117,7 @@ async def test_sending_color_temp_with_brightness(
             ),
             call(
                 "test_light_rgb/set",
-                JsonValidator(
-                    '{"state": "ON", "color": {"r": 127, "g": 64, "b": 0}, "brightness": 127}'
-                ),
+                JsonValidator('{"state": "ON", "color": {"r": 127, "g": 64, "b": 0}}'),
                 0,
                 False,
             ),

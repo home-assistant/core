@@ -600,7 +600,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
         if ATTR_BRIGHTNESS in kwargs and (
             self._config[CONF_BRIGHTNESS]
-            or self.supported_color_modes
+            or ATTR_COLOR_TEMP in kwargs
+            and self.supported_color_modes
             and ColorMode.COLOR_TEMP in self.supported_color_modes
         ):
             brightness_normalized = kwargs[ATTR_BRIGHTNESS] / DEFAULT_BRIGHTNESS_SCALE
