@@ -515,11 +515,10 @@ class KNXCommonFlow(ABC, FlowHandler):
     ) -> FlowResult:
         """Select if a specific tunnel should be used from knxkeys file."""
         if user_input is not None:
-            selected_user_id = (
-                None
-                if user_input[CONF_KNX_SECURE_USER_ID] == CONF_KNX_AUTOMATIC
-                else int(user_input[CONF_KNX_SECURE_USER_ID])
-            )
+            if user_input[CONF_KNX_SECURE_USER_ID] == CONF_KNX_AUTOMATIC:
+                selected_user_id = None
+            else:
+                selected_user_id = int(user_input[CONF_KNX_SECURE_USER_ID])
             self.new_entry_data |= KNXConfigEntryData(user_id=selected_user_id)
             return self.finish_flow(
                 title=f"Secure Tunneling @ {self.new_entry_data[CONF_HOST]}"
