@@ -137,15 +137,13 @@ async def test_migrate_unique_id(
     )
     assert entity.unique_id == old_unique_id
 
-    assert await transmission.async_setup_entry(hass, entry) is True
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
-    new_unique_id = f"{entry.entry_id}-{key}" if migration_expected else old_unique_id
-    if migration_expected:
-        assert (
-            ent_reg.async_get_entity_id(domain, transmission.DOMAIN, old_unique_id)
-            is None
-        )
-    assert (
-        ent_reg.async_get_entity_id(domain, transmission.DOMAIN, new_unique_id)
-        == f"{domain}.my_{domain}"
+    expected_unique_id = (
+        f"{entry.entry_id}-{key}" if migration_expected else old_unique_id
     )
+    migrated_entity = ent_reg.async_get(entity.entity_id)
+
+    assert migrated_entity
+    assert migrated_entity.unique_id == expected_unique_id
