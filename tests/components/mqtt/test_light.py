@@ -2861,9 +2861,9 @@ async def test_max_mireds(hass, mqtt_mock_entry_with_yaml_config):
             "hs_command_topic",
             {"rgb_color": [255, 128, 0]},
             "30.118,100.0",
-            None,
-            None,
-            None,
+            "hs_command_template",
+            "hue",
+            b"3",
         ),
         (
             light.SERVICE_TURN_ON,
@@ -3111,6 +3111,42 @@ async def test_sending_mqtt_effect_command_with_template(
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
     assert state.attributes.get("effect") == "colorloop"
+
+
+async def test_sending_mqtt_hs_command_with_template(
+    hass, mqtt_mock_entry_with_yaml_config
+):
+    """Test the sending of HS Color command with template."""
+    config = {
+        light.DOMAIN: {
+            "name": "test",
+            "command_topic": "test_light_hs/set",
+            "hs_command_topic": "test_light_hs/hs_color/set",
+            "hs_command_template": '{"hue": {{ hue | int }}, "sat": {{ sat | int}}}',
+            "qos": 0,
+        }
+    }
+
+    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
+    await hass.async_block_till_done()
+    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_UNKNOWN
+
+    await common.async_turn_on(hass, "light.test", hs_color=(30, 100))
+
+    mqtt_mock.async_publish.assert_has_calls(
+        [
+            call("test_light_hs/set", "ON", 0, False),
+            call("test_light_hs/hs_color/set", '{"hue": 30, "sat": 100}', 0, False),
+        ],
+        any_order=True,
+    )
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes["hs_color"] == (30, 100)
 
 
 async def test_setup_manual_entity_from_yaml(hass):

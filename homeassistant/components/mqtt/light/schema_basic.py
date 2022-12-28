@@ -88,6 +88,7 @@ CONF_EFFECT_COMMAND_TOPIC = "effect_command_topic"
 CONF_EFFECT_LIST = "effect_list"
 CONF_EFFECT_STATE_TOPIC = "effect_state_topic"
 CONF_EFFECT_VALUE_TEMPLATE = "effect_value_template"
+CONF_HS_COMMAND_TEMPLATE = "hs_command_template"
 CONF_HS_COMMAND_TOPIC = "hs_command_topic"
 CONF_HS_STATE_TOPIC = "hs_state_topic"
 CONF_HS_VALUE_TEMPLATE = "hs_value_template"
@@ -147,6 +148,7 @@ COMMAND_TEMPLATE_KEYS = [
     CONF_BRIGHTNESS_COMMAND_TEMPLATE,
     CONF_COLOR_TEMP_COMMAND_TEMPLATE,
     CONF_EFFECT_COMMAND_TEMPLATE,
+    CONF_HS_COMMAND_TEMPLATE,
     CONF_RGB_COMMAND_TEMPLATE,
     CONF_RGBW_COMMAND_TEMPLATE,
     CONF_RGBWW_COMMAND_TEMPLATE,
@@ -185,6 +187,7 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_EFFECT_STATE_TOPIC): valid_subscribe_topic,
             vol.Optional(CONF_EFFECT_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_HS_COMMAND_TEMPLATE): cv.template,
             vol.Optional(CONF_HS_COMMAND_TOPIC): valid_publish_topic,
             vol.Optional(CONF_HS_STATE_TOPIC): valid_subscribe_topic,
             vol.Optional(CONF_HS_VALUE_TEMPLATE): cv.template,
@@ -763,7 +766,11 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         hs_color: str | None = kwargs.get(ATTR_HS_COLOR)
 
         if hs_color and self._topic[CONF_HS_COMMAND_TOPIC] is not None:
-            await publish(CONF_HS_COMMAND_TOPIC, f"{hs_color[0]},{hs_color[1]}")
+            device_hs_payload = self._command_templates[CONF_HS_COMMAND_TEMPLATE](
+                f"{hs_color[0]},{hs_color[1]}",
+                {"hue": hs_color[0], "sat": hs_color[1]},
+            )
+            await publish(CONF_HS_COMMAND_TOPIC, device_hs_payload)
             should_update |= set_optimistic(ATTR_HS_COLOR, hs_color, ColorMode.HS)
 
         rgb: tuple[int, int, int] | None
