@@ -215,6 +215,18 @@ RRULE:FREQ=HOURLY;INTERVAL=1;COUNT=12
 END:VEVENT
 END:VCALENDAR
 """,
+    """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Global Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:14
+DTSTAMP:20151125T000000Z
+DTSTART:20151127T000000Z
+DTEND:20151127T003000Z
+RRULE:FREQ=HOURLY;INTERVAL=1;COUNT=12
+END:VEVENT
+END:VCALENDAR
+""",
 ]
 
 CALDAV_CONFIG = {
@@ -917,7 +929,7 @@ async def test_get_events(hass, calendar, get_api_events):
     await hass.async_block_till_done()
 
     events = await get_api_events("calendar.private")
-    assert len(events) == 14
+    assert len(events) == 15
     assert calendar.call
 
 
