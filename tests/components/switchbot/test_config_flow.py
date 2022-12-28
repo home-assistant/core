@@ -391,6 +391,29 @@ async def test_user_setup_wolock_or_bot(hass):
     assert result["step_id"] == "lock_key"
     assert result["errors"] == {}
 
+    with patch_async_setup_entry() as mock_setup_entry, patch(
+        "switchbot.SwitchbotLock.verify_encryption_key", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KEY_ID: "ff",
+                CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Lock EEFF"
+    assert result["data"] == {
+        CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+        CONF_KEY_ID: "ff",
+        CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+        CONF_SENSOR_TYPE: "lock",
+    }
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
 
 async def test_user_setup_wolock_invalid_encryption_key(hass):
     """Test the user initiated form for a lock with invalid encryption key."""
