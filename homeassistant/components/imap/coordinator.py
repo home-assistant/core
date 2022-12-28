@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from aioimaplib import AUTH, IMAP4_SSL, SELECTED, AioImapException
+import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_USERNAME
@@ -82,7 +83,8 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int]):
                 idle: asyncio.Future = await self.imap_client.idle_start()
                 await self.imap_client.wait_server_push()
                 self.imap_client.idle_done()
-                await asyncio.wait_for(idle, 30)
+                async with async_timeout.timeout(10):
+                    await idle
                 await self.async_refresh()
 
             except (AioImapException, asyncio.TimeoutError):
