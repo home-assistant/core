@@ -903,7 +903,7 @@ async def test_setup_raise_not_ready(hass, caplog):
     p_hass, p_wait_time, p_setup = mock_call.mock_calls[0][1]
 
     assert p_hass is hass
-    assert p_wait_time == 5
+    assert 5 <= p_wait_time <= 5.5
     assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
     assert entry.reason == "The internet connection is offline"
 
