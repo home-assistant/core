@@ -1,6 +1,7 @@
 """Support for Litter-Robot updates."""
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Any
 
 from pylitterbot import LitterRobot4
@@ -18,6 +19,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import LitterRobotEntity, LitterRobotHub
+
+SCAN_INTERVAL = timedelta(days=1)
 
 FIRMWARE_UPDATE_ENTITY = UpdateEntityDescription(
     key="firmware",
