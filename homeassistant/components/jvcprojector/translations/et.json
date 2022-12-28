@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "already_in_progress": "H\u00e4\u00e4lestamine juba k\u00e4ib",
+            "unknown": "Ootamatu t\u00f5rge",
+            "unsupported": "Seadet ei toetata"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "unsupported": "Seadet ei toetata"
+        },
+        "flow_title": "{model} ({name})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Kas seadistada m\u00e4ngijat {model} nimega {name} ?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    }
+}

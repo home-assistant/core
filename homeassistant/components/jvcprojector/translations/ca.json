@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
+            "unknown": "Error inesperat",
+            "unsupported": "Dispositiu no compatible"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "unsupported": "Dispositiu no compatible"
+        },
+        "flow_title": "{model} ({name})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Vols configurar el reproductor {name} model {model}?"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3"
+                }
+            }
+        }
+    }
+}
