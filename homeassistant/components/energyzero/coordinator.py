@@ -40,7 +40,7 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
 
     async def _async_update_data(self) -> EnergyZeroData:
         """Fetch data from EnergyZero."""
-        today = dt.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        today = dt.now().date()
         tomorrow = today + timedelta(days=1)
 
         energy_today = await self.energyzero.energy_prices(
@@ -50,7 +50,7 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
         gas_today = await self.energyzero.gas_prices(start_date=today, end_date=today)
 
         # Energy for tomorrow only after 14:00
-        if dt.now().hour >= THRESHOLD_HOUR:
+        if dt.utcnow().hour >= THRESHOLD_HOUR:
             try:
                 energy_tomorrow = await self.energyzero.energy_prices(
                     start_date=tomorrow, end_date=tomorrow
