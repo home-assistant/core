@@ -23,5 +23,10 @@
                 }
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "Discovergy API endpoint reachable"
+        }
     }
 }
