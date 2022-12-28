@@ -342,6 +342,28 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             icon="mdi:timer-cog-outline",
         ),
     ),
+    # Electric Blanket
+    # https://developer.tuya.com/en/docs/iot/categorydr?id=Kaiuz22dyc66p
+    "dr": (
+        SelectEntityDescription(
+            key=DPCode.LEVEL,
+            name="Level",
+            icon="mdi:thermometer-lines",
+            device_class=TuyaDeviceClass.BLANKET_LEVEL,
+        ),
+        SelectEntityDescription(
+            key=DPCode.LEVEL_1,
+            name="Side A Level",
+            icon="mdi:thermometer-lines",
+            device_class=TuyaDeviceClass.BLANKET_LEVEL,
+        ),
+        SelectEntityDescription(
+            key=DPCode.LEVEL_2,
+            name="Side B Level",
+            icon="mdi:thermometer-lines",
+            device_class=TuyaDeviceClass.BLANKET_LEVEL,
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)

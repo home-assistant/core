@@ -92,6 +92,7 @@ class TuyaDeviceClass(StrEnum):
     CURTAIN_MOTOR_MODE = "tuya__curtain_motor_mode"
     BASIC_ANTI_FLICKR = "tuya__basic_anti_flickr"
     BASIC_NIGHTVISION = "tuya__basic_nightvision"
+    BLANKET_LEVEL = "tuya__blanket_level"
     COUNTDOWN = "tuya__countdown"
     DECIBEL_SENSITIVITY = "tuya__decibel_sensitivity"
     FAN_ANGLE = "tuya__fan_angle"
@@ -253,6 +254,8 @@ class DPCode(StrEnum):
     LED_TYPE_2 = "led_type_2"
     LED_TYPE_3 = "led_type_3"
     LEVEL = "level"
+    LEVEL_1 = "level_1"
+    LEVEL_2 = "level_2"
     LEVEL_CURRENT = "level_current"
     LIGHT = "light"  # Light
     LIGHT_MODE = "light_mode"
@@ -291,6 +294,9 @@ class DPCode(StrEnum):
     POWDER_SET = "powder_set"  # Powder
     POWER = "power"
     POWER_GO = "power_go"
+    PREHEAT = "preheat"
+    PREHEAT_1 = "preheat_1"
+    PREHEAT_2 = "preheat_2"
     PRESENCE_STATE = "presence_state"
     PRESSURE_STATE = "pressure_state"
     PRESSURE_VALUE = "pressure_value"

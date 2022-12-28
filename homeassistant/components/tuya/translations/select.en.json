@@ -10,6 +10,18 @@
             "1": "Off",
             "2": "On"
         },
+        "tuya__blanket_level": {
+            "level_1": "Low",
+            "level_2": "Level 2",
+            "level_3": "Level 3",
+            "level_4": "Level 4",
+            "level_5": "Level 5",
+            "level_6": "Level 6",
+            "level_7": "Level 7",
+            "level_8": "Level 8",
+            "level_9": "Level 9",
+            "level_10": "High"
+        },
         "tuya__countdown": {
             "1h": "1 hour",
             "2h": "2 hours",
