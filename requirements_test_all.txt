@@ -1187,7 +1187,7 @@ pyiqvia==2022.04.0
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.0.8
+pyisy==3.0.9
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.1
@@ -1528,6 +1528,9 @@ regenmaschine==2022.11.0
 # homeassistant.components.renault
 renault-api==0.1.11
 
+# homeassistant.components.reolink
+reolink-ip==0.0.40
+
 # homeassistant.components.python_script
 restrictedpython==5.2
 
@@ -1801,7 +1804,7 @@ wiffi==1.1.0
 withings-api==2.4.0
 
 # homeassistant.components.wled
-wled==0.14.1
+wled==0.15.0
 
 # homeassistant.components.wolflink
 wolf_smartset==0.1.11

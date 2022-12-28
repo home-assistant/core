@@ -73,7 +73,7 @@ def get_entry_data(hass: HomeAssistant) -> dict[str, ShellyEntryData]:
     return cast(dict[str, ShellyEntryData], hass.data[DOMAIN][DATA_CONFIG_ENTRY])
 
 
-class ShellyBlockCoordinator(DataUpdateCoordinator):
+class ShellyBlockCoordinator(DataUpdateCoordinator[None]):
     """Coordinator for a Shelly block based device."""
 
     def __init__(
@@ -318,7 +318,7 @@ class ShellyRestCoordinator(DataUpdateCoordinator):
         return cast(str, self.device.settings["device"]["mac"])
 
 
-class ShellyRpcCoordinator(DataUpdateCoordinator):
+class ShellyRpcCoordinator(DataUpdateCoordinator[None]):
     """Coordinator for a Shelly RPC based device."""
 
     def __init__(
@@ -543,7 +543,7 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
         elif update_type is UpdateType.DISCONNECTED:
             self.hass.async_create_task(self._async_disconnected())
         elif update_type is UpdateType.STATUS:
-            self.async_set_updated_data(self.device)
+            self.async_set_updated_data(None)
         elif update_type is UpdateType.EVENT and (event := self.device.event):
             self._async_device_event_handler(event)
 

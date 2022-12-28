@@ -1674,7 +1674,7 @@ pyirishrail==0.0.2
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.0.8
+pyisy==3.0.9
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
@@ -2189,6 +2189,9 @@ regenmaschine==2022.11.0
 # homeassistant.components.renault
 renault-api==0.1.11
 
+# homeassistant.components.reolink
+reolink-ip==0.0.40
+
 # homeassistant.components.python_script
 restrictedpython==5.2
 
@@ -2579,7 +2582,7 @@ wirelesstagpy==0.8.1
 withings-api==2.4.0
 
 # homeassistant.components.wled
-wled==0.14.1
+wled==0.15.0
 
 # homeassistant.components.wolflink
 wolf_smartset==0.1.11

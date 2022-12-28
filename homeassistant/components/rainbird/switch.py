@@ -113,7 +113,9 @@ async def async_setup_platform(
     )
 
 
-class RainBirdSwitch(CoordinatorEntity, SwitchEntity):
+class RainBirdSwitch(
+    CoordinatorEntity[RainbirdUpdateCoordinator[States]], SwitchEntity
+):
     """Representation of a Rain Bird switch."""
 
     def __init__(
