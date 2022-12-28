@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -41,19 +42,19 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int]):
         """Initiate imap client."""
         self.hass = hass
         self.imap_client = imap_client
-        self.idle_loop_task: asyncio.Task | None = None
         self.support_push = imap_client.has_capability("IDLE")
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
+            update_interval=timedelta(seconds=10) if not self.support_push else None,
         )
 
     async def _async_update_data(self) -> int:
         """Update the number of unread emails."""
         try:
             if self.imap_client is None:
-                await self.retry_connection()
+                self.imap_client = await connect_to_server(dict(self.config_entry.data))
         except (AioImapException, asyncio.TimeoutError) as err:
             raise UpdateFailed(err) from err
 
@@ -74,33 +75,26 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int]):
             raise UpdateFailed(
                 f"Invalid response for search '{self.config_entry.data[CONF_SEARCH]}': {result} / {lines[0]}"
             )
+        if self.support_push:
+            self.hass.async_create_task(self.async_wait_server_push())
         return len(lines[0].split())
 
-    async def idle_loop(self) -> None:
-        """Wait for data pushed from server."""
-        while True:
-            try:
-                idle: asyncio.Future = await self.imap_client.idle_start()
-                await self.imap_client.wait_server_push()
-                self.imap_client.idle_done()
-                async with async_timeout.timeout(10):
-                    await idle
-                await self.async_refresh()
+    async def async_wait_server_push(self) -> None:
+        """Wait for data push from server."""
+        try:
+            idle: asyncio.Future = await self.imap_client.idle_start()
+            await self.imap_client.wait_server_push()
+            self.imap_client.idle_done()
+            async with async_timeout.timeout(10):
+                await idle
 
-            except (AioImapException, asyncio.TimeoutError):
-                _LOGGER.warning(
-                    "Lost %s (will attempt to reconnect)",
-                    self.config_entry.data[CONF_SERVER],
-                )
-                self.imap_client = None
-                break
-        self.hass.async_create_task(self.async_request_refresh())
-
-    async def retry_connection(self):
-        """Retry the connection in case of error."""
-        self.imap_client = await connect_to_server(dict(self.config_entry.data))
-        if self.support_push:
-            self.idle_loop_task = asyncio.create_task(self.idle_loop())
+        except (AioImapException, asyncio.TimeoutError):
+            _LOGGER.warning(
+                "Lost %s (will attempt to reconnect)",
+                self.config_entry.data[CONF_SERVER],
+            )
+            self.imap_client = None
+        await self.async_request_refresh()
 
     async def shutdown(self, *_) -> None:
         """Close resources."""
@@ -108,5 +102,3 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int]):
             if self.imap_client.has_pending_idle():
                 self.imap_client.idle_done()
             await self.imap_client.logout()
-        if self.idle_loop_task:
-            self.idle_loop_task.cancel()

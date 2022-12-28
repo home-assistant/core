@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
 
 from aioimaplib import IMAP4_SSL, AioImapException
 
@@ -35,11 +34,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = ImapDataUpdateCoordinator(hass, imap_client)
     await coordinator.async_config_entry_first_refresh()
-
-    if coordinator.support_push:
-        coordinator.idle_loop_task = asyncio.create_task(coordinator.idle_loop())
-    else:
-        coordinator.update_interval = timedelta(seconds=10)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 

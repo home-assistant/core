@@ -98,3 +98,9 @@ class ImapSensor(CoordinatorEntity[ImapDataUpdateCoordinator], SensorEntity):
     def native_value(self) -> int:
         """Return the number of emails found."""
         return self.coordinator.data
+
+    async def async_update(self) -> None:
+        """Check for idle state before updating."""
+        if self.coordinator.imap_client.has_pending_idle():
+            self.coordinator.imap_client.idle_done()
+        return await super().async_update()
