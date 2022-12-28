@@ -88,7 +88,7 @@ class MySensorsNotificationService(BaseNotificationService):
             self.hass,
             DOMAIN,
             "deprecated_notify_service",
-            breaks_in_ha_version="2023.3.0",
+            breaks_in_ha_version="2023.4.0",
             is_fixable=True,
             is_persistent=True,
             severity=IssueSeverity.WARNING,
