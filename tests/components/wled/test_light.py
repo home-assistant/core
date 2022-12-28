@@ -401,7 +401,7 @@ async def test_single_segment_with_keep_master_light(
     assert state.state == STATE_ON
 
 
-@pytest.mark.parametrize("mock_wled", ["wled/rgb_single_segment.json"], indirect=True)
+@pytest.mark.parametrize("mock_wled", ["wled/rgbw.json"], indirect=True)
 @pytest.mark.parametrize(
     "capabilities,color_modes",
     [
@@ -433,14 +433,13 @@ async def test_segment_light_capabilities(
     """Test segment light capabilities of WLED lights."""
     update: WLEDDevice = mock_wled.update.return_value
     update.info.leds.segment_light_capabilities = [LightCapability(capabilities)]
-    update.state.segments[0].color_primary = (255, 0, 0, 0)
 
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("light.wled_rgb_light")
+    state = hass.states.get("light.wled_rgbw_light")
     assert state
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_COLOR_MODE) == color_modes[0]
