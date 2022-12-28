@@ -103,7 +103,8 @@ class BaseHaScanner(ABC):
         )
         return time_since_last_detection > SCANNER_WATCHDOG_TIMEOUT
 
-    async def _async_scanner_watchdog(self, now: datetime.datetime) -> None:
+    @hass_callback
+    def _async_scanner_watchdog(self, now: datetime.datetime) -> None:
         """Check if the scanner is running.
 
         Override this method if you need to do something else when the watchdog is triggered.
