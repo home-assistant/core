@@ -193,6 +193,8 @@ class YamahaDevice(MediaPlayerEntity):
     def __init__(self, name, receiver, source_ignore, source_names, zone_names):
         """Initialize the Yamaha Receiver."""
         self.receiver = receiver
+        if name == DEFAULT_NAME and not receiver.model_name is None and not receiver.model_name == "Unknown":
+            name = 'Yamaha %s' % receiver.model_name
         self._attr_is_volume_muted = False
         self._attr_volume_level = 0
         self._attr_state = MediaPlayerState.OFF
