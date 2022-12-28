@@ -1063,6 +1063,71 @@ async def test_sending_hs_color(hass, mqtt_mock_entry_with_yaml_config):
     )
 
 
+async def test_sending_color_temp_with_brightness(
+    hass, mqtt_mock_entry_with_yaml_config
+):
+    """Test light.turn_on with color_temp sends brightness parameter."""
+    assert await async_setup_component(
+        hass,
+        mqtt.DOMAIN,
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "schema": "json",
+                    "name": "test",
+                    "command_topic": "test_light_rgb/set",
+                    "color_mode": True,
+                    "supported_color_modes": ["color_temp", "rgb"],
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_UNKNOWN
+
+    await common.async_turn_on(hass, "light.test", color_temp=400)
+    await common.async_turn_on(hass, "light.test", brightness=50, color_temp=400)
+    await common.async_turn_on(hass, "light.test", rgb_color=[255, 128, 0])
+    await common.async_turn_on(
+        hass, "light.test", rgb_color=[255, 128, 0], brightness=127
+    )
+
+    mqtt_mock.async_publish.assert_has_calls(
+        [
+            call(
+                "test_light_rgb/set",
+                JsonValidator('{"state": "ON", "color_temp": 400}'),
+                0,
+                False,
+            ),
+            call(
+                "test_light_rgb/set",
+                JsonValidator('{"state": "ON", "color_temp": 400, "brightness": 50}'),
+                0,
+                False,
+            ),
+            call(
+                "test_light_rgb/set",
+                JsonValidator('{"state": "ON", "color": {"r": 255, "g": 128, "b": 0}}'),
+                0,
+                False,
+            ),
+            call(
+                "test_light_rgb/set",
+                JsonValidator(
+                    '{"state": "ON", "color": {"r": 127, "g": 64, "b": 0}, "brightness": 127}'
+                ),
+                0,
+                False,
+            ),
+        ],
+        any_order=True,
+    )
+
+
 async def test_sending_rgb_color_no_brightness(hass, mqtt_mock_entry_with_yaml_config):
     """Test light.turn_on with hs color sends rgb color parameters."""
     assert await async_setup_component(

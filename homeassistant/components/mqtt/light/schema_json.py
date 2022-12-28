@@ -598,7 +598,11 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
         self._set_flash_and_transition(message, **kwargs)
 
-        if ATTR_BRIGHTNESS in kwargs and self._config[CONF_BRIGHTNESS]:
+        if ATTR_BRIGHTNESS in kwargs and (
+            self._config[CONF_BRIGHTNESS]
+            or self.supported_color_modes
+            and ColorMode.COLOR_TEMP in self.supported_color_modes
+        ):
             brightness_normalized = kwargs[ATTR_BRIGHTNESS] / DEFAULT_BRIGHTNESS_SCALE
             brightness_scale = self._config[CONF_BRIGHTNESS_SCALE]
             device_brightness = min(
