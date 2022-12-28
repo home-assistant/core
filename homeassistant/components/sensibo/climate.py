@@ -308,7 +308,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         if "fanLevel" not in self.device_data.active_features:
             raise HomeAssistantError("Current mode doesn't support setting Fanlevel")
 
-        transformation = self.device_data.fan_modes_to_native
+        transformation = self.device_data.fan_modes_translated
         await self.async_send_api_call(
             key=AC_STATE_TO_DATA["fanLevel"],
             value=fan_mode,
@@ -349,7 +349,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         if "swing" not in self.device_data.active_features:
             raise HomeAssistantError("Current mode doesn't support setting Swing")
 
-        transformation = self.device_data.swing_modes_to_native
+        transformation = self.device_data.swing_modes_translated
         await self.async_send_api_call(
             key=AC_STATE_TO_DATA["swing"],
             value=swing_mode,

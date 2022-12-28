@@ -46,7 +46,7 @@ DEVICE_SELECT_TYPES = (
         value_fn=lambda data: data.horizontal_swing_mode,
         options_fn=lambda data: data.horizontal_swing_modes,
         translation_key="horizontalswing",
-        transformation=lambda data: data.horizontal_swing_modes_to_native,
+        transformation=lambda data: data.horizontal_swing_modes_translated,
     ),
     SensiboSelectEntityDescription(
         key="light",
@@ -56,7 +56,7 @@ DEVICE_SELECT_TYPES = (
         value_fn=lambda data: data.light_mode,
         options_fn=lambda data: data.light_modes,
         translation_key="light",
-        transformation=lambda data: data.light_modes_to_native,
+        transformation=lambda data: data.light_modes_translated,
     ),
 )
 
