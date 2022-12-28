@@ -218,6 +218,8 @@ class DPCode(StrEnum):
     LED_TYPE_2 = "led_type_2"
     LED_TYPE_3 = "led_type_3"
     LEVEL = "level"
+    LEVEL_1 = "level_1"
+    LEVEL_2 = "level_2"
     LEVEL_CURRENT = "level_current"
     LIGHT = "light"  # Light
     LIGHT_MODE = "light_mode"
@@ -256,6 +258,9 @@ class DPCode(StrEnum):
     POWDER_SET = "powder_set"  # Powder
     POWER = "power"
     POWER_GO = "power_go"
+    PREHEAT = "preheat"
+    PREHEAT_1 = "preheat_1"
+    PREHEAT_2 = "preheat_2"
     PRESENCE_STATE = "presence_state"
     PRESSURE_STATE = "pressure_state"
     PRESSURE_VALUE = "pressure_value"
