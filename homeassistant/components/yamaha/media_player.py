@@ -207,8 +207,8 @@ class YamahaDevice(MediaPlayerEntity):
         self._play_status = None
         self._name = name
         self._zone = receiver.zone
-        if not self.receiver.serial_number is None:
-            self._attr_unique_id = '%s_%s' % (self.receiver.serial_number, self._zone)
+        if self.receiver.serial_number is not None:
+            self._attr_unique_id = f"{self.receiver.serial_number}_{self._zone}"
 
     def update(self) -> None:
         """Get the latest details from the device."""
