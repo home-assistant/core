@@ -5,7 +5,7 @@ from typing import Any, cast
 
 from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .. import mysensors
@@ -34,6 +34,11 @@ async def async_get_service(
 
 class MySensorsNotificationDevice(mysensors.device.MySensorsDevice):
     """Represent a MySensors Notification device."""
+
+    @callback
+    def _async_update_callback(self) -> None:
+        """Update the device."""
+        self._async_update()
 
     def send_msg(self, msg: str) -> None:
         """Send a message."""

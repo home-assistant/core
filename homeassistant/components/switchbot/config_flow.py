@@ -4,7 +4,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from switchbot import SwitchBotAdvertisement, parse_advertisement_data
+from switchbot import (
+    SwitchBotAdvertisement,
+    SwitchbotLock,
+    SwitchbotModel,
+    parse_advertisement_data,
+)
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
@@ -17,6 +22,8 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 
 from .const import (
+    CONF_ENCRYPTION_KEY,
+    CONF_KEY_ID,
     CONF_RETRY_COUNT,
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
     DEFAULT_RETRY_COUNT,
@@ -144,6 +151,39 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    async def async_step_lock_key(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the encryption key step."""
+        errors = {}
+        assert self._discovered_adv is not None
+        if user_input is not None:
+            if not await SwitchbotLock.verify_encryption_key(
+                self._discovered_adv.device,
+                user_input.get(CONF_KEY_ID),
+                user_input.get(CONF_ENCRYPTION_KEY),
+            ):
+                errors = {
+                    CONF_KEY_ID: "key_id_invalid",
+                    CONF_ENCRYPTION_KEY: "encryption_key_invalid",
+                }
+            else:
+                return await self._async_create_entry_from_discovery(user_input)
+
+        return self.async_show_form(
+            step_id="lock_key",
+            errors=errors,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_KEY_ID): str,
+                    vol.Required(CONF_ENCRYPTION_KEY): str,
+                }
+            ),
+            description_placeholders={
+                "name": name_from_discovery(self._discovered_adv),
+            },
+        )
+
     @callback
     def _async_discover_devices(self) -> None:
         current_addresses = self._async_current_ids()
@@ -188,6 +228,8 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             device_adv = self._discovered_advs[user_input[CONF_ADDRESS]]
             await self._async_set_device(device_adv)
+            if device_adv.data.get("modelName") == SwitchbotModel.LOCK:
+                return await self.async_step_lock_key()
             if device_adv.data["isEncrypted"]:
                 return await self.async_step_password()
             return await self._async_create_entry_from_discovery(user_input)
@@ -198,6 +240,8 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             # or simply confirm it
             device_adv = list(self._discovered_advs.values())[0]
             await self._async_set_device(device_adv)
+            if device_adv.data.get("modelName") == SwitchbotModel.LOCK:
+                return await self.async_step_lock_key()
             if device_adv.data["isEncrypted"]:
                 return await self.async_step_password()
             return await self.async_step_confirm()

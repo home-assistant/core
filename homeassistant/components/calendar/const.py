@@ -10,6 +10,7 @@ class CalendarEntityFeature(IntEnum):
 
     CREATE_EVENT = 1
     DELETE_EVENT = 2
+    UPDATE_EVENT = 4
 
 
 # rfc5545 fields

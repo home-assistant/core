@@ -86,6 +86,7 @@ from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    DataRateConverter,
     DistanceConverter,
     InformationConverter,
     MassConverter,
@@ -236,7 +237,7 @@ class SensorDeviceClass(StrEnum):
     ILLUMINANCE = "illuminance"
     """Illuminance.
 
-    Unit of measurement: `lx`, `lm`
+    Unit of measurement: `lx`
     """
 
     IRRADIANCE = "irradiance"
@@ -467,6 +468,7 @@ STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 # Note: this needs to be aligned with frontend: OVERRIDE_SENSOR_UNITS in
 # `entity-registry-settings.ts`
 UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] = {
+    SensorDeviceClass.DATA_RATE: DataRateConverter,
     SensorDeviceClass.DATA_SIZE: InformationConverter,
     SensorDeviceClass.DISTANCE: DistanceConverter,
     SensorDeviceClass.GAS: VolumeConverter,
@@ -505,7 +507,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
         UnitOfVolume.CUBIC_METERS,
     },
     SensorDeviceClass.HUMIDITY: {PERCENTAGE},
-    SensorDeviceClass.ILLUMINANCE: {LIGHT_LUX, "lm"},
+    SensorDeviceClass.ILLUMINANCE: {LIGHT_LUX},
     SensorDeviceClass.IRRADIANCE: set(UnitOfIrradiance),
     SensorDeviceClass.MOISTURE: {PERCENTAGE},
     SensorDeviceClass.NITROGEN_DIOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},

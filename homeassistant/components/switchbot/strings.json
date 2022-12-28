@@ -15,9 +15,19 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "lock_key": {
+        "description": "The {name} device requires encryption key, details on how to obtain it can be found in the documentation.",
+        "data": {
+          "key_id": "Key ID",
+          "encryption_key": "Encryption key"
+        }
       }
     },
-    "error": {},
+    "error": {
+      "key_id_invalid": "Key ID or Encryption key is invalid",
+      "encryption_key_invalid": "Key ID or Encryption key is invalid"
+    },
     "abort": {
       "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_unconfigured_devices": "No unconfigured devices found.",
