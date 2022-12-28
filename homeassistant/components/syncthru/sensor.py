@@ -161,6 +161,8 @@ class SyncThruTonerSensor(SyncThruSensor):
 class SyncThruDrumSensor(SyncThruSensor):
     """Implementation of a Samsung Printer drum sensor platform."""
 
+    _attr_native_unit_of_measurement = PERCENTAGE
+
     def __init__(
         self, coordinator: DataUpdateCoordinator[SyncThru], name: str, color: str
     ) -> None:
@@ -168,7 +170,6 @@ class SyncThruDrumSensor(SyncThruSensor):
         super().__init__(coordinator, name)
         self._attr_name = f"{name} Drum {color}"
         self._color = color
-        self._attr_native_unit_of_measurement = PERCENTAGE
         self._id_suffix = f"_drum_{color}"
 
     @property
