@@ -20,6 +20,7 @@ from homeassistant.components.hassio import (
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client
 
 from .addon import get_addon_manager
@@ -131,7 +132,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await self.start_task
-        except (CannotConnect, AddonError, AbortFlow) as err:
+        except (FailedConnect, AddonError, AbortFlow) as err:
             self.start_task = None
             LOGGER.error(err)
             return self.async_show_progress_done(next_step_id="start_failed")
@@ -170,7 +171,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 else:
                     break
             else:
-                raise CannotConnect("Failed to start Matter Server add-on: timeout")
+                raise FailedConnect("Failed to start Matter Server add-on: timeout")
         finally:
             # Continue the flow after show progress when the task is done.
             self.hass.async_create_task(
@@ -324,3 +325,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_INTEGRATION_CREATED_ADDON: self.integration_created_addon,
             },
         )
+
+
+class FailedConnect(HomeAssistantError):
+    """Failed to connect to the Matter Server."""
