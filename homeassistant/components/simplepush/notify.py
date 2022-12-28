@@ -71,14 +71,17 @@ class SimplePushNotificationService(BaseNotificationService):
             if isinstance(attachments_data, list) and attachments_data:
                 attachments = []
                 for attachment in attachments_data:
-                    if "attachment" in attachment and "thumbnail" in attachment:
+                    if (
+                        "attachment" in attachment.keys()
+                        and "thumbnail" in attachment.keys()
+                    ):
                         attachments.append(
                             {
                                 "video": attachment["attachment"],
                                 "thumbnail": attachment["thumbnail"],
                             }
                         )
-                    elif "attachment" in attachment:
+                    elif "attachment" in attachment.keys():
                         attachments.append(attachment["attachment"])
 
         # use event from config until YAML config is removed
