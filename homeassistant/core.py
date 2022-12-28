@@ -480,6 +480,7 @@ class HomeAssistant:
                 hassjob.target = cast(
                     Callable[..., Coroutine[Any, Any, _R]], hassjob.target
                 )
+            _LOGGER.warning("Creating task with args: %s: %s", hassjob.target, args)
             task = self.loop.create_task(hassjob.target(*args))
         elif hassjob.job_type == HassJobType.Callback:
             if TYPE_CHECKING:
