@@ -2,7 +2,6 @@
 from typing import Any
 
 import switchbot
-from switchbot import SwitchbotModel
 from switchbot.const import LockStatus
 
 from homeassistant.components.lock import LockEntity
@@ -20,8 +19,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Switchbot lock based on a config entry."""
     coordinator: SwitchbotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    if coordinator.model == SwitchbotModel.LOCK:
-        async_add_entities([(SwitchBotLock(coordinator))])
+    async_add_entities([(SwitchBotLock(coordinator))])
 
 
 # noinspection PyAbstractClass
