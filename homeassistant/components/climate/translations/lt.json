@@ -1,6 +1,10 @@
 {
     "state": {
         "_": {
+            "cool": "V\u0117sina",
+            "dry": "D\u017eiovina",
+            "heat": "\u0160ildo",
+            "heat_cool": "\u0160ildo/V\u0117sina",
             "off": "I\u0161jungta"
         }
     }
