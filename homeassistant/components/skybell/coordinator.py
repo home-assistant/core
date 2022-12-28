@@ -11,7 +11,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import LOGGER
 
 
-class SkybellDataUpdateCoordinator(DataUpdateCoordinator):
+class SkybellDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Data update coordinator for the Skybell integration."""
 
     config_entry: ConfigEntry

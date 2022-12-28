@@ -44,8 +44,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass,
             title="HomeWizard Energy",
             message=(
-                "The custom integration of HomeWizard Energy has been migrated to core. "
-                "You can safely remove the custom integration from the custom_integrations folder."
+                "The custom integration of HomeWizard Energy has been migrated to core."
+                " You can safely remove the custom integration from the"
+                " custom_integrations folder."
             ),
             notification_id=f"homewizard_energy_to_{DOMAIN}",
         )

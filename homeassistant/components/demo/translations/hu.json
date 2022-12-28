@@ -1,5 +1,28 @@
 {
     "entity": {
+        "climate": {
+            "ubercool": {
+                "state_attributes": {
+                    "fan_mode": {
+                        "state": {
+                            "auto_high": "Auto Magas",
+                            "auto_low": "Auto Alacsony",
+                            "on_high": "Be Maga",
+                            "on_low": "Be Alacsony"
+                        }
+                    },
+                    "swing_mode": {
+                        "state": {
+                            "1": "1",
+                            "2": "2",
+                            "3": "3",
+                            "auto": "Automatikus",
+                            "off": "Ki"
+                        }
+                    }
+                }
+            }
+        },
         "select": {
             "speed": {
                 "state": {
@@ -16,6 +39,15 @@
                     "comfort": "Komfort",
                     "eco": "Takar\u00e9kos",
                     "sleep": "Alv\u00e1s"
+                }
+            }
+        },
+        "vacuum": {
+            "model_s": {
+                "state_attributes": {
+                    "cleaned_area": {
+                        "name": "Tiszt\u00edtott ter\u00fclet"
+                    }
                 }
             }
         }

@@ -17,15 +17,15 @@ from homeassistant.const import (
     DEGREE,
     LIGHT_LUX,
     PERCENTAGE,
-    PRESSURE_HPA,
-    TEMP_CELSIUS,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
     UnitOfPrecipitationDepth,
+    UnitOfPressure,
     UnitOfSpeed,
+    UnitOfTemperature,
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
@@ -63,13 +63,13 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     "ACTUAL_TEMPERATURE": SensorEntityDescription(
         key="ACTUAL_TEMPERATURE",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "TEMPERATURE": SensorEntityDescription(
         key="TEMPERATURE",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -188,7 +188,7 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     "AIR_PRESSURE": SensorEntityDescription(
         key="AIR_PRESSURE",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -308,7 +308,10 @@ def setup_platform(
         if (entity_desc := SENSOR_DESCRIPTIONS.get(state)) is None:
             name = conf.get(ATTR_NAME)
             _LOGGER.warning(
-                "Sensor (%s) entity description is missing. Sensor state (%s) needs to be maintained",
+                (
+                    "Sensor (%s) entity description is missing. Sensor state (%s) needs"
+                    " to be maintained"
+                ),
                 name,
                 state,
             )

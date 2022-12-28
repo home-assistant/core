@@ -21,8 +21,8 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    TEMP_CELSIUS,
     UnitOfElectricPotential,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -311,7 +311,7 @@ class SensiboMotionSensor(SensiboMotionBaseEntity, SensorEntity):
     def native_unit_of_measurement(self) -> str | None:
         """Add native unit of measurement."""
         if self.entity_description.device_class == SensorDeviceClass.TEMPERATURE:
-            return TEMP_CELSIUS
+            return UnitOfTemperature.CELSIUS
         return self.entity_description.native_unit_of_measurement
 
     @property
@@ -345,7 +345,7 @@ class SensiboDeviceSensor(SensiboDeviceBaseEntity, SensorEntity):
     def native_unit_of_measurement(self) -> str | None:
         """Add native unit of measurement."""
         if self.entity_description.device_class == SensorDeviceClass.TEMPERATURE:
-            return TEMP_CELSIUS
+            return UnitOfTemperature.CELSIUS
         return self.entity_description.native_unit_of_measurement
 
     @property

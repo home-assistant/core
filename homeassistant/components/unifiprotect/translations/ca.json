@@ -52,8 +52,19 @@
     },
     "issues": {
         "deprecate_smart_sensor": {
-            "description": "El sensor 'unified' \"Detected Object\" per a deteccions intel\u00b7ligents est\u00e0 obsolet. S'ha substitu\u00eft per sensors binaris de detecci\u00f3 intel\u00b7ligent individuals per a cada tipus de detecci\u00f3. Actualitza les plantilles i/o automatitzacions que l'utilitzin.",
+            "description": "El sensor 'unified' \"Detected Object\" per a deteccions intel\u00b7ligents est\u00e0 obsolet. S'ha substitu\u00eft per sensors binaris de detecci\u00f3 intel\u00b7ligent individuals per a cada tipus de detecci\u00f3.\n\nA continuaci\u00f3 es mostren les automatitzacions i 'scripts' que utilitzen aquestes entitats obsoletes:\n{items}\nLa llista de sobre pot estar incompleta, ja que no inclou les plantilles que s'utilitzen als panells d'usuari. Actualitza les plantilles, automatitzacions i 'scripts' necessaris.",
             "title": "Sensor de detecci\u00f3 intel\u00b7ligent obsolet"
+        },
+        "deprecated_service_set_doorbell_message": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "El servei `unifiprotect.set_doorbell_message` est\u00e0 obsolet, ha canviat per la nova entitat Doorbell Text que s'afegeix a cada dispositiu Doorbell. S'eliminar\u00e0 a la versi\u00f3 2023.3.0. Actualitza-ho perqu\u00e8 utilitzi el [servei `text.set_value`]({link}).",
+                        "title": "set_doorbell_message est\u00e0 obsolet"
+                    }
+                }
+            },
+            "title": "set_doorbell_message est\u00e0 obsolet"
         },
         "ea_setup_failed": {
             "description": "Est\u00e0s utilitzant la versi\u00f3 v{version} d'UniFi Protect, que \u00e9s una versi\u00f3 d'acc\u00e9s anticipat. S'ha produ\u00eft un error irrecuperable en intentar carregar la integraci\u00f3. [Baixa a una versi\u00f3 estable](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) d'UniFi Protect per continuar utilitzant la integraci\u00f3. \n\n Error: {error}",

@@ -1009,12 +1009,6 @@
         }
       }
     },
-    "deutsche_bahn": {
-      "name": "Deutsche Bahn",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
     "device_sun_light_trigger": {
       "name": "Presence-based Lights",
       "integration_type": "hub",
@@ -4421,6 +4415,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "reolink": {
+      "name": "Reolink IP NVR/camera",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "repetier": {
       "name": "Repetier-Server",

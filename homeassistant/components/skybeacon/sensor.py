@@ -21,7 +21,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -105,7 +105,7 @@ class SkybeaconTemp(SensorEntity):
     """Representation of a Skybeacon temperature sensor."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = TEMP_CELSIUS
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     def __init__(self, name, mon):
         """Initialize a sensor."""

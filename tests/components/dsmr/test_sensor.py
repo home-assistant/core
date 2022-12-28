@@ -13,6 +13,7 @@ from unittest.mock import DEFAULT, MagicMock
 
 from homeassistant import config_entries
 from homeassistant.components.sensor import (
+    ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
@@ -116,8 +117,9 @@ async def test_default_setup(hass, dsmr_connection_fixture):
     # tariff should be translated in human readable and have no unit
     active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
     assert active_tariff.state == "low"
-    assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
     assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
+    assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
     assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
 
@@ -215,8 +217,9 @@ async def test_v4_meter(hass, dsmr_connection_fixture):
     # tariff should be translated in human readable and have no unit
     active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
     assert active_tariff.state == "low"
-    assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
     assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
+    assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
     assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
 
@@ -286,8 +289,9 @@ async def test_v5_meter(hass, dsmr_connection_fixture):
     # tariff should be translated in human readable and have no unit
     active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
     assert active_tariff.state == "low"
-    assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
     assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
+    assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
     assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
 
@@ -440,8 +444,9 @@ async def test_belgian_meter(hass, dsmr_connection_fixture):
     # tariff should be translated in human readable and have no unit
     active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
     assert active_tariff.state == "normal"
-    assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
     assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
+    assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
     assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
 
@@ -499,8 +504,9 @@ async def test_belgian_meter_low(hass, dsmr_connection_fixture):
     # tariff should be translated in human readable and have no unit
     active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
     assert active_tariff.state == "low"
-    assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
     assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
+    assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
     assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
 

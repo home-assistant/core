@@ -14,14 +14,14 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE,
     LIGHT_LUX,
     PERCENTAGE,
-    PRESSURE_KPA,
-    TEMP_CELSIUS,
+    UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfPressure,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -42,7 +42,7 @@ SENSORS_MAP: dict[str, ZWaveMeSensorEntityDescription] = {
     "barometer": ZWaveMeSensorEntityDescription(
         key="barometer",
         device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement=PRESSURE_KPA,
+        native_unit_of_measurement=UnitOfPressure.KPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "co": ZWaveMeSensorEntityDescription(
@@ -72,7 +72,7 @@ SENSORS_MAP: dict[str, ZWaveMeSensorEntityDescription] = {
     "meterElectric_ampere": ZWaveMeSensorEntityDescription(
         key="meterElectric_ampere",
         device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "meterElectric_kilowatt_hour": ZWaveMeSensorEntityDescription(
@@ -103,7 +103,7 @@ SENSORS_MAP: dict[str, ZWaveMeSensorEntityDescription] = {
     "temperature": ZWaveMeSensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "generic": ZWaveMeSensorEntityDescription(

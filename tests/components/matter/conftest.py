@@ -33,6 +33,9 @@ async def matter_client_fixture() -> AsyncGenerator[MagicMock, None]:
             """Mock listen."""
             if init_ready is not None:
                 init_ready.set()
+            listen_block = asyncio.Event()
+            await listen_block.wait()
+            assert False, "Listen was not cancelled!"
 
         client.connect = AsyncMock(side_effect=connect)
         client.start_listening = AsyncMock(side_effect=listen)

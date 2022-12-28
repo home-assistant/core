@@ -21,8 +21,10 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_TRIGGER_TIME,
     STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
@@ -46,6 +48,8 @@ CONF_PAYLOAD_DISARM = "payload_disarm"
 CONF_PAYLOAD_ARM_HOME = "payload_arm_home"
 CONF_PAYLOAD_ARM_AWAY = "payload_arm_away"
 CONF_PAYLOAD_ARM_NIGHT = "payload_arm_night"
+CONF_PAYLOAD_ARM_VACATION = "payload_arm_vacation"
+CONF_PAYLOAD_ARM_CUSTOM_BYPASS = "payload_arm_custom_bypass"
 
 DEFAULT_ALARM_NAME = "HA Alarm"
 DEFAULT_DELAY_TIME = datetime.timedelta(seconds=0)
@@ -55,6 +59,8 @@ DEFAULT_DISARM_AFTER_TRIGGER = False
 DEFAULT_ARM_AWAY = "ARM_AWAY"
 DEFAULT_ARM_HOME = "ARM_HOME"
 DEFAULT_ARM_NIGHT = "ARM_NIGHT"
+DEFAULT_ARM_VACATION = "ARM_VACATION"
+DEFAULT_ARM_CUSTOM_BYPASS = "ARM_CUSTOM_BYPASS"
 DEFAULT_DISARM = "DISARM"
 
 SUPPORTED_STATES = [
@@ -62,6 +68,8 @@ SUPPORTED_STATES = [
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_VACATION,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_TRIGGERED,
 ]
 
@@ -138,6 +146,12 @@ PLATFORM_SCHEMA = vol.Schema(
                 vol.Optional(STATE_ALARM_ARMED_NIGHT, default={}): _state_schema(
                     STATE_ALARM_ARMED_NIGHT
                 ),
+                vol.Optional(STATE_ALARM_ARMED_VACATION, default={}): _state_schema(
+                    STATE_ALARM_ARMED_VACATION
+                ),
+                vol.Optional(
+                    STATE_ALARM_ARMED_CUSTOM_BYPASS, default={}
+                ): _state_schema(STATE_ALARM_ARMED_CUSTOM_BYPASS),
                 vol.Optional(STATE_ALARM_DISARMED, default={}): _state_schema(
                     STATE_ALARM_DISARMED
                 ),
@@ -155,6 +169,12 @@ PLATFORM_SCHEMA = vol.Schema(
                 ): cv.string,
                 vol.Optional(
                     CONF_PAYLOAD_ARM_NIGHT, default=DEFAULT_ARM_NIGHT
+                ): cv.string,
+                vol.Optional(
+                    CONF_PAYLOAD_ARM_VACATION, default=DEFAULT_ARM_VACATION
+                ): cv.string,
+                vol.Optional(
+                    CONF_PAYLOAD_ARM_CUSTOM_BYPASS, default=DEFAULT_ARM_CUSTOM_BYPASS
                 ): cv.string,
                 vol.Optional(CONF_PAYLOAD_DISARM, default=DEFAULT_DISARM): cv.string,
             }
@@ -187,6 +207,8 @@ def setup_platform(
                 config.get(CONF_PAYLOAD_ARM_HOME),
                 config.get(CONF_PAYLOAD_ARM_AWAY),
                 config.get(CONF_PAYLOAD_ARM_NIGHT),
+                config.get(CONF_PAYLOAD_ARM_VACATION),
+                config.get(CONF_PAYLOAD_ARM_CUSTOM_BYPASS),
                 config,
             )
         ]
@@ -210,7 +232,9 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
         | AlarmControlPanelEntityFeature.ARM_NIGHT
+        | AlarmControlPanelEntityFeature.ARM_VACATION
         | AlarmControlPanelEntityFeature.TRIGGER
+        | AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
     )
 
     def __init__(
@@ -228,6 +252,8 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         payload_arm_home,
         payload_arm_away,
         payload_arm_night,
+        payload_arm_vacation,
+        payload_arm_custom_bypass,
         config,
     ):
         """Init the manual MQTT alarm panel."""
@@ -264,6 +290,8 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         self._payload_arm_home = payload_arm_home
         self._payload_arm_away = payload_arm_away
         self._payload_arm_night = payload_arm_night
+        self._payload_arm_vacation = payload_arm_vacation
+        self._payload_arm_custom_bypass = payload_arm_custom_bypass
 
     @property
     def state(self) -> str:
@@ -350,6 +378,24 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
 
         self._async_update_state(STATE_ALARM_ARMED_NIGHT)
 
+    async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
+        """Send arm vacation command."""
+        if self.code_arm_required and not self._async_validate_code(
+            code, STATE_ALARM_ARMED_VACATION
+        ):
+            return
+
+        self._async_update_state(STATE_ALARM_ARMED_VACATION)
+
+    async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
+        """Send arm custom bypass command."""
+        if self.code_arm_required and not self._async_validate_code(
+            code, STATE_ALARM_ARMED_CUSTOM_BYPASS
+        ):
+            return
+
+        self._async_update_state(STATE_ALARM_ARMED_CUSTOM_BYPASS)
+
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """
         Send alarm trigger command.
@@ -369,7 +415,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         self._previous_state = self._state
         self._state = state
         self._state_ts = dt_util.utcnow()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
         pending_time = self._pending_time(state)
         if state == STATE_ALARM_TRIGGERED:
@@ -434,6 +480,10 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
                 await self.async_alarm_arm_away(self._code)
             elif msg.payload == self._payload_arm_night:
                 await self.async_alarm_arm_night(self._code)
+            elif msg.payload == self._payload_arm_vacation:
+                await self.async_alarm_arm_vacation(self._code)
+            elif msg.payload == self._payload_arm_custom_bypass:
+                await self.async_alarm_arm_custom_bypass(self._code)
             else:
                 _LOGGER.warning("Received unexpected payload: %s", msg.payload)
                 return

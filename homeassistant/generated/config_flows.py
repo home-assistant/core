@@ -337,6 +337,7 @@ FLOWS = {
         "rdw",
         "recollect_waste",
         "renault",
+        "reolink",
         "rfxtrx",
         "rhasspy",
         "ridwell",

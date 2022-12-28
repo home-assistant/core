@@ -187,6 +187,7 @@ homeassistant.components.logger.*
 homeassistant.components.lookin.*
 homeassistant.components.luftdaten.*
 homeassistant.components.mailbox.*
+homeassistant.components.mastodon.*
 homeassistant.components.matter.*
 homeassistant.components.media_player.*
 homeassistant.components.media_source.*
@@ -256,6 +257,7 @@ homeassistant.components.sensirion_ble.*
 homeassistant.components.sensor.*
 homeassistant.components.senz.*
 homeassistant.components.shelly.*
+homeassistant.components.simplepush.*
 homeassistant.components.simplisafe.*
 homeassistant.components.skybell.*
 homeassistant.components.slack.*
@@ -263,6 +265,7 @@ homeassistant.components.sleepiq.*
 homeassistant.components.smhi.*
 homeassistant.components.snooz.*
 homeassistant.components.sonarr.*
+homeassistant.components.speedtestdotnet.*
 homeassistant.components.ssdp.*
 homeassistant.components.statistics.*
 homeassistant.components.steamist.*

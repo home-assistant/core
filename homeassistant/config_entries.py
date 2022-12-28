@@ -9,6 +9,7 @@ from copy import deepcopy
 from enum import Enum
 import functools
 import logging
+from random import randint
 from types import MappingProxyType, MethodType
 from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast
 import weakref
@@ -27,7 +28,11 @@ from .exceptions import (
 )
 from .helpers import device_registry, entity_registry, storage
 from .helpers.dispatcher import async_dispatcher_send
-from .helpers.event import async_call_later
+from .helpers.event import (
+    RANDOM_MICROSECOND_MAX,
+    RANDOM_MICROSECOND_MIN,
+    async_call_later,
+)
 from .helpers.frame import report
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
 from .setup import DATA_SETUP_DONE, async_process_deps_reqs, async_setup_component
@@ -278,9 +283,11 @@ class ConfigEntry:
             disabled_by, ConfigEntryDisabler
         ):
             report(  # type: ignore[unreachable]
-                "uses str for config entry disabled_by. This is deprecated and will "
-                "stop working in Home Assistant 2022.3, it should be updated to use "
-                "ConfigEntryDisabler instead",
+                (
+                    "uses str for config entry disabled_by. This is deprecated and will"
+                    " stop working in Home Assistant 2022.3, it should be updated to"
+                    " use ConfigEntryDisabler instead"
+                ),
                 error_if_core=False,
             )
             disabled_by = ConfigEntryDisabler(disabled_by)
@@ -353,7 +360,10 @@ class ConfigEntry:
                 integration.get_platform("config_flow")
             except ImportError as err:
                 _LOGGER.error(
-                    "Error importing platform config_flow from integration %s to set up %s configuration entry: %s",
+                    (
+                        "Error importing platform config_flow from integration %s to"
+                        " set up %s configuration entry: %s"
+                    ),
                     integration.domain,
                     self.domain,
                     err,
@@ -404,20 +414,28 @@ class ConfigEntry:
             result = False
         except ConfigEntryNotReady as ex:
             self.async_set_state(hass, ConfigEntryState.SETUP_RETRY, str(ex) or None)
-            wait_time = 2 ** min(tries, 4) * 5
+            wait_time = 2 ** min(tries, 4) * 5 + (
+                randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX) / 1000000
+            )
             tries += 1
             message = str(ex)
             ready_message = f"ready yet: {message}" if message else "ready yet"
             if tries == 1:
                 _LOGGER.warning(
-                    "Config entry '%s' for %s integration not %s; Retrying in background",
+                    (
+                        "Config entry '%s' for %s integration not %s; Retrying in"
+                        " background"
+                    ),
                     self.title,
                     self.domain,
                     ready_message,
                 )
             else:
                 _LOGGER.debug(
-                    "Config entry '%s' for %s integration not %s; Retrying in %d seconds",
+                    (
+                        "Config entry '%s' for %s integration not %s; Retrying in %d"
+                        " seconds"
+                    ),
                     self.title,
                     self.domain,
                     ready_message,
@@ -1065,8 +1083,9 @@ class ConfigEntries:
 
         if entry.state is not ConfigEntryState.NOT_LOADED:
             raise OperationNotAllowed(
-                f"The config entry {entry.title} ({entry.domain}) with entry_id {entry.entry_id}"
-                f" cannot be setup because is already loaded in the {entry.state} state"
+                f"The config entry {entry.title} ({entry.domain}) with entry_id"
+                f" {entry.entry_id} cannot be setup because is already loaded in the"
+                f" {entry.state} state"
             )
 
         # Setup Component if not set up yet
@@ -1090,8 +1109,9 @@ class ConfigEntries:
 
         if not entry.state.recoverable:
             raise OperationNotAllowed(
-                f"The config entry {entry.title} ({entry.domain}) with entry_id "
-                f"{entry.entry_id} cannot be unloaded because it is not in a recoverable state ({entry.state})"
+                f"The config entry {entry.title} ({entry.domain}) with entry_id"
+                f" {entry.entry_id} cannot be unloaded because it is not in a"
+                f" recoverable state ({entry.state})"
             )
 
         return await entry.async_unload(self.hass)
@@ -1126,9 +1146,11 @@ class ConfigEntries:
             disabled_by, ConfigEntryDisabler
         ):
             report(  # type: ignore[unreachable]
-                "uses str for config entry disabled_by. This is deprecated and will "
-                "stop working in Home Assistant 2022.3, it should be updated to use "
-                "ConfigEntryDisabler instead",
+                (
+                    "uses str for config entry disabled_by. This is deprecated and will"
+                    " stop working in Home Assistant 2022.3, it should be updated to"
+                    " use ConfigEntryDisabler instead"
+                ),
                 error_if_core=False,
             )
             disabled_by = ConfigEntryDisabler(disabled_by)
@@ -1225,8 +1247,10 @@ class ConfigEntries:
     ) -> None:
         """Forward the setup of an entry to platforms."""
         report(
-            "called async_setup_platforms instead of awaiting async_forward_entry_setups; "
-            "this will fail in version 2022.12",
+            (
+                "called async_setup_platforms instead of awaiting"
+                " async_forward_entry_setups; this will fail in version 2022.12"
+            ),
             # Raise this to warning once all core integrations have been migrated
             level=logging.DEBUG,
             error_if_core=False,
@@ -1777,7 +1801,10 @@ class EntityRegistryDisabledHandler:
         self.changed = set()
 
         _LOGGER.info(
-            "Reloading configuration entries because disabled_by changed in entity registry: %s",
+            (
+                "Reloading configuration entries because disabled_by changed in entity"
+                " registry: %s"
+            ),
             ", ".join(to_reload),
         )
 

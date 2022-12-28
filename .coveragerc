@@ -229,7 +229,6 @@ omit =
     homeassistant/components/denonavr/__init__.py
     homeassistant/components/denonavr/media_player.py
     homeassistant/components/denonavr/receiver.py
-    homeassistant/components/deutsche_bahn/sensor.py
     homeassistant/components/devolo_home_control/switch.py
     homeassistant/components/digital_ocean/*
     homeassistant/components/discogs/sensor.py
@@ -733,7 +732,6 @@ omit =
     homeassistant/components/mastodon/notify.py
     homeassistant/components/matrix/*
     homeassistant/components/matter/__init__.py
-    homeassistant/components/matter/entity.py
     homeassistant/components/meater/__init__.py
     homeassistant/components/meater/const.py
     homeassistant/components/meater/sensor.py
@@ -802,12 +800,9 @@ omit =
     homeassistant/components/myq/cover.py
     homeassistant/components/myq/light.py
     homeassistant/components/mysensors/__init__.py
-    homeassistant/components/mysensors/binary_sensor.py
     homeassistant/components/mysensors/climate.py
-    homeassistant/components/mysensors/const.py
     homeassistant/components/mysensors/cover.py
     homeassistant/components/mysensors/device.py
-    homeassistant/components/mysensors/device_tracker.py
     homeassistant/components/mysensors/gateway.py
     homeassistant/components/mysensors/handler.py
     homeassistant/components/mysensors/helpers.py
@@ -853,6 +848,7 @@ omit =
     homeassistant/components/nibe_heatpump/__init__.py
     homeassistant/components/nibe_heatpump/climate.py
     homeassistant/components/nibe_heatpump/binary_sensor.py
+    homeassistant/components/nibe_heatpump/button.py
     homeassistant/components/nibe_heatpump/number.py
     homeassistant/components/nibe_heatpump/select.py
     homeassistant/components/nibe_heatpump/sensor.py
@@ -1038,7 +1034,6 @@ omit =
     homeassistant/components/radiotherm/entity.py
     homeassistant/components/radiotherm/switch.py
     homeassistant/components/radiotherm/util.py
-    homeassistant/components/rainbird/*
     homeassistant/components/raincloud/*
     homeassistant/components/rainmachine/__init__.py
     homeassistant/components/rainmachine/binary_sensor.py
@@ -1058,6 +1053,11 @@ omit =
     homeassistant/components/rejseplanen/sensor.py
     homeassistant/components/remember_the_milk/__init__.py
     homeassistant/components/remote_rpi_gpio/*
+    homeassistant/components/reolink/__init__.py
+    homeassistant/components/reolink/camera.py
+    homeassistant/components/reolink/const.py
+    homeassistant/components/reolink/entity.py
+    homeassistant/components/reolink/host.py
     homeassistant/components/repetier/__init__.py
     homeassistant/components/repetier/sensor.py
     homeassistant/components/rest/notify.py
@@ -1260,6 +1260,7 @@ omit =
     homeassistant/components/switchbot/light.py
     homeassistant/components/switchbot/sensor.py
     homeassistant/components/switchbot/switch.py
+    homeassistant/components/switchbot/lock.py
     homeassistant/components/switchmate/switch.py
     homeassistant/components/syncthing/__init__.py
     homeassistant/components/syncthing/sensor.py
@@ -1589,8 +1590,6 @@ omit =
     homeassistant/components/youless/const.py
     homeassistant/components/youless/sensor.py
     homeassistant/components/zabbix/*
-    homeassistant/components/zamg/__init__.py
-    homeassistant/components/zamg/const.py
     homeassistant/components/zamg/coordinator.py
     homeassistant/components/zamg/sensor.py
     homeassistant/components/zamg/weather.py

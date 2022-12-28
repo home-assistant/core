@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TIME_MILLISECONDS, UnitOfDataRate
+from homeassistant.const import UnitOfDataRate, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -45,7 +45,7 @@ SENSOR_TYPES: tuple[SpeedtestSensorEntityDescription, ...] = (
     SpeedtestSensorEntityDescription(
         key="ping",
         name="Ping",
-        native_unit_of_measurement=TIME_MILLISECONDS,
+        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SpeedtestSensorEntityDescription(

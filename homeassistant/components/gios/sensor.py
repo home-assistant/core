@@ -72,7 +72,6 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
     GiosSensorEntityDescription(
         key=ATTR_CO,
         name="CO",
-        device_class=SensorDeviceClass.CO,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),

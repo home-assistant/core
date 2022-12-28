@@ -291,8 +291,10 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
             else:
                 success = False
                 _LOGGER.error(
-                    "The thermostat is currently not in a mode "
-                    "that supports target temperature: %s",
+                    (
+                        "The thermostat is currently not in a mode "
+                        "that supports target temperature: %s"
+                    ),
                     operation_mode,
                 )
 

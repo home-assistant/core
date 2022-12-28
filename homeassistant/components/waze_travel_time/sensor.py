@@ -16,8 +16,8 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_REGION,
     EVENT_HOMEASSISTANT_STARTED,
-    TIME_MINUTES,
     UnitOfLength,
+    UnitOfTime,
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -74,7 +74,7 @@ class WazeTravelTime(SensorEntity):
     """Representation of a Waze travel time sensor."""
 
     _attr_attribution = "Powered by Waze"
-    _attr_native_unit_of_measurement = TIME_MINUTES
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
     _attr_device_class = SensorDeviceClass.DURATION
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_device_info = DeviceInfo(
