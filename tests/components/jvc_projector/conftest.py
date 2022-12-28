@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.jvcprojector.const import DOMAIN
+from homeassistant.components.jvc_projector.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 
@@ -18,7 +18,7 @@ from tests.common import MockConfigEntry
 def fixture_mock_device() -> Generator[None, AsyncMock, None]:
     """Return a mocked JVC Projector device."""
     with patch(
-        "homeassistant.components.jvcprojector.JvcProjector", autospec=True
+        "homeassistant.components.jvc_projector.JvcProjector", autospec=True
     ) as mock:
         device = mock.return_value
         device.host = MOCK_HOST
