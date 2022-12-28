@@ -69,7 +69,6 @@ GEOGRAPHY_SENSOR_DESCRIPTIONS = (
         key=SENSOR_KIND_AQI,
         name="Air quality index",
         device_class=SensorDeviceClass.AQI,
-        native_unit_of_measurement="AQI",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
