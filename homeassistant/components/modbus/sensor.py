@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, Optional
 
 from homeassistant.components.sensor import CONF_STATE_CLASS, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_SENSORS, CONF_UNIT_OF_MEASUREMENT
@@ -58,7 +58,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
     ) -> None:
         """Initialize the modbus register sensor."""
         super().__init__(hub, entry)
-        self._coordinator: DataUpdateCoordinator[Any] | None = None
+        self._coordinator: DataUpdateCoordinator[list[str] | None] | None = None
         self._attr_native_unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_state_class = entry.get(CONF_STATE_CLASS)
 
@@ -126,11 +126,18 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
         self.async_write_ha_state()
 
 
-class SlaveSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
+class SlaveSensor(
+    CoordinatorEntity[DataUpdateCoordinator[Optional[list[str]]]],
+    RestoreEntity,
+    SensorEntity,
+):
     """Modbus slave binary sensor."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator[Any], idx: int, entry: dict[str, Any]
+        self,
+        coordinator: DataUpdateCoordinator[list[str] | None],
+        idx: int,
+        entry: dict[str, Any],
     ) -> None:
         """Initialize the Modbus binary sensor."""
         idx += 1
