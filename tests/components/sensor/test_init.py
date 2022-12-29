@@ -566,8 +566,8 @@ async def test_custom_unit(
             ELECTRIC_POTENTIAL_VOLT,
             ELECTRIC_POTENTIAL_MILLIVOLT,
             ELECTRIC_POTENTIAL_MILLIVOLT,
-            2200,
             2.2,
+            2200,
             SensorDeviceClass.VOLTAGE,
         ),
         # Volume

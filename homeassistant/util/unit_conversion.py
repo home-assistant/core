@@ -145,7 +145,7 @@ class ElectricPotentialConverter(BaseUnitConverter):
     NORMALIZED_UNIT = UnitOfElectricPotential.VOLT
     _UNIT_CONVERSION: dict[str, float] = {
         UnitOfElectricPotential.VOLT: 1,
-        UnitOfElectricPotential.MILLIVOLT: 1 / 1000,
+        UnitOfElectricPotential.MILLIVOLT: 1e3,
     }
     VALID_UNITS = {
         UnitOfElectricPotential.VOLT,
