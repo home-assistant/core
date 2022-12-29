@@ -12,5 +12,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "broker": {
+                "data": {
+                    "password": "Slapta\u017eodis"
+                }
+            }
+        }
     }
 }
