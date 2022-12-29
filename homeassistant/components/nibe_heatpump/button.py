@@ -24,11 +24,9 @@ async def async_setup_entry(
     coordinator: Coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     def reset_buttons():
-        for entity_description in UNIT_COILGROUPS.get(coordinator.series, {}).get(
-            "main"
-        ):
+        if unit := UNIT_COILGROUPS.get(coordinator.series, {}).get("main"):
             try:
-                yield NibeAlarmResetButton(coordinator, entity_description)
+                yield NibeAlarmResetButton(coordinator, unit)
             except CoilNotFoundException as exception:
                 LOGGER.debug("Skipping button %r", exception)
 
@@ -46,6 +44,7 @@ class NibeAlarmResetButton(CoordinatorEntity[Coordinator], ButtonEntity):
         self._reset_coil = coordinator.heatpump.get_coil_by_address(unit.alarm_reset)
         self._alarm_coil = coordinator.heatpump.get_coil_by_address(unit.alarm)
         super().__init__(coordinator, {self._alarm_coil.address})
+        self._attr_name = self._reset_coil.title
         self._attr_unique_id = f"{coordinator.unique_id}-alarm_reset"
         self._attr_device_info = coordinator.device_info
 
