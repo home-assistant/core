@@ -660,8 +660,8 @@ def _apply_update(  # noqa: C901
                             # Using LOCK=EXCLUSIVE to prevent the database from corrupting
                             # https://github.com/home-assistant/core/issues/56104
                             text(
-                                f"ALTER TABLE {table} CONVERT TO "
-                                "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, LOCK=EXCLUSIVE"
+                                f"ALTER TABLE {table} CONVERT TO CHARACTER SET utf8mb4"
+                                " COLLATE utf8mb4_unicode_ci, LOCK=EXCLUSIVE"
                             )
                         )
     elif new_version == 22:

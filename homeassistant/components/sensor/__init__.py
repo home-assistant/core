@@ -86,7 +86,9 @@ from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    DataRateConverter,
     DistanceConverter,
+    InformationConverter,
     MassConverter,
     PressureConverter,
     SpeedConverter,
@@ -235,7 +237,7 @@ class SensorDeviceClass(StrEnum):
     ILLUMINANCE = "illuminance"
     """Illuminance.
 
-    Unit of measurement: `lx`, `lm`
+    Unit of measurement: `lx`
     """
 
     IRRADIANCE = "irradiance"
@@ -466,6 +468,8 @@ STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 # Note: this needs to be aligned with frontend: OVERRIDE_SENSOR_UNITS in
 # `entity-registry-settings.ts`
 UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] = {
+    SensorDeviceClass.DATA_RATE: DataRateConverter,
+    SensorDeviceClass.DATA_SIZE: InformationConverter,
     SensorDeviceClass.DISTANCE: DistanceConverter,
     SensorDeviceClass.GAS: VolumeConverter,
     SensorDeviceClass.PRECIPITATION: DistanceConverter,
@@ -503,7 +507,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
         UnitOfVolume.CUBIC_METERS,
     },
     SensorDeviceClass.HUMIDITY: {PERCENTAGE},
-    SensorDeviceClass.ILLUMINANCE: {LIGHT_LUX, "lm"},
+    SensorDeviceClass.ILLUMINANCE: {LIGHT_LUX},
     SensorDeviceClass.IRRADIANCE: set(UnitOfIrradiance),
     SensorDeviceClass.MOISTURE: {PERCENTAGE},
     SensorDeviceClass.NITROGEN_DIOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
@@ -756,11 +760,12 @@ class SensorEntity(Entity):
                 report_issue = self._suggest_report_issue()
                 # This should raise in Home Assistant Core 2022.5
                 _LOGGER.warning(
-                    "Entity %s (%s) with state_class %s has set last_reset. Setting "
-                    "last_reset for entities with state_class other than 'total' is "
-                    "not supported. "
-                    "Please update your configuration if state_class is manually "
-                    "configured, otherwise %s",
+                    (
+                        "Entity %s (%s) with state_class %s has set last_reset. Setting"
+                        " last_reset for entities with state_class other than 'total'"
+                        " is not supported. Please update your configuration if"
+                        " state_class is manually configured, otherwise %s"
+                    ),
                     self.entity_id,
                     type(self),
                     self.state_class,
@@ -968,10 +973,12 @@ class SensorEntity(Entity):
 
             # This should raise in Home Assistant Core 2023.6
             _LOGGER.warning(
-                "Entity %s (%s) is using native unit of measurement '%s' which "
-                "is not a valid unit for the device class ('%s') it is using; "
-                "Please update your configuration if your entity is manually "
-                "configured, otherwise %s",
+                (
+                    "Entity %s (%s) is using native unit of measurement '%s' which "
+                    "is not a valid unit for the device class ('%s') it is using; "
+                    "Please update your configuration if your entity is manually "
+                    "configured, otherwise %s"
+                ),
                 self.entity_id,
                 type(self),
                 native_unit_of_measurement,

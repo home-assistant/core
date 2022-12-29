@@ -40,7 +40,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.30.0
+PySwitchbot==0.33.0
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -119,7 +119,7 @@ aio_georss_gdacs==0.7
 aioairq==0.2.4
 
 # homeassistant.components.airzone
-aioairzone==0.5.1
+aioairzone==0.5.2
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
@@ -177,7 +177,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.4.1
+aiohomekit==2.4.3
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -339,7 +339,7 @@ anthemav==1.4.1
 apcaccess==0.0.13
 
 # homeassistant.components.apprise
-apprise==1.2.0
+apprise==1.2.1
 
 # homeassistant.components.aprs
 aprslib==0.7.0
@@ -428,7 +428,7 @@ bimmer_connected==0.10.4
 bizkaibus==0.1.1
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==2.10.2
+bleak-retry-connector==2.13.0
 
 # homeassistant.components.bluetooth
 bleak==0.19.2
@@ -453,7 +453,7 @@ bluemaestro-ble==0.2.0
 # bluepy==1.3.0
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.14.1
+bluetooth-adapters==0.15.2
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==1.0.3
@@ -803,7 +803,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.19.3
+govee-ble==0.21.0
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -882,13 +882,13 @@ hkavr==0.0.5
 hlk-sw16==0.0.9
 
 # homeassistant.components.pi_hole
-hole==0.7.0
+hole==0.8.0
 
 # homeassistant.components.workday
-holidays==0.17.2
+holidays==0.18.0
 
 # homeassistant.components.frontend
-home-assistant-frontend==20221213.1
+home-assistant-frontend==20221228.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1110,7 +1110,7 @@ mill-local==0.2.0
 millheater==0.10.0
 
 # homeassistant.components.minio
-minio==5.0.10
+minio==7.1.12
 
 # homeassistant.components.moat
 moat-ble==0.1.1
@@ -1173,7 +1173,7 @@ nextcord==2.0.0a8
 nextdns==1.2.2
 
 # homeassistant.components.nibe_heatpump
-nibe==1.5.0
+nibe==1.6.0
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
@@ -1674,7 +1674,7 @@ pyirishrail==0.0.2
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.0.8
+pyisy==3.0.9
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
@@ -1767,7 +1767,7 @@ pymyq==3.1.4
 pymysensors==0.24.0
 
 # homeassistant.components.netgear
-pynetgear==0.10.8
+pynetgear==0.10.9
 
 # homeassistant.components.netio
 pynetio==0.1.9.1
@@ -2038,7 +2038,7 @@ python-kasa==0.5.0
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==1.0.7
+python-matter-server==1.0.8
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -2188,6 +2188,9 @@ regenmaschine==2022.11.0
 
 # homeassistant.components.renault
 renault-api==0.1.11
+
+# homeassistant.components.reolink
+reolink-ip==0.0.40
 
 # homeassistant.components.python_script
 restrictedpython==5.2
@@ -2579,7 +2582,7 @@ wirelesstagpy==0.8.1
 withings-api==2.4.0
 
 # homeassistant.components.wled
-wled==0.14.1
+wled==0.15.0
 
 # homeassistant.components.wolflink
 wolf_smartset==0.1.11
@@ -2594,7 +2597,7 @@ xboxapi==2.0.1
 xiaomi-ble==0.12.2
 
 # homeassistant.components.knx
-xknx==2.1.0
+xknx==2.2.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
@@ -2611,13 +2614,13 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.3.9
 
 # homeassistant.components.yalexs_ble
-yalexs-ble==1.12.3
+yalexs-ble==1.12.5
 
 # homeassistant.components.august
 yalexs==1.2.6
 
 # homeassistant.components.august
-yalexs_ble==1.12.3
+yalexs_ble==1.12.5
 
 # homeassistant.components.yeelight
 yeelight==0.7.10
@@ -2635,13 +2638,13 @@ youless-api==0.16
 youtube_dl==2021.12.17
 
 # homeassistant.components.zamg
-zamg==0.2.1
+zamg==0.2.2
 
 # homeassistant.components.zengge
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.47.0
+zeroconf==0.47.1
 
 # homeassistant.components.zha
 zha-quirks==0.0.89

@@ -140,6 +140,7 @@ def two_adapters_fixture():
                 "product": "Bluetooth Adapter 5.0",
                 "product_id": "aa01",
                 "vendor_id": "cc01",
+                "connection_slots": 1,
             },
             "hci1": {
                 "address": "00:00:00:00:00:02",
@@ -150,6 +151,7 @@ def two_adapters_fixture():
                 "product": "Bluetooth Adapter 5.0",
                 "product_id": "aa01",
                 "vendor_id": "cc01",
+                "connection_slots": 2,
             },
         },
     ):

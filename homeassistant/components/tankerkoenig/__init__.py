@@ -7,110 +7,28 @@ from math import ceil
 
 import pytankerkoenig
 from requests.exceptions import RequestException
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    ATTR_ID,
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LOCATION,
-    CONF_LONGITUDE,
-    CONF_NAME,
-    CONF_RADIUS,
-    CONF_SCAN_INTERVAL,
-    CONF_SHOW_ON_MAP,
-    Platform,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ID, CONF_API_KEY, CONF_SHOW_ON_MAP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
 
-from .const import (
-    CONF_FUEL_TYPES,
-    CONF_STATIONS,
-    DEFAULT_RADIUS,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    FUEL_TYPES,
-)
+from .const import CONF_FUEL_TYPES, CONF_STATIONS, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_API_KEY): cv.string,
-                    vol.Optional(
-                        CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                    ): cv.time_period,
-                    vol.Optional(CONF_FUEL_TYPES, default=FUEL_TYPES): vol.All(
-                        cv.ensure_list, [vol.In(FUEL_TYPES)]
-                    ),
-                    vol.Inclusive(
-                        CONF_LATITUDE,
-                        "coordinates",
-                        "Latitude and longitude must exist together",
-                    ): cv.latitude,
-                    vol.Inclusive(
-                        CONF_LONGITUDE,
-                        "coordinates",
-                        "Latitude and longitude must exist together",
-                    ): cv.longitude,
-                    vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): vol.All(
-                        cv.positive_int, vol.Range(min=1)
-                    ),
-                    vol.Optional(CONF_STATIONS, default=[]): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
-                    vol.Optional(CONF_SHOW_ON_MAP, default=True): cv.boolean,
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set the tankerkoenig component up."""
-    if DOMAIN not in config:
-        return True
-
-    conf = config[DOMAIN]
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_NAME: "Home",
-                CONF_API_KEY: conf[CONF_API_KEY],
-                CONF_FUEL_TYPES: conf[CONF_FUEL_TYPES],
-                CONF_LOCATION: {
-                    "latitude": conf.get(CONF_LATITUDE, hass.config.latitude),
-                    "longitude": conf.get(CONF_LONGITUDE, hass.config.longitude),
-                },
-                CONF_RADIUS: conf[CONF_RADIUS],
-                CONF_STATIONS: conf[CONF_STATIONS],
-                CONF_SHOW_ON_MAP: conf[CONF_SHOW_ON_MAP],
-            },
-        )
-    )
-
-    return True
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

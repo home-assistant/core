@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import cast
+from typing import Optional, cast
 
 from whois import Domain
 
@@ -139,7 +139,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the platform from config_entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: DataUpdateCoordinator[Domain | None] = hass.data[DOMAIN][
+        entry.entry_id
+    ]
     async_add_entities(
         [
             WhoisSensorEntity(
@@ -152,7 +154,9 @@ async def async_setup_entry(
     )
 
 
-class WhoisSensorEntity(CoordinatorEntity, SensorEntity):
+class WhoisSensorEntity(
+    CoordinatorEntity[DataUpdateCoordinator[Optional[Domain]]], SensorEntity
+):
     """Implementation of a WHOIS sensor."""
 
     entity_description: WhoisSensorEntityDescription
@@ -160,7 +164,7 @@ class WhoisSensorEntity(CoordinatorEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[Domain | None],
         description: WhoisSensorEntityDescription,
         domain: str,
     ) -> None:

@@ -48,6 +48,7 @@ from .const import (
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.CLIMATE,
     Platform.NUMBER,
     Platform.SELECT,
@@ -252,6 +253,10 @@ class Coordinator(ContextCoordinator[dict[int, Coil], int]):
 
         self.async_update_context_listeners([coil.address])
 
+    async def async_read_coil(self, coil: Coil) -> Coil:
+        """Read coil and update state using callbacks."""
+        return await self.connection.read_coil(coil)
+
     async def _async_update_data(self) -> dict[int, Coil]:
         self.task = asyncio.current_task()
         try:
@@ -282,7 +287,11 @@ class Coordinator(ContextCoordinator[dict[int, Coil], int]):
                 result[coil.address] = coil
                 self.seed.pop(coil.address, None)
         except CoilReadException as exception:
-            raise UpdateFailed(f"Failed to update: {exception}") from exception
+            if not result:
+                raise UpdateFailed(f"Failed to update: {exception}") from exception
+            self.logger.debug(
+                "Some coils failed to update, and may be unsupported: %s", exception
+            )
 
         return result
 
