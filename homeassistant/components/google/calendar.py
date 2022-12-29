@@ -63,6 +63,7 @@ from . import (
     load_config,
     update_config,
 )
+from .api import get_feature_access
 from .const import (
     DATA_SERVICE,
     DATA_STORE,
@@ -74,6 +75,7 @@ from .const import (
     EVENT_START_DATE,
     EVENT_START_DATETIME,
     EVENT_TYPES_CONF,
+    FeatureAccess,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -213,7 +215,10 @@ async def async_setup_entry(
             # Prefer calendar sync down of resources when possible. However, sync does not work
             # for search. Also free-busy calendars denormalize recurring events as individual
             # events which is not efficient for sync
-            support_write = calendar_item.access_role.is_writer
+            support_write = (
+                calendar_item.access_role.is_writer
+                and get_feature_access(hass, config_entry) is FeatureAccess.read_write
+            )
             if (
                 search := data.get(CONF_SEARCH)
                 or calendar_item.access_role == AccessRole.FREE_BUSY_READER
