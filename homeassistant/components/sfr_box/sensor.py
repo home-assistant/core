@@ -1,6 +1,9 @@
 """SFR Box sensor platform."""
+from collections.abc import Callable
+from dataclasses import dataclass
+
 from sfrbox_api.bridge import SFRBox
-from sfrbox_api.models import SystemInfo
+from sfrbox_api.models import DslInfo, SystemInfo
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -18,78 +21,93 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import DslDataUpdateCoordinator
 
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+
+@dataclass
+class SFRBoxSensorMixin:
+    """Mixin for SFR Box sensors."""
+
+    value_fn: Callable[[DslInfo], StateType]
+
+
+@dataclass
+class SFRBoxSensorEntityDescription(SensorEntityDescription, SFRBoxSensorMixin):
+    """Description for SFR Box sensors."""
+
+
+SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription, ...] = (
+    SFRBoxSensorEntityDescription(
         key="linemode",
         name="Line mode",
         has_entity_name=True,
+        value_fn=lambda x: x.linemode,
     ),
-    SensorEntityDescription(
+    SFRBoxSensorEntityDescription(
         key="counter",
         name="Counter",
         has_entity_name=True,
+        value_fn=lambda x: x.counter,
     ),
-    SensorEntityDescription(
+    SFRBoxSensorEntityDescription(
         key="crc",
         name="CRC",
         has_entity_name=True,
+        value_fn=lambda x: x.crc,
     ),
-    SensorEntityDescription(
-        key="status",
-        name="Status",
-        device_class=SensorDeviceClass.ENUM,
-        options=["up", "down"],
-        has_entity_name=True,
-    ),
-    SensorEntityDescription(
+    SFRBoxSensorEntityDescription(
         key="noise_down",
         name="Noise down",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         state_class=SensorStateClass.MEASUREMENT,
         has_entity_name=True,
+        value_fn=lambda x: x.noise_down,
     ),
-    SensorEntityDescription(
+    SFRBoxSensorEntityDescription(
         key="noise_up",
         name="Noise up",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         state_class=SensorStateClass.MEASUREMENT,
         has_entity_name=True,
+        value_fn=lambda x: x.noise_up,
     ),
-    SensorEntityDescription(
+    SFRBoxSensorEntityDescription(
         key="attenuation_down",
         name="Attenuation down",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         state_class=SensorStateClass.MEASUREMENT,
         has_entity_name=True,
+        value_fn=lambda x: x.attenuation_down,
     ),
-    SensorEntityDescription(
+    SFRBoxSensorEntityDescription(
         key="attenuation_up",
         name="Attenuation up",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         state_class=SensorStateClass.MEASUREMENT,
         has_entity_name=True,
+        value_fn=lambda x: x.attenuation_up,
     ),
-    SensorEntityDescription(
+    SFRBoxSensorEntityDescription(
         key="rate_down",
         name="Rate down",
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
         has_entity_name=True,
+        value_fn=lambda x: x.rate_down,
     ),
-    SensorEntityDescription(
+    SFRBoxSensorEntityDescription(
         key="rate_up",
         name="Rate up",
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
         has_entity_name=True,
+        value_fn=lambda x: x.rate_up,
     ),
-    SensorEntityDescription(
+    SFRBoxSensorEntityDescription(
         key="line_status",
         name="Line status",
         device_class=SensorDeviceClass.ENUM,
@@ -102,8 +120,9 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
             "Unknown",
         ],
         has_entity_name=True,
+        value_fn=lambda x: x.line_status,
     ),
-    SensorEntityDescription(
+    SFRBoxSensorEntityDescription(
         key="training",
         name="Training",
         device_class=SensorDeviceClass.ENUM,
@@ -120,6 +139,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
             "Unknown",
         ],
         has_entity_name=True,
+        value_fn=lambda x: x.training,
     ),
 )
 
@@ -142,10 +162,12 @@ async def async_setup_entry(
 class SFRBoxSensor(CoordinatorEntity[DslDataUpdateCoordinator], SensorEntity):
     """SFR Box sensor."""
 
+    entity_description: SFRBoxSensorEntityDescription
+
     def __init__(
         self,
         coordinator: DslDataUpdateCoordinator,
-        description: SensorEntityDescription,
+        description: SFRBoxSensorEntityDescription,
         system_info: SystemInfo,
     ) -> None:
         """Initialize the sensor."""
@@ -159,4 +181,4 @@ class SFRBoxSensor(CoordinatorEntity[DslDataUpdateCoordinator], SensorEntity):
         """Return the native value of the device."""
         if self.coordinator.data is None:
             return None
-        return getattr(self.coordinator.data, self.entity_description.key)
+        return self.entity_description.value_fn(self.coordinator.data)
