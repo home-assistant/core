@@ -88,6 +88,7 @@ from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
     DataRateConverter,
     DistanceConverter,
+    InformationConverter,
     MassConverter,
     PressureConverter,
     SpeedConverter,
@@ -468,6 +469,7 @@ STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 # `entity-registry-settings.ts`
 UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] = {
     SensorDeviceClass.DATA_RATE: DataRateConverter,
+    SensorDeviceClass.DATA_SIZE: InformationConverter,
     SensorDeviceClass.DISTANCE: DistanceConverter,
     SensorDeviceClass.GAS: VolumeConverter,
     SensorDeviceClass.PRECIPITATION: DistanceConverter,
