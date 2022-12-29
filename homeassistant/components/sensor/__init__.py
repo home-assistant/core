@@ -88,6 +88,8 @@ from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
     DataRateConverter,
     DistanceConverter,
+    ElectricCurrentConverter,
+    ElectricPotentialConverter,
     InformationConverter,
     MassConverter,
     PressureConverter,
@@ -390,7 +392,7 @@ class SensorDeviceClass(StrEnum):
     VOLTAGE = "voltage"
     """Voltage.
 
-    Unit of measurement: `V`
+    Unit of measurement: `V`, `mv`
     """
 
     VOLUME = "volume"
@@ -468,6 +470,7 @@ STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 # Note: this needs to be aligned with frontend: OVERRIDE_SENSOR_UNITS in
 # `entity-registry-settings.ts`
 UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] = {
+    SensorDeviceClass.CURRENT: ElectricCurrentConverter,
     SensorDeviceClass.DATA_RATE: DataRateConverter,
     SensorDeviceClass.DATA_SIZE: InformationConverter,
     SensorDeviceClass.DISTANCE: DistanceConverter,
@@ -476,6 +479,7 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.PRESSURE: PressureConverter,
     SensorDeviceClass.SPEED: SpeedConverter,
     SensorDeviceClass.TEMPERATURE: TemperatureConverter,
+    SensorDeviceClass.VOLTAGE: ElectricPotentialConverter,
     SensorDeviceClass.VOLUME: VolumeConverter,
     SensorDeviceClass.WATER: VolumeConverter,
     SensorDeviceClass.WEIGHT: MassConverter,
@@ -537,7 +541,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     },
-    SensorDeviceClass.VOLTAGE: {UnitOfElectricPotential.VOLT},
+    SensorDeviceClass.VOLTAGE: set(UnitOfElectricPotential),
     SensorDeviceClass.VOLUME: set(UnitOfVolume),
     SensorDeviceClass.WATER: {
         UnitOfVolume.CENTUM_CUBIC_FEET,

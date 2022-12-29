@@ -9,6 +9,10 @@ from homeassistant.components.number import NumberDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_CURRENT_MILLIAMPERE,
+    ELECTRIC_POTENTIAL_MILLIVOLT,
+    ELECTRIC_POTENTIAL_VOLT,
     LENGTH_CENTIMETERS,
     LENGTH_INCHES,
     LENGTH_KILOMETERS,
@@ -475,6 +479,15 @@ async def test_custom_unit(
 @pytest.mark.parametrize(
     "native_unit,custom_unit,state_unit,native_value,custom_value,device_class",
     [
+        # Current
+        (
+            ELECTRIC_CURRENT_AMPERE,
+            ELECTRIC_CURRENT_MILLIAMPERE,
+            ELECTRIC_CURRENT_MILLIAMPERE,
+            3.3,
+            3300,
+            SensorDeviceClass.CURRENT,
+        ),
         # Distance
         (
             LENGTH_KILOMETERS,
@@ -558,6 +571,15 @@ async def test_custom_unit(
             100,
             100,
             SensorDeviceClass.SPEED,
+        ),
+        # Voltage
+        (
+            ELECTRIC_POTENTIAL_VOLT,
+            ELECTRIC_POTENTIAL_MILLIVOLT,
+            ELECTRIC_POTENTIAL_MILLIVOLT,
+            2.2,
+            2200,
+            SensorDeviceClass.VOLTAGE,
         ),
         # Volume
         (
