@@ -146,9 +146,11 @@ async def ws_get_history_during_period(
 
     entity_ids = msg.get("entity_ids")
     include_start_time_state = msg["include_start_time_state"]
+    no_attributes = msg["no_attributes"]
 
     if (
         not include_start_time_state
+        and no_attributes
         and entity_ids
         and not _entities_may_have_state_changes_after(hass, entity_ids, start_time)
     ):
@@ -156,7 +158,6 @@ async def ws_get_history_during_period(
         return
 
     significant_changes_only = msg["significant_changes_only"]
-    no_attributes = msg["no_attributes"]
     minimal_response = msg["minimal_response"]
 
     connection.send_message(
@@ -231,6 +232,7 @@ class HistoryPeriodView(HomeAssistantView):
 
         if (
             not include_start_time_state
+            and no_attributes
             and entity_ids
             and not _entities_may_have_state_changes_after(hass, entity_ids, start_time)
         ):
