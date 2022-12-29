@@ -9,8 +9,6 @@ from homeassistant.components.number import NumberDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
-    ELECTRIC_POTENTIAL_MILLIVOLT,
-    ELECTRIC_POTENTIAL_VOLT,
     LENGTH_CENTIMETERS,
     LENGTH_INCHES,
     LENGTH_KILOMETERS,
@@ -560,15 +558,6 @@ async def test_custom_unit(
             100,
             100,
             SensorDeviceClass.SPEED,
-        ),
-        # Voltage
-        (
-            ELECTRIC_POTENTIAL_VOLT,
-            ELECTRIC_POTENTIAL_MILLIVOLT,
-            ELECTRIC_POTENTIAL_MILLIVOLT,
-            2.2,
-            2200,
-            SensorDeviceClass.VOLTAGE,
         ),
         # Volume
         (
