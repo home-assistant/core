@@ -179,6 +179,4 @@ class SFRBoxSensor(CoordinatorEntity[DslDataUpdateCoordinator], SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the native value of the device."""
-        if self.coordinator.data is None:
-            return None
         return self.entity_description.value_fn(self.coordinator.data)
