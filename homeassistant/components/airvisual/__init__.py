@@ -338,9 +338,13 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     entity_registry.async_update_entity(
                         new_entity_entry.entity_id,
                         area_id=old_entity_entry.area_id,
+                        device_class=old_entity_entry.device_class,
                         disabled_by=old_entity_entry.disabled_by,
                         hidden_by=old_entity_entry.hidden_by,
+                        icon=old_entity_entry.icon,
+                        name=old_entity_entry.name,
                         new_entity_id=old_entity_entry.entity_id,
+                        unit_of_measurement=old_entity_entry.unit_of_measurement,
                     )
 
             # If any automations are using the old device ID, create a Repairs issues
