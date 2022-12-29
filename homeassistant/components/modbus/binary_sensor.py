@@ -59,8 +59,8 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
     def __init__(self, hub: ModbusHub, entry: dict[str, Any], slave_count: int) -> None:
         """Initialize the Modbus binary sensor."""
         self._count = slave_count + 1
-        self._coordinator: DataUpdateCoordinator[list | None] | None = None
-        self._result: list = []
+        self._coordinator: DataUpdateCoordinator[list[int] | None] | None = None
+        self._result: list[int] = []
         super().__init__(hub, entry)
 
     async def async_setup_slaves(
@@ -122,7 +122,7 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
 
 
 class SlaveSensor(
-    CoordinatorEntity[DataUpdateCoordinator[Optional[list]]],
+    CoordinatorEntity[DataUpdateCoordinator[Optional[list[int]]]],
     RestoreEntity,
     BinarySensorEntity,
 ):
@@ -130,7 +130,7 @@ class SlaveSensor(
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[list | None],
+        coordinator: DataUpdateCoordinator[list[int] | None],
         idx: int,
         entry: dict[str, Any],
     ) -> None:
