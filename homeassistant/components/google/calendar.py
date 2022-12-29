@@ -270,7 +270,10 @@ async def async_setup_entry(
         await hass.async_add_executor_job(append_calendars_to_config)
 
     platform = entity_platform.async_get_current_platform()
-    if any(calendar_item.access_role.is_writer for calendar_item in result.items):
+    if (
+        any(calendar_item.access_role.is_writer for calendar_item in result.items)
+        and get_feature_access(hass, config_entry) is FeatureAccess.read_write
+    ):
         platform.async_register_entity_service(
             SERVICE_CREATE_EVENT,
             CREATE_EVENT_SCHEMA,
