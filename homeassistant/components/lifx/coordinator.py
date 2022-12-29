@@ -25,7 +25,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -42,6 +41,7 @@ from .const import (
 )
 from .util import (
     async_execute_lifx,
+    convert_16_to_8,
     get_real_mac_addr,
     infrared_brightness_option_to_value,
     infrared_brightness_value_to_option,
@@ -168,6 +168,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
 
     async def _async_update_data(self) -> None:
         """Fetch all device data from the api."""
+
         async with self.lock:
             if self.device.host_firmware_version is None:
                 self.device.get_hostfirmware()
@@ -198,6 +199,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
 
     async def async_get_color_zones(self) -> None:
         """Get updated color information for each zone."""
+
         zone = 0
         top = 1
         while zone < top:
@@ -214,12 +216,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
 
     async def async_get_extended_color_zones(self) -> None:
         """Get updated color information for all zones."""
-        try:
-            await async_execute_lifx(self.device.get_extended_color_zones)
-        except asyncio.TimeoutError as ex:
-            raise HomeAssistantError(
-                f"Timeout getting color zones from {self.name}"
-            ) from ex
+        await async_execute_lifx(self.device.get_extended_color_zones)
 
     async def async_set_waveform_optional(
         self, value: dict[str, Any], rapid: bool = False
@@ -371,6 +368,7 @@ class LIFXSensorUpdateCoordinator(DataUpdateCoordinator):
         self.parent: LIFXUpdateCoordinator = parent
         self.device: Light = parent.device
         self._update_rssi: bool = False
+        self._update_zones: bool = False
         self._rssi: int = 0
         self.last_used_theme: str = ""
 
@@ -403,11 +401,32 @@ class LIFXSensorUpdateCoordinator(DataUpdateCoordinator):
         """Return the current infrared brightness as a string."""
         return infrared_brightness_value_to_option(self.device.infrared_brightness)
 
+    @property
+    def zones_count(self) -> int:
+        """Return the number of zones on the device."""
+        return int(self.device.zones_count)
+
+    @property
+    def zone_colors(self) -> dict[str, dict[str, Any]]:
+        """Return a list of colors indexed by zone."""
+        return {
+            f"Zone {index}": {
+                "hs_color": f"({int((color[0] / 65535) * 360)}, {int((color[1] / 65535) * 100)})",
+                "brightness": round(convert_16_to_8(color[2])),
+                "brightness_pct": round(color[2] / 65535 * 100),
+                "color_temp_kelvin": color[3],
+            }
+            for index, color in enumerate(self.device.color_zones)
+        }
+
     async def _async_update_data(self) -> None:
         """Fetch all device data from the api."""
 
         if self._update_rssi is True:
             await self.async_update_rssi()
+
+        if self._update_zones is True:
+            await self.async_update_zones()
 
         if lifx_features(self.device)["hev"]:
             await self.async_get_hev_cycle()
@@ -448,6 +467,25 @@ class LIFXSensorUpdateCoordinator(DataUpdateCoordinator):
         """Update RSSI value."""
         resp = await async_execute_lifx(self.device.get_wifiinfo)
         self._rssi = int(floor(10 * log10(resp.signal) + 0.5))
+
+    def async_enable_zones_updates(self) -> Callable[[], None]:
+        """Enable zones state updates."""
+
+        @callback
+        def _async_disable_zones_updates() -> None:
+            """Disable zones state updates when sensor removed."""
+            self._update_zones = False
+
+        self._update_zones = True
+        self.hass.async_create_task(self.async_update_zones())
+        return _async_disable_zones_updates
+
+    async def async_update_zones(self) -> None:
+        """Update zone state from multizone devices."""
+        if lifx_features(self.device)["extended_multizone"] is True:
+            await self.parent.async_get_extended_color_zones()
+        elif lifx_features(self.device)["multizone"] is True:
+            await self.parent.async_get_color_zones()
 
     def async_get_hev_cycle_state(self) -> bool | None:
         """Return the current HEV cycle state."""

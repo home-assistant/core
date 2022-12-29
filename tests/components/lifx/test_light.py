@@ -1,7 +1,7 @@
 """Tests for the lifx integration light platform."""
-
+import asyncio
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import aiolifx_effects
 import pytest
@@ -646,7 +646,7 @@ async def test_extended_multizone_messages(hass: HomeAssistant) -> None:
     bulb.set_extended_color_zones = MockLifxCommand(bulb)
     bulb.get_extended_color_zones = MockFailingLifxCommand(bulb)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(asyncio.TimeoutError):
         await hass.services.async_call(
             DOMAIN,
             "set_state",
@@ -1140,7 +1140,10 @@ async def test_config_zoned_light_strip_fails(hass):
 
     light_strip.get_color_zones = MockFailingLifxCommand(light_strip)
 
-    with _patch_discovery(device=light_strip), _patch_device(device=light_strip):
+    with patch(
+        "homeassistant.components.lifx.coordinator.LIFXSensorUpdateCoordinator.async_update_zones",
+        MagicMock(),
+    ), _patch_discovery(device=light_strip), _patch_device(device=light_strip):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
         entity_registry = er.async_get(hass)
