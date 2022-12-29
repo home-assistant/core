@@ -78,6 +78,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             device_info = await self._async_try_connect(user_input[CONF_IP_ADDRESS])
         except RecoverableError as ex:
+            _LOGGER.error(ex)
             return self.async_show_form(
                 step_id="user",
                 data_schema=data_schema,
@@ -154,6 +155,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await self._async_try_connect(str(self.config[CONF_IP_ADDRESS]))
             except RecoverableError as ex:
+                _LOGGER.error(ex)
                 return self.async_show_form(
                     step_id="discovery_confirm",
                     errors={"base": ex.error_code},
@@ -198,6 +200,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await self._async_try_connect(self.entry.data[CONF_IP_ADDRESS])
             except RecoverableError as ex:
+                _LOGGER.error(ex)
                 return self.async_show_form(
                     step_id="reauth_confirm",
                     errors={"base": ex.error_code},
