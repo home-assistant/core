@@ -27,7 +27,7 @@ dependencies    = [
     "aiohttp==3.8.1",
     "astral==2.2",
     "async_timeout==4.0.2",
-    "attrs==22.1.0",
+    "attrs==22.2.0",
     "atomicwrites-homeassistant==1.4.1",
     "awesomeversion==22.9.0",
     "bcrypt==3.1.7",
