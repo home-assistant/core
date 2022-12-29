@@ -146,7 +146,7 @@ class ElectricCurrentConverter(BaseUnitConverter):
     NORMALIZED_UNIT = UnitOfElectricCurrent.AMPERE
     _UNIT_CONVERSION: dict[str, float] = {
         UnitOfElectricCurrent.AMPERE: 1,
-        UnitOfElectricCurrent.MILLIAMPERE: 1 / 1e3,
+        UnitOfElectricCurrent.MILLIAMPERE: 1e3,
     }
     VALID_UNITS = set(UnitOfElectricCurrent)
 
