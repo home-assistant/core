@@ -14,6 +14,11 @@ from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
+VENTILATOR_MIN_VALUE = 0
+VENTILATOR_MAX_VALUE = 60
+VENTILATOR_STEP = 5
+VENTILATOR_MEASUREMENT_UNIT = UnitOfTime.MINUTES
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -23,11 +28,11 @@ async def async_setup_entry(
     """Set up the ecobee thermostat number entity."""
     data = hass.data[DOMAIN]
     entities = []
-    _LOGGER.debug("Adding min time home ventilators numbers (if present)")
+    _LOGGER.debug("Adding min time ventilators numbers (if present)")
     for index in range(len(data.ecobee.thermostats)):
         thermostat = data.ecobee.get_thermostat(index)
         if thermostat["settings"]["ventilatorType"] != "none":
-            _LOGGER.debug("Adding 1 ventilator's min time home number")
+            _LOGGER.debug("Adding %s's ventilator min times number", thermostat["name"])
             entities.append(
                 EcobeeVentilatorMinTime(
                     data,
@@ -71,11 +76,11 @@ class EcobeeVentilatorMinTime(NumberEntity):
             name=self.thermostat["name"],
         )
         self._attr_unique_id = f'{self.thermostat["identifier"]}_{mode}'
-        self._attr_native_min_value = 0
-        self._attr_native_max_value = 60
-        self._attr_native_step = 5
+        self._attr_native_min_value = VENTILATOR_MIN_VALUE
+        self._attr_native_max_value = VENTILATOR_MAX_VALUE
+        self._attr_native_step = VENTILATOR_STEP
         self._attr_native_value = self.thermostat["settings"][ecobee_setting_key]
-        self._attr_native_unit_of_measurement = UnitOfTime.MINUTES
+        self._attr_native_unit_of_measurement = VENTILATOR_MEASUREMENT_UNIT
 
     async def async_update(self):
         """Get the latest state from the thermostat."""
@@ -90,5 +95,4 @@ class EcobeeVentilatorMinTime(NumberEntity):
 
     def set_native_value(self, value: float) -> None:
         """Set new ventilator Min On Time value."""
-        self._attr_native_value = int(value)
         self.set_func(self.thermostat_index, int(value))
