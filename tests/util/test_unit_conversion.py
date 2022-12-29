@@ -100,55 +100,17 @@ def test_convert_nonnumeric_value(
 
 
 @pytest.mark.parametrize(
-    "converter,from_unit,to_unit,expected",
+    "converter,from_unit,to_unit",
     [
-        (
-            DataRateConverter,
-            UnitOfDataRate.BITS_PER_SECOND,
-            UnitOfDataRate.BYTES_PER_SECOND,
-            8,
-        ),
-        (DistanceConverter, UnitOfLength.KILOMETERS, UnitOfLength.METERS, 1 / 1000),
-        (
-            ElectricCurrentConverter,
-            UnitOfElectricCurrent.AMPERE,
-            UnitOfElectricCurrent.MILLIAMPERE,
-            1 / 1000,
-        ),
-        (EnergyConverter, UnitOfEnergy.WATT_HOUR, UnitOfEnergy.KILO_WATT_HOUR, 1000),
-        (InformationConverter, UnitOfInformation.BITS, UnitOfInformation.BYTES, 8),
-        (PowerConverter, UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
-        (
-            PressureConverter,
-            UnitOfPressure.HPA,
-            UnitOfPressure.INHG,
-            pytest.approx(33.86389),
-        ),
-        (
-            SpeedConverter,
-            UnitOfSpeed.KILOMETERS_PER_HOUR,
-            UnitOfSpeed.MILES_PER_HOUR,
-            pytest.approx(1.609343),
-        ),
-        (
-            TemperatureConverter,
-            UnitOfTemperature.CELSIUS,
-            UnitOfTemperature.FAHRENHEIT,
-            1 / 1.8,
-        ),
-        (
-            VolumeConverter,
-            UnitOfVolume.GALLONS,
-            UnitOfVolume.LITERS,
-            pytest.approx(0.264172),
-        ),
+        (converter, converter.NORMALIZED_UNIT, _get_valid_unit(converter))
+        for converter in _CONVERTERS
     ],
 )
 def test_get_unit_ratio(
-    converter: type[BaseUnitConverter], from_unit: str, to_unit: str, expected: float
+    converter: type[BaseUnitConverter], from_unit: str, to_unit: str
 ) -> None:
     """Test unit ratio."""
-    assert converter.get_unit_ratio(from_unit, to_unit) == expected
+    assert converter.get_unit_ratio(from_unit, to_unit)
 
 
 @pytest.mark.parametrize(
