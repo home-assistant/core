@@ -4,6 +4,7 @@ from __future__ import annotations
 from homeassistant.const import (
     UNIT_NOT_RECOGNIZED_TEMPLATE,
     UnitOfDataRate,
+    UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfInformation,
@@ -136,6 +137,18 @@ class DistanceConverter(BaseUnitConverter):
         UnitOfLength.INCHES,
         UnitOfLength.YARDS,
     }
+
+
+class ElectricCurrentConverter(BaseUnitConverter):
+    """Utility to convert electric current values."""
+
+    UNIT_CLASS = "electric_current"
+    NORMALIZED_UNIT = UnitOfElectricCurrent.AMPERE
+    _UNIT_CONVERSION: dict[str, float] = {
+        UnitOfElectricCurrent.AMPERE: 1,
+        UnitOfElectricCurrent.MILLIAMPERE: 1 / 1e3,
+    }
+    VALID_UNITS = set(UnitOfElectricCurrent)
 
 
 class ElectricPotentialConverter(BaseUnitConverter):
