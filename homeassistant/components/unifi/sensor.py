@@ -8,7 +8,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Generic, TypeVar, Union
+from typing import Generic
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
@@ -34,9 +34,7 @@ import homeassistant.util.dt as dt_util
 
 from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
 from .controller import UniFiController
-
-_DataT = TypeVar("_DataT", bound=Union[Client, Port])
-_HandlerT = TypeVar("_HandlerT", bound=Union[Clients, Ports])
+from .entity import DataT, HandlerT, UnifiEntityDescription
 
 
 @callback
@@ -102,29 +100,23 @@ def async_sub_device_available_fn(controller: UniFiController, obj_id: str) -> b
 
 
 @dataclass
-class UnifiEntityLoader(Generic[_HandlerT, _DataT]):
+class UnifiSensorEntityDescriptionMixin(Generic[HandlerT, DataT]):
     """Validate and load entities from different UniFi handlers."""
 
-    allowed_fn: Callable[[UniFiController, str], bool]
-    api_handler_fn: Callable[[aiounifi.Controller], _HandlerT]
-    available_fn: Callable[[UniFiController, str], bool]
-    device_info_fn: Callable[[aiounifi.Controller, str], DeviceInfo]
-    name_fn: Callable[[_DataT], str | None]
-    object_fn: Callable[[aiounifi.Controller, str], _DataT]
-    supported_fn: Callable[[UniFiController, str], bool | None]
-    unique_id_fn: Callable[[str], str]
-    value_fn: Callable[[UniFiController, _DataT], datetime | float | str | None]
+    value_fn: Callable[[UniFiController, DataT], datetime | float | str | None]
 
 
 @dataclass
-class UnifiEntityDescription(
-    SensorEntityDescription, UnifiEntityLoader[_HandlerT, _DataT]
+class UnifiSensorEntityDescription(
+    SensorEntityDescription,
+    UnifiEntityDescription[HandlerT, DataT],
+    UnifiSensorEntityDescriptionMixin[HandlerT, DataT],
 ):
     """Class describing UniFi sensor entity."""
 
 
-ENTITY_DESCRIPTIONS: tuple[UnifiEntityDescription, ...] = (
-    UnifiEntityDescription[Clients, Client](
+ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
+    UnifiSensorEntityDescription[Clients, Client](
         key="Bandwidth sensor RX",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
@@ -133,13 +125,15 @@ ENTITY_DESCRIPTIONS: tuple[UnifiEntityDescription, ...] = (
         api_handler_fn=lambda api: api.clients,
         available_fn=lambda controller, _: controller.available,
         device_info_fn=async_client_device_info_fn,
+        event_is_on=None,
+        event_to_subscribe=None,
         name_fn=lambda _: "RX",
         object_fn=lambda api, obj_id: api.clients[obj_id],
         supported_fn=lambda controller, _: controller.option_allow_bandwidth_sensors,
-        unique_id_fn=lambda obj_id: f"rx-{obj_id}",
+        unique_id_fn=lambda controller, obj_id: f"rx-{obj_id}",
         value_fn=async_client_rx_value_fn,
     ),
-    UnifiEntityDescription[Clients, Client](
+    UnifiSensorEntityDescription[Clients, Client](
         key="Bandwidth sensor TX",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
@@ -148,13 +142,15 @@ ENTITY_DESCRIPTIONS: tuple[UnifiEntityDescription, ...] = (
         api_handler_fn=lambda api: api.clients,
         available_fn=lambda controller, _: controller.available,
         device_info_fn=async_client_device_info_fn,
+        event_is_on=None,
+        event_to_subscribe=None,
         name_fn=lambda _: "TX",
         object_fn=lambda api, obj_id: api.clients[obj_id],
         supported_fn=lambda controller, _: controller.option_allow_bandwidth_sensors,
-        unique_id_fn=lambda obj_id: f"tx-{obj_id}",
+        unique_id_fn=lambda controller, obj_id: f"tx-{obj_id}",
         value_fn=async_client_tx_value_fn,
     ),
-    UnifiEntityDescription[Ports, Port](
+    UnifiSensorEntityDescription[Ports, Port](
         key="PoE port power sensor",
         device_class=SensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -165,13 +161,15 @@ ENTITY_DESCRIPTIONS: tuple[UnifiEntityDescription, ...] = (
         api_handler_fn=lambda api: api.ports,
         available_fn=async_sub_device_available_fn,
         device_info_fn=async_device_device_info_fn,
+        event_is_on=None,
+        event_to_subscribe=None,
         name_fn=lambda port: f"{port.name} PoE Power",
         object_fn=lambda api, obj_id: api.ports[obj_id],
         supported_fn=lambda controller, obj_id: controller.api.ports[obj_id].port_poe,
-        unique_id_fn=lambda obj_id: f"poe_power-{obj_id}",
+        unique_id_fn=lambda controller, obj_id: f"poe_power-{obj_id}",
         value_fn=lambda _, obj: obj.poe_power if obj.poe_mode != "off" else "0",
     ),
-    UnifiEntityDescription[Clients, Client](
+    UnifiSensorEntityDescription[Clients, Client](
         key="Uptime sensor",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -180,10 +178,12 @@ ENTITY_DESCRIPTIONS: tuple[UnifiEntityDescription, ...] = (
         api_handler_fn=lambda api: api.clients,
         available_fn=lambda controller, obj_id: controller.available,
         device_info_fn=async_client_device_info_fn,
+        event_is_on=None,
+        event_to_subscribe=None,
         name_fn=lambda client: "Uptime",
         object_fn=lambda api, obj_id: api.clients[obj_id],
         supported_fn=lambda controller, _: controller.option_allow_uptime_sensors,
-        unique_id_fn=lambda obj_id: f"uptime-{obj_id}",
+        unique_id_fn=lambda controller, obj_id: f"uptime-{obj_id}",
         value_fn=async_client_uptime_value_fn,
     ),
 )
@@ -198,7 +198,7 @@ async def async_setup_entry(
     controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     @callback
-    def async_load_entities(description: UnifiEntityDescription) -> None:
+    def async_load_entities(description: UnifiSensorEntityDescription) -> None:
         """Load and subscribe to UniFi devices."""
         entities: list[SensorEntity] = []
         api_handler = description.api_handler_fn(controller.api)
@@ -227,17 +227,17 @@ async def async_setup_entry(
         async_load_entities(description)
 
 
-class UnifiSensorEntity(SensorEntity, Generic[_HandlerT, _DataT]):
+class UnifiSensorEntity(SensorEntity, Generic[HandlerT, DataT]):
     """Base representation of a UniFi switch."""
 
-    entity_description: UnifiEntityDescription[_HandlerT, _DataT]
+    entity_description: UnifiSensorEntityDescription[HandlerT, DataT]
     _attr_should_poll = False
 
     def __init__(
         self,
         obj_id: str,
         controller: UniFiController,
-        description: UnifiEntityDescription[_HandlerT, _DataT],
+        description: UnifiSensorEntityDescription[HandlerT, DataT],
     ) -> None:
         """Set up UniFi switch entity."""
         self._obj_id = obj_id
@@ -248,7 +248,7 @@ class UnifiSensorEntity(SensorEntity, Generic[_HandlerT, _DataT]):
 
         self._attr_available = description.available_fn(controller, obj_id)
         self._attr_device_info = description.device_info_fn(controller.api, obj_id)
-        self._attr_unique_id = description.unique_id_fn(obj_id)
+        self._attr_unique_id = description.unique_id_fn(controller, obj_id)
 
         obj = description.object_fn(controller.api, obj_id)
         self._attr_native_value = description.value_fn(controller, obj)
