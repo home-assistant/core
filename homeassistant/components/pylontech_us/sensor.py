@@ -40,7 +40,7 @@ class PylontechSensorEntityDescription(
 
 
 def _get_instant_power() -> float:
-    """Get the current value in kW."""
+    """Get the current value in W."""
     return 0.0
 
 
@@ -76,8 +76,8 @@ PYLONTECH_STACK_SENSORS = (
         # value_fn=_get_instant_power,
     ),
     PylontechSensorEntityDescription(
-        key="Power_kW",
-        name="Pylontech_Power_kW",
+        key="Power_W",
+        name="Pylontech_Power_W",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -86,8 +86,8 @@ PYLONTECH_STACK_SENSORS = (
         # value_fn=_get_instant_power,
     ),
     PylontechSensorEntityDescription(
-        key="DischargePower_kW",
-        name="Pylontech_DischargePower_kW",
+        key="DischargePower_W",
+        name="Pylontech_DischargePower_W",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -96,8 +96,8 @@ PYLONTECH_STACK_SENSORS = (
         # value_fn=_get_instant_power,
     ),
     PylontechSensorEntityDescription(
-        key="ChargePower_kW",
-        name="Pylontech_ChargePower_kW",
+        key="ChargePower_W",
+        name="Pylontech_ChargePower_W",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,

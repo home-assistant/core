@@ -10,7 +10,7 @@ from pylontech import PylontechStack
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
@@ -110,7 +110,8 @@ class PylontechUsCoordinator(DataUpdateCoordinator):
             return self._stack.pylonData
 
         self.last_update_success = False
-        raise UpdateFailed("Error communicating with API.")
+        # raise UpdateFailed("Error communicating with API.")
+        return None
 
     async def async_update_data(self) -> (Any | None):
         """Fetch data from Battery."""
@@ -127,7 +128,8 @@ class PylontechUsCoordinator(DataUpdateCoordinator):
             return self._stack.pylonData
 
         self.last_update_success = False
-        raise UpdateFailed("Error communicating with API.")
+        # raise UpdateFailed("Error communicating with API.")
+        return None
 
     def get_result(self):
         """Return result dict from last poll."""
