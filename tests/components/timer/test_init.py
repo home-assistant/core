@@ -22,6 +22,7 @@ from homeassistant.components.timer import (
     EVENT_TIMER_RESTARTED,
     EVENT_TIMER_STARTED,
     SERVICE_CANCEL,
+    SERVICE_CHANGE,
     SERVICE_FINISH,
     SERVICE_PAUSE,
     SERVICE_START,
@@ -240,6 +241,16 @@ async def test_start_service(hass: HomeAssistant) -> None:
     assert state.state == STATUS_ACTIVE
     assert state.attributes[ATTR_DURATION] == "0:00:15"
     assert state.attributes[ATTR_REMAINING] == "0:00:15"
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_CHANGE, {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: 15}
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("timer.test1")
+    assert state
+    assert state.state == STATUS_ACTIVE
+    assert state.attributes[ATTR_DURATION] == "0:00:30"
+    assert state.attributes[ATTR_REMAINING] == "0:00:30"
 
 
 async def test_wait_till_timer_expires(hass: HomeAssistant) -> None:
