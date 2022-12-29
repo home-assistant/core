@@ -113,7 +113,8 @@ class BaseFan(FanEntity):
         """Set the preset mode for the fan."""
         if preset_mode not in self.preset_modes:
             raise NotValidPresetModeError(
-                f"The preset_mode {preset_mode} is not a valid preset_mode: {self.preset_modes}"
+                f"The preset_mode {preset_mode} is not a valid preset_mode:"
+                f" {self.preset_modes}"
             )
         await self._async_set_fan_mode(NAME_TO_PRESET_MODE[preset_mode])
 
@@ -288,7 +289,8 @@ class IkeaFan(BaseFan, ZhaEntity):
         """Set the preset mode for the fan."""
         if preset_mode not in self.preset_modes:
             raise NotValidPresetModeError(
-                f"The preset_mode {preset_mode} is not a valid preset_mode: {self.preset_modes}"
+                f"The preset_mode {preset_mode} is not a valid preset_mode:"
+                f" {self.preset_modes}"
             )
         await self._async_set_fan_mode(IKEA_NAME_TO_PRESET_MODE[preset_mode])
 

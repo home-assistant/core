@@ -553,7 +553,7 @@ class TibberRtDataCoordinator(DataUpdateCoordinator):
         return self.data.get("data", {}).get("liveMeasurement")
 
 
-class TibberDataCoordinator(DataUpdateCoordinator):
+class TibberDataCoordinator(DataUpdateCoordinator[None]):
     """Handle Tibber data and insert statistics."""
 
     def __init__(self, hass: HomeAssistant, tibber_connection: tibber.Tibber) -> None:

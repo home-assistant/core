@@ -19,11 +19,8 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_SHOW_ON_MAP,
     CONF_STATE,
-    PERCENTAGE,
-    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -37,17 +34,8 @@ ATTR_POLLUTANT_UNIT = "pollutant_unit"
 ATTR_REGION = "region"
 
 SENSOR_KIND_AQI = "air_quality_index"
-SENSOR_KIND_BATTERY_LEVEL = "battery_level"
-SENSOR_KIND_CO2 = "carbon_dioxide"
-SENSOR_KIND_HUMIDITY = "humidity"
 SENSOR_KIND_LEVEL = "air_pollution_level"
-SENSOR_KIND_PM_0_1 = "particulate_matter_0_1"
-SENSOR_KIND_PM_1_0 = "particulate_matter_1_0"
-SENSOR_KIND_PM_2_5 = "particulate_matter_2_5"
 SENSOR_KIND_POLLUTANT = "main_pollutant"
-SENSOR_KIND_SENSOR_LIFE = "sensor_life"
-SENSOR_KIND_TEMPERATURE = "temperature"
-SENSOR_KIND_VOC = "voc"
 
 GEOGRAPHY_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
@@ -69,7 +57,6 @@ GEOGRAPHY_SENSOR_DESCRIPTIONS = (
         key=SENSOR_KIND_AQI,
         name="Air quality index",
         device_class=SensorDeviceClass.AQI,
-        native_unit_of_measurement="AQI",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -83,70 +70,6 @@ GEOGRAPHY_SENSOR_DESCRIPTIONS = (
 )
 GEOGRAPHY_SENSOR_LOCALES = {"cn": "Chinese", "us": "U.S."}
 
-NODE_PRO_SENSOR_DESCRIPTIONS = (
-    SensorEntityDescription(
-        key=SENSOR_KIND_AQI,
-        name="Air quality index",
-        device_class=SensorDeviceClass.AQI,
-        native_unit_of_measurement="AQI",
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key=SENSOR_KIND_BATTERY_LEVEL,
-        name="Battery",
-        device_class=SensorDeviceClass.BATTERY,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=PERCENTAGE,
-    ),
-    SensorEntityDescription(
-        key=SENSOR_KIND_CO2,
-        name="C02",
-        device_class=SensorDeviceClass.CO2,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key=SENSOR_KIND_HUMIDITY,
-        name="Humidity",
-        device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
-    ),
-    SensorEntityDescription(
-        key=SENSOR_KIND_PM_0_1,
-        name="PM 0.1",
-        device_class=SensorDeviceClass.PM1,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key=SENSOR_KIND_PM_1_0,
-        name="PM 1.0",
-        device_class=SensorDeviceClass.PM10,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key=SENSOR_KIND_PM_2_5,
-        name="PM 2.5",
-        device_class=SensorDeviceClass.PM25,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key=SENSOR_KIND_TEMPERATURE,
-        name="Temperature",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key=SENSOR_KIND_VOC,
-        name="VOC",
-        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-)
 
 STATE_POLLUTANT_LABEL_CO = "co"
 STATE_POLLUTANT_LABEL_N2 = "n2"

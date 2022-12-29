@@ -324,7 +324,7 @@ class ElectricalMeasurementRMSVoltage(ElectricalMeasurement, id_suffix="rms_volt
     """RMS Voltage measurement."""
 
     SENSOR_ATTR = "rms_voltage"
-    _attr_device_class: SensorDeviceClass = SensorDeviceClass.CURRENT
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.VOLTAGE
     _attr_should_poll = False  # Poll indirectly by ElectricalMeasurementSensor
     _attr_name: str = "RMS voltage"
     _attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
@@ -403,9 +403,9 @@ class Illuminance(Sensor):
     _attr_name: str = "Illuminance"
     _attr_native_unit_of_measurement = LIGHT_LUX
 
-    def formatter(self, value: int) -> float:
+    def formatter(self, value: int) -> int:
         """Convert illumination data."""
-        return round(pow(10, ((value - 1) / 10000)), 1)
+        return round(pow(10, ((value - 1) / 10000)))
 
 
 @MULTI_MATCH(

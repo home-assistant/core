@@ -8,6 +8,8 @@
             "unknown": "Erro inesperado"
         },
         "error": {
+            "encryption_key_invalid": "A chave ID ou Chave de Criptografia \u00e9 inv\u00e1lida",
+            "key_id_invalid": "A chave ID ou Chave de Criptografia \u00e9 inv\u00e1lida",
             "one": "",
             "other": ""
         },
@@ -15,6 +17,13 @@
         "step": {
             "confirm": {
                 "description": "Deseja configurar {name}?"
+            },
+            "lock_key": {
+                "data": {
+                    "encryption_key": "Chave de encripta\u00e7\u00e3o",
+                    "key_id": "Chave ID"
+                },
+                "description": "O dispositivo {name} requer chave de criptografia, detalhes sobre como obt\u00ea-la podem ser encontrados na documenta\u00e7\u00e3o."
             },
             "password": {
                 "data": {
