@@ -58,7 +58,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
     ) -> None:
         """Initialize the modbus register sensor."""
         super().__init__(hub, entry)
-        self._coordinator: DataUpdateCoordinator[list[str] | None] | None = None
+        self._coordinator: DataUpdateCoordinator[list[int] | None] | None = None
         self._attr_native_unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_state_class = entry.get(CONF_STATE_CLASS)
 
@@ -110,7 +110,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
         result = self.unpack_structure_result(raw_result.registers)
         if self._coordinator:
             if result:
-                result_array = result.split(",")
+                result_array = list(map(int, result.split(",")))
                 self._attr_native_value = result_array[0]
                 self._coordinator.async_set_updated_data(result_array)
             else:
@@ -127,7 +127,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
 
 
 class SlaveSensor(
-    CoordinatorEntity[DataUpdateCoordinator[Optional[list[str]]]],
+    CoordinatorEntity[DataUpdateCoordinator[Optional[list[int]]]],
     RestoreEntity,
     SensorEntity,
 ):
@@ -135,7 +135,7 @@ class SlaveSensor(
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[list[str] | None],
+        coordinator: DataUpdateCoordinator[list[int] | None],
         idx: int,
         entry: dict[str, Any],
     ) -> None:
