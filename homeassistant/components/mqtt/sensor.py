@@ -210,7 +210,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
         """Remove exprire triggers."""
         # Clean up expire triggers
         if self._expiration_trigger:
-            _LOGGER.debug("Clean up expire after trigger for %s", self.entity_id)
+            _LOGGER.info("Clean up expire after trigger for %s", self.entity_id)
             self._expiration_trigger()
             self._expiration_trigger = None
             self._expired = False
