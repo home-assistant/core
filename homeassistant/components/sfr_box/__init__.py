@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from sfrbox_api.bridge import SFRBox
-from sfrbox_api.exceptions import SfrBoxError
+from sfrbox_api.exceptions import SFRBoxError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -20,7 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     box = SFRBox(ip=entry.data[CONF_HOST], client=get_async_client(hass))
     try:
         system_info = await box.system_get_info()
-    except SfrBoxError as err:
+    except SFRBoxError as err:
         raise ConfigEntryNotReady(
             f"Unable to connect to {entry.data[CONF_HOST]}"
         ) from err

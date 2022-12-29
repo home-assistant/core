@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from sfrbox_api.bridge import SFRBox
-from sfrbox_api.exceptions import SfrBoxError
+from sfrbox_api.exceptions import SFRBoxError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
@@ -36,7 +36,7 @@ class SFRBoxFlowHandler(ConfigFlow, domain=DOMAIN):
                     client=get_async_client(self.hass),
                 )
                 system_info = await box.system_get_info()
-            except SfrBoxError:
+            except SFRBoxError:
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(system_info.mac_addr)

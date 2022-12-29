@@ -3,7 +3,7 @@ import json
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from sfrbox_api.exceptions import SfrBoxError
+from sfrbox_api.exceptions import SFRBoxError
 from sfrbox_api.models import SystemInfo
 
 from homeassistant import config_entries, data_entry_flow
@@ -33,7 +33,7 @@ async def test_config_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock):
 
     with patch(
         "homeassistant.components.sfr_box.config_flow.SFRBox.system_get_info",
-        side_effect=SfrBoxError,
+        side_effect=SFRBoxError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
