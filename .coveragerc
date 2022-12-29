@@ -1616,6 +1616,9 @@ omit =
     homeassistant/components/zwave_me/sensor.py
     homeassistant/components/zwave_me/siren.py
     homeassistant/components/zwave_me/switch.py
+    homeassistant/components/pylontech_us/__init__.py
+    homeassistant/components/pylontech_us/pylontech_us_coordinator.py
+    homeassistant/components/pylontech_us/sensor.py
 
 [report]
 # Regexes for lines to exclude from consideration

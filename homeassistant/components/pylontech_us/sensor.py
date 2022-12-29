@@ -14,14 +14,14 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # CONF_PORT,; ELECTRIC_CURRENT_AMPERE,; ELECTRIC_POTENTIAL_VOLT,
     PERCENTAGE,
-    POWER_KILO_WATT,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .__init__ import PylontechCoordinator
 from .const import DOMAIN
+from .pylontech_us_coordinator import PylontechUsCoordinator
 
 # @dataclass
 # class PylontechRequiredKeysMixin:
@@ -49,7 +49,7 @@ PYLONTECH_STACK_SENSORS = (
         key="TotalCapacity_Ah",
         name="Pylontech_TotalCapacity_Ah",
         state_class=SensorStateClass.MEASUREMENT,
-        device_class="Capacity",
+        device_class=None,  # SensorDeviceClass does not provide Capacity
         native_unit_of_measurement="Ah",
         entity_registry_enabled_default=True,
         icon="mdi:battery"
@@ -59,7 +59,7 @@ PYLONTECH_STACK_SENSORS = (
         key="RemainCapacity_Ah",
         name="Pylontech_RemainCapacity_Ah",
         state_class=SensorStateClass.MEASUREMENT,
-        device_class="Capacity",
+        device_class=None,  # SensorDeviceClass does not provide Capacity
         native_unit_of_measurement="Ah",
         entity_registry_enabled_default=True,
         icon="mdi:battery"
@@ -80,7 +80,7 @@ PYLONTECH_STACK_SENSORS = (
         name="Pylontech_Power_kW",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_KILO_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         entity_registry_enabled_default=True,
         icon="mdi:battery"
         # value_fn=_get_instant_power,
@@ -90,7 +90,7 @@ PYLONTECH_STACK_SENSORS = (
         name="Pylontech_DischargePower_kW",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_KILO_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         entity_registry_enabled_default=True,
         icon="mdi:battery"
         # value_fn=_get_instant_power,
@@ -100,7 +100,7 @@ PYLONTECH_STACK_SENSORS = (
         name="Pylontech_ChargePower_kW",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_KILO_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         entity_registry_enabled_default=True,
         icon="mdi:battery"
         # value_fn=_get_instant_power,
@@ -126,6 +126,12 @@ async def async_setup_entry(
 
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
+    await coordinator.async_update_data()
+    # if self._first_data is False:
+    #            # Refresh was successful in the past
+    #            return
+    #        self._first_data = True
+
     entities: list[SensorEntity] = []
     entities.extend(
         PylontechStackSensor(hass, coordinator, desc, config_entry.entry_id)
@@ -150,7 +156,7 @@ class PylontechStackSensor(CoordinatorEntity, SensorEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        coordinator: PylontechCoordinator,
+        coordinator: PylontechUsCoordinator,
         desc: PylontechSensorEntityDescription,
         entry_id: str,
     ) -> None:
@@ -159,10 +165,6 @@ class PylontechStackSensor(CoordinatorEntity, SensorEntity):
         self._hass = hass
         self._key = desc.key
         self._entry_id = entry_id
-        result = self._hass.data[DOMAIN][self._entry_id].get_result()
-        # result = await hass.async_add_executor_job(hub.update)
-        self._attr_native_value = result["Calculated"][self._key]
-
         self._attr_name = desc.name
         self._attr_state_class = desc.state_class
         self._attr_native_unit_of_measurement = desc.native_unit_of_measurement
@@ -170,6 +172,10 @@ class PylontechStackSensor(CoordinatorEntity, SensorEntity):
         self._attr_icon = desc.icon
         self._attr_available = True
         self._attr_should_poll = True
+        result = self._hass.data[DOMAIN][self._entry_id].get_result()
+        if result is None:
+            return
+        self._attr_native_value = result["Calculated"][self._key]
 
     @property
     def unique_id(self) -> str:
@@ -179,13 +185,13 @@ class PylontechStackSensor(CoordinatorEntity, SensorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        # self._attr_is_on = self.coordinator.data[self.idx]["state"]
-        # self.async_write_ha_state()
-        result = self._hass.data[DOMAIN][self._entry_id].get_result()
-        # result = await hass.async_add_executor_job(hub.update)
-        self._attr_native_value = result["Calculated"][self._key]
 
-        # super()._handle_coordinator_update()
+        result = self._hass.data[DOMAIN][self._entry_id].get_result()
+        if result is None:
+            self._attr_native_value = 0
+        else:
+            self._attr_native_value = result["Calculated"][self._key]
+
         self._attr_available = True
         self.async_write_ha_state()
 
@@ -216,7 +222,7 @@ class PylontechPackSensorFactory:
         self,
         hass: HomeAssistant,
         data: PylontechStack,
-        coordinator: PylontechCoordinator,
+        coordinator: PylontechUsCoordinator,
         entry_id: str,
     ) -> None:
         """Sensor Factory constructor."""
@@ -225,16 +231,22 @@ class PylontechPackSensorFactory:
             data=data, hass=hass, coordinator=coordinator
         )
         self._activated_sensor = 0
+        self._first_data = True
 
     def _pylon_to_sensors(
         self,
         data: PylontechStack,
         hass: HomeAssistant,
-        coordinator: PylontechCoordinator,
+        coordinator: PylontechUsCoordinator,
     ) -> list[PylontechPackSensor]:
         print("----- pylon_to_sensors -----")
         return_list: list[PylontechPackSensor] = []
         pack_count = 1
+
+        if data is None:
+            # no data present yet, for quick startup and battery in power down
+            return return_list
+
         for data_element in data["SerialNumbers"]:
             print(data_element)
             sensor_name = "Pylontech_PackNr_" + str(pack_count) + "_Serial"
@@ -244,7 +256,7 @@ class PylontechPackSensorFactory:
                 name=str(sensor_name),
                 state_class=SensorStateClass.MEASUREMENT,
                 native_unit_of_measurement=None,
-                device_class="serial_number",  # SensorDeviceClass.,
+                device_class=None,  # SensorDeviceClass does not provide serial number
                 icon="mdi:numeric",
                 key_main="SerialNumbers",
                 key_sub=None,
@@ -348,7 +360,7 @@ class PylontechPackSensorFactory:
                 name=str(sensor_name),
                 state_class=SensorStateClass.MEASUREMENT,
                 native_unit_of_measurement="Ah",
-                device_class="capacity",
+                device_class=None,  # SensorDeviceClass does not provide Capacity
                 icon="mdi:battery",
                 key_main="AnaloglList",
                 key_sub="RemainCapacity",
@@ -365,7 +377,7 @@ class PylontechPackSensorFactory:
                 name=str(sensor_name),
                 state_class=SensorStateClass.MEASUREMENT,
                 native_unit_of_measurement="Ah",
-                device_class="capacity",
+                device_class=None,  # SensorDeviceClass does not provide Capacity
                 icon="mdi:battery",
                 key_main="AnaloglList",
                 key_sub="ModuleTotalCapacity",
@@ -382,7 +394,7 @@ class PylontechPackSensorFactory:
                 name=str(sensor_name),
                 state_class=SensorStateClass.MEASUREMENT,
                 native_unit_of_measurement=None,
-                device_class="capacity",
+                device_class=None,  # SensorDeviceClass does not provide Capacity
                 icon="mdi:battery",
                 key_main="AnaloglList",
                 key_sub="CycleNumber",
@@ -398,6 +410,10 @@ class PylontechPackSensorFactory:
 
     def create_next_sensor(self) -> SensorEntity | None:
         """Return next sensor or None if no more left."""
+        if self._sensor_list is None:
+            # Pylontech stack in Power down, Timeout from serial communication.
+            return
+
         if self._activated_sensor < len(self._sensor_list):
             return_number = self._activated_sensor
             self._activated_sensor = self._activated_sensor + 1
@@ -411,11 +427,11 @@ class PylontechPackSensor(CoordinatorEntity, SensorEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        coordinator: PylontechCoordinator,
+        coordinator: PylontechUsCoordinator,
         name: str,
         state_class: SensorStateClass | str | None,
         native_unit_of_measurement: str | None,
-        device_class: SensorDeviceClass | str | None,
+        device_class: SensorDeviceClass | None,
         icon: str | None,
         key_main: str,
         key_pack_nr: int,
