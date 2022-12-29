@@ -813,7 +813,7 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          python3 -X dev -m pytest \
+          python3 -m pytest \
             -qq \
             --timeout=9 \
             --durations=10 \
