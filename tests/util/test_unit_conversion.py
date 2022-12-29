@@ -2,7 +2,9 @@
 import pytest
 
 from homeassistant.const import (
+    UnitOfDataRate,
     UnitOfEnergy,
+    UnitOfInformation,
     UnitOfLength,
     UnitOfMass,
     UnitOfPower,
@@ -15,8 +17,10 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    DataRateConverter,
     DistanceConverter,
     EnergyConverter,
+    InformationConverter,
     MassConverter,
     PowerConverter,
     PressureConverter,
@@ -31,6 +35,7 @@ INVALID_SYMBOL = "bob"
 @pytest.mark.parametrize(
     "converter,valid_unit",
     [
+        (DataRateConverter, UnitOfDataRate.GIBIBYTES_PER_SECOND),
         (DistanceConverter, UnitOfLength.KILOMETERS),
         (DistanceConverter, UnitOfLength.METERS),
         (DistanceConverter, UnitOfLength.CENTIMETERS),
@@ -43,6 +48,7 @@ INVALID_SYMBOL = "bob"
         (EnergyConverter, UnitOfEnergy.KILO_WATT_HOUR),
         (EnergyConverter, UnitOfEnergy.MEGA_WATT_HOUR),
         (EnergyConverter, UnitOfEnergy.GIGA_JOULE),
+        (InformationConverter, UnitOfInformation.GIGABYTES),
         (MassConverter, UnitOfMass.GRAMS),
         (MassConverter, UnitOfMass.KILOGRAMS),
         (MassConverter, UnitOfMass.MICROGRAMS),
@@ -85,8 +91,10 @@ def test_convert_same_unit(converter: type[BaseUnitConverter], valid_unit: str) 
 @pytest.mark.parametrize(
     "converter,valid_unit",
     [
+        (DataRateConverter, UnitOfDataRate.GIBIBYTES_PER_SECOND),
         (DistanceConverter, UnitOfLength.KILOMETERS),
         (EnergyConverter, UnitOfEnergy.KILO_WATT_HOUR),
+        (InformationConverter, UnitOfInformation.GIBIBYTES),
         (MassConverter, UnitOfMass.GRAMS),
         (PowerConverter, UnitOfPower.WATT),
         (PressureConverter, UnitOfPressure.PA),
@@ -111,8 +119,18 @@ def test_convert_invalid_unit(
 @pytest.mark.parametrize(
     "converter,from_unit,to_unit",
     [
+        (
+            DataRateConverter,
+            UnitOfDataRate.BYTES_PER_SECOND,
+            UnitOfDataRate.BITS_PER_SECOND,
+        ),
         (DistanceConverter, UnitOfLength.KILOMETERS, UnitOfLength.METERS),
         (EnergyConverter, UnitOfEnergy.WATT_HOUR, UnitOfEnergy.KILO_WATT_HOUR),
+        (
+            InformationConverter,
+            UnitOfInformation.GIBIBYTES,
+            UnitOfInformation.GIGABYTES,
+        ),
         (MassConverter, UnitOfMass.GRAMS, UnitOfMass.KILOGRAMS),
         (PowerConverter, UnitOfPower.WATT, UnitOfPower.KILO_WATT),
         (PressureConverter, UnitOfPressure.HPA, UnitOfPressure.INHG),
@@ -132,8 +150,15 @@ def test_convert_nonnumeric_value(
 @pytest.mark.parametrize(
     "converter,from_unit,to_unit,expected",
     [
+        (
+            DataRateConverter,
+            UnitOfDataRate.BITS_PER_SECOND,
+            UnitOfDataRate.BYTES_PER_SECOND,
+            8,
+        ),
         (DistanceConverter, UnitOfLength.KILOMETERS, UnitOfLength.METERS, 1 / 1000),
         (EnergyConverter, UnitOfEnergy.WATT_HOUR, UnitOfEnergy.KILO_WATT_HOUR, 1000),
+        (InformationConverter, UnitOfInformation.BITS, UnitOfInformation.BYTES, 8),
         (PowerConverter, UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
         (
             PressureConverter,
@@ -166,6 +191,48 @@ def test_get_unit_ratio(
 ) -> None:
     """Test unit ratio."""
     assert converter.get_unit_ratio(from_unit, to_unit) == expected
+
+
+@pytest.mark.parametrize(
+    "value,from_unit,expected,to_unit",
+    [
+        (8e3, UnitOfDataRate.BITS_PER_SECOND, 8, UnitOfDataRate.KILOBITS_PER_SECOND),
+        (8e6, UnitOfDataRate.BITS_PER_SECOND, 8, UnitOfDataRate.MEGABITS_PER_SECOND),
+        (8e9, UnitOfDataRate.BITS_PER_SECOND, 8, UnitOfDataRate.GIGABITS_PER_SECOND),
+        (8, UnitOfDataRate.BITS_PER_SECOND, 1, UnitOfDataRate.BYTES_PER_SECOND),
+        (8e3, UnitOfDataRate.BITS_PER_SECOND, 1, UnitOfDataRate.KILOBYTES_PER_SECOND),
+        (8e6, UnitOfDataRate.BITS_PER_SECOND, 1, UnitOfDataRate.MEGABYTES_PER_SECOND),
+        (8e9, UnitOfDataRate.BITS_PER_SECOND, 1, UnitOfDataRate.GIGABYTES_PER_SECOND),
+        (
+            8 * 2**10,
+            UnitOfDataRate.BITS_PER_SECOND,
+            1,
+            UnitOfDataRate.KIBIBYTES_PER_SECOND,
+        ),
+        (
+            8 * 2**20,
+            UnitOfDataRate.BITS_PER_SECOND,
+            1,
+            UnitOfDataRate.MEBIBYTES_PER_SECOND,
+        ),
+        (
+            8 * 2**30,
+            UnitOfDataRate.BITS_PER_SECOND,
+            1,
+            UnitOfDataRate.GIBIBYTES_PER_SECOND,
+        ),
+    ],
+)
+def test_data_rate_convert(
+    value: float,
+    from_unit: str,
+    expected: float,
+    to_unit: str,
+) -> None:
+    """Test conversion to other units."""
+    assert DataRateConverter.convert(value, from_unit, to_unit) == pytest.approx(
+        expected
+    )
 
 
 @pytest.mark.parametrize(
@@ -305,6 +372,43 @@ def test_energy_convert(
 ) -> None:
     """Test conversion to other units."""
     assert EnergyConverter.convert(value, from_unit, to_unit) == expected
+
+
+@pytest.mark.parametrize(
+    "value,from_unit,expected,to_unit",
+    [
+        (8e3, UnitOfInformation.BITS, 8, UnitOfInformation.KILOBITS),
+        (8e6, UnitOfInformation.BITS, 8, UnitOfInformation.MEGABITS),
+        (8e9, UnitOfInformation.BITS, 8, UnitOfInformation.GIGABITS),
+        (8, UnitOfInformation.BITS, 1, UnitOfInformation.BYTES),
+        (8e3, UnitOfInformation.BITS, 1, UnitOfInformation.KILOBYTES),
+        (8e6, UnitOfInformation.BITS, 1, UnitOfInformation.MEGABYTES),
+        (8e9, UnitOfInformation.BITS, 1, UnitOfInformation.GIGABYTES),
+        (8e12, UnitOfInformation.BITS, 1, UnitOfInformation.TERABYTES),
+        (8e15, UnitOfInformation.BITS, 1, UnitOfInformation.PETABYTES),
+        (8e18, UnitOfInformation.BITS, 1, UnitOfInformation.EXABYTES),
+        (8e21, UnitOfInformation.BITS, 1, UnitOfInformation.ZETTABYTES),
+        (8e24, UnitOfInformation.BITS, 1, UnitOfInformation.YOTTABYTES),
+        (8 * 2**10, UnitOfInformation.BITS, 1, UnitOfInformation.KIBIBYTES),
+        (8 * 2**20, UnitOfInformation.BITS, 1, UnitOfInformation.MEBIBYTES),
+        (8 * 2**30, UnitOfInformation.BITS, 1, UnitOfInformation.GIBIBYTES),
+        (8 * 2**40, UnitOfInformation.BITS, 1, UnitOfInformation.TEBIBYTES),
+        (8 * 2**50, UnitOfInformation.BITS, 1, UnitOfInformation.PEBIBYTES),
+        (8 * 2**60, UnitOfInformation.BITS, 1, UnitOfInformation.EXBIBYTES),
+        (8 * 2**70, UnitOfInformation.BITS, 1, UnitOfInformation.ZEBIBYTES),
+        (8 * 2**80, UnitOfInformation.BITS, 1, UnitOfInformation.YOBIBYTES),
+    ],
+)
+def test_information_convert(
+    value: float,
+    from_unit: str,
+    expected: float,
+    to_unit: str,
+) -> None:
+    """Test conversion to other units."""
+    assert InformationConverter.convert(value, from_unit, to_unit) == pytest.approx(
+        expected
+    )
 
 
 @pytest.mark.parametrize(

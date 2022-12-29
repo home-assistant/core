@@ -53,6 +53,13 @@
           "knxkeys_password": "This was set when exporting the file from ETS."
         }
       },
+      "knxkeys_tunnel_select": {
+        "title": "Tunnel endpoint",
+        "description": "Select the tunnel used for connection.",
+        "data": {
+          "user_id": "`Automatic` will use the first free tunnel endpoint."
+        }
+      },
       "secure_tunnel_manual": {
         "title": "Secure tunnelling",
         "description": "Please enter your IP secure information.",
@@ -183,6 +190,13 @@
         "data_description": {
           "knxkeys_filename": "[%key:component::knx::config::step::secure_knxkeys::data_description::knxkeys_filename%]",
           "knxkeys_password": "[%key:component::knx::config::step::secure_knxkeys::data_description::knxkeys_password%]"
+        }
+      },
+      "knxkeys_tunnel_select": {
+        "title": "[%key:component::knx::config::step::knxkeys_tunnel_select::title%]",
+        "description": "[%key:component::knx::config::step::knxkeys_tunnel_select::description%]",
+        "data": {
+          "user_id": "[%key:component::knx::config::step::knxkeys_tunnel_select::data::user_id%]"
         }
       },
       "secure_tunnel_manual": {

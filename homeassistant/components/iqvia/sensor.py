@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from statistics import mean
-from typing import NamedTuple
+from typing import Any, NamedTuple, cast
 
 import numpy as np
 
@@ -247,10 +247,11 @@ class IndexSensor(IQVIAEntity, SensorEntity):
         key = self.entity_description.key.split("_")[-1].title()
 
         try:
-            [period] = [p for p in data["periods"] if p["Type"] == key]
-        except ValueError:
+            [period] = [p for p in data["periods"] if p["Type"] == key]  # type: ignore[index]
+        except TypeError:
             return
 
+        data = cast(dict[str, Any], data)
         [rating] = [
             i.label for i in RATING_MAPPING if i.minimum <= period["Index"] <= i.maximum
         ]

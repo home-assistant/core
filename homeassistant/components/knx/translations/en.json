@@ -27,6 +27,13 @@
                 "description": "Please enter the connection type we should use for your KNX connection. \n AUTOMATIC - The integration takes care of the connectivity to your KNX Bus by performing a gateway scan. \n TUNNELING - The integration will connect to your KNX bus via tunneling. \n ROUTING - The integration will connect to your KNX bus via routing.",
                 "title": "KNX connection"
             },
+            "knxkeys_tunnel_select": {
+                "data": {
+                    "user_id": "`Automatic` will use the first free tunnel endpoint."
+                },
+                "description": "Select the tunnel used for connection.",
+                "title": "Tunnel endpoint"
+            },
             "manual_tunnel": {
                 "data": {
                     "host": "Host",
@@ -149,6 +156,13 @@
                 },
                 "description": "Please enter the connection type we should use for your KNX connection. \n AUTOMATIC - The integration takes care of the connectivity to your KNX Bus by performing a gateway scan. \n TUNNELING - The integration will connect to your KNX bus via tunneling. \n ROUTING - The integration will connect to your KNX bus via routing.",
                 "title": "KNX connection"
+            },
+            "knxkeys_tunnel_select": {
+                "data": {
+                    "user_id": "`Automatic` will use the first free tunnel endpoint."
+                },
+                "description": "Select the tunnel used for connection.",
+                "title": "Tunnel endpoint"
             },
             "manual_tunnel": {
                 "data": {

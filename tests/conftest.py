@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 import functools
 import gc
 import itertools
-from json import JSONDecoder, loads
+from json import JSONDecoder
 import logging
 import sqlite3
 import ssl
@@ -45,6 +45,7 @@ from homeassistant.components.websocket_api.http import URL
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, recorder as recorder_helper
+from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, location
@@ -73,9 +74,6 @@ from tests.components.recorder.common import (  # noqa: E402, isort:skip
 
 _LOGGER = logging.getLogger(__name__)
 
-logging.basicConfig(level=logging.DEBUG)
-logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
-
 asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 # Disable fixtures overriding our beautiful policy
 asyncio.set_event_loop_policy = lambda policy: None
@@ -91,6 +89,11 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "no_fail_on_log_exception: mark test to not fail on logged exception"
     )
+    if config.getoption("verbose"):
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
+    logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 
 
 def pytest_runtest_setup():
@@ -271,7 +274,7 @@ class CoalescingResponse(client.ClientWebSocketResponse):
     async def receive_json(
         self,
         *,
-        loads: JSONDecoder = loads,
+        loads: JSONDecoder = json_loads,
         timeout: float | None = None,
     ) -> Any:
         """receive_json or from buffer."""

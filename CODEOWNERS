@@ -179,8 +179,6 @@ build.json @home-assistant/supervisor
 /tests/components/buienradar/ @mjj4791 @ties @Robbie1221
 /homeassistant/components/button/ @home-assistant/core
 /tests/components/button/ @home-assistant/core
-/homeassistant/components/caldav/ @cyr-ius
-/tests/components/caldav/ @cyr-ius
 /homeassistant/components/calendar/ @home-assistant/core
 /tests/components/calendar/ @home-assistant/core
 /homeassistant/components/camera/ @home-assistant/core
@@ -671,7 +669,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/lyric/ @timmo001
 /tests/components/lyric/ @timmo001
 /homeassistant/components/mastodon/ @fabaff
-/homeassistant/components/matrix/ @tinloaf
 /homeassistant/components/matter/ @home-assistant/matter
 /tests/components/matter/ @home-assistant/matter
 /homeassistant/components/mazda/ @bdr99
@@ -1138,8 +1135,8 @@ build.json @home-assistant/supervisor
 /tests/components/switch_as_x/ @home-assistant/core
 /homeassistant/components/switchbee/ @jafar-atili
 /tests/components/switchbee/ @jafar-atili
-/homeassistant/components/switchbot/ @bdraco @danielhiversen @RenierM26 @murtas @Eloston
-/tests/components/switchbot/ @bdraco @danielhiversen @RenierM26 @murtas @Eloston
+/homeassistant/components/switchbot/ @bdraco @danielhiversen @RenierM26 @murtas @Eloston @dsypniewski
+/tests/components/switchbot/ @bdraco @danielhiversen @RenierM26 @murtas @Eloston @dsypniewski
 /homeassistant/components/switcher_kis/ @tomerfi @thecode
 /tests/components/switcher_kis/ @tomerfi @thecode
 /homeassistant/components/switchmate/ @danielhiversen @qiz-li

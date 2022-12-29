@@ -7,10 +7,21 @@
             "switchbot_unsupported_type": "Tipo de Switchbot no compatible.",
             "unknown": "Error inesperado"
         },
+        "error": {
+            "encryption_key_invalid": "El ID de clave o la clave de cifrado no son v\u00e1lidos",
+            "key_id_invalid": "El ID de clave o la clave de cifrado no son v\u00e1lidos"
+        },
         "flow_title": "{name} ({address})",
         "step": {
             "confirm": {
                 "description": "\u00bfQuieres configurar {name}?"
+            },
+            "lock_key": {
+                "data": {
+                    "encryption_key": "Clave de cifrado",
+                    "key_id": "ID de clave"
+                },
+                "description": "El dispositivo {name} requiere una clave de cifrado; los detalles sobre c\u00f3mo obtenerla se pueden encontrar en la documentaci\u00f3n."
             },
             "password": {
                 "data": {

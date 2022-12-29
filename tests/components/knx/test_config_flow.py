@@ -5,6 +5,7 @@ import pytest
 from xknx.exceptions.exception import CommunicationError, InvalidSecureConfiguration
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.io.gateway_scanner import GatewayDescriptor
+from xknx.secure.keyring import _load_keyring
 from xknx.telegram import IndividualAddress
 
 from homeassistant import config_entries
@@ -43,8 +44,9 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_fixture_path
 
+FIXTURE_KNXKEYS_PASSWORD = "test"
 GATEWAY_INDIVIDUAL_ADDRESS = IndividualAddress("1.0.0")
 
 
@@ -996,25 +998,34 @@ async def test_configure_secure_knxkeys(hass: HomeAssistant, knx_setup):
     assert not result["errors"]
 
     with patch(
-        "homeassistant.components.knx.config_flow.load_keyring"
-    ) as mock_load_keyring:
-        mock_keyring = Mock()
-        mock_keyring.get_tunnel_interfaces_by_host.return_value = ["stub"]
-        mock_load_keyring.return_value = mock_keyring
+        "xknx.secure.keyring._load_keyring",
+        return_value=_load_keyring(
+            str(get_fixture_path("fixture.knxkeys", DOMAIN).absolute()),
+            FIXTURE_KNXKEYS_PASSWORD,
+        ),
+    ):
         secure_knxkeys = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_KNX_KNXKEY_FILENAME: "testcase.knxkeys",
-                CONF_KNX_KNXKEY_PASSWORD: "password",
+                CONF_KNX_KNXKEY_PASSWORD: "test",
             },
         )
-        await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.FORM
+    assert secure_knxkeys["step_id"] == "knxkeys_tunnel_select"
+    assert not result["errors"]
+    secure_knxkeys = await hass.config_entries.flow.async_configure(
+        secure_knxkeys["flow_id"],
+        {CONF_KNX_SECURE_USER_ID: CONF_KNX_AUTOMATIC},
+    )
+
+    await hass.async_block_till_done()
     assert secure_knxkeys["type"] == FlowResultType.CREATE_ENTRY
     assert secure_knxkeys["data"] == {
         **DEFAULT_ENTRY_DATA,
         CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP_SECURE,
         CONF_KNX_KNXKEY_FILENAME: "knx/testcase.knxkeys",
-        CONF_KNX_KNXKEY_PASSWORD: "password",
+        CONF_KNX_KNXKEY_PASSWORD: "test",
         CONF_KNX_ROUTING_BACKBONE_KEY: None,
         CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE: None,
         CONF_KNX_SECURE_DEVICE_AUTHENTICATION: None,
@@ -1240,23 +1251,37 @@ async def test_options_flow_secure_manual_to_keyfile(
     assert result4["step_id"] == "secure_knxkeys"
     assert not result4["errors"]
 
-    with patch("homeassistant.components.knx.config_flow.load_keyring"):
+    with patch(
+        "xknx.secure.keyring._load_keyring",
+        return_value=_load_keyring(
+            str(get_fixture_path("fixture.knxkeys", DOMAIN).absolute()),
+            FIXTURE_KNXKEYS_PASSWORD,
+        ),
+    ):
         secure_knxkeys = await hass.config_entries.options.async_configure(
             result4["flow_id"],
             {
                 CONF_KNX_KNXKEY_FILENAME: "testcase.knxkeys",
-                CONF_KNX_KNXKEY_PASSWORD: "password",
+                CONF_KNX_KNXKEY_PASSWORD: "test",
             },
         )
-        await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.FORM
+    assert secure_knxkeys["step_id"] == "knxkeys_tunnel_select"
+    assert not result["errors"]
+    secure_knxkeys = await hass.config_entries.options.async_configure(
+        secure_knxkeys["flow_id"],
+        {CONF_KNX_SECURE_USER_ID: "2"},
+    )
+
+    await hass.async_block_till_done()
     assert secure_knxkeys["type"] == FlowResultType.CREATE_ENTRY
     assert mock_config_entry.data == {
         **DEFAULT_ENTRY_DATA,
         CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP_SECURE,
         CONF_KNX_KNXKEY_FILENAME: "knx/testcase.knxkeys",
-        CONF_KNX_KNXKEY_PASSWORD: "password",
+        CONF_KNX_KNXKEY_PASSWORD: "test",
         CONF_KNX_SECURE_DEVICE_AUTHENTICATION: None,
-        CONF_KNX_SECURE_USER_ID: None,
+        CONF_KNX_SECURE_USER_ID: 2,
         CONF_KNX_SECURE_USER_PASSWORD: None,
         CONF_KNX_ROUTING_BACKBONE_KEY: None,
         CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE: None,
