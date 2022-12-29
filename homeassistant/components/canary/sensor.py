@@ -1,7 +1,9 @@
 """Support for Canary sensors."""
 from __future__ import annotations
 
-from typing import Final, Optional
+from datetime import datetime
+import logging
+from typing import Final, cast
 
 from canary.model import Device, Location, SensorType
 
@@ -19,10 +21,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DATA_COORDINATOR, DOMAIN, MANUFACTURER
 from .coordinator import CanaryDataUpdateCoordinator
-
-SensorTypeItem = tuple[
-    str, Optional[str], Optional[str], Optional[SensorDeviceClass], list[str]
-]
+from .model import SensorTypeItem
 
 SENSOR_VALUE_PRECISION: Final = 2
 ATTR_AIR_QUALITY: Final = "air_quality"
@@ -112,16 +111,22 @@ class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity)
         self._canary_data_type = "readings"
         if self._sensor_type[0] == "air_quality":
             canary_sensor_type = SensorType.AIR_QUALITY
+            self._attr_device_class = None
         elif self._sensor_type[0] == "temperature":
             canary_sensor_type = SensorType.TEMPERATURE
+            self._attr_device_class = SensorDeviceClass.TEMPERATURE
         elif self._sensor_type[0] == "humidity":
             canary_sensor_type = SensorType.HUMIDITY
+            self._attr_device_class = SensorDeviceClass.HUMIDITY
         elif self._sensor_type[0] == "wifi":
             canary_sensor_type = SensorType.WIFI
+            self._attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
         elif self._sensor_type[0] == "battery":
             canary_sensor_type = SensorType.BATTERY
+            self._attr_device_class = SensorDeviceClass.BATTERY
         elif self._sensor_type[0] == "last_entry_date":
             canary_sensor_type = SensorType.DATE_LAST_ENTRY
+            self._attr_device_class = SensorDeviceClass.TIMESTAMP
             self._canary_data_type = "entries"
         elif self._sensor_type[0] == "entries_captured_today":
             canary_sensor_type = SensorType.ENTRIES_CAPTURED_TODAY
@@ -139,21 +144,6 @@ class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity)
         self._state: str | int | float | datetime | None = None
         self._attr_icon = sensor_type[2]
         _LOGGER.debug("%s initialized", self.name)
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the device class of the sensor."""
-        if self._canary_type == SensorType.TEMPERATURE:
-            return SensorDeviceClass.TEMPERATURE
-        if self._canary_type == SensorType.HUMIDITY:
-            return SensorDeviceClass.HUMIDITY
-        if self._canary_type == SensorType.WIFI:
-            return SensorDeviceClass.SIGNAL_STRENGTH
-        if self._canary_type == SensorType.BATTERY:
-            return SensorDeviceClass.BATTERY
-        if self._canary_type == SensorType.DATE_LAST_ENTRY:
-            return SensorDeviceClass.TIMESTAMP
-        return None
 
     @property
     def name(self) -> str:

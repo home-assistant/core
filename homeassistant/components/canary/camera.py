@@ -25,10 +25,10 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import Throttle, dt as dt_util
 
-from ...helpers.httpx_client import get_async_client
 from .const import (
     CONF_ENTRY_TIMEOUT_HOURS,
     CONF_FFMPEG_ARGUMENTS,

@@ -7,7 +7,7 @@ import logging
 
 from async_timeout import timeout
 from canary.api import Api
-from canary.model import Location, Reading
+from canary.model import Entry, Location, Reading
 from requests.exceptions import ConnectTimeout, HTTPError
 
 from homeassistant.core import HomeAssistant
@@ -38,6 +38,7 @@ class CanaryDataUpdateCoordinator(DataUpdateCoordinator[CanaryData]):
         """Fetch data from Canary via sync functions."""
         locations_by_id: dict[str, Location] = {}
         readings_by_device_id: dict[str, ValuesView[Reading]] = {}
+        entries_by_device_id: dict[str, list[Entry]] = {}
 
         for location in self.canary.get_locations():
             location_id = location.location_id
