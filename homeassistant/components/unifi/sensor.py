@@ -25,16 +25,14 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfInformation, UnitOfPower
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
 from .controller import UniFiController
-from .entity import DataT, HandlerT, UnifiEntityDescription
+from .entity import DataT, HandlerT, UnifiEntity, UnifiEntityDescription
 
 
 @callback
@@ -227,105 +225,26 @@ async def async_setup_entry(
         async_load_entities(description)
 
 
-class UnifiSensorEntity(SensorEntity, Generic[HandlerT, DataT]):
-    """Base representation of a UniFi switch."""
+class UnifiSensorEntity(UnifiEntity[HandlerT, DataT], SensorEntity):
+    """Base representation of a UniFi sensor."""
 
     entity_description: UnifiSensorEntityDescription[HandlerT, DataT]
-    _attr_should_poll = False
-
-    def __init__(
-        self,
-        obj_id: str,
-        controller: UniFiController,
-        description: UnifiSensorEntityDescription[HandlerT, DataT],
-    ) -> None:
-        """Set up UniFi switch entity."""
-        self._obj_id = obj_id
-        self.controller = controller
-        self.entity_description = description
-
-        self._removed = False
-
-        self._attr_available = description.available_fn(controller, obj_id)
-        self._attr_device_info = description.device_info_fn(controller.api, obj_id)
-        self._attr_unique_id = description.unique_id_fn(controller, obj_id)
-
-        obj = description.object_fn(controller.api, obj_id)
-        self._attr_native_value = description.value_fn(controller, obj)
-        self._attr_name = description.name_fn(obj)
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        description = self.entity_description
-        handler = description.api_handler_fn(self.controller.api)
-        self.async_on_remove(
-            handler.subscribe(
-                self.async_signalling_callback,
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                self.controller.signal_reachable,
-                self.async_signal_reachable_callback,
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                self.controller.signal_options_update,
-                self.options_updated,
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                self.controller.signal_remove,
-                self.remove_item,
-            )
-        )
 
     @callback
-    def async_signalling_callback(self, event: ItemEvent, obj_id: str) -> None:
-        """Update the switch state."""
-        if event == ItemEvent.DELETED and obj_id == self._obj_id:
-            self.hass.async_create_task(self.remove_item({self._obj_id}))
-            return
+    def async_initiate_state(self) -> None:
+        """Initiate entity state.
 
+        Initiate native_value.
+        """
+        self.async_update_state(ItemEvent.ADDED, self._obj_id)
+
+    @callback
+    def async_update_state(self, event: ItemEvent, obj_id: str) -> None:
+        """Update entity state.
+
+        Update native_value.
+        """
         description = self.entity_description
-        if not description.supported_fn(self.controller, self._obj_id):
-            self.hass.async_create_task(self.remove_item({self._obj_id}))
-            return
-
-        update_state = False
         obj = description.object_fn(self.controller.api, self._obj_id)
         if (value := description.value_fn(self.controller, obj)) != self.native_value:
             self._attr_native_value = value
-            update_state = True
-        if (
-            available := description.available_fn(self.controller, self._obj_id)
-        ) != self.available:
-            self._attr_available = available
-            update_state = True
-        if update_state:
-            self.async_write_ha_state()
-
-    @callback
-    def async_signal_reachable_callback(self) -> None:
-        """Call when controller connection state change."""
-        self.async_signalling_callback(ItemEvent.ADDED, self._obj_id)
-
-    async def options_updated(self) -> None:
-        """Config entry options are updated, remove entity if option is disabled."""
-        if not self.entity_description.allowed_fn(self.controller, self._obj_id):
-            await self.remove_item({self._obj_id})
-
-    async def remove_item(self, keys: set) -> None:
-        """Remove entity if object ID is part of set."""
-        if self._obj_id not in keys or self._removed:
-            return
-        self._removed = True
-        if self.registry_entry:
-            er.async_get(self.hass).async_remove(self.entity_id)
-        else:
-            await self.async_remove(force_remove=True)
