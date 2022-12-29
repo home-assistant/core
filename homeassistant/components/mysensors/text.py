@@ -1,4 +1,4 @@
-"""Provide a text platform for MySenSors."""
+"""Provide a text platform for MySensors."""
 from __future__ import annotations
 
 from homeassistant.components.text import TextEntity
