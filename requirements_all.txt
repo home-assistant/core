@@ -1110,7 +1110,7 @@ mill-local==0.2.0
 millheater==0.10.0
 
 # homeassistant.components.minio
-minio==5.0.10
+minio==7.1.12
 
 # homeassistant.components.moat
 moat-ble==0.1.1
