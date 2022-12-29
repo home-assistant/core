@@ -1,4 +1,4 @@
-"""Provide common Renault fixtures."""
+"""Provide common SFR Box fixtures."""
 import pytest
 
 from homeassistant.components.sfr_box.const import DOMAIN
