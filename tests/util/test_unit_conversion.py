@@ -38,8 +38,22 @@ INVALID_SYMBOL = "bob"
 _CONVERTERS: list[type[BaseUnitConverter]] = [
     obj
     for _, obj in inspect.getmembers(unit_conversion)
-    if inspect.isclass(obj) and issubclass(obj, BaseUnitConverter)
+    if inspect.isclass(obj)
+    and issubclass(obj, BaseUnitConverter)
+    and obj != BaseUnitConverter
 ]
+
+
+def _get_valid_unit(converter: type[BaseUnitConverter]) -> str:
+    """Get a valid unit from the converter, different from the normalized unit."""
+    return (
+        next(
+            filter(
+                lambda v: v != converter.NORMALIZED_UNIT,
+                iter(converter.VALID_UNITS),
+            )
+        ),
+    )
 
 
 @pytest.mark.parametrize(
@@ -57,21 +71,7 @@ def test_convert_same_unit(converter: type[BaseUnitConverter], valid_unit: str) 
 
 @pytest.mark.parametrize(
     "converter,valid_unit",
-    [
-        (DataRateConverter, UnitOfDataRate.GIBIBYTES_PER_SECOND),
-        (DistanceConverter, UnitOfLength.KILOMETERS),
-        (ElectricCurrentConverter, UnitOfElectricCurrent.AMPERE),
-        (EnergyConverter, UnitOfEnergy.KILO_WATT_HOUR),
-        (InformationConverter, UnitOfInformation.GIBIBYTES),
-        (MassConverter, UnitOfMass.GRAMS),
-        (PowerConverter, UnitOfPower.WATT),
-        (PressureConverter, UnitOfPressure.PA),
-        (SpeedConverter, UnitOfSpeed.KILOMETERS_PER_HOUR),
-        (TemperatureConverter, UnitOfTemperature.CELSIUS),
-        (TemperatureConverter, UnitOfTemperature.FAHRENHEIT),
-        (TemperatureConverter, UnitOfTemperature.KELVIN),
-        (VolumeConverter, UnitOfVolume.LITERS),
-    ],
+    [(converter, _get_valid_unit(converter)) for converter in _CONVERTERS],
 )
 def test_convert_invalid_unit(
     converter: type[BaseUnitConverter], valid_unit: str
@@ -87,24 +87,8 @@ def test_convert_invalid_unit(
 @pytest.mark.parametrize(
     "converter,from_unit,to_unit",
     [
-        (
-            DataRateConverter,
-            UnitOfDataRate.BYTES_PER_SECOND,
-            UnitOfDataRate.BITS_PER_SECOND,
-        ),
-        (DistanceConverter, UnitOfLength.KILOMETERS, UnitOfLength.METERS),
-        (EnergyConverter, UnitOfEnergy.WATT_HOUR, UnitOfEnergy.KILO_WATT_HOUR),
-        (
-            InformationConverter,
-            UnitOfInformation.GIBIBYTES,
-            UnitOfInformation.GIGABYTES,
-        ),
-        (MassConverter, UnitOfMass.GRAMS, UnitOfMass.KILOGRAMS),
-        (PowerConverter, UnitOfPower.WATT, UnitOfPower.KILO_WATT),
-        (PressureConverter, UnitOfPressure.HPA, UnitOfPressure.INHG),
-        (SpeedConverter, UnitOfSpeed.KILOMETERS_PER_HOUR, UnitOfSpeed.MILES_PER_HOUR),
-        (TemperatureConverter, UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT),
-        (VolumeConverter, UnitOfVolume.GALLONS, UnitOfVolume.LITERS),
+        (converter, converter.NORMALIZED_UNIT, _get_valid_unit(converter))
+        for converter in _CONVERTERS
     ],
 )
 def test_convert_nonnumeric_value(
