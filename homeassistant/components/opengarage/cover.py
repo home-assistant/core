@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from homeassistant.components.cover import (
     CoverDeviceClass,
@@ -28,7 +28,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the OpenGarage covers."""
     async_add_entities(
-        [OpenGarageCover(hass.data[DOMAIN][entry.entry_id], entry.unique_id)]
+        [OpenGarageCover(hass.data[DOMAIN][entry.entry_id], cast(str, entry.unique_id))]
     )
 
 
@@ -39,7 +39,7 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
     def __init__(
-        self, coordinator: OpenGarageDataUpdateCoordinator, device_id: str | None
+        self, coordinator: OpenGarageDataUpdateCoordinator, device_id: str
     ) -> None:
         """Initialize the cover."""
         self._state: str | None = None

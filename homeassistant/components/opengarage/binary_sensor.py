@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -36,7 +37,7 @@ async def async_setup_entry(
         [
             OpenGarageBinarySensor(
                 open_garage_data_coordinator,
-                entry.unique_id,
+                cast(str, entry.unique_id),
                 description,
             )
             for description in SENSOR_TYPES
@@ -50,7 +51,7 @@ class OpenGarageBinarySensor(OpenGarageEntity, BinarySensorEntity):
     def __init__(
         self,
         coordinator: OpenGarageDataUpdateCoordinator,
-        device_id: str | None,
+        device_id: str,
         description: BinarySensorEntityDescription,
     ) -> None:
         """Initialize the entity."""

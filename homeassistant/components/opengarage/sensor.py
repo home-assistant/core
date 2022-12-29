@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -67,7 +68,7 @@ async def async_setup_entry(
         [
             OpenGarageSensor(
                 open_garage_data_coordinator,
-                entry.unique_id,
+                cast(str, entry.unique_id),
                 description,
             )
             for description in SENSOR_TYPES

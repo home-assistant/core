@@ -15,7 +15,7 @@ class OpenGarageEntity(CoordinatorEntity[OpenGarageDataUpdateCoordinator]):
     def __init__(
         self,
         open_garage_data_coordinator: OpenGarageDataUpdateCoordinator,
-        device_id: str | None,
+        device_id: str,
         description: EntityDescription | None = None,
     ) -> None:
         """Initialize the entity."""
@@ -41,9 +41,9 @@ class OpenGarageEntity(CoordinatorEntity[OpenGarageDataUpdateCoordinator]):
         self.async_write_ha_state()
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
-        device_info = DeviceInfo(
+        return DeviceInfo(
             configuration_url=self.coordinator.open_garage_connection.device_url,
             connections={(CONNECTION_NETWORK_MAC, self.coordinator.data["mac"])},
             identifiers={(DOMAIN, self._device_id)},
@@ -52,4 +52,3 @@ class OpenGarageEntity(CoordinatorEntity[OpenGarageDataUpdateCoordinator]):
             suggested_area="Garage",
             sw_version=self.coordinator.data["fwv"],
         )
-        return device_info
