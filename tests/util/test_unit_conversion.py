@@ -3,7 +3,6 @@ import pytest
 
 from homeassistant.const import (
     UnitOfDataRate,
-    UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfInformation,
@@ -21,7 +20,6 @@ from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
     DataRateConverter,
     DistanceConverter,
-    ElectricCurrentConverter,
     ElectricPotentialConverter,
     EnergyConverter,
     InformationConverter,
@@ -167,12 +165,6 @@ def test_convert_nonnumeric_value(
             ElectricPotentialConverter,
             UnitOfElectricPotential.VOLT,
             UnitOfElectricPotential.MILLIVOLT,
-            1 / 1000,
-        ),
-        (
-            ElectricCurrentConverter,
-            UnitOfElectricCurrent.AMPERE,
-            UnitOfElectricCurrent.MILLIAMPERE,
             1 / 1000,
         ),
         (PowerConverter, UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
