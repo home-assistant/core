@@ -81,12 +81,11 @@ async def async_setup_entry(
         hass.config_entries.async_update_entry(config_entry, data=config)
 
     # Initialise the library with a random user id each time it is started,
-    # also extend the library's default identifier to include 'home-assistant'
+    # Use a generic agent_identifier to avoid the blacklisting on homeassistant
+    # use of this internal API apparently put in place by Growatt
     api = growattServer.GrowattApi(
         add_random_user_id=True,
-        agent_identifier=(
-            f"{growattServer.GrowattApi.agent_identifier} - home-assistant"
-        ),
+        agent_identifier="Dalvik/2.1.0 (Linux; U; Android 12)",
     )
     api.server_url = url
 
