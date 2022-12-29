@@ -328,7 +328,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 name_by_user=old_device_entry.name_by_user,
             )
 
-            # Update the new entity entryes with any customizations from the old ones:
+            # Update the new entity entries with any customizations from the old ones:
             for new_entity_entry in er.async_entries_for_device(
                 entity_registry, new_device_entry.id, include_disabled_entities=True
             ):
