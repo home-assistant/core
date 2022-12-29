@@ -89,6 +89,21 @@ CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 
+MIGRATION_NAME_TO_KEY = {
+    # Sensors
+    "Down Speed": "download",
+    "Up Speed": "upload",
+    "Status": "status",
+    "Active Torrents": "active_torrents",
+    "Paused Torrents": "paused_torrents",
+    "Total Torrents": "total_torrents",
+    "Completed Torrents": "completed_torrents",
+    "Started Torrents": "started_torrents",
+    # Switches
+    "Switch": "on_off",
+    "Turtle Mode": "turtle_mode",
+}
+
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the Transmission Component."""
@@ -187,21 +202,6 @@ class TransmissionClient:
             entity_entry: entity_registry.RegistryEntry,
         ) -> dict[str, Any] | None:
             """Update unique ID of entity entry."""
-            name_to_key = {
-                # Sensors
-                "Down Speed": "download",
-                "Up Speed": "upload",
-                "Status": "status",
-                "Active Torrents": "active_torrents",
-                "Paused Torrents": "paused_torrents",
-                "Total Torrents": "total_torrents",
-                "Completed Torrents": "completed_torrents",
-                "Started Torrents": "started_torrents",
-                # Switches
-                "Switch": "on_off",
-                "Turtle Mode": "turtle_mode",
-            }
-
             match = re.search(
                 f"{self._tm_data.host}-{self.config_entry.data[CONF_NAME]} (?P<name>.*)",
                 entity_entry.unique_id,
@@ -209,9 +209,9 @@ class TransmissionClient:
 
             if (
                 name := match.group("name") if match is not None else None
-            ) in name_to_key:
+            ) in MIGRATION_NAME_TO_KEY:
                 return {
-                    "new_unique_id": f"{self.config_entry.entry_id}-{name_to_key[name]}"
+                    "new_unique_id": f"{self.config_entry.entry_id}-{MIGRATION_NAME_TO_KEY[name]}"
                 }
             return None
 
