@@ -308,7 +308,6 @@ class UnifiSensorEntity(SensorEntity, Generic[_HandlerT, _DataT]):
             self._attr_available = available
             update_state = True
         if update_state:
-            print(self.name, self.native_value)
             self.async_write_ha_state()
 
     @callback
