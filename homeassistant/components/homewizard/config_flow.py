@@ -81,7 +81,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user",
                 data_schema=data_schema,
-                errors={"base": str(ex)},
+                errors={"base": ex.error_code},
             )
 
         # Sets unique ID and aborts if it is already exists
@@ -156,7 +156,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except RecoverableError as ex:
                 return self.async_show_form(
                     step_id="discovery_confirm",
-                    errors={"base": str(ex)},
+                    errors={"base": ex.error_code},
                 )
 
             return self.async_create_entry(
@@ -200,7 +200,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except RecoverableError as ex:
                 return self.async_show_form(
                     step_id="reauth_confirm",
-                    errors={"base": str(ex)},
+                    errors={"base": ex.error_code},
                 )
 
             await self.hass.config_entries.async_reload(self.entry.entry_id)
@@ -224,16 +224,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await energy_api.device()
 
         except DisabledError as ex:
-            _LOGGER.error("API disabled, API must be enabled in the app")
-            raise RecoverableError("api_not_enabled") from ex
+            raise RecoverableError(
+                "API disabled, API must be enabled in the app", "api_not_enabled"
+            ) from ex
 
         except UnsupportedError as ex:
             _LOGGER.error("API version unsuppored")
             raise AbortFlow("unsupported_api_version") from ex
 
         except RequestError as ex:
-            _LOGGER.exception(ex)
-            raise RecoverableError("network_error") from ex
+            raise RecoverableError(
+                "Device unreachable or unexpected response", "network_error"
+            ) from ex
 
         except Exception as ex:
             _LOGGER.exception(ex)
@@ -257,3 +259,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 class RecoverableError(HomeAssistantError):
     """Raised when a connection has been failed but can be retried."""
+
+    def __init__(self, message: str, error_code: str) -> None:
+        """Init RecoverableError."""
+        super().__init__(message)
+        self.error_code = error_code
