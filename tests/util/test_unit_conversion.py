@@ -46,13 +46,11 @@ _CONVERTERS: list[type[BaseUnitConverter]] = [
 
 def _get_valid_unit(converter: type[BaseUnitConverter]) -> str:
     """Get a valid unit from the converter, different from the normalized unit."""
-    return (
-        next(
-            filter(
-                lambda v: v != converter.NORMALIZED_UNIT,
-                iter(converter.VALID_UNITS),
-            )
-        ),
+    return next(
+        filter(
+            lambda v: v != converter.NORMALIZED_UNIT,
+            iter(converter.VALID_UNITS),
+        )
     )
 
 
