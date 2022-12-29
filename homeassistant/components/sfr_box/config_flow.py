@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from sfrbox_api.bridge import SFRBox
+from sfrbox_api.exceptions import SfrBoxError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
@@ -35,11 +36,12 @@ class SFRBoxFlowHandler(ConfigFlow, domain=DOMAIN):
                     client=get_async_client(self.hass),
                 )
                 system_info = await box.system_get_info()
-                await self.async_set_unique_id(system_info.serial_number)
-                self._abort_if_unique_id_configured()
-            except Exception:  # pylint: disable=broad-except
+            except SfrBoxError:
                 errors["base"] = "unknown"
             else:
+                await self.async_set_unique_id(system_info.mac_addr)
+                self._abort_if_unique_id_configured()
+                self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
                 return self.async_create_entry(title="SFR Box", data=user_input)
 
         return self.async_show_form(
