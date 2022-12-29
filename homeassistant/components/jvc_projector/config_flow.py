@@ -1,21 +1,26 @@
-"""Config flow for the JVC Projector integration."""
+"""Config flow for the jvc_projector integration."""
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from jvcprojector import JvcProjectorAuthError, JvcProjectorConnectError
+from jvcprojector.projector import DEFAULT_PORT
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util.network import is_host_valid
 
 from . import get_mac_address
-from .const import DEFAULT_PORT, DOMAIN, NAME
+from .const import DOMAIN, NAME
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from typing import Any
+
+    from homeassistant.config_entries import ConfigEntry
     from homeassistant.data_entry_flow import FlowResult
 
 
@@ -53,7 +58,7 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
             except JvcProjectorAuthError:
                 errors["base"] = "invalid_auth"
             else:
-                await self.async_set_unique_id(mac)
+                await self.async_set_unique_id(format_mac(mac))
                 self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
                 return self.async_create_entry(
@@ -77,9 +82,7 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(
-            self, user_input: Mapping[str, Any]
-    ) -> FlowResult:
+    async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
         """Perform reauth on password authentication error."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]

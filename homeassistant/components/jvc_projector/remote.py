@@ -1,13 +1,14 @@
-"""Remote platform for the JVC Projector integration."""
+"""Remote platform for the jvc_projector integration."""
 
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING
 
 from jvcprojector import const
 
 from homeassistant.components.remote import RemoteEntity
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN as JVC_DOMAIN, POWER_ON, POWER_WARMING
@@ -18,6 +19,7 @@ if TYPE_CHECKING:
     from typing import Any
 
     from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 ON_STATES = [POWER_ON, POWER_WARMING]
@@ -56,13 +58,20 @@ async def async_setup_entry(
 class JvcProjectorRemote(JvcProjectorEntity, RemoteEntity):
     """Representation of a JVC Projector device."""
 
+    async def _refresh_state(self) -> None:
+        """Force refresh device state."""
+        await asyncio.sleep(1)
+        await self.coordinator.async_refresh()
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self.device.power_on()
+        await self._refresh_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.device.power_off()
+        await self._refresh_state()
 
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a remote command to the device."""
@@ -70,6 +79,7 @@ class JvcProjectorRemote(JvcProjectorEntity, RemoteEntity):
             if cmd not in COMMANDS:
                 raise HomeAssistantError(f"{cmd} is not a known command")
             await self.device.remote(COMMANDS[cmd])
+        await self._refresh_state()
 
     @callback
     def _handle_coordinator_update(self) -> None:

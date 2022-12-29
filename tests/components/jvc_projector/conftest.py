@@ -25,7 +25,6 @@ def fixture_mock_device() -> Generator[None, AsyncMock, None]:
         device.port = MOCK_PORT
         device.mac = MOCK_MAC
         device.model = MOCK_MODEL
-        device.get_mac.return_value = MOCK_MAC
         yield device
 
 

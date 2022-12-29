@@ -1,0 +1,5 @@
+{
+  "domain": "jvc",
+  "name": "JVC",
+  "integrations": ["jvc_projector"]
+}

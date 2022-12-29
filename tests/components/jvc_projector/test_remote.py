@@ -1,7 +1,6 @@
 """Tests for JVC Projector remote platform."""
 
-from datetime import timedelta
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -13,21 +12,22 @@ from homeassistant.components.remote import (
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.dt import utcnow
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 ENTITY_ID = "remote.jvc_projector"
 
 
-async def test_coordinator_update(
+async def test_entity_state(
     hass: HomeAssistant,
-    mock_device: AsyncMock,
+    mock_device: MagicMock,
     mock_integration: MockConfigEntry,
 ) -> None:
-    """Test coordinator update is successful."""
-    async_fire_time_changed(hass, utcnow() + timedelta(minutes=1))
-    await hass.async_block_till_done()
+    """Tests entity state is registered."""
+    entity = hass.states.get(ENTITY_ID)
+    assert entity
+    assert er.async_get(hass).async_get(entity.entity_id)
 
 
 async def test_commands(
@@ -35,7 +35,7 @@ async def test_commands(
     mock_device: MagicMock,
     mock_integration: MockConfigEntry,
 ) -> None:
-    """Test service calls."""
+    """Test service call are called."""
     await hass.services.async_call(
         REMOTE_DOMAIN,
         SERVICE_TURN_ON,
@@ -66,7 +66,7 @@ async def test_unknown_command(
     mock_device: MagicMock,
     mock_integration: MockConfigEntry,
 ) -> None:
-    """Test service calls."""
+    """Test unknown service call errors."""
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             REMOTE_DOMAIN,

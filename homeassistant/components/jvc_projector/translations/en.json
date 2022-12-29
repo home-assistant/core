@@ -7,13 +7,13 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "invalid_auth": "Password authentication failed. Password must match configured projector setting.",
+            "invalid_auth": "Password authentication failed",
             "invalid_host": "Invalid hostname or IP address"
         },
         "flow_title": "{name}",
         "step": {
             "reauth_confirm": {
-                "description": "Password provided is not valid.",
+                "description": "Password authentication failed",
                 "title": "Reauthenticate Integration"
             },
             "user": {

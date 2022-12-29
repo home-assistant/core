@@ -46,7 +46,7 @@ async def test_user_config_flow_bad_connect_errors(
     hass: HomeAssistant, mock_device: AsyncMock
 ) -> None:
     """Test errors when connection error occurs."""
-    mock_device.get_mac.side_effect = JvcProjectorConnectError
+    mock_device.connect.side_effect = JvcProjectorConnectError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -91,7 +91,7 @@ async def test_user_config_flow_bad_auth_errors(
     hass: HomeAssistant, mock_device: AsyncMock
 ) -> None:
     """Test errors when bad auth error occurs."""
-    mock_device.get_mac.side_effect = JvcProjectorAuthError
+    mock_device.connect.side_effect = JvcProjectorAuthError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -136,7 +136,7 @@ async def test_reauth_config_flow_auth_error(
     hass: HomeAssistant, mock_device: AsyncMock, mock_integration: MockConfigEntry
 ) -> None:
     """Test reauth config flow when connect fails."""
-    mock_device.get_mac.side_effect = JvcProjectorAuthError
+    mock_device.connect.side_effect = JvcProjectorAuthError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -163,7 +163,7 @@ async def test_reauth_config_flow_connect_error(
     hass: HomeAssistant, mock_device: AsyncMock, mock_integration: MockConfigEntry
 ) -> None:
     """Test reauth config flow when connect fails."""
-    mock_device.get_mac.side_effect = JvcProjectorConnectError
+    mock_device.connect.side_effect = JvcProjectorConnectError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

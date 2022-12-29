@@ -7,8 +7,23 @@ from jvcprojector import JvcProjectorAuthError, JvcProjectorConnectError
 from homeassistant.components.jvc_projector.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+
+from . import MOCK_MAC
 
 from tests.common import MockConfigEntry
+
+
+async def test_init(
+    hass: HomeAssistant,
+    mock_device: AsyncMock,
+    mock_integration: MockConfigEntry,
+) -> None:
+    """Test initialization."""
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_MAC)})
+    assert device is not None
+    assert device.identifiers == {(DOMAIN, MOCK_MAC)}
 
 
 async def test_unload_config_entry(

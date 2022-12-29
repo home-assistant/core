@@ -212,6 +212,7 @@ FLOWS = {
         "jellyfin",
         "juicenet",
         "justnimbus",
+        "jvc_projector",
         "kaleidescape",
         "keenetic_ndms2",
         "kegtron",

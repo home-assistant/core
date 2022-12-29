@@ -1,10 +1,8 @@
-"""Constants for the JVC Projector integration."""
+"""Constants for the jvc_projector integration."""
 
 NAME = "JVC Projector"
-DOMAIN = "jvcprojector"
+DOMAIN = "jvc_projector"
 MANUFACTURER = "JVC"
-
-DEFAULT_PORT = 20554
 
 DEVICE = "device"
 COORDINATOR = "coordinator"

@@ -1,8 +1,7 @@
-"""The JVC Projector integration."""
+"""The jvc_projector integration."""
 
 from __future__ import annotations
 
-import logging
 from typing import TYPE_CHECKING
 
 from jvcprojector import JvcProjector, JvcProjectorAuthError, JvcProjectorConnectError
@@ -10,16 +9,14 @@ from jvcprojector import JvcProjector, JvcProjectorAuthError, JvcProjectorConnec
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, Platform
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .const import COORDINATOR, DEVICE, DOMAIN
+from .const import DOMAIN
 from .coordinator import JvcProjectorDataUpdateCoordinator
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
 
-_LOGGER = logging.getLogger(__name__)
-
-PLATFORMS = [Platform.REMOTE, Platform.SENSOR]
+PLATFORMS = [Platform.REMOTE]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -57,7 +54,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def get_mac_address(host: str, port: int, password: str | None) -> str:
-    """Get device mac address for projector."""
+    """Get device mac address for config flow."""
     device = JvcProjector(host, port=port, password=password)
     await device.connect(True)
-    return device.get_mac()
+    return device.mac
