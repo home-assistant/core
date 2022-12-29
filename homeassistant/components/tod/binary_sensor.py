@@ -116,7 +116,9 @@ class TodSensor(BinarySensorEntity):
         """Init the ToD Sensor..."""
         self._attr_unique_id = unique_id
         self._attr_name = name
-        self._time_before = self._time_after = self._next_update = None
+        self._time_before: datetime | None = None
+        self._time_after: datetime | None = None
+        self._next_update: datetime | None = None
         self._after_offset = after_offset
         self._before_offset = before_offset
         self._before = before
@@ -139,12 +141,14 @@ class TodSensor(BinarySensorEntity):
         if TYPE_CHECKING:
             assert self._time_after is not None
             assert self._time_before is not None
+            assert self._next_update is not None
         if time_zone := dt_util.get_time_zone(self.hass.config.time_zone):
             return {
                 ATTR_AFTER: self._time_after.astimezone(time_zone).isoformat(),
                 ATTR_BEFORE: self._time_before.astimezone(time_zone).isoformat(),
                 ATTR_NEXT_UPDATE: self._next_update.astimezone(time_zone).isoformat(),
             }
+        return None
 
     def _naive_time_to_utc_datetime(self, naive_time: time) -> datetime:
         """Convert naive time from config to utc_datetime with current day."""
@@ -159,9 +163,6 @@ class TodSensor(BinarySensorEntity):
 
     def _calculate_boundary_time(self) -> None:
         """Calculate internal absolute time boundaries."""
-        if TYPE_CHECKING:
-            assert self._time_after is not None
-            assert self._time_before is not None
         nowutc = dt_util.utcnow()
         # If after value is a sun event instead of absolute time
         if _is_sun_event(self._after):
@@ -169,7 +170,7 @@ class TodSensor(BinarySensorEntity):
             # if not available take next
             after_event_date = get_astral_event_date(
                 self.hass, str(self._after), nowutc
-            ) or get_astral_event_next(self.hass, self._after, nowutc)
+            ) or get_astral_event_next(self.hass, str(self._after), nowutc)
         else:
             # Convert local time provided to UTC today
             # datetime.combine(date, time, tzinfo) is not supported
@@ -184,13 +185,13 @@ class TodSensor(BinarySensorEntity):
             # Calculate the today's event utc time or  if not available take
             # next
             before_event_date = get_astral_event_date(
-                self.hass, self._before, nowutc
-            ) or get_astral_event_next(self.hass, self._before, nowutc)
+                self.hass, str(self._before), nowutc
+            ) or get_astral_event_next(self.hass, str(self._before), nowutc)
             # Before is earlier than after
             if before_event_date < after_event_date:
                 # Take next day for before
                 before_event_date = get_astral_event_next(
-                    self.hass, self._before, after_event_date
+                    self.hass, str(self._before), after_event_date
                 )
         else:
             # Convert local time provided to UTC today, see above
@@ -229,7 +230,7 @@ class TodSensor(BinarySensorEntity):
             assert self._time_before is not None
         if _is_sun_event(self._after):
             self._time_after = get_astral_event_next(
-                self.hass, self._after, self._time_after - self._after_offset
+                self.hass, str(self._after), self._time_after - self._after_offset
             )
             self._time_after += self._after_offset
         else:
@@ -238,7 +239,7 @@ class TodSensor(BinarySensorEntity):
 
         if _is_sun_event(self._before):
             self._time_before = get_astral_event_next(
-                self.hass, self._before, self._time_before - self._before_offset
+                self.hass, str(self._before), self._time_before - self._before_offset
             )
             self._time_before += self._before_offset
         else:
