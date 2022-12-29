@@ -30,7 +30,6 @@ async def test_full_user_flow(
 
     assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -71,7 +70,6 @@ async def test_full_flow_with_error(
 
     assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
 
     mock_whois_config_flow.side_effect = throw
     result2 = await hass.config_entries.flow.async_configure(
@@ -82,7 +80,6 @@ async def test_full_flow_with_error(
     assert result2.get("type") == FlowResultType.FORM
     assert result2.get("step_id") == SOURCE_USER
     assert result2.get("errors") == {"base": reason}
-    assert "flow_id" in result2
 
     assert len(mock_setup_entry.mock_calls) == 0
     assert len(mock_whois_config_flow.mock_calls) == 1
