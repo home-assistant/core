@@ -8,7 +8,9 @@
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "error": {
+            "encryption_key_invalid": "Identyfikator klucza lub klucz szyfruj\u0105cy jest nieprawid\u0142owy",
             "few": "Puste",
+            "key_id_invalid": "Identyfikator klucza lub klucz szyfruj\u0105cy jest nieprawid\u0142owy",
             "many": "Pustych",
             "one": "Pusty",
             "other": ""
@@ -17,6 +19,13 @@
         "step": {
             "confirm": {
                 "description": "Czy chcesz skonfigurowa\u0107 {name}?"
+            },
+            "lock_key": {
+                "data": {
+                    "encryption_key": "Klucz szyfruj\u0105cy",
+                    "key_id": "Identyfikator klucza"
+                },
+                "description": "Urz\u0105dzenie {name} wymaga klucza szyfruj\u0105cego, szczeg\u00f3\u0142y jak go uzyska\u0107 znajdziesz w dokumentacji."
             },
             "password": {
                 "data": {
