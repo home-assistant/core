@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 from sfrbox_api.bridge import SFRBox
+from sfrbox_api.exceptions import SfrBoxError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.httpx_client import get_async_client
 
@@ -16,7 +18,12 @@ from .coordinator import DslDataUpdateCoordinator
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SFR box as config entry."""
     box = SFRBox(ip=entry.data[CONF_HOST], client=get_async_client(hass))
-    system_info = await box.system_get_info()
+    try:
+        system_info = await box.system_get_info()
+    except SfrBoxError as err:
+        raise ConfigEntryNotReady(
+            f"Unable to connect to {entry.data[CONF_HOST]}"
+        ) from err
     hass.data.setdefault(DOMAIN, {})
 
     device_registry = dr.async_get(hass)
