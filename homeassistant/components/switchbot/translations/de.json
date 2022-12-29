@@ -7,10 +7,21 @@
             "switchbot_unsupported_type": "Nicht unterst\u00fctzter Switchbot Typ.",
             "unknown": "Unerwarteter Fehler"
         },
+        "error": {
+            "encryption_key_invalid": "Schl\u00fcssel-ID oder Verschl\u00fcsselungsschl\u00fcssel ist ung\u00fcltig",
+            "key_id_invalid": "Schl\u00fcssel-ID oder Verschl\u00fcsselungsschl\u00fcssel ist ung\u00fcltig"
+        },
         "flow_title": "{name} ({address})",
         "step": {
             "confirm": {
                 "description": "M\u00f6chtest du {name} einrichten?"
+            },
+            "lock_key": {
+                "data": {
+                    "encryption_key": "Verschl\u00fcsselungsschl\u00fcssel",
+                    "key_id": "Schl\u00fcssel-ID"
+                },
+                "description": "Das Ger\u00e4t {name} ben\u00f6tigt einen Verschl\u00fcsselungsschl\u00fcssel. Einzelheiten dazu, wie du diesen erh\u00e4ltst, findest du in der Dokumentation."
             },
             "password": {
                 "data": {

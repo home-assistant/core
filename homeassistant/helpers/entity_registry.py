@@ -943,7 +943,8 @@ async def async_get_registry(hass: HomeAssistant) -> EntityRegistry:
     This is deprecated and will be removed in the future. Use async_get instead.
     """
     report(
-        "uses deprecated `async_get_registry` to access entity registry, use async_get instead"
+        "uses deprecated `async_get_registry` to access entity registry, use async_get"
+        " instead"
     )
     return async_get(hass)
 

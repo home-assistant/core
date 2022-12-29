@@ -7,10 +7,21 @@
             "switchbot_unsupported_type": "Toetamata Switchboti t\u00fc\u00fcp.",
             "unknown": "Ootamatu t\u00f5rge"
         },
+        "error": {
+            "encryption_key_invalid": "V\u00f5tme ID v\u00f5i kr\u00fcptov\u00f5ti on sobimatu",
+            "key_id_invalid": "V\u00f5tme ID v\u00f5i kr\u00fcptov\u00f5ti on sobimatu"
+        },
         "flow_title": "{name} ({address})",
         "step": {
             "confirm": {
                 "description": "Kas seadistada {name} ?"
+            },
+            "lock_key": {
+                "data": {
+                    "encryption_key": "Kr\u00fcptimisv\u00f5ti",
+                    "key_id": "V\u00f5tme ID"
+                },
+                "description": "Seade {name} n\u00f5uab kr\u00fcptov\u00f5tit, \u00fcksikasjad selle hankimise kohta leiad dokumentatsioonist."
             },
             "password": {
                 "data": {
