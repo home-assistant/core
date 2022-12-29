@@ -206,6 +206,11 @@ def _standardize_geography_config_entry(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up AirVisual as config entry."""
+    if CONF_API_KEY not in entry.data:
+        # If this is a migrated AirVisual Pro entry, there's no actual setup to do;
+        # that will be handled by the `airvisual_pro` domain:
+        return False
+
     _standardize_geography_config_entry(hass, entry)
 
     websession = aiohttp_client.async_get_clientsession(hass)
