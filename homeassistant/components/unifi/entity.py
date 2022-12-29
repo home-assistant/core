@@ -83,6 +83,7 @@ class UnifiEntity(Entity, Generic[HandlerT, DataT]):
         self.async_on_remove(
             handler.subscribe(
                 self.async_signalling_callback,
+                id_filter=self._obj_id,
             )
         )
 
