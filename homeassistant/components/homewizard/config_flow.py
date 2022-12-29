@@ -14,6 +14,7 @@ from homeassistant import config_entries
 from homeassistant.components import persistent_notification, zeroconf
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
     CONF_API_ENABLED,
@@ -74,24 +75,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         # Fetch device information
-        device_info_or_error = await self._async_try_connect(
-            user_input[CONF_IP_ADDRESS]
-        )
-
-        # Check if method returned an error
-        if isinstance(device_info_or_error, str):
+        try:
+            device_info = await self._async_try_connect(user_input[CONF_IP_ADDRESS])
+        except RecoverableError as ex:
             return self.async_show_form(
                 step_id="user",
                 data_schema=data_schema,
-                errors={"base": device_info_or_error},
+                errors={"base": str(ex)},
             )
 
         # Sets unique ID and aborts if it is already exists
         await self._async_set_and_check_unique_id(
             {
                 CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
-                CONF_PRODUCT_TYPE: device_info_or_error.product_type,
-                CONF_SERIAL: device_info_or_error.serial,
+                CONF_PRODUCT_TYPE: device_info.product_type,
+                CONF_SERIAL: device_info.serial,
             }
         )
 
@@ -104,7 +102,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Add entry
         return self.async_create_entry(
-            title=f"{device_info_or_error.product_name} ({device_info_or_error.serial})",
+            title=f"{device_info.product_name} ({device_info.serial})",
             data=data,
         )
 
@@ -153,12 +151,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Confirm discovery."""
         if user_input is not None:
 
-            # Check connection
-            error = await self._async_try_connect(str(self.config[CONF_IP_ADDRESS]))
-            if isinstance(error, str):
+            try:
+                await self._async_try_connect(str(self.config[CONF_IP_ADDRESS]))
+            except RecoverableError as ex:
                 return self.async_show_form(
                     step_id="discovery_confirm",
-                    errors={"base": error},
+                    errors={"base": str(ex)},
                 )
 
             return self.async_create_entry(
@@ -197,11 +195,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             assert self.entry is not None
 
-            error = await self._async_try_connect(self.entry.data[CONF_IP_ADDRESS])
-            if isinstance(error, str):
+            try:
+                await self._async_try_connect(self.entry.data[CONF_IP_ADDRESS])
+            except RecoverableError as ex:
                 return self.async_show_form(
                     step_id="reauth_confirm",
-                    errors={"base": error},
+                    errors={"base": str(ex)},
                 )
 
             await self.hass.config_entries.async_reload(self.entry.entry_id)
@@ -212,7 +211,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     @staticmethod
-    async def _async_try_connect(ip_address: str) -> Device | str:
+    async def _async_try_connect(ip_address: str) -> Device:
         """Try to connect."""
 
         _LOGGER.debug("config_flow _async_try_connect")
@@ -224,9 +223,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             return await energy_api.device()
 
-        except DisabledError:
+        except DisabledError as ex:
             _LOGGER.error("API disabled, API must be enabled in the app")
-            return "api_not_enabled"
+            raise RecoverableError("api_not_enabled") from ex
 
         except UnsupportedError as ex:
             _LOGGER.error("API version unsuppored")
@@ -234,7 +233,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         except RequestError as ex:
             _LOGGER.exception(ex)
-            return "network_error"
+            raise RecoverableError("network_error") from ex
 
         except Exception as ex:
             _LOGGER.exception(ex)
@@ -254,3 +253,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(
             updates={CONF_IP_ADDRESS: entry_info[CONF_IP_ADDRESS]}
         )
+
+
+class RecoverableError(HomeAssistantError):
+    """Raised when a connection has been failed but can be retried."""
