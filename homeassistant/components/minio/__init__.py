@@ -10,7 +10,6 @@ import voluptuous as vol
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -138,7 +137,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         if not hass.config.is_allowed_path(file_path):
             _LOGGER.error("Invalid file_path %s", file_path)
-            raise HomeAssistantError(f"Invalid file_path {file_path}")
+            raise ValueError(f"Invalid file_path {file_path}")
 
         minio_client.fput_object(bucket, key, file_path)
 
@@ -149,7 +148,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         file_path = _render_service_value(service, ATTR_FILE_PATH)
 
         if not hass.config.is_allowed_path(file_path):
-            raise HomeAssistantError(f"Invalid file_path {file_path}")
+            raise ValueError(f"Invalid file_path {file_path}")
 
         minio_client.fget_object(bucket, key, file_path)
 
