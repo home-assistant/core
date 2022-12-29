@@ -1,4 +1,6 @@
 """Test Home Assistant eneergy utility functions."""
+import inspect
+
 import pytest
 
 from homeassistant.const import (
@@ -16,6 +18,7 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util import unit_conversion
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
     DataRateConverter,
@@ -32,59 +35,19 @@ from homeassistant.util.unit_conversion import (
 )
 
 INVALID_SYMBOL = "bob"
+_CONVERTERS: list[type[BaseUnitConverter]] = [
+    obj
+    for _, obj in inspect.getmembers(unit_conversion)
+    if inspect.isclass(obj) and issubclass(obj, BaseUnitConverter)
+]
 
 
 @pytest.mark.parametrize(
     "converter,valid_unit",
     [
-        (DataRateConverter, UnitOfDataRate.GIBIBYTES_PER_SECOND),
-        (DistanceConverter, UnitOfLength.KILOMETERS),
-        (DistanceConverter, UnitOfLength.METERS),
-        (DistanceConverter, UnitOfLength.CENTIMETERS),
-        (DistanceConverter, UnitOfLength.MILLIMETERS),
-        (DistanceConverter, UnitOfLength.MILES),
-        (DistanceConverter, UnitOfLength.YARDS),
-        (DistanceConverter, UnitOfLength.FEET),
-        (DistanceConverter, UnitOfLength.INCHES),
-        (ElectricCurrentConverter, UnitOfElectricCurrent.AMPERE),
-        (ElectricCurrentConverter, UnitOfElectricCurrent.MILLIAMPERE),
-        (EnergyConverter, UnitOfEnergy.WATT_HOUR),
-        (EnergyConverter, UnitOfEnergy.KILO_WATT_HOUR),
-        (EnergyConverter, UnitOfEnergy.MEGA_WATT_HOUR),
-        (EnergyConverter, UnitOfEnergy.GIGA_JOULE),
-        (InformationConverter, UnitOfInformation.GIGABYTES),
-        (MassConverter, UnitOfMass.GRAMS),
-        (MassConverter, UnitOfMass.KILOGRAMS),
-        (MassConverter, UnitOfMass.MICROGRAMS),
-        (MassConverter, UnitOfMass.MILLIGRAMS),
-        (MassConverter, UnitOfMass.OUNCES),
-        (MassConverter, UnitOfMass.POUNDS),
-        (PowerConverter, UnitOfPower.WATT),
-        (PowerConverter, UnitOfPower.KILO_WATT),
-        (PressureConverter, UnitOfPressure.PA),
-        (PressureConverter, UnitOfPressure.HPA),
-        (PressureConverter, UnitOfPressure.MBAR),
-        (PressureConverter, UnitOfPressure.INHG),
-        (PressureConverter, UnitOfPressure.KPA),
-        (PressureConverter, UnitOfPressure.CBAR),
-        (PressureConverter, UnitOfPressure.MMHG),
-        (PressureConverter, UnitOfPressure.PSI),
-        (SpeedConverter, UnitOfVolumetricFlux.INCHES_PER_DAY),
-        (SpeedConverter, UnitOfVolumetricFlux.INCHES_PER_HOUR),
-        (SpeedConverter, UnitOfVolumetricFlux.MILLIMETERS_PER_DAY),
-        (SpeedConverter, UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR),
-        (SpeedConverter, UnitOfSpeed.FEET_PER_SECOND),
-        (SpeedConverter, UnitOfSpeed.KILOMETERS_PER_HOUR),
-        (SpeedConverter, UnitOfSpeed.KNOTS),
-        (SpeedConverter, UnitOfSpeed.METERS_PER_SECOND),
-        (SpeedConverter, UnitOfSpeed.MILES_PER_HOUR),
-        (TemperatureConverter, UnitOfTemperature.CELSIUS),
-        (TemperatureConverter, UnitOfTemperature.FAHRENHEIT),
-        (TemperatureConverter, UnitOfTemperature.KELVIN),
-        (VolumeConverter, UnitOfVolume.LITERS),
-        (VolumeConverter, UnitOfVolume.MILLILITERS),
-        (VolumeConverter, UnitOfVolume.GALLONS),
-        (VolumeConverter, UnitOfVolume.FLUID_OUNCES),
+        (converter, valid_unit)
+        for converter in _CONVERTERS
+        for valid_unit in converter.VALID_UNITS
     ],
 )
 def test_convert_same_unit(converter: type[BaseUnitConverter], valid_unit: str) -> None:
