@@ -21,5 +21,11 @@
                 "title": "Reauthenticate Integration"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "remote_button_long_press": "long press",
+            "remote_button_short_press": "short press"
+        }
     }
 }

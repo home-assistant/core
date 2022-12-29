@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
+import math
 
 import async_timeout
 from yolink.client import YoLinkClient
@@ -15,10 +16,21 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_entry_oauth2_flow,
+    device_registry as dr,
+)
 
 from . import api
-from .const import ATTR_CLIENT, ATTR_COORDINATORS, ATTR_DEVICE, ATTR_MQTT_CLIENT, DOMAIN
+from .const import (
+    ATTR_CLIENT,
+    ATTR_COORDINATORS,
+    ATTR_DEVICE,
+    ATTR_DEVICE_SMART_REMOTE,
+    ATTR_MQTT_CLIENT,
+    DOMAIN,
+)
 from .coordinator import YoLinkCoordinator
 
 SCAN_INTERVAL = timedelta(minutes=5)
@@ -80,6 +92,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device_coordinator = device_coordinators.get(device_id)
         if device_coordinator is None:
             return
+        if device_coordinator.device.device_type == ATTR_DEVICE_SMART_REMOTE:
+            device_registry = dr.async_get(hass)
+            device_entry = device_registry.async_get_device(
+                identifiers={(DOMAIN, device_coordinator.device.device_id)}
+            )
+            if device_entry is not None:
+                btn_press_event = resolved_state.get("event")
+                if btn_press_event is not None:
+                    key_mask = btn_press_event["keyMask"]
+                    btn_no = int(math.log2(key_mask)) + 1
+                    key_press_type = (
+                        "remote_button_short_press"
+                        if btn_press_event["type"] == "Press"
+                        else "remote_button_long_press"
+                    )
+                    event_data = {
+                        "type": key_press_type,
+                        "device_id": device_entry.id,
+                        "subtype": f"button_{btn_no}",
+                    }
+                    hass.bus.async_fire(DOMAIN + "_event", event_data)
+
         device_coordinator.async_set_updated_data(resolved_state)
 
     try:
