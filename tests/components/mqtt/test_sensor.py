@@ -1146,9 +1146,6 @@ async def test_cleanup_triggers_and_restoring_state(
     )
     await hass.async_block_till_done()
 
-    assert "Clean up expire after trigger for sensor.test1" in caplog.text
-    assert "Clean up expire after trigger for sensor.test2" not in caplog.text
-
     state = hass.states.get("sensor.test1")
     assert state.state == "38"  # 100 °F -> 38 °C
 

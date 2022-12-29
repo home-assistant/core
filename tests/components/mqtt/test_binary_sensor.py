@@ -1059,8 +1059,6 @@ async def test_cleanup_triggers_and_restoring_state(
     await help_test_reload_with_config(
         hass, caplog, tmp_path, {mqtt.DOMAIN: {domain: [config1, config2]}}
     )
-    assert "Clean up expire after trigger for binary_sensor.test1" in caplog.text
-    assert "Clean up expire after trigger for binary_sensor.test2" not in caplog.text
 
     state = hass.states.get("binary_sensor.test1")
     assert state.state == state1
