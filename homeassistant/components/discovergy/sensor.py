@@ -18,7 +18,7 @@ from homeassistant.const import (
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_NAME,
-    ELECTRIC_POTENTIAL_VOLT,
+    UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfVolume,
@@ -103,7 +103,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
     DiscovergySensorEntityDescription(
         key="phase1Voltage",
         name="Phase 1 voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -111,7 +111,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
     DiscovergySensorEntityDescription(
         key="phase2Voltage",
         name="Phase 2 voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -119,7 +119,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
     DiscovergySensorEntityDescription(
         key="phase3Voltage",
         name="Phase 3 voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -207,7 +207,7 @@ async def async_setup_entry(
                 for key in keys:
                     if key in coordinator.data.values:
                         entities.append(
-                            DiscovergySensor(description, meter, coordinator)
+                            DiscovergySensor(key, description, meter, coordinator)
                         )
 
     async_add_entities(entities, False)
@@ -217,10 +217,12 @@ class DiscovergySensor(CoordinatorEntity, SensorEntity):
     """Represents a discovergy smart meter sensor."""
 
     entity_description: DiscovergySensorEntityDescription
+    data_key: str
     _attr_has_entity_name = True
 
     def __init__(
         self,
+        data_key: str,
         description: DiscovergySensorEntityDescription,
         meter: Meter,
         coordinator: DataUpdateCoordinator,
@@ -228,6 +230,7 @@ class DiscovergySensor(CoordinatorEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
 
+        self.data_key = data_key
         self.entity_description = description
         self._attr_name = f"{description.name}"
         self._attr_unique_id = f"{meter.full_serial_number}-{description.key}"
@@ -242,6 +245,5 @@ class DiscovergySensor(CoordinatorEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the sensor state."""
         return (
-            self.coordinator.data.values[self.entity_description.key]
-            / self.entity_description.scale
+            self.coordinator.data.values[self.data_key] / self.entity_description.scale
         )
