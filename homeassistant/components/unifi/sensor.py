@@ -194,49 +194,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors for UniFi Network integration."""
     controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-
-    @callback
-    def async_load_entities(description: UnifiSensorEntityDescription) -> None:
-        """Load and subscribe to UniFi devices."""
-        entities: list[SensorEntity] = []
-        api_handler = description.api_handler_fn(controller.api)
-
-        @callback
-        def async_create_entity(event: ItemEvent, obj_id: str) -> None:
-            """Create UniFi entity."""
-            if not description.allowed_fn(
-                controller, obj_id
-            ) or not description.supported_fn(controller, obj_id):
-                return
-
-            entity = UnifiSensorEntity(obj_id, controller, description)
-            if event == ItemEvent.ADDED:
-                async_add_entities([entity])
-                return
-            entities.append(entity)
-
-        for obj_id in api_handler:
-            async_create_entity(ItemEvent.CHANGED, obj_id)
-        async_add_entities(entities)
-
-        api_handler.subscribe(async_create_entity, ItemEvent.ADDED)
-
-    for description in ENTITY_DESCRIPTIONS:
-        async_load_entities(description)
+    controller.register_platform_add_entities(
+        UnifiSensorEntity, ENTITY_DESCRIPTIONS, async_add_entities
+    )
 
 
 class UnifiSensorEntity(UnifiEntity[HandlerT, DataT], SensorEntity):
     """Base representation of a UniFi sensor."""
 
     entity_description: UnifiSensorEntityDescription[HandlerT, DataT]
-
-    @callback
-    def async_initiate_state(self) -> None:
-        """Initiate entity state.
-
-        Initiate native_value.
-        """
-        self.async_update_state(ItemEvent.ADDED, self._obj_id)
 
     @callback
     def async_update_state(self, event: ItemEvent, obj_id: str) -> None:
