@@ -1,7 +1,4 @@
 """Config flow for growatt server integration."""
-import random
-import string
-
 import growattServer
 import voluptuous as vol
 
@@ -25,12 +22,7 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialise growatt server flow."""
-        rand_num = random.randint(1, 50)
-        random_identifier = "".join(
-            random.choices(string.ascii_uppercase + string.digits, k=rand_num)
-        )
-
-        self.api = growattServer.GrowattApi(agent_identifier=random_identifier)
+        self.api = None
         self.user_id = None
         self.data = {}
 
@@ -54,6 +46,10 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not user_input:
             return self._async_show_user_form()
 
+        # Initialise the library with the username & a random id each time it is started
+        self.api = growattServer.GrowattApi(
+            add_random_user_id=True, agent_identifier=user_input[CONF_USERNAME]
+        )
         self.api.server_url = user_input[CONF_URL]
         login_response = await self.hass.async_add_executor_job(
             self.api.login, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
