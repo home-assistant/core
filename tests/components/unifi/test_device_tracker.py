@@ -313,6 +313,7 @@ async def test_tracked_devices(
     # State change signalling work
 
     device_1["next_interval"] = 20
+    device_2["state"] = 1
     device_2["next_interval"] = 50
     mock_unifi_websocket(message=MessageKey.DEVICE, data=[device_1, device_2])
     await hass.async_block_till_done()
