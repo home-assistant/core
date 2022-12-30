@@ -8,7 +8,13 @@ from homeassistant.components.switchbot.const import (
     CONF_RETRY_COUNT,
 )
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PASSWORD, CONF_SENSOR_TYPE
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_SENSOR_TYPE,
+    CONF_USERNAME,
+)
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
@@ -80,6 +86,66 @@ async def test_bluetooth_discovery_requires_password(hass):
         CONF_ADDRESS: "798A8547-2A3D-C609-55FF-73FA824B923B",
         CONF_SENSOR_TYPE: "bot",
         CONF_PASSWORD: "abc123",
+    }
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_bluetooth_discovery_lock_key(hass):
+    """Test discovery via bluetooth with a lock."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=WOLOCK_SERVICE_INFO,
+    )
+    assert result["type"] == FlowResultType.MENU
+    assert result["step_id"] == "lock_chose_method"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "lock_key"}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "lock_key"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.switchbot.config_flow.SwitchbotLock.verify_encryption_key",
+        return_value=False,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KEY_ID: "",
+                CONF_ENCRYPTION_KEY: "",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "lock_key"
+    assert result["errors"] == {"base": "encryption_key_invalid"}
+
+    with patch_async_setup_entry() as mock_setup_entry, patch(
+        "homeassistant.components.switchbot.config_flow.SwitchbotLock.verify_encryption_key",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KEY_ID: "ff",
+                CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Lock EEFF"
+    assert result["data"] == {
+        CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+        CONF_KEY_ID: "ff",
+        CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+        CONF_SENSOR_TYPE: "lock",
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -327,7 +393,7 @@ async def test_user_setup_single_bot_with_password(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_setup_wolock(hass):
+async def test_user_setup_wolock_key(hass):
     """Test the user initiated form for a lock."""
 
     with patch(
@@ -337,14 +403,39 @@ async def test_user_setup_wolock(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
+    assert result["type"] == FlowResultType.MENU
+    assert result["step_id"] == "lock_chose_method"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "lock_key"}
+    )
+    await hass.async_block_till_done()
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "lock_key"
     assert result["errors"] == {}
 
-    with patch_async_setup_entry() as mock_setup_entry, patch(
-        "switchbot.SwitchbotLock.verify_encryption_key", return_value=True
+    with patch(
+        "homeassistant.components.switchbot.config_flow.SwitchbotLock.verify_encryption_key",
+        return_value=False,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KEY_ID: "",
+                CONF_ENCRYPTION_KEY: "",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "lock_key"
+    assert result["errors"] == {"base": "encryption_key_invalid"}
+
+    with patch_async_setup_entry() as mock_setup_entry, patch(
+        "homeassistant.components.switchbot.config_flow.SwitchbotLock.verify_encryption_key",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_KEY_ID: "ff",
@@ -353,9 +444,77 @@ async def test_user_setup_wolock(hass):
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Lock EEFF"
-    assert result2["data"] == {
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Lock EEFF"
+    assert result["data"] == {
+        CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+        CONF_KEY_ID: "ff",
+        CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+        CONF_SENSOR_TYPE: "lock",
+    }
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_user_setup_wolock_auth(hass):
+    """Test the user initiated form for a lock."""
+
+    with patch(
+        "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+        return_value=[WOLOCK_SERVICE_INFO],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+    assert result["type"] == FlowResultType.MENU
+    assert result["step_id"] == "lock_chose_method"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "lock_auth"}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "lock_auth"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.switchbot.config_flow.SwitchbotLock.retrieve_encryption_key",
+        side_effect=RuntimeError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "",
+                CONF_PASSWORD: "",
+            },
+        )
+        await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "lock_auth"
+    assert result["errors"] == {"base": "auth_failed"}
+
+    with patch_async_setup_entry() as mock_setup_entry, patch(
+        "homeassistant.components.switchbot.config_flow.SwitchbotLock.verify_encryption_key",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.switchbot.config_flow.SwitchbotLock.retrieve_encryption_key",
+        return_value={
+            CONF_KEY_ID: "ff",
+            CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+        },
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "username",
+                CONF_PASSWORD: "password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Lock EEFF"
+    assert result["data"] == {
         CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
         CONF_KEY_ID: "ff",
         CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
@@ -387,12 +546,20 @@ async def test_user_setup_wolock_or_bot(hass):
         USER_INPUT,
     )
     await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.MENU
+    assert result["step_id"] == "lock_chose_method"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "lock_key"}
+    )
+    await hass.async_block_till_done()
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "lock_key"
     assert result["errors"] == {}
 
     with patch_async_setup_entry() as mock_setup_entry, patch(
-        "switchbot.SwitchbotLock.verify_encryption_key", return_value=True
+        "homeassistant.components.switchbot.config_flow.SwitchbotLock.verify_encryption_key",
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -413,42 +580,6 @@ async def test_user_setup_wolock_or_bot(hass):
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_user_setup_wolock_invalid_encryption_key(hass):
-    """Test the user initiated form for a lock with invalid encryption key."""
-
-    with patch(
-        "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
-        return_value=[WOLOCK_SERVICE_INFO],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "lock_key"
-    assert result["errors"] == {}
-
-    with patch_async_setup_entry() as mock_setup_entry, patch(
-        "switchbot.SwitchbotLock.verify_encryption_key", return_value=False
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_KEY_ID: "",
-                CONF_ENCRYPTION_KEY: "",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["step_id"] == "lock_key"
-    assert result2["errors"] == {
-        CONF_KEY_ID: "key_id_invalid",
-        CONF_ENCRYPTION_KEY: "encryption_key_invalid",
-    }
-
-    assert len(mock_setup_entry.mock_calls) == 0
 
 
 async def test_user_setup_wosensor(hass):

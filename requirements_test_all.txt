@@ -36,7 +36,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.33.0
+PySwitchbot==0.34.1
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -1187,7 +1187,7 @@ pyiqvia==2022.04.0
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.0.9
+pyisy==3.0.10
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.1

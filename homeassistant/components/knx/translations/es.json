@@ -27,6 +27,13 @@
                 "description": "Por favor, introduce el tipo de conexi\u00f3n que debemos usar para tu conexi\u00f3n KNX.\n AUTOM\u00c1TICO: la integraci\u00f3n se encarga de la conectividad a tu bus KNX mediante la realizaci\u00f3n de un escaneo de la puerta de enlace.\n T\u00daNELES: la integraci\u00f3n se conectar\u00e1 a tu bus KNX a trav\u00e9s de t\u00faneles.\n ENRUTAMIENTO: la integraci\u00f3n se conectar\u00e1 a su tus KNX a trav\u00e9s del enrutamiento.",
                 "title": "Conexi\u00f3n KNX"
             },
+            "knxkeys_tunnel_select": {
+                "data": {
+                    "user_id": "'Autom\u00e1tico' utilizar\u00e1 el primer extremo del t\u00fanel libre."
+                },
+                "description": "Selecciona el t\u00fanel utilizado para la conexi\u00f3n.",
+                "title": "Extremo del t\u00fanel"
+            },
             "manual_tunnel": {
                 "data": {
                     "host": "Host",
@@ -149,6 +156,13 @@
                 },
                 "description": "Por favor, introduce el tipo de conexi\u00f3n que debemos usar para tu conexi\u00f3n KNX.\n AUTOM\u00c1TICO: la integraci\u00f3n se encarga de la conectividad a tu bus KNX mediante la realizaci\u00f3n de un escaneo de la puerta de enlace.\n T\u00daNELES: la integraci\u00f3n se conectar\u00e1 a tu bus KNX a trav\u00e9s de t\u00faneles.\n ENRUTAMIENTO: la integraci\u00f3n se conectar\u00e1 a su tus KNX a trav\u00e9s del enrutamiento.",
                 "title": "Conexi\u00f3n KNX"
+            },
+            "knxkeys_tunnel_select": {
+                "data": {
+                    "user_id": "'Autom\u00e1tico' utilizar\u00e1 el primer extremo del t\u00fanel libre."
+                },
+                "description": "Selecciona el t\u00fanel utilizado para la conexi\u00f3n.",
+                "title": "Extremo del t\u00fanel"
             },
             "manual_tunnel": {
                 "data": {
