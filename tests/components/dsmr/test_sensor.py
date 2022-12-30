@@ -23,8 +23,9 @@ from homeassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     ENERGY_KILO_WATT_HOUR,
-    STATE_UNKNOWN,
+    STATE_UNAVAILABLE,
     VOLUME_CUBIC_METERS,
+    UnitOfPower,
 )
 from homeassistant.helpers import entity_registry as er
 
@@ -56,13 +57,13 @@ async def test_default_setup(hass, dsmr_connection_fixture):
 
     telegram = {
         CURRENT_ELECTRICITY_USAGE: CosemObject(
-            [{"value": Decimal("0.0"), "unit": ENERGY_KILO_WATT_HOUR}]
+            [{"value": Decimal("0.0"), "unit": UnitOfPower.WATT}]
         ),
         ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0001", "unit": ""}]),
         GAS_METER_READING: MBusObject(
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
-                {"value": Decimal(745.695), "unit": "m3"},
+                {"value": Decimal(745.695), "unit": VOLUME_CUBIC_METERS},
             ]
         ),
     }
@@ -88,9 +89,9 @@ async def test_default_setup(hass, dsmr_connection_fixture):
 
     telegram_callback = connection_factory.call_args_list[0][0][2]
 
-    # make sure entities have been created and return 'unknown' state
+    # make sure entities have been created and return 'unavailable' state
     power_consumption = hass.states.get("sensor.electricity_meter_power_consumption")
-    assert power_consumption.state == STATE_UNKNOWN
+    assert power_consumption.state == STATE_UNAVAILABLE
     assert (
         power_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
     )
@@ -110,9 +111,7 @@ async def test_default_setup(hass, dsmr_connection_fixture):
     # ensure entities have new state value after incoming telegram
     power_consumption = hass.states.get("sensor.electricity_meter_power_consumption")
     assert power_consumption.state == "0.0"
-    assert (
-        power_consumption.attributes.get("unit_of_measurement") == ENERGY_KILO_WATT_HOUR
-    )
+    assert power_consumption.attributes.get("unit_of_measurement") == UnitOfPower.WATT
 
     # tariff should be translated in human readable and have no unit
     active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
