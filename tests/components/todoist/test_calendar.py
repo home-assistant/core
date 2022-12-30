@@ -1,13 +1,11 @@
 """Unit tests for the Todoist calendar platform."""
-from datetime import datetime, timezone
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from todoist_api_python.models import Due, Label, Project, Task
 
 from homeassistant import setup
-from homeassistant.components.calendar import CalendarEvent
-from homeassistant.components.todoist.calendar import DOMAIN, TodoistProjectData
+from homeassistant.components.todoist.calendar import DOMAIN
 from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers import entity_registry
 
@@ -108,64 +106,3 @@ async def test_calendar_custom_project_unique_id(todoist_api, hass, api):
 
     state = hass.states.get("calendar.all_projects")
     assert state.state == "off"
-
-
-async def test_async_get_events_no_due_date(api, task):
-    """Test an event without a due date is ignored."""
-    task.due = None
-    api.get_tasks.return_value = [task]
-    project_data = {"name": "test", "id": "12345"}
-    todoist_project_data = TodoistProjectData(project_data, labels=[], api=api)
-
-    start_date = datetime(2022, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
-    end_date = datetime(2022, 1, 2, 0, 0, 0, tzinfo=timezone.utc)
-    events = await todoist_project_data.async_get_events(start_date, end_date)
-
-    assert [] == events
-
-
-async def test_async_get_events_no_time_data(api, task):
-    """Test an event with a due date between start/end without time data is returned."""
-    task.due = Due(date="2022-01-01", is_recurring=False, string="")
-    api.get_tasks.return_value = [task]
-    project_data = {"name": "test", "id": "12345"}
-    todoist_project_data = TodoistProjectData(
-        project_data,
-        labels=[],
-        api=api,
-    )
-
-    start_date = datetime(2022, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
-    end_date = datetime(2022, 1, 2, 0, 0, 0, tzinfo=timezone.utc)
-    events = await todoist_project_data.async_get_events(start_date, end_date)
-
-    expected = [
-        CalendarEvent(
-            summary=task.content, start=start_date.date(), end=start_date.date()
-        )
-    ]
-    assert expected == events
-
-
-async def test_async_get_events_with_time_data(api, task):
-    """Test an event with a due date between start/end with time data is returned."""
-    task.due = Due(
-        date="2022-01-01", datetime="2022-01-01T16:00:00", is_recurring=False, string=""
-    )
-    api.get_tasks.return_value = [task]
-    project_data = {"name": "test", "id": "12345"}
-    todoist_project_data = TodoistProjectData(project_data, labels=[], api=api)
-
-    start_date = datetime(2022, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
-    end_date = datetime(2022, 1, 2, 0, 0, 0, tzinfo=timezone.utc)
-    events = await todoist_project_data.async_get_events(start_date, end_date)
-
-    expected_due_date = datetime(2022, 1, 1, 16, 0, 0, tzinfo=timezone.utc)
-    expected = [
-        CalendarEvent(
-            summary=task.content,
-            start=expected_due_date,
-            end=expected_due_date,
-        )
-    ]
-    assert expected == events

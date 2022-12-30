@@ -8,10 +8,9 @@ import logging
 from typing import Any
 import uuid
 
-import requests
 from todoist_api_python.api_async import TodoistAPIAsync
 from todoist_api_python.endpoints import get_sync_url
-from todoist_api_python.http_requests import post
+from todoist_api_python.headers import create_headers
 from todoist_api_python.models import Label, Task
 import voluptuous as vol
 
@@ -22,6 +21,7 @@ from homeassistant.components.calendar import (
 )
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TOKEN
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -126,7 +126,6 @@ async def async_setup_platform(
     # Grab all projects.
     projects = await api.get_projects()
 
-    collaborators = []
     collaborator_tasks = (api.get_collaborators(project.id) for project in projects)
     collaborators = list(chain.from_iterable(await asyncio.gather(*collaborator_tasks)))
 
@@ -182,6 +181,8 @@ async def async_setup_platform(
         )
 
     async_add_entities(project_devices)
+
+    session = async_get_clientsession(hass)
 
     async def handle_new_task(call: ServiceCall) -> None:
         """Call when a user creates a new Todoist Task from Home Assistant."""
@@ -254,7 +255,7 @@ async def async_setup_platform(
             date_format = "%Y-%m-%dT%H:%M:%S"
             _reminder_due["date"] = datetime.strftime(due_date, date_format)
 
-        def add_reminder(reminder_due: dict):
+        async def add_reminder(reminder_due: dict):
             reminder_data = {
                 "commands": [
                     {
@@ -265,10 +266,11 @@ async def async_setup_platform(
                     }
                 ]
             }
-            return post(requests.Session(), sync_url, token, data=reminder_data)
+            headers = create_headers(token=token, with_content=True)
+            return await session.post(sync_url, headers=headers, json=reminder_data)
 
         if _reminder_due:
-            hass.async_add_executor_job(add_reminder, _reminder_due)
+            await add_reminder(_reminder_due)
 
         _LOGGER.debug("Created Todoist task: %s", call.data[CONTENT])
 
@@ -425,23 +427,16 @@ class TodoistProjectData:
         if not self.event:
             return None
 
-        end = self.event[END]
-        if self.event.get(ALL_DAY):
-            return self.create_all_day_event(self.event)
-        if end is None:
-            return self.create_all_day_event(self.event)
+        start = self.event[START]
+        if self.event.get(ALL_DAY) or self.event[END] is None:
+            return CalendarEvent(
+                summary=self.event[SUMMARY],
+                start=start.date(),
+                end=start.date() + timedelta(days=1),
+            )
 
         return CalendarEvent(
-            summary=self.event[SUMMARY], start=self.event[START], end=end
-        )
-
-    def create_all_day_event(self, event: TodoistEvent) -> CalendarEvent:
-        """Create an all day calendar event."""
-        start = event[START].date()
-        return CalendarEvent(
-            summary=event[SUMMARY],
-            start=start,
-            end=start + timedelta(days=1),
+            summary=self.event[SUMMARY], start=start, end=self.event[END]
         )
 
     def create_todoist_task(self, data: Task):
