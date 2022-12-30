@@ -12,7 +12,7 @@ from .const import DOMAIN
 class ReolinkCoordinatorEntity(CoordinatorEntity):
     """Parent class for Reolink Entities."""
 
-    def __init__(self, reolink_data: ReolinkData, config_entry: ConfigEntry,):
+    def __init__(self, reolink_data: ReolinkData, config_entry: ConfigEntry) -> None:
         """Initialize ReolinkCoordinatorEntity."""
         coordinator = reolink_data.device_coordinator
         super().__init__(coordinator)

@@ -48,13 +48,13 @@ class ReolinkCamera(ReolinkCoordinatorEntity, Camera):
             config_entry: ConfigEntry,
             channel: int,
             stream: str
-        ):
+        ) -> None:
         """Initialize Reolink camera stream."""
         ReolinkCoordinatorEntity.__init__(self, reolink_data, config_entry)
         Camera.__init__(self)
 
-        self._channel = channel
-        self._stream = stream
+        self._channel: int = channel
+        self._stream: str = stream
 
         self._attr_has_entity_name = True
         self._attr_name = self._stream
