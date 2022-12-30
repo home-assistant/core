@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
+import time
 from typing import Any, TypeVar, cast
 
 import ciso8601
@@ -121,6 +122,7 @@ DOUBLE_TYPE = (
     .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
     .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
+TIMESTAMP_TYPE = Float(7)
 
 
 class JSONLiteral(JSON):  # type: ignore[misc]
@@ -155,7 +157,8 @@ class Events(Base):  # type: ignore[misc,valid-type]
     event_data = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
     origin = Column(String(MAX_LENGTH_EVENT_ORIGIN))  # no longer used for new rows
     origin_idx = Column(SmallInteger)
-    time_fired = Column(DATETIME_TYPE, index=True)
+    time_fired = Column(DATETIME_TYPE, index=True)  # no longer used for new rows
+    timed_fired_ts = Column(TIMESTAMP_TYPE, index=True)
     context_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
     context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
     context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
@@ -179,6 +182,7 @@ class Events(Base):  # type: ignore[misc,valid-type]
             event_data=None,
             origin_idx=EVENT_ORIGIN_TO_IDX.get(event.origin),
             time_fired=event.time_fired,
+            time_fired_ts=event.time_fired.timestamp(),
             context_id=event.context.id,
             context_user_id=event.context.user_id,
             context_parent_id=event.context.parent_id,
@@ -274,8 +278,12 @@ class States(Base):  # type: ignore[misc,valid-type]
     event_id = Column(  # no longer used for new rows
         Integer, ForeignKey("events.event_id", ondelete="CASCADE"), index=True
     )
-    last_changed = Column(DATETIME_TYPE)
-    last_updated = Column(DATETIME_TYPE, default=dt_util.utcnow, index=True)
+    last_changed = Column(DATETIME_TYPE)  # no longer used for new rows
+    last_changed_ts = Column(TIMESTAMP_TYPE)
+    last_updated = Column(
+        DATETIME_TYPE, default=dt_util.utcnow, index=True
+    )  # no longer used for new rows
+    last_updated_ts = Column(TIMESTAMP_TYPE, default=time.time, index=True)
     old_state_id = Column(Integer, ForeignKey("states.state_id"), index=True)
     attributes_id = Column(
         Integer, ForeignKey("state_attributes.attributes_id"), index=True
@@ -314,6 +322,7 @@ class States(Base):  # type: ignore[misc,valid-type]
         if state is None:
             dbstate.state = ""
             dbstate.last_updated = event.time_fired
+            dbstate.last_changed_ts = event.time_fired.timestamp()
             dbstate.last_changed = None
             return dbstate
 
@@ -321,8 +330,10 @@ class States(Base):  # type: ignore[misc,valid-type]
         dbstate.last_updated = state.last_updated
         if state.last_updated == state.last_changed:
             dbstate.last_changed = None
+            dbstate.last_changed_ts = None
         else:
             dbstate.last_changed = state.last_changed
+            dbstate.last_changed_ts = state.last_changed.timestamp()
 
         return dbstate
 
