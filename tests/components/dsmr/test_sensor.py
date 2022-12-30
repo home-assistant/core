@@ -24,6 +24,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     ENERGY_KILO_WATT_HOUR,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     VOLUME_CUBIC_METERS,
     UnitOfPower,
 )
@@ -782,6 +783,10 @@ async def test_reconnect(hass, dsmr_connection_fixture):
     await hass.async_block_till_done()
 
     assert connection_factory.call_count == 1
+
+    state = hass.states.get("sensor.electricity_meter_power_consumption")
+    assert state
+    assert state.state == STATE_UNKNOWN
 
     # indicate disconnect, release wait lock and allow reconnect to happen
     closed.set()
