@@ -3,7 +3,7 @@ from homeassistant.components.hassio import is_hassio
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, LOGGER
+from .const import ATTR_AMOUNT, DOMAIN, LOGGER
 from .http import async_register_http_views
 from .manager import BackupManager
 from .websocket import async_register_websocket_handlers
@@ -25,7 +25,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Service handler for creating backups."""
         await backup_manager.generate_backup()
 
+    async def async_handle_delete_service(call: ServiceCall) -> None:
+        """Service handler for deleting backups."""
+        amount = call.data[ATTR_AMOUNT] if ATTR_AMOUNT in call.data else None
+
+        await backup_manager.delete_backups(amount)
+
     hass.services.async_register(DOMAIN, "create", async_handle_create_service)
+    hass.services.async_register(DOMAIN, "delete", async_handle_delete_service)
 
     async_register_websocket_handlers(hass)
     async_register_http_views(hass)

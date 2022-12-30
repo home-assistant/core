@@ -245,6 +245,41 @@ class BackupManager:
                 )
             tar_file.add(tmp_dir_path, arcname=".")
 
+    async def delete_backups(self, amount: int) -> None:
+        """Delete backups."""
+        if self.backing_up:
+            raise HomeAssistantError(
+                "Backup in progress, can not delete backups right now"
+            )
+
+        if amount is None:
+            raise HomeAssistantError("Amount of backups to keep was None")
+
+        backups = await self.get_backups()
+        if len(backups) == 0:
+            LOGGER.debug("No backup exists, nothing to delete")
+            return None
+
+        if amount >= len(backups):
+            LOGGER.debug(
+                "Nothing to delete: %d backups exists and should keep %d",
+                len(backups),
+                amount,
+            )
+            return None
+
+        LOGGER.debug("%d backups exists and will keep newest %d", len(backups), amount)
+
+        # Get a sorted list of backups, newest first
+        sorted_backups: list[Backup] = sorted(
+            backups.values(),
+            key=lambda x: dt.parse_datetime(x.date) or dt.now(),
+            reverse=True,
+        )
+
+        for backup in sorted_backups[amount:]:
+            await self.remove_backup(backup.slug)
+
 
 def _generate_slug(date: str, name: str) -> str:
     """Generate a backup slug."""

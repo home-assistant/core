@@ -13,3 +13,5 @@ EXCLUDE_FROM_BACKUP = [
     "backups/*.tar",
     "OZW_Log.txt",
 ]
+
+ATTR_AMOUNT = "amount"

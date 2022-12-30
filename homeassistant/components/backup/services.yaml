@@ -1,3 +1,19 @@
 create:
   name: Create backup
   description: Create a new backup.
+
+delete:
+  name: Delete backups
+  description: Delete existing backups
+  fields:
+    amount:
+      name: Amount of backups to keep
+      description: Keep a certain amount of backups. Once there are more backups than the specified amount, the oldest backups are deleted.
+      required: true
+      example: 5
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          mode: box
