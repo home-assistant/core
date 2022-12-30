@@ -262,6 +262,26 @@ async def test_start_service(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_DURATION] == "0:00:20"
     assert state.attributes[ATTR_REMAINING] == "0:00:20"
 
+    await hass.services.async_call(
+        DOMAIN, SERVICE_CANCEL, {CONF_ENTITY_ID: "timer.test1"}
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("timer.test1")
+    assert state
+    assert state.state == STATUS_IDLE
+    assert state.attributes[ATTR_DURATION] == "0:00:20"
+    assert ATTR_REMAINING not in state.attributes
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_CHANGE, {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: 10}
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("timer.test1")
+    assert state
+    assert state.state == STATUS_IDLE
+    assert state.attributes[ATTR_DURATION] == "0:00:20"
+    assert ATTR_REMAINING not in state.attributes
+
 
 async def test_wait_till_timer_expires(hass: HomeAssistant) -> None:
     """Test for a timer to end."""
