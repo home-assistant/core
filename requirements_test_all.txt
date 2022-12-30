@@ -1106,7 +1106,7 @@ pydexcom==0.2.3
 pydroid-ipcam==2.0.0
 
 # homeassistant.components.econet
-pyeconet==0.1.15
+pyeconet==0.1.17
 
 # homeassistant.components.efergy
 pyefergy==22.1.1
