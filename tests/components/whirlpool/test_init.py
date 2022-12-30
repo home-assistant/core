@@ -27,6 +27,21 @@ async def test_setup(
     mock_backend_selector_api.assert_called_once_with(region[2], region[1])
 
 
+async def test_setup_no_appliances(
+    hass: HomeAssistant,
+    mock_backend_selector_api: MagicMock,
+    region,
+    mock_aircon_api_instances: MagicMock,
+    mock_appliances_manager_api: MagicMock,
+):
+    """Test setup."""
+    mock_appliances_manager_api.return_value.aircons = []
+    mock_appliances_manager_api.return_value.washer_dryers = []
+    entry = await init_integration(hass, region[0])
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
 async def test_setup_region_fallback(
     hass: HomeAssistant,
     mock_backend_selector_api: MagicMock,

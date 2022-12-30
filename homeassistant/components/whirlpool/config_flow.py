@@ -10,14 +10,13 @@ import aiohttp
 import voluptuous as vol
 from whirlpool.appliancesmanager import AppliancesManager
 from whirlpool.auth import Auth
-from whirlpool.backendselector import BackendSelector
+from whirlpool.backendselector import BackendSelector, Brand
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_REGIONS_MAP, DOMAIN
-from .util import get_brand_for_region
+from .const import CONF_ALLOWED_REGIONS, CONF_REGIONS_MAP, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +25,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_REGION): vol.In(list(CONF_REGIONS_MAP)),
+        vol.Required(CONF_REGION): vol.In(CONF_ALLOWED_REGIONS),
     }
 )
 
@@ -40,9 +39,10 @@ async def validate_input(
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    region = CONF_REGIONS_MAP[data[CONF_REGION]]
-    brand = get_brand_for_region(region)
-    backend_selector = BackendSelector(brand, region)
+    brand = Brand.Whirlpool
+    if data[CONF_REGION] == "US":
+        brand = Brand.Maytag
+    backend_selector = BackendSelector(brand, CONF_REGIONS_MAP[data[CONF_REGION]])
     auth = Auth(backend_selector, data[CONF_USERNAME], data[CONF_PASSWORD])
     try:
         await auth.do_auth()
