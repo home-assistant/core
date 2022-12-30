@@ -1,5 +1,5 @@
 """Define tests for the AirVisual config flow."""
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from pyairvisual.cloud_api import (
     InvalidKeyError,
@@ -21,6 +21,7 @@ from homeassistant.components.airvisual import (
     INTEGRATION_TYPE_GEOGRAPHY_NAME,
     INTEGRATION_TYPE_NODE_PRO,
 )
+from homeassistant.components.airvisual_pro import DOMAIN as AIRVISUAL_PRO_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import (
     CONF_API_KEY,
@@ -31,8 +32,7 @@ from homeassistant.const import (
     CONF_SHOW_ON_MAP,
     CONF_STATE,
 )
-from homeassistant.helpers import issue_registry as ir
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from tests.common import MockConfigEntry
 
@@ -169,42 +169,41 @@ async def test_migration_1_2(hass, config, config_entry, setup_airvisual, unique
     }
 
 
-@pytest.mark.parametrize(
-    "config,config_entry_version,unique_id",
-    [
-        (
-            {
-                CONF_IP_ADDRESS: "192.168.1.100",
-                CONF_PASSWORD: "abcde12345",
-                CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_NODE_PRO,
-            },
-            2,
-            "192.16.1.100",
-        )
-    ],
-)
-async def test_migration_2_3(hass, config, config_entry, unique_id):
+async def test_migration_2_3(hass, pro):
     """Test migrating from version 2 to 3."""
+    old_pro_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="192.168.1.100",
+        data={
+            CONF_IP_ADDRESS: "192.168.1.100",
+            CONF_PASSWORD: "abcde12345",
+            CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_NODE_PRO,
+        },
+        version=2,
+    )
+    old_pro_entry.add_to_hass(hass)
+
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        name="192.168.1.100",
+        config_entry_id=old_pro_entry.entry_id,
+        identifiers={(DOMAIN, "ABCDE12345")},
+    )
+
     with patch(
         "homeassistant.components.airvisual.automation.automations_with_device",
         return_value=["automation.test_automation"],
     ), patch(
-        "homeassistant.components.airvisual.async_get_pro_config_entry_by_ip_address",
-        return_value=MockConfigEntry(
-            domain="airvisual_pro",
-            unique_id="192.168.1.100",
-            data={CONF_IP_ADDRESS: "192.168.1.100", CONF_PASSWORD: "abcde12345"},
-            version=3,
-        ),
+        "homeassistant.components.airvisual_pro.NodeSamba", return_value=pro
     ), patch(
-        "homeassistant.components.airvisual.async_get_pro_device_by_config_entry",
-        return_value=Mock(id="abcde12345"),
+        "homeassistant.components.airvisual_pro.config_flow.NodeSamba", return_value=pro
     ):
-        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.config_entries.async_setup(old_pro_entry.entry_id)
         await hass.async_block_till_done()
 
-        airvisual_config_entries = hass.config_entries.async_entries(DOMAIN)
-        assert len(airvisual_config_entries) == 0
+        for domain, entry_count in ((DOMAIN, 0), (AIRVISUAL_PRO_DOMAIN, 1)):
+            entries = hass.config_entries.async_entries(domain)
+            assert len(entries) == entry_count
 
         issue_registry = ir.async_get(hass)
         assert len(issue_registry.issues) == 1
