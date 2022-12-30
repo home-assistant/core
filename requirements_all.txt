@@ -639,7 +639,7 @@ emulated_roku==0.2.1
 energyflip-client==0.2.2
 
 # homeassistant.components.energyzero
-energyzero==0.3.0
+energyzero==0.3.1
 
 # homeassistant.components.enocean
 enocean==0.50
