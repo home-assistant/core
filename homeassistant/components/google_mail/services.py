@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 
 from google.auth.exceptions import RefreshError
-from googleapiclient.discovery import Resource
+from googleapiclient.http import HttpRequest
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -16,6 +16,7 @@ from .application_credentials import get_oauth_service
 from .const import (
     ATTR_ENABLED,
     ATTR_END,
+    ATTR_ME,
     ATTR_MESSAGE,
     ATTR_PLAIN_TEXT,
     ATTR_RESTRICT_CONTACTS,
@@ -54,37 +55,38 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             and entry.domain == DOMAIN
         ]
 
-    def _set_vacation(call: ServiceCall, service: Resource) -> None:
-        """Run vacation call in the executor."""
-        settings = {
-            "enableAutoReply": call.data[ATTR_ENABLED],
-            "responseSubject": call.data.get(ATTR_TITLE),
-        }
-        if contacts := call.data.get(ATTR_RESTRICT_CONTACTS):
-            settings["restrictToContacts"] = contacts
-        if domain := call.data.get(ATTR_RESTRICT_DOMAIN):
-            settings["restrictToDomain"] = domain
-        if _date := call.data.get(ATTR_START):
-            _dt = datetime.combine(_date, datetime.min.time())
-            settings["startTime"] = _dt.timestamp() * 1000
-        if _date := call.data.get(ATTR_END):
-            _dt = datetime.combine(_date, datetime.min.time())
-            settings["endTime"] = (_dt + timedelta(days=1)).timestamp() * 1000
-        if call.data[ATTR_PLAIN_TEXT]:
-            settings["responseBodyPlainText"] = call.data[ATTR_MESSAGE]
-        else:
-            settings["responseBodyHtml"] = call.data[ATTR_MESSAGE]
-        _settings = service.users().settings()  # pylint: disable=no-member
-        _settings.updateVacation(userId="me", body=settings).execute()
-
     async def gmail_service(call: ServiceCall) -> None:
         """Call Google Mail service."""
         for entry in await extract_gmail_config_entries(call):
             if not (data := hass.data[DOMAIN].get(entry.entry_id)):
                 raise ValueError(f"Config entry not loaded: {entry.entry_id}")
             service = await get_oauth_service(data)
+
+            _settings = {
+                "enableAutoReply": call.data[ATTR_ENABLED],
+                "responseSubject": call.data.get(ATTR_TITLE),
+            }
+            if contacts := call.data.get(ATTR_RESTRICT_CONTACTS):
+                _settings["restrictToContacts"] = contacts
+            if domain := call.data.get(ATTR_RESTRICT_DOMAIN):
+                _settings["restrictToDomain"] = domain
+            if _date := call.data.get(ATTR_START):
+                _dt = datetime.combine(_date, datetime.min.time())
+                _settings["startTime"] = _dt.timestamp() * 1000
+            if _date := call.data.get(ATTR_END):
+                _dt = datetime.combine(_date, datetime.min.time())
+                _settings["endTime"] = (_dt + timedelta(days=1)).timestamp() * 1000
+            if call.data[ATTR_PLAIN_TEXT]:
+                _settings["responseBodyPlainText"] = call.data[ATTR_MESSAGE]
+            else:
+                _settings["responseBodyHtml"] = call.data[ATTR_MESSAGE]
+            settings: HttpRequest = (
+                service.users()
+                .settings()
+                .updateVacation(userId=ATTR_ME, body=_settings)
+            )
             try:
-                await hass.async_add_executor_job(_set_vacation, call, service)
+                await hass.async_add_executor_job(settings.execute)
             except RefreshError as ex:
                 entry.async_start_reauth(hass)
                 raise ex

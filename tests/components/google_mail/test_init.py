@@ -14,11 +14,9 @@ from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import SENSOR, ComponentSetup
+from .conftest import BUILD, SENSOR, ComponentSetup
 
 from tests.test_util.aiohttp import AiohttpClientMocker
-
-BUILD = "homeassistant.components.google_mail.application_credentials.build"
 
 
 async def test_setup_success(

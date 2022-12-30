@@ -2,11 +2,9 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from typing import Any
 
 from google.auth.exceptions import RefreshError
-from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import build
+from googleapiclient.http import HttpRequest
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -14,12 +12,11 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_SESSION, DOMAIN
+from .application_credentials import get_oauth_service
+from .const import DOMAIN
 from .entity import GoogleMailEntity
 
 SCAN_INTERVAL = timedelta(minutes=15)
@@ -44,21 +41,12 @@ class GoogleMailSensor(GoogleMailEntity, SensorEntity):
 
     async def async_update(self) -> None:
         """Get the vacation data."""
-        session: OAuth2Session = self.hass.data[DOMAIN].get(self.entry.entry_id)[
-            DATA_SESSION
-        ]
-        await session.async_ensure_token_valid()
-
-        def _get_vacation() -> dict[str, Any]:
-            """Get profile from inside the executor."""
-            credentials = Credentials(self.entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN])
-            users = build(  # pylint: disable=no-member
-                "gmail", "v1", credentials=credentials
-            ).users()
-            return users.settings().getVacation(userId="me").execute()
-
         try:
-            data = await self.hass.async_add_executor_job(_get_vacation)
+            service = await get_oauth_service(
+                self.hass.data[DOMAIN].get(self.entry.entry_id)
+            )
+            settings: HttpRequest = service.users().settings().getVacation(userId="me")
+            data = await self.hass.async_add_executor_job(settings.execute)
         except RefreshError as ex:
             self.entry.async_start_reauth(self.hass)
             raise ex

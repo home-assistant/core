@@ -23,6 +23,15 @@ from .application_credentials import get_oauth_service
 from .const import ATTR_FROM, ATTR_ME, ATTR_SEND
 
 
+async def async_get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> GMailNotificationService:
+    """Get the notification service."""
+    return GMailNotificationService(cast(DiscoveryInfoType, discovery_info))
+
+
 class GMailNotificationService(BaseNotificationService):
     """Define the Google Mail notification logic."""
 
@@ -32,9 +41,8 @@ class GMailNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message."""
-        data: dict[str, Any] = kwargs.get(ATTR_DATA) or {}
+        data: dict[str, str | bool] = kwargs.get(ATTR_DATA) or {}
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-        service = await get_oauth_service(self.data)
 
         email = EmailMessage()
         email.set_content(message)
@@ -44,9 +52,9 @@ class GMailNotificationService(BaseNotificationService):
         email["Subject"] = title
 
         encoded_message = base64.urlsafe_b64encode(email.as_bytes()).decode()
-        users = service.users()  # pylint: disable=no-member
         body = {"raw": encoded_message}
         msg: HttpRequest
+        users = (await get_oauth_service(self.data)).users()
         if data.get(ATTR_SEND) is False:
             msg = users.drafts().create(userId=email["From"], body={ATTR_MESSAGE: body})
         else:
@@ -54,12 +62,3 @@ class GMailNotificationService(BaseNotificationService):
                 raise vol.Invalid("recipient address required")
             msg = users.messages().send(userId=email["From"], body=body)
         await self.hass.async_add_executor_job(msg.execute)
-
-
-async def async_get_service(
-    hass: HomeAssistant,
-    config: ConfigType,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> GMailNotificationService:
-    """Get the notification service."""
-    return GMailNotificationService(cast(DiscoveryInfoType, discovery_info))

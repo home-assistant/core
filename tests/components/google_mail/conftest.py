@@ -20,6 +20,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 ComponentSetup = Callable[[], Awaitable[None]]
 
+BUILD = "homeassistant.components.google_mail.application_credentials.build"
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 SCOPES = [
