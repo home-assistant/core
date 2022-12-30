@@ -291,7 +291,7 @@ class BaseLight(LogMixin, light.LightEntity):
 
         if (
             not isinstance(self, LightGroup)
-            and self._color_channel is not None
+            and self._color_channel
             and self._color_channel.execute_if_off_supported
         ):
             self.debug("handling color commands before turning on/level")
@@ -350,7 +350,7 @@ class BaseLight(LogMixin, light.LightEntity):
 
         if (
             isinstance(self, LightGroup)
-            or self._color_channel is None
+            or not self._color_channel
             or not self._color_channel.execute_if_off_supported
         ):
             self.debug("handling color commands after turning on/level")
