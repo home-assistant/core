@@ -3,6 +3,7 @@ import pytest
 
 from homeassistant.const import (
     UnitOfDataRate,
+    UnitOfElectricCurrent,
     UnitOfEnergy,
     UnitOfInformation,
     UnitOfLength,
@@ -19,6 +20,7 @@ from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
     DataRateConverter,
     DistanceConverter,
+    ElectricCurrentConverter,
     EnergyConverter,
     InformationConverter,
     MassConverter,
@@ -44,6 +46,8 @@ INVALID_SYMBOL = "bob"
         (DistanceConverter, UnitOfLength.YARDS),
         (DistanceConverter, UnitOfLength.FEET),
         (DistanceConverter, UnitOfLength.INCHES),
+        (ElectricCurrentConverter, UnitOfElectricCurrent.AMPERE),
+        (ElectricCurrentConverter, UnitOfElectricCurrent.MILLIAMPERE),
         (EnergyConverter, UnitOfEnergy.WATT_HOUR),
         (EnergyConverter, UnitOfEnergy.KILO_WATT_HOUR),
         (EnergyConverter, UnitOfEnergy.MEGA_WATT_HOUR),
@@ -93,6 +97,7 @@ def test_convert_same_unit(converter: type[BaseUnitConverter], valid_unit: str) 
     [
         (DataRateConverter, UnitOfDataRate.GIBIBYTES_PER_SECOND),
         (DistanceConverter, UnitOfLength.KILOMETERS),
+        (ElectricCurrentConverter, UnitOfElectricCurrent.AMPERE),
         (EnergyConverter, UnitOfEnergy.KILO_WATT_HOUR),
         (InformationConverter, UnitOfInformation.GIBIBYTES),
         (MassConverter, UnitOfMass.GRAMS),
@@ -157,6 +162,12 @@ def test_convert_nonnumeric_value(
             8,
         ),
         (DistanceConverter, UnitOfLength.KILOMETERS, UnitOfLength.METERS, 1 / 1000),
+        (
+            ElectricCurrentConverter,
+            UnitOfElectricCurrent.AMPERE,
+            UnitOfElectricCurrent.MILLIAMPERE,
+            1 / 1000,
+        ),
         (EnergyConverter, UnitOfEnergy.WATT_HOUR, UnitOfEnergy.KILO_WATT_HOUR, 1000),
         (InformationConverter, UnitOfInformation.BITS, UnitOfInformation.BYTES, 8),
         (PowerConverter, UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
@@ -233,6 +244,23 @@ def test_data_rate_convert(
     assert DataRateConverter.convert(value, from_unit, to_unit) == pytest.approx(
         expected
     )
+
+
+@pytest.mark.parametrize(
+    "value,from_unit,expected,to_unit",
+    [
+        (5, UnitOfElectricCurrent.AMPERE, 5000, UnitOfElectricCurrent.MILLIAMPERE),
+        (5, UnitOfElectricCurrent.MILLIAMPERE, 0.005, UnitOfElectricCurrent.AMPERE),
+    ],
+)
+def test_electric_current_convert(
+    value: float,
+    from_unit: str,
+    expected: float,
+    to_unit: str,
+) -> None:
+    """Test conversion to other units."""
+    assert ElectricCurrentConverter.convert(value, from_unit, to_unit) == expected
 
 
 @pytest.mark.parametrize(

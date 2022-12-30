@@ -91,7 +91,7 @@ class NumberDeviceClass(StrEnum):
     CURRENT = "current"
     """Current.
 
-    Unit of measurement: `A`
+    Unit of measurement: `A`,  `mA`
     """
 
     DATA_RATE = "data_rate"

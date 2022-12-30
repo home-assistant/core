@@ -88,6 +88,7 @@ from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
     DataRateConverter,
     DistanceConverter,
+    ElectricCurrentConverter,
     ElectricPotentialConverter,
     InformationConverter,
     MassConverter,
@@ -186,7 +187,7 @@ class SensorDeviceClass(StrEnum):
     CURRENT = "current"
     """Current.
 
-    Unit of measurement: `A`
+    Unit of measurement: `A`, `mA`
     """
 
     DATA_RATE = "data_rate"
@@ -472,6 +473,7 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.DATA_RATE: DataRateConverter,
     SensorDeviceClass.DATA_SIZE: InformationConverter,
     SensorDeviceClass.DISTANCE: DistanceConverter,
+    SensorDeviceClass.CURRENT: ElectricCurrentConverter,
     SensorDeviceClass.GAS: VolumeConverter,
     SensorDeviceClass.PRECIPITATION: DistanceConverter,
     SensorDeviceClass.PRESSURE: PressureConverter,
@@ -491,7 +493,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.BATTERY: {PERCENTAGE},
     SensorDeviceClass.CO: {CONCENTRATION_PARTS_PER_MILLION},
     SensorDeviceClass.CO2: {CONCENTRATION_PARTS_PER_MILLION},
-    SensorDeviceClass.CURRENT: {UnitOfElectricCurrent.AMPERE},
+    SensorDeviceClass.CURRENT: set(UnitOfElectricCurrent),
     SensorDeviceClass.DATA_RATE: set(UnitOfDataRate),
     SensorDeviceClass.DATA_SIZE: set(UnitOfInformation),
     SensorDeviceClass.DISTANCE: set(UnitOfLength),
