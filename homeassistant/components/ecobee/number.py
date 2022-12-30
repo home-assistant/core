@@ -14,11 +14,6 @@ from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
-VENTILATOR_MIN_VALUE = 0
-VENTILATOR_MAX_VALUE = 60
-VENTILATOR_STEP = 5
-VENTILATOR_MEASUREMENT_UNIT = UnitOfTime.MINUTES
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -59,6 +54,10 @@ async def async_setup_entry(
 class EcobeeVentilatorMinTime(NumberEntity):
     """A number class, representing min time  for an ecobee thermostat with ventilator attached."""
 
+    VENTILATOR_MIN_VALUE = 0
+    VENTILATOR_MAX_VALUE = 60
+    VENTILATOR_STEP = 5
+    VENTILATOR_MEASUREMENT_UNIT = UnitOfTime.MINUTES
     _attr_has_entity_name = True
 
     def __init__(self, data, thermostat_index, mode, ecobee_setting_key, set_func):
@@ -75,12 +74,12 @@ class EcobeeVentilatorMinTime(NumberEntity):
             model=ECOBEE_MODEL_TO_NAME.get(self.thermostat["modelNumber"]),
             name=self.thermostat["name"],
         )
-        self._attr_unique_id = f'{self.thermostat["identifier"]}_{mode}'
-        self._attr_native_min_value = VENTILATOR_MIN_VALUE
-        self._attr_native_max_value = VENTILATOR_MAX_VALUE
-        self._attr_native_step = VENTILATOR_STEP
+        self._attr_unique_id = f'{self.thermostat["identifier"]}_ventilator_{mode}'
+        self._attr_native_min_value = self.VENTILATOR_MIN_VALUE
+        self._attr_native_max_value = self.VENTILATOR_MAX_VALUE
+        self._attr_native_step = self.VENTILATOR_STEP
         self._attr_native_value = self.thermostat["settings"][ecobee_setting_key]
-        self._attr_native_unit_of_measurement = VENTILATOR_MEASUREMENT_UNIT
+        self._attr_native_unit_of_measurement = self.VENTILATOR_MEASUREMENT_UNIT
 
     async def async_update(self):
         """Get the latest state from the thermostat."""
