@@ -39,16 +39,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SWITCHBOT_INTERNAL_API_BASE_URL = (
-    "https://l9ren7efdj.execute-api.us-east-1.amazonaws.com"
-)
-SWITCHBOT_COGNITO_POOL = {
-    "PoolId": "us-east-1_x1fixo5LC",
-    "AppClientId": "66r90hdllaj4nnlne4qna0muls",
-    "AppClientSecret": "1v3v7vfjsiggiupkeuqvsovg084e3msbefpj9rgh611u30uug6t8",
-    "Region": "us-east-1",
-}
-
 
 def format_unique_id(address: str) -> str:
     """Format the unique ID for a switchbot."""
