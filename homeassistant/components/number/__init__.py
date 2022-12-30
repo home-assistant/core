@@ -296,7 +296,7 @@ class NumberDeviceClass(StrEnum):
     VOLTAGE = "voltage"
     """Voltage.
 
-    Unit of measurement: `V`
+    Unit of measurement: `V`, `mV`
     """
 
     VOLUME = "volume"
