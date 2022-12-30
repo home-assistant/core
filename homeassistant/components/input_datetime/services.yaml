@@ -33,6 +33,14 @@ set_datetime:
           min: 0
           max: 9223372036854775807
           mode: box
+    compare:
+      name: Compare Mode
+      description: Use the min/max of the current value and the target time.
+      selector:
+        select:
+          options:
+            - min
+            - max
 
 reload:
   name: Reload

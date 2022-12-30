@@ -390,7 +390,9 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         return self._config[CONF_ID]
 
     @callback
-    def async_set_datetime(self, date=None, time=None, datetime=None, timestamp=None):
+    def async_set_datetime(
+        self, date=None, time=None, datetime=None, timestamp=None, compare=None
+    ):
         """Set a new date / time."""
         if timestamp:
             datetime = dt_util.as_local(dt_util.utc_from_timestamp(timestamp))
@@ -414,9 +416,13 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         if not time:
             time = self._current_datetime.time()
 
-        self._current_datetime = py_datetime.datetime.combine(
-            date, time, dt_util.DEFAULT_TIME_ZONE
-        )
+        tmp_dt = py_datetime.datetime.combine(date, time, dt_util.DEFAULT_TIME_ZONE)
+        if compare == "max":
+            tmp_dt = max(self._current_datetime, tmp_dt)
+        if compare == "min":
+            tmp_dt = min(self._current_datetime, tmp_dt)
+
+        self._current_datetime = tmp_dt
         self.async_write_ha_state()
 
     async def async_update_config(self, config: ConfigType) -> None:
