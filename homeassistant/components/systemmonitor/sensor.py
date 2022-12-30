@@ -42,13 +42,14 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF_ARG, DOMAIN
 
-CONF_ARG = "arg"
+_LOGGER = logging.getLogger(__name__)
 
 if sys.maxsize > 2**32:
     CPU_ICON = "mdi:cpu-64-bit"
@@ -338,7 +339,21 @@ async def async_setup_platform(
     entities = []
     sensor_registry: dict[tuple[str, str], SensorData] = {}
 
-    for resource in config[CONF_RESOURCES]:
+    if discovery_info:
+        resource_config = discovery_info
+    else:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "moved_yaml",
+            breaks_in_ha_version="2023.3.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="moved_yaml",
+        )
+        resource_config = config
+
+    for resource in resource_config[CONF_RESOURCES]:
         type_ = resource[CONF_TYPE]
         # Initialize the sensor argument if none was provided.
         # For disk monitoring default to "/" (root) to prevent runtime errors, if argument was not specified.
