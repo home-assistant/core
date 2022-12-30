@@ -569,6 +569,11 @@ class DSMREntity(SensorEntity):
         return attr
 
     @property
+    def available(self) -> bool:
+        """Entity is only available if there is a telegram."""
+        return bool(self.telegram)
+
+    @property
     def native_value(self) -> StateType:
         """Return the state of sensor, if available, translate if needed."""
         value: StateType
