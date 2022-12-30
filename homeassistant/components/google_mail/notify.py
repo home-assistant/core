@@ -19,7 +19,7 @@ from homeassistant.components.notify import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import get_oauth_service
+from .application_credentials import get_oauth_service
 from .const import ATTR_FROM, ATTR_ME, ATTR_SEND
 
 

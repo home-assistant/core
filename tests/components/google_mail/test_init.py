@@ -18,6 +18,8 @@ from .conftest import SENSOR, ComponentSetup
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
+BUILD = "homeassistant.components.google_mail.application_credentials.build"
+
 
 async def test_setup_success(
     hass: HomeAssistant, setup_integration: ComponentSetup
@@ -151,7 +153,7 @@ async def test_set_vacation(
     """Test service call set vacation."""
     await setup_integration()
 
-    with patch("homeassistant.components.google_mail.build") as mock_client:
+    with patch(BUILD) as mock_client:
         await hass.services.async_call(
             DOMAIN,
             "set_vacation",
@@ -170,7 +172,7 @@ async def test_set_vacation(
         )
     assert len(mock_client.mock_calls) == 5
 
-    with patch("homeassistant.components.google_mail.build") as mock_client:
+    with patch(BUILD) as mock_client:
         await hass.services.async_call(
             DOMAIN,
             "set_vacation",
@@ -197,7 +199,7 @@ async def test_email(
     """Test service call draft email."""
     await setup_integration()
 
-    with patch("homeassistant.components.google_mail.build") as mock_client:
+    with patch(BUILD) as mock_client:
         await hass.services.async_call(
             NOTIFY_DOMAIN,
             "example_gmail_com",
@@ -210,7 +212,7 @@ async def test_email(
         )
     assert len(mock_client.mock_calls) == 5
 
-    with patch("homeassistant.components.google_mail.build") as mock_client:
+    with patch(BUILD) as mock_client:
         await hass.services.async_call(
             NOTIFY_DOMAIN,
             "example_gmail_com",
