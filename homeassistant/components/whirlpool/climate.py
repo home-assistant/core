@@ -24,7 +24,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.helpers.entity import DeviceInfo, generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import WhirlpoolData
@@ -71,9 +71,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     whirlpool_data: WhirlpoolData = hass.data[DOMAIN][config_entry.entry_id]
-    if not (aircons := whirlpool_data.appliances_manager.aircons):
-        _LOGGER.debug("No aircons found")
-        return
+    aircons = whirlpool_data.appliances_manager.aircons
 
     aircons = [
         AirConEntity(
@@ -107,15 +105,32 @@ class AirConEntity(ClimateEntity):
 
     def __init__(self, hass, said, name, backend_selector: BackendSelector, auth: Auth):
         """Initialize the entity."""
-        self._aircon = Aircon(backend_selector, auth, said, self.async_write_ha_state)
+        self._aircon = Aircon(backend_selector, auth, said)
+        self._aircon.register_attr_callback(self.async_write_ha_state)
 
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, said, hass=hass)
-        self._attr_name = name if name is not None else said
+        self._name = name if name is not None else said
         self._attr_unique_id = said
+        self._said = said
+        self._attr_has_entity_name = True
+
+    @property
+    def device_info(self) -> DeviceInfo | None:
+        """Device information for Aladdin Connect sensors."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._said)},
+            name=self._name,
+            manufacturer="Whirlpool",
+            model="Sixth Sense",
+        )
 
     async def async_added_to_hass(self) -> None:
         """Connect aircon to the cloud."""
         await self._aircon.connect()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Close Whrilpool Appliance sockets before removing."""
+        await self._aircon.disconnect()
 
     @property
     def available(self) -> bool:
