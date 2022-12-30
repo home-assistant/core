@@ -31,7 +31,6 @@ class SwitchBotLock(SwitchbotEntity, LockEntity):
     def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.base_unique_id}-lock"
         self._async_update_attrs()
 
     def _async_update_attrs(self) -> None:

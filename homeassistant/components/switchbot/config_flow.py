@@ -99,7 +99,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             "name": data["modelFriendlyName"],
             "address": short_address(discovery_info.address),
         }
-        if self._discovered_adv.data.get("modelName") == SwitchbotModel.LOCK:
+        if model_name == SwitchbotModel.LOCK:
             return await self.async_step_lock_chose_method()
         if self._discovered_adv.data["isEncrypted"]:
             return await self.async_step_password()
@@ -169,8 +169,8 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                 key_details = await self.hass.async_add_executor_job(
                     SwitchbotLock.retrieve_encryption_key,
                     self._discovered_adv.address,
-                    user_input.get(CONF_USERNAME),
-                    user_input.get(CONF_PASSWORD),
+                    user_input[CONF_USERNAME],
+                    user_input[CONF_PASSWORD],
                 )
                 return await self.async_step_lock_key(key_details)
             except RuntimeError:
@@ -178,12 +178,15 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                     "base": "auth_failed",
                 }
 
+        user_input = user_input or {}
         return self.async_show_form(
             step_id="lock_auth",
             errors=errors,
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_USERNAME): str,
+                    vol.Required(
+                        CONF_USERNAME, default=user_input.get(CONF_USERNAME)
+                    ): str,
                     vol.Required(CONF_PASSWORD): str,
                 }
             ),
@@ -215,8 +218,8 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if not await SwitchbotLock.verify_encryption_key(
                 self._discovered_adv.device,
-                user_input.get(CONF_KEY_ID),
-                user_input.get(CONF_ENCRYPTION_KEY),
+                user_input[CONF_KEY_ID],
+                user_input[CONF_ENCRYPTION_KEY],
             ):
                 errors = {
                     "base": "encryption_key_invalid",

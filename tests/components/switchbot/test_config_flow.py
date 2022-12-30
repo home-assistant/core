@@ -109,7 +109,10 @@ async def test_bluetooth_discovery_lock_key(hass):
     assert result["step_id"] == "lock_key"
     assert result["errors"] == {}
 
-    with patch("switchbot.SwitchbotLock.verify_encryption_key", return_value=False):
+    with patch(
+        "homeassistant.components.switchbot.config_flow.SwitchbotLock.verify_encryption_key",
+        return_value=False,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -124,7 +127,8 @@ async def test_bluetooth_discovery_lock_key(hass):
     assert result["errors"] == {"base": "encryption_key_invalid"}
 
     with patch_async_setup_entry() as mock_setup_entry, patch(
-        "switchbot.SwitchbotLock.verify_encryption_key", return_value=True
+        "homeassistant.components.switchbot.config_flow.SwitchbotLock.verify_encryption_key",
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -410,7 +414,10 @@ async def test_user_setup_wolock_key(hass):
     assert result["step_id"] == "lock_key"
     assert result["errors"] == {}
 
-    with patch("switchbot.SwitchbotLock.verify_encryption_key", return_value=False):
+    with patch(
+        "homeassistant.components.switchbot.config_flow.SwitchbotLock.verify_encryption_key",
+        return_value=False,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -425,7 +432,8 @@ async def test_user_setup_wolock_key(hass):
     assert result["errors"] == {"base": "encryption_key_invalid"}
 
     with patch_async_setup_entry() as mock_setup_entry, patch(
-        "switchbot.SwitchbotLock.verify_encryption_key", return_value=True
+        "homeassistant.components.switchbot.config_flow.SwitchbotLock.verify_encryption_key",
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -470,7 +478,7 @@ async def test_user_setup_wolock_auth(hass):
     assert result["errors"] == {}
 
     with patch(
-        "switchbot.SwitchbotLock.retrieve_encryption_key",
+        "homeassistant.components.switchbot.config_flow.SwitchbotLock.retrieve_encryption_key",
         side_effect=RuntimeError,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -486,9 +494,10 @@ async def test_user_setup_wolock_auth(hass):
     assert result["errors"] == {"base": "auth_failed"}
 
     with patch_async_setup_entry() as mock_setup_entry, patch(
-        "switchbot.SwitchbotLock.verify_encryption_key", return_value=True
+        "homeassistant.components.switchbot.config_flow.SwitchbotLock.verify_encryption_key",
+        return_value=True,
     ), patch(
-        "switchbot.SwitchbotLock.retrieve_encryption_key",
+        "homeassistant.components.switchbot.config_flow.SwitchbotLock.retrieve_encryption_key",
         return_value={
             CONF_KEY_ID: "ff",
             CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
@@ -549,7 +558,8 @@ async def test_user_setup_wolock_or_bot(hass):
     assert result["errors"] == {}
 
     with patch_async_setup_entry() as mock_setup_entry, patch(
-        "switchbot.SwitchbotLock.verify_encryption_key", return_value=True
+        "homeassistant.components.switchbot.config_flow.SwitchbotLock.verify_encryption_key",
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
