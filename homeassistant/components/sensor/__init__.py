@@ -968,6 +968,7 @@ class SensorEntity(Entity):
         # Validate unit of measurement used for sensors with a device class
         if (
             not self._invalid_unit_of_measurement_reported
+            and value is not None
             and device_class
             and (units := DEVICE_CLASS_UNITS.get(device_class)) is not None
             and native_unit_of_measurement not in units
