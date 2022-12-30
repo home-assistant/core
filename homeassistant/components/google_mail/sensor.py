@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DATA_SESSION, DOMAIN
 from .entity import GoogleMailEntity
 
 SCAN_INTERVAL = timedelta(minutes=15)
@@ -44,7 +44,9 @@ class GoogleMailSensor(GoogleMailEntity, SensorEntity):
 
     async def async_update(self) -> None:
         """Get the vacation data."""
-        session: OAuth2Session = self.hass.data[DOMAIN].get(self.entry.entry_id)
+        session: OAuth2Session = self.hass.data[DOMAIN].get(self.entry.entry_id)[
+            DATA_SESSION
+        ]
         await session.async_ensure_token_valid()
 
         def _get_vacation() -> dict[str, Any]:

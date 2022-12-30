@@ -51,39 +51,3 @@ set_vacation:
       description: Last day of the vacation
       selector:
         date:
-email:
-  name: Email
-  description: Draft an email.
-  target:
-    device:
-      integration: google_mail
-    entity:
-      integration: google_mail
-  fields:
-    title:
-      name: Title
-      description: The subject for the email
-      selector:
-        text:
-    message:
-      name: Message
-      description: Body of the email
-      required: true
-      selector:
-        text:
-    to:
-      name: To
-      description: Address to send message to.
-      selector:
-        text:
-    from:
-      name: From
-      description: Address to send message from. Defaults to your email address.
-      selector:
-        text:
-    send:
-      name: Send
-      default: true
-      description: If False, a draft will be made.
-      selector:
-        boolean:

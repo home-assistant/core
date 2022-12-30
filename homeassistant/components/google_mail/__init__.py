@@ -1,9 +1,8 @@
 """Support for Google Mail."""
 from __future__ import annotations
 
-import base64
 from datetime import datetime, timedelta
-from email.message import EmailMessage
+from typing import Any
 
 from aiohttp.client_exceptions import ClientError, ClientResponseError
 from google.auth.exceptions import RefreshError
@@ -12,48 +11,36 @@ from googleapiclient.discovery import Resource, build
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, Platform
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
 from homeassistant.helpers.service import async_extract_config_entry_ids
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_ENABLED,
     ATTR_END,
-    ATTR_FROM,
     ATTR_MESSAGE,
     ATTR_PLAIN_TEXT,
     ATTR_RESTRICT_CONTACTS,
     ATTR_RESTRICT_DOMAIN,
-    ATTR_SEND,
     ATTR_START,
     ATTR_TITLE,
-    ATTR_TO,
+    DATA_HASS_CONFIG,
+    DATA_SESSION,
     DEFAULT_ACCESS,
     DOMAIN,
 )
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.NOTIFY, Platform.SENSOR]
 
 SERVICE_EMAIL = "email"
 SERVICE_SET_VACATION = "set_vacation"
-
-SERVICE_EMAIL_SCHEMA = vol.All(
-    cv.make_entity_service_schema(
-        {
-            vol.Optional(ATTR_TITLE): cv.string,
-            vol.Required(ATTR_MESSAGE): cv.string,
-            vol.Optional(ATTR_TO): cv.string,
-            vol.Optional(ATTR_FROM): cv.string,
-            vol.Required(ATTR_SEND, default=True): cv.boolean,
-        },
-    )
-)
 
 SERVICE_VACATION_SCHEMA = vol.All(
     cv.make_entity_service_schema(
@@ -69,6 +56,13 @@ SERVICE_VACATION_SCHEMA = vol.All(
         },
     )
 )
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the component."""
+
+    hass.data[DATA_HASS_CONFIG] = config
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -88,9 +82,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if not async_entry_has_scopes(hass, entry):
         raise ConfigEntryAuthFailed("Required scopes are not present, reauth required")
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = session
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry.data | {
+        DATA_SESSION: session
+    }
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    hass.async_create_task(
+        discovery.async_load_platform(
+            hass,
+            Platform.NOTIFY,
+            DOMAIN,
+            hass.data[DOMAIN][entry.entry_id] | {CONF_NAME: entry.title},
+            hass.data[DATA_HASS_CONFIG],
+        )
+    )
+
+    await hass.config_entries.async_forward_entry_setups(
+        entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
+    )
 
     async def extract_gmail_config_entries(call: ServiceCall) -> list[ConfigEntry]:
         return [
@@ -123,40 +131,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _settings = service.users().settings()  # pylint: disable=no-member
         _settings.updateVacation(userId="me", body=settings).execute()
 
-    def _draft_email(call: ServiceCall, service: Resource) -> None:
-        """Draft am email."""
-        message = EmailMessage()
-        message.set_content(call.data[ATTR_MESSAGE])
-        if to_addr := call.data.get(ATTR_TO):
-            message["To"] = to_addr
-        message["From"] = call.data.get(ATTR_FROM, "me")
-        message["Subject"] = call.data.get(ATTR_TITLE)
-
-        encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
-
-        users = service.users()  # pylint: disable=no-member
-        if call.data[ATTR_SEND]:
-            if not call.data.get(ATTR_TO):
-                raise vol.Invalid("recipient address required")
-            users.messages().send(userId="me", body={"raw": encoded_message}).execute()
-        else:
-            msg = {ATTR_MESSAGE: {"raw": encoded_message}}
-            users.drafts().create(userId="me", body=msg).execute()
-
     async def gmail_service(call: ServiceCall) -> None:
         """Call Google Mail service."""
         for entry in await extract_gmail_config_entries(call):
-            if not (session := hass.data[DOMAIN].get(entry.entry_id)):
+            if not (data := hass.data[DOMAIN].get(entry.entry_id)):
                 raise ValueError(f"Config entry not loaded: {entry.entry_id}")
-            await session.async_ensure_token_valid()
-            if call.service == SERVICE_SET_VACATION:
-                func = _set_vacation
-            if call.service == SERVICE_EMAIL:
-                func = _draft_email
-            credentials = Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN])
-            service = build("gmail", "v1", credentials=credentials)
+            service = await get_oauth_service(data)
             try:
-                await hass.async_add_executor_job(func, call, service)
+                await hass.async_add_executor_job(_set_vacation, call, service)
             except RefreshError as ex:
                 entry.async_start_reauth(hass)
                 raise ex
@@ -168,14 +150,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         service_func=gmail_service,
     )
 
-    hass.services.async_register(
-        domain=DOMAIN,
-        service=SERVICE_EMAIL,
-        schema=SERVICE_EMAIL_SCHEMA,
-        service_func=gmail_service,
-    )
-
     return True
+
+
+async def get_oauth_service(data: dict[str, Any]) -> Resource:
+    """Get valid service with latest access token."""
+    session: OAuth2Session = data[DATA_SESSION]
+    await session.async_ensure_token_valid()
+    credentials = Credentials(data[CONF_TOKEN][CONF_ACCESS_TOKEN])
+    return build("gmail", "v1", credentials=credentials)
 
 
 def async_entry_has_scopes(hass: HomeAssistant, entry: ConfigEntry) -> bool:

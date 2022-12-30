@@ -10,6 +10,7 @@ from voluptuous.error import Invalid
 
 from homeassistant import config_entries
 from homeassistant.components.google_mail import DOMAIN
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -31,8 +32,6 @@ async def test_setup_success(
     await hass.config_entries.async_unload(entries[0].entry_id)
     await hass.async_block_till_done()
 
-    assert not hass.data.get(DOMAIN)
-    assert entries[0].state is ConfigEntryState.NOT_LOADED
     assert not len(hass.services.async_services().get(DOMAIN, {}))
 
 
@@ -200,13 +199,12 @@ async def test_email(
 
     with patch("homeassistant.components.google_mail.build") as mock_client:
         await hass.services.async_call(
-            DOMAIN,
-            "email",
+            NOTIFY_DOMAIN,
+            "example_gmail_com",
             {
-                "entity_id": SENSOR,
                 "title": "Test",
                 "message": "test email",
-                "to": "text@example.com",
+                "target": "text@example.com",
             },
             blocking=True,
         )
@@ -214,14 +212,13 @@ async def test_email(
 
     with patch("homeassistant.components.google_mail.build") as mock_client:
         await hass.services.async_call(
-            DOMAIN,
-            "email",
+            NOTIFY_DOMAIN,
+            "example_gmail_com",
             {
-                "entity_id": SENSOR,
                 "title": "Test",
                 "message": "test email",
-                "to": "text@example.com",
-                "send": False,
+                "target": "text@example.com",
+                "data": {"send": False},
             },
             blocking=True,
         )
@@ -237,10 +234,9 @@ async def test_email_voluptuous_error(
 
     with pytest.raises(Invalid) as ex:
         await hass.services.async_call(
-            DOMAIN,
-            "email",
+            NOTIFY_DOMAIN,
+            "example_gmail_com",
             {
-                "entity_id": SENSOR,
                 "title": "Test",
                 "message": "test email",
             },
@@ -250,10 +246,9 @@ async def test_email_voluptuous_error(
 
     with pytest.raises(Invalid) as ex:
         await hass.services.async_call(
-            DOMAIN,
-            "email",
+            NOTIFY_DOMAIN,
+            "example_gmail_com",
             {
-                "entity_id": SENSOR,
                 "title": "Test",
             },
             blocking=True,
