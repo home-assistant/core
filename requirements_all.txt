@@ -1503,7 +1503,7 @@ pybotvac==0.0.23
 pybravia==0.2.5
 
 # homeassistant.components.nissan_leaf
-pycarwings2==2.13
+pycarwings2==2.14
 
 # homeassistant.components.cloudflare
 pycfdns==2.0.1
