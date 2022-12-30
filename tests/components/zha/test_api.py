@@ -138,7 +138,7 @@ async def device_groupable(hass, zigpy_device_mock, zha_device_joined):
 
 @pytest.fixture
 async def zha_client(hass, hass_ws_client, device_switch, device_groupable):
-    """Get zha websocket client."""
+    """Get ZHA WebSocket client."""
 
     # load the ZHA API
     async_load_api(hass)
