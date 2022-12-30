@@ -606,7 +606,7 @@ class TodoistProjectData:
             if not due_date:
                 continue
             due_date = dt.as_utc(due_date)
-            if start_date <= due_date < end_date:
+            if start_date < due_date < end_date:
                 due_date_value: datetime | date = due_date
                 midnight = dt.start_of_local_day(due_date)
                 if due_date == midnight:
