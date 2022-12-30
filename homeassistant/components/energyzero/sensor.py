@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -180,15 +179,3 @@ class EnergyZeroSensorEntity(
     def native_value(self) -> float | datetime | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes."""
-        if self.entity_description.key == "average_price":
-            return {
-                "today": self.coordinator.data.energy_today.timestamp_prices,
-                "tomorrow": self.coordinator.data.energy_tomorrow.timestamp_prices
-                if self.coordinator.data.energy_tomorrow
-                else None,
-            }
-        return None
