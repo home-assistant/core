@@ -93,6 +93,7 @@ TABLES_TO_CHECK = [
 
 LAST_UPDATED_INDEX = "ix_states_last_updated"
 ENTITY_ID_LAST_UPDATED_INDEX = "ix_states_entity_id_last_updated"
+ENTITY_ID_LAST_UPDATED_INDEX_TS = "ix_states_entity_id_last_updated_ts"
 EVENTS_CONTEXT_ID_INDEX = "ix_events_context_id"
 STATES_CONTEXT_ID_INDEX = "ix_states_context_id"
 
@@ -149,6 +150,7 @@ class Events(Base):  # type: ignore[misc,valid-type]
         # Used for fetching events at a specific time
         # see logbook
         Index("ix_events_event_type_time_fired", "event_type", "time_fired"),
+        Index("ix_events_event_type_time_fired_ts", "event_type", "time_fired_ts"),
         {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
     __tablename__ = TABLE_EVENTS
@@ -266,6 +268,7 @@ class States(Base):  # type: ignore[misc,valid-type]
         # Used for fetching the state of entities at a specific time
         # (get_states in history.py)
         Index(ENTITY_ID_LAST_UPDATED_INDEX, "entity_id", "last_updated"),
+        Index(ENTITY_ID_LAST_UPDATED_INDEX_TS, "entity_id", "last_updated_ts"),
         {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
     __tablename__ = TABLE_STATES
