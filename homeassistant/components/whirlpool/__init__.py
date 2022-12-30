@@ -52,18 +52,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if appliances_manager.washer_dryers or appliances_manager.aircons:
 
-    myplatform = []
-
-    if appliances_manager.washer_dryers:
-        myplatform.append(Platform.SENSOR)
-
-    if appliances_manager.aircons:
-        myplatform.append(Platform.CLIMATE)
-
-    if myplatform:
-        await hass.config_entries.async_forward_entry_setups(entry, myplatform)
-
-    return True
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+        return True
 
     _LOGGER.debug("No Appliances found")
     return False
