@@ -11,9 +11,9 @@ from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture(name="api")
-def api_fixture(hass, get_devices):
+def api_fixture(hass, mock_get_devices):
     """Define a mock API object."""
-    return Mock(get_devices=get_devices)
+    return Mock(get_devices=mock_get_devices)
 
 
 @pytest.fixture(name="config")
@@ -45,12 +45,6 @@ def data_station_fixture():
     return json.loads(load_fixture("station_data.json", "ambient_station"))
 
 
-@pytest.fixture(name="get_devices")
-def get_devices_fixture(hass, data_devices):
-    """Define a mock API object."""
-    return AsyncMock(return_value=data_devices)
-
-
 @pytest.fixture(name="mock_aioambient")
 async def mock_aioambient_fixture(api):
     """Define a fixture to patch aioambient."""
@@ -59,6 +53,12 @@ async def mock_aioambient_fixture(api):
         return_value=api,
     ), patch("aioambient.websocket.Websocket.connect"):
         yield
+
+
+@pytest.fixture(name="mock_get_devices")
+def mock_get_devices_fixture(hass, data_devices):
+    """Define a mock API object."""
+    return AsyncMock(return_value=data_devices)
 
 
 @pytest.fixture(name="setup_config_entry")
