@@ -9,7 +9,7 @@ from .coordinator import ZeverSolarCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up zeversolar from a config entry."""
+    """Set up Zeversolar from a config entry."""
     coordinator = ZeverSolarCoordinator(hass=hass, entry=entry)
     await coordinator.async_config_entry_first_refresh()
 
