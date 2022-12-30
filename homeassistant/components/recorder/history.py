@@ -29,10 +29,12 @@ from .db_schema import TIMESTAMP_TYPE, RecorderRuns, StateAttributes, States
 from .filters import Filters
 from .models import (
     LazyState,
+    LazyStatePreSchema31,
     process_datetime_to_timestamp,
     process_timestamp,
     process_timestamp_to_utc_isoformat,
     row_to_compressed_state,
+    row_to_compressed_state_pre_schema_31,
 )
 from .util import execute_stmt_lambda_element, session_scope
 
@@ -823,13 +825,20 @@ def _sorted_states_to_dict(
     """
     schema_version = _schema_version(hass)
     _process_timestamp: Callable[[datetime], float | str]
+    state_class: Callable[[Row, dict[str, dict[str, Any]], Any], Any]
     if compressed_state_format:
-        state_class = row_to_compressed_state
+        if schema_version >= 31:
+            state_class = row_to_compressed_state
+        else:
+            state_class = row_to_compressed_state_pre_schema_31
         _process_timestamp = process_datetime_to_timestamp
         attr_time = COMPRESSED_STATE_LAST_UPDATED
         attr_state = COMPRESSED_STATE_STATE
     else:
-        state_class = LazyState  # type: ignore[assignment]
+        if schema_version >= 31:
+            state_class = LazyState
+        else:
+            state_class = LazyStatePreSchema31
         _process_timestamp = process_timestamp_to_utc_isoformat
         attr_time = LAST_CHANGED_KEY
         attr_state = STATE_KEY
@@ -877,7 +886,9 @@ def _sorted_states_to_dict(
             ent_results.append(state_class(row, attr_cache, start_time))
 
         if not minimal_response or split_entity_id(ent_id)[0] in NEED_ATTRIBUTE_DOMAINS:
-            ent_results.extend(state_class(db_state, attr_cache) for db_state in group)
+            ent_results.extend(
+                state_class(db_state, attr_cache, None) for db_state in group
+            )
             continue
 
         # With minimal response we only provide a native
@@ -888,7 +899,7 @@ def _sorted_states_to_dict(
             if (first_state := next(group, None)) is None:
                 continue
             prev_state = first_state.state
-            ent_results.append(state_class(first_state, attr_cache))
+            ent_results.append(state_class(first_state, attr_cache, None))
 
         if schema_version >= 31:
             if compressed_state_format:
