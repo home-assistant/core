@@ -1,4 +1,4 @@
-"""Base Entity for ZeverSolar sensors."""
+"""Base Entity for Zeversolar sensors."""
 from __future__ import annotations
 
 from homeassistant.helpers.entity import DeviceInfo
