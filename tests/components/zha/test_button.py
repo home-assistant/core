@@ -38,7 +38,7 @@ from tests.common import mock_coro
 
 @pytest.fixture(autouse=True)
 def button_platform_only():
-    """Only setup the button and required base platforms to speed up tests."""
+    """Only set up the button and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (

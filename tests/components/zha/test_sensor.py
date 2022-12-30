@@ -53,7 +53,7 @@ ENTITY_ID_PREFIX = "sensor.fakemanufacturer_fakemodel_{}"
 
 @pytest.fixture(autouse=True)
 def sensor_platform_only():
-    """Only setup the sensor and required base platforms to speed up tests."""
+    """Only set up the sensor and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (

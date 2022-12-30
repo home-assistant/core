@@ -27,7 +27,7 @@ from tests.common import async_fire_time_changed
 
 @pytest.fixture(autouse=True)
 def device_tracker_platforms_only():
-    """Only setup the device_tracker platforms and required base platforms to speed up tests."""
+    """Only set up the device_tracker platforms and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (

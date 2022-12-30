@@ -34,7 +34,7 @@ def zigpy_dev_basic(zigpy_device_mock):
 
 @pytest.fixture(autouse=True)
 def required_platform_only():
-    """Only setup the required and required base platforms to speed up tests."""
+    """Only set up the required and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (

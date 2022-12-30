@@ -40,7 +40,7 @@ LONG_RELEASE = "remote_button_long_release"
 
 @pytest.fixture(autouse=True)
 def sensor_platforms_only():
-    """Only setup the sensor platform and required base platforms to speed up tests."""
+    """Only set up the sensor platform and required base platforms to speed up tests."""
     with patch("homeassistant.components.zha.PLATFORMS", (Platform.SENSOR,)):
         yield
 

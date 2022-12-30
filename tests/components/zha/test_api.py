@@ -60,7 +60,7 @@ IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
 
 @pytest.fixture(autouse=True)
 def required_platform_only():
-    """Only setup the required and required base platforms to speed up tests."""
+    """Only set up the required and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (

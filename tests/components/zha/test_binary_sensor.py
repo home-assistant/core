@@ -38,7 +38,7 @@ DEVICE_OCCUPANCY = {
 
 @pytest.fixture(autouse=True)
 def binary_sensor_platform_only():
-    """Only setup the binary_sensor and required base platforms to speed up tests."""
+    """Only set up the binary_sensor and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (

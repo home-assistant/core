@@ -41,7 +41,7 @@ from tests.common import async_capture_events, mock_coro, mock_restore_cache
 
 @pytest.fixture(autouse=True)
 def cover_platform_only():
-    """Only setup the cover and required base platforms to speed up tests."""
+    """Only set up the cover and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (

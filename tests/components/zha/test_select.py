@@ -19,7 +19,7 @@ from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
 @pytest.fixture(autouse=True)
 def select_select_only():
-    """Only setup the select and required base platforms to speed up tests."""
+    """Only set up the select and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (

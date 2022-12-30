@@ -32,7 +32,7 @@ COMMAND_SINGLE = "single"
 
 @pytest.fixture(autouse=True)
 def required_platforms_only():
-    """Only setup the required platforms and required base platforms to speed up tests."""
+    """Only set up the required platforms and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (

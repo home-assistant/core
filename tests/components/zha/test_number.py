@@ -28,7 +28,7 @@ from tests.common import mock_coro
 
 @pytest.fixture(autouse=True)
 def number_platform_only():
-    """Only setup the number and required base platforms to speed up tests."""
+    """Only set up the number and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (

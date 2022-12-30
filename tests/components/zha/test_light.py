@@ -86,7 +86,7 @@ LIGHT_COLOR = {
 
 @pytest.fixture(autouse=True)
 def light_platform_only():
-    """Only setup the light and required base platforms to speed up tests."""
+    """Only set up the light and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (

@@ -24,7 +24,7 @@ from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 @pytest.fixture(autouse=True)
 def alarm_control_panel_platform_only():
-    """Only setup the alarm_control_panel and required base platforms to speed up tests."""
+    """Only set up the alarm_control_panel and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (

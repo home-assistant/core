@@ -29,7 +29,7 @@ SET_USER_STATUS = 9
 
 @pytest.fixture(autouse=True)
 def lock_platform_only():
-    """Only setup the lock and required base platforms to speed up tests."""
+    """Only set up the lock and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
