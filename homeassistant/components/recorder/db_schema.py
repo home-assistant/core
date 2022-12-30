@@ -158,7 +158,7 @@ class Events(Base):  # type: ignore[misc,valid-type]
     event_data = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
     origin = Column(String(MAX_LENGTH_EVENT_ORIGIN))  # no longer used for new rows
     origin_idx = Column(SmallInteger)
-    time_fired = Column(DATETIME_TYPE, index=True)  # no longer used for new rows
+    time_fired = Column(DATETIME_TYPE)  # no longer used for new rows
     time_fired_ts = Column(TIMESTAMP_TYPE, index=True)
     context_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
     context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
@@ -281,9 +281,7 @@ class States(Base):  # type: ignore[misc,valid-type]
     )
     last_changed = Column(DATETIME_TYPE)  # no longer used for new rows
     last_changed_ts = Column(TIMESTAMP_TYPE)
-    last_updated = Column(
-        DATETIME_TYPE, default=dt_util.utcnow, index=True
-    )  # no longer used for new rows
+    last_updated = Column(DATETIME_TYPE)  # no longer used for new rows
     last_updated_ts = Column(TIMESTAMP_TYPE, default=time.time, index=True)
     old_state_id = Column(Integer, ForeignKey("states.state_id"), index=True)
     attributes_id = Column(
@@ -320,7 +318,6 @@ class States(Base):  # type: ignore[misc,valid-type]
             last_updated=None,
             last_changed=None,
         )
-
         # None state means the state was removed from the state machine
         if state is None:
             dbstate.state = ""

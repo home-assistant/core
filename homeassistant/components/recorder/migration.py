@@ -829,10 +829,14 @@ def _apply_update(  # noqa: C901
         # Migrate all data in States.last_changed to States.last_changed_ts and
         # wipe States.last_changed
         # TODO: implement
+        _create_index(session_maker, "events", "ix_events_time_fired_ts")
         _create_index(session_maker, "events", "ix_events_event_type_time_fired_ts")
         _create_index(session_maker, "states", "ix_states_entity_id_last_updated_ts")
+        _create_index(session_maker, "states", "ix_states_last_updated_ts")
         _drop_index(session_maker, "states", "ix_states_entity_id_last_updated")
         _drop_index(session_maker, "events", "ix_events_event_type_time_fired")
+        _drop_index(session_maker, "states", "ix_states_last_updated")
+        _drop_index(session_maker, "events", "ix_events_time_fired")
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
