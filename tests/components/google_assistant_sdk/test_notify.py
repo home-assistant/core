@@ -9,6 +9,8 @@ from homeassistant.core import HomeAssistant
 
 from .conftest import ComponentSetup, ExpectedCredentials
 
+from tests.common import async_capture_events
+
 
 async def test_broadcast_no_targets(
     hass: HomeAssistant, setup_integration: ComponentSetup
@@ -37,11 +39,14 @@ async def test_broadcast_one_target(
     """Test broadcast to one target."""
     await setup_integration()
 
+    events = async_capture_events(hass, "google_assistant_sdk_event")
     message = "time for dinner"
     target = "basement"
     expected_command = "broadcast to basement time for dinner"
+    mocked_text_response = "text_response"
     with patch(
-        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist"
+        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",
+        return_value=[mocked_text_response, None],
     ) as mock_assist_call:
         await hass.services.async_call(
             notify.DOMAIN,
@@ -50,6 +55,11 @@ async def test_broadcast_one_target(
         )
         await hass.async_block_till_done()
     mock_assist_call.assert_called_once_with(expected_command)
+    assert len(events) == 1
+    assert events[0].data == {
+        "request": expected_command,
+        "response": mocked_text_response,
+    }
 
 
 async def test_broadcast_two_targets(
@@ -58,13 +68,16 @@ async def test_broadcast_two_targets(
     """Test broadcast to two targets."""
     await setup_integration()
 
+    events = async_capture_events(hass, "google_assistant_sdk_event")
     message = "time for dinner"
     target1 = "basement"
     target2 = "master bedroom"
     expected_command1 = "broadcast to basement time for dinner"
     expected_command2 = "broadcast to master bedroom time for dinner"
+    mocked_text_response = "text_response"
     with patch(
-        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist"
+        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",
+        return_value=[mocked_text_response, None],
     ) as mock_assist_call:
         await hass.services.async_call(
             notify.DOMAIN,
@@ -75,6 +88,15 @@ async def test_broadcast_two_targets(
     mock_assist_call.assert_has_calls(
         [call(expected_command1), call(expected_command2)]
     )
+    assert len(events) == 2
+    assert events[0].data == {
+        "request": expected_command1,
+        "response": mocked_text_response,
+    }
+    assert events[1].data == {
+        "request": expected_command2,
+        "response": mocked_text_response,
+    }
 
 
 async def test_broadcast_empty_message(

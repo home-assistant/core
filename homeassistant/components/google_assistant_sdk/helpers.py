@@ -39,7 +39,12 @@ async def async_send_text_commands(commands: list[str], hass: HomeAssistant) -> 
     language_code = entry.options.get(CONF_LANGUAGE_CODE, default_language_code(hass))
     with TextAssistant(credentials, language_code) as assistant:
         for command in commands:
-            assistant.assist(command)
+            text_response = assistant.assist(command)[0]
+            event_data = {
+                "request": command,
+                "response": text_response,
+            }
+            hass.bus.async_fire(DOMAIN + "_event", event_data)
 
 
 def default_language_code(hass: HomeAssistant):
