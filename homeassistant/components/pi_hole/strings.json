@@ -25,5 +25,11 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "title": "The PI-Hole YAML configuration is being removed",
+      "description": "Configuring PI-Hole using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the PI-Hole YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    }
   }
 }
