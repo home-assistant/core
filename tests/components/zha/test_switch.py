@@ -297,14 +297,14 @@ async def test_zha_group_switch_entity(
     await async_enable_traffic(hass, [device_switch_1, device_switch_2], enabled=False)
     await async_wait_for_updates(hass)
 
-    # test that the lights were created and that they are off
+    # test that the switches were created and that they are off
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     # allow traffic to flow through the gateway and device
     await async_enable_traffic(hass, [device_switch_1, device_switch_2])
     await async_wait_for_updates(hass)
 
-    # test that the lights were created and are off
+    # test that the switches were created and are off
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # turn on from HA
@@ -354,25 +354,25 @@ async def test_zha_group_switch_entity(
     await send_attributes_report(hass, dev2_cluster_on_off, {0: 1})
     await async_wait_for_updates(hass)
 
-    # test that group light is on
+    # test that group switch is on
     assert hass.states.get(entity_id).state == STATE_ON
 
     await send_attributes_report(hass, dev1_cluster_on_off, {0: 0})
     await async_wait_for_updates(hass)
 
-    # test that group light is still on
+    # test that group switch is still on
     assert hass.states.get(entity_id).state == STATE_ON
 
     await send_attributes_report(hass, dev2_cluster_on_off, {0: 0})
     await async_wait_for_updates(hass)
 
-    # test that group light is now off
+    # test that group switch is now off
     assert hass.states.get(entity_id).state == STATE_OFF
 
     await send_attributes_report(hass, dev1_cluster_on_off, {0: 1})
     await async_wait_for_updates(hass)
 
-    # test that group light is now back on
+    # test that group switch is now back on
     assert hass.states.get(entity_id).state == STATE_ON
 
 
