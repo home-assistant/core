@@ -57,7 +57,7 @@ async def mock_aioambient_fixture(api):
 
 @pytest.fixture(name="mock_get_devices")
 def mock_get_devices_fixture(data_devices):
-    """Define a mock API object."""
+    """Define a mock get_devices method."""
     return AsyncMock(return_value=data_devices)
 
 
