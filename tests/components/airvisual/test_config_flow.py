@@ -1,5 +1,5 @@
 """Define tests for the AirVisual config flow."""
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from pyairvisual.cloud_api import (
     InvalidKeyError,
@@ -193,9 +193,6 @@ async def test_migration_2_3(hass, pro):
     with patch(
         "homeassistant.components.airvisual.automation.automations_with_device",
         return_value=["automation.test_automation"],
-    ), patch(
-        "homeassistant.components.airvisual.async_get_pro_device_by_config_entry",
-        return_value=Mock(id="abcde12345"),
     ), patch(
         "homeassistant.components.airvisual_pro.NodeSamba", return_value=pro
     ), patch(
