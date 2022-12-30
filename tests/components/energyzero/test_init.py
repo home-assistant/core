@@ -1,5 +1,5 @@
 """Tests for the EnergyZero integration."""
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from energyzero import EnergyZeroConnectionError
 
@@ -11,7 +11,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_load_unload_config_entry(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_energyzero: AsyncMock
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_energyzero: MagicMock
 ) -> None:
     """Test the EnergyZero configuration entry loading/unloading."""
     mock_config_entry.add_to_hass(hass)

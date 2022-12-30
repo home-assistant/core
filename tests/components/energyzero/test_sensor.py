@@ -1,4 +1,5 @@
 """Tests for the sensors provided by the EnergyZero integration."""
+
 from homeassistant.components.energyzero.const import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,

@@ -48,7 +48,7 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}",
-        value_fn=lambda data: data.gas_today.current_price if data.gas_today else None,
+        value_fn=lambda data: data.gas_today.current_price,
     ),
     EnergyZeroSensorEntityDescription(
         key="next_hour_price",
@@ -58,9 +58,7 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}",
         value_fn=lambda data: data.gas_today.price_at_time(
             data.gas_today.utcnow() + timedelta(hours=1)
-        )
-        if data.gas_today
-        else None,
+        ),
     ),
     EnergyZeroSensorEntityDescription(
         key="current_hour_price",

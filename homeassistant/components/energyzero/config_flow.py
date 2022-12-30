@@ -3,12 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from energyzero import EnergyZero, EnergyZeroError
-
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util import dt
 
 from .const import DOMAIN
 
@@ -23,23 +19,13 @@ class EnergyZeroFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
 
-        errors = {}
+        await self.async_set_unique_id(DOMAIN)
+        self._abort_if_unique_id_configured()
 
-        if user_input is not None:
-            session = async_get_clientsession(self.hass)
-            today = dt.now().date()
-            try:
-                async with EnergyZero(session=session) as client:
-                    await client.energy_prices(start_date=today, end_date=today)
-            except EnergyZeroError:
-                errors["base"] = "cannot_connect"
-            else:
-                return self.async_create_entry(
-                    title="EnergyZero",
-                    data={},
-                )
+        if user_input is None:
+            return self.async_show_form(step_id="user")
 
-        return self.async_show_form(
-            step_id="user",
-            errors=errors,
+        return self.async_create_entry(
+            title="EnergyZero",
+            data={},
         )
