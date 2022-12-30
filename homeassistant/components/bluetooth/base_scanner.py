@@ -183,7 +183,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
         scanner_id: str,
         name: str,
         new_info_callback: Callable[[BluetoothServiceInfoBleak], None],
-        connector: HaBluetoothConnector,
+        connector: HaBluetoothConnector | None,
         connectable: bool,
     ) -> None:
         """Initialize the scanner."""
