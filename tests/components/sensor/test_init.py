@@ -1144,7 +1144,7 @@ async def test_device_classes_with_invalid_unit_of_measurement(
     platform.init(empty=True)
     platform.ENTITIES["0"] = platform.MockSensor(
         name="Test",
-        native_value=None,
+        native_value="1.0",
         device_class=device_class,
         native_unit_of_measurement="INVALID!",
     )
