@@ -8,6 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import ReolinkData
 from .const import DOMAIN
 from .entity import ReolinkCoordinatorEntity
 from .host import ReolinkHost
@@ -18,10 +19,11 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_devices: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Reolink IP Camera."""
-    host: ReolinkHost = hass.data[DOMAIN][config_entry.entry_id].host
+    reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
+    host: ReolinkHost = reolink_data.host
 
     cameras = []
     for channel in host.api.channels:
@@ -30,9 +32,9 @@ async def async_setup_entry(
             streams.append("ext")
 
         for stream in streams:
-            cameras.append(ReolinkCamera(hass, config_entry, channel, stream))
+            cameras.append(ReolinkCamera(reolink_data, config_entry, channel, stream))
 
-    async_add_devices(cameras, update_before_add=True)
+    async_add_entities(cameras, update_before_add=True)
 
 
 class ReolinkCamera(ReolinkCoordinatorEntity, Camera):
@@ -40,15 +42,22 @@ class ReolinkCamera(ReolinkCoordinatorEntity, Camera):
 
     _attr_supported_features: CameraEntityFeature = CameraEntityFeature.STREAM
 
-    def __init__(self, hass, config, channel, stream):
+    def __init__(
+            self,
+            reolink_data: ReolinkData,
+            config_entry: ConfigEntry,
+            channel: int,
+            stream: str
+        ):
         """Initialize Reolink camera stream."""
-        ReolinkCoordinatorEntity.__init__(self, hass, config)
+        ReolinkCoordinatorEntity.__init__(self, reolink_data, config_entry)
         Camera.__init__(self)
 
         self._channel = channel
         self._stream = stream
 
-        self._attr_name = f"{self._host.api.camera_name(self._channel)} {self._stream}"
+        self._attr_has_entity_name = True
+        self._attr_name = self._stream
         self._attr_unique_id = f"{self._host.unique_id}_{self._channel}_{self._stream}"
         self._attr_entity_registry_enabled_default = stream == "sub"
 

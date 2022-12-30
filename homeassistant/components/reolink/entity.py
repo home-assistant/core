@@ -1,5 +1,6 @@
 """Reolink parent entity class."""
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -11,14 +12,12 @@ from .const import DOMAIN
 class ReolinkCoordinatorEntity(CoordinatorEntity):
     """Parent class for Reolink Entities."""
 
-    def __init__(self, hass, config):
+    def __init__(self, reolink_data: ReolinkData, config_entry: ConfigEntry,):
         """Initialize ReolinkCoordinatorEntity."""
-        self._hass = hass
-        entry_data: ReolinkData = self._hass.data[DOMAIN][config.entry_id]
-        coordinator = entry_data.device_coordinator
+        coordinator = reolink_data.device_coordinator
         super().__init__(coordinator)
 
-        self._host = entry_data.host
+        self._host = reolink_data.host
         self._channel = None
 
     @property
@@ -51,4 +50,4 @@ class ReolinkCoordinatorEntity(CoordinatorEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._host.api.session_active
+        return self._host.api.session_active and super().available

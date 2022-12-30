@@ -27,14 +27,14 @@ class ReolinkHost:
     def __init__(
         self,
         hass: HomeAssistant,
-        config: dict,
-        options: dict,
+        config: dict[str, Any],
+        options: dict[str, Any],
     ) -> None:
         """Initialize Reolink Host. Could be either NVR, or Camera."""
         self._hass: HomeAssistant = hass
 
         self._clientsession: aiohttp.ClientSession | None = None
-        self._unique_id: str | None = None
+        self._unique_id: str = ""
 
         cur_protocol = (
             DEFAULT_PROTOCOL if CONF_PROTOCOL not in options else options[CONF_PROTOCOL]
@@ -51,7 +51,7 @@ class ReolinkHost:
         )
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Create the unique ID, base for all entities."""
         return self._unique_id
 
@@ -99,23 +99,22 @@ class ReolinkHost:
             ):
                 if enable_onvif:
                     _LOGGER.error(
-                        "Unable to switch on ONVIF on %s. You need it to be ON to receive notifications",
+                        "Failed to enable ONVIF on %s. Set it to ON to receive notifications",
                         self._api.nvr_name,
                     )
 
                 if enable_rtmp:
                     _LOGGER.error(
-                        "Unable to switch on RTMP on %s. You need it to be ON",
+                        "Failed to enable RTMP on %s. Set it to ON",
                         self._api.nvr_name,
                     )
                 elif enable_rtsp:
                     _LOGGER.error(
-                        "Unable to switch on RTSP on %s. You need it to be ON",
+                        "Failed to enable RTSP on %s. Set it to ON",
                         self._api.nvr_name,
                     )
 
-        if self._unique_id is None:
-            self._unique_id = format_mac(self._api.mac_address)
+        self._unique_id = format_mac(self._api.mac_address)
 
         return True
 
