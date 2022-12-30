@@ -149,7 +149,6 @@ class Events(Base):  # type: ignore[misc,valid-type]
     __table_args__ = (
         # Used for fetching events at a specific time
         # see logbook
-        Index("ix_events_event_type_time_fired", "event_type", "time_fired"),
         Index("ix_events_event_type_time_fired_ts", "event_type", "time_fired_ts"),
         {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
@@ -267,7 +266,6 @@ class States(Base):  # type: ignore[misc,valid-type]
     __table_args__ = (
         # Used for fetching the state of entities at a specific time
         # (get_states in history.py)
-        Index(ENTITY_ID_LAST_UPDATED_INDEX, "entity_id", "last_updated"),
         Index(ENTITY_ID_LAST_UPDATED_INDEX_TS, "entity_id", "last_updated_ts"),
         {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )

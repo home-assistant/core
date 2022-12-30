@@ -821,6 +821,18 @@ def _apply_update(  # noqa: C901
         # Once we require SQLite >= 3.35.5, we should drop the column:
         # ALTER TABLE statistics_meta DROP COLUMN state_unit_of_measurement
         pass
+    elif new_version == 31:
+        # Migrate all data in Events.time_fired to Events.time_fired_ts and
+        # wipe Events.time_fired
+        # Migrate all data in States.last_updated to States.last_updated_ts and
+        # wipe States.last_updated
+        # Migrate all data in States.last_changed to States.last_changed_ts and
+        # wipe States.last_changed
+        # TODO: implement
+        _create_index(session_maker, "events", "ix_events_event_type_time_fired_ts")
+        _create_index(session_maker, "states", "ix_states_entity_id_last_updated_ts")
+        _drop_index(session_maker, "states", "ix_states_entity_id_last_updated")
+        _drop_index(session_maker, "events", "ix_events_event_type_time_fired")
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
