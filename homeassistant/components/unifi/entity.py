@@ -4,7 +4,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic, TypeVar
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import CallbackType, ItemEvent, UnsubscribeType
@@ -17,7 +17,8 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 
-from .controller import UniFiController
+if TYPE_CHECKING:
+    from .controller import UniFiController
 
 DataT = TypeVar("DataT", bound=Device)
 HandlerT = TypeVar("HandlerT", bound=Devices)
