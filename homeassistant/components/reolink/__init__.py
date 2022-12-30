@@ -62,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         """Update the host state cache and renew the ONVIF-subscription."""
         async with async_timeout.timeout(host.api.timeout):
             # Login session is implicitly updated here
-            await host.update_states()  
+            await host.update_states()
 
     coordinator_device_config_update = DataUpdateCoordinator(
         hass,
@@ -81,7 +81,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    config_entry.async_on_unload(config_entry.add_update_listener(entry_update_listener))
+    config_entry.async_on_unload(
+        config_entry.add_update_listener(entry_update_listener)
+    )
 
     return True
 
@@ -97,7 +99,9 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
     await host.stop()
 
-    if unload_ok := await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS):
+    if unload_ok := await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    ):
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok

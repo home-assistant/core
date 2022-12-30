@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from typing import Any
+
 import aiohttp
 from reolink_ip.api import Host
 from reolink_ip.exceptions import (

@@ -43,17 +43,17 @@ class ReolinkCamera(ReolinkCoordinatorEntity, Camera):
     _attr_supported_features: CameraEntityFeature = CameraEntityFeature.STREAM
 
     def __init__(
-            self,
-            reolink_data: ReolinkData,
-            config_entry: ConfigEntry,
-            channel: int,
-            stream: str
-        ) -> None:
+        self,
+        reolink_data: ReolinkData,
+        config_entry: ConfigEntry,
+        channel: int,
+        stream: str,
+    ) -> None:
         """Initialize Reolink camera stream."""
         ReolinkCoordinatorEntity.__init__(self, reolink_data, config_entry)
         Camera.__init__(self)
 
-        self._channel: int = channel
+        self._channel = channel
         self._stream: str = stream
 
         self._attr_has_entity_name = True

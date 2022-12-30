@@ -1,4 +1,5 @@
 """Reolink parent entity class."""
+from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -18,7 +19,7 @@ class ReolinkCoordinatorEntity(CoordinatorEntity):
         super().__init__(coordinator)
 
         self._host = reolink_data.host
-        self._channel = None
+        self._channel: int | None = None
 
     @property
     def device_info(self):

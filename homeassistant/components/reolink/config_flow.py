@@ -1,9 +1,8 @@
 """Config flow for the Reolink camera component."""
 from __future__ import annotations
 
-from typing import Any
-
 import logging
+from typing import Any
 
 from reolink_ip.exceptions import ApiError, CredentialsInvalidError
 import voluptuous as vol
@@ -27,7 +26,9 @@ class ReolinkOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize ReolinkOptionsFlowHandler."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the Reolink options."""
         if user_input is not None:
             return self.async_create_entry(data=user_input)
@@ -60,14 +61,18 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Options callback for Reolink."""
         return ReolinkOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         errors = {}
         placeholders = {}
 
         if user_input is not None:
             try:
-                host: ReolinkHost = await self.async_obtain_host_settings(self.hass, user_input)
+                host: ReolinkHost = await self.async_obtain_host_settings(
+                    self.hass, user_input
+                )
             except CannotConnect:
                 errors[CONF_HOST] = "cannot_connect"
             except CredentialsInvalidError:
@@ -84,9 +89,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_PORT] = host.api.port
                 user_input[CONF_USE_HTTPS] = host.api.use_https
 
-                await self.async_set_unique_id(
-                    host.unique_id, raise_on_progress=False
-                )
+                await self.async_set_unique_id(host.unique_id, raise_on_progress=False)
                 self._abort_if_unique_id_configured(updates=user_input)
 
                 return self.async_create_entry(
