@@ -83,6 +83,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         name="UPS Battery",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:battery",
+        device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "cable": SensorEntityDescription(
