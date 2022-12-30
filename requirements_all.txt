@@ -288,7 +288,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.5
 
 # homeassistant.components.unifi
-aiounifi==42
+aiounifi==43
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -888,7 +888,7 @@ hole==0.8.0
 holidays==0.18.0
 
 # homeassistant.components.frontend
-home-assistant-frontend==20221228.0
+home-assistant-frontend==20221230.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1119,7 +1119,7 @@ moat-ble==0.1.1
 moehlenhoff-alpha2==1.2.1
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.13
+motionblinds==0.6.14
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.12
@@ -1500,10 +1500,10 @@ pyblackbird==0.5
 pybotvac==0.0.23
 
 # homeassistant.components.braviatv
-pybravia==0.2.3
+pybravia==0.2.5
 
 # homeassistant.components.nissan_leaf
-pycarwings2==2.13
+pycarwings2==2.14
 
 # homeassistant.components.cloudflare
 pycfdns==2.0.1
@@ -1560,7 +1560,7 @@ pydroid-ipcam==2.0.0
 pyebox==1.1.4
 
 # homeassistant.components.econet
-pyeconet==0.1.15
+pyeconet==0.1.17
 
 # homeassistant.components.edimax
 pyedimax==0.2.1
@@ -2220,7 +2220,7 @@ rokuecp==0.17.0
 roombapy==1.6.5
 
 # homeassistant.components.roon
-roonapi==0.1.1
+roonapi==0.1.2
 
 # homeassistant.components.rova
 rova==0.3.0
@@ -2456,7 +2456,7 @@ tilt-ble==0.2.3
 tmb==0.0.4
 
 # homeassistant.components.todoist
-todoist-python==8.0.0
+todoist-api-python==2.0.2
 
 # homeassistant.components.tolo
 tololib==0.1.0b3
@@ -2567,7 +2567,7 @@ waterfurnace==1.1.0
 webexteamssdk==1.1.1
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.17.0
+whirlpool-sixth-sense==0.17.1
 
 # homeassistant.components.whois
 whois==0.9.16
