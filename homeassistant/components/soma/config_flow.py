@@ -37,7 +37,9 @@ class SomaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_creation(self, user_input=None):
         """Finish config flow."""
-        api = SomaApi(user_input["host"], user_input["port"])
+        api = await self.hass.async_add_executor_job(
+            SomaApi, user_input["host"], user_input["port"]
+        )
         try:
             result = await self.hass.async_add_executor_job(api.list_devices)
             _LOGGER.info("Successfully set up Soma Connect")

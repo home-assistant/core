@@ -54,7 +54,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Soma from a config entry."""
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][API] = SomaApi(entry.data[HOST], entry.data[PORT])
+    hass.data[DOMAIN][API] = await hass.async_add_executor_job(
+        SomaApi, entry.data[HOST], entry.data[PORT]
+    )
     devices = await hass.async_add_executor_job(hass.data[DOMAIN][API].list_devices)
     hass.data[DOMAIN][DEVICES] = devices["shades"]
 
