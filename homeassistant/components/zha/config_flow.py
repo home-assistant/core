@@ -286,7 +286,7 @@ class BaseZhaFlow(FlowHandler):
     async def async_step_form_new_network(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Form a brand new network."""
+        """Form a brand-new network."""
         await self._radio_mgr.async_form_network()
         return await self._async_create_radio_entry()
 

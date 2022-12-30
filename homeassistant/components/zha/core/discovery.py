@@ -129,7 +129,7 @@ class ProbeEndpoint:
 
             self.probe_single_cluster(component, channel, channel_pool)
 
-        # until we can get rid off registries
+        # until we can get rid of registries
         self.handle_on_off_output_cluster_exception(channel_pool)
 
     @staticmethod
