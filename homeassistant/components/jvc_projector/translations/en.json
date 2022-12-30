@@ -13,6 +13,9 @@
         "flow_title": "{name}",
         "step": {
             "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
                 "description": "Password authentication failed",
                 "title": "Reauthenticate Integration"
             },
@@ -21,6 +24,11 @@
                     "host": "Host",
                     "password": "Password",
                     "port": "Port"
+                },
+                "data_description": {
+                    "host": "IP address or hostname of projector",
+                    "password": "Optional password if projector is configured for one",
+                    "port": "IP port of projector (default is 20554)"
                 }
             }
         }

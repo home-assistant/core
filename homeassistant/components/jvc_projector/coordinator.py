@@ -6,13 +6,13 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
 
-from jvcprojector import JvcProjectorAuthError, JvcProjectorConnectError
+from jvcprojector import JvcProjectorAuthError, JvcProjectorConnectError, const
 
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from . import const
+from .const import NAME
 
 if TYPE_CHECKING:
     from jvcprojector import JvcProjector
@@ -21,8 +21,8 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-INTERVAL_SLOW = timedelta(seconds=15)
-INTERVAL_FAST = timedelta(seconds=5)
+INTERVAL_SLOW = timedelta(seconds=60)
+INTERVAL_FAST = timedelta(seconds=6)
 
 
 class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator):
@@ -33,7 +33,7 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass=hass,
             logger=_LOGGER,
-            name=const.NAME,
+            name=NAME,
             update_interval=INTERVAL_SLOW,
         )
 
@@ -45,13 +45,18 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             state = await self.device.get_state()
         except JvcProjectorConnectError as err:
-            raise UpdateFailed("Connection error occurred") from err
+            raise UpdateFailed(f"Unable to connect to {self.device.host}") from err
         except JvcProjectorAuthError as err:
-            raise ConfigEntryAuthFailed("Password auth failed") from err
+            raise ConfigEntryAuthFailed("Password authentication failed") from err
 
-        if state[const.POWER] == const.POWER_STANDBY:
-            self.update_interval = INTERVAL_SLOW
-        else:
+        old_interval = self.update_interval
+
+        if state[const.POWER] != const.STANDBY:
             self.update_interval = INTERVAL_FAST
+        else:
+            self.update_interval = INTERVAL_SLOW
+
+        if self.update_interval != old_interval:
+            _LOGGER.debug("Changed update interval to %s", self.update_interval)
 
         return state
