@@ -91,8 +91,7 @@ TABLES_TO_CHECK = [
     TABLE_SCHEMA_CHANGES,
 ]
 
-LAST_UPDATED_INDEX = "ix_states_last_updated"
-ENTITY_ID_LAST_UPDATED_INDEX = "ix_states_entity_id_last_updated"
+LAST_UPDATED_INDEX_TS = "ix_states_last_updated_ts"
 ENTITY_ID_LAST_UPDATED_INDEX_TS = "ix_states_entity_id_last_updated_ts"
 EVENTS_CONTEXT_ID_INDEX = "ix_events_context_id"
 STATES_CONTEXT_ID_INDEX = "ix_states_context_id"
