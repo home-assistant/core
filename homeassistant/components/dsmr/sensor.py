@@ -540,7 +540,6 @@ class DSMREntity(SensorEntity):
     entity_description: DSMRSensorEntityDescription
     _attr_has_entity_name = True
     _attr_should_poll = False
-    telegram: dict[str, DSMRObject] | None = {}
 
     def __init__(
         self, entity_description: DSMRSensorEntityDescription, entry: ConfigEntry
@@ -548,6 +547,7 @@ class DSMREntity(SensorEntity):
         """Initialize entity."""
         self.entity_description = entity_description
         self._entry = entry
+        self.telegram: dict[str, DSMRObject] | None = {}
 
         device_serial = entry.data[CONF_SERIAL_ID]
         device_name = DEVICE_NAME_ELECTRICITY
