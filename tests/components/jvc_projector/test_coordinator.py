@@ -24,9 +24,11 @@ async def test_coordinator_update(
 ) -> None:
     """Test coordinator update runs."""
     mock_device.get_state.return_value = {"power": "standby"}
-    async_fire_time_changed(hass, utcnow() + timedelta(minutes=1))
+    async_fire_time_changed(
+        hass, utcnow() + timedelta(seconds=INTERVAL_SLOW.seconds + 1)
+    )
     await hass.async_block_till_done()
-    assert mock_device.get_state.call_count == 2
+    assert mock_device.get_state.call_count == 3
     coordinator = hass.data[DOMAIN][mock_integration.entry_id]
     assert coordinator.update_interval == INTERVAL_SLOW
 
