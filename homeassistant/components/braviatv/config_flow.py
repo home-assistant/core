@@ -122,7 +122,7 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST, default=""): str}),
+            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
             errors=errors,
         )
 
@@ -180,7 +180,7 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="pin",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_PIN, default=""): str,
+                    vol.Required(CONF_PIN): str,
                 }
             ),
             errors=errors,
@@ -209,7 +209,7 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="psk",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_PIN, default=""): str,
+                    vol.Required(CONF_PIN): str,
                 }
             ),
             errors=errors,
