@@ -254,7 +254,7 @@ class GroupProbe:
         )
 
     def cleanup(self) -> None:
-        """Clean up on when zha shuts down."""
+        """Clean up on when ZHA shuts down."""
         for unsub in self._unsubs[:]:
             unsub()
             self._unsubs.remove(unsub)

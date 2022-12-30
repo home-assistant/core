@@ -109,7 +109,7 @@ def core_rs(hass_storage):
 
 
 async def test_select(hass, siren):
-    """Test zha select platform."""
+    """Test ZHA select platform."""
 
     entity_registry = er.async_get(hass)
     zha_device, cluster = siren
@@ -161,7 +161,7 @@ async def test_select_restore_state(
     core_rs,
     zha_device_restored,
 ):
-    """Test zha select entity restore state."""
+    """Test ZHA select entity restore state."""
 
     entity_id = "select.fakemanufacturer_fakemodel_default_siren_tone"
     core_rs(entity_id, state="Burglar")
@@ -194,7 +194,7 @@ async def test_select_restore_state(
 
 
 async def test_on_off_select_new_join(hass, light, zha_device_joined):
-    """Test zha on off select - new join."""
+    """Test ZHA on off select - new join."""
 
     entity_registry = er.async_get(hass)
     on_off_cluster = light.endpoints[1].on_off
@@ -253,7 +253,7 @@ async def test_on_off_select_new_join(hass, light, zha_device_joined):
 
 
 async def test_on_off_select_restored(hass, light, zha_device_restored):
-    """Test zha on off select - restored."""
+    """Test ZHA on off select - restored."""
 
     entity_registry = er.async_get(hass)
     on_off_cluster = light.endpoints[1].on_off
@@ -305,7 +305,7 @@ async def test_on_off_select_restored(hass, light, zha_device_restored):
 
 
 async def test_on_off_select_unsupported(hass, light, zha_device_joined_restored):
-    """Test zha on off select unsupported."""
+    """Test ZHA on off select unsupported."""
 
     on_off_cluster = light.endpoints[1].on_off
     on_off_cluster.add_unsupported_attribute("start_up_on_off")

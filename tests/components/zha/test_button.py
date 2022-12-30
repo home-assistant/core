@@ -121,7 +121,7 @@ async def tuya_water_valve(hass, zigpy_device_mock, zha_device_joined_restored):
 
 @freeze_time("2021-11-04 17:37:00", tz_offset=-1)
 async def test_button(hass, contact_sensor):
-    """Test zha button platform."""
+    """Test ZHA button platform."""
 
     entity_registry = er.async_get(hass)
     zha_device, cluster = contact_sensor
@@ -161,7 +161,7 @@ async def test_button(hass, contact_sensor):
 
 
 async def test_frost_unlock(hass, tuya_water_valve):
-    """Test custom frost unlock zha button."""
+    """Test custom frost unlock ZHA button."""
 
     entity_registry = er.async_get(hass)
     zha_device, cluster = tuya_water_valve

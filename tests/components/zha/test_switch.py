@@ -1,4 +1,4 @@
-"""Test zha switch."""
+"""Test ZHA switch."""
 from unittest.mock import call, patch
 
 import pytest
@@ -71,7 +71,7 @@ def zigpy_device(zigpy_device_mock):
 
 @pytest.fixture
 async def coordinator(hass, zigpy_device_mock, zha_device_joined):
-    """Test zha light platform."""
+    """Test ZHA light platform."""
 
     zigpy_device = zigpy_device_mock(
         {
@@ -92,7 +92,7 @@ async def coordinator(hass, zigpy_device_mock, zha_device_joined):
 
 @pytest.fixture
 async def device_switch_1(hass, zigpy_device_mock, zha_device_joined):
-    """Test zha switch platform."""
+    """Test ZHA switch platform."""
 
     zigpy_device = zigpy_device_mock(
         {
@@ -112,7 +112,7 @@ async def device_switch_1(hass, zigpy_device_mock, zha_device_joined):
 
 @pytest.fixture
 async def device_switch_2(hass, zigpy_device_mock, zha_device_joined):
-    """Test zha switch platform."""
+    """Test ZHA switch platform."""
 
     zigpy_device = zigpy_device_mock(
         {
@@ -131,7 +131,7 @@ async def device_switch_2(hass, zigpy_device_mock, zha_device_joined):
 
 
 async def test_switch(hass, zha_device_joined_restored, zigpy_device):
-    """Test zha switch platform."""
+    """Test ZHA switch platform."""
 
     zha_device = await zha_device_joined_restored(zigpy_device)
     cluster = zigpy_device.endpoints.get(1).on_off
@@ -377,7 +377,7 @@ async def test_zha_group_switch_entity(
 
 
 async def test_switch_configurable(hass, zha_device_joined_restored, zigpy_device_tuya):
-    """Test zha configurable switch platform."""
+    """Test ZHA configurable switch platform."""
 
     zha_device = await zha_device_joined_restored(zigpy_device_tuya)
     cluster = zigpy_device_tuya.endpoints.get(1).tuya_manufacturer

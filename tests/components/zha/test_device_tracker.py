@@ -63,7 +63,7 @@ def zigpy_device_dt(zigpy_device_mock):
 
 
 async def test_device_tracker(hass, zha_device_joined_restored, zigpy_device_dt):
-    """Test zha device tracker platform."""
+    """Test ZHA device tracker platform."""
 
     zha_device = await zha_device_joined_restored(zigpy_device_dt)
     cluster = zigpy_device_dt.endpoints.get(1).power

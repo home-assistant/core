@@ -58,7 +58,7 @@ async def zha_dev_basic(hass, zha_device_restored, zigpy_dev_basic):
 
 @pytest.fixture
 async def coordinator(hass, zigpy_device_mock, zha_device_joined):
-    """Test zha light platform."""
+    """Test ZHA light platform."""
 
     zigpy_device = zigpy_device_mock(
         {
@@ -80,7 +80,7 @@ async def coordinator(hass, zigpy_device_mock, zha_device_joined):
 
 @pytest.fixture
 async def device_light_1(hass, zigpy_device_mock, zha_device_joined):
-    """Test zha light platform."""
+    """Test ZHA light platform."""
 
     zigpy_device = zigpy_device_mock(
         {
@@ -105,7 +105,7 @@ async def device_light_1(hass, zigpy_device_mock, zha_device_joined):
 
 @pytest.fixture
 async def device_light_2(hass, zigpy_device_mock, zha_device_joined):
-    """Test zha light platform."""
+    """Test ZHA light platform."""
 
     zigpy_device = zigpy_device_mock(
         {

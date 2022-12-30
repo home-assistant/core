@@ -1,4 +1,4 @@
-"""Test zha alarm control panel."""
+"""Test ZHA alarm control panel."""
 from unittest.mock import AsyncMock, call, patch, sentinel
 
 import pytest
@@ -58,7 +58,7 @@ def zigpy_device(zigpy_device_mock):
     new=AsyncMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
 )
 async def test_alarm_control_panel(hass, zha_device_joined_restored, zigpy_device):
-    """Test zha alarm control panel platform."""
+    """Test ZHA alarm control panel platform."""
 
     zha_device = await zha_device_joined_restored(zigpy_device)
     cluster = zigpy_device.endpoints.get(1).ias_ace

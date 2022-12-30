@@ -77,7 +77,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
 
     @property
     def zha_device(self) -> ZHADevice:
-        """Return the zha device this entity is attached to."""
+        """Return the ZHA device this entity is attached to."""
         return self._zha_device
 
     @property

@@ -1,4 +1,4 @@
-"""Test zha device switch."""
+"""Test ZHA device switch."""
 from datetime import timedelta
 import time
 from unittest import mock
@@ -86,13 +86,13 @@ def zigpy_device_mains(zigpy_device_mock):
 
 @pytest.fixture
 def device_with_basic_channel(zigpy_device_mains):
-    """Return a zha device with a basic channel present."""
+    """Return a ZHA device with a basic channel present."""
     return zigpy_device_mains(with_basic_channel=True)
 
 
 @pytest.fixture
 def device_without_basic_channel(zigpy_device):
-    """Return a zha device with a basic channel present."""
+    """Return a ZHA device with a basic channel present."""
     return zigpy_device(with_basic_channel=False)
 
 

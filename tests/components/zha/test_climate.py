@@ -1,4 +1,4 @@
-"""Test zha climate."""
+"""Test ZHA climate."""
 from unittest.mock import patch
 
 import pytest

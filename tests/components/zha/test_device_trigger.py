@@ -83,7 +83,7 @@ async def mock_devices(hass, zigpy_device_mock, zha_device_joined_restored):
 
 
 async def test_triggers(hass, mock_devices):
-    """Test zha device triggers."""
+    """Test ZHA device triggers."""
 
     zigpy_device, zha_device = mock_devices
 
@@ -158,7 +158,7 @@ async def test_triggers(hass, mock_devices):
 
 
 async def test_no_triggers(hass, mock_devices):
-    """Test zha device with no triggers."""
+    """Test ZHA device with no triggers."""
 
     _, zha_device = mock_devices
     ieee_address = str(zha_device.ieee)
