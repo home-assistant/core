@@ -8,6 +8,8 @@
             "unknown": "Errore imprevisto"
         },
         "error": {
+            "encryption_key_invalid": "L'ID chiave o la chiave crittografica non sono validi",
+            "key_id_invalid": "L'ID chiave o la chiave crittografica non sono validi",
             "one": "Vuoto",
             "other": "Vuoti"
         },
@@ -15,6 +17,13 @@
         "step": {
             "confirm": {
                 "description": "Vuoi configurare {name}?"
+            },
+            "lock_key": {
+                "data": {
+                    "encryption_key": "Chiave crittografica",
+                    "key_id": "ID chiave"
+                },
+                "description": "Il dispositivo {name} richiede una chiave di crittografia, i dettagli su come ottenerla sono disponibili nella documentazione."
             },
             "password": {
                 "data": {
