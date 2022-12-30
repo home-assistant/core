@@ -2,17 +2,16 @@
 from __future__ import annotations
 
 import logging
+from typing import Union
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import SENSOR_TYPE_RAINDELAY, SENSOR_TYPE_RAINSENSOR
+from .coordinator import RainbirdUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,12 +50,14 @@ async def async_setup_platform(
     )
 
 
-class RainBirdSensor(CoordinatorEntity, SensorEntity):
+class RainBirdSensor(
+    CoordinatorEntity[RainbirdUpdateCoordinator[Union[int, bool]]], SensorEntity
+):
     """A sensor implementation for Rain Bird device."""
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: RainbirdUpdateCoordinator[int | bool],
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the Rain Bird sensor."""

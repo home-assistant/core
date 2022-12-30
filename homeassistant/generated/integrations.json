@@ -4410,6 +4410,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "reolink": {
+      "name": "Reolink IP NVR/camera",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "repetier": {
       "name": "Repetier-Server",
       "integration_type": "hub",

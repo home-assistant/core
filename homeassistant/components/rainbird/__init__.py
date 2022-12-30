@@ -36,7 +36,6 @@ PLATFORMS = [Platform.SWITCH, Platform.SENSOR, Platform.BINARY_SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_RAINBIRD = "rainbird"
 DOMAIN = "rainbird"
 
 TRIGGER_TIME_SCHEMA = vol.All(
@@ -65,13 +64,14 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Rain Bird component."""
-
-    hass.data[DATA_RAINBIRD] = []
-
-    tasks = []
-    for controller_config in config[DOMAIN]:
-        tasks.append(_setup_controller(hass, controller_config, config))
-    return all(await asyncio.gather(*tasks))
+    return all(
+        await asyncio.gather(
+            *[
+                _setup_controller(hass, controller_config, config)
+                for controller_config in config[DOMAIN]
+            ]
+        )
+    )
 
 
 async def _setup_controller(hass, controller_config, config):
@@ -80,29 +80,28 @@ async def _setup_controller(hass, controller_config, config):
     password = controller_config[CONF_PASSWORD]
     client = AsyncRainbirdClient(async_get_clientsession(hass), server, password)
     controller = AsyncRainbirdController(client)
-    position = len(hass.data[DATA_RAINBIRD])
     try:
         await controller.get_serial_number()
     except RainbirdApiException as exc:
         _LOGGER.error("Unable to setup controller: %s", exc)
         return False
-    hass.data[DATA_RAINBIRD].append(controller)
 
     rain_coordinator = RainbirdUpdateCoordinator(hass, controller.get_rain_sensor_state)
     delay_coordinator = RainbirdUpdateCoordinator(hass, controller.get_rain_delay)
 
-    _LOGGER.debug("Rain Bird Controller %d set to: %s", position, server)
     for platform in PLATFORMS:
-        discovery.load_platform(
-            hass,
-            platform,
-            DOMAIN,
-            {
-                RAINBIRD_CONTROLLER: controller,
-                SENSOR_TYPE_RAINSENSOR: rain_coordinator,
-                SENSOR_TYPE_RAINDELAY: delay_coordinator,
-                **controller_config,
-            },
-            config,
+        hass.async_create_task(
+            discovery.async_load_platform(
+                hass,
+                platform,
+                DOMAIN,
+                {
+                    RAINBIRD_CONTROLLER: controller,
+                    SENSOR_TYPE_RAINSENSOR: rain_coordinator,
+                    SENSOR_TYPE_RAINDELAY: delay_coordinator,
+                    **controller_config,
+                },
+                config,
+            )
         )
     return True

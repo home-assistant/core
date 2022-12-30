@@ -1383,12 +1383,8 @@ async def test_handle_mqtt_on_callback(
     await hass.async_block_till_done()
     # Now call publish without call back, this will call _wait_for_mid(msg_info.mid)
     await mqtt.async_publish(hass, "no_callback/test-topic", "test-payload")
-    # Since the mid event was already set, we should not see any timeout
+    # Since the mid event was already set, we should not see any timeout warning in the log
     await hass.async_block_till_done()
-    assert (
-        "Transmitting message on no_callback/test-topic: 'test-payload', mid: 1"
-        in caplog.text
-    )
     assert "No ACK from MQTT server" not in caplog.text
 
 
@@ -1425,18 +1421,26 @@ async def test_subscribe_error(
 
 
 async def test_handle_message_callback(
-    hass, caplog, mqtt_mock_entry_no_yaml_config, mqtt_client_mock
+    hass, mqtt_mock_entry_no_yaml_config, mqtt_client_mock
 ):
     """Test for handling an incoming message callback."""
+    callbacks = []
+
+    def _callback(args):
+        callbacks.append(args)
+
     await mqtt_mock_entry_no_yaml_config()
     msg = ReceiveMessage("some-topic", b"test-payload", 1, False)
     mqtt_client_mock.on_connect(mqtt_client_mock, None, None, 0)
-    await mqtt.async_subscribe(hass, "some-topic", lambda *args: 0)
+    await mqtt.async_subscribe(hass, "some-topic", _callback)
     mqtt_client_mock.on_message(mock_mqtt, None, msg)
 
     await hass.async_block_till_done()
     await hass.async_block_till_done()
-    assert "Received message on some-topic (qos=1): b'test-payload'" in caplog.text
+    assert len(callbacks) == 1
+    assert callbacks[0].topic == "some-topic"
+    assert callbacks[0].qos == 1
+    assert callbacks[0].payload == "test-payload"
 
 
 async def test_setup_override_configuration(hass, caplog, tmp_path):

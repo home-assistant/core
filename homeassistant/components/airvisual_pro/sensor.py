@@ -39,7 +39,6 @@ SENSOR_DESCRIPTIONS = (
         key=SENSOR_KIND_AQI,
         name="Air quality index",
         device_class=SensorDeviceClass.AQI,
-        native_unit_of_measurement="AQI",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -94,7 +93,7 @@ SENSOR_DESCRIPTIONS = (
         key=SENSOR_KIND_VOC,
         name="VOC",
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
@@ -159,6 +158,6 @@ class AirVisualProSensor(AirVisualProEntity, SensorEntity):
         elif self.entity_description.key == SENSOR_KIND_BATTERY_LEVEL:
             self._attr_native_value = self.status["battery"]
         else:
-            self._attr_native_value = self.MEASUREMENTS_KEY_TO_VALUE[
-                self.entity_description.key
+            self._attr_native_value = self.measurements[
+                self.MEASUREMENTS_KEY_TO_VALUE[self.entity_description.key]
             ]

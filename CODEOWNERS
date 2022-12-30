@@ -437,8 +437,8 @@ build.json @home-assistant/supervisor
 /tests/components/google_sheets/ @tkdrob
 /homeassistant/components/google_travel_time/ @eifinger
 /tests/components/google_travel_time/ @eifinger
-/homeassistant/components/govee_ble/ @bdraco
-/tests/components/govee_ble/ @bdraco
+/homeassistant/components/govee_ble/ @bdraco @PierreAronnax
+/tests/components/govee_ble/ @bdraco @PierreAronnax
 /homeassistant/components/gpsd/ @fabaff
 /homeassistant/components/gree/ @cmroche
 /tests/components/gree/ @cmroche
@@ -669,7 +669,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/lyric/ @timmo001
 /tests/components/lyric/ @timmo001
 /homeassistant/components/mastodon/ @fabaff
-/homeassistant/components/matrix/ @tinloaf
 /homeassistant/components/matter/ @home-assistant/matter
 /tests/components/matter/ @home-assistant/matter
 /homeassistant/components/mazda/ @bdr99
@@ -947,6 +946,8 @@ build.json @home-assistant/supervisor
 /tests/components/remote/ @home-assistant/core
 /homeassistant/components/renault/ @epenet
 /tests/components/renault/ @epenet
+/homeassistant/components/reolink/ @starkillerOG @JimStar
+/tests/components/reolink/ @starkillerOG @JimStar
 /homeassistant/components/repairs/ @home-assistant/core
 /tests/components/repairs/ @home-assistant/core
 /homeassistant/components/repetier/ @MTrab @ShadowBr0ther
@@ -1134,8 +1135,8 @@ build.json @home-assistant/supervisor
 /tests/components/switch_as_x/ @home-assistant/core
 /homeassistant/components/switchbee/ @jafar-atili
 /tests/components/switchbee/ @jafar-atili
-/homeassistant/components/switchbot/ @bdraco @danielhiversen @RenierM26 @murtas @Eloston
-/tests/components/switchbot/ @bdraco @danielhiversen @RenierM26 @murtas @Eloston
+/homeassistant/components/switchbot/ @bdraco @danielhiversen @RenierM26 @murtas @Eloston @dsypniewski
+/tests/components/switchbot/ @bdraco @danielhiversen @RenierM26 @murtas @Eloston @dsypniewski
 /homeassistant/components/switcher_kis/ @tomerfi @thecode
 /tests/components/switcher_kis/ @tomerfi @thecode
 /homeassistant/components/switchmate/ @danielhiversen @qiz-li
