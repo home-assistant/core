@@ -158,7 +158,7 @@ class Events(Base):  # type: ignore[misc,valid-type]
     origin = Column(String(MAX_LENGTH_EVENT_ORIGIN))  # no longer used for new rows
     origin_idx = Column(SmallInteger)
     time_fired = Column(DATETIME_TYPE, index=True)  # no longer used for new rows
-    timed_fired_ts = Column(TIMESTAMP_TYPE, index=True)
+    time_fired_ts = Column(TIMESTAMP_TYPE, index=True)
     context_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
     context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
     context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))

@@ -825,18 +825,14 @@ def _sorted_states_to_dict(
     _process_timestamp: Callable[[datetime], float | str]
     if compressed_state_format:
         state_class = row_to_compressed_state
+        _process_timestamp = process_datetime_to_timestamp
         attr_time = COMPRESSED_STATE_LAST_UPDATED
         attr_state = COMPRESSED_STATE_STATE
     else:
         state_class = LazyState  # type: ignore[assignment]
+        _process_timestamp = process_timestamp_to_utc_isoformat
         attr_time = LAST_CHANGED_KEY
         attr_state = STATE_KEY
-
-    if schema_version < 31:
-        if compressed_state_format:
-            _process_timestamp = process_datetime_to_timestamp
-        else:
-            _process_timestamp = process_timestamp_to_utc_isoformat
 
     result: dict[str, list[State | dict[str, Any]]] = defaultdict(list)
     # Set all entity IDs to empty lists in result set to maintain the order
