@@ -5,29 +5,25 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import ZeverSolarCoordinator
+from .coordinator import ZeversolarCoordinator
 
 
-class ZeverSolarEntity(
-    CoordinatorEntity[ZeverSolarCoordinator],
+class ZeversolarEntity(
+    CoordinatorEntity[ZeversolarCoordinator],
 ):
-    """Defines a base ZeverSolar entity."""
+    """Defines a base Zeversolar entity."""
 
     def __init__(
         self,
         *,
         device_id: str,
-        coordinator: ZeverSolarCoordinator,
+        coordinator: ZeversolarCoordinator,
     ) -> None:
-        """Initialize the ZeverSolar entity."""
+        """Initialize the Zeversolar entity."""
         super().__init__(coordinator=coordinator)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
-            name="ZeverSolar Sensor",
-            manufacturer="ZeverSolar",
+            name="Zeversolar Sensor",
+            manufacturer="Zeversolar",
         )
 
-    @property
-    def available(self) -> bool:
-        """Return device availability."""
-        return super().available
