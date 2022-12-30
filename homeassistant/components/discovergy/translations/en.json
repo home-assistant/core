@@ -28,5 +28,15 @@
         "info": {
             "api_endpoint_reachable": "Discovergy API endpoint reachable"
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "time_between_update": "Minimum time between entity updates [s]",
+                    "precision": "Number of decimal places"
+                }
+            }
+        }
     }
 }

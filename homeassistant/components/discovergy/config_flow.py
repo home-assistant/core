@@ -13,10 +13,18 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import APP_NAME, DOMAIN
+from .const import (
+    APP_NAME,
+    CONF_PRECISION,
+    CONF_TIME_BETWEEN_UPDATE,
+    DEFAULT_PRECISION,
+    DEFAULT_TIME_BETWEEN_UPDATE,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -121,4 +129,47 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id=step_id,
             data_schema=make_schema(),
             errors=errors,
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
+        """Create the options flow."""
+        return DiscovergyOptionsFlowHandler(config_entry)
+
+
+class DiscovergyOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle Discovergy options."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_PRECISION,
+                        default=self.config_entry.options.get(
+                            CONF_PRECISION, DEFAULT_PRECISION
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=0)),
+                    vol.Optional(
+                        CONF_TIME_BETWEEN_UPDATE,
+                        default=self.config_entry.options.get(
+                            CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=1)),
+                }
+            ),
         )

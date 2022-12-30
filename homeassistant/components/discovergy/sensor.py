@@ -1,5 +1,6 @@
 """Discovergy sensor entity."""
 from dataclasses import dataclass, field
+from datetime import timedelta
 import logging
 
 from pydiscovergy import Discovergy
@@ -34,7 +35,14 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import DiscovergyData
-from .const import DOMAIN, MANUFACTURER, MIN_TIME_BETWEEN_UPDATES
+from .const import (
+    CONF_PRECISION,
+    CONF_TIME_BETWEEN_UPDATE,
+    DEFAULT_PRECISION,
+    DEFAULT_TIME_BETWEEN_UPDATE,
+    DOMAIN,
+    MANUFACTURER,
+)
 
 PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
@@ -145,7 +153,10 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
 
 
 def get_coordinator_for_meter(
-    hass: HomeAssistant, meter: Meter, discovergy_instance: Discovergy
+    hass: HomeAssistant,
+    meter: Meter,
+    discovergy_instance: Discovergy,
+    update_interval: timedelta,
 ) -> DataUpdateCoordinator:
     """Create a new DataUpdateCoordinator for given meter."""
 
@@ -169,7 +180,7 @@ def get_coordinator_for_meter(
         _LOGGER,
         name="sensor",
         update_method=async_update_data,
-        update_interval=MIN_TIME_BETWEEN_UPDATES,
+        update_interval=update_interval,
     )
     return coordinator
 
@@ -182,11 +193,18 @@ async def async_setup_entry(
     discovergy_instance: Discovergy = data.api_client
     meters: list[Meter] = data.meters  # always returns a list
 
+    min_time_between_updates = timedelta(
+        seconds=entry.options.get(CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE)
+    )
+    precision = entry.options.get(CONF_PRECISION, DEFAULT_PRECISION)
+
     entities = []
     for meter in meters:
         # Get coordinator for meter, set config entry and fetch initial data
         # so we have data when entities are added
-        coordinator = get_coordinator_for_meter(hass, meter, discovergy_instance)
+        coordinator = get_coordinator_for_meter(
+            hass, meter, discovergy_instance, min_time_between_updates
+        )
         coordinator.config_entry = entry
         await coordinator.async_config_entry_first_refresh()
 
@@ -207,7 +225,9 @@ async def async_setup_entry(
                 for key in keys:
                     if key in coordinator.data.values:
                         entities.append(
-                            DiscovergySensor(key, description, meter, coordinator)
+                            DiscovergySensor(
+                                key, description, meter, coordinator, precision
+                            )
                         )
 
     async_add_entities(entities, False)
@@ -218,6 +238,7 @@ class DiscovergySensor(CoordinatorEntity, SensorEntity):
 
     entity_description: DiscovergySensorEntityDescription
     data_key: str
+    precision: int
     _attr_has_entity_name = True
 
     def __init__(
@@ -226,11 +247,14 @@ class DiscovergySensor(CoordinatorEntity, SensorEntity):
         description: DiscovergySensorEntityDescription,
         meter: Meter,
         coordinator: DataUpdateCoordinator,
+        precision: int,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
 
         self.data_key = data_key
+        self.precision = precision
+
         self.entity_description = description
         self._attr_name = f"{description.name}"
         self._attr_unique_id = f"{meter.full_serial_number}-{description.key}"
@@ -244,6 +268,7 @@ class DiscovergySensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the sensor state."""
-        return (
-            self.coordinator.data.values[self.data_key] / self.entity_description.scale
+        return round(
+            self.coordinator.data.values[self.data_key] / self.entity_description.scale,
+            self.precision,
         )
