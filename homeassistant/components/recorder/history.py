@@ -937,7 +937,7 @@ def _sorted_states_to_dict(
                             # We use last_updated for for last_changed since its the same
                             #
                             attr_time: process_timestamp_to_utc_isoformat(
-                                datetime.fromtimestamp(row.last_updated_ts)
+                                dt_util.utc_from_timestamp(row.last_updated_ts)
                             ),
                         }
                     )

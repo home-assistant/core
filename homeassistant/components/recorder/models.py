@@ -188,6 +188,11 @@ class LazyStatePreSchema31(State):
         self._last_changed = value
 
     @property
+    def last_updated_ts(self) -> float:
+        """Last updated timestamp."""
+        return self.last_updated.timestamp()
+
+    @property
     def last_updated(self) -> datetime:
         """Last updated datetime."""
         if self._last_updated is None:
@@ -301,23 +306,29 @@ class LazyState(State):
     def last_changed(self) -> datetime:
         """Last changed datetime."""
         assert self._last_changed_ts is not None
-        return datetime.fromtimestamp(self._last_changed_ts)
+        return dt_util.utc_from_timestamp(self._last_changed_ts)
 
     @last_changed.setter
     def last_changed(self, value: datetime) -> None:
         """Set last changed datetime."""
-        self._last_changed_ts = value.timestamp()
+        self._last_changed_ts = process_timestamp(value).timestamp()
+
+    @property
+    def last_updated_ts(self) -> float:
+        """Last updated timestamp."""
+        assert self._last_updated_ts is not None
+        return self._last_updated_ts
 
     @property
     def last_updated(self) -> datetime:
         """Last updated datetime."""
         assert self._last_updated_ts is not None
-        return datetime.fromtimestamp(self._last_updated_ts)
+        return dt_util.utc_from_timestamp(self._last_updated_ts)
 
     @last_updated.setter
     def last_updated(self, value: datetime) -> None:
         """Set last updated datetime."""
-        self._last_updated_ts = value.timestamp()
+        self._last_updated_ts = process_timestamp(value).timestamp()
 
     def as_dict(self) -> dict[str, Any]:  # type: ignore[override]
         """Return a dict representation of the LazyState.

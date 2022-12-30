@@ -11,14 +11,18 @@ import pytest
 from sqlalchemy import text
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import history
+from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.recorder.db_schema import (
     Events,
     RecorderRuns,
     StateAttributes,
     States,
 )
-from homeassistant.components.recorder.models import LazyState, process_timestamp
+from homeassistant.components.recorder.models import (
+    LazyState,
+    LazyStatePreSchema31,
+    process_timestamp,
+)
 from homeassistant.components.recorder.util import session_scope
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant, State
@@ -40,10 +44,14 @@ async def _async_get_states(
     """Get states from the database."""
 
     def _get_states_with_session():
+        if get_instance(hass).schema_version < 31:
+            klass = LazyStatePreSchema31
+        else:
+            klass = LazyState
         with session_scope(hass=hass) as session:
             attr_cache = {}
             return [
-                LazyState(row, attr_cache)
+                klass(row, attr_cache)
                 for row in history._get_rows_with_session(
                     hass,
                     session,

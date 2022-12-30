@@ -48,7 +48,7 @@ from homeassistant.helpers.json import (
 import homeassistant.util.dt as dt_util
 
 from .const import ALL_DOMAIN_EXCLUDE_ATTRS
-from .models import StatisticData, StatisticMetaData, process_timestamp
+from .models import StatisticData, StatisticMetaData
 
 # SQLAlchemy Schema
 # pylint: disable=invalid-name
@@ -184,7 +184,7 @@ class Events(Base):  # type: ignore[misc,valid-type]
             event_data=None,
             origin_idx=EVENT_ORIGIN_TO_IDX.get(event.origin),
             time_fired=event.time_fired,
-            time_fired_ts=event.time_fired.timestamp(),
+            time_fired_ts=dt_util.utc_to_timestamp(event.time_fired),
             context_id=event.context.id,
             context_user_id=event.context.user_id,
             context_parent_id=event.context.parent_id,
@@ -204,7 +204,7 @@ class Events(Base):  # type: ignore[misc,valid-type]
                 EventOrigin(self.origin)
                 if self.origin
                 else EVENT_ORIGIN_ORDER[self.origin_idx],
-                process_timestamp(self.time_fired),
+                dt_util.utc_from_timestamp(self.time_fired_ts),
                 context=context,
             )
         except JSON_DECODE_EXCEPTIONS:
@@ -325,18 +325,20 @@ class States(Base):  # type: ignore[misc,valid-type]
         if state is None:
             dbstate.state = ""
             dbstate.last_updated = event.time_fired
-            dbstate.last_changed_ts = event.time_fired.timestamp()
+            dbstate.last_updated_ts = dt_util.utc_to_timestamp(event.time_fired)
             dbstate.last_changed = None
+            dbstate.last_changed_ts = None
             return dbstate
 
         dbstate.state = state.state
         dbstate.last_updated = state.last_updated
+        dbstate.last_updated_ts = dt_util.utc_to_timestamp(state.last_updated)
         if state.last_updated == state.last_changed:
             dbstate.last_changed = None
             dbstate.last_changed_ts = None
         else:
             dbstate.last_changed = state.last_changed
-            dbstate.last_changed_ts = state.last_changed.timestamp()
+            dbstate.last_changed_ts = dt_util.utc_to_timestamp(state.last_changed)
 
         return dbstate
 
@@ -354,10 +356,12 @@ class States(Base):  # type: ignore[misc,valid-type]
             _LOGGER.exception("Error converting row to state: %s", self)
             return None
         if self.last_changed is None or self.last_changed == self.last_updated:
-            last_changed = last_updated = process_timestamp(self.last_updated)
+            last_changed = last_updated = dt_util.utc_from_timestamp(
+                self.last_updated_ts
+            )
         else:
-            last_updated = process_timestamp(self.last_updated)
-            last_changed = process_timestamp(self.last_changed)
+            last_updated = dt_util.utc_from_timestamp(self.last_updated_ts)
+            last_changed = dt_util.utc_from_timestamp(self.last_changed_ts)
         return State(
             self.entity_id,
             self.state,
