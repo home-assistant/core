@@ -1,5 +1,7 @@
 """Tests for the sensors provided by the EnergyZero integration."""
 
+import pytest
+
 from homeassistant.components.energyzero.const import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -21,6 +23,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.freeze_time("2022-12-07 15:00:00")
 async def test_energy_today(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
@@ -37,7 +40,7 @@ async def test_energy_today(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_today_energy_current_hour_price"
-    assert state.state == "unknown"
+    assert state.state == "0.49"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy market price Current hour"
     )
@@ -112,6 +115,7 @@ async def test_energy_today(
     assert not device_entry.sw_version
 
 
+@pytest.mark.freeze_time("2022-12-07 15:00:00")
 async def test_gas_today(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
@@ -126,7 +130,7 @@ async def test_gas_today(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_today_gas_current_hour_price"
-    assert state.state == "unknown"
+    assert state.state == "1.47"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Gas market price Current hour"
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
