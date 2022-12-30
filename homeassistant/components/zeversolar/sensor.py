@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+
+import zeversolar
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -12,11 +13,10 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS, UnitOfEnergy, UnitOfPower
+from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
 from .coordinator import ZeversolarCoordinator
@@ -27,7 +27,7 @@ from .entity import ZeversolarEntity
 class ZeversolarEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[zeversolar.ZeverSolarData], Any]
+    value_fn: Callable[[zeversolar.ZeverSolarData], zeversolar.kWh | zeversolar.Watt]
 
 
 @dataclass
@@ -38,7 +38,7 @@ class ZeversolarEntityDescription(
 
 
 SENSOR_TYPES = (
-    ZeverSolarEntityDescription(
+    ZeversolarEntityDescription(
         key="pac",
         name="Current power",
         icon="mdi:solar-power-variant",
@@ -48,7 +48,7 @@ SENSOR_TYPES = (
         device_class=SensorDeviceClass.POWER,
         value_fn=lambda data: data.pac,
     ),
-    ZeverSolarEntityDescription(
+    ZeversolarEntityDescription(
         key="energy_today",
         name="Energy today",
         icon="mdi:home-battery",
@@ -63,11 +63,10 @@ SENSOR_TYPES = (
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the ZeverSolar sensor."""
+    """Set up the Zeversolar sensor."""
     coordinator: ZeversolarCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         ZeversolarSensor(
-            device_id=entry.data[CONF_IP_ADDRESS],
             description=description,
             coordinator=coordinator,
         )
@@ -78,25 +77,20 @@ async def async_setup_entry(
 class ZeversolarSensor(ZeversolarEntity, SensorEntity):
     """Implementation of the Zeversolar sensor."""
 
-
     entity_description: ZeversolarEntityDescription
 
     def __init__(
         self,
         *,
-        device_id: str,
         description: ZeversolarEntityDescription,
         coordinator: ZeversolarCoordinator,
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
-        super().__init__(
-            device_id=device_id,
-            coordinator=coordinator,
-        )
-        self._attr_unique_id = f"{device_id}_{description.key}"
+        super().__init__(coordinator=coordinator)
+        self._attr_unique_id = f"{coordinator.data.serial_number}_{description.key}"
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> int | float:
         """Return sensor state."""
         return self.entity_description.value_fn(self.coordinator.data)
