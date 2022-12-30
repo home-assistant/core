@@ -246,7 +246,7 @@ class BackupManager:
             tar_file.add(tmp_dir_path, arcname=".")
 
     async def delete_backups(self, amount: int) -> None:
-        """Delete backups."""
+        """Delete backups and keep the specified amount of newest backups."""
         if self.backing_up:
             raise HomeAssistantError(
                 "Backup in progress, can not delete backups right now"
