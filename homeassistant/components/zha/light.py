@@ -228,7 +228,6 @@ class BaseLight(LogMixin, light.LightEntity):
         # desired color mode with the desired color or color temperature.
         new_color_provided_while_off = (
             self._zha_config_enhanced_light_transition
-            and not self._color_channel.execute_if_off_supported
             and not self._FORCE_ON
             and not self._attr_state
             and (
@@ -255,6 +254,7 @@ class BaseLight(LogMixin, light.LightEntity):
                 )
             )
             and brightness_supported(self._attr_supported_color_modes)
+            and not self._color_channel.execute_if_off_supported
         )
 
         if (
@@ -291,6 +291,7 @@ class BaseLight(LogMixin, light.LightEntity):
 
         if (
             not isinstance(self, LightGroup)
+            and self._color_channel is not None
             and self._color_channel.execute_if_off_supported
         ):
             self.debug("handling color commands before turning on/level")
@@ -349,6 +350,7 @@ class BaseLight(LogMixin, light.LightEntity):
 
         if (
             isinstance(self, LightGroup)
+            or self._color_channel is None
             or not self._color_channel.execute_if_off_supported
         ):
             self.debug("handling color commands after turning on/level")
