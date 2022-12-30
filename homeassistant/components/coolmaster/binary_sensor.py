@@ -24,10 +24,8 @@ async def async_setup_entry(
     info = hass.data[DOMAIN][config_entry.entry_id][DATA_INFO]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
     async_add_entities(
-        [
-            CoolmasterCleanFilter(coordinator, unit_id, info)
-            for unit_id in coordinator.data
-        ]
+        CoolmasterCleanFilter(coordinator, unit_id, info)
+        for unit_id in coordinator.data
     )
 
 

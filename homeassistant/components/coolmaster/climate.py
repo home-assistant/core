@@ -40,10 +40,8 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
     supported_modes = config_entry.data.get(CONF_SUPPORTED_MODES)
     async_add_entities(
-        [
-            CoolmasterClimate(coordinator, unit_id, info, supported_modes)
-            for unit_id in coordinator.data
-        ]
+        CoolmasterClimate(coordinator, unit_id, info, supported_modes)
+        for unit_id in coordinator.data
     )
 
 
