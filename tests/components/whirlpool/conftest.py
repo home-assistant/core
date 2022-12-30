@@ -114,7 +114,6 @@ def side_effect_function(*args, **kwargs):
         return "0"
     if args[0] == "WashCavity_OpStatusBulkDispense1Level":
         return "3"
-    return "3"
 
 
 def get_sensor_mock(said):
