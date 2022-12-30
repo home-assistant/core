@@ -32,6 +32,7 @@ from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
     device_registry as dr,
+    entity_registry as er,
 )
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -114,36 +115,6 @@ def async_get_geography_id(geography_dict: Mapping[str, Any]) -> str:
     return ", ".join(
         (str(geography_dict[CONF_LATITUDE]), str(geography_dict[CONF_LONGITUDE]))
     )
-
-
-@callback
-def async_get_pro_config_entry_by_ip_address(
-    hass: HomeAssistant, ip_address: str
-) -> ConfigEntry:
-    """Get the Pro config entry related to an IP address."""
-    [config_entry] = [
-        entry
-        for entry in hass.config_entries.async_entries(DOMAIN_AIRVISUAL_PRO)
-        if entry.data[CONF_IP_ADDRESS] == ip_address
-    ]
-    return config_entry
-
-
-@callback
-def async_get_pro_device_by_config_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> dr.DeviceEntry:
-    """Get the Pro device entry related to a config entry.
-
-    Note that a Pro config entry can only contain a single device.
-    """
-    device_registry = dr.async_get(hass)
-    [device_entry] = [
-        device_entry
-        for device_entry in device_registry.devices.values()
-        if config_entry.entry_id in device_entry.config_entries
-    ]
-    return device_entry
 
 
 @callback
@@ -305,14 +276,31 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         version = 3
 
         if entry.data[CONF_INTEGRATION_TYPE] == INTEGRATION_TYPE_NODE_PRO:
+            device_registry = dr.async_get(hass)
+            entity_registry = er.async_get(hass)
             ip_address = entry.data[CONF_IP_ADDRESS]
 
-            # Get the existing Pro device entry before it is removed by the migration:
-            old_device_entry = async_get_pro_device_by_config_entry(hass, entry)
+            # Store the existing Pro device before the migration removes it:
+            old_device_entry = next(
+                entry
+                for entry in dr.async_entries_for_config_entry(
+                    device_registry, entry.entry_id
+                )
+            )
 
+            # Store the existing Pro entity entries (mapped by unique ID) before the
+            # migration removes it:
+            old_entity_entries: dict[str, er.RegistryEntry] = {
+                entry.unique_id: entry
+                for entry in er.async_entries_for_device(
+                    entity_registry, old_device_entry.id, include_disabled_entities=True
+                )
+            }
+
+            # Remove this config entry and create a new one under the `airvisual_pro`
+            # domain:
             new_entry_data = {**entry.data}
             new_entry_data.pop(CONF_INTEGRATION_TYPE)
-
             tasks = [
                 hass.config_entries.async_remove(entry.entry_id),
                 hass.config_entries.flow.async_init(
@@ -323,18 +311,52 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ]
             await asyncio.gather(*tasks)
 
+            # After the migration has occurred, grab the new config and device entries
+            # (now under the `airvisual_pro` domain):
+            new_config_entry = next(
+                entry
+                for entry in hass.config_entries.async_entries(DOMAIN_AIRVISUAL_PRO)
+                if entry.data[CONF_IP_ADDRESS] == ip_address
+            )
+            new_device_entry = next(
+                entry
+                for entry in dr.async_entries_for_config_entry(
+                    device_registry, new_config_entry.entry_id
+                )
+            )
+
+            # Update the new device entry with any customizations from the old one:
+            device_registry.async_update_device(
+                new_device_entry.id,
+                area_id=old_device_entry.area_id,
+                disabled_by=old_device_entry.disabled_by,
+                name_by_user=old_device_entry.name_by_user,
+            )
+
+            # Update the new entity entries with any customizations from the old ones:
+            for new_entity_entry in er.async_entries_for_device(
+                entity_registry, new_device_entry.id, include_disabled_entities=True
+            ):
+                if old_entity_entry := old_entity_entries.get(
+                    new_entity_entry.unique_id
+                ):
+                    entity_registry.async_update_entity(
+                        new_entity_entry.entity_id,
+                        area_id=old_entity_entry.area_id,
+                        device_class=old_entity_entry.device_class,
+                        disabled_by=old_entity_entry.disabled_by,
+                        hidden_by=old_entity_entry.hidden_by,
+                        icon=old_entity_entry.icon,
+                        name=old_entity_entry.name,
+                        new_entity_id=old_entity_entry.entity_id,
+                        unit_of_measurement=old_entity_entry.unit_of_measurement,
+                    )
+
             # If any automations are using the old device ID, create a Repairs issues
             # with instructions on how to update it:
             if device_automations := automation.automations_with_device(
                 hass, old_device_entry.id
             ):
-                new_config_entry = async_get_pro_config_entry_by_ip_address(
-                    hass, ip_address
-                )
-                new_device_entry = async_get_pro_device_by_config_entry(
-                    hass, new_config_entry
-                )
-
                 async_create_issue(
                     hass,
                     DOMAIN,

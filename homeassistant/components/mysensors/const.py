@@ -163,5 +163,4 @@ for platform, platform_types in PLATFORM_TYPES.items():
 
 PLATFORMS_WITH_ENTRY_SUPPORT = set(PLATFORM_TYPES.keys()) - {
     Platform.NOTIFY,
-    Platform.DEVICE_TRACKER,
 }

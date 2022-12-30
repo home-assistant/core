@@ -9,18 +9,24 @@ from typing import Any
 import aiohttp
 import voluptuous as vol
 from whirlpool.auth import Auth
-from whirlpool.backendselector import BackendSelector, Brand, Region
+from whirlpool.backendselector import BackendSelector
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN
+from .const import CONF_REGIONS_MAP, DOMAIN
+from .util import get_brand_for_region
 
 _LOGGER = logging.getLogger(__name__)
 
+
 STEP_USER_DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+    {
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_REGION): vol.In(list(CONF_REGIONS_MAP)),
+    }
 )
 
 REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
@@ -33,7 +39,9 @@ async def validate_input(
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    backend_selector = BackendSelector(Brand.Whirlpool, Region.EU)
+    region = CONF_REGIONS_MAP[data[CONF_REGION]]
+    brand = get_brand_for_region(region)
+    backend_selector = BackendSelector(brand, region)
     auth = Auth(backend_selector, data[CONF_USERNAME], data[CONF_PASSWORD])
     try:
         await auth.do_auth()
@@ -68,7 +76,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             assert self.entry is not None
             password = user_input[CONF_PASSWORD]
             data = {
-                CONF_USERNAME: self.entry.data[CONF_USERNAME],
+                **self.entry.data,
                 CONF_PASSWORD: password,
             }
 
