@@ -892,7 +892,7 @@ async def test_get_full_significant_states_handles_empty_last_changed(
         != native_sensor_one_states[1].last_updated
     )
 
-    def _fetch_db_states() -> list[State]:
+    def _fetch_db_states() -> list[States]:
         with session_scope(hass=hass) as session:
             states = list(session.query(States))
             session.expunge_all()
@@ -902,12 +902,22 @@ async def test_get_full_significant_states_handles_empty_last_changed(
         _fetch_db_states
     )
     assert db_sensor_one_states[0].last_changed is None
+    assert db_sensor_one_states[0].last_changed_ts is None
+
     assert (
-        process_timestamp(db_sensor_one_states[1].last_changed) == state0.last_changed
+        process_timestamp(
+            dt_util.utc_from_timestamp(db_sensor_one_states[1].last_changed_ts)
+        )
+        == state0.last_changed
     )
     assert db_sensor_one_states[0].last_updated is not None
+    assert db_sensor_one_states[0].last_updated_ts is not None
     assert db_sensor_one_states[1].last_updated is not None
-    assert db_sensor_one_states[0].last_updated != db_sensor_one_states[1].last_updated
+    assert db_sensor_one_states[1].last_updated_ts is not None
+    assert (
+        db_sensor_one_states[0].last_updated_ts
+        != db_sensor_one_states[1].last_updated_ts
+    )
 
 
 def test_state_changes_during_period_multiple_entities_single_test(hass_recorder):

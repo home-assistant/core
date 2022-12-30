@@ -183,7 +183,7 @@ class Events(Base):  # type: ignore[misc,valid-type]
             event_type=event.event_type,
             event_data=None,
             origin_idx=EVENT_ORIGIN_TO_IDX.get(event.origin),
-            time_fired=event.time_fired,
+            time_fired=None,
             time_fired_ts=dt_util.utc_to_timestamp(event.time_fired),
             context_id=event.context.id,
             context_user_id=event.context.user_id,
@@ -319,25 +319,22 @@ class States(Base):  # type: ignore[misc,valid-type]
             context_user_id=event.context.user_id,
             context_parent_id=event.context.parent_id,
             origin_idx=EVENT_ORIGIN_TO_IDX.get(event.origin),
+            last_updated=None,
+            last_changed=None,
         )
 
         # None state means the state was removed from the state machine
         if state is None:
             dbstate.state = ""
-            dbstate.last_updated = event.time_fired
             dbstate.last_updated_ts = dt_util.utc_to_timestamp(event.time_fired)
-            dbstate.last_changed = None
             dbstate.last_changed_ts = None
             return dbstate
 
         dbstate.state = state.state
-        dbstate.last_updated = state.last_updated
         dbstate.last_updated_ts = dt_util.utc_to_timestamp(state.last_updated)
         if state.last_updated == state.last_changed:
-            dbstate.last_changed = None
             dbstate.last_changed_ts = None
         else:
-            dbstate.last_changed = state.last_changed
             dbstate.last_changed_ts = dt_util.utc_to_timestamp(state.last_changed)
 
         return dbstate
@@ -355,7 +352,7 @@ class States(Base):  # type: ignore[misc,valid-type]
             # When json_loads fails
             _LOGGER.exception("Error converting row to state: %s", self)
             return None
-        if self.last_changed is None or self.last_changed == self.last_updated:
+        if self.last_changed_ts is None or self.last_changed_ts == self.last_updated_ts:
             last_changed = last_updated = dt_util.utc_from_timestamp(
                 self.last_updated_ts
             )
