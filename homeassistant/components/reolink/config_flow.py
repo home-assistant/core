@@ -1,6 +1,8 @@
 """Config flow for the Reolink camera component."""
 from __future__ import annotations
 
+from typing import Any
+
 import logging
 
 from reolink_ip.exceptions import ApiError, CredentialsInvalidError
