@@ -401,6 +401,10 @@ DHCP: list[dict[str, str | bool]] = [
         "macaddress": "204EF6*",
     },
     {
+        "domain": "ruuvi_gateway",
+        "hostname": "ruuvigateway*",
+    },
+    {
         "domain": "samsungtv",
         "registered_devices": True,
     },
