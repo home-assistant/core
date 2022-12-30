@@ -44,7 +44,7 @@ async def async_device_control_fn(api: aiounifi.Controller, obj_id: str) -> None
 
 
 @dataclass
-class UnifiEntityLoader(Generic[_HandlerT, _DataT]):
+class UnifiUpdateEntityDescriptionMixin(Generic[_HandlerT, _DataT]):
     """Validate and load entities from different UniFi handlers."""
 
     control_fn: Callable[[aiounifi.Controller, str], Coroutine[Any, Any, None]]
@@ -55,7 +55,7 @@ class UnifiEntityLoader(Generic[_HandlerT, _DataT]):
 class UnifiUpdateEntityDescription(
     UpdateEntityDescription,
     UnifiEntityDescription[_HandlerT, _DataT],
-    UnifiEntityLoader[_HandlerT, _DataT],
+    UnifiUpdateEntityDescriptionMixin[_HandlerT, _DataT],
 ):
     """Class describing UniFi update entity."""
 
