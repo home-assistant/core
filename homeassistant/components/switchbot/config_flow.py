@@ -5,6 +5,7 @@ import logging
 from typing import Any
 
 from switchbot import (
+    SwitchbotAccountConnectionError,
     SwitchBotAdvertisement,
     SwitchbotAuthenticationError,
     SwitchbotLock,
@@ -173,10 +174,10 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_USERNAME],
                     user_input[CONF_PASSWORD],
                 )
+            except SwitchbotAccountConnectionError as ex:
+                raise AbortFlow("cannot_connect") from ex
             except SwitchbotAuthenticationError:
-                errors = {
-                    "base": "auth_failed",
-                }
+                errors = {"base": "auth_failed"}
             else:
                 return await self.async_step_lock_key(key_details)
 
