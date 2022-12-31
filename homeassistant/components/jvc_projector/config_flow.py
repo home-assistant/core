@@ -2,26 +2,21 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from collections.abc import Mapping
+from typing import Any
 
 from jvcprojector import JvcProjectorAuthError, JvcProjectorConnectError
 from jvcprojector.projector import DEFAULT_PORT
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util.network import is_host_valid
 
 from . import get_mac_address
 from .const import DOMAIN, NAME
-
-if TYPE_CHECKING:
-    from collections.abc import Mapping
-    from typing import Any
-
-    from homeassistant.config_entries import ConfigEntry
-    from homeassistant.data_entry_flow import FlowResult
 
 
 class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):

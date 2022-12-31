@@ -4,20 +4,20 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
 
-from jvcprojector import JvcProjectorAuthError, JvcProjectorConnectError, const
+from jvcprojector import (
+    JvcProjector,
+    JvcProjectorAuthError,
+    JvcProjectorConnectError,
+    const,
+)
 
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import NAME
-
-if TYPE_CHECKING:
-    from jvcprojector import JvcProjector
-
-    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

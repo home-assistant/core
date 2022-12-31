@@ -3,26 +3,20 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterable
 import logging
-from typing import TYPE_CHECKING
+from typing import Any
 
 from jvcprojector import const
 
 from homeassistant.components.remote import RemoteEntity
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as JVC_DOMAIN
 from .entity import JvcProjectorEntity
-
-if TYPE_CHECKING:
-    from collections.abc import Iterable
-    from typing import Any
-
-    from homeassistant.config_entries import ConfigEntry
-    from homeassistant.core import HomeAssistant
-    from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
 
 COMMANDS = {
     "menu": const.REMOTE_MENU,

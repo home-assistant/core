@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+
+from jvcprojector import JvcProjector
 
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -14,9 +15,6 @@ from .const import (
     NAME as JVC_NAME,
 )
 from .coordinator import JvcProjectorDataUpdateCoordinator
-
-if TYPE_CHECKING:
-    from jvcprojector import JvcProjector
 
 _LOGGER = logging.getLogger(__name__)
 
