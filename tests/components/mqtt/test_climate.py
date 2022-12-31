@@ -21,7 +21,7 @@ from homeassistant.components.climate import (
     PRESET_ECO,
     ClimateEntityFeature,
     HVACAction,
-    HVACMode,
+    HVACMode, ATTR_HUMIDITY,
 )
 from homeassistant.components.mqtt.climate import MQTT_CLIMATE_ATTRIBUTES_BLOCKED
 from homeassistant.const import ATTR_TEMPERATURE, Platform
@@ -640,6 +640,31 @@ async def test_set_target_temperature_low_high_optimistic(
     assert state.attributes.get("target_temp_high") == 25
 
 
+async def test_set_target_humidity_pessimistic(
+        hass, mqtt_mock_entry_with_yaml_config
+):
+    """Test setting the target humidity."""
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
+    config["climate"]["target_humidity_state_topic"] = "humidity-state"
+    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("humidity") is None
+    await common.async_set_humidity(hass, humidity=50, entity_id=ENTITY_CLIMATE)
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("humidity") is None
+
+    async_fire_mqtt_message(hass, "humidity-state", "80")
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("humidity") == 80
+
+    async_fire_mqtt_message(hass, "humidity-state", "not a number")
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("humidity") == 80
+
+
 async def test_receive_mqtt_temperature(hass, mqtt_mock_entry_with_yaml_config):
     """Test getting the current temperature via MQTT."""
     config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
@@ -965,6 +990,7 @@ async def test_get_with_templates(hass, mqtt_mock_entry_with_yaml_config, caplog
     config["climate"]["fan_mode_state_topic"] = "fan-state"
     config["climate"]["swing_mode_state_topic"] = "swing-state"
     config["climate"]["temperature_state_topic"] = "temperature-state"
+    config["climate"]["target_humidity_state_topic"] = "humidity-state"
     config["climate"]["aux_state_topic"] = "aux-state"
     config["climate"]["current_temperature_topic"] = "current-temperature"
     config["climate"]["current_humidity_topic"] = "current-humidity"
@@ -1004,6 +1030,20 @@ async def test_get_with_templates(hass, mqtt_mock_entry_with_yaml_config, caplog
     assert "Could not parse temperature from -INVALID-" in caplog.text
     # ... but the actual value stays unchanged.
     assert state.attributes.get("temperature") == 1031
+
+    # Humidity - with valid value
+    assert state.attributes.get("humidity") is None
+    async_fire_mqtt_message(hass, "humidity-state", '"82"')
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("humidity") == 82
+
+    # Humidity - with invalid value
+    async_fire_mqtt_message(hass, "humidity-state", '"-INVALID-"')
+    state = hass.states.get(ENTITY_CLIMATE)
+    # make sure, the invalid value gets logged...
+    assert "Could not parse temperature from -INVALID-" in caplog.text
+    # ... but the actual value stays unchanged.
+    assert state.attributes.get("humidity") == 82
 
     # Preset Mode
     assert state.attributes.get("preset_mode") == "none"
@@ -1297,6 +1337,7 @@ async def test_unique_id(hass, mqtt_mock_entry_with_yaml_config):
         ("temperature_low_state_topic", "19.1", ATTR_TARGET_TEMP_LOW, 19.1),
         ("temperature_high_state_topic", "22.9", ATTR_TARGET_TEMP_HIGH, 22.9),
         ("temperature_state_topic", "19.9", ATTR_TEMPERATURE, 19.9),
+        ("target_humidity_state_topic", "82.6", ATTR_HUMIDITY, 82.6),
     ],
 )
 async def test_encoding_subscribable_topics(

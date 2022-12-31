@@ -176,6 +176,7 @@ VALUE_TEMPLATE_KEYS = (
     CONF_CURRENT_HUMIDITY_TEMPLATE,
     CONF_CURRENT_TEMP_TEMPLATE,
     CONF_FAN_MODE_STATE_TEMPLATE,
+    CONF_HUMIDITY_STATE_TEMPLATE,
     CONF_MODE_STATE_TEMPLATE,
     CONF_POWER_STATE_TEMPLATE,
     CONF_ACTION_TEMPLATE,
@@ -205,6 +206,7 @@ TOPIC_KEYS = (
     CONF_CURRENT_TEMP_TOPIC,
     CONF_FAN_MODE_COMMAND_TOPIC,
     CONF_FAN_MODE_STATE_TOPIC,
+    CONF_HUMIDITY_STATE_TOPIC,
     CONF_MODE_COMMAND_TOPIC,
     CONF_MODE_STATE_TOPIC,
     CONF_POWER_COMMAND_TOPIC,
@@ -246,6 +248,8 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         ): cv.ensure_list,
         vol.Optional(CONF_FAN_MODE_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_FAN_MODE_STATE_TOPIC): valid_subscribe_topic,
+        vol.Optional(CONF_HUMIDITY_STATE_TEMPLATE): cv.template,
+        vol.Optional(CONF_HUMIDITY_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_MODE_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_MODE_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(
@@ -498,6 +502,11 @@ class MqttClimate(MqttEntity, ClimateEntity):
         ):
             support |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
 
+        if (self._topic[CONF_HUMIDITY_STATE_TOPIC] is not None) or (
+                self._topic[CONF_HUMIDITY_COMMAND_TOPIC] is not None
+        ):
+            support |= ClimateEntityFeature.TARGET_HUMIDITY
+
         if (self._topic[CONF_FAN_MODE_STATE_TOPIC] is not None) or (
             self._topic[CONF_FAN_MODE_COMMAND_TOPIC] is not None
         ):
@@ -637,6 +646,18 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
         add_subscription(
             topics, CONF_CURRENT_HUMIDITY_TOPIC, handle_current_humidity_received
+        )
+
+        @callback
+        @log_messages(self.hass, self.entity_id)
+        def handle_target_humidity_received(msg: ReceiveMessage) -> None:
+            """Handle target humidity coming via MQTT."""
+            handle_temperature_received(
+                msg, CONF_HUMIDITY_STATE_TEMPLATE, "_attr_target_humidity"
+            )
+
+        add_subscription(
+            topics, CONF_HUMIDITY_STATE_TOPIC, handle_target_humidity_received
         )
 
         @callback
