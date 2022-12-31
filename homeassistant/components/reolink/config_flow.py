@@ -18,6 +18,8 @@ from .host import ReolinkHost
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_OPTIONS = {CONF_PROTOCOL: DEFAULT_PROTOCOL}
+
 
 class ReolinkOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Reolink options."""
@@ -88,10 +90,8 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(host.unique_id, raise_on_progress=False)
                 self._abort_if_unique_id_configured(updates=user_input)
 
-                options = {CONF_PROTOCOL: DEFAULT_PROTOCOL}
-
                 return self.async_create_entry(
-                    title=str(host.api.nvr_name), data=user_input, options=options
+                    title=str(host.api.nvr_name), data=user_input, options=DEFAULT_OPTIONS
                 )
 
         data_schema = vol.Schema(
@@ -121,7 +121,7 @@ async def async_obtain_host_settings(
     hass: core.HomeAssistant, user_input: dict
 ) -> ReolinkHost:
     """Initialize the Reolink host and get the host information."""
-    host = ReolinkHost(hass, user_input, {})
+    host = ReolinkHost(hass, user_input, DEFAULT_OPTIONS)
 
     try:
         if not await host.async_init():

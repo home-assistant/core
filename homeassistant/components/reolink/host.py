@@ -41,8 +41,8 @@ class ReolinkHost:
             config[CONF_HOST],
             config[CONF_USERNAME],
             config[CONF_PASSWORD],
-            port=config[CONF_PORT],
-            use_https=config[CONF_USE_HTTPS],
+            port=config.get(CONF_PORT),
+            use_https=config.get(CONF_USE_HTTPS),
             protocol=options[CONF_PROTOCOL],
             timeout=DEFAULT_TIMEOUT,
         )
