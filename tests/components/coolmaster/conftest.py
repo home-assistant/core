@@ -1,6 +1,7 @@
 """Fixtures for the Coolmaster integration."""
 from __future__ import annotations
 
+import copy
 from typing import Any
 from unittest.mock import patch
 
@@ -46,12 +47,13 @@ class CoolMasterNetUnitMock:
     def __init__(self, unit_id: str, attributes: dict[str, Any]) -> None:
         """Initialize the CoolMasterNetUnitMock."""
         self.unit_id = unit_id
+        self._attributes = attributes
         for key, value in attributes.items():
             setattr(self, key, value)
 
     async def reset_filter(self):
         """Report that the air filter was cleaned and reset the timer."""
-        TEST_UNITS[self.unit_id]["clean_filter"] = False
+        self._attributes["clean_filter"] = False
 
 
 class CoolMasterNetMock:
@@ -59,6 +61,7 @@ class CoolMasterNetMock:
 
     def __init__(self, *_args: Any) -> None:
         """Initialize the CoolMasterNetMock."""
+        self._data = copy.deepcopy(TEST_UNITS)
 
     async def info(self) -> dict[str, Any]:
         """Return info about the bridge device."""
@@ -68,7 +71,7 @@ class CoolMasterNetMock:
         """Return the units."""
         return {
             key: CoolMasterNetUnitMock(key, attributes)
-            for key, attributes in TEST_UNITS.items()
+            for key, attributes in self._data.items()
         }
 
 
