@@ -531,6 +531,10 @@ DHCP: list[dict[str, str | bool]] = [
         "hostname": "tado*",
     },
     {
+        "domain": "telekomunikace_2n",
+        "macaddress": "7C1EB3*",
+    },
+    {
         "domain": "tesla_wall_connector",
         "hostname": "teslawallconnector_*",
         "macaddress": "DC44271*",

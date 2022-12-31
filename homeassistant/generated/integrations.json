@@ -5374,6 +5374,12 @@
         }
       }
     },
+    "telekomunikace_2n": {
+      "name": "2N Telekomunikace",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "telldus": {
       "name": "Telldus",
       "integrations": {

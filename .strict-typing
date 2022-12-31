@@ -283,6 +283,7 @@ homeassistant.components.tag.*
 homeassistant.components.tailscale.*
 homeassistant.components.tautulli.*
 homeassistant.components.tcp.*
+homeassistant.components.telekomunikace_2n.*
 homeassistant.components.tibber.*
 homeassistant.components.tile.*
 homeassistant.components.tilt_ble.*

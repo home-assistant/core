@@ -1419,6 +1419,9 @@ py-zabbix==1.1.7
 # homeassistant.components.seventeentrack
 py17track==2021.12.2
 
+# homeassistant.components.telekomunikace_2n
+py2n==0.1.1
+
 # homeassistant.components.hdmi_cec
 pyCEC==0.5.2
 

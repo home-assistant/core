@@ -415,6 +415,7 @@ FLOWS = {
         "tankerkoenig",
         "tasmota",
         "tautulli",
+        "telekomunikace_2n",
         "tellduslive",
         "tesla_wall_connector",
         "thermobeacon",

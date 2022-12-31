@@ -1304,6 +1304,9 @@ omit =
     homeassistant/components/ted5000/sensor.py
     homeassistant/components/telegram/notify.py
     homeassistant/components/telegram_bot/*
+    homeassistant/components/telekomunikace_2n/__init__.py
+    homeassistant/components/telekomunikace_2n/const.py
+    homeassistant/components/telekomunikace_2n/sensor.py
     homeassistant/components/tellduslive/__init__.py
     homeassistant/components/tellduslive/binary_sensor.py
     homeassistant/components/tellduslive/cover.py
