@@ -1,19 +1,19 @@
-"""The homely integration."""
-from __future__ import annotations
-
+"""Sensors provided by Homely."""
 from datetime import timedelta
 import logging
 
-from requests import ConnectTimeout, HTTPError
+from httpcore import ConnectTimeout
+from httpx import HTTPError
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -25,48 +25,31 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR]
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up homely from a config entry."""
-
-    username = entry.data["username"]
-    password = entry.data["password"]
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up Plate Relays as switch based on a config entry."""
+    homely = hass.data[DOMAIN][entry.entry_id]
     location_id = entry.data["location_id"]
 
     try:
-        homely = Homely(username, password)
-        await hass.async_add_executor_job(homely.get_location, location_id)
+        location = await hass.async_add_executor_job(homely.get_location, location_id)
     except (ConnectionFailedException, ConnectTimeout, HTTPError) as ex:
-        raise ConfigEntryNotReady(f"Unable to connect to Homely: {ex}") from ex
+        raise PlatformNotReady(f"Unable to connect to Homely: {ex}") from ex
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = homely
+    coordinator = PollingDataCoordinator(hass, homely, location)
+    await coordinator.async_config_entry_first_refresh()
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    # set up notify platform, no entry support for notify component yet,
-    # have to use discovery to load platform.
-    # hass.async_create_task(
-    #     discovery.async_load_platform(
-    #         hass,
-    #         Platform.NOTIFY,
-    #         DOMAIN,
-    #         {CONF_NAME: DOMAIN},
-    #         hass.data[DATA_HASS_CONFIG],
-    #     )
-    # )
-
-    return True
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    entities = []
+    for device in coordinator.location.devices:
+        if device.id not in coordinator.added_sensors:
+            coordinator.added_sensors.add(device.id)
+            print(f"Reviewing device {device}")
+            if isinstance(device, WindowSensor):
+                print("This is a Window sensor")
+                entities.append(WindowSensorEntity(coordinator, device))
+    async_add_entities(entities)
 
 
 class PollingDataCoordinator(DataUpdateCoordinator):
@@ -97,17 +80,30 @@ class WindowSensorEntity(CoordinatorEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.DOOR
 
-    def __init__(self, coordinator, device_id):
+    def __init__(self, coordinator, device: WindowSensor):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
-        self.device_id = device_id
+        self.device = device
+        self._attr_name = device.name
+        self._attr_is_on = device.alarm.alarm
+        self._attr_unique_id = f"{DOMAIN}_{device.id}"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device info."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},  # type: ignore[arg-type]
+            name=f"{self.device.location} - {self.device.name}",
+            manufacturer="",
+            model=self.device.model_name,
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         device: WindowSensor = next(
             filter(
-                lambda device: (device.id == self.device_id),
+                lambda device: (device.id == self.device.id),
                 self.coordinator.location.devices,
             )
         )
