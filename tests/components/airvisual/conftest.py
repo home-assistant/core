@@ -87,7 +87,7 @@ def data_cloud_fixture():
     return json.loads(load_fixture("data.json", "airvisual"))
 
 
-@pytest.fixture(name="data_pro", scope="session")
+@pytest.fixture(name="data_pro", scope="package")
 def data_pro_fixture():
     """Define an update coordinator data example for the Pro."""
     return json.loads(load_fixture("data.json", "airvisual_pro"))
