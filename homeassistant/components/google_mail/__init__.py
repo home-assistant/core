@@ -4,7 +4,7 @@ from __future__ import annotations
 from aiohttp.client_exceptions import ClientError, ClientResponseError
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_NAME, CONF_TOKEN, Platform
+from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import discovery
@@ -14,7 +14,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_HASS_CONFIG, DATA_SESSION, DEFAULT_ACCESS, DOMAIN
+from .const import DATA_HASS_CONFIG, DATA_SESSION, DOMAIN
 from .services import async_setup_services
 
 PLATFORMS = [Platform.NOTIFY, Platform.SENSOR]
@@ -42,8 +42,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ClientError as err:
         raise ConfigEntryNotReady from err
 
-    if not async_entry_has_scopes(hass, entry):
-        raise ConfigEntryAuthFailed("Required scopes are not present, reauth required")
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry.data | {
         DATA_SESSION: session
     }
@@ -65,14 +63,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await async_setup_services(hass)
 
     return True
-
-
-def async_entry_has_scopes(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Verify that the config entry desired scope is present in the oauth token."""
-    return all(
-        feature in entry.data[CONF_TOKEN]["scope"].split(" ")
-        for feature in DEFAULT_ACCESS
-    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

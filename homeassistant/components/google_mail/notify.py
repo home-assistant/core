@@ -41,7 +41,7 @@ class GMailNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message."""
-        data: dict[str, Any] = kwargs.get(ATTR_DATA, {})
+        data: dict[str, Any] = kwargs.get(ATTR_DATA) or {}
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 
         email = EmailMessage()
