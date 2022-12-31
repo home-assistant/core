@@ -22,13 +22,6 @@
                     "pin": "PIN k\u00f3d",
                     "port": "Port"
                 }
-            },
-            "user": {
-                "data": {
-                    "password": "Heslo",
-                    "pin": "PIN k\u00f3d",
-                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
-                }
             }
         }
     },

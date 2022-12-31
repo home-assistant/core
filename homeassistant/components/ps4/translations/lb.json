@@ -10,7 +10,7 @@
         "error": {
             "cannot_connect": "Feeler beim verbannen",
             "credential_timeout": "Z\u00e4it Iwwerschreidung beim Service vun den Umeldungsinformatiounen. Dr\u00e9ck op ofsch\u00e9cke fir nach emol ze starten.",
-            "login_failed": "Feeler beim verbanne mat der Playstation 4. Iwwerpr\u00e9if op de PIN Code korrekt ass.",
+            "login_failed": "Feeler beim verbanne mat der Playstation 4. Iwwerpr\u00e9if op de PIN-Code korrekt ass.",
             "no_ipaddress": "G\u00ebff d'IP Adresse vun der Playstation 4 d\u00e9i soll konfigur\u00e9iert ginn an:"
         },
         "step": {
@@ -19,7 +19,7 @@
             },
             "link": {
                 "data": {
-                    "code": "PIN Code",
+                    "code": "PIN-Code",
                     "ip_address": "IP Adresse",
                     "name": "Numm",
                     "region": "Regioun"

@@ -29,7 +29,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
@@ -104,7 +104,6 @@ class ThermostatEntity(ClimateEntity):
         """Initialize ThermostatEntity."""
         self._device = device
         self._device_info = NestDeviceInfo(device)
-        self._attr_supported_features = 0
 
     @property
     def unique_id(self) -> str | None:
@@ -132,7 +131,7 @@ class ThermostatEntity(ClimateEntity):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of temperature measurement for the system."""
-        return TEMP_CELSIUS
+        return UnitOfTemperature.CELSIUS
 
     @property
     def current_temperature(self) -> float | None:
@@ -266,9 +265,9 @@ class ThermostatEntity(ClimateEntity):
             return FAN_INV_MODES
         return []
 
-    def _get_supported_features(self) -> int:
+    def _get_supported_features(self) -> ClimateEntityFeature:
         """Compute the bitmap of supported features from the current state."""
-        features = 0
+        features = ClimateEntityFeature(0)
         if HVACMode.HEAT_COOL in self.hvac_modes:
             features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         if HVACMode.HEAT in self.hvac_modes or HVACMode.COOL in self.hvac_modes:

@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.fibaro import DOMAIN
+from homeassistant.components.fibaro.config_flow import _normalize_url
 from homeassistant.components.fibaro.const import CONF_IMPORT_PLUGINS
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 
@@ -362,3 +363,9 @@ async def test_reauth_auth_failure(hass):
         assert result["type"] == "form"
         assert result["step_id"] == "reauth_confirm"
         assert result["errors"] == {"base": "invalid_auth"}
+
+
+@pytest.mark.parametrize("url_path", ["/api/", "/api", "/", ""])
+async def test_normalize_url(url_path: str) -> None:
+    """Test that the url is normalized for different entered values."""
+    assert _normalize_url(f"http://192.168.1.1{url_path}") == "http://192.168.1.1/api/"

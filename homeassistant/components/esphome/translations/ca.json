@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "El dispositiu ja est\u00e0 configurat",
             "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
+            "mdns_missing_mac": "Falta l'adre\u00e7a MAC a les propietats MDNS.",
             "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {
@@ -42,6 +43,12 @@
                 },
                 "description": "Introdueix la configuraci\u00f3 de connexi\u00f3 del node [ESPHome]({esphome_url})."
             }
+        }
+    },
+    "issues": {
+        "ble_firmware_outdated": {
+            "description": "Per millorar la fiabilitat i el rendiment de Bluetooth, et recomanem que actualitzis {name} a ESPHome {version} o posterior. Quan actualitzis el dispositiu a ESPHome {version}, es recomana utilitzar un cable s\u00e8rie enlloc de fer una actualitzaci\u00f3 remota, per poder aprofitar el nou esquema de particions.",
+            "title": "Actualitza {name} amb ESPHome {version} o posterior"
         }
     }
 }

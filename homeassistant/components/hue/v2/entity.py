@@ -196,11 +196,13 @@ class HueBaseEntity(Entity):
                 # the device state changed from on->off or off->on
                 # while it was reported as not connected!
                 self.logger.warning(
-                    "Device %s changed state while reported as disconnected. "
-                    "This might be an indicator that routing is not working for this device "
-                    "or the device is having connectivity issues. "
-                    "You can disable availability reporting for this device in the Hue options. "
-                    "Device details: %s - %s (%s) fw: %s",
+                    (
+                        "Device %s changed state while reported as disconnected. This"
+                        " might be an indicator that routing is not working for this"
+                        " device or the device is having connectivity issues. You can"
+                        " disable availability reporting for this device in the Hue"
+                        " options. Device details: %s - %s (%s) fw: %s"
+                    ),
                     self.name,
                     self.device.product_data.manufacturer_name,
                     self.device.product_data.product_name,

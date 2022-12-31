@@ -14,6 +14,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -22,9 +23,9 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
-    DATA_GIGABITS,
     PERCENTAGE,
-    TIME_DAYS,
+    UnitOfInformation,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
@@ -61,67 +62,77 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="limit",
         name="Data limit",
-        native_unit_of_measurement=DATA_GIGABITS,
+        native_unit_of_measurement=UnitOfInformation.GIGABITS,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:download",
     ),
     SensorEntityDescription(
         key="days_left",
         name="Days left",
-        native_unit_of_measurement=TIME_DAYS,
+        native_unit_of_measurement=UnitOfTime.DAYS,
         icon="mdi:calendar-today",
     ),
     SensorEntityDescription(
         key="before_offpeak_download",
         name="Download before offpeak",
-        native_unit_of_measurement=DATA_GIGABITS,
+        native_unit_of_measurement=UnitOfInformation.GIGABITS,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:download",
     ),
     SensorEntityDescription(
         key="before_offpeak_upload",
         name="Upload before offpeak",
-        native_unit_of_measurement=DATA_GIGABITS,
+        native_unit_of_measurement=UnitOfInformation.GIGABITS,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:upload",
     ),
     SensorEntityDescription(
         key="before_offpeak_total",
         name="Total before offpeak",
-        native_unit_of_measurement=DATA_GIGABITS,
+        native_unit_of_measurement=UnitOfInformation.GIGABITS,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:download",
     ),
     SensorEntityDescription(
         key="offpeak_download",
         name="Offpeak download",
-        native_unit_of_measurement=DATA_GIGABITS,
+        native_unit_of_measurement=UnitOfInformation.GIGABITS,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:download",
     ),
     SensorEntityDescription(
         key="offpeak_upload",
         name="Offpeak Upload",
-        native_unit_of_measurement=DATA_GIGABITS,
+        native_unit_of_measurement=UnitOfInformation.GIGABITS,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:upload",
     ),
     SensorEntityDescription(
         key="offpeak_total",
         name="Offpeak Total",
-        native_unit_of_measurement=DATA_GIGABITS,
+        native_unit_of_measurement=UnitOfInformation.GIGABITS,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:download",
     ),
     SensorEntityDescription(
         key="download",
         name="Download",
-        native_unit_of_measurement=DATA_GIGABITS,
+        native_unit_of_measurement=UnitOfInformation.GIGABITS,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:download",
     ),
     SensorEntityDescription(
         key="upload",
         name="Upload",
-        native_unit_of_measurement=DATA_GIGABITS,
+        native_unit_of_measurement=UnitOfInformation.GIGABITS,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:upload",
     ),
     SensorEntityDescription(
         key="total",
         name="Total",
-        native_unit_of_measurement=DATA_GIGABITS,
+        native_unit_of_measurement=UnitOfInformation.GIGABITS,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:download",
     ),
 )

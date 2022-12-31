@@ -130,7 +130,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         return self.coordinator.data.media.duration > 0
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> MediaPlayerDeviceClass:
         """Return the class of this device."""
         if self.coordinator.data.info.device_type == "tv":
             return MediaPlayerDeviceClass.TV

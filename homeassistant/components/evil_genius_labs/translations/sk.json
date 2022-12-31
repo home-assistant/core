@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "timeout": "\u010casov\u00fd limit na nadviazanie spojenia",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostite\u013e"
+                }
+            }
+        }
+    }
+}

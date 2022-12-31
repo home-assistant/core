@@ -33,16 +33,6 @@
             }
         }
     },
-    "issues": {
-        "deprecated_yaml": {
-            "description": "Se va a eliminar la configuraci\u00f3n de Google Calendar en configuration.yaml en Home Assistant 2022.9. \n\nTus credenciales OAuth de aplicaci\u00f3n existentes y la configuraci\u00f3n de acceso se han importado a la IU autom\u00e1ticamente. Elimina la configuraci\u00f3n YAML de tu archivo configuration.yaml y reinicia Home Assistant para solucionar este problema.",
-            "title": "Se va a eliminar la configuraci\u00f3n YAML de Google Calendar"
-        },
-        "removed_track_new_yaml": {
-            "description": "Has deshabilitado el rastreo de entidades para Google Calendar en configuration.yaml, que ya no es compatible. Debes cambiar manualmente las opciones de sistema de la integraci\u00f3n en la IU para deshabilitar las entidades reci\u00e9n descubiertas en el futuro. Elimina la configuraci\u00f3n track_new de configuration.yaml y reinicia Home Assistant para solucionar este problema.",
-            "title": "El rastreo de entidades de Google Calendar ha cambiado"
-        }
-    },
     "options": {
         "step": {
             "init": {

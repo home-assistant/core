@@ -1,19 +1,23 @@
 {
     "config": {
         "abort": {
+            "already_configured": "\uc11c\ube44\uc2a4\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
             "single_instance_allowed": "\uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \ud558\ub098\uc758 \uc778\uc2a4\ud134\uc2a4\ub9cc \uad6c\uc131\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4."
         },
         "error": {
+            "bad_ws_headers": "\uc720\ud6a8\ud55c HTTP \ud5e4\ub354\ub97c JSON \uac1d\uccb4\ub85c \uc81c\uacf5",
             "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4"
         },
         "step": {
             "broker": {
                 "data": {
                     "broker": "\ube0c\ub85c\ucee4",
-                    "discovery": "\uae30\uae30 \uac80\uc0c9 \ud65c\uc131\ud654",
                     "password": "\ube44\ubc00\ubc88\ud638",
                     "port": "\ud3ec\ud2b8",
-                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
+                    "transport": "MQTT \uc804\uc1a1",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984",
+                    "ws_headers": "JSON \ud615\uc2dd\uc758 WebSocket \ud5e4\ub354",
+                    "ws_path": "WebSocket \uacbd\ub85c"
                 },
                 "description": "MQTT \ube0c\ub85c\ucee4\uc758 \uc5f0\uacb0 \uc815\ubcf4\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694."
             },
@@ -52,6 +56,7 @@
         "error": {
             "bad_birth": "Birth \ud1a0\ud53d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
             "bad_will": "Will \ud1a0\ud53d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
+            "bad_ws_headers": "\uc720\ud6a8\ud55c HTTP \ud5e4\ub354\ub97c JSON \uac1d\uccb4\ub85c \uc81c\uacf5",
             "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4"
         },
         "step": {
@@ -60,7 +65,10 @@
                     "broker": "\ube0c\ub85c\ucee4",
                     "password": "\ube44\ubc00\ubc88\ud638",
                     "port": "\ud3ec\ud2b8",
-                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
+                    "transport": "MQTT \uc804\uc1a1",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984",
+                    "ws_headers": "JSON \ud615\uc2dd\uc758 WebSocket \ud5e4\ub354",
+                    "ws_path": "WebSocket \uacbd\ub85c"
                 },
                 "description": "MQTT \ube0c\ub85c\ucee4\uc640\uc758 \uc5f0\uacb0 \uc815\ubcf4\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694.",
                 "title": "\ube0c\ub85c\ucee4 \uc635\uc158"

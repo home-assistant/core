@@ -177,6 +177,7 @@ class Store(Generic[_T]):
                     if data["version"] != self.version:
                         raise
                     stored = data["data"]
+            await self.async_save(stored)
 
         return stored
 
@@ -275,11 +276,12 @@ class Store(Generic[_T]):
             self._data = None
 
             try:
-                await self.hass.async_add_executor_job(
-                    self._write_data, self.path, data
-                )
+                await self._async_write_data(self.path, data)
             except (json_util.SerializationError, json_util.WriteError) as err:
                 _LOGGER.error("Error writing config for %s: %s", self.key, err)
+
+    async def _async_write_data(self, path: str, data: dict) -> None:
+        await self.hass.async_add_executor_job(self._write_data, self.path, data)
 
     def _write_data(self, path: str, data: dict) -> None:
         """Write the data."""

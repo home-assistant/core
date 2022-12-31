@@ -1,9 +1,9 @@
 """Button for Shelly."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Final, cast
+from typing import Any, Final, Generic, TypeVar, Union
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -18,34 +18,40 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
-from .const import BLOCK, DATA_CONFIG_ENTRY, DOMAIN, RPC, SHELLY_GAS_MODELS
-from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator
+from .const import SHELLY_GAS_MODELS
+from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
 from .utils import get_block_device_name, get_device_entry_gen, get_rpc_device_name
 
+_ShellyCoordinatorT = TypeVar(
+    "_ShellyCoordinatorT", bound=Union[ShellyBlockCoordinator, ShellyRpcCoordinator]
+)
+
 
 @dataclass
-class ShellyButtonDescriptionMixin:
+class ShellyButtonDescriptionMixin(Generic[_ShellyCoordinatorT]):
     """Mixin to describe a Button entity."""
 
-    press_action: Callable
+    press_action: Callable[[_ShellyCoordinatorT], Coroutine[Any, Any, None]]
 
 
 @dataclass
-class ShellyButtonDescription(ButtonEntityDescription, ShellyButtonDescriptionMixin):
+class ShellyButtonDescription(
+    ButtonEntityDescription, ShellyButtonDescriptionMixin[_ShellyCoordinatorT]
+):
     """Class to describe a Button entity."""
 
-    supported: Callable = lambda _: True
+    supported: Callable[[_ShellyCoordinatorT], bool] = lambda _: True
 
 
-BUTTONS: Final = [
-    ShellyButtonDescription(
+BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
+    ShellyButtonDescription[Union[ShellyBlockCoordinator, ShellyRpcCoordinator]](
         key="reboot",
         name="Reboot",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_action=lambda coordinator: coordinator.device.trigger_reboot(),
     ),
-    ShellyButtonDescription(
+    ShellyButtonDescription[ShellyBlockCoordinator](
         key="self_test",
         name="Self Test",
         icon="mdi:progress-wrench",
@@ -53,7 +59,7 @@ BUTTONS: Final = [
         press_action=lambda coordinator: coordinator.device.trigger_shelly_gas_self_test(),
         supported=lambda coordinator: coordinator.device.model in SHELLY_GAS_MODELS,
     ),
-    ShellyButtonDescription(
+    ShellyButtonDescription[ShellyBlockCoordinator](
         key="mute",
         name="Mute",
         icon="mdi:volume-mute",
@@ -61,7 +67,7 @@ BUTTONS: Final = [
         press_action=lambda coordinator: coordinator.device.trigger_shelly_gas_mute(),
         supported=lambda coordinator: coordinator.device.model in SHELLY_GAS_MODELS,
     ),
-    ShellyButtonDescription(
+    ShellyButtonDescription[ShellyBlockCoordinator](
         key="unmute",
         name="Unmute",
         icon="mdi:volume-high",
@@ -80,18 +86,12 @@ async def async_setup_entry(
     """Set buttons for device."""
     coordinator: ShellyRpcCoordinator | ShellyBlockCoordinator | None = None
     if get_device_entry_gen(config_entry) == 2:
-        if rpc_coordinator := hass.data[DOMAIN][DATA_CONFIG_ENTRY][
-            config_entry.entry_id
-        ].get(RPC):
-            coordinator = cast(ShellyRpcCoordinator, rpc_coordinator)
+        coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
     else:
-        if block_coordinator := hass.data[DOMAIN][DATA_CONFIG_ENTRY][
-            config_entry.entry_id
-        ].get(BLOCK):
-            coordinator = cast(ShellyBlockCoordinator, block_coordinator)
+        coordinator = get_entry_data(hass)[config_entry.entry_id].block
 
     if coordinator is not None:
-        entities = []
+        entities: list[ShellyButton] = []
 
         for button in BUTTONS:
             if not button.supported(coordinator):
@@ -101,15 +101,21 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-class ShellyButton(CoordinatorEntity, ButtonEntity):
+class ShellyButton(
+    CoordinatorEntity[Union[ShellyRpcCoordinator, ShellyBlockCoordinator]], ButtonEntity
+):
     """Defines a Shelly base button."""
 
-    entity_description: ShellyButtonDescription
+    entity_description: ShellyButtonDescription[
+        ShellyRpcCoordinator | ShellyBlockCoordinator
+    ]
 
     def __init__(
         self,
         coordinator: ShellyRpcCoordinator | ShellyBlockCoordinator,
-        description: ShellyButtonDescription,
+        description: ShellyButtonDescription[
+            ShellyRpcCoordinator | ShellyBlockCoordinator
+        ],
     ) -> None:
         """Initialize Shelly button."""
         super().__init__(coordinator)

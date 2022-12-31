@@ -7,11 +7,11 @@ from regenmaschine.errors import RainMachineError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_UNIT_SYSTEM_IMPERIAL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM, UnitSystem
 
 from . import RainMachineData, RainMachineEntity
 from .const import DATA_RESTRICTIONS_UNIVERSAL, DOMAIN
@@ -101,7 +101,7 @@ async def async_setup_entry(
     }
 
     async_add_entities(
-        entity_map[description.key](entry, data, description, hass.config.units.name)
+        entity_map[description.key](entry, data, description, hass.config.units)
         for description in SELECT_DESCRIPTIONS
         if (
             (coordinator := data.coordinators[description.api_category]) is not None
@@ -121,7 +121,7 @@ class FreezeProtectionTemperatureSelect(RainMachineEntity, SelectEntity):
         entry: ConfigEntry,
         data: RainMachineData,
         description: FreezeProtectionSelectDescription,
-        unit_system: str,
+        unit_system: UnitSystem,
     ) -> None:
         """Initialize."""
         super().__init__(entry, data, description)
@@ -130,7 +130,7 @@ class FreezeProtectionTemperatureSelect(RainMachineEntity, SelectEntity):
         self._label_to_api_value_map = {}
 
         for option in description.extended_options:
-            if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
+            if unit_system is US_CUSTOMARY_SYSTEM:
                 label = option.imperial_label
             else:
                 label = option.metric_label

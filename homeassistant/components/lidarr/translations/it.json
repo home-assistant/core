@@ -28,15 +28,5 @@
                 "description": "La chiave API pu\u00f2 essere recuperata automaticamente se le credenziali di accesso non sono state impostate nell'applicazione.\nLa tua chiave API pu\u00f2 essere trovata in Impostazioni > Generali nell'interfaccia utente web di Lidarr."
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "max_records": "Numero massimo di record da visualizzare su ricercato e coda",
-                    "upcoming_days": "Numero di giorni successivi da visualizzare sul calendario"
-                }
-            }
-        }
     }
 }

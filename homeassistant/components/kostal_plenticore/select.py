@@ -23,7 +23,6 @@ class PlenticoreRequiredKeysMixin:
     """A class that describes required properties for plenticore select entities."""
 
     module_id: str
-    options: list[str]
 
 
 @dataclass
@@ -43,7 +42,6 @@ SELECT_SETTINGS_DATA = [
             "Battery:SmartBatteryControl:Enable",
             "Battery:TimeControl:Enable",
         ],
-        device_class="kostal_plenticore__battery",
     )
 ]
 
@@ -65,6 +63,7 @@ async def async_setup_entry(
 
     entities = []
     for description in SELECT_SETTINGS_DATA:
+        assert description.options is not None
         if description.module_id not in available_settings_data:
             continue
         needed_data_ids = {
@@ -88,7 +87,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PlenticoreDataSelect(CoordinatorEntity, SelectEntity):
+class PlenticoreDataSelect(
+    CoordinatorEntity[SelectDataUpdateCoordinator], SelectEntity
+):
     """Representation of a Plenticore Select."""
 
     _attr_entity_category = EntityCategory.CONFIG
@@ -109,7 +110,6 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity):
         self.platform_name = platform_name
         self.module_id = description.module_id
         self.data_id = description.key
-        self._attr_options = description.options
         self._device_info = device_info
         self._attr_unique_id = f"{entry_id}_{description.module_id}"
 

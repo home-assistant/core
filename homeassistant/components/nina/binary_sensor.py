@@ -18,6 +18,7 @@ from .const import (
     ATTR_EXPIRES,
     ATTR_HEADLINE,
     ATTR_ID,
+    ATTR_RECOMMENDED_ACTIONS,
     ATTR_SENDER,
     ATTR_SENT,
     ATTR_SEVERITY,
@@ -62,12 +63,12 @@ class NINAMessage(CoordinatorEntity[NINADataUpdateCoordinator], BinarySensorEnti
         """Initialize."""
         super().__init__(coordinator)
 
-        self._region: str = region
-        self._warning_index: int = slot_id - 1
+        self._region = region
+        self._warning_index = slot_id - 1
 
-        self._attr_name: str = f"Warning: {region_name} {slot_id}"
-        self._attr_unique_id: str = f"{region}-{slot_id}"
-        self._attr_device_class: str = BinarySensorDeviceClass.SAFETY
+        self._attr_name = f"Warning: {region_name} {slot_id}"
+        self._attr_unique_id = f"{region}-{slot_id}"
+        self._attr_device_class = BinarySensorDeviceClass.SAFETY
 
     @property
     def is_on(self) -> bool:
@@ -92,6 +93,7 @@ class NINAMessage(CoordinatorEntity[NINADataUpdateCoordinator], BinarySensorEnti
             ATTR_DESCRIPTION: data.description,
             ATTR_SENDER: data.sender,
             ATTR_SEVERITY: data.severity,
+            ATTR_RECOMMENDED_ACTIONS: data.recommended_actions,
             ATTR_ID: data.id,
             ATTR_SENT: data.sent,
             ATTR_START: data.start,

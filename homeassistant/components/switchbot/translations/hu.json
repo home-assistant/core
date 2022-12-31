@@ -8,6 +8,8 @@
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "error": {
+            "encryption_key_invalid": "A kulcs azonos\u00edt\u00f3ja vagy a titkos\u00edt\u00e1si kulcs \u00e9rv\u00e9nytelen",
+            "key_id_invalid": "A kulcsazonos\u00edt\u00f3 vagy a titkos\u00edt\u00e1si kulcs \u00e9rv\u00e9nytelen",
             "one": "\u00dcres",
             "other": "\u00dcres"
         },
@@ -15,6 +17,13 @@
         "step": {
             "confirm": {
                 "description": "Szeretn\u00e9 be\u00e1ll\u00edtani: {name}?"
+            },
+            "lock_key": {
+                "data": {
+                    "encryption_key": "Titkos\u00edt\u00e1si kulcs",
+                    "key_id": "Kulcs azonos\u00edt\u00f3"
+                },
+                "description": "A(z) {name} eszk\u00f6z titkos\u00edt\u00e1si kulcsot ig\u00e9nyel, annak beszerz\u00e9s\u00e9vel kapcsolatos r\u00e9szletek a dokument\u00e1ci\u00f3ban tal\u00e1lhat\u00f3k."
             },
             "password": {
                 "data": {
@@ -24,12 +33,8 @@
             },
             "user": {
                 "data": {
-                    "address": "Eszk\u00f6z c\u00edme",
-                    "mac": "Eszk\u00f6z MAC-c\u00edme",
-                    "name": "Elnevez\u00e9s",
-                    "password": "Jelsz\u00f3"
-                },
-                "title": "Switchbot eszk\u00f6z be\u00e1ll\u00edt\u00e1sa"
+                    "address": "Eszk\u00f6z c\u00edme"
+                }
             }
         }
     },
@@ -37,10 +42,7 @@
         "step": {
             "init": {
                 "data": {
-                    "retry_count": "\u00dajrapr\u00f3b\u00e1lkoz\u00e1sok sz\u00e1ma",
-                    "retry_timeout": "\u00dajrapr\u00f3b\u00e1lkoz\u00e1sok k\u00f6z\u00f6tti id\u0151korl\u00e1t",
-                    "scan_timeout": "Mennyi ideig keresse a hirdet\u00e9si adatokat",
-                    "update_time": "Friss\u00edt\u00e9sek k\u00f6z\u00f6tti id\u0151 (m\u00e1sodperc)"
+                    "retry_count": "\u00dajrapr\u00f3b\u00e1lkoz\u00e1sok sz\u00e1ma"
                 }
             }
         }

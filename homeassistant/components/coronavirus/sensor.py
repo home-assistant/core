@@ -1,7 +1,6 @@
 """Sensor platform for the Corona virus."""
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -34,12 +33,12 @@ async def async_setup_entry(
 class CoronavirusSensor(CoordinatorEntity, SensorEntity):
     """Sensor representing corona virus data."""
 
+    _attr_attribution = ATTRIBUTION
     _attr_native_unit_of_measurement = "people"
 
     def __init__(self, coordinator, country, info_type):
         """Initialize coronavirus sensor."""
         super().__init__(coordinator)
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self._attr_icon = SENSORS[info_type]
         self._attr_unique_id = f"{country}-{info_type}"
         if country == OPTION_WORLDWIDE:

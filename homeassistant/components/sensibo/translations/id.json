@@ -17,7 +17,7 @@
                     "api_key": "Kunci API"
                 },
                 "data_description": {
-                    "api_key": "Ikuti petunjuk dalam dokumentasi untuk mendapatkan kunci API baru."
+                    "api_key": "Ikuti petunjuk dalam dokumentasi untuk mendapatkan kunci API"
                 }
             },
             "user": {
@@ -25,7 +25,24 @@
                     "api_key": "Kunci API"
                 },
                 "data_description": {
-                    "api_key": "Ikuti petunjuk dalam dokumentasi untuk mendapatkan kunci API."
+                    "api_key": "Ikuti petunjuk dalam dokumentasi untuk mendapatkan kunci API"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "sensitivity": {
+                "state": {
+                    "n": "Normal",
+                    "s": "Sensitif"
+                }
+            },
+            "smart_type": {
+                "state": {
+                    "feelslike": "Terasa seperti",
+                    "humidity": "Kelembaban",
+                    "temperature": "Suhu"
                 }
             }
         }

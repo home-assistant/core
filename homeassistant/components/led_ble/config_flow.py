@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from bluetooth_data_tools import human_readable_name
 from led_ble import BLEAK_EXCEPTIONS, LEDBLE
 import voluptuous as vol
 
@@ -16,7 +17,6 @@ from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN, LOCAL_NAMES, UNSUPPORTED_SUB_MODEL
-from .util import human_readable_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,7 +104,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_ADDRESS): vol.In(
                     {
-                        service_info.address: f"{service_info.name} ({service_info.address})"
+                        service_info.address: (
+                            f"{service_info.name} ({service_info.address})"
+                        )
                         for service_info in self._discovered_devices.values()
                     }
                 ),

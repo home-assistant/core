@@ -209,7 +209,10 @@ class ZHAGateway:
                 zha_device.available = delta < zha_device.consider_unavailable_time
                 delta_msg = f"{str(timedelta(seconds=delta))} ago"
             _LOGGER.debug(
-                "[%s](%s) restored as '%s', last seen: %s, consider_unavailable_time: %s seconds",
+                (
+                    "[%s](%s) restored as '%s', last seen: %s,"
+                    " consider_unavailable_time: %s seconds"
+                ),
                 zha_device.nwk,
                 zha_device.name,
                 "available" if zha_device.available else "unavailable",
@@ -649,7 +652,10 @@ class ZHAGateway:
                 tasks = []
                 for member in members:
                     _LOGGER.debug(
-                        "Adding member with IEEE: %s and endpoint ID: %s to group: %s:0x%04x",
+                        (
+                            "Adding member with IEEE: %s and endpoint ID: %s to group:"
+                            " %s:0x%04x"
+                        ),
                         member.ieee,
                         member.endpoint_id,
                         name,
@@ -754,7 +760,7 @@ class LogRelayHandler(logging.Handler):
                 "|".join([re.escape(x) for x in (hass_path, config_dir)])
             )
         )
-        entry = LogEntry(record, stack, _figure_out_source(record, stack, paths_re))
+        entry = LogEntry(record, _figure_out_source(record, stack, paths_re))
         async_dispatcher_send(
             self.hass,
             ZHA_GW_MSG,

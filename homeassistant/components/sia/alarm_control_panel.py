@@ -90,7 +90,6 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
     """Class for SIA Alarm Control Panels."""
 
     entity_description: SIAAlarmControlPanelEntityDescription
-    _attr_supported_features = 0
 
     def __init__(
         self,

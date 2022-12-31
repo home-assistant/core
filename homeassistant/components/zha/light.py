@@ -18,6 +18,7 @@ from zigpy.zcl.foundation import Status
 from homeassistant.components import light
 from homeassistant.components.light import (
     ColorMode,
+    LightEntityFeature,
     brightness_supported,
     filter_supported_color_modes,
 )
@@ -1078,7 +1079,7 @@ class LightGroup(BaseLight, ZhaGroupEntity):
                 set[str], set().union(*all_supported_color_modes)
             )
 
-        self._attr_supported_features = 0
+        self._attr_supported_features = LightEntityFeature(0)
         for support in helpers.find_state_attributes(states, ATTR_SUPPORTED_FEATURES):
             # Merge supported features by emulating support for every feature
             # we find.

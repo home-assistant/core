@@ -29,9 +29,7 @@ def simplepush_setup_fixture():
 @pytest.fixture(autouse=True)
 def mock_api_request():
     """Patch simplepush api request."""
-    with patch("homeassistant.components.simplepush.config_flow.send"), patch(
-        "homeassistant.components.simplepush.config_flow.send_encrypted"
-    ):
+    with patch("homeassistant.components.simplepush.config_flow.send"):
         yield
 
 

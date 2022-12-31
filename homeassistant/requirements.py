@@ -7,6 +7,8 @@ import logging
 import os
 from typing import Any, cast
 
+import pkg_resources
+
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
 from .helpers.typing import UNDEFINED, UndefinedType
@@ -225,6 +227,19 @@ class RequirementsManager:
         This method is a coroutine. It will raise RequirementsNotFound
         if an requirement can't be satisfied.
         """
+        if self.hass.config.skip_pip_packages:
+            skipped_requirements = [
+                req
+                for req in requirements
+                if pkg_resources.Requirement.parse(req).project_name
+                in self.hass.config.skip_pip_packages
+            ]
+
+            for req in skipped_requirements:
+                _LOGGER.warning("Skipping requirement %s. This may cause issues", req)
+
+            requirements = [r for r in requirements if r not in skipped_requirements]
+
         if not (missing := self._find_missing_requirements(requirements)):
             return
         self._raise_for_failed_requirements(name, missing)
@@ -246,7 +261,10 @@ class RequirementsManager:
         for req in missing:
             if req in self.install_failure_history:
                 _LOGGER.info(
-                    "Multiple attempts to install %s failed, install will be retried after next configuration check or restart",
+                    (
+                        "Multiple attempts to install %s failed, install will be"
+                        " retried after next configuration check or restart"
+                    ),
                     req,
                 )
                 raise RequirementsNotFound(integration, [req])

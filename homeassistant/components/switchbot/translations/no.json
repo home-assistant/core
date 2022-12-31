@@ -7,10 +7,21 @@
             "switchbot_unsupported_type": "Switchbot-type st\u00f8ttes ikke.",
             "unknown": "Uventet feil"
         },
+        "error": {
+            "encryption_key_invalid": "N\u00f8kkel-ID eller krypteringsn\u00f8kkel er ugyldig",
+            "key_id_invalid": "N\u00f8kkel-ID eller krypteringsn\u00f8kkel er ugyldig"
+        },
         "flow_title": "{name} ( {address} )",
         "step": {
             "confirm": {
-                "description": "Vil du konfigurere {name}?"
+                "description": "Vil du sette opp {name} ?"
+            },
+            "lock_key": {
+                "data": {
+                    "encryption_key": "Krypteringsn\u00f8kkel",
+                    "key_id": "N\u00f8kkel-ID"
+                },
+                "description": "{name} -enheten krever krypteringsn\u00f8kkel, detaljer om hvordan du f\u00e5r tak i den finner du i dokumentasjonen."
             },
             "password": {
                 "data": {
@@ -20,12 +31,8 @@
             },
             "user": {
                 "data": {
-                    "address": "Enhetsadresse",
-                    "mac": "Enhetens MAC -adresse",
-                    "name": "Navn",
-                    "password": "Passord"
-                },
-                "title": "Sett opp Switchbot-enhet"
+                    "address": "Enhetsadresse"
+                }
             }
         }
     },
@@ -33,10 +40,7 @@
         "step": {
             "init": {
                 "data": {
-                    "retry_count": "Antall nye fors\u00f8k",
-                    "retry_timeout": "Tidsavbrudd mellom fors\u00f8k",
-                    "scan_timeout": "Hvor lenge skal jeg s\u00f8ke etter annonsedata",
-                    "update_time": "Tid mellom oppdateringer (sekunder)"
+                    "retry_count": "Antall nye fors\u00f8k"
                 }
             }
         }

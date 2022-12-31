@@ -22,8 +22,8 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     AsyncSeeCallback,
     SourceType,
+    TrackerEntity,
 )
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_EVENT,

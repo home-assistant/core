@@ -31,7 +31,7 @@
         "error": {
             "int": "Das Feld unten muss eine ganze Zahl sein.",
             "loop_range": "RF Loop muss eine ganze Zahl zwischen 1 und 4 sein.",
-            "loop_rfid": "RF Loop kann nicht ohne RF Serial verwendet werden.",
+            "loop_rfid": "RF Loop kann nicht ohne RF Seriell verwendet werden.",
             "relay_inclusive": "Relaisadresse und Relaiskanal sind abh\u00e4ngig voneinander und m\u00fcssen zusammen aufgenommen werden."
         },
         "step": {
@@ -56,7 +56,7 @@
                     "zone_name": "Zonenname",
                     "zone_relayaddr": "Relais-Adresse",
                     "zone_relaychan": "Relaiskanal",
-                    "zone_rfid": "RF Serial",
+                    "zone_rfid": "RF Seriell",
                     "zone_type": "Zonentyp"
                 },
                 "description": "Gib Details f\u00fcr Zone {zone_number} ein. Um Zone {zone_number} zu l\u00f6schen, lass den Zonennamen leer.",
@@ -66,7 +66,7 @@
                 "data": {
                     "zone_number": "Zonennummer"
                 },
-                "description": "Gib die die Zonennummer ein, die du hinzuf\u00fcgen, bearbeiten oder entfernen m\u00f6chtest.",
+                "description": "Gib die Zonennummer ein, die du hinzuf\u00fcgen, bearbeiten oder entfernen m\u00f6chtest.",
                 "title": "AlarmDecoder konfigurieren"
             }
         }

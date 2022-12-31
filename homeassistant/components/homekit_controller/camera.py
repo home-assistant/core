@@ -6,10 +6,12 @@ from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import KNOWN_DEVICES
+from .connection import HKDevice
 from .entity import AccessoryEntity
 
 
@@ -39,8 +41,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Homekit sensors."""
-    hkid = config_entry.data["AccessoryPairingID"]
-    conn = hass.data[KNOWN_DEVICES][hkid]
+    hkid: str = config_entry.data["AccessoryPairingID"]
+    conn: HKDevice = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
     def async_add_accessory(accessory: Accessory) -> bool:
@@ -51,7 +53,11 @@ async def async_setup_entry(
             return False
 
         info = {"aid": accessory.aid, "iid": stream_mgmt.iid}
-        async_add_entities([HomeKitCamera(conn, info)], True)
+        entity = HomeKitCamera(conn, info)
+        conn.async_migrate_unique_id(
+            entity.old_unique_id, entity.unique_id, Platform.CAMERA
+        )
+        async_add_entities([entity])
         return True
 
     conn.add_accessory_factory(async_add_accessory)

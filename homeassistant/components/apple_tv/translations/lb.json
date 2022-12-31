@@ -23,9 +23,9 @@
             },
             "pair_with_pin": {
                 "data": {
-                    "pin": "PIN Code"
+                    "pin": "PIN-Code"
                 },
-                "description": "Kopplung ass n\u00e9ideg fir de `{protocol}` Protokoll. G\u00ebff de PIN code un deen um Ecran ugewise g\u00ebtt. Nullen op der 1ter Plaatz ginn ewechgelooss, dh g\u00ebff 123 wann de gewise Code 0123 ass.",
+                "description": "Fir de Protokoll `{protocol}` ass eng Kopplung n\u00e9ideg. G\u00ebff de PIN-Code, deen um Ecran gewise gett. Nullen um Ufank musse wech gelooss ginn, d.h. g\u00ebff '123' an, wann den ugewisene Code '0123' ass.",
                 "title": "Kopplung"
             },
             "reconfigure": {

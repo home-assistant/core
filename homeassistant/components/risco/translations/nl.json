@@ -22,13 +22,6 @@
                     "pin": "Pincode",
                     "port": "Poort"
                 }
-            },
-            "user": {
-                "data": {
-                    "password": "Wachtwoord",
-                    "pin": "Pincode",
-                    "username": "Gebruikersnaam"
-                }
             }
         }
     },

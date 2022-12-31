@@ -16,7 +16,7 @@
             },
             "user": {
                 "data": {
-                    "email": "Email",
+                    "email": "",
                     "password": "Palavra-passe"
                 }
             }

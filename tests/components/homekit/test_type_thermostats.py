@@ -1045,7 +1045,7 @@ async def test_thermostat_restore(hass, hk_driver, events):
         "off",
     }
 
-    acc = Thermostat(hass, hk_driver, "Climate", "climate.all_info_set", 2, None)
+    acc = Thermostat(hass, hk_driver, "Climate", "climate.all_info_set", 3, None)
     assert acc.category == 9
     assert acc.get_temperature_range() == (60.0, 70.0)
     assert set(acc.char_target_heat_cool.properties["ValidValues"].keys()) == {
@@ -1859,7 +1859,7 @@ async def test_water_heater_restore(hass, hk_driver, events):
     }
 
     acc = WaterHeater(
-        hass, hk_driver, "WaterHeater", "water_heater.all_info_set", 2, None
+        hass, hk_driver, "WaterHeater", "water_heater.all_info_set", 3, None
     )
     assert acc.category == 9
     assert acc.get_temperature_range() == (60.0, 70.0)
@@ -2445,7 +2445,6 @@ async def test_thermostat_with_supported_features_target_temp_but_fan_mode_set(
             ATTR_FAN_MODE: FAN_AUTO,
             ATTR_FAN_MODES: None,
             ATTR_HVAC_ACTION: HVACAction.IDLE,
-            ATTR_FAN_MODE: FAN_AUTO,
             ATTR_PRESET_MODE: "home",
             ATTR_FRIENDLY_NAME: "Rec Room",
             ATTR_HVAC_MODES: [

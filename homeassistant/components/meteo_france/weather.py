@@ -2,6 +2,8 @@
 import logging
 import time
 
+from meteofrance_api.model.forecast import Forecast
+
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_NATIVE_PRECIPITATION,
@@ -15,10 +17,10 @@ from homeassistant.components.weather import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_MODE,
-    LENGTH_MILLIMETERS,
-    PRESSURE_HPA,
-    SPEED_METERS_PER_SECOND,
-    TEMP_CELSIUS,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -56,7 +58,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Meteo-France weather platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR_FORECAST]
+    coordinator: DataUpdateCoordinator[Forecast] = hass.data[DOMAIN][entry.entry_id][
+        COORDINATOR_FORECAST
+    ]
 
     async_add_entities(
         [
@@ -74,15 +78,17 @@ async def async_setup_entry(
     )
 
 
-class MeteoFranceWeather(CoordinatorEntity, WeatherEntity):
+class MeteoFranceWeather(
+    CoordinatorEntity[DataUpdateCoordinator[Forecast]], WeatherEntity
+):
     """Representation of a weather condition."""
 
-    _attr_native_temperature_unit = TEMP_CELSIUS
-    _attr_native_precipitation_unit = LENGTH_MILLIMETERS
-    _attr_native_pressure_unit = PRESSURE_HPA
-    _attr_native_wind_speed_unit = SPEED_METERS_PER_SECOND
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
+    _attr_native_pressure_unit = UnitOfPressure.HPA
+    _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
 
-    def __init__(self, coordinator: DataUpdateCoordinator, mode: str) -> None:
+    def __init__(self, coordinator: DataUpdateCoordinator[Forecast], mode: str) -> None:
         """Initialise the platform with a data instance and station name."""
         super().__init__(coordinator)
         self._city_name = self.coordinator.data.position["name"]
@@ -178,7 +184,7 @@ class MeteoFranceWeather(CoordinatorEntity, WeatherEntity):
                 )
         else:
             for forecast in self.coordinator.data.daily_forecast:
-                # stop when we don't have a weather condition (can happen around last days of forcast, max 14)
+                # stop when we don't have a weather condition (can happen around last days of forecast, max 14)
                 if not forecast.get("weather12H"):
                     break
                 forecast_data.append(

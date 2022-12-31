@@ -10,9 +10,10 @@ from homeassistant.components.waze_travel_time.const import (
     CONF_REALTIME,
     CONF_UNITS,
     CONF_VEHICLE_TYPE,
+    DEFAULT_OPTIONS,
     DOMAIN,
+    IMPERIAL_UNITS,
 )
-from homeassistant.const import CONF_UNIT_SYSTEM_IMPERIAL
 
 from .const import MOCK_CONFIG
 
@@ -51,7 +52,7 @@ def mock_update_keyerror_fixture(mock_wrc):
 
 @pytest.mark.parametrize(
     "data,options",
-    [(MOCK_CONFIG, {})],
+    [(MOCK_CONFIG, DEFAULT_OPTIONS)],
 )
 @pytest.mark.usefixtures("mock_update", "mock_config")
 async def test_sensor(hass):
@@ -84,7 +85,7 @@ async def test_sensor(hass):
         (
             MOCK_CONFIG,
             {
-                CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
+                CONF_UNITS: IMPERIAL_UNITS,
                 CONF_REALTIME: True,
                 CONF_VEHICLE_TYPE: "car",
                 CONF_AVOID_TOLL_ROADS: True,
@@ -105,7 +106,9 @@ async def test_imperial(hass):
 @pytest.mark.usefixtures("mock_update_wrcerror")
 async def test_sensor_failed_wrcerror(hass, caplog):
     """Test that sensor update fails with log message."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, options=DEFAULT_OPTIONS, entry_id="test"
+    )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -117,7 +120,9 @@ async def test_sensor_failed_wrcerror(hass, caplog):
 @pytest.mark.usefixtures("mock_update_keyerror")
 async def test_sensor_failed_keyerror(hass, caplog):
     """Test that sensor update fails with log message."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, options=DEFAULT_OPTIONS, entry_id="test"
+    )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

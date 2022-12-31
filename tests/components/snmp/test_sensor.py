@@ -1,5 +1,6 @@
 """SNMP sensor tests."""
 
+import asyncio
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -15,9 +16,11 @@ def hlapi_mock():
     """Mock out 3rd party API."""
     mock_data = MagicMock()
     mock_data.prettyPrint = Mock(return_value="hello")
+    future = asyncio.get_event_loop().create_future()
+    future.set_result((None, None, None, [[mock_data]]))
     with patch(
         "homeassistant.components.snmp.sensor.getCmd",
-        return_value=(None, None, None, [[mock_data]]),
+        return_value=future,
     ):
         yield
 
@@ -57,7 +60,7 @@ async def test_entity_config(hass: HomeAssistant) -> None:
             "name": "{{'SNMP' + ' ' + 'Sensor'}}",
             "state_class": "measurement",
             "unique_id": "very_unique",
-            "unit_of_measurement": "beardsecond",
+            "unit_of_measurement": "°C",
         },
     }
 
@@ -75,5 +78,5 @@ async def test_entity_config(hass: HomeAssistant) -> None:
         "friendly_name": "SNMP Sensor",
         "icon": "mdi:one_two_three",
         "state_class": "measurement",
-        "unit_of_measurement": "beardsecond",
+        "unit_of_measurement": "°C",
     }

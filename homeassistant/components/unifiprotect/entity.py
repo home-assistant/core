@@ -24,10 +24,15 @@ from homeassistant.core import callback
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 
-from .const import ATTR_EVENT_SCORE, DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
+from .const import (
+    ATTR_EVENT_ID,
+    ATTR_EVENT_SCORE,
+    DEFAULT_ATTRIBUTION,
+    DEFAULT_BRAND,
+    DOMAIN,
+)
 from .data import ProtectData
-from .models import PermRequired, ProtectRequiredKeysMixin
-from .utils import get_nested_attr
+from .models import PermRequired, ProtectEventMixin, ProtectRequiredKeysMixin
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,10 +87,8 @@ def _async_device_entities(
                 ):
                     continue
 
-            if description.ufp_required_field:
-                required_field = get_nested_attr(device, description.ufp_required_field)
-                if not required_field:
-                    continue
+            if not description.has_required(device):
+                continue
 
             entities.append(
                 klass(
@@ -294,42 +297,38 @@ class ProtectNVREntity(ProtectDeviceEntity):
         self._attr_available = self.data.last_update_success
 
 
-class EventThumbnailMixin(ProtectDeviceEntity):
+class EventEntityMixin(ProtectDeviceEntity):
     """Adds motion event attributes to sensor."""
 
-    def __init__(self, *args: Any, **kwarg: Any) -> None:
+    entity_description: ProtectEventMixin
+
+    def __init__(
+        self,
+        *args: Any,
+        **kwarg: Any,
+    ) -> None:
         """Init an sensor that has event thumbnails."""
         super().__init__(*args, **kwarg)
         self._event: Event | None = None
 
     @callback
-    def _async_get_event(self) -> Event | None:
-        """Get event from Protect device.
-
-        To be overridden by child classes.
-        """
-        raise NotImplementedError()
-
-    @callback
-    def _async_thumbnail_extra_attrs(self) -> dict[str, Any]:
-        # Camera motion sensors with object detection
-        attrs: dict[str, Any] = {
-            ATTR_EVENT_SCORE: 0,
-        }
+    def _async_event_extra_attrs(self) -> dict[str, Any]:
+        attrs: dict[str, Any] = {}
 
         if self._event is None:
             return attrs
 
+        attrs[ATTR_EVENT_ID] = self._event.id
         attrs[ATTR_EVENT_SCORE] = self._event.score
         return attrs
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
-        self._event = self._async_get_event()
+        self._event = self.entity_description.get_event_obj(device)
 
         attrs = self.extra_state_attributes or {}
         self._attr_extra_state_attributes = {
             **attrs,
-            **self._async_thumbnail_extra_attrs(),
+            **self._async_event_extra_attrs(),
         }

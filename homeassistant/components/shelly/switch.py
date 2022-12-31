@@ -10,8 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import BLOCK, DATA_CONFIG_ENTRY, DOMAIN, RPC
-from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator
+from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
 from .entity import ShellyBlockEntity, ShellyRpcEntity
 from .utils import (
     async_remove_shelly_entity,
@@ -41,7 +40,8 @@ def async_setup_block_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entities for block device."""
-    coordinator = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][BLOCK]
+    coordinator = get_entry_data(hass)[config_entry.entry_id].block
+    assert coordinator
 
     # In roller mode the relay blocks exist but do not contain required info
     if (
@@ -75,8 +75,8 @@ def async_setup_rpc_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entities for RPC device."""
-    coordinator = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][RPC]
-
+    coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
+    assert coordinator
     switch_key_ids = get_rpc_key_ids(coordinator.device.status, "switch")
 
     switch_ids = []
@@ -138,7 +138,7 @@ class RpcRelaySwitch(ShellyRpcEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """If switch is on."""
-        return bool(self.coordinator.device.status[self.key]["output"])
+        return bool(self.status["output"])
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on relay."""
