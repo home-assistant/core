@@ -123,7 +123,7 @@ DOUBLE_TYPE = (
     .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
 
-TIMESTAMP_TYPE = Float(16)  # Covers up to at least 2250 AD
+TIMESTAMP_TYPE = DOUBLE_TYPE
 
 
 class JSONLiteral(JSON):  # type: ignore[misc]
