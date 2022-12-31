@@ -210,12 +210,14 @@ async def _execute_channel_command_based_action(
 
     if action_channel is None:
         raise InvalidDeviceAutomationConfig(
-            f"Unable to execute channel action - channel: {channel_name} action: {action_type}"
+            f"Unable to execute channel action - channel: {channel_name} action:"
+            f" {action_type}"
         )
 
     if not hasattr(action_channel, action_type):
         raise InvalidDeviceAutomationConfig(
-            f"Unable to execute channel action - channel: {channel_name} action: {action_type}"
+            f"Unable to execute channel action - channel: {channel_name} action:"
+            f" {action_type}"
         )
 
     await getattr(action_channel, action_type)(**config)

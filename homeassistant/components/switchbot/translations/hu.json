@@ -8,6 +8,8 @@
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "error": {
+            "encryption_key_invalid": "A kulcs azonos\u00edt\u00f3ja vagy a titkos\u00edt\u00e1si kulcs \u00e9rv\u00e9nytelen",
+            "key_id_invalid": "A kulcsazonos\u00edt\u00f3 vagy a titkos\u00edt\u00e1si kulcs \u00e9rv\u00e9nytelen",
             "one": "\u00dcres",
             "other": "\u00dcres"
         },
@@ -15,6 +17,13 @@
         "step": {
             "confirm": {
                 "description": "Szeretn\u00e9 be\u00e1ll\u00edtani: {name}?"
+            },
+            "lock_key": {
+                "data": {
+                    "encryption_key": "Titkos\u00edt\u00e1si kulcs",
+                    "key_id": "Kulcs azonos\u00edt\u00f3"
+                },
+                "description": "A(z) {name} eszk\u00f6z titkos\u00edt\u00e1si kulcsot ig\u00e9nyel, annak beszerz\u00e9s\u00e9vel kapcsolatos r\u00e9szletek a dokument\u00e1ci\u00f3ban tal\u00e1lhat\u00f3k."
             },
             "password": {
                 "data": {

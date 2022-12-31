@@ -181,7 +181,8 @@ class ValueMappingZwaveFan(ZwaveFan):
                 return
 
         raise NotValidPresetModeError(
-            f"The preset_mode {preset_mode} is not a valid preset_mode: {self.preset_modes}"
+            f"The preset_mode {preset_mode} is not a valid preset_mode:"
+            f" {self.preset_modes}"
         )
 
     @property

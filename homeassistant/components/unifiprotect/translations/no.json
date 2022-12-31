@@ -52,8 +52,19 @@
     },
     "issues": {
         "deprecate_smart_sensor": {
-            "description": "Den enhetlige \u00abDetected Object\u00bb-sensoren for smarte deteksjoner er n\u00e5 avviklet. Den er erstattet med individuelle smartdeteksjonsbin\u00e6re sensorer for hver smartdeteksjonstype. Oppdater eventuelle maler eller automatiseringer tilsvarende.",
+            "description": "Den enhetlige \u00abDetected Object\u00bb-sensoren for smarte deteksjoner er n\u00e5 avviklet. Den er erstattet med individuelle smartdeteksjonsbin\u00e6re sensorer for hver smartdeteksjonstype. \n\n Nedenfor er de oppdagede automatiseringene eller skriptene som bruker \u00e9n eller flere av de avviklede enhetene:\n {items}\n Listen ovenfor kan v\u00e6re ufullstendig, og den inkluderer ingen malbruk inne i dashbord. Vennligst oppdater eventuelle maler, automatiseringer eller skript tilsvarende.",
             "title": "Smart deteksjonssensor avviklet"
+        },
+        "deprecated_service_set_doorbell_message": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "\u00abunifiprotect.set_doorbell_message\u00bb-tjenesten er avviklet til fordel for den nye Doorbell Text-enheten som legges til hver Doorbell-enhet. Den vil bli fjernet i v2023.3.0. Vennligst oppdater for \u00e5 bruke [`text.set_value`-tjenesten]( {link} ).",
+                        "title": "set_doorbell_message er avviklet"
+                    }
+                }
+            },
+            "title": "set_doorbell_message er avviklet"
         },
         "ea_setup_failed": {
             "description": "Du bruker v {version} av UniFi Protect som er en tidlig tilgangsversjon. Det oppstod en uopprettelig feil under fors\u00f8k p\u00e5 \u00e5 laste integrasjonen. Vennligst [nedgrader til en stabil versjon](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) av UniFi Protect for \u00e5 fortsette \u00e5 bruke integrasjonen. \n\n Feil: {error}",

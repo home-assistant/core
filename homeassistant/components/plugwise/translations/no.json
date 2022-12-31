@@ -26,6 +26,21 @@
         }
     },
     "entity": {
+        "climate": {
+            "plugwise": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "asleep": "Natt",
+                            "away": "Borte",
+                            "home": "Hjemme",
+                            "no_frost": "Anti-frost",
+                            "vacation": "Ferie"
+                        }
+                    }
+                }
+            }
+        },
         "select": {
             "dhw_mode": {
                 "state": {

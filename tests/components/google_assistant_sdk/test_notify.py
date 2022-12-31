@@ -41,7 +41,8 @@ async def test_broadcast_one_target(
     target = "basement"
     expected_command = "broadcast to basement time for dinner"
     with patch(
-        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist"
+        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",
+        return_value=["text_response", None],
     ) as mock_assist_call:
         await hass.services.async_call(
             notify.DOMAIN,
@@ -64,7 +65,8 @@ async def test_broadcast_two_targets(
     expected_command1 = "broadcast to basement time for dinner"
     expected_command2 = "broadcast to master bedroom time for dinner"
     with patch(
-        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist"
+        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",
+        return_value=["text_response", None],
     ) as mock_assist_call:
         await hass.services.async_call(
             notify.DOMAIN,
@@ -84,7 +86,8 @@ async def test_broadcast_empty_message(
     await setup_integration()
 
     with patch(
-        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist"
+        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",
+        return_value=["text_response", None],
     ) as mock_assist_call:
         await hass.services.async_call(
             notify.DOMAIN,
