@@ -829,6 +829,10 @@ def _apply_update(  # noqa: C901
         # Migrate all data in States.last_changed to States.last_changed_ts and
         # wipe States.last_changed
         # TODO: implement
+        # Once we require SQLite >= 3.35.5, we should drop the column:
+        # ALTER TABLE events DROP COLUMN time_fired
+        # ALTER TABLE states DROP COLUMN last_updated
+        # ALTER TABLE states DROP COLUMN last_changed
         _create_index(session_maker, "events", "ix_events_time_fired_ts")
         _create_index(session_maker, "events", "ix_events_event_type_time_fired_ts")
         _create_index(session_maker, "states", "ix_states_entity_id_last_updated_ts")
