@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .application_credentials import get_oauth_service
-from .const import ATTR_FROM, ATTR_ME, ATTR_SEND
+from .const import ATTR_BCC, ATTR_CC, ATTR_FROM, ATTR_ME, ATTR_SEND
 
 
 async def async_get_service(
@@ -41,7 +41,7 @@ class GMailNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message."""
-        data: dict[str, str | bool] = kwargs.get(ATTR_DATA) or {}
+        data: dict[str, Any] = kwargs.get(ATTR_DATA, {})
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 
         email = EmailMessage()
@@ -50,6 +50,8 @@ class GMailNotificationService(BaseNotificationService):
             email["To"] = ", ".join(to_addrs)
         email["From"] = data.get(ATTR_FROM, ATTR_ME)
         email["Subject"] = title
+        email[ATTR_CC] = ", ".join(data.get(ATTR_CC, []))
+        email[ATTR_BCC] = ", ".join(data.get(ATTR_BCC, []))
 
         encoded_message = base64.urlsafe_b64encode(email.as_bytes()).decode()
         body = {"raw": encoded_message}

@@ -1,6 +1,8 @@
 """Constants for Google Mail integration."""
 from __future__ import annotations
 
+ATTR_BCC = "bcc"
+ATTR_CC = "cc"
 ATTR_ENABLED = "enabled"
 ATTR_END = "end"
 ATTR_FROM = "from"
