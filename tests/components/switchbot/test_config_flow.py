@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from switchbot import SwitchbotAuthenticationError
+from switchbot import SwitchbotAccountConnectionError, SwitchbotAuthenticationError
 
 from homeassistant.components.switchbot.const import (
     CONF_ENCRYPTION_KEY,
@@ -524,6 +524,43 @@ async def test_user_setup_wolock_auth(hass):
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_user_setup_wolock_auth_switchbot_api_down(hass):
+    """Test the user initiated form for a lock when the switchbot api is down."""
+
+    with patch(
+        "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+        return_value=[WOLOCK_SERVICE_INFO],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+    assert result["type"] == FlowResultType.MENU
+    assert result["step_id"] == "lock_choose_method"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "lock_auth"}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "lock_auth"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.switchbot.config_flow.SwitchbotLock.retrieve_encryption_key",
+        side_effect=SwitchbotAccountConnectionError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "",
+                CONF_PASSWORD: "",
+            },
+        )
+        await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_user_setup_wolock_or_bot(hass):
