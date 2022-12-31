@@ -1598,6 +1598,7 @@ omit =
     homeassistant/components/zerproc/__init__.py
     homeassistant/components/zerproc/const.py
     homeassistant/components/zestimate/sensor.py
+    homeassistant/components/zeversolar/__init__.py
     homeassistant/components/zeversolar/const.py
     homeassistant/components/zeversolar/coordinator.py
     homeassistant/components/zeversolar/entity.py
