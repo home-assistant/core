@@ -860,7 +860,7 @@ def _initialize_database(session: Session) -> bool:
     indexes = inspector.get_indexes("events")
 
     for index in indexes:
-        if index["column_names"] == ["time_fired_ts"]:
+        if index["column_names"] in (["time_fired"], ["time_fired_ts"]):
             # Schema addition from version 1 detected. New DB.
             session.add(StatisticsRuns(start=get_start_time()))
             session.add(SchemaChanges(schema_version=SCHEMA_VERSION))
