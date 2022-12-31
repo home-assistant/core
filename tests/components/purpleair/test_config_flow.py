@@ -9,7 +9,10 @@ from homeassistant.components.purpleair import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import TEST_API_KEY
+from .conftest import TEST_API_KEY, TEST_SENSOR_INDEX1, TEST_SENSOR_INDEX2
+
+TEST_LATITUDE = 51.5285582
+TEST_LONGITUDE = -0.2416796
 
 
 @pytest.mark.parametrize(
@@ -63,8 +66,8 @@ async def test_create_entry_by_coordinates(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
-                "latitude": 51.5285582,
-                "longitude": -0.2416796,
+                "latitude": TEST_LATITUDE,
+                "longitude": TEST_LONGITUDE,
                 "distance": 5,
             },
         )
@@ -74,8 +77,8 @@ async def test_create_entry_by_coordinates(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            "latitude": 51.5285582,
-            "longitude": -0.2416796,
+            "latitude": TEST_LATITUDE,
+            "longitude": TEST_LONGITUDE,
             "distance": 5,
         },
     )
@@ -85,7 +88,7 @@ async def test_create_entry_by_coordinates(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            "sensor_index": "123456",
+            "sensor_index": str(TEST_SENSOR_INDEX1),
         },
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
@@ -94,7 +97,7 @@ async def test_create_entry_by_coordinates(
         "api_key": TEST_API_KEY,
     }
     assert result["options"] == {
-        "sensor_indices": [123456],
+        "sensor_indices": [TEST_SENSOR_INDEX1],
     }
 
 
@@ -185,8 +188,8 @@ async def test_options_add_sensor(
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
-                "latitude": 51.5285582,
-                "longitude": -0.2416796,
+                "latitude": TEST_LATITUDE,
+                "longitude": TEST_LONGITUDE,
                 "distance": 5,
             },
         )
@@ -196,8 +199,8 @@ async def test_options_add_sensor(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "latitude": 51.5285582,
-            "longitude": -0.2416796,
+            "latitude": TEST_LATITUDE,
+            "longitude": TEST_LONGITUDE,
             "distance": 5,
         },
     )
@@ -207,16 +210,19 @@ async def test_options_add_sensor(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "sensor_index": "567890",
+            "sensor_index": str(TEST_SENSOR_INDEX2),
         },
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "last_update_sensor_add": True,
-        "sensor_indices": [123456, 567890],
+        "sensor_indices": [TEST_SENSOR_INDEX1, TEST_SENSOR_INDEX2],
     }
 
-    assert config_entry.options["sensor_indices"] == [123456, 567890]
+    assert config_entry.options["sensor_indices"] == [
+        TEST_SENSOR_INDEX1,
+        TEST_SENSOR_INDEX2,
+    ]
 
 
 async def test_options_add_sensor_duplicate(hass, config_entry, setup_config_entry):
@@ -234,8 +240,8 @@ async def test_options_add_sensor_duplicate(hass, config_entry, setup_config_ent
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "latitude": 51.5285582,
-            "longitude": -0.2416796,
+            "latitude": TEST_LATITUDE,
+            "longitude": TEST_LONGITUDE,
             "distance": 5,
         },
     )
@@ -245,7 +251,7 @@ async def test_options_add_sensor_duplicate(hass, config_entry, setup_config_ent
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "sensor_index": "123456",
+            "sensor_index": str(TEST_SENSOR_INDEX1),
         },
     )
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
@@ -265,7 +271,7 @@ async def test_options_remove_sensor(hass, config_entry, setup_config_entry):
     assert result["step_id"] == "remove_sensor"
 
     device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_device({(DOMAIN, "123456")})
+    device_entry = device_registry.async_get_device({(DOMAIN, str(TEST_SENSOR_INDEX1))})
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={"sensor_device_id": device_entry.id},

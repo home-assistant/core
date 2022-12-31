@@ -10,6 +10,8 @@ from homeassistant.components.purpleair import DOMAIN
 from tests.common import MockConfigEntry, load_fixture
 
 TEST_API_KEY = "abcde12345"
+TEST_SENSOR_INDEX1 = 123456
+TEST_SENSOR_INDEX2 = 567890
 
 
 @pytest.fixture(name="api")
@@ -55,7 +57,7 @@ def config_entry_data_fixture():
 def config_entry_options_fixture():
     """Define a config entry options fixture."""
     return {
-        "sensor_indices": [123456],
+        "sensor_indices": [TEST_SENSOR_INDEX1],
     }
 
 
