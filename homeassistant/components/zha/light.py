@@ -188,6 +188,14 @@ class BaseLight(LogMixin, light.LightEntity):
         xy_color = kwargs.get(light.ATTR_XY_COLOR)
         hs_color = kwargs.get(light.ATTR_HS_COLOR)
 
+        execute_if_off_supported = (
+            self._GROUP_SUPPORTS_EXECUTE_IF_OFF
+            if isinstance(self, LightGroup)
+            else self._color_channel.execute_if_off_supported
+            if self._color_channel
+            else False
+        )
+
         set_transition_flag = (
             brightness_supported(self._attr_supported_color_modes)
             or temperature is not None
@@ -254,7 +262,7 @@ class BaseLight(LogMixin, light.LightEntity):
                 )
             )
             and brightness_supported(self._attr_supported_color_modes)
-            and not self._color_channel.execute_if_off_supported
+            and not execute_if_off_supported
         )
 
         if (
@@ -289,11 +297,7 @@ class BaseLight(LogMixin, light.LightEntity):
             # Currently only setting it to "on", as the correct level state will be set at the second move_to_level call
             self._attr_state = True
 
-        if (
-            not isinstance(self, LightGroup)
-            and self._color_channel
-            and self._color_channel.execute_if_off_supported
-        ):
+        if execute_if_off_supported:
             self.debug("handling color commands before turning on/level")
             if not await self.async_handle_color_commands(
                 temperature,
@@ -348,11 +352,7 @@ class BaseLight(LogMixin, light.LightEntity):
                 return
             self._attr_state = True
 
-        if (
-            isinstance(self, LightGroup)
-            or not self._color_channel
-            or not self._color_channel.execute_if_off_supported
-        ):
+        if not execute_if_off_supported:
             self.debug("handling color commands after turning on/level")
             if not await self.async_handle_color_commands(
                 temperature,
@@ -1051,6 +1051,22 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         """Initialize a light group."""
         super().__init__(entity_ids, unique_id, group_id, zha_device, **kwargs)
         group = self.zha_device.gateway.get_group(self._group_id)
+
+        # ugly experimental code to support "execute if off" for groups
+        # Note: Can this be done in a better way?
+        # Note: Also, currently, this is only set once when the group is initialized,
+        #       so if the "options" attribute is changed, ZHA needs to be reloaded.
+        self._GROUP_SUPPORTS_EXECUTE_IF_OFF = True  # pylint: disable=invalid-name
+        for member in group.members:
+            for pool in member.device.channels.pools:
+                for channel in pool.all_channels.values():
+                    if (
+                        channel.name == CHANNEL_COLOR
+                        and not channel.execute_if_off_supported
+                    ):
+                        self._GROUP_SUPPORTS_EXECUTE_IF_OFF = False
+                        break
+
         self._DEFAULT_MIN_TRANSITION_TIME = any(  # pylint: disable=invalid-name
             member.device.manufacturer in DEFAULT_MIN_TRANSITION_MANUFACTURERS
             for member in group.members
