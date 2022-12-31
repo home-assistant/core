@@ -38,10 +38,10 @@ class TransmissionSwitch(SwitchEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, switch_type, switch_name, tm_client, name):
+    def __init__(self, switch_type, switch_name, tm_client, client_name):
         """Initialize the Transmission switch."""
         self._name = switch_name
-        self.client_name = name
+        self.client_name = client_name
         self.type = switch_type
         self._tm_client = tm_client
         self._state = STATE_OFF
@@ -51,7 +51,7 @@ class TransmissionSwitch(SwitchEntity):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, tm_client.config_entry.entry_id)},
             manufacturer="Transmission",
-            name=name,
+            name=client_name,
         )
 
     @property
