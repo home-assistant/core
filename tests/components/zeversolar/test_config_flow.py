@@ -10,7 +10,7 @@ from zeversolar.exceptions import (
 
 from homeassistant import config_entries
 from homeassistant.components.zeversolar.const import DOMAIN
-from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -66,7 +66,7 @@ async def test_form_errors(
         result2 = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"],
             user_input={
-                CONF_IP_ADDRESS: "test_ip",
+                CONF_HOST: "test_ip",
             },
         )
 
@@ -81,7 +81,7 @@ async def test_abort_already_configured(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Zeversolar",
-        data={CONF_IP_ADDRESS: "test_ip"},
+        data={CONF_HOST: "test_ip"},
         unique_id="test_serial",
     )
     entry.add_to_hass(hass)
@@ -101,7 +101,7 @@ async def test_abort_already_configured(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"],
             user_input={
-                CONF_IP_ADDRESS: "test_ip",
+                CONF_HOST: "test_ip",
             },
         )
         await hass.async_block_till_done()
@@ -122,14 +122,14 @@ async def _set_up_zeversolar(hass: HomeAssistant, flow_id: str) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             flow_id=flow_id,
             user_input={
-                CONF_IP_ADDRESS: "test_ip",
+                CONF_HOST: "test_ip",
             },
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == mock_data.serial_number
+    assert result2["title"] == "Zeversolar"
     assert result2["data"] == {
-        CONF_IP_ADDRESS: "test_ip",
+        CONF_HOST: "test_ip",
     }
     assert len(mock_setup_entry.mock_calls) == 1

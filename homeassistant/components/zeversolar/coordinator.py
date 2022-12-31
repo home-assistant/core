@@ -7,7 +7,7 @@ import logging
 import zeversolar
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -27,7 +27,7 @@ class ZeversolarCoordinator(DataUpdateCoordinator[zeversolar.ZeverSolarData]):
             name=DOMAIN,
             update_interval=timedelta(minutes=1),
         )
-        self._client = zeversolar.ZeverSolarClient(host=entry.data[CONF_IP_ADDRESS])
+        self._client = zeversolar.ZeverSolarClient(host=entry.data[CONF_HOST])
 
     async def _async_update_data(self) -> zeversolar.ZeverSolarData:
         """Fetch the latest data from the source."""
