@@ -37,7 +37,7 @@ async def async_setup_entry(
     )
 
 
-class Device(CoordinatorEntity, LightEntity):
+class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], LightEntity):
     """Representation of an Freedompro light."""
 
     def __init__(

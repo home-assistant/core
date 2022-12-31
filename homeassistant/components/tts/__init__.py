@@ -158,7 +158,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         base_url = conf.get(CONF_BASE_URL)
         if base_url is not None:
             _LOGGER.warning(
-                "TTS base_url option is deprecated. Configure internal/external URL instead"
+                "TTS base_url option is deprecated. Configure internal/external URL"
+                " instead"
             )
         hass.data[BASE_URL_KEY] = base_url
 
@@ -241,7 +242,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # Register the service description
         service_desc = {
             CONF_NAME: f"Say a TTS message with {p_type}",
-            CONF_DESCRIPTION: f"Say something using text-to-speech on a media player with {p_type}.",
+            CONF_DESCRIPTION: (
+                f"Say something using text-to-speech on a media player with {p_type}."
+            ),
             CONF_FIELDS: services_dict[SERVICE_SAY][CONF_FIELDS],
         }
         async_set_service_schema(hass, DOMAIN, service_name, service_desc)

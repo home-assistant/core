@@ -10,8 +10,10 @@
             "user": {
                 "data": {
                     "device_key": "K\u013e\u00fa\u010d zariadenia v\u00e1\u0161ho zariadenia",
+                    "event": "Udalos\u0165 pre udalosti.",
                     "name": "N\u00e1zov",
-                    "password": "Heslo \u0161ifrovania pou\u017e\u00edvan\u00e9ho va\u0161\u00edm zariaden\u00edm"
+                    "password": "Heslo \u0161ifrovania pou\u017e\u00edvan\u00e9ho va\u0161\u00edm zariaden\u00edm",
+                    "salt": "So\u013e pou\u017e\u00edvan\u00e1 vo va\u0161om zariaden\u00ed."
                 }
             }
         }

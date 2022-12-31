@@ -410,7 +410,7 @@ async def test_setting_sensor_bad_last_reset_via_mqtt_message(
 
 
 async def test_setting_sensor_empty_last_reset_via_mqtt_message(
-    hass, caplog, mqtt_mock_entry_with_yaml_config
+    hass, mqtt_mock_entry_with_yaml_config
 ):
     """Test the setting of the last_reset property via MQTT."""
     assert await async_setup_component(
@@ -434,7 +434,6 @@ async def test_setting_sensor_empty_last_reset_via_mqtt_message(
     async_fire_mqtt_message(hass, "last-reset-topic", "")
     state = hass.states.get("sensor.test")
     assert state.attributes.get("last_reset") is None
-    assert "Ignoring empty last_reset message" in caplog.text
 
 
 async def test_setting_sensor_last_reset_via_mqtt_json_message(
@@ -1147,14 +1146,6 @@ async def test_cleanup_triggers_and_restoring_state(
     )
     await hass.async_block_till_done()
 
-    assert "Clean up expire after trigger for sensor.test1" in caplog.text
-    assert "Clean up expire after trigger for sensor.test2" not in caplog.text
-    assert (
-        "State recovered after reload for sensor.test1, remaining time before expiring"
-        in caplog.text
-    )
-    assert "State recovered after reload for sensor.test2" not in caplog.text
-
     state = hass.states.get("sensor.test1")
     assert state.state == "38"  # 100 °F -> 38 °C
 
@@ -1171,7 +1162,7 @@ async def test_cleanup_triggers_and_restoring_state(
 
 
 async def test_skip_restoring_state_with_over_due_expire_trigger(
-    hass, mqtt_mock_entry_with_yaml_config, caplog, freezer
+    hass, mqtt_mock_entry_with_yaml_config, freezer
 ):
     """Test restoring a state with over due expire timer."""
 
@@ -1195,7 +1186,8 @@ async def test_skip_restoring_state_with_over_due_expire_trigger(
     )
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
-    assert "Skip state recovery after reload for sensor.test3" in caplog.text
+    state = hass.states.get("sensor.test3")
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(

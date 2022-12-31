@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import LIGHT_LUX, PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import LIGHT_LUX, PERCENTAGE, UnitOfTemperature
 from homeassistant.helpers.entity import EntityCategory
 
 from ..const import DOMAIN as HUE_DOMAIN
@@ -76,7 +76,7 @@ class HueTemperature(GenericHueGaugeSensorEntity):
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = TEMP_CELSIUS
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     @property
     def native_value(self):

@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Jelsz\u00f3"
+                },
+                "description": "A jelsz\u00f3 az AirVisual Pro felhaszn\u00e1l\u00f3i fel\u00fclet\u00e9n tal\u00e1lhat\u00f3 meg."
+            },
+            "user": {
+                "data": {
+                    "ip_address": "C\u00edm",
+                    "password": "Jelsz\u00f3"
+                },
+                "description": "A jelsz\u00f3 az AirVisual Pro felhaszn\u00e1l\u00f3i fel\u00fclet\u00e9n tal\u00e1lhat\u00f3 meg."
+            }
+        }
+    }
+}

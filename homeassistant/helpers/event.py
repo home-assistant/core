@@ -729,7 +729,7 @@ def async_track_template(
     ],
     variables: TemplateVarsType | None = None,
 ) -> CALLBACK_TYPE:
-    """Add a listener that fires when a a template evaluates to 'true'.
+    """Add a listener that fires when a template evaluates to 'true'.
 
     Listen for the result of the template becoming true, or a true-like
     string result, such as 'On', 'Open', or 'Yes'. If the template results
@@ -884,7 +884,10 @@ class TrackTemplateResultInfo:
         )
         self._update_time_listeners()
         _LOGGER.debug(
-            "Template group %s listens for %s, first render blocker by super template: %s",
+            (
+                "Template group %s listens for %s, first render blocker by super"
+                " template: %s"
+            ),
             self._track_templates,
             self.listeners,
             block_render,
@@ -1106,7 +1109,10 @@ class TrackTemplateResultInfo:
                 )
             )
             _LOGGER.debug(
-                "Template group %s listens for %s, re-render blocker by super template: %s",
+                (
+                    "Template group %s listens for %s, re-render blocker by super"
+                    " template: %s"
+                ),
                 self._track_templates,
                 self.listeners,
                 block_updates,
