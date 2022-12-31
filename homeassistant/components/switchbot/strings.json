@@ -30,11 +30,11 @@
           "password": "[%key:common::config_flow::data::password%]"
         }
       },
-      "lock_chose_method": {
-        "description": "Choose configuration method, details can be found in the documentation.",
+      "lock_choose_method": {
+        "description": "A SwitchBot lock can be set up in Home Assistant in two different ways.\n\nYou can enter the key id and encryption key yourself, or Home Assistant can import them from your SwitchBot account.",
         "menu_options": {
-          "lock_auth": "SwitchBot app login and password",
-          "lock_key": "Lock encryption key"
+          "lock_auth": "SwitchBot account (recommended)",
+          "lock_key": "Enter lock encryption key manually"
         }
       }
     },
