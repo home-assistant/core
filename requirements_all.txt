@@ -2644,7 +2644,7 @@ zengge==0.2
 zeroconf==0.47.0
 
 # homeassistant.components.zeversolar
-zeversolar==0.1.0
+zeversolar==0.2.0
 
 # homeassistant.components.zha
 zha-quirks==0.0.89

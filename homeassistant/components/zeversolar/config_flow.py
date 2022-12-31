@@ -39,12 +39,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
 
-        await self.async_set_unique_id(user_input[CONF_IP_ADDRESS])
-        self._abort_if_unique_id_configured()
-
         client = zeversolar.ZeverSolarClient(host=user_input[CONF_IP_ADDRESS])
         try:
             data = await self.hass.async_add_executor_job(client.get_data)
+        except zeversolar.ZeverSolarHTTPNotFound:
+            errors["base"] = "invalid_host"
         except zeversolar.ZeverSolarHTTPError:
             errors["base"] = "cannot_connect"
         except zeversolar.ZeverSolarTimeout:
@@ -53,6 +52,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
+            await self.async_set_unique_id(data.serial_number)
+            self._abort_if_unique_id_configured()
             return self.async_create_entry(title=data.serial_number, data=user_input)
 
         return self.async_show_form(
