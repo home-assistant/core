@@ -6277,7 +6277,7 @@
       "iot_class": "cloud_polling"
     },
     "zeversolar": {
-      "name": "zeversolar",
+      "name": "Zeversolar",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
