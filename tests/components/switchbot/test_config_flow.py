@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from switchbot import SwitchbotAuthenticationError
+
 from homeassistant.components.switchbot.const import (
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
@@ -479,7 +481,7 @@ async def test_user_setup_wolock_auth(hass):
 
     with patch(
         "homeassistant.components.switchbot.config_flow.SwitchbotLock.retrieve_encryption_key",
-        side_effect=RuntimeError,
+        side_effect=SwitchbotAuthenticationError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
