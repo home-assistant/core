@@ -173,11 +173,12 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_USERNAME],
                     user_input[CONF_PASSWORD],
                 )
-                return await self.async_step_lock_key(key_details)
             except SwitchbotAuthenticationError:
                 errors = {
                     "base": "auth_failed",
                 }
+            else:
+                return await self.async_step_lock_key(key_details)
 
         user_input = user_input or {}
         return self.async_show_form(
