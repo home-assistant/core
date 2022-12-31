@@ -91,7 +91,9 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured(updates=user_input)
 
                 return self.async_create_entry(
-                    title=str(host.api.nvr_name), data=user_input, options=DEFAULT_OPTIONS
+                    title=str(host.api.nvr_name),
+                    data=user_input,
+                    options=DEFAULT_OPTIONS,
                 )
 
         data_schema = vol.Schema(
