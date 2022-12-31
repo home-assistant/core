@@ -126,11 +126,11 @@ def async_get_sensor_index(
     Note that this method expects that there will always be a single sensor index per
     DeviceEntry.
     """
-    [sensor_index] = [
+    sensor_index = next(
         sensor_index
         for sensor_index in config_entry.options[CONF_SENSOR_INDICES]
         if (DOMAIN, str(sensor_index)) in device_entry.identifiers
-    ]
+    )
 
     return cast(int, sensor_index)
 
