@@ -25,17 +25,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import AirVisualProData, AirVisualProEntity
 from .const import DOMAIN
 
-SENSOR_KIND_AQI = "air_quality_index"
-SENSOR_KIND_BATTERY_LEVEL = "battery_level"
-SENSOR_KIND_CO2 = "carbon_dioxide"
-SENSOR_KIND_HUMIDITY = "humidity"
-SENSOR_KIND_PM_0_1 = "particulate_matter_0_1"
-SENSOR_KIND_PM_1_0 = "particulate_matter_1_0"
-SENSOR_KIND_PM_2_5 = "particulate_matter_2_5"
-SENSOR_KIND_SENSOR_LIFE = "sensor_life"
-SENSOR_KIND_TEMPERATURE = "temperature"
-SENSOR_KIND_VOC = "voc"
-
 
 @dataclass
 class AirVisualProMeasurementKeyMixin:
@@ -53,7 +42,7 @@ class AirVisualProMeasurementDescription(
 
 SENSOR_DESCRIPTIONS = (
     AirVisualProMeasurementDescription(
-        key=SENSOR_KIND_AQI,
+        key="air_quality_index",
         name="Air quality index",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
@@ -62,7 +51,7 @@ SENSOR_DESCRIPTIONS = (
         ],
     ),
     AirVisualProMeasurementDescription(
-        key=SENSOR_KIND_BATTERY_LEVEL,
+        key="battery_level",
         name="Battery",
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -70,7 +59,7 @@ SENSOR_DESCRIPTIONS = (
         value_fn=lambda settings, status, measurements: status["battery"],
     ),
     AirVisualProMeasurementDescription(
-        key=SENSOR_KIND_CO2,
+        key="carbon_dioxide",
         name="C02",
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
@@ -78,14 +67,14 @@ SENSOR_DESCRIPTIONS = (
         value_fn=lambda settings, status, measurements: measurements["co2"],
     ),
     AirVisualProMeasurementDescription(
-        key=SENSOR_KIND_HUMIDITY,
+        key="humidity",
         name="Humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda settings, status, measurements: measurements["humidity"],
     ),
     AirVisualProMeasurementDescription(
-        key=SENSOR_KIND_PM_0_1,
+        key="particulate_matter_0_1",
         name="PM 0.1",
         device_class=SensorDeviceClass.PM1,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -93,7 +82,7 @@ SENSOR_DESCRIPTIONS = (
         value_fn=lambda settings, status, measurements: measurements["pm0_1"],
     ),
     AirVisualProMeasurementDescription(
-        key=SENSOR_KIND_PM_1_0,
+        key="particulate_matter_1_0",
         name="PM 1.0",
         device_class=SensorDeviceClass.PM10,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -101,7 +90,7 @@ SENSOR_DESCRIPTIONS = (
         value_fn=lambda settings, status, measurements: measurements["pm1_0"],
     ),
     AirVisualProMeasurementDescription(
-        key=SENSOR_KIND_PM_2_5,
+        key="particulate_matter_2_5",
         name="PM 2.5",
         device_class=SensorDeviceClass.PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -109,7 +98,7 @@ SENSOR_DESCRIPTIONS = (
         value_fn=lambda settings, status, measurements: measurements["pm2_5"],
     ),
     AirVisualProMeasurementDescription(
-        key=SENSOR_KIND_TEMPERATURE,
+        key="temperature",
         name="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -117,7 +106,7 @@ SENSOR_DESCRIPTIONS = (
         value_fn=lambda settings, status, measurements: measurements["temperature_C"],
     ),
     AirVisualProMeasurementDescription(
-        key=SENSOR_KIND_VOC,
+        key="voc",
         name="VOC",
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
