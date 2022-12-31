@@ -2283,6 +2283,9 @@ sensorpush-ble==1.5.2
 # homeassistant.components.sentry
 sentry-sdk==1.12.1
 
+# homeassistant.components.sfr_box
+sfrbox-api==0.0.1
+
 # homeassistant.components.sharkiq
 sharkiq==0.0.1
 
