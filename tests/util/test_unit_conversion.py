@@ -49,7 +49,7 @@ def _get_valid_unit(converter: type[BaseUnitConverter]) -> str:
     return next(
         filter(
             lambda v: v != converter.NORMALIZED_UNIT,
-            iter(converter.VALID_UNITS),
+            sorted(converter.VALID_UNITS),
         )
     )
 
