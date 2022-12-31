@@ -1,7 +1,7 @@
 """MicroBot class."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.components.bluetooth.passive_update_coordinator import (
     PassiveBluetoothCoordinatorEntity,
@@ -10,15 +10,11 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
 
 from .const import MANUFACTURER
-
-if TYPE_CHECKING:
-    from . import MicroBotDataUpdateCoordinator
+from .coordinator import MicroBotDataUpdateCoordinator
 
 
-class MicroBotEntity(PassiveBluetoothCoordinatorEntity):
+class MicroBotEntity(PassiveBluetoothCoordinatorEntity[MicroBotDataUpdateCoordinator]):
     """Generic entity for all MicroBots."""
-
-    coordinator: MicroBotDataUpdateCoordinator
 
     def __init__(self, coordinator, config_entry):
         """Initialise the entity."""
