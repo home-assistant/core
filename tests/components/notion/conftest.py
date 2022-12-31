@@ -32,7 +32,7 @@ def config_entry_fixture(hass, config):
 
 
 @pytest.fixture(name="config")
-def config_fixture(hass):
+def config_fixture():
     """Define a config entry data fixture."""
     return {
         CONF_USERNAME: TEST_USERNAME,
