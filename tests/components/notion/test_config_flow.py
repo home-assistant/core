@@ -19,7 +19,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
     ],
 )
 async def test_create_entry(
-    hass, client, config, errors, get_client_with_exception, setup_notion
+    hass, client, config, errors, get_client_with_exception, mock_aionotion
 ):
     """Test creating an etry (including recovery from errors)."""
     result = await hass.config_entries.flow.async_init(
@@ -50,7 +50,7 @@ async def test_create_entry(
     }
 
 
-async def test_duplicate_error(hass, config, config_entry):
+async def test_duplicate_error(hass, config, setup_config_entry):
     """Test that errors are shown when duplicates are added."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=config
@@ -68,7 +68,7 @@ async def test_duplicate_error(hass, config, config_entry):
     ],
 )
 async def test_reauth(
-    hass, config, config_entry, errors, get_client_with_exception, setup_notion
+    hass, config, config_entry, errors, get_client_with_exception, setup_config_entry
 ):
     """Test that re-auth works."""
     result = await hass.config_entries.flow.async_init(
