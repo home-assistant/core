@@ -122,7 +122,8 @@ DOUBLE_TYPE = (
     .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
     .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
-TIMESTAMP_TYPE = Float(7)
+
+TIMESTAMP_TYPE = Float(16)  # Covers up to at least 2250 AD
 
 
 class JSONLiteral(JSON):  # type: ignore[misc]
