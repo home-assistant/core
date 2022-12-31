@@ -68,9 +68,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                host = await async_obtain_host_settings(
-                    self.hass, user_input
-                )
+                host = await async_obtain_host_settings(self.hass, user_input)
             except CannotConnect:
                 errors[CONF_HOST] = "cannot_connect"
             except CredentialsInvalidError:
