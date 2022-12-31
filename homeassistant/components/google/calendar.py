@@ -221,8 +221,7 @@ async def async_setup_entry(
             )
             if (
                 search := data.get(CONF_SEARCH)
-                or calendar_item.access_role == AccessRole.FREE_BUSY_READER
-            ):
+            ) or calendar_item.access_role == AccessRole.FREE_BUSY_READER:
                 coordinator = CalendarQueryUpdateCoordinator(
                     hass,
                     calendar_service,
