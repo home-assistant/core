@@ -9,7 +9,8 @@
         },
         "error": {
             "auth_failed": "Authentication failed",
-            "encryption_key_invalid": "Key ID or Encryption key is invalid"
+            "encryption_key_invalid": "Key ID or Encryption key is invalid",
+            "key_id_invalid": "Key ID or Encryption key is invalid"
         },
         "flow_title": "{name} ({address})",
         "step": {
