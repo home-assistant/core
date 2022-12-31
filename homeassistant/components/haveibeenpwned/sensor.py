@@ -5,7 +5,6 @@ from datetime import timedelta
 from http import HTTPStatus
 import logging
 
-from aiohttp.hdrs import USER_AGENT
 import requests
 import voluptuous as vol
 
