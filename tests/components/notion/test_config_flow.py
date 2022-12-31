@@ -9,6 +9,8 @@ from homeassistant.components.notion import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
+from .conftest import TEST_PASSWORD, TEST_USERNAME
+
 
 @pytest.mark.parametrize(
     "get_client_with_exception,errors",
@@ -43,10 +45,10 @@ async def test_create_entry(
         result["flow_id"], user_input=config
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == "user@host.com"
+    assert result["title"] == TEST_USERNAME
     assert result["data"] == {
-        CONF_USERNAME: "user@host.com",
-        CONF_PASSWORD: "password123",
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_PASSWORD: TEST_PASSWORD,
     }
 
 
