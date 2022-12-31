@@ -59,7 +59,7 @@ def _get_valid_unit(converter: type[BaseUnitConverter]) -> str:
     [
         (converter, valid_unit)
         for converter in _CONVERTERS
-        for valid_unit in converter.VALID_UNITS
+        for valid_unit in sorted(converter.VALID_UNITS)
     ],
 )
 def test_convert_same_unit(converter: type[BaseUnitConverter], valid_unit: str) -> None:
