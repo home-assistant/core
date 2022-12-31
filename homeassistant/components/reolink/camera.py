@@ -23,7 +23,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up a Reolink IP Camera."""
     reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
-    host: ReolinkHost = reolink_data.host
+    host = reolink_data.host
 
     cameras = []
     for channel in host.api.channels:
