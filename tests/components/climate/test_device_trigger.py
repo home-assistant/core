@@ -271,7 +271,6 @@ async def test_get_trigger_capabilities_hvac_mode(hass):
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
-        {"name": "for", "optional": True, "type": "positive_time_period_dict"},
         {
             "name": "to",
             "options": [
@@ -286,6 +285,7 @@ async def test_get_trigger_capabilities_hvac_mode(hass):
             "required": True,
             "type": "select",
         },
+        {"name": "for", "optional": True, "type": "positive_time_period_dict"},
     ]
 
 
