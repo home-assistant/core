@@ -1,6 +1,6 @@
 {
   "domain": "zeversolar",
-  "name": "zeversolar",
+  "name": "Zeversolar",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zeversolar",
   "requirements": ["zeversolar==0.2.0"],

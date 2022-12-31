@@ -1,1 +1,1 @@
-"""Tests for the zeversolar integration."""
+"""Tests for the Zeversolar integration."""

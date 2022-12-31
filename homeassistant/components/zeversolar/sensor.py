@@ -1,4 +1,4 @@
-"""Support for the JustNimbus platform."""
+"""Support for the Zeversolar platform."""
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -19,44 +19,43 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
-from .coordinator import ZeverSolarCoordinator
-from .entity import ZeverSolarEntity
+from .coordinator import ZeversolarCoordinator
+from .entity import ZeversolarEntity
 
 
 @dataclass
-class ZeverSolarEntityDescriptionMixin:
+class ZeversolarEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[ZeverSolarCoordinator], Any]
+    value_fn: Callable[[zeversolar.ZeverSolarData], Any]
 
 
 @dataclass
-class ZeverSolarEntityDescription(
-    SensorEntityDescription, ZeverSolarEntityDescriptionMixin
+class ZeversolarEntityDescription(
+    SensorEntityDescription, ZeversolarEntityDescriptionMixin
 ):
-    """Describes ZeverSolar sensor entity."""
+    """Describes Zeversolar sensor entity."""
 
 
 SENSOR_TYPES = (
     ZeverSolarEntityDescription(
         key="pac",
-        name="Power in watts",
+        name="Current power",
         icon="mdi:solar-power-variant",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.POWER,
-        value_fn=lambda coordinator: coordinator.data.pac,
+        value_fn=lambda data: data.pac,
     ),
     ZeverSolarEntityDescription(
         key="energy_today",
-        name="Energy Today",
+        name="Energy today",
         icon="mdi:home-battery",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL,
-        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
-        value_fn=lambda coordinator: coordinator.data.energy_today,
+        value_fn=lambda data: data.energy_today,
     ),
 )
 
@@ -65,9 +64,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the ZeverSolar sensor."""
-    coordinator: ZeverSolarCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: ZeversolarCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        ZeverSolarSensor(
+        ZeversolarSensor(
             device_id=entry.data[CONF_IP_ADDRESS],
             description=description,
             coordinator=coordinator,
@@ -76,18 +75,21 @@ async def async_setup_entry(
     )
 
 
-class ZeverSolarSensor(ZeverSolarEntity, SensorEntity):
-    """Implementation of the ZeverSolar sensor."""
+class ZeversolarSensor(ZeversolarEntity, SensorEntity):
+    """Implementation of the Zeversolar sensor."""
+
+
+    entity_description: ZeversolarEntityDescription
 
     def __init__(
         self,
         *,
         device_id: str,
-        description: ZeverSolarEntityDescription,
-        coordinator: ZeverSolarCoordinator,
+        description: ZeversolarEntityDescription,
+        coordinator: ZeversolarCoordinator,
     ) -> None:
         """Initialize the sensor."""
-        self.entity_description: ZeverSolarEntityDescription = description
+        self.entity_description = description
         super().__init__(
             device_id=device_id,
             coordinator=coordinator,
@@ -97,4 +99,4 @@ class ZeverSolarSensor(ZeverSolarEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return sensor state."""
-        return self.entity_description.value_fn(self.coordinator)
+        return self.entity_description.value_fn(self.coordinator.data)

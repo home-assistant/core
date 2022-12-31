@@ -1,4 +1,4 @@
-"""ZeverSolar coordinator."""
+"""Zeversolar coordinator."""
 from __future__ import annotations
 
 from datetime import timedelta
@@ -16,7 +16,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class ZeverSolarCoordinator(DataUpdateCoordinator[zeversolar.ZeverSolarData]):
+class ZeversolarCoordinator(DataUpdateCoordinator[zeversolar.ZeverSolarData]):
     """Data update coordinator."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
