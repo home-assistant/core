@@ -85,6 +85,7 @@ ABBREVIATIONS = {
     "ic": "icon",
     "img_e": "image_encoding",
     "init": "initial",
+    "init_hum": "initial_humidity",
     "hum_cmd_t": "target_humidity_command_topic",
     "hum_cmd_tpl": "target_humidity_command_template",
     "hum_stat_t": "target_humidity_state_topic",
