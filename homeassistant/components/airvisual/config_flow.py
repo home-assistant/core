@@ -5,25 +5,22 @@ import asyncio
 from collections.abc import Mapping
 from typing import Any
 
-from pyairvisual import CloudAPI, NodeSamba
 from pyairvisual.cloud_api import (
+    CloudAPI,
     InvalidKeyError,
     KeyExpiredError,
     NotFoundError,
     UnauthorizedError,
 )
 from pyairvisual.errors import AirVisualError
-from pyairvisual.node import NodeProError
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_IP_ADDRESS,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_PASSWORD,
     CONF_SHOW_ON_MAP,
     CONF_STATE,
 )
@@ -43,7 +40,6 @@ from .const import (
     DOMAIN,
     INTEGRATION_TYPE_GEOGRAPHY_COORDS,
     INTEGRATION_TYPE_GEOGRAPHY_NAME,
-    INTEGRATION_TYPE_NODE_PRO,
     LOGGER,
 )
 
@@ -55,16 +51,12 @@ GEOGRAPHY_NAME_SCHEMA = API_KEY_DATA_SCHEMA.extend(
         vol.Required(CONF_COUNTRY): cv.string,
     }
 )
-NODE_PRO_SCHEMA = vol.Schema(
-    {vol.Required(CONF_IP_ADDRESS): str, vol.Required(CONF_PASSWORD): cv.string}
-)
 PICK_INTEGRATION_TYPE_SCHEMA = vol.Schema(
     {
         vol.Required("type"): vol.In(
             [
                 INTEGRATION_TYPE_GEOGRAPHY_COORDS,
                 INTEGRATION_TYPE_GEOGRAPHY_NAME,
-                INTEGRATION_TYPE_NODE_PRO,
             ]
         )
     }
@@ -81,7 +73,7 @@ OPTIONS_FLOW = {
 class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle an AirVisual config flow."""
 
-    VERSION = 2
+    VERSION = 3
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -206,34 +198,6 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             user_input, INTEGRATION_TYPE_GEOGRAPHY_NAME
         )
 
-    async def async_step_node_pro(
-        self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
-        """Handle the initialization of the integration with a Node/Pro."""
-        if not user_input:
-            return self.async_show_form(step_id="node_pro", data_schema=NODE_PRO_SCHEMA)
-
-        await self._async_set_unique_id(user_input[CONF_IP_ADDRESS])
-
-        node = NodeSamba(user_input[CONF_IP_ADDRESS], user_input[CONF_PASSWORD])
-
-        try:
-            await node.async_connect()
-        except NodeProError as err:
-            LOGGER.error("Error connecting to Node/Pro unit: %s", err)
-            return self.async_show_form(
-                step_id="node_pro",
-                data_schema=NODE_PRO_SCHEMA,
-                errors={CONF_IP_ADDRESS: "cannot_connect"},
-            )
-
-        await node.async_disconnect()
-
-        return self.async_create_entry(
-            title=f"Node/Pro ({user_input[CONF_IP_ADDRESS]})",
-            data={**user_input, CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_NODE_PRO},
-        )
-
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
         self._entry_data_for_reauth = entry_data
@@ -266,6 +230,4 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input["type"] == INTEGRATION_TYPE_GEOGRAPHY_COORDS:
             return await self.async_step_geography_by_coords()
-        if user_input["type"] == INTEGRATION_TYPE_GEOGRAPHY_NAME:
-            return await self.async_step_geography_by_name()
-        return await self.async_step_node_pro()
+        return await self.async_step_geography_by_name()

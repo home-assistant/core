@@ -226,7 +226,10 @@ class TractiveClient:
 
             except aiotractive.exceptions.TractiveError:
                 _LOGGER.debug(
-                    "Tractive is not available. Internet connection is down? Sleeping %i seconds and retrying",
+                    (
+                        "Tractive is not available. Internet connection is down?"
+                        " Sleeping %i seconds and retrying"
+                    ),
                     RECONNECT_INTERVAL.total_seconds(),
                 )
                 self._last_hw_time = 0

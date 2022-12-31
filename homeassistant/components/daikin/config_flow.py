@@ -11,11 +11,11 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_UUID
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_UUID, DOMAIN, KEY_MAC, TIMEOUT
+from .const import DOMAIN, KEY_MAC, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -134,8 +134,10 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         devices = Discovery().poll(ip=discovery_info.host)
         if not devices:
             _LOGGER.debug(
-                "Could not find MAC-address for %s,"
-                " make sure the required UDP ports are open (see integration documentation)",
+                (
+                    "Could not find MAC-address for %s, make sure the required UDP"
+                    " ports are open (see integration documentation)"
+                ),
                 discovery_info.host,
             )
             return self.async_abort(reason="cannot_connect")

@@ -98,7 +98,8 @@ class SynoApi:
                 self._with_surveillance_station = False
                 self.dsm.reset(SynoSurveillanceStation.API_KEY)
                 LOGGER.info(
-                    "Surveillance Station found, but disabled due to missing user permissions"
+                    "Surveillance Station found, but disabled due to missing user"
+                    " permissions"
                 )
 
         LOGGER.debug(

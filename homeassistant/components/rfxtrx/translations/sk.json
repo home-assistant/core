@@ -5,9 +5,17 @@
             "cannot_connect": "Nepodarilo sa pripoji\u0165"
         },
         "error": {
-            "cannot_connect": "Nepodarilo sa pripoji\u0165"
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "few": "Pr\u00e1zdnych",
+            "many": "Pr\u00e1zdnych",
+            "one": "Pr\u00e1zdny",
+            "other": "Pr\u00e1zdny"
         },
         "step": {
+            "few": "Pr\u00e1zdnych",
+            "many": "Pr\u00e1zdnych",
+            "one": "Pr\u00e1zdny",
+            "other": "Pr\u00e1zdny",
             "setup_network": {
                 "data": {
                     "host": "Hostite\u013e",
@@ -45,6 +53,9 @@
             "status": "Prijat\u00fd stav: {subtype}"
         }
     },
+    "few": "Pr\u00e1zdnych",
+    "many": "Pr\u00e1zdnych",
+    "one": "Pr\u00e1zdny",
     "options": {
         "error": {
             "already_configured_device": "Zariadenie u\u017e je nakonfigurovan\u00e9",
@@ -72,10 +83,12 @@
                     "data_bit": "Po\u010det d\u00e1tov\u00fdch bitov",
                     "off_delay": "Oneskorenie vypnutia",
                     "off_delay_enabled": "Povoli\u0165 oneskorenie vypnutia",
-                    "replace_device": "Vyberte zariadenie, ktor\u00e9 chcete nahradi\u0165"
+                    "replace_device": "Vyberte zariadenie, ktor\u00e9 chcete nahradi\u0165",
+                    "venetian_blind_mode": "Re\u017eim \u017eal\u00fazie"
                 },
                 "title": "Konfigur\u00e1cia mo\u017enost\u00ed zariadenia"
             }
         }
-    }
+    },
+    "other": "Pr\u00e1zdny"
 }

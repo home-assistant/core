@@ -623,7 +623,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 self._attr_hs_color = cast(tuple[float, float], hs_color)
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
             except ValueError:
-                _LOGGER.debug("Failed to parse hs state update: '%s'", payload)
+                _LOGGER.warning("Failed to parse hs state update: '%s'", payload)
 
         add_topic(CONF_HS_STATE_TOPIC, hs_received)
 

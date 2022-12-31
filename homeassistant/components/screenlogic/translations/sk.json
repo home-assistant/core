@@ -13,12 +13,14 @@
                     "ip_address": "IP adresa",
                     "port": "Port"
                 },
+                "description": "Zadajte inform\u00e1cie o va\u0161ej br\u00e1ne ScreenLogic.",
                 "title": "ScreenLogic"
             },
             "gateway_select": {
                 "data": {
                     "selected_gateway": "Gateway"
                 },
+                "description": "Boli objaven\u00e9 nasleduj\u00face br\u00e1ny ScreenLogic. Vyberte jednu, ktor\u00fa chcete nakonfigurova\u0165, alebo sa rozhodnite manu\u00e1lne nakonfigurova\u0165 br\u00e1nu ScreenLogic.",
                 "title": "ScreenLogic"
             }
         }

@@ -177,20 +177,29 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
                 json_payload = json_loads(payload)
                 if isinstance(json_payload, dict):
                     _LOGGER.debug(
-                        "JSON payload detected after processing payload '%s' on topic %s",
+                        (
+                            "JSON payload detected after processing payload '%s' on"
+                            " topic %s"
+                        ),
                         json_payload,
                         msg.topic,
                     )
                 else:
                     _LOGGER.debug(
-                        "Non-dictionary JSON payload detected after processing payload '%s' on topic %s",
+                        (
+                            "Non-dictionary JSON payload detected after processing"
+                            " payload '%s' on topic %s"
+                        ),
                         payload,
                         msg.topic,
                     )
                     json_payload = {"installed_version": payload}
             except JSON_DECODE_EXCEPTIONS:
                 _LOGGER.debug(
-                    "No valid (JSON) payload detected after processing payload '%s' on topic %s",
+                    (
+                        "No valid (JSON) payload detected after processing payload '%s'"
+                        " on topic %s"
+                    ),
                     payload,
                     msg.topic,
                 )

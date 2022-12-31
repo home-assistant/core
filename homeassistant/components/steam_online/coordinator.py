@@ -16,7 +16,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import CONF_ACCOUNTS, DOMAIN, LOGGER
 
 
-class SteamDataUpdateCoordinator(DataUpdateCoordinator):
+class SteamDataUpdateCoordinator(DataUpdateCoordinator[dict[int, profile]]):
     """Data update coordinator for the Steam integration."""
 
     config_entry: ConfigEntry
@@ -33,7 +33,7 @@ class SteamDataUpdateCoordinator(DataUpdateCoordinator):
         self.game_icons: dict[int, str] = {}
         key.set(self.config_entry.data[CONF_API_KEY])
 
-    def _update(self) -> dict[str, dict[str, str | int]]:
+    def _update(self) -> dict[int, profile]:
         """Fetch data from API endpoint."""
         _ids = list(self.config_entry.options[CONF_ACCOUNTS])
         reg = er.async_get(self.hass)
@@ -59,7 +59,7 @@ class SteamDataUpdateCoordinator(DataUpdateCoordinator):
             profiles[_profile.id64] = _profile
         return profiles
 
-    async def _async_update_data(self) -> dict[str, dict[str, str | int]]:
+    async def _async_update_data(self) -> dict[int, profile]:
         """Send request to the executor."""
         try:
             return await self.hass.async_add_executor_job(self._update)

@@ -507,7 +507,7 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-class RainMachineEntity(CoordinatorEntity):
+class RainMachineEntity(CoordinatorEntity[RainMachineDataUpdateCoordinator]):
     """Define a generic RainMachine entity."""
 
     _attr_has_entity_name = True

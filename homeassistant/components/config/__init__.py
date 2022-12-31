@@ -130,7 +130,7 @@ class BaseEditConfigView(HomeAssistantView):
             # We just validate, we don't store that data because
             # we don't want to store the defaults.
             if self.data_validator:
-                await self.data_validator(hass, data)
+                await self.data_validator(hass, config_key, data)
             else:
                 self.data_schema(data)
         except (vol.Invalid, HomeAssistantError) as err:

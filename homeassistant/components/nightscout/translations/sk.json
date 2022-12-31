@@ -14,6 +14,7 @@
                     "api_key": "API k\u013e\u00fa\u010d",
                     "url": "URL"
                 },
+                "description": "- URL: adresa va\u0161ej in\u0161tancie no\u010dn\u00e9ho prieskumu. Napr\u00edklad: https://myhomeassistant.duckdns.org:5423\n- K\u013e\u00fa\u010d API (volite\u013en\u00e9): Pou\u017eite len vtedy, ak je va\u0161a in\u0161tancia chr\u00e1nen\u00e1 (auth_default_roles != \u010ditate\u013en\u00e9).",
                 "title": "Zadajte inform\u00e1cie o serveri Nightscout."
             }
         }

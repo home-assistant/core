@@ -6,6 +6,7 @@ import logging
 from time import localtime, strftime, time
 from typing import Any
 
+from aiolyric import Lyric
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
 import voluptuous as vol
@@ -97,7 +98,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Honeywell Lyric climate platform based on a config entry."""
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: DataUpdateCoordinator[Lyric] = hass.data[DOMAIN][entry.entry_id]
 
     entities = []
 
@@ -130,12 +131,12 @@ async def async_setup_entry(
 class LyricClimate(LyricDeviceEntity, ClimateEntity):
     """Defines a Honeywell Lyric climate entity."""
 
-    coordinator: DataUpdateCoordinator
+    coordinator: DataUpdateCoordinator[Lyric]
     entity_description: ClimateEntityDescription
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[Lyric],
         description: ClimateEntityDescription,
         location: LyricLocation,
         device: LyricDevice,
@@ -277,7 +278,8 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         if device.changeableValues.autoChangeoverActive:
             if target_temp_low is None or target_temp_high is None:
                 raise HomeAssistantError(
-                    "Could not find target_temp_low and/or target_temp_high in arguments"
+                    "Could not find target_temp_low and/or target_temp_high in"
+                    " arguments"
                 )
             _LOGGER.debug("Set temperature: %s - %s", target_temp_low, target_temp_high)
             try:

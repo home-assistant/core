@@ -5,7 +5,7 @@
         },
         "step": {
             "pairing": {
-                "description": "Para concluir o emparelhamento, siga as instru\u00e7\u00f5es em \"Emparelhamento do HomeKit\" > \"Notifica\u00e7\u00f5es\".",
+                "description": "Para concluir o emparelhamento, siga as instru\u00e7\u00f5es em \u201cNotifica\u00e7\u00f5es\u201d em \u201cEmparelhamento do HomeKit\u201d.",
                 "title": "Emparelhar HomeKit"
             },
             "user": {

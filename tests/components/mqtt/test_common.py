@@ -1672,8 +1672,6 @@ async def help_test_reload_with_config(hass, caplog, tmp_path, config):
         )
         await hass.async_block_till_done()
 
-    assert "<Event event_mqtt_reloaded[L]>" in caplog.text
-
 
 async def help_test_entry_reload_with_new_config(hass, tmp_path, new_config):
     """Test reloading with supplied config."""

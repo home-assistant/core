@@ -35,7 +35,8 @@
             "user": {
                 "description": "U moet zich registreren voor een Awair-toegangstoken voor ontwikkelaars op: https://developer.getawair.com/onboard/login",
                 "menu_options": {
-                    "cloud": "Verbinden via de cloud"
+                    "cloud": "Verbinden via de cloud",
+                    "local": "Lokaal verbinden (aanbevolen)"
                 }
             }
         }

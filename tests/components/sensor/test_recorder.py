@@ -4057,7 +4057,7 @@ async def test_validate_statistics_unit_change_equivalent_units(
 @pytest.mark.parametrize(
     "attributes, unit1, unit2, supported_unit",
     [
-        (NONE_SENSOR_ATTRIBUTES, "m³", "m3", "L, fl. oz., ft³, gal, mL, m³"),
+        (NONE_SENSOR_ATTRIBUTES, "m³", "m3", "CCF, L, fl. oz., ft³, gal, mL, m³"),
     ],
 )
 async def test_validate_statistics_unit_change_equivalent_units_2(

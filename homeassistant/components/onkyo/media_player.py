@@ -365,7 +365,8 @@ class OnkyoDevice(MediaPlayerEntity):
         """
         #        HA_VOL * (MAX VOL / 100) * MAX_RECEIVER_VOL
         self.command(
-            f"volume {int(volume * (self._max_volume / 100) * self._receiver_max_volume)}"
+            "volume"
+            f" {int(volume * (self._max_volume / 100) * self._receiver_max_volume)}"
         )
 
     def volume_up(self) -> None:

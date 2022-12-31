@@ -88,7 +88,7 @@
             },
             "options_misc": {
                 "data": {
-                    "api_host": "Zast\u0119powanie adresu URL hosta API",
+                    "api_host": "Zast\u0119powanie adresu API",
                     "blink": "Miganie diody LED panelu podczas wysy\u0142ania zmiany stanu",
                     "discovery": "Odpowiadaj na \u017c\u0105dania wykrywania w Twojej sieci",
                     "override_api_host": "Zast\u0105p domy\u015blny adres URL API Home Assistanta"
