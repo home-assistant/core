@@ -39,9 +39,7 @@ class ReolinkOptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Required(
                         CONF_PROTOCOL,
-                        default=self.config_entry.options.get(
-                            CONF_PROTOCOL, DEFAULT_PROTOCOL
-                        ),
+                        default=self.config_entry.options[CONF_PROTOCOL],
                     ): vol.In(["rtsp", "rtmp"]),
                 }
             ),
@@ -92,8 +90,10 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(host.unique_id, raise_on_progress=False)
                 self._abort_if_unique_id_configured(updates=user_input)
 
+                options = {CONF_PROTOCOL: DEFAULT_PROTOCOL}
+
                 return self.async_create_entry(
-                    title=str(host.api.nvr_name), data=user_input
+                    title=str(host.api.nvr_name), data=user_input, options=options
                 )
 
         data_schema = vol.Schema(

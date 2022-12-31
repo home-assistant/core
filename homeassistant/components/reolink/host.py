@@ -17,7 +17,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNA
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DEFAULT_PROTOCOL, DEFAULT_TIMEOUT
+from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DEFAULT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,17 +37,13 @@ class ReolinkHost:
         self._clientsession: aiohttp.ClientSession | None = None
         self._unique_id: str = ""
 
-        cur_protocol = (
-            DEFAULT_PROTOCOL if CONF_PROTOCOL not in options else options[CONF_PROTOCOL]
-        )
-
         self._api = Host(
             config[CONF_HOST],
             config[CONF_USERNAME],
             config[CONF_PASSWORD],
-            port=config.get(CONF_PORT),
-            use_https=config.get(CONF_USE_HTTPS),
-            protocol=cur_protocol,
+            port=config[CONF_PORT],
+            use_https=config[CONF_USE_HTTPS],
+            protocol=options[CONF_PROTOCOL],
             timeout=DEFAULT_TIMEOUT,
         )
 
