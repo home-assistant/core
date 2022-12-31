@@ -40,6 +40,7 @@ def garbage_collection():
     case, leading to the test breaking down. Make sure we
     clean up between each testcase to avoid this issue.
     """
+    yield
     gc.collect()
 
 
