@@ -16,14 +16,12 @@ class ZeversolarEntity(
     def __init__(
         self,
         *,
-        device_id: str,
         coordinator: ZeversolarCoordinator,
     ) -> None:
         """Initialize the Zeversolar entity."""
         super().__init__(coordinator=coordinator)
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_id)},
+            identifiers={(DOMAIN, coordinator.data.serial_number)},
             name="Zeversolar Sensor",
             manufacturer="Zeversolar",
         )
-

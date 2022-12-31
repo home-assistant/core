@@ -80,7 +80,7 @@ async def test_abort_already_configured(hass: HomeAssistant) -> None:
     """Test we abort when the device is already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        title="ZeverSolar",
+        title="Zeversolar",
         data={CONF_IP_ADDRESS: "test_ip"},
         unique_id="test_serial",
     )
@@ -112,7 +112,7 @@ async def test_abort_already_configured(hass: HomeAssistant) -> None:
 
 
 async def _set_up_zeversolar(hass: HomeAssistant, flow_id: str) -> None:
-    """Reusable successful setup of ZeverSolar sensor."""
+    """Reusable successful setup of Zeversolar sensor."""
     mock_data = MagicMock()
     mock_data.serial_number = "test_serial"
     with patch("zeversolar.ZeverSolarClient.get_data", return_value=mock_data), patch(

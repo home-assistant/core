@@ -8,7 +8,7 @@ import voluptuous as vol
 import zeversolar
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_IP_ADDRESS): cv.string,
+        vol.Required(CONF_HOST): cv.string,
     },
 )
 
@@ -39,7 +39,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
 
-        client = zeversolar.ZeverSolarClient(host=user_input[CONF_IP_ADDRESS])
+        client = zeversolar.ZeverSolarClient(host=user_input[CONF_HOST])
         try:
             data = await self.hass.async_add_executor_job(client.get_data)
         except zeversolar.ZeverSolarHTTPNotFound:
