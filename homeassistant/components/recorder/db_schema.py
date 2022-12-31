@@ -48,7 +48,7 @@ from homeassistant.helpers.json import (
 import homeassistant.util.dt as dt_util
 
 from .const import ALL_DOMAIN_EXCLUDE_ATTRS
-from .models import StatisticData, StatisticMetaData
+from .models import StatisticData, StatisticMetaData, process_timestamp
 
 # SQLAlchemy Schema
 # pylint: disable=invalid-name
@@ -170,9 +170,17 @@ class Events(Base):  # type: ignore[misc,valid-type]
         return (
             "<recorder.Events("
             f"id={self.event_id}, type='{self.event_type}', "
-            f"origin_idx='{self.origin_idx}', time_fired='{self.time_fired}'"
+            f"origin_idx='{self.origin_idx}', time_fired='{self.time_fired_isotime}'"
             f", data_id={self.data_id})>"
         )
+
+    @property
+    def time_fired_isotime(self) -> str:
+        """Return time_fired as an isotime string."""
+        date_time = dt_util.utc_from_timestamp(self.time_fired_ts) or process_timestamp(
+            self.time_fired
+        )
+        return date_time.isoformat(sep=" ", timespec="seconds")
 
     @staticmethod
     def from_event(event: Event) -> Events:
@@ -298,9 +306,17 @@ class States(Base):  # type: ignore[misc,valid-type]
         return (
             f"<recorder.States(id={self.state_id}, entity_id='{self.entity_id}',"
             f" state='{self.state}', event_id='{self.event_id}',"
-            f" last_updated='{self.last_updated.isoformat(sep=' ', timespec='seconds')}',"
+            f" last_updated='{self.last_updated_isotime}',"
             f" old_state_id={self.old_state_id}, attributes_id={self.attributes_id})>"
         )
+
+    @property
+    def last_updated_isotime(self) -> str:
+        """Return last_updated as an isotime string."""
+        date_time = dt_util.utc_from_timestamp(
+            self.last_updated_ts
+        ) or process_timestamp(self.last_updated)
+        return date_time.isoformat(sep=" ", timespec="seconds")
 
     @staticmethod
     def from_event(event: Event) -> States:

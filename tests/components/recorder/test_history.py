@@ -910,9 +910,7 @@ async def test_get_full_significant_states_handles_empty_last_changed(
         )
         == state0.last_changed
     )
-    assert db_sensor_one_states[0].last_updated is not None
     assert db_sensor_one_states[0].last_updated_ts is not None
-    assert db_sensor_one_states[1].last_updated is not None
     assert db_sensor_one_states[1].last_updated_ts is not None
     assert (
         db_sensor_one_states[0].last_updated_ts
