@@ -70,7 +70,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                host: ReolinkHost = await self.async_obtain_host_settings(
+                host = await self.async_obtain_host_settings(
                     self.hass, user_input
                 )
             except CannotConnect:
