@@ -175,6 +175,7 @@ FLOWS = {
         "homeassistant_sky_connect",
         "homekit",
         "homekit_controller",
+        "homely",
         "homematicip_cloud",
         "homewizard",
         "honeywell",
