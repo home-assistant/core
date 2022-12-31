@@ -68,7 +68,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                host = await self.async_obtain_host_settings(
+                host = await async_obtain_host_settings(
                     self.hass, user_input
                 )
             except CannotConnect:
@@ -118,19 +118,20 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders=placeholders,
         )
 
-    async def async_obtain_host_settings(
-        self, hass: core.HomeAssistant, user_input: dict
-    ) -> ReolinkHost:
-        """Initialize the Reolink host and get the host information."""
-        host = ReolinkHost(hass, user_input, {})
 
-        try:
-            if not await host.async_init():
-                raise CannotConnect
-        finally:
-            await host.stop()
+async def async_obtain_host_settings(
+    hass: core.HomeAssistant, user_input: dict
+) -> ReolinkHost:
+    """Initialize the Reolink host and get the host information."""
+    host = ReolinkHost(hass, user_input, {})
 
-        return host
+    try:
+        if not await host.async_init():
+            raise CannotConnect
+    finally:
+        await host.stop()
+
+    return host
 
 
 class CannotConnect(exceptions.HomeAssistantError):

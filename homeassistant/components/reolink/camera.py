@@ -41,6 +41,7 @@ class ReolinkCamera(ReolinkCoordinatorEntity, Camera):
     """An implementation of a Reolink IP camera."""
 
     _attr_supported_features: CameraEntityFeature = CameraEntityFeature.STREAM
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -50,13 +51,11 @@ class ReolinkCamera(ReolinkCoordinatorEntity, Camera):
         stream: str,
     ) -> None:
         """Initialize Reolink camera stream."""
-        ReolinkCoordinatorEntity.__init__(self, reolink_data, config_entry)
+        ReolinkCoordinatorEntity.__init__(self, reolink_data, config_entry, channel)
         Camera.__init__(self)
 
-        self._channel = channel
         self._stream = stream
 
-        self._attr_has_entity_name = True
         self._attr_name = self._stream
         self._attr_unique_id = f"{self._host.unique_id}_{self._channel}_{self._stream}"
         self._attr_entity_registry_enabled_default = stream == "sub"
