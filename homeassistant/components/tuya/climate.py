@@ -341,7 +341,8 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         """Set new target temperature."""
         if self._set_temperature is None:
             raise RuntimeError(
-                "Cannot set target temperature, device doesn't provide methods to set it"
+                "Cannot set target temperature, device doesn't provide methods to"
+                " set it"
             )
 
         self._send_command(

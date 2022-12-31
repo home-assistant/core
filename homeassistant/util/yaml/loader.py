@@ -85,7 +85,10 @@ class Secrets:
                     _LOGGER.setLevel(logging.DEBUG)
                 else:
                     _LOGGER.error(
-                        "Error in secrets.yaml: 'logger: debug' expected, but 'logger: %s' found",
+                        (
+                            "Error in secrets.yaml: 'logger: debug' expected, but"
+                            " 'logger: %s' found"
+                        ),
                         logger,
                     )
                 del secrets["logger"]

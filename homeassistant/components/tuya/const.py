@@ -457,11 +457,6 @@ UNITS = (
         device_classes={SensorDeviceClass.ILLUMINANCE},
     ),
     UnitOfMeasurement(
-        unit="lm",
-        aliases={"lum", "lumen"},
-        device_classes={SensorDeviceClass.ILLUMINANCE},
-    ),
-    UnitOfMeasurement(
         unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         aliases={"ug/m3", "µg/m3", "ug/m³"},
         device_classes={

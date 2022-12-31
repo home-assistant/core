@@ -2,19 +2,44 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import aiohttp
+from whirlpool.backendselector import Brand, Region
 
 from homeassistant.components.whirlpool.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from . import init_integration
+from . import init_integration, init_integration_with_entry
+
+from tests.common import MockConfigEntry
 
 
-async def test_setup(hass: HomeAssistant):
+async def test_setup(hass: HomeAssistant, mock_backend_selector_api: MagicMock, region):
     """Test setup."""
-    entry = await init_integration(hass)
+    entry = await init_integration(hass, region[0])
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state is ConfigEntryState.LOADED
+    mock_backend_selector_api.assert_called_once_with(region[2], region[1])
+
+
+async def test_setup_region_fallback(
+    hass: HomeAssistant, mock_backend_selector_api: MagicMock
+):
+    """Test setup when no region is available on the ConfigEntry.
+
+    This can happen after a version update, since there was no region in the first versions.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "nobody",
+            CONF_PASSWORD: "qwerty",
+        },
+    )
+    entry = await init_integration_with_entry(hass, entry)
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert entry.state is ConfigEntryState.LOADED
+    mock_backend_selector_api.assert_called_once_with(Brand.Whirlpool, Region.EU)
 
 
 async def test_setup_http_exception(hass: HomeAssistant, mock_auth_api: MagicMock):

@@ -86,7 +86,11 @@ from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    DataRateConverter,
     DistanceConverter,
+    ElectricCurrentConverter,
+    ElectricPotentialConverter,
+    InformationConverter,
     MassConverter,
     PressureConverter,
     SpeedConverter,
@@ -183,7 +187,7 @@ class SensorDeviceClass(StrEnum):
     CURRENT = "current"
     """Current.
 
-    Unit of measurement: `A`
+    Unit of measurement: `A`, `mA`
     """
 
     DATA_RATE = "data_rate"
@@ -235,7 +239,7 @@ class SensorDeviceClass(StrEnum):
     ILLUMINANCE = "illuminance"
     """Illuminance.
 
-    Unit of measurement: `lx`, `lm`
+    Unit of measurement: `lx`
     """
 
     IRRADIANCE = "irradiance"
@@ -388,7 +392,7 @@ class SensorDeviceClass(StrEnum):
     VOLTAGE = "voltage"
     """Voltage.
 
-    Unit of measurement: `V`
+    Unit of measurement: `V`, `mV`
     """
 
     VOLUME = "volume"
@@ -466,12 +470,16 @@ STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 # Note: this needs to be aligned with frontend: OVERRIDE_SENSOR_UNITS in
 # `entity-registry-settings.ts`
 UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] = {
+    SensorDeviceClass.DATA_RATE: DataRateConverter,
+    SensorDeviceClass.DATA_SIZE: InformationConverter,
     SensorDeviceClass.DISTANCE: DistanceConverter,
+    SensorDeviceClass.CURRENT: ElectricCurrentConverter,
     SensorDeviceClass.GAS: VolumeConverter,
     SensorDeviceClass.PRECIPITATION: DistanceConverter,
     SensorDeviceClass.PRESSURE: PressureConverter,
     SensorDeviceClass.SPEED: SpeedConverter,
     SensorDeviceClass.TEMPERATURE: TemperatureConverter,
+    SensorDeviceClass.VOLTAGE: ElectricPotentialConverter,
     SensorDeviceClass.VOLUME: VolumeConverter,
     SensorDeviceClass.WATER: VolumeConverter,
     SensorDeviceClass.WEIGHT: MassConverter,
@@ -485,7 +493,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.BATTERY: {PERCENTAGE},
     SensorDeviceClass.CO: {CONCENTRATION_PARTS_PER_MILLION},
     SensorDeviceClass.CO2: {CONCENTRATION_PARTS_PER_MILLION},
-    SensorDeviceClass.CURRENT: {UnitOfElectricCurrent.AMPERE},
+    SensorDeviceClass.CURRENT: set(UnitOfElectricCurrent),
     SensorDeviceClass.DATA_RATE: set(UnitOfDataRate),
     SensorDeviceClass.DATA_SIZE: set(UnitOfInformation),
     SensorDeviceClass.DISTANCE: set(UnitOfLength),
@@ -503,7 +511,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
         UnitOfVolume.CUBIC_METERS,
     },
     SensorDeviceClass.HUMIDITY: {PERCENTAGE},
-    SensorDeviceClass.ILLUMINANCE: {LIGHT_LUX, "lm"},
+    SensorDeviceClass.ILLUMINANCE: {LIGHT_LUX},
     SensorDeviceClass.IRRADIANCE: set(UnitOfIrradiance),
     SensorDeviceClass.MOISTURE: {PERCENTAGE},
     SensorDeviceClass.NITROGEN_DIOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
@@ -533,7 +541,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     },
-    SensorDeviceClass.VOLTAGE: {UnitOfElectricPotential.VOLT},
+    SensorDeviceClass.VOLTAGE: set(UnitOfElectricPotential),
     SensorDeviceClass.VOLUME: set(UnitOfVolume),
     SensorDeviceClass.WATER: {
         UnitOfVolume.CENTUM_CUBIC_FEET,
@@ -960,6 +968,7 @@ class SensorEntity(Entity):
         # Validate unit of measurement used for sensors with a device class
         if (
             not self._invalid_unit_of_measurement_reported
+            and value is not None
             and device_class
             and (units := DEVICE_CLASS_UNITS.get(device_class)) is not None
             and native_unit_of_measurement not in units

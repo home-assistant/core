@@ -44,6 +44,7 @@ class BaseHaScanner(ABC):
 
     __slots__ = (
         "hass",
+        "adapter",
         "connectable",
         "source",
         "connector",
@@ -68,6 +69,7 @@ class BaseHaScanner(ABC):
         self.source = source
         self.connector = connector
         self._connecting = 0
+        self.adapter = adapter
         self.name = adapter_human_name(adapter, source) if adapter != source else source
         self.scanning = True
         self._last_detection = 0.0
@@ -101,7 +103,8 @@ class BaseHaScanner(ABC):
         )
         return time_since_last_detection > SCANNER_WATCHDOG_TIMEOUT
 
-    async def _async_scanner_watchdog(self, now: datetime.datetime) -> None:
+    @hass_callback
+    def _async_scanner_watchdog(self, now: datetime.datetime) -> None:
         """Check if the scanner is running.
 
         Override this method if you need to do something else when the watchdog is triggered.
@@ -180,7 +183,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
         scanner_id: str,
         name: str,
         new_info_callback: Callable[[BluetoothServiceInfoBleak], None],
-        connector: HaBluetoothConnector,
+        connector: HaBluetoothConnector | None,
         connectable: bool,
     ) -> None:
         """Initialize the scanner."""
