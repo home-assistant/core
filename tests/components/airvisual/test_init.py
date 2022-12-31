@@ -114,8 +114,7 @@ async def test_migration_2_3(hass, mock_pyairvisual):
         # Ensure that after migration, the AirVisual Pro device has been moved to the
         # `airvisual_pro` domain and an issue has been created:
         for domain, entry_count in ((DOMAIN, 0), (AIRVISUAL_PRO_DOMAIN, 1)):
-            entries = hass.config_entries.async_entries(domain)
-            assert len(entries) == entry_count
+            assert len(hass.config_entries.async_entries(domain)) == entry_count
 
         issue_registry = ir.async_get(hass)
         assert len(issue_registry.issues) == 1
