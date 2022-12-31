@@ -365,11 +365,11 @@ class States(Base):  # type: ignore[misc,valid-type]
             return None
         if self.last_changed_ts is None or self.last_changed_ts == self.last_updated_ts:
             last_changed = last_updated = dt_util.utc_from_timestamp(
-                self.last_updated_ts
+                self.last_updated_ts or 0
             )
         else:
-            last_updated = dt_util.utc_from_timestamp(self.last_updated_ts)
-            last_changed = dt_util.utc_from_timestamp(self.last_changed_ts)
+            last_updated = dt_util.utc_from_timestamp(self.last_updated_ts or 0)
+            last_changed = dt_util.utc_from_timestamp(self.last_changed_ts or 0)
         return State(
             self.entity_id,
             self.state,

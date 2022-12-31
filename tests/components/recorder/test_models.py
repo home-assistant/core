@@ -81,8 +81,8 @@ def test_from_event_to_delete_state():
 
     assert db_state.entity_id == "sensor.temperature"
     assert db_state.state == ""
-    assert db_state.last_changed is None
-    assert db_state.last_updated == event.time_fired
+    assert db_state.last_changed_ts is None
+    assert db_state.last_updated_ts == event.time_fired.timestamp()
 
 
 def test_entity_ids():
@@ -272,8 +272,8 @@ async def test_lazy_state_handles_different_last_updated_and_last_changed(caplog
         entity_id="sensor.valid",
         state="off",
         shared_attrs='{"shared":true}',
-        last_updated=now,
-        last_changed=now - timedelta(seconds=60),
+        last_updated_ts=now.timestamp(),
+        last_changed_ts=(now - timedelta(seconds=60)).timestamp(),
     )
     lstate = LazyState(row, {})
     assert lstate.as_dict() == {
@@ -283,8 +283,8 @@ async def test_lazy_state_handles_different_last_updated_and_last_changed(caplog
         "last_updated": "2021-06-12T03:04:01.000323+00:00",
         "state": "off",
     }
-    assert lstate.last_updated == row.last_updated
-    assert lstate.last_changed == row.last_changed
+    assert lstate.last_updated.timestamp() == row.last_updated_ts
+    assert lstate.last_changed.timestamp() == row.last_changed_ts
     assert lstate.as_dict() == {
         "attributes": {"shared": True},
         "entity_id": "sensor.valid",
@@ -301,8 +301,8 @@ async def test_lazy_state_handles_same_last_updated_and_last_changed(caplog):
         entity_id="sensor.valid",
         state="off",
         shared_attrs='{"shared":true}',
-        last_updated=now,
-        last_changed=now,
+        last_updated_ts=now.timestamp(),
+        last_changed_ts=now.timestamp(),
     )
     lstate = LazyState(row, {})
     assert lstate.as_dict() == {
@@ -312,8 +312,8 @@ async def test_lazy_state_handles_same_last_updated_and_last_changed(caplog):
         "last_updated": "2021-06-12T03:04:01.000323+00:00",
         "state": "off",
     }
-    assert lstate.last_updated == row.last_updated
-    assert lstate.last_changed == row.last_changed
+    assert lstate.last_updated.timestamp() == row.last_updated_ts
+    assert lstate.last_changed.timestamp() == row.last_changed_ts
     assert lstate.as_dict() == {
         "attributes": {"shared": True},
         "entity_id": "sensor.valid",
