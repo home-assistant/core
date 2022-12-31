@@ -54,7 +54,7 @@ class ReolinkCamera(ReolinkCoordinatorEntity, Camera):
         Camera.__init__(self)
 
         self._channel = channel
-        self._stream: str = stream
+        self._stream = stream
 
         self._attr_has_entity_name = True
         self._attr_name = self._stream
