@@ -81,5 +81,17 @@
                 "description": "Kies de verbindingsmethode met de gateway"
             }
         }
+    },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "De {deprecated_service} service zal worden verwijderd"
+                    }
+                }
+            },
+            "title": "De {deprecated_service} service zal worden verwijderd"
+        }
     }
 }

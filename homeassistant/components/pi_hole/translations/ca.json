@@ -25,5 +25,11 @@
                 }
             }
         }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "L'opci\u00f3 de configurar el PI-Hole usant YAML s'est\u00e0 eliminant.\n\nLa vostra configuraci\u00f3 YAML actual s'ha importat autom\u00e0ticament a la IGU.\n\nElimineu la configuraci\u00f3 YAML del Pi-Hole del vostre fitxer \u00abconfiguration.yaml\u00bb i reinicieu el Home Assistant per tal d'esmenar aquesta incid\u00e8ncia.",
+            "title": "S'est\u00e0 eliminant la configuraci\u00f3 YAML del PI-Hole"
+        }
     }
 }

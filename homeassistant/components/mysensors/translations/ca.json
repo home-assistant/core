@@ -83,5 +83,18 @@
                 "description": "Tria el m\u00e8tode de connexi\u00f3 a la passarel\u00b7la"
             }
         }
+    },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Actualitzeu totes les automatitzacions o scripts que usen aquest servei o, alternativament, empreu el servei `{alternative_service}` amb un ID d'entitat objectiu de `{alternate_target}`.",
+                        "title": "El servei {deprecated_service} s'eliminar\u00e0"
+                    }
+                }
+            },
+            "title": "El servei {deprecated_service} s'eliminar\u00e0"
+        }
     }
 }
