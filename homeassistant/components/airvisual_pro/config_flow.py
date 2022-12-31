@@ -51,6 +51,7 @@ async def async_validate_credentials(
 
     try:
         await node.async_connect()
+        measurements = await node.async_get_latest_measurements()
     except InvalidAuthenticationError as err:
         LOGGER.error("Invalid password for Pro at IP address %s: %s", ip_address, err)
         errors["base"] = "invalid_auth"
@@ -64,7 +65,6 @@ async def async_validate_credentials(
         LOGGER.exception("Unknown error while connecting to %s: %s", ip_address, err)
         errors["base"] = "unknown"
     else:
-        measurements = await node.async_get_latest_measurements()
         return ValidationResult(serial_number=measurements["serial_number"])
     finally:
         await node.async_disconnect()
