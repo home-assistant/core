@@ -30,6 +30,7 @@ from . import PurpleAirEntity
 from .const import CONF_SENSOR_INDICES, DOMAIN
 from .coordinator import PurpleAirDataUpdateCoordinator
 
+CONCENTRATION_IAQ = "iaq"
 CONCENTRATION_PARTICLES_PER_100_MILLILITERS = f"particles/100{UnitOfVolume.MILLILITERS}"
 
 
@@ -173,8 +174,7 @@ SENSOR_DESCRIPTIONS = [
     PurpleAirSensorEntityDescription(
         key="voc",
         name="VOC",
-        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=CONCENTRATION_IAQ,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda sensor: sensor.voc,
     ),
