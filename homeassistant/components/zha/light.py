@@ -758,38 +758,29 @@ class Light(BaseLight, ZhaEntity):
         def assume_group_state(signal, update_params):
             """Handle an assume group state event from a group."""
             if self.entity_id in signal["entity_ids"]:
-                self.warning(
-                    f"Called assume_group_state with {signal} and {update_params}"
-                )
-
                 self.debug("member assuming group state with: %s", update_params)
 
+                # state is always set (light.turn_on/light.turn_off)
                 self._attr_state = update_params.get("state")
 
+                brightness = update_params.get(light.ATTR_BRIGHTNESS)
+                color_mode = update_params.get(light.ATTR_COLOR_MODE)
+                color_temp = update_params.get(light.ATTR_COLOR_TEMP)
+                xy_color = update_params.get(light.ATTR_XY_COLOR)
+                hs_color = update_params.get(light.ATTR_HS_COLOR)
+
+                supported_modes = self._attr_supported_color_modes
+
                 # before assuming a group state attribute, check if the attribute was actually set in that call
-                if (
-                    brightness := update_params.get(light.ATTR_BRIGHTNESS)
-                ) and brightness_supported(self._attr_supported_color_modes):
+                if brightness is not None and brightness_supported(supported_modes):
                     self._attr_brightness = brightness
-
-                if (
-                    color_mode := update_params.get(light.ATTR_COLOR_MODE)
-                ) and color_mode in self._attr_supported_color_modes:
+                if color_mode is not None and color_mode in supported_modes:
                     self._attr_color_mode = color_mode
-
-                if (
-                    color_temp := update_params.get(light.ATTR_COLOR_TEMP)
-                ) and ColorMode.COLOR_TEMP in self._attr_supported_color_modes:
+                if color_temp is not None and ColorMode.COLOR_TEMP in supported_modes:
                     self._attr_color_temp = color_temp
-
-                if (
-                    xy_color := update_params.get(light.ATTR_XY_COLOR)
-                ) and ColorMode.XY in self._attr_supported_color_modes:
+                if xy_color is not None and ColorMode.XY in supported_modes:
                     self._attr_xy_color = xy_color
-
-                if (
-                    hs_color := update_params.get(light.ATTR_HS_COLOR)
-                ) and ColorMode.HS in self._attr_supported_color_modes:
+                if hs_color is not None and ColorMode.HS in supported_modes:
                     self._attr_hs_color = hs_color
 
                 self.async_write_ha_state()
