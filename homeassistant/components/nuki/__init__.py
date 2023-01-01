@@ -19,6 +19,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
     DATA_BRIDGE,
@@ -33,7 +34,7 @@ from .helpers import parse_id
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.LOCK]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
 UPDATE_INTERVAL = timedelta(seconds=30)
 
 
@@ -178,3 +179,15 @@ class NukiEntity(CoordinatorEntity):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
         self._nuki_device = nuki_device
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device information."""
+
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._nuki_device.nuki_id)},
+            manufacturer="Nuki Home Solutions GmbH",
+            name=self._nuki_device.name,
+            sw_version=self._nuki_device.firmware_version,
+            hw_version=self._nuki_device.device_type_str,
+        )
