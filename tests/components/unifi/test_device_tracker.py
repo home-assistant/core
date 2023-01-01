@@ -156,7 +156,7 @@ async def test_tracked_clients(
 
     # State change signalling works
 
-    client_1["last_seen"] += 1
+    client_1["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
     mock_unifi_websocket(message=MessageKey.CLIENT, data=client_1)
     await hass.async_block_till_done()
 
@@ -244,6 +244,7 @@ async def test_tracked_wireless_clients_event_source(
 
     # New data
 
+    client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
     mock_unifi_websocket(message=MessageKey.CLIENT, data=client)
     await hass.async_block_till_done()
     assert hass.states.get("device_tracker.client").state == STATE_HOME
