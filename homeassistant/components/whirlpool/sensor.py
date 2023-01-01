@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 import logging
 
 from whirlpool.washerdryer import MachineState, WasherDryer
@@ -19,6 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util.dt import utcnow
 
 from . import WhirlpoolData
 from .const import DOMAIN
@@ -70,17 +72,17 @@ ICON_W = "mdi:washing-machine"
 _LOGGER = logging.getLogger(__name__)
 
 
-def washer_state(washer: WasherDryer) -> str | None:
+def washer_state(washer: WasherDryerClass) -> str | None:
     """Determine correct states for a washer."""
 
-    if washer.get_attribute("Cavity_OpStatusDoorOpen") == "1":
+    if washer.washdry.get_attribute("Cavity_OpStatusDoorOpen") == "1":
         return "Door open"
 
-    machine_state = washer.get_machine_state()
+    machine_state = washer.washdry.get_machine_state()
     machine_cycle = None
 
     for func, cycle_name in CYCLE_FUNC:
-        if func(washer):
+        if func(washer.washdry):
             machine_cycle = cycle_name
             break
 
@@ -88,6 +90,22 @@ def washer_state(washer: WasherDryer) -> str | None:
         return machine_cycle
 
     return MACHINE_STATE.get(machine_state, STATE_UNKNOWN)
+
+
+def completion_time(washer: WasherDryerClass) -> datetime | None:
+    """Calculate the time stamp for completion."""
+    if (
+        washer.washdry.get_machine_state().value
+        in {MachineState.Complete.value, MachineState.Standby.value}
+        and washer.running
+    ):
+        washer.running = False
+        return utcnow()
+
+    washer.running = True
+    return utcnow() + timedelta(
+        seconds=int(washer.washdry.get_attribute("Cavity_TimeStatusEstTimeRemaining"))
+    )
 
 
 @dataclass
@@ -116,15 +134,13 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
     WhirlpoolSensorEntityDescription(
         key="timeremaining",
         name="Time Remaining",
-        device_class=SensorDeviceClass.DURATION,
+        device_class=SensorDeviceClass.TIMESTAMP,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="s",
         entity_registry_enabled_default=True,
         icon=ICON_W,
         has_entity_name=True,
-        value_fn=lambda WasherDryer: WasherDryer.get_attribute(
-            "Cavity_TimeStatusEstTimeRemaining"
-        ),
+        value_fn=completion_time,
     ),
     WhirlpoolSensorEntityDescription(
         key="DispenseLevel",
@@ -135,7 +151,7 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
         icon=ICON_W,
         has_entity_name=True,
         value_fn=lambda WasherDryer: TANK_FILL[
-            WasherDryer.get_attribute("WashCavity_OpStatusBulkDispense1Level")
+            WasherDryer.washdry.get_attribute("WashCavity_OpStatusBulkDispense1Level")
         ],
     ),
 )
@@ -194,6 +210,7 @@ class WasherDryerClass(SensorEntity):
             self._attr_icon = ICON_D
         self.entity_description: WhirlpoolSensorEntityDescription = description
         self._attr_unique_id = f"{said}-{description.key}"
+        self._running = True
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -216,4 +233,19 @@ class WasherDryerClass(SensorEntity):
     @property
     def native_value(self) -> StateType | str:
         """Return native value of sensor."""
-        return self.entity_description.value_fn(self._wd)
+        return self.entity_description.value_fn(self)
+
+    @property
+    def washdry(self) -> WasherDryer:
+        """Return the washer/dryer."""
+        return self._wd
+
+    @property
+    def running(self) -> bool:
+        """Return the washer/dryer."""
+        return self._running
+
+    @running.setter
+    def running(self, value: bool):
+        """Set the running state."""
+        self._running = value

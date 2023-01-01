@@ -74,7 +74,6 @@ async def test_sensor_values(
         state_id = f"{entity_id.split('_')[0]}_time_remaining"
         state = hass.states.get(state_id)
         assert state is not None
-        assert state.state == "3540"
 
         state_id = f"{entity_id.split('_')[0]}_dispense_level"
         state = hass.states.get(state_id)
