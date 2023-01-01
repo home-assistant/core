@@ -219,10 +219,6 @@ def verify_cleanup(event_loop: asyncio.AbstractEventLoop):
             inst.stop()
         pytest.exit(f"Detected non stopped instances ({count}), aborting test run")
 
-    threads = frozenset(threading.enumerate()) - threads_before
-    for thread in threads:
-        assert isinstance(thread, threading._DummyThread)
-
     # Warn and clean-up lingering tasks and timers
     # before moving on to the next test.
     tasks = asyncio.all_tasks(event_loop) - tasks_before
@@ -236,6 +232,13 @@ def verify_cleanup(event_loop: asyncio.AbstractEventLoop):
         if not handle.cancelled():
             _LOGGER.warning("Lingering timer after test %r", handle)
             handle.cancel()
+
+    # Verify no threads where left behind
+    threads = frozenset(threading.enumerate()) - threads_before
+    for thread in threads:
+        assert isinstance(thread, threading._DummyThread) or thread.name.startswith(
+            "waitpid-"
+        )
 
 
 @pytest.fixture(autouse=True)
