@@ -818,7 +818,7 @@ class Light(BaseLight, ZhaEntity):
 
     async def async_get_state(self) -> None:
         """Attempt to retrieve the state from the light."""
-        if not self._attr_available or True:
+        if not self._attr_available:
             return
         self.debug("polling current state")
         if self._on_off_channel:
