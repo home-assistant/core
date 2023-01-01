@@ -404,17 +404,7 @@ class BaseLight(LogMixin, light.LightEntity):
         # (Rare case though and possibly also a bug that we don't call async_write_ha_state() if turn_on
         # needs multiple Zigbee calls and one works, one fails?)
         if isinstance(self, LightGroup) and self._zha_config_group_members_assume_state:
-            async_dispatcher_send(
-                self.hass,
-                SIGNAL_LIGHT_GROUP_ASSUME_GROUP_STATE,
-                {"entity_ids": self._entity_ids},
-                self._attr_state,
-                self._attr_brightness,
-                self._attr_color_mode,
-                self._attr_color_temp,
-                self._attr_xy_color,
-                self._attr_hs_color,
-            )
+            self._send_member_assume_state_event()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
@@ -454,6 +444,10 @@ class BaseLight(LogMixin, light.LightEntity):
             self._off_brightness = self._attr_brightness
 
         self.async_write_ha_state()
+
+        # TODO: see above TODO
+        if isinstance(self, LightGroup) and self._zha_config_group_members_assume_state:
+            self._send_member_assume_state_event()
 
     async def async_handle_color_commands(
         self,
@@ -1153,4 +1147,18 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             self.hass,
             SIGNAL_LIGHT_GROUP_STATE_CHANGED,
             {"entity_ids": self._entity_ids},
+        )
+
+    def _send_member_assume_state_event(self) -> None:
+        """Send an assume event to all members of the group."""
+        async_dispatcher_send(
+            self.hass,
+            SIGNAL_LIGHT_GROUP_ASSUME_GROUP_STATE,
+            {"entity_ids": self._entity_ids},
+            self._attr_state,
+            self._attr_brightness,
+            self._attr_color_mode,
+            self._attr_color_temp,
+            self._attr_xy_color,
+            self._attr_hs_color,
         )
