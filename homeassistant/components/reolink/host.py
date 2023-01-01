@@ -28,7 +28,7 @@ class ReolinkHost:
     def __init__(
         self,
         hass: HomeAssistant,
-        config: Mapping,
+        config: Mapping[str, Any],
         options: Mapping,
     ) -> None:
         """Initialize Reolink Host. Could be either NVR, or Camera."""
