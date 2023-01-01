@@ -825,7 +825,9 @@ def _sorted_states_to_dict(
     """
     schema_version = _schema_version(hass)
     _process_timestamp: Callable[[datetime], float | str]
-    state_class: Callable[[Row, dict[str, dict[str, Any]], Any], Any]
+    state_class: Callable[
+        [Row, dict[str, dict[str, Any]], datetime | None], State | dict[str, Any]
+    ]
     if compressed_state_format:
         if schema_version >= 31:
             state_class = row_to_compressed_state

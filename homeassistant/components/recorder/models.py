@@ -136,7 +136,7 @@ class LazyStatePreSchema31(State):
         self,
         row: Row,
         attr_cache: dict[str, dict[str, Any]],
-        start_time: datetime | None = None,
+        start_time: datetime | None,
     ) -> None:
         """Init the lazy state."""
         self._row = row
@@ -264,16 +264,18 @@ class LazyState(State):
         self,
         row: Row,
         attr_cache: dict[str, dict[str, Any]],
-        start_time: float | None = None,
+        start_time: datetime | None,
     ) -> None:
         """Init the lazy state."""
         self._row = row
         self.entity_id: str = self._row.entity_id
         self.state = self._row.state or ""
         self._attributes: dict[str, Any] | None = None
-        self._last_updated_ts: float | None = self._row.last_updated_ts or start_time
+        self._last_updated_ts: float | None = self._row.last_updated_ts or (
+            dt_util.utc_to_timestamp(start_time) if start_time else None
+        )
         self._last_changed_ts: float | None = (
-            self._row.last_changed_ts or self._last_updated_ts or start_time
+            self._row.last_changed_ts or self._last_updated_ts
         )
         self._context: Context | None = None
         self.attr_cache = attr_cache
@@ -380,15 +382,15 @@ def decode_attributes_from_row(
 def row_to_compressed_state(
     row: Row,
     attr_cache: dict[str, dict[str, Any]],
-    start_time: float | None = None,
+    start_time: datetime | None,
 ) -> dict[str, Any]:
-    """Convert a database row to a compressed state after schema 31."""
+    """Convert a database row to a compressed state schema 31 and later."""
     comp_state = {
         COMPRESSED_STATE_STATE: row.state,
         COMPRESSED_STATE_ATTRIBUTES: decode_attributes_from_row(row, attr_cache),
     }
     if start_time:
-        comp_state[COMPRESSED_STATE_LAST_UPDATED] = start_time
+        comp_state[COMPRESSED_STATE_LAST_UPDATED] = dt_util.utc_to_timestamp(start_time)
     else:
         row_last_updated_ts: float = row.last_updated_ts
         comp_state[COMPRESSED_STATE_LAST_UPDATED] = row_last_updated_ts
@@ -402,7 +404,7 @@ def row_to_compressed_state(
 def row_to_compressed_state_pre_schema_31(
     row: Row,
     attr_cache: dict[str, dict[str, Any]],
-    start_time: datetime | None = None,
+    start_time: datetime | None,
 ) -> dict[str, Any]:
     """Convert a database row to a compressed state before schema 31."""
     comp_state = {

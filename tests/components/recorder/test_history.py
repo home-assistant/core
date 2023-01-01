@@ -51,7 +51,7 @@ async def _async_get_states(
         with session_scope(hass=hass) as session:
             attr_cache = {}
             return [
-                klass(row, attr_cache)
+                klass(row, attr_cache, None)
                 for row in history._get_rows_with_session(
                     hass,
                     session,
