@@ -30,7 +30,7 @@ class ReolinkHost:
         self,
         hass: HomeAssistant,
         config: Mapping[str, Any],
-        options: Mapping,
+        options: Mapping[str, Any],
     ) -> None:
         """Initialize Reolink Host. Could be either NVR, or Camera."""
         self._hass: HomeAssistant = hass
