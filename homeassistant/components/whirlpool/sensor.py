@@ -21,15 +21,51 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import WhirlpoolData
-from .const import (
-    CYCLE_FUNC,
-    DOMAIN,
-    ICON_D,
-    ICON_W,
-    MACHINE_STATE,
-    TANK_FILL,
-    WASHER_STATE,
-)
+from .const import DOMAIN
+
+TANK_FILL = {
+    "0": "Unknown",
+    "1": "Empty",
+    "2": "25%",
+    "3": "50%",
+    "4": "100%",
+    "5": "Active",
+}
+
+MACHINE_STATE = {
+    MachineState.Standby: "Standby",
+    MachineState.Setting: "Setting",
+    MachineState.DelayCountdownMode: "Delay Countdown",
+    MachineState.DelayPause: "Delay Paused",
+    MachineState.SmartDelay: "Smart Delay",
+    MachineState.SmartGridPause: "Smart Grid Pause",
+    MachineState.Pause: "Pause",
+    MachineState.RunningMainCycle: "Running Maincycle",
+    MachineState.RunningPostCycle: "Running Postcycle",
+    MachineState.Exceptions: "Exception",
+    MachineState.Complete: "Complete",
+    MachineState.PowerFailure: "Power Failure",
+    MachineState.ServiceDiagnostic: "Service Diagnostic Mode",
+    MachineState.FactoryDiagnostic: "Factory Diagnostic Mode",
+    MachineState.LifeTest: "Life Test",
+    MachineState.CustomerFocusMode: "Customer Focus Mode",
+    MachineState.DemoMode: "Demo Mode",
+    MachineState.HardStopOrError: "Hard Stop or Error",
+    MachineState.SystemInit: "System Initialize",
+}
+
+CYCLE_FUNC = [
+    (WasherDryer.get_cycle_status_filling, "Cycle Filling"),
+    (WasherDryer.get_cycle_status_rinsing, "Cycle Rinsing"),
+    (WasherDryer.get_cycle_status_sensing, "Cycle Sensing"),
+    (WasherDryer.get_cycle_status_soaking, "Cycle Soaking"),
+    (WasherDryer.get_cycle_status_spinning, "Cycle Spinning"),
+    (WasherDryer.get_cycle_status_washing, "Cycle Washing"),
+]
+
+
+ICON_D = "mdi:tumble-dryer"
+ICON_W = "mdi:washing-machine"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,16 +73,16 @@ _LOGGER = logging.getLogger(__name__)
 def washer_state(washer: WasherDryer) -> str | None:
     """Determine correct states for a washer."""
 
+    if washer.get_attribute("Cavity_OpStatusDoorOpen") == "1":
+        return "Door open"
+
     machine_state = washer.get_machine_state()
     machine_cycle = None
-    for count, func in zip(range(len(CYCLE_FUNC)), CYCLE_FUNC):
-        if func(washer):
-            machine_cycle = WASHER_STATE.get(count)
-            break
 
-    if washer.get_attribute("Cavity_OpStatusDoorOpen") == "1":
-        machine_cycle = "Door open"
-        return machine_cycle
+    for func, cycle_name in CYCLE_FUNC:
+        if func(washer):
+            machine_cycle = cycle_name
+            break
 
     if machine_state == MachineState.RunningMainCycle and machine_cycle:
         return machine_cycle
@@ -71,7 +107,7 @@ class WhirlpoolSensorEntityDescription(
 SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
     WhirlpoolSensorEntityDescription(
         key="state",
-        name="state",
+        name="State",
         entity_registry_enabled_default=True,
         icon=ICON_W,
         has_entity_name=True,
@@ -79,7 +115,7 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
     ),
     WhirlpoolSensorEntityDescription(
         key="timeremaining",
-        name="time remaining",
+        name="Time Remaining",
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="s",
@@ -111,6 +147,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Config flow entry for Whrilpool Laundry."""
+    entities: list = []
     whirlpool_data: WhirlpoolData = hass.data[DOMAIN][config_entry.entry_id]
     for appliance in whirlpool_data.appliances_manager.washer_dryers:
         _wd = WasherDryer(
@@ -119,17 +156,19 @@ async def async_setup_entry(
             appliance["SAID"],
         )
         await _wd.connect()
-        entities = [
-            WasherDryerClass(
-                appliance["SAID"],
-                appliance["NAME"],
-                description,
-                _wd,
-            )
-            for description in SENSORS
-        ]
+        entities.extend(
+            [
+                WasherDryerClass(
+                    appliance["SAID"],
+                    appliance["NAME"],
+                    description,
+                    _wd,
+                )
+                for description in SENSORS
+            ]
+        )
 
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class WasherDryerClass(SensorEntity):
