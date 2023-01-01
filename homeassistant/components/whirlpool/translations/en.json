@@ -3,6 +3,7 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
+            "no_appliances": "No supported appliances found",
             "unknown": "Unexpected error"
         },
         "step": {

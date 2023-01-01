@@ -19,7 +19,10 @@ CONFIG_INPUT = {
 }
 
 
-async def test_form(hass: HomeAssistant, region) -> None:
+async def test_form(
+    hass: HomeAssistant,
+    region,
+) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -36,7 +39,13 @@ async def test_form(hass: HomeAssistant, region) -> None:
     ) as mock_backend_selector, patch(
         "homeassistant.components.whirlpool.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.whirlpool.config_flow.AppliancesManager.aircons",
+        return_value=["test"],
+    ), patch(
+        "homeassistant.components.whirlpool.config_flow.AppliancesManager.fetch_appliances",
+        return_value=True,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             CONFIG_INPUT | {"region": region[0]},
@@ -153,6 +162,12 @@ async def test_form_already_configured(hass: HomeAssistant, region) -> None:
     with patch("homeassistant.components.whirlpool.config_flow.Auth.do_auth"), patch(
         "homeassistant.components.whirlpool.config_flow.Auth.is_access_token_valid",
         return_value=True,
+    ), patch(
+        "homeassistant.components.whirlpool.config_flow.AppliancesManager.aircons",
+        return_value=["test"],
+    ), patch(
+        "homeassistant.components.whirlpool.config_flow.AppliancesManager.fetch_appliances",
+        return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -167,9 +182,35 @@ async def test_form_already_configured(hass: HomeAssistant, region) -> None:
     assert result2["reason"] == "already_configured"
 
 
+async def test_no_appliances_flow(hass: HomeAssistant, region) -> None:
+    """Test we get and error with no appliances."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == config_entries.SOURCE_USER
+
+    with patch("homeassistant.components.whirlpool.config_flow.Auth.do_auth"), patch(
+        "homeassistant.components.whirlpool.config_flow.Auth.is_access_token_valid",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.whirlpool.config_flow.AppliancesManager.fetch_appliances",
+        return_value=True,
+    ):
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            CONFIG_INPUT | {"region": region[0]},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "no_appliances"}
+
+
 async def test_reauth_flow(hass: HomeAssistant, region) -> None:
     """Test a successful reauth flow."""
-
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG_INPUT | {"region": region[0]},
@@ -196,6 +237,12 @@ async def test_reauth_flow(hass: HomeAssistant, region) -> None:
         return_value=True,
     ), patch("homeassistant.components.whirlpool.config_flow.Auth.do_auth"), patch(
         "homeassistant.components.whirlpool.config_flow.Auth.is_access_token_valid",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.whirlpool.config_flow.AppliancesManager.aircons",
+        return_value=["test"],
+    ), patch(
+        "homeassistant.components.whirlpool.config_flow.AppliancesManager.fetch_appliances",
         return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(
