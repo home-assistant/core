@@ -117,7 +117,7 @@ class AirConEntity(ClimateEntity):
 
     @property
     def device_info(self) -> DeviceInfo | None:
-        """Device information for Aladdin Connect sensors."""
+        """Device information for Whirlpool 6th Sense air conditioners."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._said)},
             name=self._name,
