@@ -404,7 +404,7 @@ class BaseLight(LogMixin, light.LightEntity):
         # (Rare case though and possibly also a bug that we don't call async_write_ha_state() if turn_on
         # needs multiple Zigbee calls and one works, one fails?)
         if isinstance(self, LightGroup) and self._zha_config_group_members_assume_state:
-            self._send_member_assume_state_event()
+            self._send_member_assume_state_event(True, kwargs)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
@@ -447,7 +447,7 @@ class BaseLight(LogMixin, light.LightEntity):
 
         # TODO: see above TODO
         if isinstance(self, LightGroup) and self._zha_config_group_members_assume_state:
-            self._send_member_assume_state_event()
+            self._send_member_assume_state_event(False, kwargs)
 
     async def async_handle_color_commands(
         self,
@@ -755,23 +755,41 @@ class Light(BaseLight, ZhaEntity):
         )
 
         @callback
-        def assume_group_state(
-            signal, state, brightness, color_mode, color_temp, xy_color, hs_color
-        ):
+        def assume_group_state(signal, update_params):
             """Handle an assume group state event from a group."""
             if self.entity_id in signal["entity_ids"]:
-                self.debug("member assuming group state")
+                self.warning(
+                    f"Called assume_group_state with {signal} and {update_params}"
+                )
 
-                self._attr_state = state
-                if brightness_supported(self._attr_supported_color_modes):
+                self.debug("member assuming group state with: %s", update_params)
+
+                self._attr_state = update_params.get("state")
+
+                # before assuming a group state attribute, check if the attribute was actually set in that call
+                if (
+                    brightness := update_params.get(light.ATTR_BRIGHTNESS)
+                ) and brightness_supported(self._attr_supported_color_modes):
                     self._attr_brightness = brightness
-                if color_mode in self._attr_supported_color_modes:
+
+                if (
+                    color_mode := update_params.get(light.ATTR_COLOR_MODE)
+                ) and color_mode in self._attr_supported_color_modes:
                     self._attr_color_mode = color_mode
-                if ColorMode.COLOR_TEMP in self._attr_supported_color_modes:
+
+                if (
+                    color_temp := update_params.get(light.ATTR_COLOR_TEMP)
+                ) and ColorMode.COLOR_TEMP in self._attr_supported_color_modes:
                     self._attr_color_temp = color_temp
-                if ColorMode.XY in self._attr_supported_color_modes:
+
+                if (
+                    xy_color := update_params.get(light.ATTR_XY_COLOR)
+                ) and ColorMode.XY in self._attr_supported_color_modes:
                     self._attr_xy_color = xy_color
-                if ColorMode.HS in self._attr_supported_color_modes:
+
+                if (
+                    hs_color := update_params.get(light.ATTR_HS_COLOR)
+                ) and ColorMode.HS in self._attr_supported_color_modes:
                     self._attr_hs_color = hs_color
 
                 self.async_write_ha_state()
@@ -1149,16 +1167,29 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             {"entity_ids": self._entity_ids},
         )
 
-    def _send_member_assume_state_event(self) -> None:
+    def _send_member_assume_state_event(self, state, service_kwargs) -> None:
         """Send an assume event to all members of the group."""
+        update_params = {"state": state}
+
+        # check if the parameters were actually updated in the service call before updating members
+        if light.ATTR_BRIGHTNESS in service_kwargs:
+            update_params[light.ATTR_BRIGHTNESS] = self._attr_brightness
+
+        if light.ATTR_COLOR_TEMP in service_kwargs:
+            update_params[light.ATTR_COLOR_MODE] = self._attr_color_mode
+            update_params[light.ATTR_COLOR_TEMP] = self._attr_color_temp
+
+        if light.ATTR_XY_COLOR in service_kwargs:
+            update_params[light.ATTR_COLOR_MODE] = self._attr_color_mode
+            update_params[light.ATTR_XY_COLOR] = self._attr_xy_color
+
+        if light.ATTR_HS_COLOR in service_kwargs:
+            update_params[light.ATTR_COLOR_MODE] = self._attr_color_mode
+            update_params[light.ATTR_HS_COLOR] = self._attr_hs_color
+
         async_dispatcher_send(
             self.hass,
             SIGNAL_LIGHT_GROUP_ASSUME_GROUP_STATE,
             {"entity_ids": self._entity_ids},
-            self._attr_state,
-            self._attr_brightness,
-            self._attr_color_mode,
-            self._attr_color_temp,
-            self._attr_xy_color,
-            self._attr_hs_color,
+            update_params,
         )
