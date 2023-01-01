@@ -17,7 +17,7 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_airvisua
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "source": "user",
-            "unique_id": "192.168.1.101",
+            "unique_id": "XXXXXXX",
             "disabled_by": None,
         },
         "data": {
