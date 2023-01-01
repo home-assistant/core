@@ -361,7 +361,8 @@ class HomeAssistantHTTP:
         except OSError as error:
             if not self.hass.config.safe_mode:
                 raise HomeAssistantError(
-                    f"Could not use SSL certificate from {self.ssl_certificate}: {error}"
+                    f"Could not use SSL certificate from {self.ssl_certificate}:"
+                    f" {error}"
                 ) from error
             _LOGGER.error(
                 "Could not read SSL certificate from %s: %s",
@@ -378,14 +379,17 @@ class HomeAssistantHTTP:
                 context = None
             else:
                 _LOGGER.critical(
-                    "Home Assistant is running in safe mode with an emergency self signed ssl certificate because the configured SSL certificate was not usable"
+                    "Home Assistant is running in safe mode with an emergency self"
+                    " signed ssl certificate because the configured SSL certificate was"
+                    " not usable"
                 )
                 return context
 
         if self.ssl_peer_certificate:
             if context is None:
                 raise HomeAssistantError(
-                    "Failed to create ssl context, no fallback available because a peer certificate is required."
+                    "Failed to create ssl context, no fallback available because a peer"
+                    " certificate is required."
                 )
 
             context.verify_mode = ssl.CERT_REQUIRED

@@ -20,15 +20,18 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
     """Gather data for the energy device."""
 
     api: HomeWizardEnergy
+    api_disabled: bool = False
 
     def __init__(
         self,
         hass: HomeAssistant,
+        entry_id: str,
         host: str,
     ) -> None:
         """Initialize Update Coordinator."""
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
+        self.entry_id = entry_id
         self.api = HomeWizardEnergy(host, clientsession=async_get_clientsession(hass))
 
     @property
@@ -55,9 +58,18 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
                 data["system"] = await self.api.system()
 
         except RequestError as ex:
-            raise UpdateFailed("Device did not respond as expected") from ex
+            raise UpdateFailed(ex) from ex
 
         except DisabledError as ex:
-            raise UpdateFailed("API disabled, API must be enabled in the app") from ex
+            if not self.api_disabled:
+                self.api_disabled = True
+
+                # Do not reload when performing first refresh
+                if self.data is not None:
+                    await self.hass.config_entries.async_reload(self.entry_id)
+
+            raise UpdateFailed(ex) from ex
+
+        self.api_disabled = False
 
         return data

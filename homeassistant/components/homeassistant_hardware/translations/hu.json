@@ -6,6 +6,7 @@
                 "addon_install_failed": "Nem siker\u00fclt telep\u00edteni a Silicon Labs Multiprotocol b\u0151v\u00edtm\u00e9nyt.",
                 "addon_set_config_failed": "A Silicon Labs Multiprotokoll konfigur\u00e1ci\u00f3 be\u00e1ll\u00edt\u00e1sa sikertelen volt.",
                 "addon_start_failed": "Nem siker\u00fclt elind\u00edtani a Silicon Labs Multiprotocol b\u0151v\u00edtm\u00e9nyt.",
+                "disabled_due_to_bug": "A hardver opci\u00f3k \u00e1tmenetileg le vannak tiltva, am\u00edg kijav\u00edtunk egy hib\u00e1t. [Tov\u00e1bbi inform\u00e1ci\u00f3]({url})",
                 "not_hassio": "A hardverbe\u00e1ll\u00edt\u00e1sok csak HassOS telep\u00edt\u00e9sekn\u00e9l konfigur\u00e1lhat\u00f3k.",
                 "zha_migration_failed": "A ZHA migr\u00e1ci\u00f3 nem siker\u00fclt."
             },

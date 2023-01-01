@@ -8,11 +8,10 @@ from pyairvisual.cloud_api import (
     UnauthorizedError,
 )
 from pyairvisual.errors import AirVisualError
-from pyairvisual.node import NodeProError
 import pytest
 
 from homeassistant import data_entry_flow
-from homeassistant.components.airvisual.const import (
+from homeassistant.components.airvisual import (
     CONF_CITY,
     CONF_COUNTRY,
     CONF_GEOGRAPHIES,
@@ -22,6 +21,7 @@ from homeassistant.components.airvisual.const import (
     INTEGRATION_TYPE_GEOGRAPHY_NAME,
     INTEGRATION_TYPE_NODE_PRO,
 )
+from homeassistant.components.airvisual_pro import DOMAIN as AIRVISUAL_PRO_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import (
     CONF_API_KEY,
@@ -32,38 +32,17 @@ from homeassistant.const import (
     CONF_SHOW_ON_MAP,
     CONF_STATE,
 )
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
+
+from tests.common import MockConfigEntry
 
 
-@pytest.mark.parametrize(
-    "config,data,unique_id",
-    [
-        (
-            {
-                CONF_API_KEY: "abcde12345",
-                CONF_LATITUDE: 51.528308,
-                CONF_LONGITUDE: -0.3817765,
-            },
-            {
-                "type": INTEGRATION_TYPE_GEOGRAPHY_COORDS,
-            },
-            "51.528308, -0.3817765",
-        ),
-        (
-            {
-                CONF_IP_ADDRESS: "192.168.1.100",
-                CONF_PASSWORD: "12345",
-            },
-            {
-                "type": INTEGRATION_TYPE_NODE_PRO,
-            },
-            "192.168.1.100",
-        ),
-    ],
-)
-async def test_duplicate_error(hass, config, config_entry, data):
+async def test_duplicate_error(hass, config, config_entry, data, setup_airvisual):
     """Test that errors are shown when duplicate entries are added."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=data
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={"type": INTEGRATION_TYPE_GEOGRAPHY_COORDS},
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=config
@@ -130,15 +109,6 @@ async def test_duplicate_error(hass, config, config_entry, data):
             {"base": "unknown"},
             INTEGRATION_TYPE_GEOGRAPHY_NAME,
         ),
-        (
-            {
-                CONF_IP_ADDRESS: "192.168.1.100",
-                CONF_PASSWORD: "my_password",
-            },
-            NodeProError,
-            {CONF_IP_ADDRESS: "cannot_connect"},
-            INTEGRATION_TYPE_NODE_PRO,
-        ),
     ],
 )
 async def test_errors(hass, data, exc, errors, integration_type):
@@ -174,8 +144,8 @@ async def test_errors(hass, data, exc, errors, integration_type):
         )
     ],
 )
-async def test_migration(hass, config, config_entry, setup_airvisual, unique_id):
-    """Test migrating from version 1 to the current version."""
+async def test_migration_1_2(hass, config, config_entry, setup_airvisual, unique_id):
+    """Test migrating from version 1 to 2."""
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 2
 
@@ -197,6 +167,46 @@ async def test_migration(hass, config, config_entry, setup_airvisual, unique_id)
         CONF_COUNTRY: "China",
         CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY_NAME,
     }
+
+
+async def test_migration_2_3(hass, pro):
+    """Test migrating from version 2 to 3."""
+    old_pro_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="192.168.1.100",
+        data={
+            CONF_IP_ADDRESS: "192.168.1.100",
+            CONF_PASSWORD: "abcde12345",
+            CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_NODE_PRO,
+        },
+        version=2,
+    )
+    old_pro_entry.add_to_hass(hass)
+
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        name="192.168.1.100",
+        config_entry_id=old_pro_entry.entry_id,
+        identifiers={(DOMAIN, "ABCDE12345")},
+    )
+
+    with patch(
+        "homeassistant.components.airvisual.automation.automations_with_device",
+        return_value=["automation.test_automation"],
+    ), patch(
+        "homeassistant.components.airvisual_pro.NodeSamba", return_value=pro
+    ), patch(
+        "homeassistant.components.airvisual_pro.config_flow.NodeSamba", return_value=pro
+    ):
+        await hass.config_entries.async_setup(old_pro_entry.entry_id)
+        await hass.async_block_till_done()
+
+        for domain, entry_count in ((DOMAIN, 0), (AIRVISUAL_PRO_DOMAIN, 1)):
+            entries = hass.config_entries.async_entries(domain)
+            assert len(entries) == entry_count
+
+        issue_registry = ir.async_get(hass)
+        assert len(issue_registry.issues) == 1
 
 
 async def test_options_flow(hass, config_entry):
@@ -272,32 +282,6 @@ async def test_step_geography_by_name(hass, config, setup_airvisual):
     }
 
 
-@pytest.mark.parametrize(
-    "config",
-    [
-        {
-            CONF_IP_ADDRESS: "192.168.1.100",
-            CONF_PASSWORD: "my_password",
-        }
-    ],
-)
-async def test_step_node_pro(hass, config, setup_airvisual):
-    """Test the Node/Pro step."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={"type": "AirVisual Node/Pro"}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=config
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Node/Pro (192.168.1.100)"
-    assert result["data"] == {
-        CONF_IP_ADDRESS: "192.168.1.100",
-        CONF_PASSWORD: "my_password",
-        CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_NODE_PRO,
-    }
-
-
 async def test_step_reauth(hass, config_entry, setup_airvisual):
     """Test that the reauth step works."""
     result = await hass.config_entries.flow.async_init(
@@ -350,12 +334,3 @@ async def test_step_user(hass):
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "geography_by_name"
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={"type": INTEGRATION_TYPE_NODE_PRO},
-    )
-
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "node_pro"

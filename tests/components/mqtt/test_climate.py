@@ -807,7 +807,6 @@ async def test_get_with_templates(hass, mqtt_mock_entry_with_yaml_config, caplog
         hass, "current-preset-mode", '{"other_attribute": "some_value"}'
     )
     state = hass.states.get(ENTITY_CLIMATE)
-    assert "Ignoring empty preset_mode from 'current-preset-mode'"
     assert state.attributes.get("preset_mode") == "eco"
 
     # Aux mode
@@ -835,10 +834,6 @@ async def test_get_with_templates(hass, mqtt_mock_entry_with_yaml_config, caplog
     async_fire_mqtt_message(hass, "action", "null")
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("hvac_action") == "cooling"
-    assert (
-        "Invalid ['cooling', 'drying', 'fan', 'heating', 'idle', 'off'] action: None, ignoring"
-        in caplog.text
-    )
 
 
 async def test_set_and_templates(hass, mqtt_mock_entry_with_yaml_config, caplog):

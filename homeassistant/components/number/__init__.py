@@ -14,12 +14,7 @@ import voluptuous as vol
 
 from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_MODE,
-    CONF_UNIT_OF_MEASUREMENT,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.const import ATTR_MODE, CONF_UNIT_OF_MEASUREMENT, UnitOfTemperature
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -96,7 +91,7 @@ class NumberDeviceClass(StrEnum):
     CURRENT = "current"
     """Current.
 
-    Unit of measurement: `A`
+    Unit of measurement: `A`,  `mA`
     """
 
     DATA_RATE = "data_rate"
@@ -134,7 +129,9 @@ class NumberDeviceClass(StrEnum):
     GAS = "gas"
     """Gas.
 
-    Unit of measurement: `m³`, `ft³`
+    Unit of measurement:
+    - SI / metric: `m³`
+    - USCS / imperial: `ft³`, `CCF`
     """
 
     HUMIDITY = "humidity"
@@ -146,7 +143,7 @@ class NumberDeviceClass(StrEnum):
     ILLUMINANCE = "illuminance"
     """Illuminance.
 
-    Unit of measurement: `lx`, `lm`
+    Unit of measurement: `lx`
     """
 
     IRRADIANCE = "irradiance"
@@ -299,7 +296,7 @@ class NumberDeviceClass(StrEnum):
     VOLTAGE = "voltage"
     """Voltage.
 
-    Unit of measurement: `V`
+    Unit of measurement: `V`, `mV`
     """
 
     VOLUME = "volume"
@@ -307,7 +304,7 @@ class NumberDeviceClass(StrEnum):
 
     Unit of measurement: `VOLUME_*` units
     - SI / metric: `mL`, `L`, `m³`
-    - USCS / imperial: `fl. oz.`, `ft³`, `gal` (warning: volumes expressed in
+    - USCS / imperial: `ft³`, `CCF`, `fl. oz.`, `gal` (warning: volumes expressed in
     USCS/imperial units are currently assumed to be US volumes)
     """
 
@@ -316,7 +313,7 @@ class NumberDeviceClass(StrEnum):
 
     Unit of measurement:
     - SI / metric: `m³`, `L`
-    - USCS / imperial: `ft³`, `gal` (warning: volumes expressed in
+    - USCS / imperial: `ft³`, `CCF`, `gal` (warning: volumes expressed in
     USCS/imperial units are currently assumed to be US volumes)
     """
 
@@ -379,7 +376,8 @@ async def async_set_value(entity: NumberEntity, service_call: ServiceCall) -> No
     value = service_call.data["value"]
     if value < entity.min_value or value > entity.max_value:
         raise ValueError(
-            f"Value {value} for {entity.name} is outside valid range {entity.min_value} - {entity.max_value}"
+            f"Value {value} for {entity.name} is outside valid range"
+            f" {entity.min_value} - {entity.max_value}"
         )
     try:
         native_value = entity.convert_to_native_value(value)
@@ -439,9 +437,11 @@ class NumberEntityDescription(EntityDescription):
                     "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
                 )
             _LOGGER.warning(
-                "%s is setting deprecated attributes on an instance of "
-                "NumberEntityDescription, this is not valid and will be unsupported "
-                "from Home Assistant 2022.10. Please %s",
+                (
+                    "%s is setting deprecated attributes on an instance of"
+                    " NumberEntityDescription, this is not valid and will be"
+                    " unsupported from Home Assistant 2022.10. Please %s"
+                ),
                 module.__name__ if module else self.__class__.__name__,
                 report_issue,
             )
@@ -510,9 +510,11 @@ class NumberEntity(Entity):
                     "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
                 )
             _LOGGER.warning(
-                "%s::%s is overriding deprecated methods on an instance of "
-                "NumberEntity, this is not valid and will be unsupported "
-                "from Home Assistant 2022.10. Please %s",
+                (
+                    "%s::%s is overriding deprecated methods on an instance of "
+                    "NumberEntity, this is not valid and will be unsupported "
+                    "from Home Assistant 2022.10. Please %s"
+                ),
                 cls.__module__,
                 cls.__name__,
                 report_issue,
@@ -672,7 +674,8 @@ class NumberEntity(Entity):
 
         if (
             self.device_class == NumberDeviceClass.TEMPERATURE
-            and native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
+            and native_unit_of_measurement
+            in (UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT)
         ):
             return self.hass.config.units.temperature_unit
 
@@ -774,8 +777,10 @@ class NumberEntity(Entity):
             self._deprecated_number_entity_reported = True
             report_issue = self._suggest_report_issue()
             _LOGGER.warning(
-                "Entity %s (%s) is using deprecated NumberEntity features which will "
-                "be unsupported from Home Assistant Core 2022.10, please %s",
+                (
+                    "Entity %s (%s) is using deprecated NumberEntity features which"
+                    " will be unsupported from Home Assistant Core 2022.10, please %s"
+                ),
                 self.entity_id,
                 type(self),
                 report_issue,

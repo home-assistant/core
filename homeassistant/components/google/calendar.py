@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Iterable
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, Union, cast
 
 from gcal_sync.api import (
     GoogleCalendarService,
@@ -63,6 +63,7 @@ from . import (
     load_config,
     update_config,
 )
+from .api import get_feature_access
 from .const import (
     DATA_SERVICE,
     DATA_STORE,
@@ -74,6 +75,7 @@ from .const import (
     EVENT_START_DATE,
     EVENT_START_DATETIME,
     EVENT_TYPES_CONF,
+    FeatureAccess,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -88,6 +90,10 @@ SYNC_EVENT_MIN_TIME = timedelta(days=-90)
 # When an event is opaque, it means "Show me as busy" which is the default.  Events that
 # are not opaque are ignored by default.
 OPAQUE = "opaque"
+
+# Google calendar prefixes recurrence rules with RRULE: which
+# we need to strip when working with the frontend recurrence rule values
+RRULE_PREFIX = "RRULE:"
 
 _EVENT_IN_TYPES = vol.Schema(
     {
@@ -169,8 +175,9 @@ async def async_setup_entry(
             entity_enabled = data.get(CONF_TRACK, True)
             if not entity_enabled:
                 _LOGGER.warning(
-                    "The 'track' option in google_calendars.yaml has been deprecated. The setting "
-                    "has been imported to the UI, and should now be removed from google_calendars.yaml"
+                    "The 'track' option in google_calendars.yaml has been deprecated."
+                    " The setting has been imported to the UI, and should now be"
+                    " removed from google_calendars.yaml"
                 )
             entity_name = data[CONF_DEVICE_ID]
             # The unique id is based on the config entry and calendar id since multiple accounts
@@ -208,10 +215,13 @@ async def async_setup_entry(
             # Prefer calendar sync down of resources when possible. However, sync does not work
             # for search. Also free-busy calendars denormalize recurring events as individual
             # events which is not efficient for sync
+            support_write = (
+                calendar_item.access_role.is_writer
+                and get_feature_access(hass, config_entry) is FeatureAccess.read_write
+            )
             if (
                 search := data.get(CONF_SEARCH)
-                or calendar_item.access_role == AccessRole.FREE_BUSY_READER
-            ):
+            ) or calendar_item.access_role == AccessRole.FREE_BUSY_READER:
                 coordinator = CalendarQueryUpdateCoordinator(
                     hass,
                     calendar_service,
@@ -219,6 +229,7 @@ async def async_setup_entry(
                     calendar_id,
                     search,
                 )
+                support_write = False
             else:
                 request_template = SyncEventsRequest(
                     calendar_id=calendar_id,
@@ -242,7 +253,7 @@ async def async_setup_entry(
                     generate_entity_id(ENTITY_ID_FORMAT, entity_name, hass=hass),
                     unique_id,
                     entity_enabled,
-                    calendar_item.access_role.is_writer,
+                    support_write,
                 )
             )
 
@@ -258,7 +269,10 @@ async def async_setup_entry(
         await hass.async_add_executor_job(append_calendars_to_config)
 
     platform = entity_platform.async_get_current_platform()
-    if any(calendar_item.access_role.is_writer for calendar_item in result.items):
+    if (
+        any(calendar_item.access_role.is_writer for calendar_item in result.items)
+        and get_feature_access(hass, config_entry) is FeatureAccess.read_write
+    ):
         platform.async_register_entity_service(
             SERVICE_CREATE_EVENT,
             CREATE_EVENT_SCHEMA,
@@ -377,7 +391,12 @@ class CalendarQueryUpdateCoordinator(DataUpdateCoordinator[list[Event]]):
         return self.data
 
 
-class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
+class GoogleCalendarEntity(
+    CoordinatorEntity[
+        Union[CalendarSyncUpdateCoordinator, CalendarQueryUpdateCoordinator]
+    ],
+    CalendarEntity,
+):
     """A calendar event entity."""
 
     _attr_has_entity_name = True
@@ -394,7 +413,6 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
     ) -> None:
         """Create the Calendar event device."""
         super().__init__(coordinator)
-        self.coordinator = coordinator
         self.calendar_id = calendar_id
         self._ignore_availability: bool = data.get(CONF_IGNORE_AVAILABILITY, False)
         self._event: CalendarEvent | None = None
@@ -526,9 +544,11 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
             }
         )
         if rrule := kwargs.get(EVENT_RRULE):
-            event.recurrence = [rrule]
+            event.recurrence = [f"{RRULE_PREFIX}{rrule}"]
 
-        await self.coordinator.sync.store_service.async_add_event(event)
+        await cast(
+            CalendarSyncUpdateCoordinator, self.coordinator
+        ).sync.store_service.async_add_event(event)
         await self.coordinator.async_refresh()
 
     async def async_delete_event(
@@ -541,7 +561,9 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
         range_value: Range = Range.NONE
         if recurrence_range == Range.THIS_AND_FUTURE:
             range_value = Range.THIS_AND_FUTURE
-        await self.coordinator.sync.store_service.async_delete_event(
+        await cast(
+            CalendarSyncUpdateCoordinator, self.coordinator
+        ).sync.store_service.async_delete_event(
             ical_uuid=uid,
             event_id=recurrence_id,
             recurrence_range=range_value,
@@ -551,10 +573,13 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
 
 def _get_calendar_event(event: Event) -> CalendarEvent:
     """Return a CalendarEvent from an API event."""
+    rrule: str | None = None
+    if len(event.recurrence) == 1:
+        rrule = event.recurrence[0].lstrip(RRULE_PREFIX)
     return CalendarEvent(
         uid=event.ical_uuid,
         recurrence_id=event.id if event.recurring_event_id else None,
-        rrule=event.recurrence[0] if len(event.recurrence) == 1 else None,
+        rrule=rrule,
         summary=event.summary,
         start=event.start.value,
         end=event.end.value,
@@ -602,7 +627,9 @@ async def async_create_event(entity: GoogleCalendarEntity, call: ServiceCall) ->
         raise ValueError("Missing required fields to set start or end date/datetime")
 
     try:
-        await entity.coordinator.sync.api.async_create_event(
+        await cast(
+            CalendarSyncUpdateCoordinator, entity.coordinator
+        ).sync.api.async_create_event(
             entity.calendar_id,
             Event(
                 summary=call.data[EVENT_SUMMARY],

@@ -27,7 +27,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -173,7 +173,7 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
         value = convert_isy_value_to_hass(value, uom, self.target.prec)
 
         # Convert temperatures to Home Assistant's unit
-        if uom in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
+        if uom in (UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT):
             value = self.hass.config.units.temperature(value, uom)
 
         if value is None:
@@ -189,7 +189,11 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
         # Check if this is a known index pair UOM
         if isinstance(raw_units, dict) or raw_units in (UOM_ON_OFF, UOM_INDEX):
             return None
-        if raw_units in (TEMP_FAHRENHEIT, TEMP_CELSIUS, UOM_DOUBLE_TEMP):
+        if raw_units in (
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
+            UOM_DOUBLE_TEMP,
+        ):
             return self.hass.config.units.temperature_unit
         return raw_units
 

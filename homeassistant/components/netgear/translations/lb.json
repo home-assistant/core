@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Standardhost: {host}\nStandardbenotzernumm: {username}"
+            }
+        }
+    }
+}

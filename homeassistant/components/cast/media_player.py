@@ -43,6 +43,7 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CAST_APP_ID_HOMEASSISTANT_LOVELACE,
+    CONF_UUID,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
@@ -59,7 +60,6 @@ from .const import (
     ADDED_CAST_DEVICES_KEY,
     CAST_MULTIZONE_MANAGER_KEY,
     CONF_IGNORE_CEC,
-    CONF_UUID,
     DOMAIN as CAST_DOMAIN,
     SIGNAL_CAST_DISCOVERED,
     SIGNAL_CAST_REMOVED,
@@ -396,9 +396,11 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                     url_description = f" from internal_url ({internal_url})"
 
             _LOGGER.error(
-                "Failed to cast media %s%s. Please make sure the URL is: "
-                "Reachable from the cast device and either a publicly resolvable "
-                "hostname or an IP address",
+                (
+                    "Failed to cast media %s%s. Please make sure the URL is: "
+                    "Reachable from the cast device and either a publicly resolvable "
+                    "hostname or an IP address"
+                ),
                 media_status.content_id,
                 url_description,
             )

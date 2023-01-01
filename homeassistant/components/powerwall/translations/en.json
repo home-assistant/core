@@ -14,7 +14,7 @@
         "flow_title": "{name} ({ip_address})",
         "step": {
             "confirm_discovery": {
-                "description": "Do you want to setup {name} ({ip_address})?",
+                "description": "Do you want to set up {name} ({ip_address})?",
                 "title": "Connect to the powerwall"
             },
             "reauth_confim": {

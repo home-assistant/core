@@ -20,8 +20,6 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
-    VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
-    VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
     Platform,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
@@ -34,6 +32,7 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfTime,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -325,7 +324,7 @@ class ElectricalMeasurementRMSVoltage(ElectricalMeasurement, id_suffix="rms_volt
     """RMS Voltage measurement."""
 
     SENSOR_ATTR = "rms_voltage"
-    _attr_device_class: SensorDeviceClass = SensorDeviceClass.CURRENT
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.VOLTAGE
     _attr_should_poll = False  # Poll indirectly by ElectricalMeasurementSensor
     _attr_name: str = "RMS voltage"
     _attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
@@ -404,9 +403,9 @@ class Illuminance(Sensor):
     _attr_name: str = "Illuminance"
     _attr_native_unit_of_measurement = LIGHT_LUX
 
-    def formatter(self, value: int) -> float:
+    def formatter(self, value: int) -> int:
         """Convert illumination data."""
-        return round(pow(10, ((value - 1) / 10000)), 1)
+        return round(pow(10, ((value - 1) / 10000)))
 
 
 @MULTI_MATCH(
@@ -423,9 +422,9 @@ class SmartEnergyMetering(Sensor):
 
     unit_of_measure_map = {
         0x00: UnitOfPower.WATT,
-        0x01: VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
-        0x02: VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
-        0x03: f"100 {VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR}",
+        0x01: UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        0x02: UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+        0x03: f"100 {UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR}",
         0x04: f"US {UnitOfVolume.GALLONS}/{UnitOfTime.HOURS}",
         0x05: f"IMP {UnitOfVolume.GALLONS}/{UnitOfTime.HOURS}",
         0x06: UnitOfPower.BTU_PER_HOUR,

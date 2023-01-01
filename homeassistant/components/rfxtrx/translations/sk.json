@@ -5,9 +5,17 @@
             "cannot_connect": "Nepodarilo sa pripoji\u0165"
         },
         "error": {
-            "cannot_connect": "Nepodarilo sa pripoji\u0165"
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "few": "Pr\u00e1zdnych",
+            "many": "Pr\u00e1zdnych",
+            "one": "Pr\u00e1zdny",
+            "other": "Pr\u00e1zdny"
         },
         "step": {
+            "few": "Pr\u00e1zdnych",
+            "many": "Pr\u00e1zdnych",
+            "one": "Pr\u00e1zdny",
+            "other": "Pr\u00e1zdny",
             "setup_network": {
                 "data": {
                     "host": "Hostite\u013e",
@@ -45,6 +53,9 @@
             "status": "Prijat\u00fd stav: {subtype}"
         }
     },
+    "few": "Pr\u00e1zdnych",
+    "many": "Pr\u00e1zdnych",
+    "one": "Pr\u00e1zdny",
     "options": {
         "error": {
             "already_configured_device": "Zariadenie u\u017e je nakonfigurovan\u00e9",
@@ -78,5 +89,6 @@
                 "title": "Konfigur\u00e1cia mo\u017enost\u00ed zariadenia"
             }
         }
-    }
+    },
+    "other": "Pr\u00e1zdny"
 }

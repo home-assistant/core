@@ -36,10 +36,10 @@
                 "title": "Select a Serial Port"
             },
             "confirm": {
-                "description": "Do you want to setup {name}?"
+                "description": "Do you want to set up {name}?"
             },
             "confirm_hardware": {
-                "description": "Do you want to setup {name}?"
+                "description": "Do you want to set up {name}?"
             },
             "manual_pick_radio_type": {
                 "data": {

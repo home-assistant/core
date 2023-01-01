@@ -120,7 +120,8 @@ def validate_options(config: ConfigType) -> ConfigType:
     """
     if CONF_SET_POSITION_TOPIC in config and CONF_GET_POSITION_TOPIC not in config:
         raise vol.Invalid(
-            f"'{CONF_SET_POSITION_TOPIC}' must be set together with '{CONF_GET_POSITION_TOPIC}'."
+            f"'{CONF_SET_POSITION_TOPIC}' must be set together with"
+            f" '{CONF_GET_POSITION_TOPIC}'."
         )
 
     # if templates are set make sure the topic for the template is also set
@@ -132,22 +133,26 @@ def validate_options(config: ConfigType) -> ConfigType:
 
     if CONF_GET_POSITION_TEMPLATE in config and CONF_GET_POSITION_TOPIC not in config:
         raise vol.Invalid(
-            f"'{CONF_GET_POSITION_TEMPLATE}' must be set together with '{CONF_GET_POSITION_TOPIC}'."
+            f"'{CONF_GET_POSITION_TEMPLATE}' must be set together with"
+            f" '{CONF_GET_POSITION_TOPIC}'."
         )
 
     if CONF_SET_POSITION_TEMPLATE in config and CONF_SET_POSITION_TOPIC not in config:
         raise vol.Invalid(
-            f"'{CONF_SET_POSITION_TEMPLATE}' must be set together with '{CONF_SET_POSITION_TOPIC}'."
+            f"'{CONF_SET_POSITION_TEMPLATE}' must be set together with"
+            f" '{CONF_SET_POSITION_TOPIC}'."
         )
 
     if CONF_TILT_COMMAND_TEMPLATE in config and CONF_TILT_COMMAND_TOPIC not in config:
         raise vol.Invalid(
-            f"'{CONF_TILT_COMMAND_TEMPLATE}' must be set together with '{CONF_TILT_COMMAND_TOPIC}'."
+            f"'{CONF_TILT_COMMAND_TEMPLATE}' must be set together with"
+            f" '{CONF_TILT_COMMAND_TOPIC}'."
         )
 
     if CONF_TILT_STATUS_TEMPLATE in config and CONF_TILT_STATUS_TOPIC not in config:
         raise vol.Invalid(
-            f"'{CONF_TILT_STATUS_TEMPLATE}' must be set together with '{CONF_TILT_STATUS_TOPIC}'."
+            f"'{CONF_TILT_STATUS_TEMPLATE}' must be set together with"
+            f" '{CONF_TILT_STATUS_TOPIC}'."
         )
 
     return config
@@ -388,7 +393,10 @@ class MqttCover(MqttEntity, CoverEntity):
                 self._state = STATE_CLOSED
             else:
                 _LOGGER.warning(
-                    "Payload is not supported (e.g. open, closed, opening, closing, stopped): %s",
+                    (
+                        "Payload is not supported (e.g. open, closed, opening, closing,"
+                        " stopped): %s"
+                    ),
                     payload,
                 )
                 return
@@ -414,7 +422,8 @@ class MqttCover(MqttEntity, CoverEntity):
             if payload_dict and isinstance(payload_dict, dict):
                 if "position" not in payload_dict:
                     _LOGGER.warning(
-                        "Template (position_template) returned JSON without position attribute"
+                        "Template (position_template) returned JSON without position"
+                        " attribute"
                     )
                     return
                 if "tilt_position" in payload_dict:

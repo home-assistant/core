@@ -249,13 +249,19 @@ class MqttSiren(MqttEntity, SirenEntity):
                 try:
                     json_payload = json_loads(payload)
                     _LOGGER.debug(
-                        "JSON payload detected after processing payload '%s' on topic %s",
+                        (
+                            "JSON payload detected after processing payload '%s' on"
+                            " topic %s"
+                        ),
                         json_payload,
                         msg.topic,
                     )
                 except JSON_DECODE_EXCEPTIONS:
                     _LOGGER.warning(
-                        "No valid (JSON) payload detected after processing payload '%s' on topic %s",
+                        (
+                            "No valid (JSON) payload detected after processing payload"
+                            " '%s' on topic %s"
+                        ),
                         json_payload,
                         msg.topic,
                     )

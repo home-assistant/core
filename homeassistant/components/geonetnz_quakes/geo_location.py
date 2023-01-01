@@ -9,7 +9,7 @@ from aio_geojson_geonetnz_quakes.feed_entry import GeonetnzQuakesFeedEntry
 
 from homeassistant.components.geo_location import GeolocationEvent
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TIME, LENGTH_KILOMETERS, LENGTH_MILES
+from homeassistant.const import ATTR_TIME, UnitOfLength
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -81,7 +81,7 @@ class GeonetnzQuakesEvent(GeolocationEvent):
         self._feed_manager = feed_manager
         self._external_id = external_id
         self._attr_unique_id = f"{integration_id}_{external_id}"
-        self._attr_unit_of_measurement = LENGTH_KILOMETERS
+        self._attr_unit_of_measurement = UnitOfLength.KILOMETERS
         self._depth = None
         self._locality = None
         self._magnitude = None
@@ -94,7 +94,7 @@ class GeonetnzQuakesEvent(GeolocationEvent):
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         if self.hass.config.units is US_CUSTOMARY_SYSTEM:
-            self._attr_unit_of_measurement = LENGTH_MILES
+            self._attr_unit_of_measurement = UnitOfLength.MILES
         self._remove_signal_delete = async_dispatcher_connect(
             self.hass,
             f"geonetnz_quakes_delete_{self._external_id}",
@@ -138,7 +138,7 @@ class GeonetnzQuakesEvent(GeolocationEvent):
         # Convert distance if not metric system.
         if self.hass.config.units is US_CUSTOMARY_SYSTEM:
             self._attr_distance = DistanceConverter.convert(
-                feed_entry.distance_to_home, LENGTH_KILOMETERS, LENGTH_MILES
+                feed_entry.distance_to_home, UnitOfLength.KILOMETERS, UnitOfLength.MILES
             )
         else:
             self._attr_distance = feed_entry.distance_to_home

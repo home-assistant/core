@@ -28,7 +28,7 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.const import CONF_DEVICE_ID, CONF_TYPE, CONF_URL
+from homeassistant.const import CONF_DEVICE_ID, CONF_MAC, CONF_TYPE, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -98,6 +98,7 @@ async def async_setup_entry(
         event_callback_url=entry.options.get(CONF_CALLBACK_URL_OVERRIDE),
         poll_availability=entry.options.get(CONF_POLL_AVAILABILITY, False),
         location=entry.data[CONF_URL],
+        mac_address=entry.data.get(CONF_MAC),
         browse_unfiltered=entry.options.get(CONF_BROWSE_UNFILTERED, False),
     )
 
@@ -139,6 +140,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         event_callback_url: str | None,
         poll_availability: bool,
         location: str,
+        mac_address: str | None,
         browse_unfiltered: bool,
     ) -> None:
         """Initialize DLNA DMR entity."""
@@ -148,6 +150,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         self._event_addr = EventListenAddr(None, event_port, event_callback_url)
         self.poll_availability = poll_availability
         self.location = location
+        self.mac_address = mac_address
         self.browse_unfiltered = browse_unfiltered
         self._device_lock = asyncio.Lock()
 
@@ -272,6 +275,11 @@ class DlnaDmrEntity(MediaPlayerEntity):
         self.poll_availability = entry.options.get(CONF_POLL_AVAILABILITY, False)
         self.browse_unfiltered = entry.options.get(CONF_BROWSE_UNFILTERED, False)
 
+        new_mac_address = entry.data.get(CONF_MAC)
+        if new_mac_address != self.mac_address:
+            self.mac_address = new_mac_address
+            self._update_device_registry(set_mac=True)
+
         new_port = entry.options.get(CONF_LISTEN_PORT) or 0
         new_callback_url = entry.options.get(CONF_CALLBACK_URL_OVERRIDE)
 
@@ -338,27 +346,42 @@ class DlnaDmrEntity(MediaPlayerEntity):
                 _LOGGER.debug("Error while subscribing during device connect: %r", err)
                 raise
 
-        if (
-            not self.registry_entry
-            or not self.registry_entry.config_entry_id
-            or self.registry_entry.device_id
-        ):
-            return
+        self._update_device_registry()
+
+    def _update_device_registry(self, set_mac: bool = False) -> None:
+        """Update the device registry with new information about the DMR."""
+        if not self._device:
+            return  # Can't get all the required information without a connection
+
+        if not self.registry_entry or not self.registry_entry.config_entry_id:
+            return  # No config registry entry to link to
+
+        if self.registry_entry.device_id and not set_mac:
+            return  # No new information
+
+        connections = set()
+        # Connections based on the root device's UDN, and the DMR embedded
+        # device's UDN. They may be the same, if the DMR is the root device.
+        connections.add(
+            (
+                device_registry.CONNECTION_UPNP,
+                self._device.profile_device.root_device.udn,
+            )
+        )
+        connections.add((device_registry.CONNECTION_UPNP, self._device.udn))
+
+        if self.mac_address:
+            # Connection based on MAC address, if known
+            connections.add(
+                # Device MAC is obtained from the config entry, which uses getmac
+                (device_registry.CONNECTION_NETWORK_MAC, self.mac_address)
+            )
 
         # Create linked HA DeviceEntry now the information is known.
         dev_reg = device_registry.async_get(self.hass)
         device_entry = dev_reg.async_get_or_create(
             config_entry_id=self.registry_entry.config_entry_id,
-            # Connections are based on the root device's UDN, and the DMR
-            # embedded device's UDN. They may be the same, if the DMR is the
-            # root device.
-            connections={
-                (
-                    device_registry.CONNECTION_UPNP,
-                    self._device.profile_device.root_device.udn,
-                ),
-                (device_registry.CONNECTION_UPNP, self._device.udn),
-            },
+            connections=connections,
             identifiers={(DOMAIN, self.unique_id)},
             default_manufacturer=self._device.manufacturer,
             default_model=self._device.model_name,

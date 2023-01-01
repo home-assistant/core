@@ -125,9 +125,11 @@ class UnitSystem:
     def name(self) -> str:
         """Return the name of the unit system."""
         report(
-            "accesses the `name` property of the unit system. "
-            "This is deprecated and will stop working in Home Assistant 2023.1. "
-            "Please adjust to use instance check instead.",
+            (
+                "accesses the `name` property of the unit system. "
+                "This is deprecated and will stop working in Home Assistant 2023.1. "
+                "Please adjust to use instance check instead."
+            ),
             error_if_core=False,
         )
         if self is IMPERIAL_SYSTEM:
@@ -139,9 +141,11 @@ class UnitSystem:
     def is_metric(self) -> bool:
         """Determine if this is the metric unit system."""
         report(
-            "accesses the `is_metric` property of the unit system. "
-            "This is deprecated and will stop working in Home Assistant 2023.1. "
-            "Please adjust to use instance check instead.",
+            (
+                "accesses the `is_metric` property of the unit system. "
+                "This is deprecated and will stop working in Home Assistant 2023.1. "
+                "Please adjust to use instance check instead."
+            ),
             error_if_core=False,
         )
         return self is METRIC_SYSTEM
@@ -265,6 +269,9 @@ METRIC_SYSTEM = UnitSystem(
         ("gas", UnitOfVolume.CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         # Convert non-metric precipitation
         ("precipitation", UnitOfLength.INCHES): UnitOfLength.MILLIMETERS,
+        # Convert non-metric pressure
+        ("pressure", UnitOfPressure.PSI): UnitOfPressure.KPA,
+        ("pressure", UnitOfPressure.INHG): UnitOfPressure.HPA,
         # Convert non-metric speeds except knots to km/h
         ("speed", UnitOfSpeed.FEET_PER_SECOND): UnitOfSpeed.KILOMETERS_PER_HOUR,
         ("speed", UnitOfSpeed.MILES_PER_HOUR): UnitOfSpeed.KILOMETERS_PER_HOUR,
@@ -303,6 +310,14 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         ("gas", UnitOfVolume.CUBIC_METERS): UnitOfVolume.CUBIC_FEET,
         # Convert non-USCS precipitation
         ("precipitation", UnitOfLength.MILLIMETERS): UnitOfLength.INCHES,
+        # Convert non-USCS pressure
+        ("pressure", UnitOfPressure.MBAR): UnitOfPressure.PSI,
+        ("pressure", UnitOfPressure.CBAR): UnitOfPressure.PSI,
+        ("pressure", UnitOfPressure.BAR): UnitOfPressure.PSI,
+        ("pressure", UnitOfPressure.PA): UnitOfPressure.PSI,
+        ("pressure", UnitOfPressure.HPA): UnitOfPressure.PSI,
+        ("pressure", UnitOfPressure.KPA): UnitOfPressure.PSI,
+        ("pressure", UnitOfPressure.MMHG): UnitOfPressure.INHG,
         # Convert non-USCS speeds except knots to mph
         ("speed", UnitOfSpeed.METERS_PER_SECOND): UnitOfSpeed.MILES_PER_HOUR,
         ("speed", UnitOfSpeed.KILOMETERS_PER_HOUR): UnitOfSpeed.MILES_PER_HOUR,

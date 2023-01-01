@@ -1165,13 +1165,13 @@ def mock_storage(data=None):
 
         # Route through original load so that we trigger migration
         loaded = await orig_load(store)
-        _LOGGER.info("Loading data for %s: %s", store.key, loaded)
+        _LOGGER.debug("Loading data for %s: %s", store.key, loaded)
         return loaded
 
-    def mock_write_data(store, path, data_to_write):
+    async def mock_write_data(store, path, data_to_write):
         """Mock version of write data."""
         # To ensure that the data can be serialized
-        _LOGGER.info("Writing data to %s: %s", store.key, data_to_write)
+        _LOGGER.debug("Writing data to %s: %s", store.key, data_to_write)
         raise_contains_mocks(data_to_write)
         data[store.key] = json.loads(json.dumps(data_to_write, cls=store._encoder))
 
@@ -1184,7 +1184,7 @@ def mock_storage(data=None):
         side_effect=mock_async_load,
         autospec=True,
     ), patch(
-        "homeassistant.helpers.storage.Store._write_data",
+        "homeassistant.helpers.storage.Store._async_write_data",
         side_effect=mock_write_data,
         autospec=True,
     ), patch(
@@ -1301,6 +1301,38 @@ def assert_lists_same(a, b):
         assert i in b
     for i in b:
         assert i in a
+
+
+_SENTINEL = object()
+
+
+class _HA_ANY:
+    """A helper object that compares equal to everything.
+
+    Based on unittest.mock.ANY, but modified to not show up in pytest's equality
+    assertion diffs.
+    """
+
+    _other = _SENTINEL
+
+    def __eq__(self, other):
+        """Test equal."""
+        self._other = other
+        return True
+
+    def __ne__(self, other):
+        """Test not equal."""
+        self._other = other
+        return False
+
+    def __repr__(self):
+        """Return repr() other to not show up in pytest quality diffs."""
+        if self._other is _SENTINEL:
+            return "<ANY>"
+        return repr(self._other)
+
+
+ANY = _HA_ANY()
 
 
 def raise_contains_mocks(val):

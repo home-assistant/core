@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "not_insteon_device": "Zisten\u00e9 zariadenie nie je zariadenie Insteon",
             "single_instance_allowed": "U\u017e je nakonfigurovan\u00fd. Mo\u017en\u00e1 len jedna konfigur\u00e1cia."
         },
         "error": {
@@ -17,7 +18,9 @@
                 "data": {
                     "host": "IP adresa",
                     "port": "Port"
-                }
+                },
+                "description": "Nakonfigurujte Insteon Hub Verzia 1 (pred rokom 2014).",
+                "title": "Insteon Hub Verzia 1"
             },
             "hubv2": {
                 "data": {
@@ -25,12 +28,22 @@
                     "password": "Heslo",
                     "port": "Port",
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
-                }
+                },
+                "description": "Nakonfigurujte Insteon Hub Verzia 2.",
+                "title": "Insteon Hub Verzia 2"
             },
             "plm": {
                 "data": {
                     "device": "Cesta k zariadeniu USB"
-                }
+                },
+                "description": "Nakonfigurujte Insteon PowerLink Modem (PLM).",
+                "title": "Insteon PLM"
+            },
+            "user": {
+                "data": {
+                    "modem_type": "Typ modemu."
+                },
+                "description": "Vyberte typ modemu Insteon."
             }
         }
     },
@@ -46,7 +59,8 @@
                     "address": "Adresa zariadenia (t. j. 1a2b3c)",
                     "cat": "Kateg\u00f3ria zariadenia (t. j. 0x10)",
                     "subcat": "Podkateg\u00f3ria zariadenia (napr. 0x0a)"
-                }
+                },
+                "description": "Pridanie prep\u00edsania zariadenia."
             },
             "add_x10": {
                 "data": {
@@ -68,8 +82,10 @@
             },
             "init": {
                 "data": {
+                    "add_override": "Pridanie prep\u00edsania zariadenia.",
                     "add_x10": "Pridajte zariadenie X10.",
                     "change_hub_config": "Zme\u0148te konfigur\u00e1ciu hubu.",
+                    "remove_override": "Odstr\u00e1nenie prep\u00edsania zariadenia.",
                     "remove_x10": "Odstr\u00e1\u0148te zariadenie X10."
                 }
             },

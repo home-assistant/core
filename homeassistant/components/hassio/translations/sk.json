@@ -17,7 +17,8 @@
             "title": "Syst\u00e9m nie je v poriadku \u2013 nastavenie zlyhalo"
         },
         "unhealthy_supervisor": {
-            "description": "Syst\u00e9m moment\u00e1lne nie je v poriadku, preto\u017ee pokus o aktualiz\u00e1ciu spr\u00e1vcu na najnov\u0161iu verziu zlyhal. Ak sa chcete dozvedie\u0165 viac a ako to opravi\u0165, pou\u017eite odkaz."
+            "description": "Syst\u00e9m moment\u00e1lne nie je v poriadku, preto\u017ee pokus o aktualiz\u00e1ciu spr\u00e1vcu na najnov\u0161iu verziu zlyhal. Ak sa chcete dozvedie\u0165 viac a ako to opravi\u0165, pou\u017eite odkaz.",
+            "title": "Syst\u00e9m nie je v poriadku \u2013 aktualiz\u00e1cia spr\u00e1vcu zlyhala"
         },
         "unhealthy_untrusted": {
             "description": "Syst\u00e9m je moment\u00e1lne nezdrav\u00fd, preto\u017ee zistil, \u017ee sa pou\u017e\u00edva ned\u00f4veryhodn\u00fd k\u00f3d alebo obr\u00e1zky. Ak sa chcete dozvedie\u0165 viac a ako to opravi\u0165, pou\u017eite odkaz.",
@@ -26,6 +27,10 @@
         "unsupported": {
             "description": "Syst\u00e9m nie je podporovan\u00fd z {reason}. Ak sa chcete dozvedie\u0165 viac a ako to opravi\u0165, pou\u017eite odkaz.",
             "title": "Nepodporovan\u00fd syst\u00e9m \u2013 {reason}"
+        },
+        "unsupported_apparmor": {
+            "description": "Syst\u00e9m nie je podporovan\u00fd, preto\u017ee AppArmor nefunguje spr\u00e1vne a doplnky s\u00fa spusten\u00e9 nechr\u00e1nen\u00fdm a nezabezpe\u010den\u00fdm sp\u00f4sobom. Ak sa chcete dozvedie\u0165 viac a ako to opravi\u0165, pou\u017eite odkaz.",
+            "title": "Nepodporovan\u00fd syst\u00e9m \u2013 probl\u00e9my s AppArmor"
         },
         "unsupported_cgroup_version": {
             "description": "Syst\u00e9m nie je podporovan\u00fd, preto\u017ee sa pou\u017e\u00edva nespr\u00e1vna verzia Docker CGroup. Ak chcete zisti\u0165 spr\u00e1vnu verziu a ako to opravi\u0165, pou\u017eite odkaz.",
@@ -80,12 +85,34 @@
             "title": "Nepodporovan\u00fd syst\u00e9m - Z\u00e1sady re\u0161tartu kontajnera"
         },
         "unsupported_software": {
+            "description": "Syst\u00e9m nie je podporovan\u00fd, preto\u017ee bol zisten\u00fd \u010fal\u0161\u00ed softv\u00e9r mimo ekosyst\u00e9mu Home Assistant. Ak sa chcete dozvedie\u0165 viac a ako to opravi\u0165, pou\u017eite odkaz.",
             "title": "Nepodporovan\u00fd syst\u00e9m \u2013 Nepodporovan\u00fd softv\u00e9r"
+        },
+        "unsupported_source_mods": {
+            "description": "Syst\u00e9m nie je podporovan\u00fd, preto\u017ee zdrojov\u00fd k\u00f3d spr\u00e1vcu bol upraven\u00fd. Ak sa chcete dozvedie\u0165 viac a ako to opravi\u0165, pou\u017eite odkaz.",
+            "title": "Nepodporovan\u00fd syst\u00e9m \u2013 \u00fapravy zdroja superv\u00edzora"
+        },
+        "unsupported_supervisor_version": {
+            "description": "Syst\u00e9m nie je podporovan\u00fd, preto\u017ee sa pou\u017e\u00edva zastaran\u00e1 verzia n\u00e1stroja Supervisor a automatick\u00e1 aktualiz\u00e1cia bola zak\u00e1zan\u00e1. Ak sa chcete dozvedie\u0165 viac a ako to opravi\u0165, pou\u017eite odkaz.",
+            "title": "Nepodporovan\u00fd syst\u00e9m - Verzia spr\u00e1vcu"
+        },
+        "unsupported_systemd": {
+            "description": "Syst\u00e9m nie je podporovan\u00fd, preto\u017ee Systemd ch\u00fdba, je neakt\u00edvny alebo je nespr\u00e1vne nakonfigurovan\u00fd. Ak sa chcete dozvedie\u0165 viac a ako to opravi\u0165, pou\u017eite odkaz.",
+            "title": "Nepodporovan\u00fd syst\u00e9m \u2013 probl\u00e9my so syst\u00e9mom Systemd"
+        },
+        "unsupported_systemd_journal": {
+            "description": "Syst\u00e9m nie je podporovan\u00fd, preto\u017ee Systemd Journal a/alebo slu\u017eba br\u00e1ny ch\u00fdba, je neakt\u00edvna alebo je nespr\u00e1vne nakonfigurovan\u00e1. Ak sa chcete dozvedie\u0165 viac a ako to opravi\u0165, pou\u017eite odkaz.",
+            "title": "Nepodporovan\u00fd syst\u00e9m \u2013 probl\u00e9my so Systemd Journal"
+        },
+        "unsupported_systemd_resolved": {
+            "description": "Syst\u00e9m nie je podporovan\u00fd, preto\u017ee Systemd Resolved ch\u00fdba, je neakt\u00edvny alebo je nespr\u00e1vne nakonfigurovan\u00fd. Ak sa chcete dozvedie\u0165 viac a ako to opravi\u0165, pou\u017eite odkaz.",
+            "title": "Nepodporovan\u00fd syst\u00e9m \u2013 Probl\u00e9my vyrie\u0161en\u00e9 syst\u00e9mom Systemd"
         }
     },
     "system_health": {
         "info": {
             "agent_version": "Verzia agenta",
+            "board": "Board",
             "disk_total": "Disk celkovo",
             "disk_used": "Disk pou\u017eit\u00fd",
             "docker_version": "Verzia Dockera",
