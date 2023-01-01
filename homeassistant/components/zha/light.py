@@ -47,6 +47,7 @@ from .core.const import (
     CONF_DEFAULT_LIGHT_TRANSITION,
     CONF_ENABLE_ENHANCED_LIGHT_TRANSITION,
     CONF_ENABLE_LIGHT_TRANSITIONING_FLAG,
+    CONF_GROUP_MEMBERS_ASSUME_STATE,
     DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
@@ -79,6 +80,7 @@ PARALLEL_UPDATES = 0
 SIGNAL_LIGHT_GROUP_STATE_CHANGED = "zha_light_group_state_changed"
 SIGNAL_LIGHT_GROUP_TRANSITION_START = "zha_light_group_transition_start"
 SIGNAL_LIGHT_GROUP_TRANSITION_FINISHED = "zha_light_group_transition_finished"
+SIGNAL_LIGHT_GROUP_ASSUME_GROUP_STATE = "zha_light_group_assume_group_state"
 DEFAULT_MIN_TRANSITION_MANUFACTURERS = {"sengled"}
 
 COLOR_MODES_GROUP_LIGHT = {ColorMode.COLOR_TEMP, ColorMode.XY}
@@ -391,6 +393,28 @@ class BaseLight(LogMixin, light.LightEntity):
         self._off_brightness = None
         self.debug("turned on: %s", t_log)
         self.async_write_ha_state()
+
+        # TODO: will fail pylint for good reason / move somewhere else
+        # The reason it's currently here is because it's after group state was written to HA state,
+        # and the coordinator successfully executed all broadcast requests here (no "NETWORK_BUSY" for example).
+        # We could probably move this to the overriding "async_turn_on" method in LightGroup though to clean this up,
+        # but we can't be sure that HA state was written to for the group.
+        # So if only one call is successful (level worked, color didn't), the _attr_brightness will be correct,
+        # but HA state for the group likely won't be.
+        # (Rare case though and possibly also a bug that we don't call async_write_ha_state() if turn_on
+        # needs multiple Zigbee calls and one works, one fails?)
+        if isinstance(self, LightGroup) and self._zha_config_group_members_assume_state:
+            async_dispatcher_send(
+                self.hass,
+                SIGNAL_LIGHT_GROUP_ASSUME_GROUP_STATE,
+                {"entity_ids": self._entity_ids},
+                self._attr_state,
+                self._attr_brightness,
+                self._attr_color_mode,
+                self._attr_color_temp,
+                self._attr_xy_color,
+                self._attr_hs_color,
+            )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
@@ -736,6 +760,35 @@ class Light(BaseLight, ZhaEntity):
             signal_override=True,
         )
 
+        @callback
+        def assume_group_state(
+            signal, state, brightness, color_mode, color_temp, xy_color, hs_color
+        ):
+            """Handle an assume group state event from a group."""
+            if self.entity_id in signal["entity_ids"]:
+                self.debug("member assuming group state")
+
+                self._attr_state = state
+                if brightness_supported(self._attr_supported_color_modes):
+                    self._attr_brightness = brightness
+                if color_mode in self._attr_supported_color_modes:
+                    self._attr_color_mode = color_mode
+                if ColorMode.COLOR_TEMP in self._attr_supported_color_modes:
+                    self._attr_color_temp = color_temp
+                if ColorMode.XY in self._attr_supported_color_modes:
+                    self._attr_xy_color = xy_color
+                if ColorMode.HS in self._attr_supported_color_modes:
+                    self._attr_hs_color = hs_color
+
+                self.async_write_ha_state()
+
+        self.async_accept_signal(
+            None,
+            SIGNAL_LIGHT_GROUP_ASSUME_GROUP_STATE,
+            assume_group_state,
+            signal_override=True,
+        )
+
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect entity object when removed."""
         assert self._cancel_refresh_handle
@@ -765,7 +818,7 @@ class Light(BaseLight, ZhaEntity):
 
     async def async_get_state(self) -> None:
         """Attempt to retrieve the state from the light."""
-        if not self._attr_available:
+        if not self._attr_available or True:
             return
         self.debug("polling current state")
         if self._on_off_channel:
@@ -950,6 +1003,12 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             ZHA_OPTIONS,
             CONF_ALWAYS_PREFER_XY_COLOR_MODE,
             True,
+        )
+        self._zha_config_group_members_assume_state = async_get_zha_config_value(
+            zha_device.gateway.config_entry,
+            ZHA_OPTIONS,
+            CONF_GROUP_MEMBERS_ASSUME_STATE,
+            False,
         )
         self._zha_config_enhanced_light_transition = False
         self._attr_color_mode = None
