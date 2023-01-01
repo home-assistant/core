@@ -30,6 +30,12 @@ BASE_CUSTOM_CONFIGURATION = {
             },
             {
                 "type": "boolean",
+                "name": "group_members_assume_state",
+                "required": True,
+                "default": False,
+            },
+            {
+                "type": "boolean",
                 "name": "enable_identify_on_join",
                 "required": True,
                 "default": True,
@@ -56,6 +62,7 @@ BASE_CUSTOM_CONFIGURATION = {
             "default_light_transition": 0,
             "light_transitioning_flag": True,
             "always_prefer_xy_color_mode": True,
+            "group_members_assume_state": False,
             "enable_identify_on_join": True,
             "consider_unavailable_mains": 7200,
             "consider_unavailable_battery": 21600,
@@ -90,6 +97,12 @@ CONFIG_WITH_ALARM_OPTIONS = {
                 "name": "always_prefer_xy_color_mode",
                 "required": True,
                 "default": True,
+            },
+            {
+                "type": "boolean",
+                "name": "group_members_assume_state",
+                "required": True,
+                "default": False,
             },
             {
                 "type": "boolean",
@@ -140,6 +153,7 @@ CONFIG_WITH_ALARM_OPTIONS = {
             "default_light_transition": 0,
             "light_transitioning_flag": True,
             "always_prefer_xy_color_mode": True,
+            "group_members_assume_state": False,
             "enable_identify_on_join": True,
             "consider_unavailable_mains": 7200,
             "consider_unavailable_battery": 21600,
