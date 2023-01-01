@@ -40,7 +40,7 @@ async def async_setup_entry(
 
 
 class HomelySensorEntity(CoordinatorEntity, SensorEntity):
-    """Abstract binary sensor class."""
+    """Abstract sensor class."""
 
     def __init__(
         self,
