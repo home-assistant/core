@@ -30,7 +30,6 @@ from . import PurpleAirEntity
 from .const import CONF_SENSOR_INDICES, DOMAIN
 from .coordinator import PurpleAirDataUpdateCoordinator
 
-CONCENTRATION_IAQ = "iaq"
 CONCENTRATION_PARTICLES_PER_100_MILLILITERS = f"particles/100{UnitOfVolume.MILLILITERS}"
 
 
