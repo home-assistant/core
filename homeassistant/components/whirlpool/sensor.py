@@ -144,7 +144,7 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
     ),
     WhirlpoolSensorEntityDescription(
         key="DispenseLevel",
-        name="Dispense Level",
+        name="Detergent Level",
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=True,
         icon=ICON_W,
