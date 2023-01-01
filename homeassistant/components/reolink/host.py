@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 import aiohttp
 from reolink_ip.api import Host
