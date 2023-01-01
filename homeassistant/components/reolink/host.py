@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, Mapping
 
 import aiohttp
 from reolink_ip.api import Host
@@ -28,8 +28,8 @@ class ReolinkHost:
     def __init__(
         self,
         hass: HomeAssistant,
-        config: dict[str, Any],
-        options: dict[str, Any],
+        config: Mapping,
+        options: Mapping,
     ) -> None:
         """Initialize Reolink Host. Could be either NVR, or Camera."""
         self._hass: HomeAssistant = hass
