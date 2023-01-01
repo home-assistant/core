@@ -1,15 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado"
         },
         "error": {
-            "unknown": "Unexpected error"
+            "unknown": "Erro inesperado"
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "Host"
+                    "host": "Nome do host"
                 }
             }
         }
