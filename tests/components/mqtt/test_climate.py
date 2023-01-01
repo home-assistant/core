@@ -17,10 +17,10 @@ from homeassistant.components.climate import (
     ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    DEFAULT_MIN_HUMIDITY,
-    DEFAULT_MIN_TEMP,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_HUMIDITY,
+    DEFAULT_MIN_TEMP,
     PRESET_ECO,
     ClimateEntityFeature,
     HVACAction,
@@ -508,9 +508,7 @@ async def test_set_target_humidity(hass, mqtt_mock_entry_with_yaml_config):
     await common.async_set_humidity(hass, humidity=82, entity_id=ENTITY_CLIMATE)
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("humidity") == 82
-    mqtt_mock.async_publish.assert_called_once_with(
-        "humidity-topic", "82.0", 0, False
-    )
+    mqtt_mock.async_publish.assert_called_once_with("humidity-topic", "82", 0, False)
     mqtt_mock.async_publish.reset_mock()
 
 
@@ -664,9 +662,7 @@ async def test_set_target_temperature_low_high_optimistic(
     assert state.attributes.get("target_temp_high") == 25
 
 
-async def test_set_target_humidity_pessimistic(
-        hass, mqtt_mock_entry_with_yaml_config
-):
+async def test_set_target_humidity_pessimistic(hass, mqtt_mock_entry_with_yaml_config):
     """Test setting the target humidity."""
     config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
     config["climate"]["target_humidity_state_topic"] = "humidity-state"
@@ -1194,7 +1190,7 @@ async def test_set_and_templates(hass, mqtt_mock_entry_with_yaml_config, caplog)
     # Humidity
     await common.async_set_humidity(hass, humidity=82, entity_id=ENTITY_CLIMATE)
     mqtt_mock.async_publish.assert_called_once_with(
-        "humidity-topic", "humidity: 82.0", 0, False
+        "humidity-topic", "humidity: 82", 0, False
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get(ENTITY_CLIMATE)

@@ -13,10 +13,10 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    DEFAULT_MIN_HUMIDITY,
-    DEFAULT_MIN_TEMP,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_HUMIDITY,
+    DEFAULT_MIN_TEMP,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -255,8 +255,12 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_HUMIDITY_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_HUMIDITY_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_HUMIDITY_INITIAL, default=50): cv.positive_int,
-        vol.Optional(CONF_HUMIDITY_MIN, default=DEFAULT_MIN_HUMIDITY): vol.Coerce(float),
-        vol.Optional(CONF_HUMIDITY_MAX, default=DEFAULT_MAX_HUMIDITY): vol.Coerce(float),
+        vol.Optional(CONF_HUMIDITY_MIN, default=DEFAULT_MIN_HUMIDITY): vol.Coerce(
+            float
+        ),
+        vol.Optional(CONF_HUMIDITY_MAX, default=DEFAULT_MAX_HUMIDITY): vol.Coerce(
+            float
+        ),
         vol.Optional(CONF_HUMIDITY_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_HUMIDITY_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_MODE_COMMAND_TEMPLATE): cv.template,
@@ -517,7 +521,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
             support |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
 
         if (self._topic[CONF_HUMIDITY_STATE_TOPIC] is not None) or (
-                self._topic[CONF_HUMIDITY_COMMAND_TOPIC] is not None
+            self._topic[CONF_HUMIDITY_COMMAND_TOPIC] is not None
         ):
             support |= ClimateEntityFeature.TARGET_HUMIDITY
 
