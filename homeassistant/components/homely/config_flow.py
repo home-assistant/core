@@ -36,14 +36,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         locations: list[Location] = await hass.async_add_executor_job(
             homely.get_locations
         )
+    except TimeoutError as ex:
+        raise CannotConnect from ex
     except ConnectionFailedException as ex:
         raise InvalidAuth from ex
-    # If you cannot connect:
-    # throw CannotConnect
-    # If the authentication is wrong:
-    # InvalidAuth
 
-    # Return info that you want to store in the config entry.
     return {
         "username": data["username"],
         "password": data["password"],
@@ -52,7 +49,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
 
 class HomelyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for homely."""
+    """Handle the config flow for homely."""
 
     VERSION = 1
     locations: list[Location] = []
@@ -94,31 +91,24 @@ class HomelyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             location_name: str = user_input["location"]
-            location_id = next(
+            location = next(
                 filter(
                     lambda location: (location.name == location_name),
                     self.locations,
                 )
-            ).location_id
-            self.data["location_id"] = location_id
+            )
+            self.data["location_id"] = location.location_id
             # Do not allow multiple instances for the same location
-            await self.async_set_unique_id(location_id)
+            await self.async_set_unique_id(location.location_id)
             self._abort_if_unique_id_configured()
-            return self.async_create_entry(title="Homely", data=self.data)
+            return self.async_create_entry(
+                title=f"Homely {location.name}", data=self.data
+            )
         schema = vol.Schema(
             {
                 vol.Required(
                     "location",
                 ): vol.In([location.name for location in self.locations])
-                # selector.SelectSelector(
-                #     selector.SelectSelectorConfig(
-                #         options=[
-                #             (location.name, location.location_id)
-                #             for location in self.locations
-                #         ],
-                #         mode=selector.SelectSelectorMode.DROPDOWN,
-                #     )
-                # )
             }
         )
         return self.async_show_form(step_id="location", data_schema=schema, errors={})
