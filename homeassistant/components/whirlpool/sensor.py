@@ -133,7 +133,7 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
     ),
     WhirlpoolSensorEntityDescription(
         key="timeremaining",
-        name="Time Remaining",
+        name="End Time",
         device_class=SensorDeviceClass.TIMESTAMP,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="s",
@@ -145,7 +145,6 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
     WhirlpoolSensorEntityDescription(
         key="DispenseLevel",
         name="Dispense Level",
-        device_class=SensorDeviceClass.VOLUME,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=True,
         icon=ICON_W,
