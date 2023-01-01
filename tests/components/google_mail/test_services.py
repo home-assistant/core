@@ -8,7 +8,7 @@ from homeassistant import config_entries
 from homeassistant.components.google_mail import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from .conftest import BUILD, SENSOR, ComponentSetup
+from .conftest import BUILD, SENSOR, TOKEN, ComponentSetup
 
 
 async def test_set_vacation(
@@ -63,7 +63,7 @@ async def test_reauth_trigger(
     """Test reauth is triggered after a refresh error during service call."""
     await setup_integration()
 
-    with patch(BUILD, side_effect=RefreshError), pytest.raises(RefreshError):
+    with patch(TOKEN, side_effect=RefreshError), pytest.raises(RefreshError):
         await hass.services.async_call(
             DOMAIN,
             "set_vacation",

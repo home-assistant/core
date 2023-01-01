@@ -29,6 +29,7 @@ SCOPES = [
 ]
 SENSOR = "sensor.example_gmail_com_vacation_end_date"
 TITLE = "example@gmail.com"
+TOKEN = "homeassistant.components.google_mail.api.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid"
 
 
 @fixture(name="scopes")

@@ -1,13 +1,11 @@
 """API for Google Mail bound to Home Assistant OAuth."""
 from aiohttp import ClientSession
-from aiohttp.client_exceptions import ClientError, ClientResponseError
 from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
 from google.oauth2.utils import OAuthClientAuthHandler
 from googleapiclient.discovery import Resource, build
 
 from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
 
 
@@ -30,23 +28,14 @@ class AsyncConfigEntryAuth(OAuthClientAuthHandler):
 
     async def check_and_refresh_token(self) -> str:
         """Check the token."""
-        try:
-            await self.oauth_session.async_ensure_token_valid()
-        except ClientResponseError as err:
-            if 400 <= err.status < 500:
-                raise ConfigEntryAuthFailed(
-                    "OAuth session is not valid, reauth required"
-                ) from err
-            raise ConfigEntryNotReady from err
-        except ClientError as err:
-            raise ConfigEntryNotReady from err
+        await self.oauth_session.async_ensure_token_valid()
         return self.access_token
 
     async def get_resource(self) -> Resource:
         """Get current resource."""
-        credentials = Credentials(await self.check_and_refresh_token())
         try:
-            return build("gmail", "v1", credentials=credentials)
+            credentials = Credentials(await self.check_and_refresh_token())
         except RefreshError as ex:
             self.oauth_session.config_entry.async_start_reauth(self.oauth_session.hass)
             raise ex
+        return build("gmail", "v1", credentials=credentials)
