@@ -2,13 +2,28 @@
   "config": {
     "step": {
       "user": {
-        "title": "Fill in your Homely login information. This is the same as used in the app.",
+        "title": "Authentication",
+        "description": "Fill in your Homely login information. This is the same as used in the app.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "location": {
+        "title": "Location",
+        "description": "Select your desired location",
+        "data": {
           "location": "[%key:common::config_flow::data::location%]"
         }
       }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   }
 }

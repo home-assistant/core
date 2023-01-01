@@ -4,14 +4,18 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from homelypy.devices import Location
+from homelypy.homely import (
+    AuthenticationFailedException,
+    ConnectionFailedException,
+    Homely,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
-from homelypy.devices import Location
-from homelypy.homely import ConnectionFailedException, Homely
 
 from .const import DOMAIN
 
@@ -36,9 +40,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         locations: list[Location] = await hass.async_add_executor_job(
             homely.get_locations
         )
-    except TimeoutError as ex:
+    except (TimeoutError, ConnectionFailedException) as ex:
         raise CannotConnect from ex
-    except ConnectionFailedException as ex:
+    except AuthenticationFailedException as ex:
         raise InvalidAuth from ex
 
     return {
@@ -90,10 +94,10 @@ class HomelyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Choose the correct location from the list provided by Homely."""
 
         if user_input is not None:
-            location_name: str = user_input["location"]
+            location_id: str = user_input["location"]
             location = next(
                 filter(
-                    lambda location: (location.name == location_name),
+                    lambda location: (location.location_id == location_id),
                     self.locations,
                 )
             )
@@ -106,9 +110,9 @@ class HomelyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         schema = vol.Schema(
             {
-                vol.Required(
-                    "location",
-                ): vol.In([location.name for location in self.locations])
+                vol.Required("location",): vol.In(
+                    {location.location_id: location.name for location in self.locations}
+                )
             }
         )
         return self.async_show_form(step_id="location", data_schema=schema, errors={})

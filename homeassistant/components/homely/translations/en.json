@@ -1,21 +1,29 @@
 {
     "config": {
-        "abort": {
-            "already_configured": "Account is already configured",
-            "already_in_progress": "Configuration flow is already in progress",
-            "authorize_url_timeout": "Timeout generating authorize URL.",
-            "missing_configuration": "The component is not configured. Please follow the documentation.",
-            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
-            "oauth_error": "Received invalid token data.",
-            "user_rejected_authorize": "Account linking rejected: {error}"
+      "step": {
+        "user": {
+          "title": "Homely",
+          "description": "Fill in your Homely login information. This is the same as used in the app.",
+          "data": {
+            "username": "Username",
+            "password": "Password"
+          }
         },
-        "create_entry": {
-            "default": "Successfully authenticated"
-        },
-        "step": {
-            "pick_implementation": {
-                "title": "Pick Authentication Method"
+        "location":{
+            "title":"Homely location",
+            "description":"Select your desired location",
+            "data":{
+              "location": "Homely location"
             }
         }
+      },
+      "error": {
+        "cannot_connect": "Cannot connect to the Homely service.",
+        "invalid_auth": "Failed to authenticate with the Homely service.",
+        "unknown": "An unknown error occurred."
+      },
+      "abort": {
+        "already_configured": "This Homely location has already been configured."
+      }
     }
-}
+  }
