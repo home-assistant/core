@@ -517,8 +517,8 @@ async def test_option_track_clients(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("device_tracker.wireless_client")
-    assert hass.states.get("device_tracker.wired_client")
+    assert not hass.states.get("device_tracker.wireless_client")
+    assert not hass.states.get("device_tracker.wired_client")
     assert hass.states.get("device_tracker.device")
 
 
@@ -586,7 +586,7 @@ async def test_option_track_wired_clients(
     await hass.async_block_till_done()
 
     assert hass.states.get("device_tracker.wireless_client")
-    assert hass.states.get("device_tracker.wired_client")
+    assert not hass.states.get("device_tracker.wired_client")
     assert hass.states.get("device_tracker.device")
 
 
@@ -704,6 +704,11 @@ async def test_option_ssid_filter(
     mock_unifi_websocket(message=MessageKey.CLIENT, data=client_on_ssid2)
     await hass.async_block_till_done()
 
+    new_time = dt_util.utcnow() + controller.option_detection_time
+    with patch("homeassistant.util.dt.utcnow", return_value=new_time):
+        async_fire_time_changed(hass, new_time)
+        await hass.async_block_till_done()
+
     # SSID filter marks client as away
     assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
 
@@ -723,11 +728,11 @@ async def test_option_ssid_filter(
     await hass.async_block_till_done()
 
     assert hass.states.get("device_tracker.client").state == STATE_HOME
-    assert hass.states.get("device_tracker.client_on_ssid2").state == STATE_HOME
+    assert not hass.states.get("device_tracker.client_on_ssid2")
 
     # Time pass to mark client as away
 
-    new_time = dt_util.utcnow() + controller.option_detection_time
+    new_time += controller.option_detection_time
     with patch("homeassistant.util.dt.utcnow", return_value=new_time):
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()
@@ -739,7 +744,7 @@ async def test_option_ssid_filter(
     await hass.async_block_till_done()
 
     # Client won't go away until after next update
-    assert hass.states.get("device_tracker.client_on_ssid2").state == STATE_HOME
+    assert not hass.states.get("device_tracker.client_on_ssid2")
 
     # Trigger update to get client marked as away
     client_on_ssid2["last_seen"] += 1
@@ -753,7 +758,7 @@ async def test_option_ssid_filter(
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()
 
-    assert hass.states.get("device_tracker.client_on_ssid2").state == STATE_NOT_HOME
+    assert not hass.states.get("device_tracker.client_on_ssid2")
 
 
 async def test_wireless_client_go_wired_issue(
@@ -788,7 +793,7 @@ async def test_wireless_client_go_wired_issue(
     assert client_state.attributes["is_wired"] is False
 
     # Trigger wired bug
-    client["last_seen"] += 1
+    client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
     client["is_wired"] = True
     mock_unifi_websocket(message=MessageKey.CLIENT, data=client)
     await hass.async_block_till_done()
@@ -870,7 +875,7 @@ async def test_option_ignore_wired_bug(
     # Wired bug in effect
     client_state = hass.states.get("device_tracker.client")
     assert client_state.state == STATE_HOME
-    assert client_state.attributes["is_wired"] is True
+    assert client_state.attributes["is_wired"] is False
 
     # pass time
     new_time = dt_util.utcnow() + controller.option_detection_time
@@ -881,7 +886,7 @@ async def test_option_ignore_wired_bug(
     # Timer marks client as away
     client_state = hass.states.get("device_tracker.client")
     assert client_state.state == STATE_NOT_HOME
-    assert client_state.attributes["is_wired"] is True
+    assert client_state.attributes["is_wired"] is False
 
     # Mark client as connected again
     client["last_seen"] += 1
@@ -891,7 +896,7 @@ async def test_option_ignore_wired_bug(
     # Ignoring wired bug allows client to go home again even while affected
     client_state = hass.states.get("device_tracker.client")
     assert client_state.state == STATE_HOME
-    assert client_state.attributes["is_wired"] is True
+    assert client_state.attributes["is_wired"] is False
 
     # Make client wireless
     client["last_seen"] += 1
@@ -1017,9 +1022,9 @@ async def test_dont_track_clients(
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 3
-    assert hass.states.get("device_tracker.wireless_client")
-    assert hass.states.get("device_tracker.wired_client")
+    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
+    assert not hass.states.get("device_tracker.wireless_client")
+    assert not hass.states.get("device_tracker.wired_client")
     assert hass.states.get("device_tracker.device")
 
 
@@ -1109,6 +1114,6 @@ async def test_dont_track_wired_clients(
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
+    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
     assert hass.states.get("device_tracker.wireless_client")
-    assert hass.states.get("device_tracker.wired_client")
+    assert not hass.states.get("device_tracker.wired_client")
