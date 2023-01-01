@@ -865,9 +865,9 @@ def _migrate_columns_to_timestamp(
     hass: HomeAssistant, session: Session, engine: Engine
 ) -> None:
     """Migrate columns to use timestamp."""
-    # Migrate all data in Events.time_fired to Events.time_fired_ts and wipe Events.time_fired
-    # Migrate all data in States.last_updated to States.last_updated_ts and wipe States.last_updated
-    # Migrate all data in States.last_changed to States.last_changed_ts and wipe States.last_changed
+    # Migrate all data in Events.time_fired to Events.time_fired_ts
+    # Migrate all data in States.last_updated to States.last_updated_ts
+    # Migrate all data in States.last_changed to States.last_changed_ts
     connection = session.connection()
     if engine.dialect.name == SupportedDialect.SQLITE:
         connection.execute(
