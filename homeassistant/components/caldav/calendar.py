@@ -343,4 +343,5 @@ class WebDavCalendarData:
 
         else:
             enddate = obj.dtstart.value + timedelta(days=1)
+
         return enddate
