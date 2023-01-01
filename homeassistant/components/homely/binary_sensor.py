@@ -1,6 +1,8 @@
 """Sensors provided by Homely."""
 import logging
 
+from homelypy.devices import Device, MotionSensorMini, SmokeAlarm, State, WindowSensor
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -12,7 +14,6 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
-from homelypy.devices import Device, MotionSensorMini, SmokeAlarm, State, WindowSensor
 
 from .const import DOMAIN
 from .homely_device import HomelyDevice, HomelyHome
@@ -43,8 +44,6 @@ async def async_setup_entry(
 
 class HomelyBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
     """Abstract binary sensor class."""
-
-    _attr_name = "Basic"
 
     def __init__(
         self,

@@ -1,6 +1,8 @@
 """Sensors provided by Homely."""
 import logging
 
+from homelypy.devices import Device, State
+
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -14,7 +16,6 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
-from homelypy.devices import Device, State
 
 from .const import DOMAIN
 from .homely_device import HomelyDevice, HomelyHome
@@ -40,8 +41,6 @@ async def async_setup_entry(
 
 class HomelySensorEntity(CoordinatorEntity, SensorEntity):
     """Abstract binary sensor class."""
-
-    _attr_name = "Basic"
 
     def __init__(
         self,
