@@ -557,7 +557,7 @@ fritzconnection==1.10.3
 gTTS==2.2.4
 
 # homeassistant.components.google_assistant_sdk
-gassist-text==0.0.5
+gassist-text==0.0.7
 
 # homeassistant.components.google
 gcal-sync==4.1.0
@@ -1097,7 +1097,7 @@ pycoolmasternet-async==0.1.2
 pydaikin==2.8.0
 
 # homeassistant.components.deconz
-pydeconz==105
+pydeconz==106
 
 # homeassistant.components.dexcom
 pydexcom==0.2.3
@@ -1591,6 +1591,9 @@ sensorpush-ble==1.5.2
 
 # homeassistant.components.sentry
 sentry-sdk==1.12.1
+
+# homeassistant.components.sfr_box
+sfrbox-api==0.0.1
 
 # homeassistant.components.sharkiq
 sharkiq==0.0.1
