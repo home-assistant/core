@@ -59,12 +59,12 @@
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "description": "El servei `unifiprotect.set_doorbell_message` est\u00e0 obsolet, ha canviat per la nova entitat Doorbell Text que s'afegeix a cada dispositiu Doorbell. S'eliminar\u00e0 a la versi\u00f3 2023.3.0. Actualitza-ho perqu\u00e8 utilitzi el [servei `text.set_value`]({link}).",
-                        "title": "set_doorbell_message est\u00e0 obsolet"
+                        "description": "El servei `unifiprotect.set_doorbell_message` \u00e9s obsolet, ha canviat per la nova entitat Doorbell Text que s'afegeix a cada dispositiu Doorbell. S'eliminar\u00e0 a la versi\u00f3 2023.3.0. Actualitzeu-ho perqu\u00e8 utilitzi el [servei `text.set_value`]({link}).",
+                        "title": "El set_doorbell_message \u00e9s obsolet"
                     }
                 }
             },
-            "title": "set_doorbell_message est\u00e0 obsolet"
+            "title": "El set_doorbell_message \u00e9s obsolet"
         },
         "ea_setup_failed": {
             "description": "Est\u00e0s utilitzant la versi\u00f3 v{version} d'UniFi Protect, que \u00e9s una versi\u00f3 d'acc\u00e9s anticipat. S'ha produ\u00eft un error irrecuperable en intentar carregar la integraci\u00f3. [Baixa a una versi\u00f3 estable](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) d'UniFi Protect per continuar utilitzant la integraci\u00f3. \n\n Error: {error}",

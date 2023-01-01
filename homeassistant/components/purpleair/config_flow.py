@@ -74,8 +74,7 @@ def async_get_nearby_sensors_options(
     """Return a set of nearby sensors as SelectOptionDict objects."""
     return [
         SelectOptionDict(
-            value=str(result.sensor.sensor_index),
-            label=f"{result.sensor.name} ({round(result.distance, 1)} km away)",
+            value=str(result.sensor.sensor_index), label=cast(str, result.sensor.name)
         )
         for result in nearby_sensor_results
     ]
@@ -127,11 +126,11 @@ def async_get_sensor_index(
     Note that this method expects that there will always be a single sensor index per
     DeviceEntry.
     """
-    [sensor_index] = [
+    sensor_index = next(
         sensor_index
         for sensor_index in config_entry.options[CONF_SENSOR_INDICES]
         if (DOMAIN, str(sensor_index)) in device_entry.identifiers
-    ]
+    )
 
     return cast(int, sensor_index)
 
