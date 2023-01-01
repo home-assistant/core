@@ -954,7 +954,7 @@ async def test_get_full_significant_states_past_year_2038(
 ):
     """Test we can store times past year 2038."""
     await async_setup_recorder_instance(hass, {})
-    past_2038_time = dt_util.parse_datetime("2039-01-19 03:14:07.555000-00:00")
+    past_2038_time = dt_util.parse_datetime("2039-01-19 03:14:07.555555-00:00")
 
     with freeze_time(past_2038_time):
         hass.states.async_set("sensor.one", "on", {"attr": "original"})
