@@ -104,6 +104,7 @@ async def test_setup_params(hass, mqtt_mock_entry_with_yaml_config):
 
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("temperature") == 21
+    assert state.attributes.get("humidity") == 50
     assert state.attributes.get("fan_mode") == "low"
     assert state.attributes.get("swing_mode") == "off"
     assert state.state == "off"

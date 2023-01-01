@@ -248,6 +248,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         ): cv.ensure_list,
         vol.Optional(CONF_FAN_MODE_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_FAN_MODE_STATE_TOPIC): valid_subscribe_topic,
+        vol.Optional(CONF_HUMIDITY_INITIAL, default=50): cv.positive_int,
         vol.Optional(CONF_HUMIDITY_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_HUMIDITY_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_MODE_COMMAND_TEMPLATE): cv.template,
@@ -439,6 +440,9 @@ class MqttClimate(MqttEntity, ClimateEntity):
             self._attr_target_temperature_low = config[CONF_TEMP_INITIAL]
         if self._topic[CONF_TEMP_HIGH_STATE_TOPIC] is None:
             self._attr_target_temperature_high = config[CONF_TEMP_INITIAL]
+
+        if self._topic[CONF_HUMIDITY_STATE_TOPIC] is None:
+            self._attr_target_humidity = config[CONF_HUMIDITY_INITIAL]
 
         if self._topic[CONF_FAN_MODE_STATE_TOPIC] is None:
             self._attr_fan_mode = FAN_LOW
