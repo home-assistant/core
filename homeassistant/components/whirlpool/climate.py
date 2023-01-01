@@ -104,6 +104,7 @@ class AirConEntity(ClimateEntity):
     _attr_target_temperature_step = SUPPORTED_TARGET_TEMPERATURE_STEP
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, hass, said, name, backend_selector: BackendSelector, auth: Auth):
         """Initialize the entity."""
@@ -113,7 +114,6 @@ class AirConEntity(ClimateEntity):
         self._name = name if name is not None else said
         self._attr_unique_id = said
         self._said = said
-        self._attr_has_entity_name = True
 
     @property
     def device_info(self) -> DeviceInfo | None:
