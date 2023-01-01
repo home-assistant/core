@@ -12,7 +12,7 @@ import async_timeout
 from reolink_ip.exceptions import ApiError, InvalidContentTypeError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -22,7 +22,7 @@ from .host import ReolinkHost
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["camera"]
+PLATFORMS = [Platform.CAMERA]
 DEVICE_UPDATE_INTERVAL = 60
 
 
