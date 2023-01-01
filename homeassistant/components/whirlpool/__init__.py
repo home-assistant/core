@@ -49,13 +49,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         backend_selector,
     )
 
-    if appliances_manager.washer_dryers or appliances_manager.aircons:
-
-        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-        return True
-
-    _LOGGER.debug("No Appliances found")
-    return False
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
