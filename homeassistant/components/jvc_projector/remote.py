@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN as JVC_DOMAIN
+from .const import DOMAIN
 from .entity import JvcProjectorEntity
 
 COMMANDS = {
@@ -46,7 +46,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the JVC Projector platform from a config entry."""
-    coordinator = hass.data[JVC_DOMAIN][entry.entry_id]
+    coordinator = hass.data[DOMAIN][entry.entry_id]
     entity = JvcProjectorRemote(coordinator)
     async_add_entities([entity], True)
 
