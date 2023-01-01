@@ -313,14 +313,17 @@ def create_state_changed_event_from_old_new(
     row = collections.namedtuple(
         "Row",
         [
-            "event_type" "event_data" "time_fired" "time_fired_ts",
-            "context_id"
-            "context_user_id"
-            "context_parent_id"
-            "state"
-            "entity_id"
-            "domain"
-            "attributes"
+            "event_type",
+            "event_data",
+            "time_fired",
+            "time_fired_ts",
+            "context_id",
+            "context_user_id",
+            "context_parent_id",
+            "state",
+            "entity_id",
+            "domain",
+            "attributes",
             "state_id",
             "old_state_id",
             "shared_attrs",
