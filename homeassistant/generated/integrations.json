@@ -4740,6 +4740,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "sfr_box": {
+      "name": "SFR Box",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "sharkiq": {
       "name": "Shark IQ",
       "integration_type": "hub",

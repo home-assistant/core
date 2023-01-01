@@ -40,7 +40,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.34.1
+PySwitchbot==0.36.1
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -288,7 +288,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.5
 
 # homeassistant.components.unifi
-aiounifi==42
+aiounifi==43
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -741,7 +741,7 @@ fritzconnection==1.10.3
 gTTS==2.2.4
 
 # homeassistant.components.google_assistant_sdk
-gassist-text==0.0.5
+gassist-text==0.0.7
 
 # homeassistant.components.google
 gcal-sync==4.1.0
@@ -794,7 +794,7 @@ google-cloud-pubsub==2.13.11
 google-cloud-texttospeech==2.12.3
 
 # homeassistant.components.nest
-google-nest-sdm==2.1.0
+google-nest-sdm==2.1.2
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -1119,7 +1119,7 @@ moat-ble==0.1.1
 moehlenhoff-alpha2==1.2.1
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.13
+motionblinds==0.6.14
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.12
@@ -1542,7 +1542,7 @@ pydaikin==2.8.0
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==105
+pydeconz==106
 
 # homeassistant.components.delijn
 pydelijn==1.0.0
@@ -1560,7 +1560,7 @@ pydroid-ipcam==2.0.0
 pyebox==1.1.4
 
 # homeassistant.components.econet
-pyeconet==0.1.15
+pyeconet==0.1.17
 
 # homeassistant.components.edimax
 pyedimax==0.2.1
@@ -2220,7 +2220,7 @@ rokuecp==0.17.0
 roombapy==1.6.5
 
 # homeassistant.components.roon
-roonapi==0.1.1
+roonapi==0.1.2
 
 # homeassistant.components.rova
 rova==0.3.0
@@ -2282,6 +2282,9 @@ sensorpush-ble==1.5.2
 
 # homeassistant.components.sentry
 sentry-sdk==1.12.1
+
+# homeassistant.components.sfr_box
+sfrbox-api==0.0.1
 
 # homeassistant.components.sharkiq
 sharkiq==0.0.1
@@ -2456,7 +2459,7 @@ tilt-ble==0.2.3
 tmb==0.0.4
 
 # homeassistant.components.todoist
-todoist-python==8.0.0
+todoist-api-python==2.0.2
 
 # homeassistant.components.tolo
 tololib==0.1.0b3
@@ -2521,7 +2524,7 @@ vallox-websocket-api==3.0.0
 vehicle==0.4.0
 
 # homeassistant.components.velbus
-velbus-aio==2022.10.4
+velbus-aio==2022.12.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
