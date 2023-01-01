@@ -125,9 +125,11 @@ class UnitSystem:
     def name(self) -> str:
         """Return the name of the unit system."""
         report(
-            "accesses the `name` property of the unit system. "
-            "This is deprecated and will stop working in Home Assistant 2023.1. "
-            "Please adjust to use instance check instead.",
+            (
+                "accesses the `name` property of the unit system. "
+                "This is deprecated and will stop working in Home Assistant 2023.1. "
+                "Please adjust to use instance check instead."
+            ),
             error_if_core=False,
         )
         if self is IMPERIAL_SYSTEM:
@@ -139,9 +141,11 @@ class UnitSystem:
     def is_metric(self) -> bool:
         """Determine if this is the metric unit system."""
         report(
-            "accesses the `is_metric` property of the unit system. "
-            "This is deprecated and will stop working in Home Assistant 2023.1. "
-            "Please adjust to use instance check instead.",
+            (
+                "accesses the `is_metric` property of the unit system. "
+                "This is deprecated and will stop working in Home Assistant 2023.1. "
+                "Please adjust to use instance check instead."
+            ),
             error_if_core=False,
         )
         return self is METRIC_SYSTEM

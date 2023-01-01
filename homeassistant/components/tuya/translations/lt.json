@@ -1,0 +1,31 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Slapta\u017eodis",
+                    "username": "Paskyra"
+                }
+            }
+        }
+    },
+    "entity": {
+        "select": {
+            "vacuum_collection": {
+                "state": {
+                    "small": "Ma\u017ea"
+                }
+            },
+            "vacuum_mode": {
+                "state": {
+                    "bow": "Lankas",
+                    "chargego": "Gr\u012f\u017eti \u012f stotel\u0119",
+                    "mop": "Plauna",
+                    "part": "Dalis",
+                    "pick_zone": "Pasirinkite zon\u0105",
+                    "point": "Ta\u0161kas valymas"
+                }
+            }
+        }
+    }
+}

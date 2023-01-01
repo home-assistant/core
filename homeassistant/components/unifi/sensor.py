@@ -8,12 +8,14 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, Union
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.clients import Clients
+from aiounifi.interfaces.ports import Ports
 from aiounifi.models.client import Client
+from aiounifi.models.port import Port
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -21,7 +23,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfInformation
+from homeassistant.const import UnitOfInformation, UnitOfPower
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -30,11 +32,11 @@ from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN as UNIFI_DOMAIN
+from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
 from .controller import UniFiController
 
-_DataT = TypeVar("_DataT", bound=Client)
-_HandlerT = TypeVar("_HandlerT", bound=Clients)
+_DataT = TypeVar("_DataT", bound=Union[Client, Port])
+_HandlerT = TypeVar("_HandlerT", bound=Union[Clients, Ports])
 
 
 @callback
@@ -74,6 +76,31 @@ def async_client_device_info_fn(api: aiounifi.Controller, obj_id: str) -> Device
     )
 
 
+@callback
+def async_device_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
+    """Create device registry entry for device."""
+    if "_" in obj_id:  # Sub device
+        obj_id = obj_id.partition("_")[0]
+
+    device = api.devices[obj_id]
+    return DeviceInfo(
+        connections={(CONNECTION_NETWORK_MAC, device.mac)},
+        manufacturer=ATTR_MANUFACTURER,
+        model=device.model,
+        name=device.name or device.model,
+        sw_version=device.version,
+        hw_version=str(device.board_revision),
+    )
+
+
+@callback
+def async_sub_device_available_fn(controller: UniFiController, obj_id: str) -> bool:
+    """Check if sub device object is disabled."""
+    device_id = obj_id.partition("_")[0]
+    device = controller.api.devices[device_id]
+    return controller.available and not device.disabled
+
+
 @dataclass
 class UnifiEntityLoader(Generic[_HandlerT, _DataT]):
     """Validate and load entities from different UniFi handlers."""
@@ -86,7 +113,7 @@ class UnifiEntityLoader(Generic[_HandlerT, _DataT]):
     object_fn: Callable[[aiounifi.Controller, str], _DataT]
     supported_fn: Callable[[UniFiController, str], bool | None]
     unique_id_fn: Callable[[str], str]
-    value_fn: Callable[[UniFiController, _DataT], datetime | float]
+    value_fn: Callable[[UniFiController, _DataT], datetime | float | str | None]
 
 
 @dataclass
@@ -126,6 +153,23 @@ ENTITY_DESCRIPTIONS: tuple[UnifiEntityDescription, ...] = (
         supported_fn=lambda controller, _: controller.option_allow_bandwidth_sensors,
         unique_id_fn=lambda obj_id: f"tx-{obj_id}",
         value_fn=async_client_tx_value_fn,
+    ),
+    UnifiEntityDescription[Ports, Port](
+        key="PoE port power sensor",
+        device_class=SensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        has_entity_name=True,
+        entity_registry_enabled_default=False,
+        allowed_fn=lambda controller, obj_id: True,
+        api_handler_fn=lambda api: api.ports,
+        available_fn=async_sub_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        name_fn=lambda port: f"{port.name} PoE Power",
+        object_fn=lambda api, obj_id: api.ports[obj_id],
+        supported_fn=lambda controller, obj_id: controller.api.ports[obj_id].port_poe,
+        unique_id_fn=lambda obj_id: f"poe_power-{obj_id}",
+        value_fn=lambda _, obj: obj.poe_power if obj.poe_mode != "off" else "0",
     ),
     UnifiEntityDescription[Clients, Client](
         key="Uptime sensor",
@@ -253,11 +297,18 @@ class UnifiSensorEntity(SensorEntity, Generic[_HandlerT, _DataT]):
             self.hass.async_create_task(self.remove_item({self._obj_id}))
             return
 
+        update_state = False
         obj = description.object_fn(self.controller.api, self._obj_id)
         if (value := description.value_fn(self.controller, obj)) != self.native_value:
             self._attr_native_value = value
-        self._attr_available = description.available_fn(self.controller, self._obj_id)
-        self.async_write_ha_state()
+            update_state = True
+        if (
+            available := description.available_fn(self.controller, self._obj_id)
+        ) != self.available:
+            self._attr_available = available
+            update_state = True
+        if update_state:
+            self.async_write_ha_state()
 
     @callback
     def async_signal_reachable_callback(self) -> None:

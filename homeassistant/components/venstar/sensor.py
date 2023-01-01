@@ -61,8 +61,8 @@ RUNTIME_ATTRIBUTES = {
 class VenstarSensorTypeMixin:
     """Mixin for sensor required keys."""
 
-    value_fn: Callable[[Any, Any], Any]
-    name_fn: Callable[[Any, Any], str]
+    value_fn: Callable[[VenstarDataUpdateCoordinator, str], Any]
+    name_fn: Callable[[VenstarDataUpdateCoordinator, str], str]
     uom_fn: Callable[[Any], str | None]
 
 
@@ -77,7 +77,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Vensar device binary_sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: VenstarDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[Entity] = []
 
     if not (sensors := coordinator.client.get_sensor_list()):

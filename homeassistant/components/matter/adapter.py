@@ -47,8 +47,12 @@ class MatterAdapter:
         for node in await self.matter_client.get_nodes():
             self._setup_node(node)
 
-        def node_added_callback(event: EventType, node: MatterNode) -> None:
+        def node_added_callback(event: EventType, node: MatterNode | None) -> None:
             """Handle node added event."""
+            if node is None:
+                # We can clean this up when we've improved the typing in the library.
+                # https://github.com/home-assistant-libs/python-matter-server/pull/153
+                raise RuntimeError("Node added event without node")
             self._setup_node(node)
 
         self.config_entry.async_on_unload(
@@ -61,8 +65,9 @@ class MatterAdapter:
 
         bridge_unique_id: str | None = None
 
-        if node.aggregator_device_type_instance is not None:
-            node_info = node.root_device_type_instance.get_cluster(all_clusters.Basic)
+        if node.aggregator_device_type_instance is not None and (
+            node_info := node.root_device_type_instance.get_cluster(all_clusters.Basic)
+        ):
             self._create_device_registry(
                 node_info, node_info.nodeLabel or "Hub device", None
             )

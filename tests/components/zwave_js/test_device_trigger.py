@@ -788,7 +788,6 @@ async def test_if_central_scene_value_notification_fires(
                 "property": "scene",
                 "propertyName": "scene",
                 "propertyKey": "001",
-                "propertyKey": "001",
                 "value": 0,
                 "metadata": {
                     "type": "number",
