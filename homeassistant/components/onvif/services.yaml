@@ -91,3 +91,18 @@ aux:
       example: "tt:Wiper|On"
       selector:
         text:
+
+set_imaging_settings:
+  name: Set Imaging Settings
+  description: "Set imaging settings such as brightness, focus, IR lamp"
+  target:
+    entity:
+      integration: onvif
+      domain: camera
+  fields:
+    settings:
+      name: "Imaging Settings"
+      description: "The settings object to set"
+      example: "{'IrCutFilter': 'ON'}"
+      selector:
+        object:

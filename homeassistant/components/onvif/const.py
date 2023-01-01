@@ -20,6 +20,7 @@ ATTR_MOVE_MODE = "move_mode"
 ATTR_CONTINUOUS_DURATION = "continuous_duration"
 ATTR_PRESET = "preset"
 ATTR_CMD = "cmd"
+ATTR_IMAGING_SETTINGS = "settings"
 
 DIR_UP = "UP"
 DIR_DOWN = "DOWN"
@@ -38,3 +39,4 @@ STOP_MOVE = "Stop"
 
 SERVICE_PTZ = "ptz"
 SERVICE_AUX = "aux"
+SERVICE_SET_IMAGING_SETTINGS = "set_imaging_settings"

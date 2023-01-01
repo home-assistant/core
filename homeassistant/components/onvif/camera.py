@@ -27,6 +27,7 @@ from .const import (
     ATTR_CMD,
     ATTR_CONTINUOUS_DURATION,
     ATTR_DISTANCE,
+    ATTR_IMAGING_SETTINGS,
     ATTR_MOVE_MODE,
     ATTR_PAN,
     ATTR_PRESET,
@@ -45,6 +46,7 @@ from .const import (
     RELATIVE_MOVE,
     SERVICE_AUX,
     SERVICE_PTZ,
+    SERVICE_SET_IMAGING_SETTINGS,
     STOP_MOVE,
     ZOOM_IN,
     ZOOM_OUT,
@@ -91,6 +93,14 @@ async def async_setup_entry(
             ATTR_CMD: cv.string,
         },
         "async_run_aux_command",
+    )
+    # Create image setting service
+    platform.async_register_entity_service(
+        SERVICE_SET_IMAGING_SETTINGS,
+        {
+            ATTR_IMAGING_SETTINGS: dict,
+        },
+        "async_set_imaging_settings",
     )
 
     device = hass.data[DOMAIN][config_entry.unique_id]
@@ -240,4 +250,14 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         await self.device.async_run_aux_command(
             self.profile,
             cmd,
+        )
+
+    async def async_set_imaging_settings(
+        self,
+        settings,
+    ) -> None:
+        """Set imaging settings."""
+        await self.device.async_set_imaging_settings(
+            self.profile,
+            settings,
         )

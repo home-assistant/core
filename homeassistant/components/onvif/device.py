@@ -292,7 +292,12 @@ class ONVIFDevice:
             self.device.get_definition("ptz")
             ptz = True
 
-        return Capabilities(snapshot, pullpoint, ptz)
+        imaging = False
+        with suppress(ONVIFError, Fault, RequestError):
+            self.device.create_imaging_service()
+            imaging = True
+
+        return Capabilities(snapshot, pullpoint, ptz, imaging)
 
     async def async_get_profiles(self) -> list[Profile]:
         """Obtain media profiles for this device."""
@@ -342,6 +347,12 @@ class ONVIFDevice:
                 except (Fault, RequestError):
                     # It's OK if Presets aren't supported
                     profile.ptz.presets = []
+
+            # Configure Imaging options
+            if self.capabilities.imaging and onvif_profile.VideoSourceConfiguration:
+                profile.video_source_token = (
+                    onvif_profile.VideoSourceConfiguration.SourceToken
+                )
 
             profiles.append(profile)
 
@@ -508,6 +519,36 @@ class ONVIFDevice:
                 LOGGER.warning("Device '%s' doesn't support PTZ", self.name)
             else:
                 LOGGER.error("Error trying to send PTZ auxiliary command: %s", err)
+
+    async def async_set_imaging_settings(
+        self,
+        profile: Profile,
+        settings,
+    ):
+        """Set an imaging setting on the ONVIF imaging service."""
+        # The Imaging Service is defined by ONVIF standard
+        # https://www.onvif.org/specs/srv/img/ONVIF-Imaging-Service-Spec-v210.pdf
+        if not self.capabilities.imaging:
+            LOGGER.warning(
+                "The imaging service is not supported on device '%s'", self.name
+            )
+            return
+
+        imaging_service = self.device.create_imaging_service()
+
+        LOGGER.debug("Setting Imaging Setting | Settings = %s", settings)
+        try:
+            req = imaging_service.create_type("SetImagingSettings")
+            req.VideoSourceToken = profile.video_source_token
+            req.ImagingSettings = settings
+            await imaging_service.SetImagingSettings(req)
+        except ONVIFError as err:
+            if "Bad Request" in err.reason:
+                LOGGER.warning(
+                    "Device '%s' doesn't support the Imaging Service", self.name
+                )
+            else:
+                LOGGER.error("Error trying to set Imaging settings: %s", err)
 
 
 def get_device(hass, host, port, username, password) -> ONVIFCamera:

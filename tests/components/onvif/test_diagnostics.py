@@ -48,7 +48,12 @@ async def test_diagnostics(hass, hass_client):
                 "serial_number": SERIAL_NUMBER,
                 "mac": MAC,
             },
-            "capabilities": {"snapshot": False, "events": False, "ptz": False},
+            "capabilities": {
+                "snapshot": False,
+                "events": False,
+                "ptz": False,
+                "imaging": False,
+            },
             "profiles": [],
         },
     }
