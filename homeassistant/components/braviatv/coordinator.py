@@ -95,8 +95,6 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.is_on = False
         self.is_channel = False
         self.connected = False
-        # Assume that the TV is in Play mode
-        self.playing = True
         self.skipped_updates = 0
 
         super().__init__(
@@ -249,13 +247,11 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
     async def async_media_play(self) -> None:
         """Send play command to device."""
         await self.client.play()
-        self.playing = True
 
     @catch_braviatv_errors
     async def async_media_pause(self) -> None:
         """Send pause command to device."""
         await self.client.pause()
-        self.playing = False
 
     @catch_braviatv_errors
     async def async_media_stop(self) -> None:
