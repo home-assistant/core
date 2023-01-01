@@ -15,6 +15,7 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 
+from .const import OLD_ADVERTISEMENT_CUTOFF
 from .coordinator import RuuviGatewayUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,7 +48,7 @@ class RuuviGatewayScanner(BaseHaRemoteScanner):
     def _async_handle_new_data(self) -> None:
         now = datetime.datetime.now()
         for tag_data in self.coordinator.data:
-            if now - tag_data.datetime > datetime.timedelta(minutes=10):
+            if now - tag_data.datetime > OLD_ADVERTISEMENT_CUTOFF:
                 # Don't process data that is older than 10 minutes
                 continue
             anno = tag_data.parse_announcement()
