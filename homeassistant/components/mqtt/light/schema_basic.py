@@ -106,6 +106,7 @@ CONF_RGBWW_COMMAND_TEMPLATE = "rgbww_command_template"
 CONF_RGBWW_COMMAND_TOPIC = "rgbww_command_topic"
 CONF_RGBWW_STATE_TOPIC = "rgbww_state_topic"
 CONF_RGBWW_VALUE_TEMPLATE = "rgbww_value_template"
+CONF_XY_COMMAND_TEMPLATE = "xy_command_template"
 CONF_XY_COMMAND_TOPIC = "xy_command_topic"
 CONF_XY_STATE_TOPIC = "xy_state_topic"
 CONF_XY_VALUE_TEMPLATE = "xy_value_template"
@@ -152,6 +153,7 @@ COMMAND_TEMPLATE_KEYS = [
     CONF_RGB_COMMAND_TEMPLATE,
     CONF_RGBW_COMMAND_TEMPLATE,
     CONF_RGBWW_COMMAND_TEMPLATE,
+    CONF_XY_COMMAND_TEMPLATE,
 ]
 VALUE_TEMPLATE_KEYS = [
     CONF_BRIGHTNESS_VALUE_TEMPLATE,
@@ -216,6 +218,7 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_WHITE_SCALE, default=DEFAULT_WHITE_SCALE): vol.All(
                 vol.Coerce(int), vol.Range(min=1)
             ),
+            vol.Optional(CONF_XY_COMMAND_TEMPLATE): cv.template,
             vol.Optional(CONF_XY_COMMAND_TOPIC): valid_publish_topic,
             vol.Optional(CONF_XY_STATE_TOPIC): valid_subscribe_topic,
             vol.Optional(CONF_XY_VALUE_TEMPLATE): cv.template,
@@ -804,7 +807,11 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         if (xy_color := kwargs.get(ATTR_XY_COLOR)) and self._topic[
             CONF_XY_COMMAND_TOPIC
         ] is not None:
-            await publish(CONF_XY_COMMAND_TOPIC, f"{xy_color[0]},{xy_color[1]}")
+            device_xy_payload = self._command_templates[CONF_XY_COMMAND_TEMPLATE](
+                f"{xy_color[0]},{xy_color[1]}",
+                {"x": xy_color[0], "y": xy_color[1]},
+            )
+            await publish(CONF_XY_COMMAND_TOPIC, device_xy_payload)
             should_update |= set_optimistic(ATTR_XY_COLOR, xy_color, ColorMode.XY)
 
         if (
