@@ -394,18 +394,6 @@ class BaseLight(LogMixin, light.LightEntity):
         self.debug("turned on: %s", t_log)
         self.async_write_ha_state()
 
-        # TODO: will fail pylint for good reason / move somewhere else
-        # The reason it's currently here is because it's after group state was written to HA state,
-        # and the coordinator successfully executed all broadcast requests here (no "NETWORK_BUSY" for example).
-        # We could probably move this to the overriding "async_turn_on" method in LightGroup though to clean this up,
-        # but we can't be sure that HA state was written to for the group.
-        # So if only one call is successful (level worked, color didn't), the _attr_brightness will be correct,
-        # but HA state for the group likely won't be.
-        # (Rare case though and possibly also a bug that we don't call async_write_ha_state() if turn_on
-        # needs multiple Zigbee calls and one works, one fails?)
-        if isinstance(self, LightGroup) and self._zha_config_group_members_assume_state:
-            self._send_member_assume_state_event(True, kwargs)
-
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         transition = kwargs.get(light.ATTR_TRANSITION)
@@ -444,10 +432,6 @@ class BaseLight(LogMixin, light.LightEntity):
             self._off_brightness = self._attr_brightness
 
         self.async_write_ha_state()
-
-        # TODO: see above TODO
-        if isinstance(self, LightGroup) and self._zha_config_group_members_assume_state:
-            self._send_member_assume_state_event(False, kwargs)
 
     async def async_handle_color_commands(
         self,
@@ -1038,7 +1022,9 @@ class LightGroup(BaseLight, ZhaGroupEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await super().async_turn_on(**kwargs)
-        if self._transitioning:
+        if self._zha_config_group_members_assume_state:
+            self._send_member_assume_state_event(True, kwargs)
+        if self._transitioning:  # when transitioning, state is refreshed at the end
             return
         if self._debounced_member_refresh:
             await self._debounced_member_refresh.async_call()
@@ -1046,6 +1032,8 @@ class LightGroup(BaseLight, ZhaGroupEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await super().async_turn_off(**kwargs)
+        if self._zha_config_group_members_assume_state:
+            self._send_member_assume_state_event(False, kwargs)
         if self._transitioning:
             return
         if self._debounced_member_refresh:
