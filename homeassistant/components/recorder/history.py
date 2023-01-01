@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant, State, split_entity_id
 import homeassistant.util.dt as dt_util
 
 from .. import recorder
-from .db_schema import TIMESTAMP_TYPE, RecorderRuns, StateAttributes, States
+from .db_schema import RecorderRuns, StateAttributes, States
 from .filters import Filters
 from .models import (
     LazyState,
@@ -71,7 +71,7 @@ _BASE_STATES = [
 _BASE_STATES_NO_LAST_CHANGED = [
     States.entity_id,
     States.state,
-    literal(value=None, type_=TIMESTAMP_TYPE).label("last_changed_ts"),
+    literal(value=None).label("last_changed_ts"),
     States.last_updated_ts,
 ]
 _QUERY_STATE_NO_ATTR = [
