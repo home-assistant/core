@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import json
 from unittest.mock import patch, sentinel
 
+from freezegun import freeze_time
 import pytest
 from sqlalchemy import text
 
@@ -945,3 +946,38 @@ def test_state_changes_during_period_multiple_entities_single_test(hass_recorder
     hist = history.state_changes_during_period(hass, start, end, None)
     for entity_id, value in test_entites.items():
         hist[entity_id][0].state == value
+
+
+async def test_get_full_significant_states_past_year_2038(
+    async_setup_recorder_instance: SetupRecorderInstanceT,
+    hass: ha.HomeAssistant,
+):
+    """Test we can store times past year 2038."""
+    await async_setup_recorder_instance(hass, {})
+    past_2038_time = dt_util.parse_datetime("2039-01-19 03:14:07.555000-00:00")
+
+    with freeze_time(past_2038_time):
+        hass.states.async_set("sensor.one", "on", {"attr": "original"})
+        state0 = hass.states.get("sensor.one")
+        await hass.async_block_till_done()
+        hass.states.async_set("sensor.one", "on", {"attr": "new"})
+        state1 = hass.states.get("sensor.one")
+        await async_wait_recording_done(hass)
+
+        def _get_entries():
+            with session_scope(hass=hass) as session:
+                return history.get_full_significant_states_with_session(
+                    hass,
+                    session,
+                    past_2038_time - timedelta(days=365),
+                    past_2038_time + timedelta(days=365),
+                    entity_ids=["sensor.one"],
+                    significant_changes_only=False,
+                )
+
+        states = await recorder.get_instance(hass).async_add_executor_job(_get_entries)
+        sensor_one_states: list[State] = states["sensor.one"]
+        assert sensor_one_states[0] == state0
+        assert sensor_one_states[1] == state1
+        assert sensor_one_states[0].last_changed == past_2038_time
+        assert sensor_one_states[0].last_updated == past_2038_time
