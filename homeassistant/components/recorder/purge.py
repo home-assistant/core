@@ -12,6 +12,7 @@ from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import distinct
 
 from homeassistant.const import EVENT_STATE_CHANGED
+import homeassistant.util.dt as dt_util
 
 from .const import MAX_ROWS_TO_PURGE, SupportedDialect
 from .db_schema import Events, StateAttributes, States
@@ -233,7 +234,9 @@ def _select_state_attributes_ids_to_purge(
     """Return sets of state and attribute ids to purge."""
     state_ids = set()
     attributes_ids = set()
-    for state in session.execute(find_states_to_purge(purge_before)).all():
+    for state in session.execute(
+        find_states_to_purge(dt_util.utc_to_timestamp(purge_before))
+    ).all():
         state_ids.add(state.state_id)
         if state.attributes_id:
             attributes_ids.add(state.attributes_id)
@@ -251,7 +254,9 @@ def _select_event_data_ids_to_purge(
     """Return sets of event and data ids to purge."""
     event_ids = set()
     data_ids = set()
-    for event in session.execute(find_events_to_purge(purge_before)).all():
+    for event in session.execute(
+        find_events_to_purge(dt_util.utc_to_timestamp(purge_before))
+    ).all():
         event_ids.add(event.event_id)
         if event.data_id:
             data_ids.add(event.data_id)
@@ -420,7 +425,9 @@ def _select_legacy_event_state_and_attributes_and_data_ids_to_purge(
     still need to be able to purge them.
     """
     events = session.execute(
-        find_legacy_event_state_and_attributes_and_data_ids_to_purge(purge_before)
+        find_legacy_event_state_and_attributes_and_data_ids_to_purge(
+            dt_util.utc_to_timestamp(purge_before)
+        )
     ).all()
     _LOGGER.debug("Selected %s event ids to remove", len(events))
     event_ids = set()

@@ -313,16 +313,17 @@ def create_state_changed_event_from_old_new(
     row = collections.namedtuple(
         "Row",
         [
-            "event_type"
-            "event_data"
-            "time_fired"
-            "context_id"
-            "context_user_id"
-            "context_parent_id"
-            "state"
-            "entity_id"
-            "domain"
-            "attributes"
+            "event_type",
+            "event_data",
+            "time_fired",
+            "time_fired_ts",
+            "context_id",
+            "context_user_id",
+            "context_parent_id",
+            "state",
+            "entity_id",
+            "domain",
+            "attributes",
             "state_id",
             "old_state_id",
             "shared_attrs",
@@ -337,6 +338,7 @@ def create_state_changed_event_from_old_new(
     row.attributes = attributes_json
     row.shared_attrs = attributes_json
     row.time_fired = event_time_fired
+    row.time_fired_ts = dt_util.utc_to_timestamp(event_time_fired)
     row.state = new_state and new_state.get("state")
     row.entity_id = entity_id
     row.domain = entity_id and ha.split_entity_id(entity_id)[0]

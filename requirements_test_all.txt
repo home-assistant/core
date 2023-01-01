@@ -601,7 +601,7 @@ goodwe==0.2.18
 google-cloud-pubsub==2.13.11
 
 # homeassistant.components.nest
-google-nest-sdm==2.1.0
+google-nest-sdm==2.1.2
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -1764,7 +1764,7 @@ vallox-websocket-api==3.0.0
 vehicle==0.4.0
 
 # homeassistant.components.velbus
-velbus-aio==2022.10.4
+velbus-aio==2022.12.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
@@ -1795,7 +1795,7 @@ wallbox==0.4.12
 watchdog==2.2.0
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.17.1
+whirlpool-sixth-sense==0.18.0
 
 # homeassistant.components.whois
 whois==0.9.16
