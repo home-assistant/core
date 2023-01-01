@@ -83,5 +83,18 @@
                 "description": "Velg tilkoblingsmetode til gatewayen"
             }
         }
+    },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Oppdater eventuelle automatiseringer eller skript som bruker denne tjenesten for i stedet \u00e5 bruke ` {alternate_service} `-tjenesten med en m\u00e5lenhets-ID p\u00e5 ` {alternate_target} `.",
+                        "title": "{deprecated_service} -tjenesten vil bli fjernet"
+                    }
+                }
+            },
+            "title": "{deprecated_service} -tjenesten vil bli fjernet"
+        }
     }
 }

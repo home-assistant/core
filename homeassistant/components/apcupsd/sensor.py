@@ -465,7 +465,7 @@ async def async_setup_entry(
     async_add_entities(entities, update_before_add=True)
 
 
-def infer_unit(value):
+def infer_unit(value: str) -> tuple[str, str | None]:
     """If the value ends with any of the units from ALL_UNITS.
 
     Split the unit off the end of the value and return the value, unit tuple
