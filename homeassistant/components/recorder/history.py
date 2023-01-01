@@ -903,65 +903,48 @@ def _sorted_states_to_dict(
             prev_state = first_state.state
             ent_results.append(state_class(first_state, attr_cache, None))
 
-        if schema_version >= 31:
-            if compressed_state_format:
-                for row in group:
-                    # With minimal response we do not care about attribute
-                    # changes so we can filter out duplicate states
-                    if (state := row.state) == prev_state:
-                        continue
+        #
+        # minimal_response only makes sense with last_updated == last_updated
+        #
+        # We use last_updated for for last_changed since its the same
+        #
+        # With minimal response we do not care about attribute
+        # changes so we can filter out duplicate states
+        if schema_version < 31:
+            for row in group:
+                if (state := row.state) == prev_state:
+                    continue
+                ent_results.append(
+                    {
+                        attr_state: state,
+                        attr_time: _process_timestamp(row.last_updated),
+                    }
+                )
+                prev_state = state
+            continue
 
-                    ent_results.append(
-                        {
-                            attr_state: state,
-                            #
-                            # minimal_response only makes sense with last_updated == last_updated
-                            #
-                            # We use last_updated for for last_changed since its the same
-                            #
-                            attr_time: row.last_updated_ts,
-                        }
-                    )
-                    prev_state = state
-            else:
-                for row in group:
-                    # With minimal response we do not care about attribute
-                    # changes so we can filter out duplicate states
-                    if (state := row.state) == prev_state:
-                        continue
-
-                    ent_results.append(
-                        {
-                            attr_state: state,
-                            #
-                            # minimal_response only makes sense with last_updated == last_updated
-                            #
-                            # We use last_updated for for last_changed since its the same
-                            #
-                            attr_time: process_timestamp_to_utc_isoformat(
-                                dt_util.utc_from_timestamp(row.last_updated_ts)
-                            ),
-                        }
-                    )
-                    prev_state = state
-
+        if compressed_state_format:
+            for row in group:
+                if (state := row.state) == prev_state:
+                    continue
+                ent_results.append(
+                    {
+                        attr_state: state,
+                        attr_time: row.last_updated_ts,
+                    }
+                )
+                prev_state = state
             continue
 
         for row in group:
-            # With minimal response we do not care about attribute
-            # changes so we can filter out duplicate states
             if (state := row.state) == prev_state:
                 continue
-
             ent_results.append(
                 {
                     attr_state: state,
-                    #
-                    # minimal_response only makes sense with last_updated == last_updated
-                    #
-                    # We use last_updated for for last_changed since its the same
-                    #
-                    attr_time: _process_timestamp(row.last_updated),
+                    attr_time: process_timestamp_to_utc_isoformat(
+                        dt_util.utc_from_timestamp(row.last_updated_ts)
+                    ),
                 }
             )
             prev_state = state
