@@ -82,6 +82,9 @@ async def test_config_flow_manual_success(hass):
         CONF_PORT: TEST_PORT,
         const.CONF_USE_HTTPS: TEST_USE_HTTPS,
     }
+    assert result["options"] == {
+        const.CONF_PROTOCOL: const.DEFAULT_PROTOCOL,
+    }
 
 
 async def test_config_flow_errors(hass):
@@ -174,6 +177,9 @@ async def test_config_flow_errors(hass):
         CONF_PORT: TEST_PORT,
         const.CONF_USE_HTTPS: TEST_USE_HTTPS,
     }
+    assert result["options"] == {
+        const.CONF_PROTOCOL: const.DEFAULT_PROTOCOL,
+    }
 
 
 async def test_options_flow(hass):
@@ -187,6 +193,9 @@ async def test_options_flow(hass):
             CONF_PASSWORD: TEST_PASSWORD,
             CONF_PORT: TEST_PORT,
             const.CONF_USE_HTTPS: TEST_USE_HTTPS,
+        },
+        options={
+            const.CONF_PROTOCOL: "rtsp",
         },
         title=TEST_NVR_NAME,
     )
@@ -202,12 +211,12 @@ async def test_options_flow(hass):
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={const.CONF_PROTOCOL: "rtsp"},
+        user_input={const.CONF_PROTOCOL: "rtmp"},
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
-        const.CONF_PROTOCOL: "rtsp",
+        const.CONF_PROTOCOL: "rtmp",
     }
 
 
@@ -222,6 +231,9 @@ async def test_change_connection_settings(hass):
             CONF_PASSWORD: TEST_PASSWORD,
             CONF_PORT: TEST_PORT,
             const.CONF_USE_HTTPS: TEST_USE_HTTPS,
+        },
+        options={
+            const.CONF_PROTOCOL: const.DEFAULT_PROTOCOL,
         },
         title=TEST_NVR_NAME,
     )
@@ -245,6 +257,7 @@ async def test_change_connection_settings(hass):
     )
 
     assert result["type"] is data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
     assert config_entry.data[CONF_HOST] == TEST_HOST2
     assert config_entry.data[CONF_USERNAME] == TEST_USERNAME2
     assert config_entry.data[CONF_PASSWORD] == TEST_PASSWORD2
