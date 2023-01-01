@@ -235,6 +235,16 @@ def valid_preset_mode_configuration(config: ConfigType) -> ConfigType:
     return config
 
 
+def valid_humidity_range_configuration(config: ConfigType) -> ConfigType:
+    """Validate that the target_humidity range configuration is valid, throws if it isn't."""
+    if config[CONF_HUMIDITY_MIN] >= config[CONF_HUMIDITY_MAX]:
+        raise ValueError("target_humidity_max must be > target_humidity_min")
+    if config[CONF_HUMIDITY_MAX] > 100:
+        raise ValueError("max_humidity must be <= 100")
+
+    return config
+
+
 _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_AUX_COMMAND_TOPIC): valid_publish_topic,
@@ -343,6 +353,7 @@ PLATFORM_SCHEMA_MODERN = vol.All(
     cv.removed(CONF_HOLD_LIST),
     _PLATFORM_SCHEMA_BASE,
     valid_preset_mode_configuration,
+    valid_humidity_range_configuration,
 )
 
 # Configuring MQTT Climate under the climate platform key was deprecated in HA Core 2022.6
@@ -367,6 +378,7 @@ DISCOVERY_SCHEMA = vol.All(
     cv.removed(CONF_HOLD_STATE_TOPIC),
     cv.removed(CONF_HOLD_LIST),
     valid_preset_mode_configuration,
+    valid_humidity_range_configuration,
 )
 
 
