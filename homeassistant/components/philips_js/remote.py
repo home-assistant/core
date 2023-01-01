@@ -13,10 +13,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.trigger import PluggableAction
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import LOGGER, PhilipsTVDataUpdateCoordinator
 from .const import DOMAIN
+from .helpers import async_get_turn_on_trigger
 
 
 async def async_setup_entry(
@@ -52,6 +54,18 @@ class PhilipsTVRemote(CoordinatorEntity[PhilipsTVDataUpdateCoordinator], RemoteE
             name=coordinator.system["name"],
             sw_version=coordinator.system.get("softwareversion"),
         )
+        self._turn_on = PluggableAction(self.async_write_ha_state)
+
+    async def async_added_to_hass(self) -> None:
+        """Handle being added to hass."""
+        await super().async_added_to_hass()
+
+        if (entry := self.registry_entry) and entry.device_id:
+            self.async_on_remove(
+                self._turn_on.async_register(
+                    self.hass, async_get_turn_on_trigger(entry.device_id)
+                )
+            )
 
     @property
     def is_on(self):
@@ -65,7 +79,7 @@ class PhilipsTVRemote(CoordinatorEntity[PhilipsTVDataUpdateCoordinator], RemoteE
         if self._tv.on and self._tv.powerstate:
             await self._tv.setPowerState("On")
         else:
-            await self.coordinator.turn_on.async_run(self.hass, self._context)
+            await self._turn_on.async_run(self.hass, self._context)
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:

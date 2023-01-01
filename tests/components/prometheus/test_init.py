@@ -11,6 +11,7 @@ from homeassistant.components import (
     binary_sensor,
     climate,
     counter,
+    cover,
     device_tracker,
     humidifier,
     input_boolean,
@@ -44,11 +45,15 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     EVENT_STATE_CHANGED,
     PERCENTAGE,
+    STATE_CLOSED,
+    STATE_CLOSING,
     STATE_HOME,
     STATE_LOCKED,
     STATE_NOT_HOME,
     STATE_OFF,
     STATE_ON,
+    STATE_OPEN,
+    STATE_OPENING,
     STATE_UNLOCKED,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -293,6 +298,12 @@ async def test_climate(client, climate_entities):
         'friendly_name="Ecobee"} 24.0' in body
     )
 
+    assert (
+        'climate_target_temperature_celsius{domain="climate",'
+        'entity="climate.fritzdect",'
+        'friendly_name="Fritz!DECT"} 0.0' in body
+    )
+
 
 @pytest.mark.parametrize("namespace", [""])
 async def test_humidifier(client, humidifier_entities):
@@ -437,6 +448,65 @@ async def test_lock(client, lock_entities):
         'entity="lock.kitchen_door",'
         'friendly_name="Kitchen Door"} 0.0' in body
     )
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_cover(client, cover_entities):
+    """Test prometheus metrics for cover."""
+    data = {**cover_entities}
+    body = await generate_latest_metrics(client)
+
+    open_covers = ["cover_open", "cover_position", "cover_tilt_position"]
+    for testcover in data:
+        open_metric = (
+            f'cover_state{{domain="cover",'
+            f'entity="{cover_entities[testcover].entity_id}",'
+            f'friendly_name="{cover_entities[testcover].original_name}",'
+            f'state="open"}} {1.0 if cover_entities[testcover].unique_id in open_covers else 0.0}'
+        )
+        assert open_metric in body
+
+        closed_metric = (
+            f'cover_state{{domain="cover",'
+            f'entity="{cover_entities[testcover].entity_id}",'
+            f'friendly_name="{cover_entities[testcover].original_name}",'
+            f'state="closed"}} {1.0 if cover_entities[testcover].unique_id == "cover_closed" else 0.0}'
+        )
+        assert closed_metric in body
+
+        opening_metric = (
+            f'cover_state{{domain="cover",'
+            f'entity="{cover_entities[testcover].entity_id}",'
+            f'friendly_name="{cover_entities[testcover].original_name}",'
+            f'state="opening"}} {1.0 if cover_entities[testcover].unique_id == "cover_opening" else 0.0}'
+        )
+        assert opening_metric in body
+
+        closing_metric = (
+            f'cover_state{{domain="cover",'
+            f'entity="{cover_entities[testcover].entity_id}",'
+            f'friendly_name="{cover_entities[testcover].original_name}",'
+            f'state="closing"}} {1.0 if cover_entities[testcover].unique_id == "cover_closing" else 0.0}'
+        )
+        assert closing_metric in body
+
+        if testcover == "cover_position":
+            position_metric = (
+                f'cover_position{{domain="cover",'
+                f'entity="{cover_entities[testcover].entity_id}",'
+                f'friendly_name="{cover_entities[testcover].original_name}"'
+                f"}} 50.0"
+            )
+            assert position_metric in body
+
+        if testcover == "cover_tilt_position":
+            tilt_position_metric = (
+                f'cover_tilt_position{{domain="cover",'
+                f'entity="{cover_entities[testcover].entity_id}",'
+                f'friendly_name="{cover_entities[testcover].original_name}"'
+                f"}} 50.0"
+            )
+            assert tilt_position_metric in body
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -1001,6 +1071,23 @@ async def climate_fixture(hass, registry):
     data["climate_2"] = climate_2
     data["climate_2_attributes"] = climate_2_attributes
 
+    climate_3 = registry.async_get_or_create(
+        domain=climate.DOMAIN,
+        platform="test",
+        unique_id="climate_3",
+        unit_of_measurement=TEMP_CELSIUS,
+        suggested_object_id="fritzdect",
+        original_name="Fritz!DECT",
+    )
+    climate_3_attributes = {
+        ATTR_TEMPERATURE: 0,
+        ATTR_CURRENT_TEMPERATURE: 22,
+        ATTR_HVAC_ACTION: climate.HVACAction.OFF,
+    }
+    set_state_with_entry(hass, climate_3, climate.HVACAction.OFF, climate_3_attributes)
+    data["climate_3"] = climate_3
+    data["climate_3_attributes"] = climate_3_attributes
+
     await hass.async_block_till_done()
     return data
 
@@ -1082,6 +1169,78 @@ async def lock_fixture(hass, registry):
     )
     set_state_with_entry(hass, lock_2, STATE_UNLOCKED)
     data["lock_2"] = lock_2
+
+    await hass.async_block_till_done()
+    return data
+
+
+@pytest.fixture(name="cover_entities")
+async def cover_fixture(hass, registry):
+    """Simulate cover entities."""
+    data = {}
+    cover_open = registry.async_get_or_create(
+        domain=cover.DOMAIN,
+        platform="test",
+        unique_id="cover_open",
+        suggested_object_id="open_shade",
+        original_name="Open Shade",
+    )
+    set_state_with_entry(hass, cover_open, STATE_OPEN)
+    data["cover_open"] = cover_open
+
+    cover_closed = registry.async_get_or_create(
+        domain=cover.DOMAIN,
+        platform="test",
+        unique_id="cover_closed",
+        suggested_object_id="closed_shade",
+        original_name="Closed Shade",
+    )
+    set_state_with_entry(hass, cover_closed, STATE_CLOSED)
+    data["cover_closed"] = cover_closed
+
+    cover_closing = registry.async_get_or_create(
+        domain=cover.DOMAIN,
+        platform="test",
+        unique_id="cover_closing",
+        suggested_object_id="closing_shade",
+        original_name="Closing Shade",
+    )
+    set_state_with_entry(hass, cover_closing, STATE_CLOSING)
+    data["cover_closing"] = cover_closing
+
+    cover_opening = registry.async_get_or_create(
+        domain=cover.DOMAIN,
+        platform="test",
+        unique_id="cover_opening",
+        suggested_object_id="opening_shade",
+        original_name="Opening Shade",
+    )
+    set_state_with_entry(hass, cover_opening, STATE_OPENING)
+    data["cover_opening"] = cover_opening
+
+    cover_position = registry.async_get_or_create(
+        domain=cover.DOMAIN,
+        platform="test",
+        unique_id="cover_position",
+        suggested_object_id="position_shade",
+        original_name="Position Shade",
+    )
+    cover_position_attributes = {cover.ATTR_POSITION: 50}
+    set_state_with_entry(hass, cover_position, STATE_OPEN, cover_position_attributes)
+    data["cover_position"] = cover_position
+
+    cover_tilt_position = registry.async_get_or_create(
+        domain=cover.DOMAIN,
+        platform="test",
+        unique_id="cover_tilt_position",
+        suggested_object_id="tilt_position_shade",
+        original_name="Tilt Position Shade",
+    )
+    cover_tilt_position_attributes = {cover.ATTR_TILT_POSITION: 50}
+    set_state_with_entry(
+        hass, cover_tilt_position, STATE_OPEN, cover_tilt_position_attributes
+    )
+    data["cover_tilt_position"] = cover_tilt_position
 
     await hass.async_block_till_done()
     return data

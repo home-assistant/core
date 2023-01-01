@@ -11,6 +11,18 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "season": {
+                "state": {
+                    "autumn": "S\u00fcgis",
+                    "spring": "Kevad",
+                    "summer": "Suvi",
+                    "winter": "Talv"
+                }
+            }
+        }
+    },
     "issues": {
         "removed_yaml": {
             "description": "Season seadistamine YAML-i abil on eemaldatud. \n\n Koduassistent ei kasuta teie olemasolevat YAML-i konfiguratsiooni. \n\n Selle probleemi lahendamiseks eemaldage YAML-i konfiguratsioon failist configuration.yaml ja taask\u00e4ivitage Home Assistant.",

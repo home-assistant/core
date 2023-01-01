@@ -6,6 +6,7 @@ from unittest.mock import ANY, MagicMock, Mock, patch
 
 from bleak import BleakError
 from bleak.backends.scanner import AdvertisementData, BLEDevice
+from bluetooth_adapters import DEFAULT_ADDRESS
 import pytest
 
 from homeassistant.components import bluetooth
@@ -16,13 +17,13 @@ from homeassistant.components.bluetooth import (
     async_process_advertisements,
     async_rediscover_address,
     async_track_unavailable,
-    models,
     scanner,
 )
 from homeassistant.components.bluetooth.const import (
+    BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS,
     CONF_PASSIVE,
-    DEFAULT_ADDRESS,
     DOMAIN,
+    LINUX_FIRMWARE_LOAD_FALLBACK_SECONDS,
     SOURCE_LOCAL,
     UNAVAILABLE_TRACK_SECONDS,
 )
@@ -34,6 +35,7 @@ from homeassistant.components.bluetooth.match import (
     SERVICE_DATA_UUID,
     SERVICE_UUID,
 )
+from homeassistant.components.bluetooth.wrappers import HaBleakScannerWrapper
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
@@ -42,6 +44,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import (
+    FakeScanner,
     _get_manager,
     async_setup_with_default_adapter,
     generate_advertisement_data,
@@ -2208,7 +2211,7 @@ async def test_wrapped_instance_with_filter(
         empty_adv = generate_advertisement_data(local_name="empty")
 
         assert _get_manager() is not None
-        scanner = models.HaBleakScannerWrapper(
+        scanner = HaBleakScannerWrapper(
             filters={"UUIDs": ["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]}
         )
         scanner.register_detection_callback(_device_detected)
@@ -2280,7 +2283,7 @@ async def test_wrapped_instance_with_service_uuids(
         empty_adv = generate_advertisement_data(local_name="empty")
 
         assert _get_manager() is not None
-        scanner = models.HaBleakScannerWrapper(
+        scanner = HaBleakScannerWrapper(
             service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
         )
         scanner.register_detection_callback(_device_detected)
@@ -2330,7 +2333,7 @@ async def test_wrapped_instance_with_broken_callbacks(
         )
 
         assert _get_manager() is not None
-        scanner = models.HaBleakScannerWrapper(
+        scanner = HaBleakScannerWrapper(
             service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
         )
         scanner.register_detection_callback(_device_detected)
@@ -2379,7 +2382,7 @@ async def test_wrapped_instance_changes_uuids(
         empty_adv = generate_advertisement_data(local_name="empty")
 
         assert _get_manager() is not None
-        scanner = models.HaBleakScannerWrapper()
+        scanner = HaBleakScannerWrapper()
         scanner.set_scanning_filter(
             service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
         )
@@ -2434,7 +2437,7 @@ async def test_wrapped_instance_changes_filters(
         empty_adv = generate_advertisement_data(local_name="empty")
 
         assert _get_manager() is not None
-        scanner = models.HaBleakScannerWrapper()
+        scanner = HaBleakScannerWrapper()
         scanner.set_scanning_filter(
             filters={"UUIDs": ["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]}
         )
@@ -2466,7 +2469,7 @@ async def test_wrapped_instance_unsupported_filter(
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
         assert _get_manager() is not None
-        scanner = models.HaBleakScannerWrapper()
+        scanner = HaBleakScannerWrapper()
         scanner.set_scanning_filter(
             filters={
                 "unsupported": ["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
@@ -2520,7 +2523,7 @@ async def test_async_ble_device_from_address(
 
 
 async def test_can_unsetup_bluetooth_single_adapter_macos(
-    hass, mock_bleak_scanner_start, enable_bluetooth, macos_adapter
+    hass, mock_bleak_scanner_start, macos_adapter
 ):
     """Test we can setup and unsetup bluetooth."""
     entry = MockConfigEntry(domain=bluetooth.DOMAIN, data={}, unique_id=DEFAULT_ADDRESS)
@@ -2603,12 +2606,13 @@ async def test_auto_detect_bluetooth_adapters_linux_multiple(hass, two_adapters)
     assert len(hass.config_entries.flow.async_progress(bluetooth.DOMAIN)) == 2
 
 
-async def test_auto_detect_bluetooth_adapters_linux_none_found(hass, bluez_dbus_mock):
+async def test_auto_detect_bluetooth_adapters_linux_none_found(hass):
     """Test we auto detect bluetooth adapters on linux with no adapters found."""
     with patch(
-        "bluetooth_adapters.get_bluetooth_adapter_details", return_value={}
-    ), patch(
-        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
+        "bluetooth_adapters.systems.platform.system", return_value="Linux"
+    ), patch("bluetooth_adapters.systems.linux.LinuxAdapters.refresh"), patch(
+        "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
+        {},
     ):
         assert await async_setup_component(hass, bluetooth.DOMAIN, {})
         await hass.async_block_till_done()
@@ -2618,9 +2622,7 @@ async def test_auto_detect_bluetooth_adapters_linux_none_found(hass, bluez_dbus_
 
 async def test_auto_detect_bluetooth_adapters_macos(hass):
     """Test we auto detect bluetooth adapters on macos."""
-    with patch(
-        "homeassistant.components.bluetooth.util.platform.system", return_value="Darwin"
-    ):
+    with patch("bluetooth_adapters.systems.platform.system", return_value="Darwin"):
         assert await async_setup_component(hass, bluetooth.DOMAIN, {})
         await hass.async_block_till_done()
     assert not hass.config_entries.async_entries(bluetooth.DOMAIN)
@@ -2630,7 +2632,7 @@ async def test_auto_detect_bluetooth_adapters_macos(hass):
 async def test_no_auto_detect_bluetooth_adapters_windows(hass):
     """Test we auto detect bluetooth adapters on windows."""
     with patch(
-        "homeassistant.components.bluetooth.util.platform.system",
+        "bluetooth_adapters.systems.platform.system",
         return_value="Windows",
     ):
         assert await async_setup_component(hass, bluetooth.DOMAIN, {})
@@ -2642,12 +2644,12 @@ async def test_no_auto_detect_bluetooth_adapters_windows(hass):
 async def test_getting_the_scanner_returns_the_wrapped_instance(hass, enable_bluetooth):
     """Test getting the scanner returns the wrapped instance."""
     scanner = bluetooth.async_get_scanner(hass)
-    assert isinstance(scanner, models.HaBleakScannerWrapper)
+    assert isinstance(scanner, HaBleakScannerWrapper)
 
 
 async def test_scanner_count_connectable(hass, enable_bluetooth):
     """Test getting the connectable scanner count."""
-    scanner = models.BaseHaScanner(hass, "any")
+    scanner = FakeScanner(hass, "any", "any")
     cancel = bluetooth.async_register_scanner(hass, scanner, False)
     assert bluetooth.async_scanner_count(hass, connectable=True) == 1
     cancel()
@@ -2655,7 +2657,7 @@ async def test_scanner_count_connectable(hass, enable_bluetooth):
 
 async def test_scanner_count(hass, enable_bluetooth):
     """Test getting the connectable and non-connectable scanner count."""
-    scanner = models.BaseHaScanner(hass, "any")
+    scanner = FakeScanner(hass, "any", "any")
     cancel = bluetooth.async_register_scanner(hass, scanner, False)
     assert bluetooth.async_scanner_count(hass, connectable=False) == 2
     cancel()
@@ -2708,23 +2710,21 @@ async def test_discover_new_usb_adapters(hass, mock_bleak_scanner_start, one_ada
     assert not hass.config_entries.flow.async_progress(DOMAIN)
 
     with patch(
-        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
-    ), patch(
-        "bluetooth_adapters.get_bluetooth_adapter_details",
-        return_value={
+        "bluetooth_adapters.systems.platform.system", return_value="Linux"
+    ), patch("bluetooth_adapters.systems.linux.LinuxAdapters.refresh"), patch(
+        "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
+        {
             "hci0": {
-                "org.bluez.Adapter1": {
-                    "Address": "00:00:00:00:00:01",
-                    "Name": "BlueZ 4.63",
-                    "Modalias": "usbid:1234",
-                }
+                "address": "00:00:00:00:00:01",
+                "hw_version": "usb:v1D6Bp0246d053F",
+                "passive_scan": False,
+                "sw_version": "homeassistant",
             },
             "hci1": {
-                "org.bluez.Adapter1": {
-                    "Address": "00:00:00:00:00:02",
-                    "Name": "BlueZ 4.63",
-                    "Modalias": "usbid:1234",
-                }
+                "address": "00:00:00:00:00:02",
+                "hw_version": "usb:v1D6Bp0246d053F",
+                "passive_scan": False,
+                "sw_version": "homeassistant",
             },
         },
     ):
@@ -2733,6 +2733,79 @@ async def test_discover_new_usb_adapters(hass, mock_bleak_scanner_start, one_ada
                 hass, dt_util.utcnow() + timedelta(seconds=wait_sec)
             )
             await hass.async_block_till_done()
+
+    assert len(hass.config_entries.flow.async_progress(DOMAIN)) == 1
+
+
+async def test_discover_new_usb_adapters_with_firmware_fallback_delay(
+    hass, mock_bleak_scanner_start, one_adapter
+):
+    """Test we can discover new usb adapters with a firmware fallback delay."""
+    entry = MockConfigEntry(
+        domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:01"
+    )
+    entry.add_to_hass(hass)
+
+    saved_callback = None
+
+    def _async_register_scan_request_callback(_hass, _callback):
+        nonlocal saved_callback
+        saved_callback = _callback
+        return lambda: None
+
+    with patch(
+        "homeassistant.components.bluetooth.usb.async_register_scan_request_callback",
+        _async_register_scan_request_callback,
+    ):
+        assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+        await hass.async_block_till_done()
+
+    assert not hass.config_entries.flow.async_progress(DOMAIN)
+
+    saved_callback()
+    assert not hass.config_entries.flow.async_progress(DOMAIN)
+
+    with patch(
+        "bluetooth_adapters.systems.platform.system", return_value="Linux"
+    ), patch("bluetooth_adapters.systems.linux.LinuxAdapters.refresh"), patch(
+        "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
+        {},
+    ):
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS * 2)
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.config_entries.flow.async_progress(DOMAIN)) == 0
+
+    with patch(
+        "bluetooth_adapters.systems.platform.system", return_value="Linux"
+    ), patch("bluetooth_adapters.systems.linux.LinuxAdapters.refresh"), patch(
+        "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
+        {
+            "hci0": {
+                "address": "00:00:00:00:00:01",
+                "hw_version": "usb:v1D6Bp0246d053F",
+                "passive_scan": False,
+                "sw_version": "homeassistant",
+            },
+            "hci1": {
+                "address": "00:00:00:00:00:02",
+                "hw_version": "usb:v1D6Bp0246d053F",
+                "passive_scan": False,
+                "sw_version": "homeassistant",
+            },
+        },
+    ):
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow()
+            + timedelta(
+                seconds=LINUX_FIRMWARE_LOAD_FALLBACK_SECONDS
+                + (BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS * 2)
+            ),
+        )
+        await hass.async_block_till_done()
 
     assert len(hass.config_entries.flow.async_progress(DOMAIN)) == 1
 

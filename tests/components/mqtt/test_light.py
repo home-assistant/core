@@ -216,7 +216,6 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
     help_test_publishing_with_custom_encoding,
     help_test_reloadable,
-    help_test_reloadable_late,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
@@ -233,11 +232,6 @@ from tests.components.light import common
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {light.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
-
-# Test deprecated YAML configuration under the platform key
-# Scheduled to be removed in HA core 2022.12
-DEFAULT_CONFIG_LEGACY = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
-DEFAULT_CONFIG_LEGACY[light.DOMAIN]["platform"] = mqtt.DOMAIN
 
 
 @pytest.fixture(autouse=True)
@@ -499,32 +493,26 @@ async def test_invalid_state_via_topic(hass, mqtt_mock_entry_with_yaml_config, c
     assert state.attributes.get("color_mode") == "rgb"
 
     async_fire_mqtt_message(hass, "test_light_rgb/status", "")
-    assert "Ignoring empty state message" in caplog.text
     light_state = hass.states.get("light.test")
     assert state.state == STATE_ON
 
     async_fire_mqtt_message(hass, "test_light_rgb/brightness/status", "")
-    assert "Ignoring empty brightness message" in caplog.text
     light_state = hass.states.get("light.test")
     assert light_state.attributes["brightness"] == 255
 
     async_fire_mqtt_message(hass, "test_light_rgb/color_mode/status", "")
-    assert "Ignoring empty color mode message" in caplog.text
     light_state = hass.states.get("light.test")
-    assert light_state.attributes["effect"] == "none"
+    assert state.attributes.get("color_mode") == "rgb"
 
     async_fire_mqtt_message(hass, "test_light_rgb/effect/status", "")
-    assert "Ignoring empty effect message" in caplog.text
     light_state = hass.states.get("light.test")
     assert light_state.attributes["effect"] == "none"
 
     async_fire_mqtt_message(hass, "test_light_rgb/rgb/status", "")
-    assert "Ignoring empty rgb message" in caplog.text
     light_state = hass.states.get("light.test")
     assert light_state.attributes.get("rgb_color") == (255, 255, 255)
 
     async_fire_mqtt_message(hass, "test_light_rgb/hs/status", "")
-    assert "Ignoring empty hs message" in caplog.text
     light_state = hass.states.get("light.test")
     assert light_state.attributes.get("hs_color") == (0, 0)
 
@@ -534,21 +522,18 @@ async def test_invalid_state_via_topic(hass, mqtt_mock_entry_with_yaml_config, c
     assert light_state.attributes.get("hs_color") == (0, 0)
 
     async_fire_mqtt_message(hass, "test_light_rgb/xy/status", "")
-    assert "Ignoring empty xy-color message" in caplog.text
     light_state = hass.states.get("light.test")
     assert light_state.attributes.get("xy_color") == (0.323, 0.329)
 
     async_fire_mqtt_message(hass, "test_light_rgb/rgbw/status", "255,255,255,1")
     async_fire_mqtt_message(hass, "test_light_rgb/color_mode/status", "rgbw")
     async_fire_mqtt_message(hass, "test_light_rgb/rgbw/status", "")
-    assert "Ignoring empty rgbw message" in caplog.text
     light_state = hass.states.get("light.test")
     assert light_state.attributes.get("rgbw_color") == (255, 255, 255, 1)
 
     async_fire_mqtt_message(hass, "test_light_rgb/rgbww/status", "255,255,255,1,2")
     async_fire_mqtt_message(hass, "test_light_rgb/color_mode/status", "rgbww")
     async_fire_mqtt_message(hass, "test_light_rgb/rgbww/status", "")
-    assert "Ignoring empty rgbww message" in caplog.text
     light_state = hass.states.get("light.test")
     assert light_state.attributes.get("rgbww_color") == (255, 255, 255, 1, 2)
 
@@ -565,7 +550,6 @@ async def test_invalid_state_via_topic(hass, mqtt_mock_entry_with_yaml_config, c
     assert state.attributes.get("xy_color") == (0.326, 0.333)
 
     async_fire_mqtt_message(hass, "test_light_rgb/color_temp/status", "")
-    assert "Ignoring empty color temp message" in caplog.text
     light_state = hass.states.get("light.test")
     assert light_state.attributes["color_temp"] == 153
 
@@ -2222,11 +2206,12 @@ async def test_discovery_removal_light(hass, mqtt_mock_entry_no_yaml_config, cap
     )
 
 
-# Test deprecated YAML configuration under the platform key
-# Scheduled to be removed in HA core 2022.12
-async def test_discovery_deprecated(hass, mqtt_mock_entry_no_yaml_config, caplog):
-    """Test discovery of mqtt light with deprecated platform option."""
+async def test_discovery_ignores_extra_keys(
+    hass, mqtt_mock_entry_no_yaml_config, caplog
+):
+    """Test discovery ignores extra keys that are not blocked."""
     await mqtt_mock_entry_no_yaml_config()
+    # inserted `platform` key should be ignored
     data = (
         '{ "name": "Beer",' '  "platform": "mqtt",' '  "command_topic": "test_topic"}'
     )
@@ -2945,15 +2930,6 @@ async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_pa
     )
 
 
-# Test deprecated YAML configuration under the platform key
-# Scheduled to be removed in HA core 2022.12
-async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
-    """Test reloading the MQTT platform with late entry setup."""
-    domain = light.DOMAIN
-    config = DEFAULT_CONFIG_LEGACY[domain]
-    await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)
-
-
 @pytest.mark.parametrize(
     "topic,value,attribute,attribute_value,init_payload",
     [
@@ -3151,16 +3127,3 @@ async def test_unload_entry(hass, mqtt_mock_entry_with_yaml_config, tmp_path):
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
     )
-
-
-# Test deprecated YAML configuration under the platform key
-# Scheduled to be removed in HA core 2022.12
-async def test_setup_with_legacy_schema(hass, mqtt_mock_entry_with_yaml_config):
-    """Test a setup with deprecated yaml platform schema."""
-    domain = light.DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[domain])
-    config["name"] = "test"
-    assert await async_setup_component(hass, domain, {domain: config})
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
-    assert hass.states.get(f"{domain}.test") is not None

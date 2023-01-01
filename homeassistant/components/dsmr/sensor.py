@@ -28,9 +28,9 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
-    VOLUME_CUBIC_METERS,
+    UnitOfVolume,
 )
-from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import EventType, StateType
@@ -55,7 +55,7 @@ from .const import (
     LOGGER,
 )
 
-UNIT_CONVERSION = {"m3": VOLUME_CUBIC_METERS}
+UNIT_CONVERSION = {"m3": UnitOfVolume.CUBIC_METERS}
 
 
 @dataclass
@@ -97,6 +97,9 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         name="Active tariff",
         obis_reference=obis_references.ELECTRICITY_ACTIVE_TARIFF,
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
+        device_class=SensorDeviceClass.ENUM,
+        options=["low", "normal"],
+        translation_key="electricity_tariff",
         icon="mdi:flash",
     ),
     DSMRSensorEntityDescription(
@@ -398,7 +401,7 @@ async def async_setup_entry(
     )
 
     @Throttle(min_time_between_updates)
-    def update_entities_telegram(telegram: dict[str, DSMRObject]) -> None:
+    def update_entities_telegram(telegram: dict[str, DSMRObject] | None) -> None:
         """Update entities with latest telegram and trigger state update."""
         # Make all device entities aware of new telegram
         for entity in entities:
@@ -442,6 +445,11 @@ async def async_setup_entry(
 
         while hass.state == CoreState.not_running or hass.is_running:
             # Start DSMR asyncio.Protocol reader
+
+            # Reflect connected state in devices state by setting an
+            # empty telegram resulting in `unknown` states
+            update_entities_telegram({})
+
             try:
                 transport, protocol = await hass.loop.create_task(reader_factory())
 
@@ -469,8 +477,8 @@ async def async_setup_entry(
                 protocol = None
 
                 # Reflect disconnect state in devices state by setting an
-                # empty telegram resulting in `unknown` states
-                update_entities_telegram({})
+                # None telegram resulting in `unavailable` states
+                update_entities_telegram(None)
 
                 # throttle reconnect attempts
                 await asyncio.sleep(
@@ -484,11 +492,19 @@ async def async_setup_entry(
                 transport = None
                 protocol = None
 
+                # Reflect disconnect state in devices state by setting an
+                # None telegram resulting in `unavailable` states
+                update_entities_telegram(None)
+
                 # throttle reconnect attempts
                 await asyncio.sleep(
                     entry.data.get(CONF_RECONNECT_INTERVAL, DEFAULT_RECONNECT_INTERVAL)
                 )
             except CancelledError:
+                # Reflect disconnect state in devices state by setting an
+                # None telegram resulting in `unavailable` states
+                update_entities_telegram(None)
+
                 if stop_listener and (
                     hass.state == CoreState.not_running or hass.is_running
                 ):
@@ -504,6 +520,15 @@ async def async_setup_entry(
 
     # Can't be hass.async_add_job because job runs forever
     task = asyncio.create_task(connect_and_reconnect())
+
+    @callback
+    async def _async_stop(_: Event) -> None:
+        task.cancel()
+
+    # Make sure task is cancelled on shutdown (or tests complete)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop)
+    )
 
     # Save the task to be able to cancel it when unloading
     hass.data[DOMAIN][entry.entry_id][DATA_TASK] = task
@@ -522,7 +547,7 @@ class DSMREntity(SensorEntity):
         """Initialize entity."""
         self.entity_description = entity_description
         self._entry = entry
-        self.telegram: dict[str, DSMRObject] = {}
+        self.telegram: dict[str, DSMRObject] | None = {}
 
         device_serial = entry.data[CONF_SERIAL_ID]
         device_name = DEVICE_NAME_ELECTRICITY
@@ -539,16 +564,21 @@ class DSMREntity(SensorEntity):
         self._attr_unique_id = f"{device_serial}_{entity_description.key}"
 
     @callback
-    def update_data(self, telegram: dict[str, DSMRObject]) -> None:
+    def update_data(self, telegram: dict[str, DSMRObject] | None) -> None:
         """Update data."""
         self.telegram = telegram
-        if self.hass and self.entity_description.obis_reference in self.telegram:
+        if self.hass and (
+            telegram is None or self.entity_description.obis_reference in telegram
+        ):
             self.async_write_ha_state()
 
     def get_dsmr_object_attr(self, attribute: str) -> str | None:
         """Read attribute from last received telegram for this DSMR object."""
         # Make sure telegram contains an object for this entities obis
-        if self.entity_description.obis_reference not in self.telegram:
+        if (
+            self.telegram is None
+            or self.entity_description.obis_reference not in self.telegram
+        ):
             return None
 
         # Get the attribute value if the object has it
@@ -557,8 +587,14 @@ class DSMREntity(SensorEntity):
         return attr
 
     @property
+    def available(self) -> bool:
+        """Entity is only available if there is a telegram."""
+        return self.telegram is not None
+
+    @property
     def native_value(self) -> StateType:
         """Return the state of sensor, if available, translate if needed."""
+        value: StateType
         if (value := self.get_dsmr_object_attr("value")) is None:
             return None
 
@@ -573,10 +609,7 @@ class DSMREntity(SensorEntity):
                 float(value), self._entry.data.get(CONF_PRECISION, DEFAULT_PRECISION)
             )
 
-        if value is not None:
-            return value
-
-        return None
+        return value
 
     @property
     def native_unit_of_measurement(self) -> str | None:

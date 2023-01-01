@@ -13,9 +13,10 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import MASS_POUNDS, PERCENTAGE
+from homeassistant.const import PERCENTAGE, UnitOfMass
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -73,6 +74,7 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
             name="Waste Drawer",
             native_unit_of_measurement=PERCENTAGE,
             icon_fn=lambda state: icon_for_gauge_level(state, 10),
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         RobotSensorEntityDescription[LitterRobot](
             key="sleep_mode_start_time",
@@ -95,8 +97,36 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
         RobotSensorEntityDescription[LitterRobot](
             key="status_code",
             name="Status Code",
-            device_class="litterrobot__status_code",
+            translation_key="status_code",
             entity_category=EntityCategory.DIAGNOSTIC,
+            device_class=SensorDeviceClass.ENUM,
+            options=[
+                "br",
+                "ccc",
+                "ccp",
+                "cd",
+                "csf",
+                "csi",
+                "cst",
+                "df1",
+                "df2",
+                "dfs",
+                "dhf",
+                "dpf",
+                "ec",
+                "hpf",
+                "off",
+                "offline",
+                "otf",
+                "p",
+                "pd",
+                "pwrd",
+                "pwru",
+                "rdy",
+                "scf",
+                "sdf",
+                "spf",
+            ],
         ),
     ],
     LitterRobot4: [
@@ -105,12 +135,14 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
             name="Litter level",
             native_unit_of_measurement=PERCENTAGE,
             icon_fn=lambda state: icon_for_gauge_level(state, 10),
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         RobotSensorEntityDescription[LitterRobot4](
             key="pet_weight",
             name="Pet weight",
-            native_unit_of_measurement=MASS_POUNDS,
+            native_unit_of_measurement=UnitOfMass.POUNDS,
             device_class=SensorDeviceClass.WEIGHT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
     ],
     FeederRobot: [
@@ -119,6 +151,7 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
             name="Food level",
             native_unit_of_measurement=PERCENTAGE,
             icon_fn=lambda state: icon_for_gauge_level(state, 10),
+            state_class=SensorStateClass.MEASUREMENT,
         )
     ],
 }

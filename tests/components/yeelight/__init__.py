@@ -1,5 +1,4 @@
 """Tests for the Yeelight integration."""
-import asyncio
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -164,12 +163,12 @@ def _patched_ssdp_listener(info: CaseInsensitiveDict, *args, **kwargs):
     async def _async_callback(*_):
         if kwargs["source"][0] == FAIL_TO_BIND_IP:
             raise OSError
-        await listener.async_connect_callback()
+        listener.connect_callback()
 
     @callback
     def _async_search(*_):
         if info:
-            asyncio.create_task(listener.async_callback(info))
+            listener.callback(info)
 
     listener.async_start = _async_callback
     listener.async_search = _async_search

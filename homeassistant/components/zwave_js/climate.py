@@ -34,12 +34,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    PRECISION_TENTHS,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -187,7 +182,6 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             check_all_endpoints=True,
         )
         self._set_modes_and_presets()
-        self._attr_supported_features = 0
         if self._current_mode and len(self._hvac_presets) > 1:
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
         # If any setpoint value exists, we can assume temperature
@@ -260,8 +254,8 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             and self._unit_value.metadata.unit
             and "f" in self._unit_value.metadata.unit.lower()
         ):
-            return TEMP_FAHRENHEIT
-        return TEMP_CELSIUS
+            return UnitOfTemperature.FAHRENHEIT
+        return UnitOfTemperature.CELSIUS
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -398,7 +392,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         min_temp = DEFAULT_MIN_TEMP
-        base_unit = TEMP_CELSIUS
+        base_unit: str = UnitOfTemperature.CELSIUS
         try:
             temp = self._setpoint_value_or_raise(self._current_mode_setpoint_enums[0])
             if temp.metadata.min:
@@ -414,7 +408,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         max_temp = DEFAULT_MAX_TEMP
-        base_unit = TEMP_CELSIUS
+        base_unit: str = UnitOfTemperature.CELSIUS
         try:
             temp = self._setpoint_value_or_raise(self._current_mode_setpoint_enums[0])
             if temp.metadata.max:

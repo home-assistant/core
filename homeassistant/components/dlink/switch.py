@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -85,7 +85,9 @@ class SmartPlugSwitch(SwitchEntity):
     def extra_state_attributes(self):
         """Return the state attributes of the device."""
         try:
-            ui_temp = self.units.temperature(int(self.data.temperature), TEMP_CELSIUS)
+            ui_temp = self.units.temperature(
+                int(self.data.temperature), UnitOfTemperature.CELSIUS
+            )
             temperature = ui_temp
         except (ValueError, TypeError):
             temperature = None

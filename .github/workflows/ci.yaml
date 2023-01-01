@@ -22,7 +22,7 @@ on:
 env:
   CACHE_VERSION: 3
   PIP_CACHE_VERSION: 3
-  HA_SHORT_VERSION: 2022.12
+  HA_SHORT_VERSION: 2023.2
   DEFAULT_PYTHON: 3.9
   ALL_PYTHON_VERSIONS: "['3.9', '3.10']"
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
@@ -56,7 +56,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.2.0
       - name: Generate partial Python venv restore key
         id: generate_python_cache_key
         run: >-
@@ -167,16 +167,16 @@ jobs:
       - info
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.2.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.3.0
+        uses: actions/setup-python@v4.4.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v3.0.11
+        uses: actions/cache@v3.2.2
         with:
           path: venv
           key: >-
@@ -191,7 +191,7 @@ jobs:
           pip install "$(cat requirements_test.txt | grep pre-commit)"
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v3.0.11
+        uses: actions/cache@v3.2.2
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           key: >-
@@ -211,16 +211,16 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.2.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.3.0
+        uses: actions/setup-python@v4.4.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v3.0.11
+        uses: actions/cache/restore@v3.2.2
         with:
           path: venv
           key: >-
@@ -233,7 +233,7 @@ jobs:
           exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v3.0.11
+        uses: actions/cache/restore@v3.2.2
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           key: >-
@@ -255,7 +255,7 @@ jobs:
         run: |
           . venv/bin/activate
           shopt -s globstar
-          pre-commit run --hook-stage manual black --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/**/* --show-diff-on-failure
+          pre-commit run --hook-stage manual black --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*} --show-diff-on-failure
 
   lint-flake8:
     name: Check flake8
@@ -265,16 +265,16 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.2.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.3.0
+        uses: actions/setup-python@v4.4.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v3.0.11
+        uses: actions/cache/restore@v3.2.2
         with:
           path: venv
           key: >-
@@ -287,7 +287,7 @@ jobs:
           exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v3.0.11
+        uses: actions/cache/restore@v3.2.2
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           key: >-
@@ -312,7 +312,7 @@ jobs:
         run: |
           . venv/bin/activate
           shopt -s globstar
-          pre-commit run --hook-stage manual flake8 --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/**/*
+          pre-commit run --hook-stage manual flake8 --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*}
 
   lint-isort:
     name: Check isort
@@ -322,16 +322,16 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.2.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.3.0
+        uses: actions/setup-python@v4.4.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v3.0.11
+        uses: actions/cache/restore@v3.2.2
         with:
           path: venv
           key: >-
@@ -344,7 +344,7 @@ jobs:
           exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v3.0.11
+        uses: actions/cache/restore@v3.2.2
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           key: >-
@@ -368,16 +368,16 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.2.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.3.0
+        uses: actions/setup-python@v4.4.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v3.0.11
+        uses: actions/cache/restore@v3.2.2
         with:
           path: venv
           key: >-
@@ -390,7 +390,7 @@ jobs:
           exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v3.0.11
+        uses: actions/cache/restore@v3.2.2
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           key: >-
@@ -413,7 +413,7 @@ jobs:
         run: |
           . venv/bin/activate
           shopt -s globstar
-          pre-commit run --hook-stage manual pyupgrade --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/**/* --show-diff-on-failure
+          pre-commit run --hook-stage manual pyupgrade --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*} --show-diff-on-failure
 
       - name: Register yamllint problem matcher
         run: |
@@ -442,7 +442,7 @@ jobs:
         shell: bash
         run: |
           . venv/bin/activate
-          pre-commit run --hook-stage manual prettier --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/**/*
+          pre-commit run --hook-stage manual prettier --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*}
 
       - name: Register check executables problem matcher
         run: |
@@ -483,7 +483,7 @@ jobs:
         run: |
           . venv/bin/activate
           shopt -s globstar
-          pre-commit run --hook-stage manual bandit --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/**/* --show-diff-on-failure
+          pre-commit run --hook-stage manual bandit --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*} --show-diff-on-failure
 
   base:
     name: Prepare dependencies
@@ -495,10 +495,10 @@ jobs:
         python-version: ${{ fromJSON(needs.info.outputs.python_versions) }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.2.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.3.0
+        uses: actions/setup-python@v4.4.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -509,7 +509,7 @@ jobs:
             env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v3.0.11
+        uses: actions/cache@v3.2.2
         with:
           path: venv
           key: >-
@@ -517,7 +517,7 @@ jobs:
             needs.info.outputs.python_cache_key }}
       - name: Restore pip wheel cache
         if: steps.cache-venv.outputs.cache-hit != 'true'
-        uses: actions/cache@v3.0.11
+        uses: actions/cache@v3.2.2
         with:
           path: ${{ env.PIP_CACHE }}
           key: >-
@@ -559,16 +559,16 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.2.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.3.0
+        uses: actions/setup-python@v4.4.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache@v3.0.11
+        uses: actions/cache/restore@v3.2.2
         with:
           path: venv
           key: >-
@@ -592,16 +592,16 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.2.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.3.0
+        uses: actions/setup-python@v4.4.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v3.0.11
+        uses: actions/cache/restore@v3.2.2
         with:
           path: venv
           key: >-
@@ -626,16 +626,16 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.2.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.3.0
+        uses: actions/setup-python@v4.4.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache@v3.0.11
+        uses: actions/cache/restore@v3.2.2
         with:
           path: venv
           key: >-
@@ -671,16 +671,16 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.2.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.3.0
+        uses: actions/setup-python@v4.4.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache@v3.0.11
+        uses: actions/cache/restore@v3.2.2
         with:
           path: venv
           key: >-
@@ -720,16 +720,16 @@ jobs:
     name: Run pip check ${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.2.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.3.0
+        uses: actions/setup-python@v4.4.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache@v3.0.11
+        uses: actions/cache/restore@v3.2.2
         with:
           path: venv
           key: >-
@@ -775,16 +775,16 @@ jobs:
             bluez \
             ffmpeg
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.2.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.3.0
+        uses: actions/setup-python@v4.4.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache@v3.0.11
+        uses: actions/cache/restore@v3.2.2
         with:
           path: venv
           key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
@@ -842,7 +842,6 @@ jobs:
           python3 -X dev -m pytest \
             -qq \
             --timeout=9 \
-            --durations=10 \
             -n auto \
             --cov="homeassistant.components.${{ matrix.group }}" \
             --cov-report=xml \
@@ -899,16 +898,16 @@ jobs:
             ffmpeg \
             libmariadb-dev-compat
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.2.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.3.0
+        uses: actions/setup-python@v4.4.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache@v3.0.11
+        uses: actions/cache/restore@v3.2.2
         with:
           path: venv
           key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
@@ -936,7 +935,7 @@ jobs:
           . venv/bin/activate
           pip install mysqlclient sqlalchemy_utils
       - name: Run pytest (partially)
-        timeout-minutes: 10
+        timeout-minutes: 15
         shell: bash
         run: |
           . venv/bin/activate
@@ -944,14 +943,13 @@ jobs:
 
           python3 -X dev -m pytest \
             -qq \
-            --timeout=9 \
+            --timeout=20 \
             -n 1 \
             --cov="homeassistant.components.recorder" \
             --cov-report=xml \
             --cov-report=term-missing \
             -o console_output_style=count \
-            --durations=0 \
-            --durations-min=10 \
+            --durations=10 \
             -p no:sugar \
             --dburl=mysql://root:password@127.0.0.1/homeassistant-test \
             tests/components/recorder
@@ -972,7 +970,7 @@ jobs:
       - pytest
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.2.0
       - name: Download all coverage artifacts
         uses: actions/download-artifact@v3
       - name: Upload coverage to Codecov (full coverage)

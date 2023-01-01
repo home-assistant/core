@@ -18,20 +18,21 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT, TIME_SECONDS
+from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from .const import DOMAIN
-from .device import device_key_to_bluetooth_entity_key, sensor_device_info_to_hass
+from .device import device_key_to_bluetooth_entity_key
 
 SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     OralBSensor.TIME: SensorEntityDescription(
         key=OralBSensor.TIME,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
     ),
     OralBSensor.SECTOR: SensorEntityDescription(
         key=OralBSensor.SECTOR,
@@ -67,7 +68,7 @@ def sensor_update_to_bluetooth_data_update(
     """Convert a sensor update to a bluetooth data update."""
     return PassiveBluetoothDataUpdate(
         devices={
-            device_id: sensor_device_info_to_hass(device_info)
+            device_id: sensor_device_info_to_hass_device_info(device_info)
             for device_id, device_info in sensor_update.devices.items()
         },
         entity_descriptions={

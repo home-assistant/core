@@ -1179,7 +1179,10 @@ ABBREVIATIONS_WHITE_LIST = [
     "CONF_KEEPALIVE",
     "CONF_TLS_INSECURE",
     "CONF_TLS_VERSION",
+    "CONF_TRANSPORT",
     "CONF_WILL_MESSAGE",
+    "CONF_WS_PATH",
+    "CONF_WS_HEADERS",
     # Undocumented device configuration
     "CONF_DEPRECATED_VIA_HUB",
     "CONF_VIA_DEVICE",
@@ -1235,7 +1238,6 @@ async def test_no_implicit_state_topic_switch(
 
     async_fire_mqtt_message(hass, "homeassistant/switch/bla/config", data)
     await hass.async_block_till_done()
-    assert "implicit state_topic is deprecated" not in caplog.text
 
     state = hass.states.get("switch.Test1")
     assert state is not None

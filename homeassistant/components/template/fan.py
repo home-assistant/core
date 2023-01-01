@@ -147,7 +147,6 @@ class TemplateFan(TemplateEntity, FanEntity):
         self._preset_mode_template = config.get(CONF_PRESET_MODE_TEMPLATE)
         self._oscillating_template = config.get(CONF_OSCILLATING_TEMPLATE)
         self._direction_template = config.get(CONF_DIRECTION_TEMPLATE)
-        self._supported_features = 0
 
         self._on_script = Script(hass, config[CONF_ON_ACTION], friendly_name, DOMAIN)
         self._off_script = Script(hass, config[CONF_OFF_ACTION], friendly_name, DOMAIN)
@@ -189,18 +188,13 @@ class TemplateFan(TemplateEntity, FanEntity):
         self._preset_modes = config.get(CONF_PRESET_MODES)
 
         if self._percentage_template:
-            self._supported_features |= FanEntityFeature.SET_SPEED
+            self._attr_supported_features |= FanEntityFeature.SET_SPEED
         if self._preset_mode_template and self._preset_modes:
-            self._supported_features |= FanEntityFeature.PRESET_MODE
+            self._attr_supported_features |= FanEntityFeature.PRESET_MODE
         if self._oscillating_template:
-            self._supported_features |= FanEntityFeature.OSCILLATE
+            self._attr_supported_features |= FanEntityFeature.OSCILLATE
         if self._direction_template:
-            self._supported_features |= FanEntityFeature.DIRECTION
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return self._supported_features
+            self._attr_supported_features |= FanEntityFeature.DIRECTION
 
     @property
     def speed_count(self) -> int:

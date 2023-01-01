@@ -12,16 +12,25 @@ from aioshelly.exceptions import (
     InvalidAuthError,
 )
 from aioshelly.rpc_device import RpcDevice
+from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import aiohttp_client, selector
 
-from .const import CONF_SLEEP_PERIOD, DOMAIN, LOGGER
+from .const import (
+    BLE_MIN_VERSION,
+    CONF_BLE_SCANNER_MODE,
+    CONF_SLEEP_PERIOD,
+    DOMAIN,
+    LOGGER,
+    BLEScannerMode,
+)
+from .coordinator import async_reconnect_soon, get_entry_data
 from .utils import (
     get_block_device_name,
     get_block_device_sleep_period,
@@ -32,9 +41,17 @@ from .utils import (
     get_rpc_device_name,
     get_rpc_device_sleep_period,
     get_ws_context,
+    mac_address_from_name,
 )
 
 HOST_SCHEMA: Final = vol.Schema({vol.Required(CONF_HOST): str})
+
+
+BLE_SCANNER_OPTIONS = [
+    selector.SelectOptionDict(value=BLEScannerMode.DISABLED, label="Disabled"),
+    selector.SelectOptionDict(value=BLEScannerMode.ACTIVE, label="Active"),
+    selector.SelectOptionDict(value=BLEScannerMode.PASSIVE, label="Passive"),
+]
 
 
 async def validate_input(
@@ -194,11 +211,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="credentials", data_schema=vol.Schema(schema), errors=errors
         )
 
+    async def _async_discovered_mac(self, mac: str, host: str) -> None:
+        """Abort and reconnect soon if the device with the mac address is already configured."""
+        if (
+            current_entry := await self.async_set_unique_id(mac)
+        ) and current_entry.data[CONF_HOST] == host:
+            await async_reconnect_soon(self.hass, current_entry)
+        self._abort_if_unique_id_configured({CONF_HOST: host})
+
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
         host = discovery_info.host
+        # First try to get the mac address from the name
+        # so we can avoid making another connection to the
+        # device if we already have it configured
+        if mac := mac_address_from_name(discovery_info.name):
+            await self._async_discovered_mac(mac, host)
+
         try:
             self.info = await self._async_get_info(host)
         except DeviceConnectionError:
@@ -206,10 +237,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except FirmwareUnsupported:
             return self.async_abort(reason="unsupported_firmware")
 
-        await self.async_set_unique_id(self.info["mac"])
-        self._abort_if_unique_id_configured({CONF_HOST: host})
-        self.host = host
+        if not mac:
+            # We could not get the mac address from the name
+            # so need to check here since we just got the info
+            await self._async_discovered_mac(self.info["mac"], host)
 
+        self.host = host
         self.context.update(
             {
                 "title_placeholders": {"name": discovery_info.name.split(".")[0]},
@@ -309,4 +342,62 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get info from shelly device."""
         return await aioshelly.common.get_info(
             aiohttp_client.async_get_clientsession(self.hass), host
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler(config_entry)
+
+    @classmethod
+    @callback
+    def async_supports_options_flow(
+        cls, config_entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Return options flow support for this handler."""
+        return config_entry.data.get("gen") == 2 and not config_entry.data.get(
+            CONF_SLEEP_PERIOD
+        )
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle the option flow for shelly."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle options flow."""
+        if user_input is not None:
+            entry_data = get_entry_data(self.hass)[self.config_entry.entry_id]
+            if user_input[CONF_BLE_SCANNER_MODE] != BLEScannerMode.DISABLED and (
+                not entry_data.rpc
+                or AwesomeVersion(entry_data.rpc.device.version) < BLE_MIN_VERSION
+            ):
+                return self.async_abort(
+                    reason="ble_unsupported",
+                    description_placeholders={"ble_min_version": BLE_MIN_VERSION},
+                )
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_BLE_SCANNER_MODE,
+                        default=self.config_entry.options.get(
+                            CONF_BLE_SCANNER_MODE, BLEScannerMode.DISABLED
+                        ),
+                    ): selector.SelectSelector(
+                        selector.SelectSelectorConfig(options=BLE_SCANNER_OPTIONS),
+                    ),
+                }
+            ),
         )

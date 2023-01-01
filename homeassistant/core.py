@@ -15,6 +15,7 @@ from collections.abc import (
     Iterable,
     Mapping,
 )
+from contextlib import suppress
 from contextvars import ContextVar
 import datetime
 import enum
@@ -113,7 +114,7 @@ CALLBACK_TYPE = Callable[[], None]  # pylint: disable=invalid-name
 
 CORE_STORAGE_KEY = "core.config"
 CORE_STORAGE_VERSION = 1
-CORE_STORAGE_MINOR_VERSION = 2
+CORE_STORAGE_MINOR_VERSION = 3
 
 DOMAIN = "homeassistant"
 
@@ -356,9 +357,12 @@ class HomeAssistant:
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                "Something is blocking Home Assistant from wrapping up the "
-                "start up phase. We're going to continue anyway. Please "
-                "report the following info at https://github.com/home-assistant/core/issues: %s",
+                (
+                    "Something is blocking Home Assistant from wrapping up the start up"
+                    " phase. We're going to continue anyway. Please report the"
+                    " following info at"
+                    " https://github.com/home-assistant/core/issues: %s"
+                ),
                 ", ".join(self.config.components),
             )
 
@@ -704,7 +708,8 @@ class HomeAssistant:
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                "Timed out waiting for shutdown stage 1 to complete, the shutdown will continue"
+                "Timed out waiting for shutdown stage 1 to complete, the shutdown will"
+                " continue"
             )
 
         # stage 2
@@ -715,7 +720,8 @@ class HomeAssistant:
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                "Timed out waiting for shutdown stage 2 to complete, the shutdown will continue"
+                "Timed out waiting for shutdown stage 2 to complete, the shutdown will"
+                " continue"
             )
 
         # stage 3
@@ -734,7 +740,8 @@ class HomeAssistant:
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                "Timed out waiting for shutdown stage 3 to complete, the shutdown will continue"
+                "Timed out waiting for shutdown stage 3 to complete, the shutdown will"
+                " continue"
             )
 
         self.exit_code = exit_code
@@ -824,7 +831,10 @@ class Event:
     def __repr__(self) -> str:
         """Return the representation."""
         if self.data:
-            return f"<Event {self.event_type}[{str(self.origin)[0]}]: {util.repr_helper(self.data)}>"
+            return (
+                f"<Event {self.event_type}[{str(self.origin)[0]}]:"
+                f" {util.repr_helper(self.data)}>"
+            )
 
         return f"<Event {self.event_type}[{str(self.origin)[0]}]>"
 
@@ -1418,7 +1428,8 @@ class StateMachine:
         entity_id = entity_id.lower()
         if entity_id in self._states or entity_id in self._reservations:
             raise HomeAssistantError(
-                "async_reserve must not be called once the state is in the state machine."
+                "async_reserve must not be called once the state is in the state"
+                " machine."
             )
 
         self._reservations.add(entity_id)
@@ -1807,11 +1818,16 @@ class Config:
         self.internal_url: str | None = None
         self.external_url: str | None = None
         self.currency: str = "EUR"
+        self.country: str | None = None
+        self.language: str = "en"
 
         self.config_source: ConfigSource = ConfigSource.DEFAULT
 
         # If True, pip install is skipped for requirements on startup
         self.skip_pip: bool = False
+
+        # List of packages to skip when installing requirements on startup
+        self.skip_pip_packages: list[str] = []
 
         # List of loaded components
         self.components: set[str] = set()
@@ -1913,6 +1929,8 @@ class Config:
             "external_url": self.external_url,
             "internal_url": self.internal_url,
             "currency": self.currency,
+            "country": self.country,
+            "language": self.language,
         }
 
     def set_time_zone(self, time_zone_str: str) -> None:
@@ -1938,6 +1956,8 @@ class Config:
         external_url: str | dict[Any, Any] | None = _UNDEF,
         internal_url: str | dict[Any, Any] | None = _UNDEF,
         currency: str | None = None,
+        country: str | dict[Any, Any] | None = _UNDEF,
+        language: str | None = None,
     ) -> None:
         """Update the configuration from a dictionary."""
         self.config_source = source
@@ -1962,12 +1982,25 @@ class Config:
             self.internal_url = cast(Optional[str], internal_url)
         if currency is not None:
             self.currency = currency
+        if country is not _UNDEF:
+            self.country = cast(Optional[str], country)
+        if language is not None:
+            self.language = language
 
     async def async_update(self, **kwargs: Any) -> None:
         """Update the configuration from a dictionary."""
+        # pylint: disable-next=import-outside-toplevel
+        from .config import (
+            _raise_issue_if_historic_currency,
+            _raise_issue_if_no_country,
+        )
+
         self._update(source=ConfigSource.STORAGE, **kwargs)
         await self._async_store()
         self.hass.bus.async_fire(EVENT_CORE_CONFIG_UPDATE, kwargs)
+
+        _raise_issue_if_historic_currency(self.hass, self.currency)
+        _raise_issue_if_no_country(self.hass, self.country)
 
     async def async_load(self) -> None:
         """Load [homeassistant] core config."""
@@ -1999,6 +2032,8 @@ class Config:
             external_url=data.get("external_url", _UNDEF),
             internal_url=data.get("internal_url", _UNDEF),
             currency=data.get("currency"),
+            country=data.get("country"),
+            language=data.get("language"),
         )
 
     async def _async_store(self) -> None:
@@ -2015,6 +2050,8 @@ class Config:
             "external_url": self.external_url,
             "internal_url": self.internal_url,
             "currency": self.currency,
+            "country": self.country,
+            "language": self.language,
         }
 
         await self._store.async_save(data)
@@ -2053,6 +2090,34 @@ class Config:
                 data["unit_system_v2"] = self._original_unit_system
                 if data["unit_system_v2"] == _CONF_UNIT_SYSTEM_IMPERIAL:
                     data["unit_system_v2"] = _CONF_UNIT_SYSTEM_US_CUSTOMARY
+            if old_major_version == 1 and old_minor_version < 3:
+                # In 1.3, we add the key "language", initialize it from the owner account
+                data["language"] = "en"
+                try:
+                    owner = await self.hass.auth.async_get_owner()
+                    if owner is not None:
+                        # pylint: disable-next=import-outside-toplevel
+                        from .components.frontend import storage as frontend_store
+
+                        # pylint: disable-next=import-outside-toplevel
+                        from .helpers import config_validation as cv
+
+                        _, owner_data = await frontend_store.async_user_store(
+                            self.hass, owner.id
+                        )
+
+                        if (
+                            "language" in owner_data
+                            and "language" in owner_data["language"]
+                        ):
+                            with suppress(vol.InInvalid):
+                                data["language"] = cv.language(
+                                    owner_data["language"]["language"]
+                                )
+                # pylint: disable-next=broad-except
+                except Exception:
+                    _LOGGER.exception("Unexpected error during core config migration")
+
             if old_major_version > 1:
                 raise NotImplementedError
             return data

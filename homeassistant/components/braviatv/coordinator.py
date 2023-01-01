@@ -125,13 +125,18 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         """Connect and fetch data."""
         try:
             if not self.connected:
-                if self.use_psk:
-                    await self.client.connect(psk=self.pin)
-                else:
-                    await self.client.connect(
-                        pin=self.pin, clientid=self.client_id, nickname=self.nickname
-                    )
-                self.connected = True
+                try:
+                    if self.use_psk:
+                        await self.client.connect(psk=self.pin)
+                    else:
+                        await self.client.connect(
+                            pin=self.pin,
+                            clientid=self.client_id,
+                            nickname=self.nickname,
+                        )
+                    self.connected = True
+                except BraviaTVAuthError as err:
+                    raise ConfigEntryAuthFailed from err
 
             power_status = await self.client.get_power_status()
             self.is_on = power_status == "active"
@@ -151,8 +156,6 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 _LOGGER.debug("Update skipped, Bravia API service is reloading")
                 return
             raise UpdateFailed("Error communicating with device") from err
-        except BraviaTVAuthError as err:
-            raise ConfigEntryAuthFailed from err
         except (BraviaTVConnectionError, BraviaTVConnectionTimeout, BraviaTVTurnedOff):
             self.is_on = False
             self.connected = False

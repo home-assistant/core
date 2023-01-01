@@ -11,7 +11,6 @@ from async_upnp_client.ssdp_listener import SsdpListener
 from async_upnp_client.utils import CaseInsensitiveDict
 import pytest
 
-import homeassistant
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.const import (
@@ -19,6 +18,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     MATCH_ALL,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -31,7 +31,7 @@ def _ssdp_headers(headers):
     return ssdp_headers
 
 
-async def init_ssdp_component(hass: homeassistant) -> SsdpListener:
+async def init_ssdp_component(hass: HomeAssistant) -> SsdpListener:
     """Initialize ssdp component and get SsdpListener."""
     await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
     await hass.async_block_till_done()
@@ -55,7 +55,7 @@ async def test_ssdp_flow_dispatched_on_st(mock_get_ssdp, hass, caplog, mock_flow
         }
     )
     ssdp_listener = await init_ssdp_component(hass)
-    await ssdp_listener._on_search(mock_ssdp_search_response)
+    ssdp_listener._on_search(mock_ssdp_search_response)
     await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
@@ -98,7 +98,7 @@ async def test_ssdp_flow_dispatched_on_manufacturer_url(
         }
     )
     ssdp_listener = await init_ssdp_component(hass)
-    await ssdp_listener._on_search(mock_ssdp_search_response)
+    ssdp_listener._on_search(mock_ssdp_search_response)
     await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
@@ -148,7 +148,7 @@ async def test_scan_match_upnp_devicedesc_manufacturer(
         }
     )
     ssdp_listener = await init_ssdp_component(hass)
-    await ssdp_listener._on_search(mock_ssdp_search_response)
+    ssdp_listener._on_search(mock_ssdp_search_response)
     await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
@@ -189,7 +189,7 @@ async def test_scan_match_upnp_devicedesc_devicetype(
         }
     )
     ssdp_listener = await init_ssdp_component(hass)
-    await ssdp_listener._on_search(mock_ssdp_search_response)
+    ssdp_listener._on_search(mock_ssdp_search_response)
     await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -237,7 +237,7 @@ async def test_scan_not_all_present(
         }
     )
     ssdp_listener = await init_ssdp_component(hass)
-    await ssdp_listener._on_search(mock_ssdp_search_response)
+    ssdp_listener._on_search(mock_ssdp_search_response)
     await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
@@ -278,7 +278,7 @@ async def test_scan_not_all_match(mock_get_ssdp, hass, aioclient_mock, mock_flow
         }
     )
     ssdp_listener = await init_ssdp_component(hass)
-    await ssdp_listener._on_search(mock_ssdp_search_response)
+    ssdp_listener._on_search(mock_ssdp_search_response)
     await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
@@ -317,7 +317,7 @@ async def test_flow_start_only_alive(
             "usn": "uuid:mock-udn::mock-st",
         }
     )
-    await ssdp_listener._on_search(mock_ssdp_search_response)
+    ssdp_listener._on_search(mock_ssdp_search_response)
     await hass.async_block_till_done()
 
     mock_flow_init.assert_awaited_once_with(
@@ -334,7 +334,7 @@ async def test_flow_start_only_alive(
             "nts": "ssdp:alive",
         }
     )
-    await ssdp_listener._on_alive(mock_ssdp_advertisement)
+    ssdp_listener._on_alive(mock_ssdp_advertisement)
     await hass.async_block_till_done()
     mock_flow_init.assert_awaited_once_with(
         "mock-domain", context={"source": config_entries.SOURCE_SSDP}, data=ANY
@@ -343,14 +343,14 @@ async def test_flow_start_only_alive(
     # ssdp:byebye advertisement should not start a flow
     mock_flow_init.reset_mock()
     mock_ssdp_advertisement["nts"] = "ssdp:byebye"
-    await ssdp_listener._on_byebye(mock_ssdp_advertisement)
+    ssdp_listener._on_byebye(mock_ssdp_advertisement)
     await hass.async_block_till_done()
     mock_flow_init.assert_not_called()
 
     # ssdp:update advertisement should start a flow
     mock_flow_init.reset_mock()
     mock_ssdp_advertisement["nts"] = "ssdp:update"
-    await ssdp_listener._on_update(mock_ssdp_advertisement)
+    ssdp_listener._on_update(mock_ssdp_advertisement)
     await hass.async_block_till_done()
     mock_flow_init.assert_awaited_once_with(
         "mock-domain", context={"source": config_entries.SOURCE_SSDP}, data=ANY
@@ -388,7 +388,7 @@ async def test_discovery_from_advertisement_sets_ssdp_st(
             "usn": "uuid:mock-udn::mock-st",
         }
     )
-    await ssdp_listener._on_alive(mock_ssdp_advertisement)
+    ssdp_listener._on_alive(mock_ssdp_advertisement)
     await hass.async_block_till_done()
 
     discovery_info = await ssdp.async_get_discovery_info_by_udn(hass, "uuid:mock-udn")
@@ -469,34 +469,35 @@ async def test_scan_with_registered_callback(
         hass, async_integration_callback, {"st": "mock-st"}
     )
 
-    async_integration_match_all_callback1 = AsyncMock()
+    async_integration_match_all_callback = AsyncMock()
     await ssdp.async_register_callback(
-        hass, async_integration_match_all_callback1, {"x-rincon-bootseq": MATCH_ALL}
+        hass, async_integration_match_all_callback, {"x-rincon-bootseq": MATCH_ALL}
     )
 
-    async_integration_match_all_not_present_callback1 = AsyncMock()
+    async_integration_match_all_not_present_callback = AsyncMock()
     await ssdp.async_register_callback(
         hass,
-        async_integration_match_all_not_present_callback1,
+        async_integration_match_all_not_present_callback,
         {"x-not-there": MATCH_ALL},
     )
 
-    async_not_matching_integration_callback1 = AsyncMock()
+    async_not_matching_integration_callback = AsyncMock()
     await ssdp.async_register_callback(
-        hass, async_not_matching_integration_callback1, {"st": "not-match-mock-st"}
+        hass, async_not_matching_integration_callback, {"st": "not-match-mock-st"}
     )
 
-    async_match_any_callback1 = AsyncMock()
-    await ssdp.async_register_callback(hass, async_match_any_callback1)
+    async_match_any_callback = AsyncMock()
+    await ssdp.async_register_callback(hass, async_match_any_callback)
 
     await hass.async_block_till_done()
-    await ssdp_listener._on_search(mock_ssdp_search_response)
+    ssdp_listener._on_search(mock_ssdp_search_response)
+    await hass.async_block_till_done()
 
     assert async_integration_callback.call_count == 1
-    assert async_integration_match_all_callback1.call_count == 1
-    assert async_integration_match_all_not_present_callback1.call_count == 0
-    assert async_match_any_callback1.call_count == 1
-    assert async_not_matching_integration_callback1.call_count == 0
+    assert async_integration_match_all_callback.call_count == 1
+    assert async_integration_match_all_not_present_callback.call_count == 0
+    assert async_match_any_callback.call_count == 1
+    assert async_not_matching_integration_callback.call_count == 0
     assert async_integration_callback.call_args[0][1] == ssdp.SsdpChange.ALIVE
     mock_call_data: ssdp.SsdpServiceInfo = async_integration_callback.call_args[0][0]
     assert mock_call_data.ssdp_ext == ""
@@ -552,7 +553,7 @@ async def test_getting_existing_headers(
         }
     )
     ssdp_listener = await init_ssdp_component(hass)
-    await ssdp_listener._on_search(mock_ssdp_search_response)
+    ssdp_listener._on_search(mock_ssdp_search_response)
 
     discovery_info_by_st = await ssdp.async_get_discovery_info_by_st(hass, "mock-st")
     discovery_info_by_st = discovery_info_by_st[0]

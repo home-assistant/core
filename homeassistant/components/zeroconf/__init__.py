@@ -552,12 +552,20 @@ def _first_non_link_local_address(
     """Return the first ipv6 or non-link local ipv4 address, preferring IPv4."""
     for address in addresses:
         ip_addr = ip_address(address)
-        if not ip_addr.is_link_local and ip_addr.version == 4:
+        if (
+            not ip_addr.is_link_local
+            and not ip_addr.is_unspecified
+            and ip_addr.version == 4
+        ):
             return str(ip_addr)
     # If we didn't find a good IPv4 address, check for IPv6 addresses.
     for address in addresses:
         ip_addr = ip_address(address)
-        if not ip_addr.is_link_local and ip_addr.version == 6:
+        if (
+            not ip_addr.is_link_local
+            and not ip_addr.is_unspecified
+            and ip_addr.version == 6
+        ):
             return str(ip_addr)
     return None
 
@@ -571,7 +579,10 @@ def _suppress_invalid_properties(properties: dict) -> None:
 
         if len(prop_value.encode("utf-8")) > MAX_PROPERTY_VALUE_LEN:
             _LOGGER.error(
-                "The property '%s' was suppressed because it is longer than the maximum length of %d bytes: %s",
+                (
+                    "The property '%s' was suppressed because it is longer than the"
+                    " maximum length of %d bytes: %s"
+                ),
                 prop,
                 MAX_PROPERTY_VALUE_LEN,
                 prop_value,
@@ -585,7 +596,10 @@ def _truncate_location_name_to_valid(location_name: str) -> str:
         return location_name
 
     _LOGGER.warning(
-        "The location name was truncated because it is longer than the maximum length of %d bytes: %s",
+        (
+            "The location name was truncated because it is longer than the maximum"
+            " length of %d bytes: %s"
+        ),
         MAX_NAME_LEN,
         location_name,
     )

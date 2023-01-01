@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "calendar_name": "Naam agenda"
+                },
+                "description": "Kies een naam voor je nieuwe agenda"
+            }
+        }
+    }
+}

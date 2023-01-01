@@ -198,11 +198,11 @@ class JellyfinMediaPlayer(JellyfinEntity, MediaPlayerEntity):
         return get_artwork_url(self.coordinator.api_client, self.now_playing, 150)
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         commands: list[str] = self.capabilities.get("SupportedCommands", [])
         controllable = self.capabilities.get("SupportsMediaControl", False)
-        features = 0
+        features = MediaPlayerEntityFeature(0)
 
         if controllable:
             features |= (

@@ -64,7 +64,7 @@ class FirmwareEffect(IntEnum):
     FLAME = 3
 
 
-class LIFXUpdateCoordinator(DataUpdateCoordinator):
+class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
     """DataUpdateCoordinator to gather data for a specific lifx device."""
 
     def __init__(
@@ -173,6 +173,8 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
                 self.device.get_hostfirmware()
             if self.device.product is None:
                 self.device.get_version()
+            if self.device.group is None:
+                self.device.get_group()
 
             response = await async_execute_lifx(self.device.get_color)
 

@@ -71,6 +71,8 @@ def two_zone_local():
     ), patch.object(
         zone_mocks[0], "bypassed", new_callable=PropertyMock(return_value=False)
     ), patch.object(
+        zone_mocks[0], "armed", new_callable=PropertyMock(return_value=False)
+    ), patch.object(
         zone_mocks[1], "id", new_callable=PropertyMock(return_value=1)
     ), patch.object(
         zone_mocks[1], "name", new_callable=PropertyMock(return_value="Zone 1")
@@ -78,6 +80,8 @@ def two_zone_local():
         zone_mocks[1], "alarmed", new_callable=PropertyMock(return_value=False)
     ), patch.object(
         zone_mocks[1], "bypassed", new_callable=PropertyMock(return_value=False)
+    ), patch.object(
+        zone_mocks[1], "armed", new_callable=PropertyMock(return_value=False)
     ), patch(
         "homeassistant.components.risco.RiscoLocal.partitions",
         new_callable=PropertyMock(return_value={}),

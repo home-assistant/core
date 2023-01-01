@@ -14,29 +14,18 @@ from homeassistant.const import (
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_CURRENT_MILLIAMPERE,
-    ELECTRIC_POTENTIAL_MILLIVOLT,
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_KILO_WATT,
-    POWER_WATT,
-    PRESSURE_BAR,
-    PRESSURE_HPA,
-    PRESSURE_INHG,
-    PRESSURE_MBAR,
-    PRESSURE_PA,
-    PRESSURE_PSI,
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
     Platform,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfPressure,
+    UnitOfTemperature,
+    UnitOfVolume,
 )
 
 DOMAIN = "tuya"
@@ -82,33 +71,6 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.VACUUM,
 ]
-
-
-class TuyaDeviceClass(StrEnum):
-    """Tuya specific device classes, used for translations."""
-
-    AIR_QUALITY = "tuya__air_quality"
-    CURTAIN_MODE = "tuya__curtain_mode"
-    CURTAIN_MOTOR_MODE = "tuya__curtain_motor_mode"
-    BASIC_ANTI_FLICKR = "tuya__basic_anti_flickr"
-    BASIC_NIGHTVISION = "tuya__basic_nightvision"
-    COUNTDOWN = "tuya__countdown"
-    DECIBEL_SENSITIVITY = "tuya__decibel_sensitivity"
-    FAN_ANGLE = "tuya__fan_angle"
-    FINGERBOT_MODE = "tuya__fingerbot_mode"
-    HUMIDIFIER_SPRAY_MODE = "tuya__humidifier_spray_mode"
-    HUMIDIFIER_LEVEL = "tuya__humidifier_level"
-    HUMIDIFIER_MOODLIGHTING = "tuya__humidifier_moodlighting"
-    IPC_WORK_MODE = "tuya__ipc_work_mode"
-    LED_TYPE = "tuya__led_type"
-    LIGHT_MODE = "tuya__light_mode"
-    MOTION_SENSITIVITY = "tuya__motion_sensitivity"
-    RECORD_MODE = "tuya__record_mode"
-    RELAY_STATUS = "tuya__relay_status"
-    STATUS = "tuya__status"
-    VACUUM_CISTERN = "tuya__vacuum_cistern"
-    VACUUM_COLLECTION = "tuya__vacuum_collection"
-    VACUUM_MODE = "tuya__vacuum_mode"
 
 
 class WorkMode(StrEnum):
@@ -458,45 +420,40 @@ UNITS = (
         conversion_fn=lambda x: x / 1000,
     ),
     UnitOfMeasurement(
-        unit=ELECTRIC_CURRENT_AMPERE,
+        unit=UnitOfElectricCurrent.AMPERE,
         aliases={"a", "ampere"},
         device_classes={SensorDeviceClass.CURRENT},
     ),
     UnitOfMeasurement(
-        unit=ELECTRIC_CURRENT_MILLIAMPERE,
+        unit=UnitOfElectricCurrent.MILLIAMPERE,
         aliases={"ma", "milliampere"},
         device_classes={SensorDeviceClass.CURRENT},
-        conversion_unit=ELECTRIC_CURRENT_AMPERE,
+        conversion_unit=UnitOfElectricCurrent.AMPERE,
         conversion_fn=lambda x: x / 1000,
     ),
     UnitOfMeasurement(
-        unit=ENERGY_WATT_HOUR,
+        unit=UnitOfEnergy.WATT_HOUR,
         aliases={"wh", "watthour"},
         device_classes={SensorDeviceClass.ENERGY},
     ),
     UnitOfMeasurement(
-        unit=ENERGY_KILO_WATT_HOUR,
+        unit=UnitOfEnergy.KILO_WATT_HOUR,
         aliases={"kwh", "kilowatt-hour", "kW·h"},
         device_classes={SensorDeviceClass.ENERGY},
     ),
     UnitOfMeasurement(
-        unit=VOLUME_CUBIC_FEET,
+        unit=UnitOfVolume.CUBIC_FEET,
         aliases={"ft3"},
         device_classes={SensorDeviceClass.GAS},
     ),
     UnitOfMeasurement(
-        unit=VOLUME_CUBIC_METERS,
+        unit=UnitOfVolume.CUBIC_METERS,
         aliases={"m3"},
         device_classes={SensorDeviceClass.GAS},
     ),
     UnitOfMeasurement(
         unit=LIGHT_LUX,
         aliases={"lux"},
-        device_classes={SensorDeviceClass.ILLUMINANCE},
-    ),
-    UnitOfMeasurement(
-        unit="lm",
-        aliases={"lum", "lumen"},
         device_classes={SensorDeviceClass.ILLUMINANCE},
     ),
     UnitOfMeasurement(
@@ -532,40 +489,40 @@ UNITS = (
         conversion_fn=lambda x: x * 1000,
     ),
     UnitOfMeasurement(
-        unit=POWER_WATT,
+        unit=UnitOfPower.WATT,
         aliases={"watt"},
         device_classes={SensorDeviceClass.POWER},
     ),
     UnitOfMeasurement(
-        unit=POWER_KILO_WATT,
+        unit=UnitOfPower.KILO_WATT,
         aliases={"kilowatt"},
         device_classes={SensorDeviceClass.POWER},
     ),
     UnitOfMeasurement(
-        unit=PRESSURE_BAR,
+        unit=UnitOfPressure.BAR,
         device_classes={SensorDeviceClass.PRESSURE},
     ),
     UnitOfMeasurement(
-        unit=PRESSURE_MBAR,
+        unit=UnitOfPressure.MBAR,
         aliases={"millibar"},
         device_classes={SensorDeviceClass.PRESSURE},
     ),
     UnitOfMeasurement(
-        unit=PRESSURE_HPA,
+        unit=UnitOfPressure.HPA,
         aliases={"hpa", "hectopascal"},
         device_classes={SensorDeviceClass.PRESSURE},
     ),
     UnitOfMeasurement(
-        unit=PRESSURE_INHG,
+        unit=UnitOfPressure.INHG,
         aliases={"inhg"},
         device_classes={SensorDeviceClass.PRESSURE},
     ),
     UnitOfMeasurement(
-        unit=PRESSURE_PSI,
+        unit=UnitOfPressure.PSI,
         device_classes={SensorDeviceClass.PRESSURE},
     ),
     UnitOfMeasurement(
-        unit=PRESSURE_PA,
+        unit=UnitOfPressure.PA,
         device_classes={SensorDeviceClass.PRESSURE},
     ),
     UnitOfMeasurement(
@@ -579,25 +536,25 @@ UNITS = (
         device_classes={SensorDeviceClass.SIGNAL_STRENGTH},
     ),
     UnitOfMeasurement(
-        unit=TEMP_CELSIUS,
+        unit=UnitOfTemperature.CELSIUS,
         aliases={"°c", "c", "celsius", "℃"},
         device_classes={SensorDeviceClass.TEMPERATURE},
     ),
     UnitOfMeasurement(
-        unit=TEMP_FAHRENHEIT,
+        unit=UnitOfTemperature.FAHRENHEIT,
         aliases={"°f", "f", "fahrenheit"},
         device_classes={SensorDeviceClass.TEMPERATURE},
     ),
     UnitOfMeasurement(
-        unit=ELECTRIC_POTENTIAL_VOLT,
+        unit=UnitOfElectricPotential.VOLT,
         aliases={"volt"},
         device_classes={SensorDeviceClass.VOLTAGE},
     ),
     UnitOfMeasurement(
-        unit=ELECTRIC_POTENTIAL_MILLIVOLT,
+        unit=UnitOfElectricPotential.MILLIVOLT,
         aliases={"mv", "millivolt"},
         device_classes={SensorDeviceClass.VOLTAGE},
-        conversion_unit=ELECTRIC_POTENTIAL_VOLT,
+        conversion_unit=UnitOfElectricPotential.VOLT,
         conversion_fn=lambda x: x / 1000,
     ),
 )

@@ -147,7 +147,6 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         self._min_humidity = min_humidity
         self._max_humidity = max_humidity
         self._target_humidity = target_humidity
-        self._attr_supported_features = 0
         if away_humidity:
             self._attr_supported_features |= HumidifierEntityFeature.MODES
         self._away_humidity = away_humidity
@@ -359,8 +358,10 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
                 self._active = True
                 force = True
                 _LOGGER.info(
-                    "Obtained current and target humidity. "
-                    "Generic hygrostat active. %s, %s",
+                    (
+                        "Obtained current and target humidity. "
+                        "Generic hygrostat active. %s, %s"
+                    ),
                     self._cur_humidity,
                     self._target_humidity,
                 )

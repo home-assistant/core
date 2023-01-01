@@ -1,9 +1,10 @@
 """Test util methods."""
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import os
 import sqlite3
 from unittest.mock import MagicMock, Mock, patch
 
+from freezegun import freeze_time
 import pytest
 from sqlalchemy import text
 from sqlalchemy.engine.result import ChunkedIteratorResult
@@ -19,6 +20,7 @@ from homeassistant.components.recorder.models import UnsupportedDialect
 from homeassistant.components.recorder.util import (
     end_incomplete_runs,
     is_second_sunday,
+    resolve_period,
     session_scope,
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -108,7 +110,7 @@ def test_validate_or_move_away_sqlite_database(hass, tmpdir, caplog):
 
 
 async def test_last_run_was_recently_clean(
-    loop, async_setup_recorder_instance: SetupRecorderInstanceT, tmp_path
+    event_loop, async_setup_recorder_instance: SetupRecorderInstanceT, tmp_path
 ):
     """Test we can check if the last recorder run was recently clean."""
     config = {
@@ -776,3 +778,80 @@ def test_execute_stmt_lambda_element(hass_recorder):
         with patch.object(session, "execute", MockExecutor):
             rows = util.execute_stmt_lambda_element(session, stmt, now, tomorrow)
             assert rows == ["mock_row"]
+
+
+@freeze_time(datetime(2022, 10, 21, 7, 25, tzinfo=timezone.utc))
+async def test_resolve_period(hass):
+    """Test statistic_during_period."""
+
+    now = dt_util.utcnow()
+
+    start_t, end_t = resolve_period({"calendar": {"period": "hour"}})
+    assert start_t.isoformat() == "2022-10-21T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-21T08:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "hour"}})
+    assert start_t.isoformat() == "2022-10-21T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-21T08:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "hour", "offset": -1}})
+    assert start_t.isoformat() == "2022-10-21T06:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-21T07:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "day"}})
+    assert start_t.isoformat() == "2022-10-21T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-22T07:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "day", "offset": -1}})
+    assert start_t.isoformat() == "2022-10-20T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-21T07:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "week"}})
+    assert start_t.isoformat() == "2022-10-17T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-24T07:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "week", "offset": -1}})
+    assert start_t.isoformat() == "2022-10-10T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-17T07:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "month"}})
+    assert start_t.isoformat() == "2022-10-01T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-11-01T07:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "month", "offset": -1}})
+    assert start_t.isoformat() == "2022-09-01T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-01T07:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "year"}})
+    assert start_t.isoformat() == "2022-01-01T08:00:00+00:00"
+    assert end_t.isoformat() == "2023-01-01T08:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "year", "offset": -1}})
+    assert start_t.isoformat() == "2021-01-01T08:00:00+00:00"
+    assert end_t.isoformat() == "2022-01-01T08:00:00+00:00"
+
+    # Fixed period
+    assert resolve_period({}) == (None, None)
+
+    assert resolve_period({"fixed_period": {"end_time": now}}) == (None, now)
+
+    assert resolve_period({"fixed_period": {"start_time": now}}) == (now, None)
+
+    assert resolve_period({"fixed_period": {"end_time": now, "start_time": now}}) == (
+        now,
+        now,
+    )
+
+    # Rolling window
+    assert resolve_period(
+        {"rolling_window": {"duration": timedelta(hours=1, minutes=25)}}
+    ) == (now - timedelta(hours=1, minutes=25), now)
+
+    assert resolve_period(
+        {
+            "rolling_window": {
+                "duration": timedelta(hours=1),
+                "offset": timedelta(minutes=-25),
+            }
+        }
+    ) == (now - timedelta(hours=1, minutes=25), now - timedelta(minutes=25))

@@ -1,6 +1,7 @@
 """Support for MQTT switches."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import functools
 from typing import Any
 
@@ -22,6 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import subscription
@@ -39,10 +41,9 @@ from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
-    async_setup_platform_helper,
     warn_for_legacy_schema,
 )
-from .models import MqttValueTemplate
+from .models import MqttValueTemplate, ReceiveMessage
 from .util import get_mqtt_data
 
 DEFAULT_NAME = "MQTT Switch"
@@ -65,30 +66,13 @@ PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-# Configuring MQTT Switches under the switch platform key is deprecated in HA Core 2022.6
+# Configuring MQTT Switches under the switch platform key was deprecated in HA Core 2022.6
+# Setup for the legacy YAML format was removed in HA Core 2022.12
 PLATFORM_SCHEMA = vol.All(
-    cv.PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_MODERN.schema),
     warn_for_legacy_schema(switch.DOMAIN),
 )
 
 DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up MQTT switch configured under the fan platform key (deprecated)."""
-    # Deprecated in HA Core 2022.6
-    await async_setup_platform_helper(
-        hass,
-        switch.DOMAIN,
-        discovery_info or config,
-        async_add_entities,
-        _async_setup_entity,
-    )
 
 
 async def async_setup_entry(
@@ -107,8 +91,8 @@ async def _async_setup_entity(
     hass: HomeAssistant,
     async_add_entities: AddEntitiesCallback,
     config: ConfigType,
-    config_entry: ConfigEntry | None = None,
-    discovery_data: dict | None = None,
+    config_entry: ConfigEntry,
+    discovery_data: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the MQTT switch."""
     async_add_entities([MqttSwitch(hass, config, config_entry, discovery_data)])
@@ -119,16 +103,24 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
 
     _entity_id_format = switch.ENTITY_ID_FORMAT
 
-    def __init__(self, hass, config, config_entry, discovery_data):
+    _optimistic: bool
+    _state_on: str
+    _state_off: str
+    _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        config_entry: ConfigEntry,
+        discovery_data: DiscoveryInfoType | None,
+    ) -> None:
         """Initialize the MQTT switch."""
-        self._state_on = None
-        self._state_off = None
-        self._optimistic = None
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
-    def config_schema():
+    def config_schema() -> vol.Schema:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
@@ -136,10 +128,10 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
         """(Re)Setup the entity."""
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
 
-        state_on = config.get(CONF_STATE_ON)
+        state_on: str | None = config.get(CONF_STATE_ON)
         self._state_on = state_on if state_on else config[CONF_PAYLOAD_ON]
 
-        state_off = config.get(CONF_STATE_OFF)
+        state_off: str | None = config.get(CONF_STATE_OFF)
         self._state_off = state_off if state_off else config[CONF_PAYLOAD_OFF]
 
         self._optimistic = (
@@ -150,12 +142,12 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
             self._config.get(CONF_VALUE_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
 
-    def _prepare_subscribe_topics(self):
+    def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def state_message_received(msg):
+        def state_message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT state messages."""
             payload = self._value_template(msg.payload)
             if payload == self._state_on:
@@ -184,7 +176,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
                 },
             )
 
-    async def _subscribe_topics(self):
+    async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 

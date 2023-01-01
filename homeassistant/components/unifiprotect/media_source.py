@@ -406,10 +406,13 @@ class ProtectMediaSource(MediaSource):
             event_text = "Motion Event"
         elif event_type == EventType.SMART_DETECT.value:
             if isinstance(event, Event):
-                smart_type = event.smart_detect_types[0]
+                smart_types = event.smart_detect_types
             else:
-                smart_type = SmartDetectObjectType(event["smartDetectTypes"][0])
-            event_text = f"Smart Detection - {smart_type.name.title()}"
+                smart_types = [
+                    SmartDetectObjectType(e) for e in event["smartDetectTypes"]
+                ]
+            smart_type_names = [s.name.title().replace("_", " ") for s in smart_types]
+            event_text = f"Smart Detection - {','.join(smart_type_names)}"
         title += f" {event_text}"
 
         nvr = data.api.bootstrap.nvr

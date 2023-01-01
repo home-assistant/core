@@ -202,7 +202,7 @@ def async_prepare_call_from_config(
                 f"Template rendered invalid service: {domain_service}"
             ) from ex
 
-    domain, service = domain_service.split(".", 1)
+    domain, _, service = domain_service.partition(".")
 
     target = {}
     if CONF_TARGET in config:
@@ -437,7 +437,7 @@ def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_T
 def _load_services_files(
     hass: HomeAssistant, integrations: Iterable[Integration]
 ) -> list[JSON_TYPE]:
-    """Load service files for multiple intergrations."""
+    """Load service files for multiple integrations."""
     return [_load_services_file(hass, integration) for integration in integrations]
 
 
@@ -716,7 +716,10 @@ async def _handle_entity_call(
 
     if asyncio.iscoroutine(result):
         _LOGGER.error(
-            "Service %s for %s incorrectly returns a coroutine object. Await result instead in service handler. Report bug to integration author",
+            (
+                "Service %s for %s incorrectly returns a coroutine object. Await result"
+                " instead in service handler. Report bug to integration author"
+            ),
             func,
             entity.entity_id,
         )

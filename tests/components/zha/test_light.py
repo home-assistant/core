@@ -242,7 +242,9 @@ async def eWeLink_light(hass, zigpy_device_mock, zha_device_joined):
     color_cluster = zigpy_device.endpoints[1].light_color
     color_cluster.PLUGGED_ATTR_READS = {
         "color_capabilities": lighting.Color.ColorCapabilities.Color_temperature
-        | lighting.Color.ColorCapabilities.XY_attributes
+        | lighting.Color.ColorCapabilities.XY_attributes,
+        "color_temp_physical_min": 0,
+        "color_temp_physical_max": 0,
     }
     zha_device = await zha_device_joined(zigpy_device)
     zha_device.available = True
@@ -1192,6 +1194,8 @@ async def test_transitions(
     assert eWeLink_state.state == STATE_ON
     assert eWeLink_state.attributes["color_temp"] == 235
     assert eWeLink_state.attributes["color_mode"] == ColorMode.COLOR_TEMP
+    assert eWeLink_state.attributes["min_mireds"] == 153
+    assert eWeLink_state.attributes["max_mireds"] == 500
 
 
 async def async_test_on_off_from_light(hass, cluster, entity_id):

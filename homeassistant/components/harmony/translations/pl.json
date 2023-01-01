@@ -22,6 +22,15 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "activities": {
+                "state": {
+                    "power_off": "wy\u0142\u0105czony"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

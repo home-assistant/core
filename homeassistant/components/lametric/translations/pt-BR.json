@@ -44,9 +44,19 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "brightness_mode": {
+                "state": {
+                    "auto": "Autom\u00e1tico",
+                    "manual": "Manual"
+                }
+            }
+        }
+    },
     "issues": {
         "manual_migration": {
-            "description": "A integra\u00e7\u00e3o LaMetric foi modernizada: agora est\u00e1 configurada e configurada atrav\u00e9s da interface do usu\u00e1rio e as comunica\u00e7\u00f5es agora s\u00e3o locais. \n\n Infelizmente, n\u00e3o h\u00e1 caminho de migra\u00e7\u00e3o autom\u00e1tica poss\u00edvel e, portanto, exige que voc\u00ea reconfigure seu LaMetric com o Home Assistant. Consulte a documenta\u00e7\u00e3o de integra\u00e7\u00e3o do Home Assistant LaMetric sobre como configur\u00e1-lo. \n\n Remova a configura\u00e7\u00e3o antiga do LaMetric YAML do arquivo configuration.yaml e reinicie o Home Assistant para corrigir esse problema.",
+            "description": "A integra\u00e7\u00e3o LaMetric foi modernizada: agora \u00e9 configurada e configurada atrav\u00e9s da interface do usu\u00e1rio e as comunica\u00e7\u00f5es agora s\u00e3o locais. \n\n Infelizmente, n\u00e3o h\u00e1 um caminho de migra\u00e7\u00e3o autom\u00e1tica poss\u00edvel e, portanto, requer que voc\u00ea reconfigure seu LaMetric com o Home Assistant. Consulte a documenta\u00e7\u00e3o de integra\u00e7\u00e3o LaMetric do Home Assistant para saber como configur\u00e1-lo. \n\n Remova a configura\u00e7\u00e3o antiga do LaMetric YAML do arquivo configuration.yaml e reinicie o Home Assistant para corrigir esse problema.",
             "title": "Migra\u00e7\u00e3o manual necess\u00e1ria para LaMetric"
         }
     }

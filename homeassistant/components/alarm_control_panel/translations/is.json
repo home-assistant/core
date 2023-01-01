@@ -4,7 +4,8 @@
             "is_armed_away": "{entity_name} er \u00e1 ver\u00f0i \u00fati",
             "is_armed_home": "{entity_name} er \u00e1 ver\u00f0i heima",
             "is_armed_night": "{entity_name} er \u00e1 ver\u00f0i n\u00f3tt",
-            "is_disarmed": "{entity_name} er ekki \u00e1 ver\u00f0i"
+            "is_disarmed": "{entity_name} er ekki \u00e1 ver\u00f0i",
+            "is_triggered": "{entity_name} er r\u00e6st"
         },
         "trigger_type": {
             "armed_away": "{entity_name} \u00e1 ver\u00f0i \u00fati",

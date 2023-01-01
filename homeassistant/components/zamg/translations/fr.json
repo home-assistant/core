@@ -7,6 +7,11 @@
         "error": {
             "cannot_connect": "\u00c9chec de connexion"
         },
-        "flow_title": "{name}"
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "description": "Configurez ZAMG pour l\u2019int\u00e9grer \u00e0 Home Assistant."
+            }
+        }
     }
 }

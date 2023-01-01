@@ -2445,7 +2445,6 @@ async def test_thermostat_with_supported_features_target_temp_but_fan_mode_set(
             ATTR_FAN_MODE: FAN_AUTO,
             ATTR_FAN_MODES: None,
             ATTR_HVAC_ACTION: HVACAction.IDLE,
-            ATTR_FAN_MODE: FAN_AUTO,
             ATTR_PRESET_MODE: "home",
             ATTR_FRIENDLY_NAME: "Rec Room",
             ATTR_HVAC_MODES: [

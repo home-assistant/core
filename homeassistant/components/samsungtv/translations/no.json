@@ -26,7 +26,7 @@
                 "description": "Vil du konfigurere {device} ? Hvis du aldri har koblet til Home Assistant f\u00f8r, b\u00f8r du se en popup p\u00e5 TV-en din som ber om autorisasjon."
             },
             "reauth_confirm": {
-                "description": "Etter innsending, godta popup-vinduet p\u00e5 {device} ber om autorisasjon innen 30 sekunder eller angi PIN-kode."
+                "description": "Etter innsending godtar du popup-vinduet p\u00e5 {device} ber om autorisasjon innen 30 sekunder eller skriv inn PIN-kode."
             },
             "reauth_confirm_encrypted": {
                 "description": "Vennligst skriv inn PIN-koden som vises p\u00e5 {device} ."

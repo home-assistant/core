@@ -32,7 +32,7 @@ DATA_REGISTRY = "device_registry"
 EVENT_DEVICE_REGISTRY_UPDATED = "device_registry_updated"
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 3
+STORAGE_VERSION_MINOR = 4
 SAVE_DELAY = 10
 CLEANUP_DELAY = 10
 
@@ -70,6 +70,7 @@ class DeviceEntryType(StrEnum):
 class DeviceEntry:
     """Device Registry Entry."""
 
+    aliases: set[str] = attr.ib(factory=set)
     area_id: str | None = attr.ib(default=None)
     config_entries: set[str] = attr.ib(converter=set, factory=set)
     configuration_url: str | None = attr.ib(default=None)
@@ -146,40 +147,37 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
     """Store entity registry data."""
 
     async def _async_migrate_func(
-        self, old_major_version: int, old_minor_version: int, old_data: dict[str, Any]
+        self,
+        old_major_version: int,
+        old_minor_version: int,
+        old_data: dict[str, list[dict[str, Any]]],
     ) -> dict[str, Any]:
         """Migrate to the new version."""
         if old_major_version < 2:
             if old_minor_version < 2:
-                # From version 1.1
+                # Version 1.2 implements migration and freezes the available keys,
+                # populate keys which were introduced before version 1.2
                 for device in old_data["devices"]:
-                    # Introduced in 0.110
+                    device.setdefault("area_id", None)
+                    device.setdefault("configuration_url", None)
+                    device.setdefault("disabled_by", None)
                     try:
-                        device["entry_type"] = DeviceEntryType(device.get("entry_type"))
+                        device["entry_type"] = DeviceEntryType(device.get("entry_type"))  # type: ignore[arg-type]
                     except ValueError:
                         device["entry_type"] = None
-
-                    # Introduced in 0.79
-                    # renamed in 0.95
-                    device["via_device_id"] = device.get("via_device_id") or device.get(
-                        "hub_device_id"
-                    )
-                    # Introduced in 0.87
-                    device["area_id"] = device.get("area_id")
-                    device["name_by_user"] = device.get("name_by_user")
-                    # Introduced in 0.119
-                    device["disabled_by"] = device.get("disabled_by")
-                    # Introduced in 2021.11
-                    device["configuration_url"] = device.get("configuration_url")
-                # Introduced in 0.111
-                old_data["deleted_devices"] = old_data.get("deleted_devices", [])
+                    device.setdefault("name_by_user", None)
+                    # via_device_id was originally introduced as hub_device_id
+                    device.setdefault("via_device_id", device.get("hub_device_id"))
+                old_data.setdefault("deleted_devices", [])
                 for device in old_data["deleted_devices"]:
-                    # Introduced in 2021.2
-                    device["orphaned_timestamp"] = device.get("orphaned_timestamp")
+                    device.setdefault("orphaned_timestamp", None)
             if old_minor_version < 3:
-                # Introduced in 2022.2
+                # Version 1.3 adds hw_version
                 for device in old_data["devices"]:
-                    device["hw_version"] = device.get("hw_version")
+                    device["hw_version"] = None
+            if old_minor_version < 4:
+                for device in old_data["devices"]:
+                    device["aliases"] = []
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -347,9 +345,11 @@ class DeviceRegistry:
 
         if isinstance(entry_type, str) and not isinstance(entry_type, DeviceEntryType):
             report(  # type: ignore[unreachable]
-                "uses str for device registry entry_type. This is deprecated and will "
-                "stop working in Home Assistant 2022.3, it should be updated to use "
-                "DeviceEntryType instead",
+                (
+                    "uses str for device registry entry_type. This is deprecated and"
+                    " will stop working in Home Assistant 2022.3, it should be updated"
+                    " to use DeviceEntryType instead"
+                ),
                 error_if_core=False,
             )
             entry_type = DeviceEntryType(entry_type)
@@ -382,6 +382,7 @@ class DeviceRegistry:
         device_id: str,
         *,
         add_config_entry_id: str | UndefinedType = UNDEFINED,
+        aliases: set[str] | UndefinedType = UNDEFINED,
         area_id: str | None | UndefinedType = UNDEFINED,
         configuration_url: str | None | UndefinedType = UNDEFINED,
         disabled_by: DeviceEntryDisabler | None | UndefinedType = UNDEFINED,
@@ -418,9 +419,11 @@ class DeviceRegistry:
             disabled_by, DeviceEntryDisabler
         ):
             report(  # type: ignore[unreachable]
-                "uses str for device registry disabled_by. This is deprecated and will "
-                "stop working in Home Assistant 2022.3, it should be updated to use "
-                "DeviceEntryDisabler instead",
+                (
+                    "uses str for device registry disabled_by. This is deprecated and"
+                    " will stop working in Home Assistant 2022.3, it should be updated"
+                    " to use DeviceEntryDisabler instead"
+                ),
                 error_if_core=False,
             )
             disabled_by = DeviceEntryDisabler(disabled_by)
@@ -470,6 +473,7 @@ class DeviceRegistry:
             old_values["identifiers"] = old.identifiers
 
         for attr_name, value in (
+            ("aliases", aliases),
             ("area_id", area_id),
             ("configuration_url", configuration_url),
             ("disabled_by", disabled_by),
@@ -548,6 +552,7 @@ class DeviceRegistry:
         if data is not None:
             for device in data["devices"]:
                 devices[device["id"]] = DeviceEntry(
+                    aliases=set(device["aliases"]),
                     area_id=device["area_id"],
                     config_entries=set(device["config_entries"]),
                     configuration_url=device["configuration_url"],
@@ -595,6 +600,7 @@ class DeviceRegistry:
 
         data["devices"] = [
             {
+                "aliases": list(entry.aliases),
                 "area_id": entry.area_id,
                 "config_entries": list(entry.config_entries),
                 "configuration_url": entry.configuration_url,
@@ -696,7 +702,8 @@ async def async_get_registry(hass: HomeAssistant) -> DeviceRegistry:
     This is deprecated and will be removed in the future. Use async_get instead.
     """
     report(
-        "uses deprecated `async_get_registry` to access device registry, use async_get instead"
+        "uses deprecated `async_get_registry` to access device registry, use async_get"
+        " instead"
     )
     return async_get(hass)
 

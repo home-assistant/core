@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165"
+        },
+        "step": {
+            "few": "Pr\u00e1zdnych",
+            "many": "Pr\u00e1zdnych",
+            "one": "Pr\u00e1zdny",
+            "other": "Pr\u00e1zdny"
+        }
+    }
+}

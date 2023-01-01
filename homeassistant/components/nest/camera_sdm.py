@@ -95,9 +95,9 @@ class NestCamera(Camera):
         return self._device_info.device_model
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> CameraEntityFeature:
         """Flag supported features."""
-        supported_features = 0
+        supported_features = CameraEntityFeature(0)
         if CameraLiveStreamTrait.NAME in self._device.traits:
             supported_features |= CameraEntityFeature.STREAM
         return supported_features

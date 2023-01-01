@@ -58,7 +58,7 @@
                 "title": "The Z-Wave JS add-on is starting."
             },
             "usb_confirm": {
-                "description": "Do you want to setup {name} with the Z-Wave JS add-on?"
+                "description": "Do you want to set up {name} with the Z-Wave JS add-on?"
             },
             "zeroconf_confirm": {
                 "description": "Do you want to add the Z-Wave JS Server with home ID {home_id} found at {url} to Home Assistant?",

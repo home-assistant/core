@@ -42,15 +42,17 @@ SERVICE_EFFECT_MOVE = "effect_move"
 SERVICE_EFFECT_PULSE = "effect_pulse"
 SERVICE_EFFECT_STOP = "effect_stop"
 
+ATTR_CHANGE = "change"
+ATTR_CYCLES = "cycles"
+ATTR_DIRECTION = "direction"
+ATTR_PALETTE = "palette"
+ATTR_PERIOD = "period"
 ATTR_POWER_OFF = "power_off"
 ATTR_POWER_ON = "power_on"
-ATTR_PERIOD = "period"
-ATTR_CYCLES = "cycles"
-ATTR_SPREAD = "spread"
-ATTR_CHANGE = "change"
-ATTR_DIRECTION = "direction"
+ATTR_SATURATION_MAX = "saturation_max"
+ATTR_SATURATION_MIN = "saturation_min"
 ATTR_SPEED = "speed"
-ATTR_PALETTE = "palette"
+ATTR_SPREAD = "spread"
 
 EFFECT_FLAME = "FLAME"
 EFFECT_MORPH = "MORPH"
@@ -72,8 +74,8 @@ EFFECT_MOVE_DIRECTIONS = [EFFECT_MOVE_DIRECTION_LEFT, EFFECT_MOVE_DIRECTION_RIGH
 PULSE_MODE_BLINK = "blink"
 PULSE_MODE_BREATHE = "breathe"
 PULSE_MODE_PING = "ping"
-PULSE_MODE_STROBE = "strobe"
 PULSE_MODE_SOLID = "solid"
+PULSE_MODE_STROBE = "strobe"
 
 PULSE_MODES = [
     PULSE_MODE_BLINK,
@@ -90,8 +92,8 @@ LIFX_EFFECT_SCHEMA = {
 LIFX_EFFECT_PULSE_SCHEMA = cv.make_entity_service_schema(
     {
         **LIFX_EFFECT_SCHEMA,
-        ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
-        ATTR_BRIGHTNESS_PCT: VALID_BRIGHTNESS_PCT,
+        vol.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
+        vol.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
         vol.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
         vol.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP): vol.All(
             vol.Coerce(tuple), vol.ExactSequence((cv.byte, cv.byte, cv.byte))
@@ -121,8 +123,10 @@ LIFX_EFFECT_PULSE_SCHEMA = cv.make_entity_service_schema(
 LIFX_EFFECT_COLORLOOP_SCHEMA = cv.make_entity_service_schema(
     {
         **LIFX_EFFECT_SCHEMA,
-        ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
-        ATTR_BRIGHTNESS_PCT: VALID_BRIGHTNESS_PCT,
+        vol.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
+        vol.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
+        ATTR_SATURATION_MAX: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=100)),
+        ATTR_SATURATION_MIN: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=100)),
         ATTR_PERIOD: vol.All(vol.Coerce(float), vol.Clamp(min=0.05)),
         ATTR_CHANGE: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=360)),
         ATTR_SPREAD: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=360)),
@@ -345,8 +349,21 @@ class LIFXManager:
         elif service == SERVICE_EFFECT_COLORLOOP:
 
             brightness = None
+            saturation_max = None
+            saturation_min = None
+
             if ATTR_BRIGHTNESS in kwargs:
                 brightness = convert_8_to_16(kwargs[ATTR_BRIGHTNESS])
+            elif ATTR_BRIGHTNESS_PCT in kwargs:
+                brightness = convert_8_to_16(
+                    round(255 * kwargs[ATTR_BRIGHTNESS_PCT] / 100)
+                )
+
+            if ATTR_SATURATION_MAX in kwargs:
+                saturation_max = int(kwargs[ATTR_SATURATION_MAX] / 100 * 65535)
+
+            if ATTR_SATURATION_MIN in kwargs:
+                saturation_min = int(kwargs[ATTR_SATURATION_MIN] / 100 * 65535)
 
             effect = aiolifx_effects.EffectColorloop(
                 power_on=kwargs.get(ATTR_POWER_ON),
@@ -355,6 +372,8 @@ class LIFXManager:
                 spread=kwargs.get(ATTR_SPREAD),
                 transition=kwargs.get(ATTR_TRANSITION),
                 brightness=brightness,
+                saturation_max=saturation_max,
+                saturation_min=saturation_min,
             )
             await self.effects_conductor.start(effect, bulbs)
 

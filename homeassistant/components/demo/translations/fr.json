@@ -1,4 +1,14 @@
 {
+    "entity": {
+        "sensor": {
+            "thermostat_mode": {
+                "state": {
+                    "away": "Absent",
+                    "comfort": "Confort"
+                }
+            }
+        }
+    },
     "issues": {
         "bad_psu": {
             "fix_flow": {
@@ -9,6 +19,14 @@
                 }
             },
             "title": "L'alimentation \u00e9lectrique n'est pas stable"
+        },
+        "cold_tea": {
+            "fix_flow": {
+                "abort": {
+                    "not_tea_time": "Impossible de r\u00e9chauffer le th\u00e9 pour le moment"
+                }
+            },
+            "title": "Le th\u00e9 est froid"
         },
         "out_of_blinker_fluid": {
             "fix_flow": {

@@ -48,9 +48,6 @@ async def test_gps_sensor(
     message_string = f"1;1;1;0;49;{new_coords},{altitude}\n"
 
     receive_message(message_string)
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -105,7 +102,7 @@ async def test_sound_sensor(
 
     assert state
     assert state.state == "10"
-    assert state.attributes[ATTR_ICON] == "mdi:volume-high"
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.SOUND_PRESSURE
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "dB"
 
 
@@ -144,9 +141,6 @@ async def test_temperature_sensor(
     message_string = f"1;1;1;0;0;{temperature}\n"
 
     receive_message(message_string)
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)

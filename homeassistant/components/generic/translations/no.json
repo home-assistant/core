@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "Ingen enheter funnet p\u00e5 nettverket",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {
@@ -10,28 +9,15 @@
             "malformed_url": "Feil utforming p\u00e5 URL",
             "no_still_image_or_stream_url": "Du m\u00e5 angi minst en URL-adresse for stillbilde eller dataflyt",
             "relative_url": "Relative URL-adresser ikke tillatt",
-            "stream_file_not_found": "Filen ble ikke funnet under fors\u00f8k p\u00e5 \u00e5 koble til str\u00f8m (er ffmpeg installert?)",
-            "stream_http_not_found": "HTTP 404 Ikke funnet under fors\u00f8k p\u00e5 \u00e5 koble til str\u00f8m",
             "stream_io_error": "Inn-/utdatafeil under fors\u00f8k p\u00e5 \u00e5 koble til str\u00f8m. Feil RTSP-transportprotokoll?",
             "stream_no_route_to_host": "Kunne ikke finne verten under fors\u00f8k p\u00e5 \u00e5 koble til str\u00f8mmen",
-            "stream_no_video": "Stream har ingen video",
             "stream_not_permitted": "Operasjon er ikke tillatt mens du pr\u00f8ver \u00e5 koble til str\u00f8m. Feil RTSP-transportprotokoll?",
-            "stream_unauthorised": "Autorisasjonen mislyktes under fors\u00f8k p\u00e5 \u00e5 koble til str\u00f8mmen",
             "template_error": "Feil ved gjengivelse av mal. Se gjennom loggen for mer informasjon.",
             "timeout": "Tidsavbrudd under innlasting av URL",
             "unable_still_load": "Kan ikke laste inn gyldig bilde fra URL-adresse for stillbilde (f.eks. ugyldig verts-, URL- eller godkjenningsfeil).  Se gjennom loggen hvis du vil ha mer informasjon.",
             "unknown": "Uventet feil"
         },
         "step": {
-            "confirm": {
-                "description": "Vil du starte oppsettet?"
-            },
-            "content_type": {
-                "data": {
-                    "content_type": "Innholdstype"
-                },
-                "description": "Angi innholdstypen for str\u00f8mmen."
-            },
             "user": {
                 "data": {
                     "authentication": "Godkjenning",
@@ -62,13 +48,9 @@
             "malformed_url": "Feil utforming p\u00e5 URL",
             "no_still_image_or_stream_url": "Du m\u00e5 angi minst en URL-adresse for stillbilde eller dataflyt",
             "relative_url": "Relative URL-adresser ikke tillatt",
-            "stream_file_not_found": "Filen ble ikke funnet under fors\u00f8k p\u00e5 \u00e5 koble til str\u00f8m (er ffmpeg installert?)",
-            "stream_http_not_found": "HTTP 404 Ikke funnet under fors\u00f8k p\u00e5 \u00e5 koble til str\u00f8m",
             "stream_io_error": "Inn-/utdatafeil under fors\u00f8k p\u00e5 \u00e5 koble til str\u00f8m. Feil RTSP-transportprotokoll?",
             "stream_no_route_to_host": "Kunne ikke finne verten under fors\u00f8k p\u00e5 \u00e5 koble til str\u00f8mmen",
-            "stream_no_video": "Stream har ingen video",
             "stream_not_permitted": "Operasjon er ikke tillatt mens du pr\u00f8ver \u00e5 koble til str\u00f8m. Feil RTSP-transportprotokoll?",
-            "stream_unauthorised": "Autorisasjonen mislyktes under fors\u00f8k p\u00e5 \u00e5 koble til str\u00f8mmen",
             "template_error": "Feil ved gjengivelse av mal. Se gjennom loggen for mer informasjon.",
             "timeout": "Tidsavbrudd under innlasting av URL",
             "unable_still_load": "Kan ikke laste inn gyldig bilde fra URL-adresse for stillbilde (f.eks. ugyldig verts-, URL- eller godkjenningsfeil).  Se gjennom loggen hvis du vil ha mer informasjon.",
@@ -81,12 +63,6 @@
                 },
                 "description": "![Camera Still Image Preview]( {preview_url} )",
                 "title": "Forh\u00e5ndsvisning"
-            },
-            "content_type": {
-                "data": {
-                    "content_type": "Innholdstype"
-                },
-                "description": "Angi innholdstypen for str\u00f8mmen."
             },
             "init": {
                 "data": {

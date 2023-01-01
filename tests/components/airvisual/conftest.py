@@ -1,6 +1,6 @@
 """Define test fixtures for AirVisual."""
 import json
-from unittest.mock import patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -56,17 +56,27 @@ def data_fixture():
     return json.loads(load_fixture("data.json", "airvisual"))
 
 
+@pytest.fixture(name="pro_data", scope="session")
+def pro_data_fixture():
+    """Define an update coordinator data example for the Pro."""
+    return json.loads(load_fixture("data.json", "airvisual_pro"))
+
+
+@pytest.fixture(name="pro")
+def pro_fixture(pro_data):
+    """Define a mocked NodeSamba object."""
+    return Mock(
+        async_connect=AsyncMock(),
+        async_disconnect=AsyncMock(),
+        async_get_latest_measurements=AsyncMock(return_value=pro_data),
+    )
+
+
 @pytest.fixture(name="setup_airvisual")
 async def setup_airvisual_fixture(hass, config, data):
     """Define a fixture to set up AirVisual."""
     with patch("pyairvisual.air_quality.AirQuality.city"), patch(
         "pyairvisual.air_quality.AirQuality.nearest_city", return_value=data
-    ), patch("pyairvisual.node.NodeSamba.async_connect"), patch(
-        "pyairvisual.node.NodeSamba.async_get_latest_measurements"
-    ), patch(
-        "pyairvisual.node.NodeSamba.async_disconnect"
-    ), patch(
-        "homeassistant.components.airvisual.PLATFORMS", []
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
