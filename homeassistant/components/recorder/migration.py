@@ -496,6 +496,10 @@ def _apply_update(  # noqa: C901
     """Perform operations to bring schema up to date."""
     dialect = engine.dialect.name
     big_int = "INTEGER(20)" if dialect == SupportedDialect.MYSQL else "INTEGER"
+    if dialect in (SupportedDialect.MYSQL, SupportedDialect.POSTGRESQL):
+        timestamp_type = "DOUBLE PRECISION"
+    else:
+        timestamp_type = "FLOAT"
 
     if new_version == 1:
         _create_index(session_maker, "events", "ix_events_time_fired")
@@ -830,9 +834,11 @@ def _apply_update(  # noqa: C901
         # ALTER TABLE events DROP COLUMN time_fired
         # ALTER TABLE states DROP COLUMN last_updated
         # ALTER TABLE states DROP COLUMN last_changed
-        _add_columns(session_maker, "events", ["time_fired_ts FLOAT"])
+        _add_columns(session_maker, "events", [f"time_fired_ts {timestamp_type}"])
         _add_columns(
-            session_maker, "states", ["last_updated_ts FLOAT", "last_changed_ts FLOAT"]
+            session_maker,
+            "states",
+            [f"last_updated_ts {timestamp_type}", f"last_changed_ts {timestamp_type}"],
         )
         _create_index(session_maker, "events", "ix_events_time_fired_ts")
         _create_index(session_maker, "events", "ix_events_event_type_time_fired_ts")
