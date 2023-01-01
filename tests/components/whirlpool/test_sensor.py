@@ -71,11 +71,11 @@ async def test_sensor_values(
 
         state = await update_sensor_state(hass, entity_id, mock_instance)
         assert state is not None
-        state_id = f"{entity_id.split('_')[0]}_time_remaining"
+        state_id = f"{entity_id.split('_')[0]}_end_time"
         state = hass.states.get(state_id)
         assert state is not None
 
-        state_id = f"{entity_id.split('_')[0]}_dispense_level"
+        state_id = f"{entity_id.split('_')[0]}_detergent_level"
         state = hass.states.get(state_id)
         assert state is not None
         assert state.state == "50%"

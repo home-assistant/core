@@ -94,18 +94,22 @@ def washer_state(washer: WasherDryerClass) -> str | None:
 
 def completion_time(washer: WasherDryerClass) -> datetime | None:
     """Calculate the time stamp for completion."""
+    machine_state = washer.washdry.get_machine_state()
     if (
-        washer.washdry.get_machine_state().value
-        in {MachineState.Complete.value, MachineState.Standby.value}
+        machine_state.value in {MachineState.Complete.value, MachineState.Standby.value}
         and washer.running
     ):
         washer.running = False
-        return utcnow()
+        washer.timestamp = utcnow()
 
-    washer.running = True
-    return utcnow() + timedelta(
-        seconds=int(washer.washdry.get_attribute("Cavity_TimeStatusEstTimeRemaining"))
-    )
+    if machine_state is MachineState.RunningMainCycle:
+        washer.running = True
+        washer.timestamp = utcnow() + timedelta(
+            seconds=int(
+                washer.washdry.get_attribute("Cavity_TimeStatusEstTimeRemaining")
+            )
+        )
+    return washer.timestamp
 
 
 @dataclass
@@ -210,6 +214,7 @@ class WasherDryerClass(SensorEntity):
         self.entity_description: WhirlpoolSensorEntityDescription = description
         self._attr_unique_id = f"{said}-{description.key}"
         self._running = True
+        self._timestamp = utcnow()
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -245,6 +250,16 @@ class WasherDryerClass(SensorEntity):
         return self._running
 
     @running.setter
-    def running(self, value: bool):
+    def running(self, value: bool) -> None:
         """Set the running state."""
         self._running = value
+
+    @property
+    def timestamp(self) -> datetime:
+        """Return the washer/dryer last timestamp."""
+        return self._timestamp
+
+    @timestamp.setter
+    def timestamp(self, value) -> None:
+        """Set the Timestamp value."""
+        self._timestamp = value
