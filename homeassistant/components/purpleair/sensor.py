@@ -166,7 +166,7 @@ SENSOR_DESCRIPTIONS = [
         name="Uptime",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:timer",
+        device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda sensor: sensor.uptime,
@@ -174,8 +174,7 @@ SENSOR_DESCRIPTIONS = [
     PurpleAirSensorEntityDescription(
         key="voc",
         name="VOC",
-        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
-        native_unit_of_measurement=CONCENTRATION_IAQ,
+        device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda sensor: sensor.voc,
     ),
