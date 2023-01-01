@@ -872,13 +872,16 @@ def _migrate_columns_to_timestamp(
     if engine.dialect.name == SupportedDialect.SQLITE:
         connection.execute(
             text(
-                'UPDATE events set time_fired_ts=strftime("%s",time_fired) + cast(substr(time_fired,-7) AS FLOAT);'
+                'UPDATE events set time_fired_ts=strftime("%s",time_fired) + '
+                'cast(substr(time_fired,-7) AS FLOAT);'
             )
         )
         connection.execute(
             text(
-                'UPDATE states set last_updated_ts=strftime("%s",last_updated) + cast(substr(last_updated,-7) AS FLOAT), '
-                'last_changed_ts=strftime("%s",last_changed) + cast(substr(last_changed,-7) AS FLOAT);'
+                'UPDATE states set last_updated_ts=strftime("%s",last_updated) + '
+                'cast(substr(last_updated,-7) AS FLOAT), '
+                'last_changed_ts=strftime("%s",last_changed) + '
+                'cast(substr(last_changed,-7) AS FLOAT);'
             )
         )
     elif engine.dialect.name == SupportedDialect.MYSQL:
