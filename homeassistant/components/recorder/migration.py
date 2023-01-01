@@ -853,9 +853,9 @@ def _wipe_old_string_time_columns(
     hass: HomeAssistant, session: Session, engine: Engine
 ) -> None:
     """Wipe old string time columns."""
-    # Wipe Events.time_fired
-    # Wipe States.last_updated
-    # Wipe States.last_changed
+    # Wipe Events.time_fired since its been replaced by Events.time_fired_ts
+    # Wipe States.last_updated since its been replaced by States.last_updated_ts
+    # Wipe States.last_changed since its been replaced by States.last_changed_ts
     connection = session.connection()
     connection.execute(text("UPDATE events set time_fired=NULL;"))
     connection.execute(text("UPDATE states set last_updated=NULL, last_changed=NULL;"))
@@ -865,9 +865,9 @@ def _migrate_columns_to_timestamp(
     hass: HomeAssistant, session: Session, engine: Engine
 ) -> None:
     """Migrate columns to use timestamp."""
-    # Migrate all data in Events.time_fired to Events.time_fired_ts and wipe Events.time_fired
-    # Migrate all data in States.last_updated to States.last_updated_ts and wipe States.last_updated
-    # Migrate all data in States.last_changed to States.last_changed_ts and wipe States.last_changed
+    # Migrate all data in Events.time_fired to Events.time_fired_ts
+    # Migrate all data in States.last_updated to States.last_updated_ts
+    # Migrate all data in States.last_changed to States.last_changed_ts
     connection = session.connection()
     if engine.dialect.name == SupportedDialect.SQLITE:
         connection.execute(
