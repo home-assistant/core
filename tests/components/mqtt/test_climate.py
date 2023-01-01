@@ -12,16 +12,19 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
+    ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
     ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_HUMIDITY,
     DEFAULT_MIN_TEMP,
+    DEFAULT_MAX_HUMIDITY,
+    DEFAULT_MAX_TEMP,
     PRESET_ECO,
     ClimateEntityFeature,
     HVACAction,
-    HVACMode, ATTR_HUMIDITY,
+    HVACMode,
 )
 from homeassistant.components.mqtt.climate import MQTT_CLIMATE_ATTRIBUTES_BLOCKED
 from homeassistant.const import ATTR_TEMPERATURE, Platform
@@ -111,6 +114,8 @@ async def test_setup_params(hass, mqtt_mock_entry_with_yaml_config):
     assert state.state == "off"
     assert state.attributes.get("min_temp") == DEFAULT_MIN_TEMP
     assert state.attributes.get("max_temp") == DEFAULT_MAX_TEMP
+    assert state.attributes.get("min_humidity") == DEFAULT_MIN_HUMIDITY
+    assert state.attributes.get("max_humidity") == DEFAULT_MAX_HUMIDITY
 
 
 async def test_preset_none_in_preset_modes(hass, caplog):
@@ -1226,6 +1231,38 @@ async def test_max_temp_custom(hass, mqtt_mock_entry_with_yaml_config):
 
     assert isinstance(max_temp, float)
     assert max_temp == 60
+
+
+async def test_min_humidity_custom(hass, mqtt_mock_entry_with_yaml_config):
+    """Test a custom min humidity."""
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
+    config["climate"]["min_humidity"] = 42
+
+    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+
+    state = hass.states.get(ENTITY_CLIMATE)
+    min_humidity = state.attributes.get("min_humidity")
+
+    assert isinstance(min_humidity, float)
+    assert state.attributes.get("min_humidity") == 42
+
+
+async def test_max_humidity_custom(hass, mqtt_mock_entry_with_yaml_config):
+    """Test a custom max humidity."""
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
+    config["climate"]["max_humidity"] = 58
+
+    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+
+    state = hass.states.get(ENTITY_CLIMATE)
+    max_humidity = state.attributes.get("max_humidity")
+
+    assert isinstance(max_humidity, float)
+    assert max_humidity == 58
 
 
 async def test_temp_step_custom(hass, mqtt_mock_entry_with_yaml_config):

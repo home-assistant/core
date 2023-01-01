@@ -13,8 +13,10 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_HUMIDITY,
     DEFAULT_MIN_TEMP,
+    DEFAULT_MAX_HUMIDITY,
+    DEFAULT_MAX_TEMP,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -253,6 +255,8 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_HUMIDITY_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_HUMIDITY_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_HUMIDITY_INITIAL, default=50): cv.positive_int,
+        vol.Optional(CONF_HUMIDITY_MIN, default=DEFAULT_MIN_HUMIDITY): vol.Coerce(float),
+        vol.Optional(CONF_HUMIDITY_MAX, default=DEFAULT_MAX_HUMIDITY): vol.Coerce(float),
         vol.Optional(CONF_HUMIDITY_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_HUMIDITY_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_MODE_COMMAND_TEMPLATE): cv.template,
@@ -418,6 +422,8 @@ class MqttClimate(MqttEntity, ClimateEntity):
         self._attr_hvac_modes = config[CONF_MODE_LIST]
         self._attr_min_temp = config[CONF_TEMP_MIN]
         self._attr_max_temp = config[CONF_TEMP_MAX]
+        self._attr_min_humidity = config[CONF_HUMIDITY_MIN]
+        self._attr_max_humidity = config[CONF_HUMIDITY_MAX]
         self._attr_precision = config.get(CONF_PRECISION, super().precision)
         self._attr_fan_modes = config[CONF_FAN_MODE_LIST]
         self._attr_swing_modes = config[CONF_SWING_MODE_LIST]
