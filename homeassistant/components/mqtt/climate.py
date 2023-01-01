@@ -594,7 +594,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
         add_subscription(topics, CONF_ACTION_TOPIC, handle_action_received)
 
         @callback
-        def handle_temperature_received(
+        def handle_climate_attribute_received(
             msg: ReceiveMessage, template_name: str, attr: str
         ) -> None:
             """Handle temperature coming via MQTT."""
@@ -610,7 +610,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
         @log_messages(self.hass, self.entity_id)
         def handle_current_temperature_received(msg: ReceiveMessage) -> None:
             """Handle current temperature coming via MQTT."""
-            handle_temperature_received(
+            handle_climate_attribute_received(
                 msg, CONF_CURRENT_TEMP_TEMPLATE, "_attr_current_temperature"
             )
 
@@ -622,7 +622,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
         @log_messages(self.hass, self.entity_id)
         def handle_target_temperature_received(msg: ReceiveMessage) -> None:
             """Handle target temperature coming via MQTT."""
-            handle_temperature_received(
+            handle_climate_attribute_received(
                 msg, CONF_TEMP_STATE_TEMPLATE, "_attr_target_temperature"
             )
 
@@ -634,7 +634,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
         @log_messages(self.hass, self.entity_id)
         def handle_temperature_low_received(msg: ReceiveMessage) -> None:
             """Handle target temperature low coming via MQTT."""
-            handle_temperature_received(
+            handle_climate_attribute_received(
                 msg, CONF_TEMP_LOW_STATE_TEMPLATE, "_attr_target_temperature_low"
             )
 
@@ -646,7 +646,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
         @log_messages(self.hass, self.entity_id)
         def handle_temperature_high_received(msg: ReceiveMessage) -> None:
             """Handle target temperature high coming via MQTT."""
-            handle_temperature_received(
+            handle_climate_attribute_received(
                 msg, CONF_TEMP_HIGH_STATE_TEMPLATE, "_attr_target_temperature_high"
             )
 
@@ -658,7 +658,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
         @log_messages(self.hass, self.entity_id)
         def handle_current_humidity_received(msg: ReceiveMessage) -> None:
             """Handle current humidity coming via MQTT."""
-            handle_temperature_received(
+            handle_climate_attribute_received(
                 msg, CONF_CURRENT_HUMIDITY_TEMPLATE, "_attr_current_humidity"
             )
 
@@ -670,7 +670,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
         @log_messages(self.hass, self.entity_id)
         def handle_target_humidity_received(msg: ReceiveMessage) -> None:
             """Handle target humidity coming via MQTT."""
-            handle_temperature_received(
+            handle_climate_attribute_received(
                 msg, CONF_HUMIDITY_STATE_TEMPLATE, "_attr_target_humidity"
             )
 
@@ -808,7 +808,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
                 self._config[CONF_ENCODING],
             )
 
-    async def _set_mqtt_attribute(
+    async def _set_climate_attribute(
         self,
         temp: float | None,
         cmnd_topic: str,
@@ -834,7 +834,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
         if (operation_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
             await self.async_set_hvac_mode(operation_mode)
 
-        changed = await self._set_mqtt_attribute(
+        changed = await self._set_climate_attribute(
             kwargs.get(ATTR_TEMPERATURE),
             CONF_TEMP_COMMAND_TOPIC,
             CONF_TEMP_COMMAND_TEMPLATE,
@@ -842,7 +842,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
             "_attr_target_temperature",
         )
 
-        changed |= await self._set_mqtt_attribute(
+        changed |= await self._set_climate_attribute(
             kwargs.get(ATTR_TARGET_TEMP_LOW),
             CONF_TEMP_LOW_COMMAND_TOPIC,
             CONF_TEMP_LOW_COMMAND_TEMPLATE,
@@ -850,7 +850,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
             "_attr_target_temperature_low",
         )
 
-        changed |= await self._set_mqtt_attribute(
+        changed |= await self._set_climate_attribute(
             kwargs.get(ATTR_TARGET_TEMP_HIGH),
             CONF_TEMP_HIGH_COMMAND_TOPIC,
             CONF_TEMP_HIGH_COMMAND_TEMPLATE,
@@ -865,7 +865,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
 
-        await self._set_mqtt_attribute(
+        await self._set_climate_attribute(
             humidity,
             CONF_HUMIDITY_COMMAND_TOPIC,
             CONF_HUMIDITY_COMMAND_TEMPLATE,
