@@ -79,7 +79,6 @@ class TemperatureEntity(HomelySensorEntity):
 
     _attr_name = "Temperature"
     _attr_device_class = SensorDeviceClass.TEMPERATURE
-    # _attr_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
 
@@ -88,7 +87,6 @@ class SignalStrengthEntity(HomelySensorEntity):
 
     _attr_name = "ZigBee signal strength"
     _attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
-    # _attr_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS
     _attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS
 
     def get_state_from_device(self, device: Device) -> float:
@@ -101,7 +99,6 @@ class BatteryVoltageEntity(HomelySensorEntity):
 
     _attr_name = "Battery voltage"
     _attr_device_class = SensorDeviceClass.VOLTAGE
-    # _attr_unit_of_measurement = UnitOfElectricPotential.VOLT
     _attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
 
     def get_state_from_device(self, device: Device) -> float:
