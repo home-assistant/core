@@ -31,6 +31,13 @@
                     "lock_key": "Enter lock encryption key manually"
                 }
             },
+            "lock_chose_method": {
+                "description": "Choose configuration method, details can be found in the documentation.",
+                "menu_options": {
+                    "lock_auth": "SwitchBot app login and password",
+                    "lock_key": "Lock encryption key"
+                }
+            },
             "lock_key": {
                 "data": {
                     "encryption_key": "Encryption key",
