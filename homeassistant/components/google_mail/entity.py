@@ -1,11 +1,9 @@
 """Entity representing a Google Mail account."""
 from __future__ import annotations
 
-from typing import Any
-
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 
+from .api import AsyncConfigEntryAuth
 from .const import DOMAIN, MANUFACTURER
 
 
@@ -14,14 +12,19 @@ class GoogleMailEntity(Entity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, entry: ConfigEntry, description: EntityDescription) -> None:
+    def __init__(
+        self,
+        auth: AsyncConfigEntryAuth,
+        description: EntityDescription,
+    ) -> None:
         """Initialize a Google Mail entity."""
-        self.data: dict[str, Any] = {}
-        self.entry = entry
+        self.auth = auth
         self.entity_description = description
-        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
+        self._attr_unique_id = (
+            f"{auth.oauth_session.config_entry.entry_id}_{description.key}"
+        )
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
+            identifiers={(DOMAIN, auth.oauth_session.config_entry.entry_id)},
             manufacturer=MANUFACTURER,
-            name=entry.unique_id,
+            name=auth.oauth_session.config_entry.unique_id,
         )

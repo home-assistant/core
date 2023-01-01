@@ -15,8 +15,7 @@ ATTR_SEND = "send"
 ATTR_START = "start"
 ATTR_TITLE = "title"
 
-DATA_HASS_CONFIG = "google_mail_hass_config"
-DATA_SESSION = "session"
+DATA_AUTH = "auth"
 DEFAULT_ACCESS = [
     "https://www.googleapis.com/auth/gmail.compose",
     "https://www.googleapis.com/auth/gmail.settings.basic",

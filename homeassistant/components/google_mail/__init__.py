@@ -1,58 +1,38 @@
 """Support for Google Mail."""
 from __future__ import annotations
 
-from aiohttp.client_exceptions import ClientError, ClientResponseError
-
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import discovery
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
-from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_HASS_CONFIG, DATA_SESSION, DOMAIN
+from .api import AsyncConfigEntryAuth
+from .const import DATA_AUTH, DOMAIN
 from .services import async_setup_services
 
 PLATFORMS = [Platform.NOTIFY, Platform.SENSOR]
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the component."""
-
-    hass.data[DATA_HASS_CONFIG] = config
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Google Mail from a config entry."""
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
-    try:
-        await session.async_ensure_token_valid()
-    except ClientResponseError as err:
-        if 400 <= err.status < 500:
-            raise ConfigEntryAuthFailed(
-                "OAuth session is not valid, reauth required"
-            ) from err
-        raise ConfigEntryNotReady from err
-    except ClientError as err:
-        raise ConfigEntryNotReady from err
-
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry.data | {
-        DATA_SESSION: session
-    }
+    auth = AsyncConfigEntryAuth(async_get_clientsession(hass), session)
+    await auth.check_and_refresh_token()
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = auth
 
     hass.async_create_task(
         discovery.async_load_platform(
             hass,
             Platform.NOTIFY,
             DOMAIN,
-            hass.data[DOMAIN][entry.entry_id] | {CONF_NAME: entry.title},
-            hass.data[DATA_HASS_CONFIG],
+            {DATA_AUTH: auth, CONF_NAME: entry.title},
+            {},
         )
     )
 

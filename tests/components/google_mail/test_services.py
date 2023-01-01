@@ -63,9 +63,7 @@ async def test_reauth_trigger(
     """Test reauth is triggered after a refresh error during service call."""
     await setup_integration()
 
-    with patch(
-        "googleapiclient.http.HttpRequest.execute", side_effect=RefreshError
-    ), pytest.raises(RefreshError):
+    with patch(BUILD, side_effect=RefreshError), pytest.raises(RefreshError):
         await hass.services.async_call(
             DOMAIN,
             "set_vacation",

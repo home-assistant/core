@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
-from google.auth.exceptions import RefreshError
 from googleapiclient.http import HttpRequest
 
 from homeassistant.components.sensor import (
@@ -15,7 +14,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .application_credentials import get_oauth_service
 from .const import DOMAIN
 from .entity import GoogleMailEntity
 
@@ -33,7 +31,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Google Mail sensor."""
-    async_add_entities([GoogleMailSensor(entry, SENSOR_TYPE)], True)
+    async_add_entities(
+        [GoogleMailSensor(hass.data[DOMAIN][entry.entry_id], SENSOR_TYPE)], True
+    )
 
 
 class GoogleMailSensor(GoogleMailEntity, SensorEntity):
@@ -41,15 +41,9 @@ class GoogleMailSensor(GoogleMailEntity, SensorEntity):
 
     async def async_update(self) -> None:
         """Get the vacation data."""
-        try:
-            service = await get_oauth_service(
-                self.hass.data[DOMAIN].get(self.entry.entry_id)
-            )
-            settings: HttpRequest = service.users().settings().getVacation(userId="me")
-            data = await self.hass.async_add_executor_job(settings.execute)
-        except RefreshError as ex:
-            self.entry.async_start_reauth(self.hass)
-            raise ex
+        service = await self.auth.get_resource()
+        settings: HttpRequest = service.users().settings().getVacation(userId="me")
+        data = await self.hass.async_add_executor_job(settings.execute)
 
         if data["enableAutoReply"]:
             value = datetime.fromtimestamp(int(data["endTime"]) / 1000, tz=timezone.utc)

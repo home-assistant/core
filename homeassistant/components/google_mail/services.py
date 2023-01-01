@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
-from google.auth.exceptions import RefreshError
 from googleapiclient.http import HttpRequest
 import voluptuous as vol
 
@@ -12,7 +11,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_extract_config_entry_ids
 
-from .application_credentials import get_oauth_service
+from .api import AsyncConfigEntryAuth
 from .const import (
     ATTR_ENABLED,
     ATTR_END,
@@ -57,10 +56,11 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
     async def gmail_service(call: ServiceCall) -> None:
         """Call Google Mail service."""
+        auth: AsyncConfigEntryAuth
         for entry in await extract_gmail_config_entries(call):
-            if not (data := hass.data[DOMAIN].get(entry.entry_id)):
+            if not (auth := hass.data[DOMAIN].get(entry.entry_id)):
                 raise ValueError(f"Config entry not loaded: {entry.entry_id}")
-            service = await get_oauth_service(data)
+            service = await auth.get_resource()
 
             _settings = {
                 "enableAutoReply": call.data[ATTR_ENABLED],
@@ -85,11 +85,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                 .settings()
                 .updateVacation(userId=ATTR_ME, body=_settings)
             )
-            try:
-                await hass.async_add_executor_job(settings.execute)
-            except RefreshError as ex:
-                entry.async_start_reauth(hass)
-                raise ex
+            await hass.async_add_executor_job(settings.execute)
 
     hass.services.async_register(
         domain=DOMAIN,

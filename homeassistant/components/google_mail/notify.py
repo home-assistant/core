@@ -19,8 +19,8 @@ from homeassistant.components.notify import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .application_credentials import get_oauth_service
-from .const import ATTR_BCC, ATTR_CC, ATTR_FROM, ATTR_ME, ATTR_SEND
+from .api import AsyncConfigEntryAuth
+from .const import ATTR_BCC, ATTR_CC, ATTR_FROM, ATTR_ME, ATTR_SEND, DATA_AUTH
 
 
 async def async_get_service(
@@ -37,7 +37,7 @@ class GMailNotificationService(BaseNotificationService):
 
     def __init__(self, config: dict[str, Any]) -> None:
         """Initialize the service."""
-        self.data = config
+        self.auth: AsyncConfigEntryAuth = config[DATA_AUTH]
 
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message."""
@@ -56,7 +56,7 @@ class GMailNotificationService(BaseNotificationService):
         encoded_message = base64.urlsafe_b64encode(email.as_bytes()).decode()
         body = {"raw": encoded_message}
         msg: HttpRequest
-        users = (await get_oauth_service(self.data)).users()
+        users = (await self.auth.get_resource()).users()
         if data.get(ATTR_SEND) is False:
             msg = users.drafts().create(userId=email["From"], body={ATTR_MESSAGE: body})
         else:
