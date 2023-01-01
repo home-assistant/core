@@ -28,20 +28,48 @@ from .const import DOMAIN
 from .device import device_key_to_bluetooth_entity_key
 
 BINARY_SENSOR_DESCRIPTIONS = {
-    XiaomiBinarySensorDeviceClass.MOTION: BinarySensorEntityDescription(
-        key=XiaomiBinarySensorDeviceClass.MOTION,
-        device_class=BinarySensorDeviceClass.MOTION,
+    XiaomiBinarySensorDeviceClass.DOOR: BinarySensorEntityDescription(
+        key=XiaomiBinarySensorDeviceClass.DOOR,
+        device_class=BinarySensorDeviceClass.DOOR,
     ),
     XiaomiBinarySensorDeviceClass.LIGHT: BinarySensorEntityDescription(
         key=XiaomiBinarySensorDeviceClass.LIGHT,
         device_class=BinarySensorDeviceClass.LIGHT,
     ),
+    XiaomiBinarySensorDeviceClass.MOISTURE: BinarySensorEntityDescription(
+        key=XiaomiBinarySensorDeviceClass.MOISTURE,
+        device_class=BinarySensorDeviceClass.MOISTURE,
+    ),
+    XiaomiBinarySensorDeviceClass.MOTION: BinarySensorEntityDescription(
+        key=XiaomiBinarySensorDeviceClass.MOTION,
+        device_class=BinarySensorDeviceClass.MOTION,
+    ),
+    XiaomiBinarySensorDeviceClass.OPENING: BinarySensorEntityDescription(
+        key=XiaomiBinarySensorDeviceClass.OPENING,
+        device_class=BinarySensorDeviceClass.OPENING,
+    ),
     XiaomiBinarySensorDeviceClass.SMOKE: BinarySensorEntityDescription(
         key=XiaomiBinarySensorDeviceClass.SMOKE,
         device_class=BinarySensorDeviceClass.SMOKE,
     ),
-    XiaomiBinarySensorDeviceClass.MOISTURE: BinarySensorEntityDescription(
-        key=XiaomiBinarySensorDeviceClass.MOISTURE,
+    "device_forcibly_removed": BinarySensorEntityDescription(
+        key="device_forcibly_removed",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    "door_left_open": BinarySensorEntityDescription(
+        key="door_left_open",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    "door_stuck": BinarySensorEntityDescription(
+        key="door_stuck",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    "knock_on_the_door": BinarySensorEntityDescription(
+        key="knock_on_the_door",
+    ),
+    "pry_the_door": BinarySensorEntityDescription(
+        key="pry_the_door",
+        device_class=BinarySensorDeviceClass.TAMPER,
     ),
 }
 
@@ -57,7 +85,7 @@ def sensor_update_to_bluetooth_data_update(
         },
         entity_descriptions={
             device_key_to_bluetooth_entity_key(device_key): BINARY_SENSOR_DESCRIPTIONS[
-                description.device_class
+                device_key.key
             ]
             for device_key, description in sensor_update.binary_entity_descriptions.items()
             if description.device_class
