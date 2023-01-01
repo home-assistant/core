@@ -189,6 +189,7 @@ VALUE_TEMPLATE_KEYS = (
 
 COMMAND_TEMPLATE_KEYS = {
     CONF_FAN_MODE_COMMAND_TEMPLATE,
+    CONF_HUMIDITY_COMMAND_TEMPLATE,
     CONF_MODE_COMMAND_TEMPLATE,
     CONF_PRESET_MODE_COMMAND_TEMPLATE,
     CONF_SWING_MODE_COMMAND_TEMPLATE,
@@ -206,6 +207,7 @@ TOPIC_KEYS = (
     CONF_CURRENT_TEMP_TOPIC,
     CONF_FAN_MODE_COMMAND_TOPIC,
     CONF_FAN_MODE_STATE_TOPIC,
+    CONF_HUMIDITY_COMMAND_TOPIC,
     CONF_HUMIDITY_STATE_TOPIC,
     CONF_MODE_COMMAND_TOPIC,
     CONF_MODE_STATE_TOPIC,
@@ -248,6 +250,8 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         ): cv.ensure_list,
         vol.Optional(CONF_FAN_MODE_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_FAN_MODE_STATE_TOPIC): valid_subscribe_topic,
+        vol.Optional(CONF_HUMIDITY_COMMAND_TEMPLATE): cv.template,
+        vol.Optional(CONF_HUMIDITY_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_HUMIDITY_INITIAL, default=50): cv.positive_int,
         vol.Optional(CONF_HUMIDITY_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_HUMIDITY_STATE_TOPIC): valid_subscribe_topic,
@@ -794,7 +798,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
                 self._config[CONF_ENCODING],
             )
 
-    async def _set_temperature(
+    async def _set_mqtt_attribute(
         self,
         temp: float | None,
         cmnd_topic: str,
@@ -820,7 +824,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
         if (operation_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
             await self.async_set_hvac_mode(operation_mode)
 
-        changed = await self._set_temperature(
+        changed = await self._set_mqtt_attribute(
             kwargs.get(ATTR_TEMPERATURE),
             CONF_TEMP_COMMAND_TOPIC,
             CONF_TEMP_COMMAND_TEMPLATE,
@@ -828,7 +832,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
             "_attr_target_temperature",
         )
 
-        changed |= await self._set_temperature(
+        changed |= await self._set_mqtt_attribute(
             kwargs.get(ATTR_TARGET_TEMP_LOW),
             CONF_TEMP_LOW_COMMAND_TOPIC,
             CONF_TEMP_LOW_COMMAND_TEMPLATE,
@@ -836,7 +840,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
             "_attr_target_temperature_low",
         )
 
-        changed |= await self._set_temperature(
+        changed |= await self._set_mqtt_attribute(
             kwargs.get(ATTR_TARGET_TEMP_HIGH),
             CONF_TEMP_HIGH_COMMAND_TOPIC,
             CONF_TEMP_HIGH_COMMAND_TEMPLATE,
@@ -846,6 +850,19 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
         if not changed:
             return
+        self.async_write_ha_state()
+
+    async def async_set_humidity(self, humidity: int) -> None:
+        """Set new target humidity."""
+
+        await self._set_mqtt_attribute(
+            humidity,
+            CONF_HUMIDITY_COMMAND_TOPIC,
+            CONF_HUMIDITY_COMMAND_TEMPLATE,
+            CONF_HUMIDITY_STATE_TOPIC,
+            "_attr_target_humidity",
+        )
+
         self.async_write_ha_state()
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
