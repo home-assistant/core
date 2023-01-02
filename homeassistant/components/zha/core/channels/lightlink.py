@@ -17,7 +17,7 @@ class LightLink(ZigbeeChannel):
     BIND: bool = False
 
     async def async_configure(self) -> None:
-        """Add Coordinator to LightLink group ."""
+        """Add Coordinator to LightLink group."""
 
         if self._ch_pool.skip_configuration:
             self._status = ChannelStatus.CONFIGURED
