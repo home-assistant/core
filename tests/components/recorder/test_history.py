@@ -30,7 +30,11 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.json import JSONEncoder
 import homeassistant.util.dt as dt_util
 
-from .common import async_wait_recording_done, wait_recording_done
+from .common import (
+    async_recorder_block_till_done,
+    async_wait_recording_done,
+    wait_recording_done,
+)
 
 from tests.common import SetupRecorderInstanceT, mock_state_change_event
 
@@ -586,6 +590,27 @@ def test_get_significant_states_only(hass_recorder):
 
     assert len(hist[entity_id]) == 3
     assert states == hist[entity_id]
+
+
+async def test_get_significant_states_only_minimal_response(recorder_mock, hass):
+    """Test significant states when significant_states_only is True."""
+    now = dt_util.utcnow()
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.test", "on", attributes={"any": "attr"})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.test", "off", attributes={"any": "attr"})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.test", "off", attributes={"any": "changed"})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.test", "off", attributes={"any": "again"})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.test", "on", attributes={"any": "attr"})
+    await async_wait_recording_done(hass)
+
+    hist = history.get_significant_states(
+        hass, now, minimal_response=True, significant_changes_only=False
+    )
+    assert len(hist["sensor.test"]) == 3
 
 
 def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:

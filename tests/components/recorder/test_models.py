@@ -58,6 +58,27 @@ def test_from_event_to_db_state_attributes():
     assert StateAttributes.from_event(event).to_native() == attrs
 
 
+def test_repr():
+    """Test converting event to db state repr."""
+    attrs = {"this_attr": True}
+    fixed_time = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC, microsecond=432432)
+    state = ha.State(
+        "sensor.temperature",
+        "18",
+        attrs,
+        last_changed=fixed_time,
+        last_updated=fixed_time,
+    )
+    event = ha.Event(
+        EVENT_STATE_CHANGED,
+        {"entity_id": "sensor.temperature", "old_state": None, "new_state": state},
+        context=state.context,
+        time_fired=fixed_time,
+    )
+    assert "2016-07-09 11:00:00+00:00" in repr(States.from_event(event))
+    assert "2016-07-09 11:00:00+00:00" in repr(Events.from_event(event))
+
+
 def test_handling_broken_json_state_attributes(caplog):
     """Test we handle broken json in state attributes."""
     state_attributes = StateAttributes(
