@@ -3,13 +3,7 @@
   "name": "Nee-Vo Tank Monitoring",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/neevo",
-  "requirements": [],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
-  "codeowners": [
-    "@davidflypei"
-  ],
+  "requirements": ["pyneevo==1.0.0"],
+  "codeowners": ["@davidflypei"],
   "iot_class": "cloud_polling"
 }
