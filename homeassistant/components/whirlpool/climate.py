@@ -92,9 +92,11 @@ class AirConEntity(ClimateEntity):
     """Representation of an air conditioner."""
 
     _attr_fan_modes = SUPPORTED_FAN_MODES
+    _attr_has_entity_name = True
     _attr_hvac_modes = SUPPORTED_HVAC_MODES
     _attr_max_temp = SUPPORTED_MAX_TEMP
     _attr_min_temp = SUPPORTED_MIN_TEMP
+    _attr_should_poll = False
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
@@ -103,8 +105,6 @@ class AirConEntity(ClimateEntity):
     _attr_swing_modes = SUPPORTED_SWING_MODES
     _attr_target_temperature_step = SUPPORTED_TARGET_TEMPERATURE_STEP
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_should_poll = False
-    _attr_has_entity_name = True
 
     def __init__(self, hass, said, name, backend_selector: BackendSelector, auth: Auth):
         """Initialize the entity."""
