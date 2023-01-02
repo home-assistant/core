@@ -79,7 +79,7 @@ async def validate_input(
         port = host.port or HTTPS_PORT
         session = aiohttp_client.async_get_clientsession(hass)
     else:
-        _LOGGER.error("The isy host value in configuration is invalid")
+        _LOGGER.error("The ISY/IoX host value in configuration is invalid")
         raise InvalidHost
 
     # Connect to ISY controller.

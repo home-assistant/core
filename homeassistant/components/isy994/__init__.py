@@ -159,7 +159,7 @@ async def async_setup_entry(
         port = host.port or 443
         session = aiohttp_client.async_get_clientsession(hass)
     else:
-        _LOGGER.error("The ISY host value in configuration is invalid")
+        _LOGGER.error("The ISY/IoX host value in configuration is invalid")
         return False
 
     # Connect to ISY controller.
