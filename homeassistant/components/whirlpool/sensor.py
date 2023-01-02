@@ -207,7 +207,6 @@ class WasherDryerClass(SensorEntity):
         self._said = said
 
         self._wd: WasherDryer = washdry
-        self._wd.register_attr_callback(self.async_write_ha_state)
 
         if self._name == "dryer":
             self._attr_icon = ICON_D
@@ -224,6 +223,11 @@ class WasherDryerClass(SensorEntity):
             name=self._name,
             manufacturer="Whirlpool",
         )
+
+    async def async_added_to_hass(self) -> None:
+        """Connect washer/dryer to the cloud."""
+        self._wd.register_attr_callback(self.async_write_ha_state)
+        await self._wd.connect()
 
     async def async_will_remove_from_hass(self) -> None:
         """Close Whrilpool Appliance sockets before removing."""
