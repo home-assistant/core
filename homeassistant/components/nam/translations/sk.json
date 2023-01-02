@@ -8,10 +8,14 @@
         },
         "error": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
-            "invalid_auth": "Neplatn\u00e9 overenie"
+            "invalid_auth": "Neplatn\u00e9 overenie",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "flow_title": "{host}",
         "step": {
+            "confirm_discovery": {
+                "description": "Chcete nastavi\u0165 Nettigo Air Monitor na {host}?"
+            },
             "credentials": {
                 "data": {
                     "password": "Heslo",
@@ -29,6 +33,20 @@
             "user": {
                 "data": {
                     "host": "Hostite\u013e"
+                },
+                "description": "Nastavte integr\u00e1ciu Nettigo Air Monitor."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "caqi_level": {
+                "state": {
+                    "high": "Vysok\u00fd",
+                    "low": "N\u00edzky",
+                    "medium": "Stredn\u00fd",
+                    "very high": "Ve\u013emi vysok\u00fd",
+                    "very low": "Ve\u013emi n\u00edzky"
                 }
             }
         }

@@ -160,7 +160,7 @@ class SwitchGroup(ZhaGroupEntity, SwitchEntity):
         self.async_write_ha_state()
 
     async def async_update(self) -> None:
-        """Query all members and determine the light group state."""
+        """Query all members and determine the switch group state."""
         all_states = [self.hass.states.get(x) for x in self._entity_ids]
         states: list[State] = list(filter(None, all_states))
         on_states = [state for state in states if state.state == STATE_ON]
@@ -452,6 +452,18 @@ class AqaraPetFeederLEDIndicator(
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
 class AqaraPetFeederChildLock(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
+    """Representation of a child lock configuration entity."""
+
+    _zcl_attribute: str = "child_lock"
+    _attr_name = "Child lock"
+    _attr_icon: str = "mdi:account-lock"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_ON_OFF,
+    models={"TS011F"},
+)
+class TuyaChildLockSwitch(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
     """Representation of a child lock configuration entity."""
 
     _zcl_attribute: str = "child_lock"

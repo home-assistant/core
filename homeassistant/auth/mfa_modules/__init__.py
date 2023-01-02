@@ -116,9 +116,7 @@ class SetupFlow(data_entry_flow.FlowHandler):
 
         if user_input:
             result = await self._auth_module.async_setup_user(self._user_id, user_input)
-            return self.async_create_entry(
-                title=self._auth_module.name, data={"result": result}
-            )
+            return self.async_create_entry(data={"result": result})
 
         return self.async_show_form(
             step_id="init", data_schema=self._setup_schema, errors=errors

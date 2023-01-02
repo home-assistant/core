@@ -25,7 +25,9 @@ from .util import get_usb_service_info
 _LOGGER = logging.getLogger(__name__)
 
 
-async def _multi_pan_addon_info(hass, entry: ConfigEntry) -> AddonInfo | None:
+async def _multi_pan_addon_info(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> AddonInfo | None:
     """Return AddonInfo if the multi-PAN addon is enabled for our SkyConnect."""
     if not is_hassio(hass):
         return None

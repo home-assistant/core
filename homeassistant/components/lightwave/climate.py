@@ -11,7 +11,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -49,7 +49,7 @@ class LightwaveTrv(ClimateEntity):
     _attr_max_temp = DEFAULT_MAX_TEMP
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_target_temperature_step = 0.5
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, name, device_id, lwlink, serial):
         """Initialize LightwaveTrv entity."""

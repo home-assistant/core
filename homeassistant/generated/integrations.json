@@ -120,9 +120,20 @@
     },
     "airvisual": {
       "name": "AirVisual",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
+      "integrations": {
+        "airvisual": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "AirVisual Cloud"
+        },
+        "airvisual_pro": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "AirVisual Pro"
+        }
+      }
     },
     "airzone": {
       "name": "Airzone",
@@ -143,7 +154,6 @@
       "iot_class": "local_push"
     },
     "alert": {
-      "name": "Alert",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_push"
@@ -232,7 +242,7 @@
     },
     "androidtv": {
       "name": "Android TV",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -992,12 +1002,6 @@
           "name": "Denon HEOS"
         }
       }
-    },
-    "deutsche_bahn": {
-      "name": "Deutsche Bahn",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
     },
     "device_sun_light_trigger": {
       "name": "Presence-based Lights",
@@ -1957,6 +1961,12 @@
           "iot_class": "cloud_push",
           "name": "Google Assistant"
         },
+        "google_assistant_sdk": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Google Assistant SDK"
+        },
         "google_cloud": {
           "integration_type": "hub",
           "config_flow": false,
@@ -2884,6 +2894,12 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "local_calendar": {
+      "name": "Local Calendar",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "local_file": {
       "name": "Local File",
       "integration_type": "hub",
@@ -3045,6 +3061,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
+    },
+    "matter": {
+      "name": "Matter (BETA)",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "mazda": {
       "name": "Mazda Connected Services",
@@ -3657,7 +3679,7 @@
     },
     "nut": {
       "name": "Network UPS Tools (NUT)",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -4159,6 +4181,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "purpleair": {
+      "name": "PurpleAir",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "push": {
       "name": "Push",
       "integration_type": "hub",
@@ -4387,6 +4415,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "reolink": {
+      "name": "Reolink IP NVR/camera",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "repetier": {
       "name": "Repetier-Server",
@@ -4711,6 +4745,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
+    },
+    "sfr_box": {
+      "name": "SFR Box",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "sharkiq": {
       "name": "Shark IQ",
@@ -6385,6 +6425,7 @@
     }
   },
   "translated_name": [
+    "alert",
     "aurora",
     "cert_expiry",
     "cpuspeed",

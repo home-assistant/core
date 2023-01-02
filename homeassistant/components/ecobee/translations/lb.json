@@ -9,7 +9,7 @@
         },
         "step": {
             "authorize": {
-                "description": "Autoris\u00e9iert d\u00ebs App op https://www.ecobee.com/consumerportal/index.html mam Pin Code:\n\n{pin}\n\nKlickt dann op ofsch\u00e9cken.",
+                "description": "Autoris\u00e9iert d\u00ebs App op https://www.ecobee.com/consumerportal/index.html mam PIN-Code:\n\n{pin}\n\nKlickt dann op ofsch\u00e9cken.",
                 "title": "App autoris\u00e9ieren op ecobee.com"
             },
             "user": {

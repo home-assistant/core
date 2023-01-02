@@ -235,15 +235,6 @@ async def test_success(hass, login_requests_mock):
                 "errors": {},
             },
         ),
-        (
-            {
-                ssdp.ATTR_UPNP_FRIENDLY_NAME: "Some other device",
-            },
-            {
-                "type": data_entry_flow.FlowResultType.ABORT,
-                "reason": "not_huawei_lte",
-            },
-        ),
     ),
 )
 async def test_ssdp(hass, upnp_data, expected_result):

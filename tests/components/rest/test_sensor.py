@@ -243,7 +243,6 @@ async def test_setup_timestamp(
                 "method": "GET",
                 "value_template": "{{ value_json.key }}",
                 "device_class": SensorDeviceClass.TIMESTAMP,
-                "state_class": SensorStateClass.MEASUREMENT,
             }
         },
     )
@@ -255,7 +254,6 @@ async def test_setup_timestamp(
     state = hass.states.get("sensor.rest_sensor")
     assert state.state == "2021-11-11T11:39:00+00:00"
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TIMESTAMP
-    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.MEASUREMENT
     assert "sensor.rest_sensor rendered invalid timestamp" not in caplog.text
     assert "sensor.rest_sensor rendered timestamp without timezone" not in caplog.text
 
@@ -904,7 +902,7 @@ async def test_entity_config(hass: HomeAssistant) -> None:
             "name": "{{'REST' + ' ' + 'Sensor'}}",
             "state_class": "measurement",
             "unique_id": "very_unique",
-            "unit_of_measurement": "beardsecond",
+            "unit_of_measurement": "°C",
         },
     }
 
@@ -923,5 +921,5 @@ async def test_entity_config(hass: HomeAssistant) -> None:
         "friendly_name": "REST Sensor",
         "icon": "mdi:one_two_three",
         "state_class": "measurement",
-        "unit_of_measurement": "beardsecond",
+        "unit_of_measurement": "°C",
     }

@@ -9,7 +9,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -45,7 +45,7 @@ class Alpha2Climate(CoordinatorEntity[Alpha2BaseCoordinator], ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.COOL]
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_preset_modes = [PRESET_AUTO, PRESET_DAY, PRESET_NIGHT]
 
     def __init__(self, coordinator: Alpha2BaseCoordinator, heat_area_id: str) -> None:

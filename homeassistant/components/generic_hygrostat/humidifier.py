@@ -358,8 +358,10 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
                 self._active = True
                 force = True
                 _LOGGER.info(
-                    "Obtained current and target humidity. "
-                    "Generic hygrostat active. %s, %s",
+                    (
+                        "Obtained current and target humidity. "
+                        "Generic hygrostat active. %s, %s"
+                    ),
                     self._cur_humidity,
                     self._target_humidity,
                 )

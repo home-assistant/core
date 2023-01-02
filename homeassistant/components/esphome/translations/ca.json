@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "El dispositiu ja est\u00e0 configurat",
             "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
+            "mdns_missing_mac": "Falta l'adre\u00e7a MAC a les propietats MDNS.",
             "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {
@@ -27,13 +28,13 @@
                 "data": {
                     "noise_psk": "Clau de xifrat"
                 },
-                "description": "Introdueix la clau de xifrat de {name} establerta a la configuraci\u00f3."
+                "description": "Introdueix la clau de xifrat de {name}. La pots trobar al panell d'usuari d'ESPHome o a la configuraci\u00f3 del teu dispositiu."
             },
             "reauth_confirm": {
                 "data": {
                     "noise_psk": "Clau de xifrat"
                 },
-                "description": "El dispositiu ESPHome {name} ha activat el xifratge de transport o ha canviat la clau de xifrat. Introdueix la clau actualitzada."
+                "description": "El dispositiu ESPHome {name} ha activat el transport xifrat o ha canviat la clau de xifrat. Introdueix la clau actualitzada. La pots trobar al panell d'usuari d'ESPHome o a la configuraci\u00f3 del teu dispositiu."
             },
             "user": {
                 "data": {
@@ -46,8 +47,8 @@
     },
     "issues": {
         "ble_firmware_outdated": {
-            "description": "Per millorar la fiabilitat i el rendiment de Bluetooth, et recomanem que actualitzis {name} a ESPHome 2022.11.0 o posterior.",
-            "title": "Actualitza {name} amb ESPHome 2022.11.0 o posterior"
+            "description": "Per millorar la fiabilitat i el rendiment de Bluetooth, et recomanem que actualitzis {name} a ESPHome {version} o posterior. Quan actualitzis el dispositiu a ESPHome {version}, es recomana utilitzar un cable s\u00e8rie enlloc de fer una actualitzaci\u00f3 remota, per poder aprofitar el nou esquema de particions.",
+            "title": "Actualitza {name} amb ESPHome {version} o posterior"
         }
     }
 }

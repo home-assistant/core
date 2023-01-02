@@ -152,11 +152,12 @@ async def test_calendar_yaml_missing_required_fields(
     component_setup: ComponentSetup,
     calendars_config: list[dict[str, Any]],
     mock_calendars_yaml: None,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test setup with a missing schema fields, ignores the error and continues."""
-    assert await component_setup()
+    assert not await component_setup()
 
-    assert not hass.states.get(TEST_YAML_ENTITY)
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 @pytest.mark.parametrize("calendars_config", [[{"missing-cal_id": "invalid-schema"}]])
@@ -165,23 +166,12 @@ async def test_invalid_calendar_yaml(
     component_setup: ComponentSetup,
     calendars_config: list[dict[str, Any]],
     mock_calendars_yaml: None,
-    mock_calendars_list: ApiResult,
-    test_api_calendar: dict[str, Any],
-    mock_events_list: ApiResult,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test setup with missing entity id fields fails to load the platform."""
-    mock_calendars_list({"items": [test_api_calendar]})
-    mock_events_list({})
+    assert not await component_setup()
 
-    assert await component_setup()
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    entry = entries[0]
-    assert entry.state is ConfigEntryState.LOADED
-
-    assert not hass.states.get(TEST_YAML_ENTITY)
-    assert not hass.states.get(TEST_API_ENTITY)
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_calendar_yaml_error(
@@ -197,6 +187,26 @@ async def test_calendar_yaml_error(
 
     with patch("homeassistant.components.google.open", side_effect=FileNotFoundError()):
         assert await component_setup()
+
+    assert not hass.states.get(TEST_YAML_ENTITY)
+    assert hass.states.get(TEST_API_ENTITY)
+
+
+@pytest.mark.parametrize("calendars_config", [None])
+async def test_empty_calendar_yaml(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    calendars_config: list[dict[str, Any]],
+    mock_calendars_yaml: None,
+    mock_calendars_list: ApiResult,
+    test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
+) -> None:
+    """Test an empty yaml file is equivalent to a missing yaml file."""
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
+
+    assert await component_setup()
 
     assert not hass.states.get(TEST_YAML_ENTITY)
     assert hass.states.get(TEST_API_ENTITY)
@@ -768,7 +778,7 @@ async def test_assign_unique_id(
 
     mock_calendar_get(
         "primary",
-        {"id": EMAIL_ADDRESS, "summary": "Personal"},
+        {"id": EMAIL_ADDRESS, "summary": "Personal", "accessRole": "owner"},
     )
 
     mock_calendars_list({"items": [test_api_calendar]})

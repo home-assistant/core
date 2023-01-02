@@ -120,8 +120,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 continue
             except SSLError:
                 _LOGGER.error(
-                    "Unable to verify proxmox server SSL. "
-                    'Try using "verify_ssl: false" for proxmox instance %s:%d',
+                    (
+                        "Unable to verify proxmox server SSL. "
+                        'Try using "verify_ssl: false" for proxmox instance %s:%d'
+                    ),
                     host,
                     port,
                 )

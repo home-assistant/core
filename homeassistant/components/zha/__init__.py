@@ -99,7 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if config.get(CONF_ENABLE_QUIRKS, True):
         setup_quirks(config)
 
-    # temporary code to remove the zha storage file from disk. this will be removed in 2022.10.0
+    # temporary code to remove the ZHA storage file from disk. this will be removed in 2022.10.0
     storage_path = hass.config.path(STORAGE_DIR, "zha.storage")
     if os.path.isfile(storage_path):
         _LOGGER.debug("removing ZHA storage file")

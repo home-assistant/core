@@ -1,0 +1,10 @@
+{
+    "state": {
+        "_": {
+            "idle": "Niet actief",
+            "off": "Bevestigd",
+            "on": "Actief"
+        }
+    },
+    "title": "Alarmering"
+}

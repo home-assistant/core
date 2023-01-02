@@ -15,7 +15,7 @@
                 "data": {
                     "usb_path": "USB enhetsbane"
                 },
-                "description": "Velg den serielle porten p\u00e5 Crownstone USB -dongelen, eller velg 'Ikke bruk USB' hvis du ikke vil konfigurere en USB -dongle. \n\n Se etter en enhet med VID 10C4 og PID EA60.",
+                "description": "Velg serieporten til Crownstone USB-dongelen, eller velg 'Ikke bruk USB' hvis du ikke vil sette opp en USB-dongel. \n\n Se etter en enhet med VID 10C4 og PID EA60.",
                 "title": "Crownstone USB -dongle -konfigurasjon"
             },
             "usb_manual_config": {

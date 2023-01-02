@@ -508,8 +508,10 @@ def delete_statistics_duplicates(hass: HomeAssistant, session: Session) -> None:
                 cls=JSONEncoder,
             )
         _LOGGER.warning(
-            "Deleted %s non identical duplicated %s rows, a backup of the deleted rows "
-            "has been saved to %s",
+            (
+                "Deleted %s non identical duplicated %s rows, a backup of the deleted"
+                " rows has been saved to %s"
+            ),
             len(non_identical_duplicates),
             Statistics.__tablename__,
             backup_path,
@@ -2070,7 +2072,10 @@ def _filter_unique_constraint_integrity_error(
 
         if ignore:
             _LOGGER.warning(
-                "Blocked attempt to insert duplicated statistic rows, please report at %s",
+                (
+                    "Blocked attempt to insert duplicated statistic rows, please report"
+                    " at %s"
+                ),
                 "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+recorder%22",
                 exc_info=err,
             )
@@ -2404,7 +2409,10 @@ def validate_db_schema(
 
 
 def correct_db_schema(
-    engine: Engine, session_maker: Callable[[], Session], schema_errors: set[str]
+    instance: Recorder,
+    engine: Engine,
+    session_maker: Callable[[], Session],
+    schema_errors: set[str],
 ) -> None:
     """Correct issues detected by validate_db_schema."""
     from .migration import _modify_columns  # pylint: disable=import-outside-toplevel
@@ -2412,9 +2420,11 @@ def correct_db_schema(
     if "statistics_meta.4-byte UTF-8" in schema_errors:
         # Attempt to convert the table to utf8mb4
         _LOGGER.warning(
-            "Updating character set and collation of table %s to utf8mb4. "
-            "Note: this can take several minutes on large databases and slow "
-            "computers. Please be patient!",
+            (
+                "Updating character set and collation of table %s to utf8mb4. "
+                "Note: this can take several minutes on large databases and slow "
+                "computers. Please be patient!"
+            ),
             "statistics_meta",
         )
         with contextlib.suppress(SQLAlchemyError):
@@ -2424,8 +2434,8 @@ def correct_db_schema(
                     # Using LOCK=EXCLUSIVE to prevent the database from corrupting
                     # https://github.com/home-assistant/core/issues/56104
                     text(
-                        "ALTER TABLE statistics_meta CONVERT TO "
-                        "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, LOCK=EXCLUSIVE"
+                        "ALTER TABLE statistics_meta CONVERT TO CHARACTER SET utf8mb4"
+                        " COLLATE utf8mb4_unicode_ci, LOCK=EXCLUSIVE"
                     )
                 )
 
@@ -2450,12 +2460,16 @@ def correct_db_schema(
             )
         if f"{table.__tablename__}.µs precision" in schema_errors:
             # Attempt to convert datetime columns to µs precision
+            if instance.dialect_name == SupportedDialect.MYSQL:
+                datetime_type = "DATETIME(6)"
+            else:
+                datetime_type = "TIMESTAMP(6) WITH TIME ZONE"
             _modify_columns(
                 session_maker,
                 engine,
                 table.__tablename__,
                 [
-                    "last_reset DATETIME(6)",
-                    "start DATETIME(6)",
+                    f"last_reset {datetime_type}",
+                    f"start {datetime_type}",
                 ],
             )

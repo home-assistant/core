@@ -22,7 +22,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -102,20 +102,24 @@ class AirConEntity(ClimateEntity):
     )
     _attr_swing_modes = SUPPORTED_SWING_MODES
     _attr_target_temperature_step = SUPPORTED_TARGET_TEMPERATURE_STEP
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_should_poll = False
 
     def __init__(self, hass, said, name, backend_selector: BackendSelector, auth: Auth):
         """Initialize the entity."""
-        self._aircon = Aircon(backend_selector, auth, said, self.async_write_ha_state)
-
+        self._aircon = Aircon(backend_selector, auth, said)
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, said, hass=hass)
         self._attr_name = name if name is not None else said
         self._attr_unique_id = said
 
     async def async_added_to_hass(self) -> None:
         """Connect aircon to the cloud."""
+        self._aircon.register_attr_callback(self.async_write_ha_state)
         await self._aircon.connect()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Close Whrilpool Appliance sockets before removing."""
+        await self._aircon.disconnect()
 
     @property
     def available(self) -> bool:

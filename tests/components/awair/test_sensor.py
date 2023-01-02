@@ -287,7 +287,7 @@ async def test_awair_omni_sensors(hass: HomeAssistant, user, cloud_devices, omni
         "sensor.living_room_sound_level",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SPL_A].unique_id_tag}",
         "47.0",
-        {ATTR_UNIT_OF_MEASUREMENT: "dBa"},
+        {ATTR_UNIT_OF_MEASUREMENT: "dBA"},
     )
 
     assert_expected_properties(

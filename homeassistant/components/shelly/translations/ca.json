@@ -33,7 +33,7 @@
                 "data": {
                     "host": "Amfitri\u00f3"
                 },
-                "description": "Abans de configurar-lo, els dispositius amb bateria s'han de desperar, ja pots clicar el bot\u00f3 del dispositiu per a despertar-lo."
+                "description": "Abans de configurar-ho, els dispositius amb bateria s'han de despertar, pots clicar el bot\u00f3 del dispositiu per a despertar-lo, ara."
             }
         }
     },
@@ -67,7 +67,8 @@
             "init": {
                 "data": {
                     "ble_scanner_mode": "Mode d'escaneig Bluetooth"
-                }
+                },
+                "description": "L'escaneig Bluetooth pot ser actiu o passiu. Si \u00e9s actiu, el Shelly sol\u00b7licita dades a dispositius propers; en passiu, el Shelly rep dades no sol\u00b7licitades de dispositius propers."
             }
         }
     }

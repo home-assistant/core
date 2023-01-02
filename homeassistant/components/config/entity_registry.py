@@ -102,6 +102,7 @@ def websocket_get_entity(
         vol.Required("type"): "config/entity_registry/update",
         vol.Required("entity_id"): cv.entity_id,
         # If passed in, we update value. Passing None will remove old value.
+        vol.Optional("aliases"): list,
         vol.Optional("area_id"): vol.Any(str, None),
         vol.Optional("device_class"): vol.Any(str, None),
         vol.Optional("icon"): vol.Any(str, None),
@@ -159,6 +160,10 @@ def websocket_update_entity(
     ):
         if key in msg:
             changes[key] = msg[key]
+
+    if "aliases" in msg:
+        # Convert aliases to a set
+        changes["aliases"] = set(msg["aliases"])
 
     if "disabled_by" in msg and msg["disabled_by"] is None:
         # Don't allow enabling an entity of a disabled device
@@ -247,16 +252,17 @@ def _entry_dict(entry: er.RegistryEntry) -> dict[str, Any]:
         "config_entry_id": entry.config_entry_id,
         "device_id": entry.device_id,
         "disabled_by": entry.disabled_by,
-        "has_entity_name": entry.has_entity_name,
         "entity_category": entry.entity_category,
         "entity_id": entry.entity_id,
+        "has_entity_name": entry.has_entity_name,
         "hidden_by": entry.hidden_by,
         "icon": entry.icon,
         "id": entry.id,
-        "unique_id": entry.unique_id,
         "name": entry.name,
         "original_name": entry.original_name,
         "platform": entry.platform,
+        "translation_key": entry.translation_key,
+        "unique_id": entry.unique_id,
     }
 
 
@@ -264,6 +270,7 @@ def _entry_dict(entry: er.RegistryEntry) -> dict[str, Any]:
 def _entry_ext_dict(entry: er.RegistryEntry) -> dict[str, Any]:
     """Convert entry to API format."""
     data = _entry_dict(entry)
+    data["aliases"] = entry.aliases
     data["capabilities"] = entry.capabilities
     data["device_class"] = entry.device_class
     data["options"] = entry.options

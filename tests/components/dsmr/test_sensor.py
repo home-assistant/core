@@ -13,6 +13,7 @@ from unittest.mock import DEFAULT, MagicMock
 
 from homeassistant import config_entries
 from homeassistant.components.sensor import (
+    ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
@@ -22,8 +23,10 @@ from homeassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     ENERGY_KILO_WATT_HOUR,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     VOLUME_CUBIC_METERS,
+    UnitOfPower,
 )
 from homeassistant.helpers import entity_registry as er
 
@@ -55,13 +58,13 @@ async def test_default_setup(hass, dsmr_connection_fixture):
 
     telegram = {
         CURRENT_ELECTRICITY_USAGE: CosemObject(
-            [{"value": Decimal("0.0"), "unit": ENERGY_KILO_WATT_HOUR}]
+            [{"value": Decimal("0.0"), "unit": UnitOfPower.WATT}]
         ),
         ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0001", "unit": ""}]),
         GAS_METER_READING: MBusObject(
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
-                {"value": Decimal(745.695), "unit": "m3"},
+                {"value": Decimal(745.695), "unit": VOLUME_CUBIC_METERS},
             ]
         ),
     }
@@ -87,9 +90,9 @@ async def test_default_setup(hass, dsmr_connection_fixture):
 
     telegram_callback = connection_factory.call_args_list[0][0][2]
 
-    # make sure entities have been created and return 'unknown' state
+    # make sure entities have been created and return 'unavailable' state
     power_consumption = hass.states.get("sensor.electricity_meter_power_consumption")
-    assert power_consumption.state == STATE_UNKNOWN
+    assert power_consumption.state == STATE_UNAVAILABLE
     assert (
         power_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
     )
@@ -109,15 +112,14 @@ async def test_default_setup(hass, dsmr_connection_fixture):
     # ensure entities have new state value after incoming telegram
     power_consumption = hass.states.get("sensor.electricity_meter_power_consumption")
     assert power_consumption.state == "0.0"
-    assert (
-        power_consumption.attributes.get("unit_of_measurement") == ENERGY_KILO_WATT_HOUR
-    )
+    assert power_consumption.attributes.get("unit_of_measurement") == UnitOfPower.WATT
 
     # tariff should be translated in human readable and have no unit
     active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
     assert active_tariff.state == "low"
-    assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
     assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
+    assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
     assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
 
@@ -215,8 +217,9 @@ async def test_v4_meter(hass, dsmr_connection_fixture):
     # tariff should be translated in human readable and have no unit
     active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
     assert active_tariff.state == "low"
-    assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
     assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
+    assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
     assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
 
@@ -286,8 +289,9 @@ async def test_v5_meter(hass, dsmr_connection_fixture):
     # tariff should be translated in human readable and have no unit
     active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
     assert active_tariff.state == "low"
-    assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
     assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
+    assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
     assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
 
@@ -440,8 +444,9 @@ async def test_belgian_meter(hass, dsmr_connection_fixture):
     # tariff should be translated in human readable and have no unit
     active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
     assert active_tariff.state == "normal"
-    assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
     assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
+    assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
     assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
 
@@ -499,8 +504,9 @@ async def test_belgian_meter_low(hass, dsmr_connection_fixture):
     # tariff should be translated in human readable and have no unit
     active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
     assert active_tariff.state == "low"
-    assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
     assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
+    assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
     assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
 
@@ -777,6 +783,10 @@ async def test_reconnect(hass, dsmr_connection_fixture):
     await hass.async_block_till_done()
 
     assert connection_factory.call_count == 1
+
+    state = hass.states.get("sensor.electricity_meter_power_consumption")
+    assert state
+    assert state.state == STATE_UNKNOWN
 
     # indicate disconnect, release wait lock and allow reconnect to happen
     closed.set()
