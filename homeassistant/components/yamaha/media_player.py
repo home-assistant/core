@@ -217,6 +217,7 @@ class YamahaDevice(MediaPlayerEntity):
             self._play_status = self.receiver.play_status()
         except requests.exceptions.ConnectionError:
             _LOGGER.info("Receiver is offline: %s", self._name)
+            self._attr_state = MediaPlayerState.OFF
             return
 
         if self.receiver.on:
