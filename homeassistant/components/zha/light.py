@@ -741,7 +741,7 @@ class Light(BaseLight, ZhaEntity):
         @callback
         def assume_group_state(signal, update_params):
             """Handle an assume group state event from a group."""
-            if self.entity_id in signal["entity_ids"]:
+            if self.entity_id in signal["entity_ids"] and self._attr_available:
                 self.debug("member assuming group state with: %s", update_params)
 
                 # state is always set (light.turn_on/light.turn_off)
