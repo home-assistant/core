@@ -1023,7 +1023,7 @@ py-synologydsm-api==1.0.8
 py17track==2021.12.2
 
 # homeassistant.components.telekomunikace_2n
-py2n==0.1.1
+py2n==0.3.0
 
 # homeassistant.components.hdmi_cec
 pyCEC==0.5.2

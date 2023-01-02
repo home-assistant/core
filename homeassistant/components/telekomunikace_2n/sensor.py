@@ -3,10 +3,10 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
-from typing import Any
+from datetime import datetime
+from typing import cast
 
-from py2n import Py2NDeviceData
+from py2n import Py2NDevice
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -14,23 +14,20 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.typing import StateType
 
-from . import Py2NDeviceCoordinator
-from .const import DATA_CONFIG_ENTRY, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from . import Py2NDeviceCoordinator, Py2NDeviceEntity
+from .const import DOMAIN
 
 
 @dataclass
 class Py2NDeviceSensorRequiredKeysMixin:
     """Class for 2N entity required keys."""
 
-    value: Callable[[Py2NDeviceData], Any]
+    value: Callable[[Py2NDevice], StateType | datetime]
 
 
 @dataclass
@@ -43,11 +40,10 @@ class Py2NDeviceSensorEntityDescription(
 SENSOR_TYPES: tuple[Py2NDeviceSensorEntityDescription, ...] = (
     Py2NDeviceSensorEntityDescription(
         key="uptime",
-        name="uptime",
-        entity_registry_enabled_default=True,
+        name="Uptime",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value=lambda data: data.uptime,
+        value=lambda device: cast(datetime, device.data.uptime),
     ),
 )
 
@@ -58,47 +54,32 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors."""
-    coordinator = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id]
+    coordinator: Py2NDeviceCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     sensors = []
-
-    device_info = DeviceInfo(
-        configuration_url=f"https://{entry.data[CONF_HOST]}/",
-        identifiers={(DOMAIN, coordinator.data.serial)},
-        manufacturer="2N Telekomunikace",
-        model=coordinator.data.model,
-        name=coordinator.data.name,
-        sw_version=coordinator.data.firmware,
-        hw_version=coordinator.data.hardware,
-    )
-
     for description in SENSOR_TYPES:
-        if description.value(coordinator.data) is not None:
-            sensors.append(Py2NDeviceSensor(coordinator, description, device_info))
+        if description.value(coordinator.device) is not None:
+            sensors.append(
+                Py2NDeviceSensor(coordinator, description, coordinator.device)
+            )
     async_add_entities(sensors, False)
 
 
-class Py2NDeviceSensor(CoordinatorEntity[Py2NDeviceCoordinator], SensorEntity):
-    """Define a 2N sensor."""
+class Py2NDeviceSensor(Py2NDeviceEntity, SensorEntity):
+    """Define a 2N Telekomunikace sensor."""
 
-    _attr_has_entity_name = True
     entity_description: Py2NDeviceSensorEntityDescription
 
     def __init__(
         self,
         coordinator: Py2NDeviceCoordinator,
         description: Py2NDeviceSensorEntityDescription,
-        device_info: DeviceInfo,
+        device: Py2NDevice,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, description, device)
 
-        self._attr_device_info = device_info
-        self._attr_native_value = description.value(coordinator.data)
-        self._attr_unique_id = f"{coordinator.data.serial.lower()}_{description.key}"
-        self.entity_description = description
-
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._attr_native_value = self.entity_description.value(self.coordinator.data)
-        self.async_write_ha_state()
+    @property
+    def native_value(self) -> StateType | datetime:
+        """Native value."""
+        return self.entity_description.value(self.device)

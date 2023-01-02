@@ -1308,8 +1308,10 @@ omit =
     homeassistant/components/telegram/notify.py
     homeassistant/components/telegram_bot/*
     homeassistant/components/telekomunikace_2n/__init__.py
+    homeassistant/components/telekomunikace_2n/button.py
     homeassistant/components/telekomunikace_2n/const.py
     homeassistant/components/telekomunikace_2n/sensor.py
+    homeassistant/components/telekomunikace_2n/switch.py
     homeassistant/components/tellduslive/__init__.py
     homeassistant/components/tellduslive/binary_sensor.py
     homeassistant/components/tellduslive/cover.py

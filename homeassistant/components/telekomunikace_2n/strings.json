@@ -2,8 +2,16 @@
   "config": {
     "step": {
       "user": {
+        "description": "Please enter device information:",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Please enter updated credentials:",
+        "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
@@ -12,10 +20,16 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "invalid_host": "Invalid host",
+      "not_supported": "Not a 2N device or device is unsupported",
+      "invalid_authentication_method": "Digest authentication is unsupported",
+      "authorization_required": "Authorization required",
+      "insufficient_privileges": "Insufficient privileges"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   }
 }

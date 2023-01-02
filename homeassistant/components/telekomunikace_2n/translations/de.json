@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "reauth_successful": "Authentifizierung erfolgreich"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Zugangsdaten",
+            "unknown": "Unerwarteter Fehler",
+            "invalid_host": "Ung\u00fcltiger Host",
+            "not_supported": "Kein 2N Ger\u00e4t oder Ger\u00e4t wird nicht unterst\u00fczt",
+            "invalid_authentication_method": "Digest-Authentifizierung wird nicht unterst\u00fczt",
+            "authorization_required": "Anmeldung erforderlich",
+            "insufficient_privileges": "Keine ausreichenden Berechtigungen"
+        },
+        "step": {
+            "user": {
+                "description": "Bitte geben Sie die Ger\u00e4tinformationen ein:",
+                "data": {
+                    "host": "Host",
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                }
+            },
+            "reauth_confirm": {
+                "description": "Bitte geben Sie die neuen Zugangsdaten ein:",
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                }
+            }
+        }
+    }
+}

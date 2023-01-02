@@ -4,12 +4,7 @@
   "integration_type": "device",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/telekomunikace_2n",
-  "requirements": ["py2n==0.1.1"],
-  "dhcp": [
-    {
-      "macaddress": "7C1EB3*"
-    }
-  ],
+  "requirements": ["py2n==0.3.0"],
   "dependencies": [],
   "codeowners": ["@elektr0nisch"],
   "iot_class": "local_polling"
