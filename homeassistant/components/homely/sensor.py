@@ -5,11 +5,7 @@ from homelypy.devices import Device, State
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    SIGNAL_STRENGTH_DECIBELS,
-    UnitOfElectricPotential,
-    UnitOfTemperature,
-)
+from homeassistant.const import UnitOfElectricPotential, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -18,7 +14,8 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import DOMAIN
-from .homely_device import HomelyDevice, HomelyHome
+from .coordinator import HomelyHomeCoordinator
+from .homely_device import HomelyDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,12 +24,11 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Plate Relays as switch based on a config entry."""
-    homely_home: HomelyHome = hass.data[DOMAIN][entry.entry_id]
-    coordinator = homely_home.coordinator
-    await coordinator.async_config_entry_first_refresh()
+    homely_home: HomelyHomeCoordinator = hass.data[DOMAIN][entry.entry_id]
+    await homely_home.async_config_entry_first_refresh()
 
     entities: list[SensorEntity] = [
-        EntityType(coordinator, homely_device)
+        EntityType(homely_home, homely_device)
         for homely_device in homely_home.devices.values()
         for EntityType in (
             TemperatureEntity,
@@ -62,7 +58,7 @@ class HomelySensorEntity(CoordinatorEntity, SensorEntity):
 
     def get_state_from_device(self, device: Device) -> float:
         """Get the current state of the sensor."""
-        return device.temperature.temperature
+        raise NotImplementedError
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -84,13 +80,16 @@ class TemperatureEntity(HomelySensorEntity):
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
+    def get_state_from_device(self, device: Device) -> float:
+        """Get the current state of the sensor."""
+        return device.temperature.temperature
+
 
 class SignalStrengthEntity(HomelySensorEntity):
     """Represents Zigbee signal strength."""
 
     _attr_name = "ZigBee signal strength"
     _attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
-    _attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS
 
     def get_state_from_device(self, device: Device) -> float:
         """Get the current state of the sensor."""
