@@ -2,9 +2,12 @@
 
 import logging
 
+from homewizard_energy.errors import RequestError
+
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -54,4 +57,7 @@ class HomeWizardIdentifyButton(
 
     async def async_press(self) -> None:
         """Identify the device."""
-        await self.coordinator.api.identify()
+        try:
+            await self.coordinator.api.identify()
+        except RequestError as ex:
+            raise HomeAssistantError(str(ex)) from ex
