@@ -589,22 +589,6 @@ class Tier6SmartEnergySummation(
     _attr_name: str = "Tier 6 summation delivered"
 
 
-@MULTI_MATCH(
-    channel_names=CHANNEL_SMARTENERGY_METERING,
-    models={"ZLinky_TIC"},
-)
-class RegisterTierDeliveredSensor(Sensor, id_suffix="register_tier_delivered"):
-    """Active register tier delivered sensor."""
-
-    SENSOR_ATTR: int | str = "active_register_tier_delivered"
-    _attr_icon = "mdi:calendar-clock"
-    _attr_name: str = "Register tier delivered"
-
-    def formatter(self, value: enum.IntEnum) -> str:  # type: ignore[override]
-        """Numeric pass-through formatter."""
-        return value.name.replace("_", " ")
-
-
 @MULTI_MATCH(channel_names=CHANNEL_PRESSURE)
 class Pressure(Sensor):
     """Pressure sensor."""

@@ -86,9 +86,6 @@ class Metering(ZigbeeChannel):
         AttrReportConfig(
             attr="current_tier6_summ_delivered", config=REPORT_CONFIG_DEFAULT
         ),
-        AttrReportConfig(
-            attr="active_register_tier_delivered", config=REPORT_CONFIG_ASAP
-        ),
         AttrReportConfig(attr="status", config=REPORT_CONFIG_ASAP),
     )
     ZCL_INIT_ATTRS = {
