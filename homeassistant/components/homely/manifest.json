@@ -5,7 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/homely",
   "requirements": ["homelypy==0.0.7"],
   "integration_type": "hub",
-  "dependencies": [],
   "codeowners": ["@kolaf"],
   "iot_class": "cloud_push",
   "loggers": ["homelypy"]
