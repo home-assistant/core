@@ -9,7 +9,7 @@ import axis
 from axis.configuration import Configuration
 from axis.errors import Unauthorized
 from axis.event_stream import OPERATION_INITIALIZED
-from axis.stream_manager import SIGNAL_PLAYING, STATE_STOPPED
+from axis.stream_manager import Signal, State
 from axis.vapix.interfaces.mqtt import mqtt_json_to_event
 
 from homeassistant.components import mqtt
@@ -149,7 +149,7 @@ class AxisNetworkDevice:
         Only signal state change if state change is true.
         """
 
-        if self.available != (status == SIGNAL_PLAYING):
+        if self.available != (status == Signal.PLAYING):
             self.available = not self.available
             async_dispatcher_send(self.hass, self.signal_reachable, True)
 
@@ -228,7 +228,7 @@ class AxisNetworkDevice:
     @callback
     def disconnect_from_stream(self) -> None:
         """Stop stream."""
-        if self.api.stream.state != STATE_STOPPED:
+        if self.api.stream.state != State.STOPPED:
             self.api.stream.connection_status_callback.clear()
             self.api.stream.stop()
 
