@@ -377,7 +377,8 @@ class Recorder(threading.Thread):
         # Unknown what it is.
         return True
 
-    def _empty_queue(self, event: Event) -> None:
+    @callback
+    def _async_empty_queue(self, event: Event) -> None:
         """Empty the queue if its still present at final write."""
 
         # If the queue is full of events to be processed because
@@ -411,7 +412,7 @@ class Recorder(threading.Thread):
     def async_register(self) -> None:
         """Post connection initialize."""
         bus = self.hass.bus
-        bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, self._empty_queue)
+        bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, self._async_empty_queue)
         bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
         async_at_started(self.hass, self._async_hass_started)
 
