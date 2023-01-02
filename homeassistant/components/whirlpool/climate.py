@@ -111,7 +111,6 @@ class AirConEntity(ClimateEntity):
         self._aircon = Aircon(backend_selector, auth, said, self.async_write_ha_state)
 
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, said, hass=hass)
-        self._attr_name = None
         self._attr_unique_id = said
         self._said = said
         self._attr_device_info = DeviceInfo(
