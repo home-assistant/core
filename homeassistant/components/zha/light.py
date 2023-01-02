@@ -29,7 +29,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     Platform,
 )
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, State, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -1040,21 +1040,6 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             return
         if self._debounced_member_refresh:
             await self._debounced_member_refresh.async_call()
-
-    @callback
-    def async_state_changed_listener(self, event: Event) -> None:
-        """Handle child updates."""
-        if self._transitioning:
-            self.debug("skipping group entity state update during transition")
-            return
-        super().async_state_changed_listener(event)
-
-    async def async_update_ha_state(self, force_refresh: bool = False) -> None:
-        """Update Home Assistant with current state of entity."""
-        if self._transitioning:
-            self.debug("skipping group entity state update during transition")
-            return
-        await super().async_update_ha_state(force_refresh)
 
     async def async_update(self) -> None:
         """Query all members and determine the light group state."""
