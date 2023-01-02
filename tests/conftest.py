@@ -193,13 +193,13 @@ util.get_local_ip = lambda: "127.0.0.1"
 
 @pytest.fixture(autouse=True, scope="module")
 def garbage_collection():
-    """Make sure garbage collection is run.
+    """Run garbage collection at known locations.
 
-    pytest-aiohttp did this in same test as allocation
-    this is to mimic the behavior of pytest-aiohttp, and is
-    required to avoid warnings from spilling over into next
-    test case. We run it per module and let each module track
-    handle it's own cleanup if needed.
+    This is to mimic the behavior of pytest-aiohttp, and is
+    required to avoid warnings during garbage collection from
+    spilling over into next test case. We run it per module which
+    handles the most common cases and let each module override
+    to run per test case if needed.
     """
     gc.collect()
 
@@ -233,7 +233,7 @@ def verify_cleanup(event_loop: asyncio.AbstractEventLoop):
             _LOGGER.warning("Lingering timer after test %r", handle)
             handle.cancel()
 
-    # Verify no threads where left behind
+    # Verify no threads where left behind.
     threads = frozenset(threading.enumerate()) - threads_before
     for thread in threads:
         assert isinstance(thread, threading._DummyThread) or thread.name.startswith(
