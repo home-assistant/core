@@ -119,7 +119,7 @@ class BaseLight(LogMixin, light.LightEntity):
         super().__init__(*args, **kwargs)
         self._attr_min_mireds: int | None = 153
         self._attr_max_mireds: int | None = 500
-        self._attr_color_mode = ColorMode.UNKNOWN  # Set by sub classes
+        self._attr_color_mode = ColorMode.UNKNOWN  # Set by subclasses
         self._attr_supported_features: int = 0
         self._attr_state: bool | None
         self._off_with_transition: bool = False

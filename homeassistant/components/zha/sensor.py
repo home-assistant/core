@@ -871,7 +871,7 @@ class AqaraPetFeederPortionsDispensed(Sensor, id_suffix="portions_dispensed"):
 
 @MULTI_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
 class AqaraPetFeederWeightDispensed(Sensor, id_suffix="weight_dispensed"):
-    """Sensor that displays the weight weight dispensed by the pet feeder."""
+    """Sensor that displays the weight dispensed by the pet feeder."""
 
     SENSOR_ATTR = "weight_dispensed"
     _attr_name: str = "Weight dispensed today"
