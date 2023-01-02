@@ -15,7 +15,7 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
     get_addon_manager,
     get_zigbee_socket,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryDisabler
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -75,7 +75,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if not usb.async_is_plugged_in(hass, matcher):
         # The USB dongle is not plugged in
-        raise ConfigEntryNotReady
+        hass.async_create_task(
+            hass.config_entries.async_set_disabled_by(
+                entry.entry_id, ConfigEntryDisabler.INTEGRATION
+            )
+        )
+        return False
 
     addon_info = await _multi_pan_addon_info(hass, entry)
 
