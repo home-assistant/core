@@ -149,7 +149,7 @@ class MatchRule:
     def weight(self) -> int:
         """Return the weight of the matching rule.
 
-        Most specific matches should be preferred over less specific. Model matching
+        More specific matches should be preferred over less specific. Model matching
         rules have a priority over manufacturer matching rules and rules matching a
         single model/manufacturer get a better priority over rules matching multiple
         models/manufacturers. And any model or manufacturers matching rules get better
