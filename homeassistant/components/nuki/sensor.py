@@ -1,7 +1,5 @@
 """Battery sensor for the Nuki Lock."""
 
-from pynuki.constants import STATE_DOORSENSOR_OPENED
-
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorDeviceClass,
