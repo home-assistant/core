@@ -18,10 +18,9 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up homely from a config entry."""
 
-    hass.data.setdefault(DOMAIN, {})
     homely_home = HomelyHome(hass, entry)
     await homely_home.setup()
-    hass.data[DOMAIN][entry.entry_id] = homely_home
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = homely_home
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
