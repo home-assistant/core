@@ -22,7 +22,7 @@
                     "restore_light_state": "Valon kirkkauden palauttaminen",
                     "variable_sensor_string": "Muuttuva anturin merkkijono"
                 },
-                "title": "ISY994-asetukset"
+                "title": "ISY-asetukset"
             }
         }
     }
