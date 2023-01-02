@@ -43,6 +43,7 @@ from .statistics import (
     get_start_time,
     validate_db_schema as statistics_validate_db_schema,
 )
+from .tasks import PostSchemaMigrationTask
 from .util import session_scope
 
 if TYPE_CHECKING:
@@ -162,6 +163,9 @@ def migrate_schema(
             ", ".join(sorted(schema_errors)),
         )
         statistics_correct_db_schema(instance, engine, session_maker, schema_errors)
+
+    if current_version != SCHEMA_VERSION:
+        instance.queue_task(PostSchemaMigrationTask(current_version, SCHEMA_VERSION))
 
 
 def _create_index(
@@ -492,6 +496,10 @@ def _apply_update(  # noqa: C901
     """Perform operations to bring schema up to date."""
     dialect = engine.dialect.name
     big_int = "INTEGER(20)" if dialect == SupportedDialect.MYSQL else "INTEGER"
+    if dialect in (SupportedDialect.MYSQL, SupportedDialect.POSTGRESQL):
+        timestamp_type = "DOUBLE PRECISION"
+    else:
+        timestamp_type = "FLOAT"
 
     if new_version == 1:
         _create_index(session_maker, "events", "ix_events_time_fired")
@@ -821,8 +829,109 @@ def _apply_update(  # noqa: C901
         # Once we require SQLite >= 3.35.5, we should drop the column:
         # ALTER TABLE statistics_meta DROP COLUMN state_unit_of_measurement
         pass
+    elif new_version == 31:
+        # Once we require SQLite >= 3.35.5, we should drop the column:
+        # ALTER TABLE events DROP COLUMN time_fired
+        # ALTER TABLE states DROP COLUMN last_updated
+        # ALTER TABLE states DROP COLUMN last_changed
+        _add_columns(session_maker, "events", [f"time_fired_ts {timestamp_type}"])
+        _add_columns(
+            session_maker,
+            "states",
+            [f"last_updated_ts {timestamp_type}", f"last_changed_ts {timestamp_type}"],
+        )
+        _create_index(session_maker, "events", "ix_events_time_fired_ts")
+        _create_index(session_maker, "events", "ix_events_event_type_time_fired_ts")
+        _create_index(session_maker, "states", "ix_states_entity_id_last_updated_ts")
+        _create_index(session_maker, "states", "ix_states_last_updated_ts")
+        with session_scope(session=session_maker()) as session:
+            _migrate_columns_to_timestamp(hass, session, engine)
+    elif new_version == 32:
+        # Migration is done in two steps to ensure we can start using
+        # the new columns before we wipe the old ones.
+        _drop_index(session_maker, "states", "ix_states_entity_id_last_updated")
+        _drop_index(session_maker, "events", "ix_events_event_type_time_fired")
+        _drop_index(session_maker, "states", "ix_states_last_updated")
+        _drop_index(session_maker, "events", "ix_events_time_fired")
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
+
+
+def post_schema_migration(
+    session: Session,
+    old_version: int,
+    new_version: int,
+) -> None:
+    """Post schema migration.
+
+    Run any housekeeping tasks after the schema migration has completed.
+
+    Post schema migration is run after the schema migration has completed
+    and the queue has been processed to ensure that we reduce the memory
+    pressure since events are held in memory until the queue is processed
+    which is blocked from being processed until the schema migration is
+    complete.
+    """
+    if old_version < 32 <= new_version:
+        # In version 31 we migrated all the time_fired, last_updated, and last_changed
+        # columns to be timestamps. In version 32 we need to wipe the old columns
+        # since they are no longer used and take up a significant amount of space.
+        _wipe_old_string_time_columns(session)
+
+
+def _wipe_old_string_time_columns(session: Session) -> None:
+    """Wipe old string time columns to save space."""
+    # Wipe Events.time_fired since its been replaced by Events.time_fired_ts
+    # Wipe States.last_updated since its been replaced by States.last_updated_ts
+    # Wipe States.last_changed since its been replaced by States.last_changed_ts
+    session.execute(text("UPDATE events set time_fired=NULL;"))
+    session.execute(text("UPDATE states set last_updated=NULL, last_changed=NULL;"))
+    session.commit()
+
+
+def _migrate_columns_to_timestamp(
+    hass: HomeAssistant, session: Session, engine: Engine
+) -> None:
+    """Migrate columns to use timestamp."""
+    # Migrate all data in Events.time_fired to Events.time_fired_ts
+    # Migrate all data in States.last_updated to States.last_updated_ts
+    # Migrate all data in States.last_changed to States.last_changed_ts
+    connection = session.connection()
+    if engine.dialect.name == SupportedDialect.SQLITE:
+        connection.execute(
+            text(
+                'UPDATE events set time_fired_ts=strftime("%s",time_fired) + '
+                "cast(substr(time_fired,-7) AS FLOAT);"
+            )
+        )
+        connection.execute(
+            text(
+                'UPDATE states set last_updated_ts=strftime("%s",last_updated) + '
+                "cast(substr(last_updated,-7) AS FLOAT), "
+                'last_changed_ts=strftime("%s",last_changed) + '
+                "cast(substr(last_changed,-7) AS FLOAT);"
+            )
+        )
+    elif engine.dialect.name == SupportedDialect.MYSQL:
+        connection.execute(
+            text("UPDATE events set time_fired_ts=UNIX_TIMESTAMP(time_fired);")
+        )
+        connection.execute(
+            text(
+                "UPDATE states set last_updated_ts=UNIX_TIMESTAMP(last_updated), "
+                "last_changed_ts=UNIX_TIMESTAMP(last_changed);"
+            )
+        )
+    elif engine.dialect.name == SupportedDialect.POSTGRESQL:
+        connection.execute(
+            text("UPDATE events set time_fired_ts=EXTRACT(EPOCH FROM time_fired);")
+        )
+        connection.execute(
+            text(
+                "UPDATE states set last_updated_ts=EXTRACT(EPOCH FROM last_updated), "
+                "last_changed_ts=EXTRACT(EPOCH FROM last_changed);"
+            )
+        )
 
 
 def _initialize_database(session: Session) -> bool:
@@ -840,7 +949,7 @@ def _initialize_database(session: Session) -> bool:
     indexes = inspector.get_indexes("events")
 
     for index in indexes:
-        if index["column_names"] == ["time_fired"]:
+        if index["column_names"] in (["time_fired"], ["time_fired_ts"]):
             # Schema addition from version 1 detected. New DB.
             session.add(StatisticsRuns(start=get_start_time()))
             session.add(SchemaChanges(schema_version=SCHEMA_VERSION))

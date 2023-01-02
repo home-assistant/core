@@ -1,8 +1,6 @@
 """Queries for logbook."""
 from __future__ import annotations
 
-from datetime import datetime as dt
-
 import sqlalchemy
 from sqlalchemy import select
 from sqlalchemy.orm import Query
@@ -47,7 +45,7 @@ EVENT_COLUMNS = (
     Events.event_id.label("event_id"),
     Events.event_type.label("event_type"),
     Events.event_data.label("event_data"),
-    Events.time_fired.label("time_fired"),
+    Events.time_fired_ts.label("time_fired_ts"),
     Events.context_id.label("context_id"),
     Events.context_user_id.label("context_user_id"),
     Events.context_parent_id.label("context_parent_id"),
@@ -79,7 +77,7 @@ EVENT_COLUMNS_FOR_STATE_SELECT = [
         "event_type"
     ),
     literal(value=None, type_=sqlalchemy.Text).label("event_data"),
-    States.last_updated.label("time_fired"),
+    States.last_updated_ts.label("time_fired_ts"),
     States.context_id.label("context_id"),
     States.context_user_id.label("context_user_id"),
     States.context_parent_id.label("context_parent_id"),
@@ -108,14 +106,14 @@ NOT_CONTEXT_ONLY = literal(None).label("context_only")
 
 
 def select_events_context_id_subquery(
-    start_day: dt,
-    end_day: dt,
+    start_day: float,
+    end_day: float,
     event_types: tuple[str, ...],
 ) -> Select:
     """Generate the select for a context_id subquery."""
     return (
         select(Events.context_id)
-        .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
+        .where((Events.time_fired_ts > start_day) & (Events.time_fired_ts < end_day))
         .where(Events.event_type.in_(event_types))
         .outerjoin(EventData, (Events.data_id == EventData.data_id))
     )
@@ -142,12 +140,12 @@ def select_states_context_only() -> Select:
 
 
 def select_events_without_states(
-    start_day: dt, end_day: dt, event_types: tuple[str, ...]
+    start_day: float, end_day: float, event_types: tuple[str, ...]
 ) -> Select:
     """Generate an events select that does not join states."""
     return (
         select(*EVENT_ROWS_NO_STATES, NOT_CONTEXT_ONLY)
-        .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
+        .where((Events.time_fired_ts > start_day) & (Events.time_fired_ts < end_day))
         .where(Events.event_type.in_(event_types))
         .outerjoin(EventData, (Events.data_id == EventData.data_id))
     )
@@ -163,7 +161,7 @@ def select_states() -> Select:
 
 
 def legacy_select_events_context_id(
-    start_day: dt, end_day: dt, context_id: str
+    start_day: float, end_day: float, context_id: str
 ) -> Select:
     """Generate a legacy events context id select that also joins states."""
     # This can be removed once we no longer have event_ids in the states table
@@ -176,33 +174,35 @@ def legacy_select_events_context_id(
         )
         .outerjoin(States, (Events.event_id == States.event_id))
         .where(
-            (States.last_updated == States.last_changed) | States.last_changed.is_(None)
+            (States.last_updated_ts == States.last_changed_ts)
+            | States.last_changed_ts.is_(None)
         )
         .where(_not_continuous_entity_matcher())
         .outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
         )
-        .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
+        .where((Events.time_fired_ts > start_day) & (Events.time_fired_ts < end_day))
         .where(Events.context_id == context_id)
     )
 
 
-def apply_states_filters(query: Query, start_day: dt, end_day: dt) -> Query:
+def apply_states_filters(query: Query, start_day: float, end_day: float) -> Query:
     """Filter states by time range.
 
     Filters states that do not have an old state or new state (added / removed)
     Filters states that are in a continuous domain with a UOM.
-    Filters states that do not have matching last_updated and last_changed.
+    Filters states that do not have matching last_updated_ts and last_changed_ts.
     """
     return (
         query.filter(
-            (States.last_updated > start_day) & (States.last_updated < end_day)
+            (States.last_updated_ts > start_day) & (States.last_updated_ts < end_day)
         )
         .outerjoin(OLD_STATE, (States.old_state_id == OLD_STATE.state_id))
         .where(_missing_state_matcher())
         .where(_not_continuous_entity_matcher())
         .where(
-            (States.last_updated == States.last_changed) | States.last_changed.is_(None)
+            (States.last_updated_ts == States.last_changed_ts)
+            | States.last_changed_ts.is_(None)
         )
         .outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
