@@ -18,7 +18,7 @@ from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 @pytest.fixture(autouse=True)
 def mock_axis_rtspclient():
     """No real RTSP communication allowed."""
-    with patch("axis.streammanager.RTSPClient") as rtsp_client_mock:
+    with patch("axis.stream_manager.RTSPClient") as rtsp_client_mock:
 
         rtsp_client_mock.return_value.session.state = STATE_STOPPED
 
