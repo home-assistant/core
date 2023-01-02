@@ -1,4 +1,4 @@
-"""Test zha analog output."""
+"""Test ZHA analog output."""
 from unittest.mock import call, patch
 
 import pytest
@@ -28,7 +28,7 @@ from tests.common import mock_coro
 
 @pytest.fixture(autouse=True)
 def number_platform_only():
-    """Only setup the number and required base platforms to speed up tests."""
+    """Only set up the number and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
@@ -83,7 +83,7 @@ async def light(zigpy_device_mock):
 
 
 async def test_number(hass, zha_device_joined_restored, zigpy_analog_output_device):
-    """Test zha number platform."""
+    """Test ZHA number platform."""
 
     cluster = zigpy_analog_output_device.endpoints.get(1).analog_output
     cluster.PLUGGED_ATTR_READS = {
@@ -200,7 +200,7 @@ async def test_number(hass, zha_device_joined_restored, zigpy_analog_output_devi
 async def test_level_control_number(
     hass, light, zha_device_joined, attr, initial_value, new_value
 ):
-    """Test zha level control number entities - new join."""
+    """Test ZHA level control number entities - new join."""
 
     entity_registry = er.async_get(hass)
     level_control_cluster = light.endpoints[1].level
@@ -333,7 +333,7 @@ async def test_level_control_number(
 async def test_color_number(
     hass, light, zha_device_joined, attr, initial_value, new_value
 ):
-    """Test zha color number entities - new join."""
+    """Test ZHA color number entities - new join."""
 
     entity_registry = er.async_get(hass)
     color_cluster = light.endpoints[1].light_color

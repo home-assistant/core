@@ -1,4 +1,4 @@
-"""The test for zha device automation actions."""
+"""The test for ZHA device automation actions."""
 from unittest.mock import call, patch
 
 import pytest
@@ -32,7 +32,7 @@ COMMAND_SINGLE = "single"
 
 @pytest.fixture(autouse=True)
 def required_platforms_only():
-    """Only setup the required platforms and required base platforms to speed up tests."""
+    """Only set up the required platforms and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
@@ -102,7 +102,7 @@ async def device_inovelli(hass, zigpy_device_mock, zha_device_joined):
 
 
 async def test_get_actions(hass, device_ias):
-    """Test we get the expected actions from a zha device."""
+    """Test we get the expected actions from a ZHA device."""
 
     ieee_address = str(device_ias[0].ieee)
 
@@ -155,7 +155,7 @@ async def test_get_actions(hass, device_ias):
 
 
 async def test_get_inovelli_actions(hass, device_inovelli):
-    """Test we get the expected actions from a zha device."""
+    """Test we get the expected actions from a ZHA device."""
 
     inovelli_ieee_address = str(device_inovelli[0].ieee)
     ha_device_registry = dr.async_get(hass)
@@ -235,7 +235,7 @@ async def test_get_inovelli_actions(hass, device_inovelli):
 
 
 async def test_action(hass, device_ias, device_inovelli):
-    """Test for executing a zha device action."""
+    """Test for executing a ZHA device action."""
     zigpy_device, zha_device = device_ias
     inovelli_zigpy_device, inovelli_zha_device = device_inovelli
 
