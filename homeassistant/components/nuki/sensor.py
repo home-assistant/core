@@ -1,17 +1,11 @@
 """Battery sensor for the Nuki Lock."""
 
-from homeassistant.components.sensor import (
-    SensorEntity,
-    SensorDeviceClass,
-)
-
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity import EntityCategory
-from homeassistant.const import (
-    PERCENTAGE,
-)
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NukiEntity
 from .const import ATTR_NUKI_ID, DATA_COORDINATOR, DATA_LOCKS, DOMAIN as NUKI_DOMAIN
@@ -46,7 +40,7 @@ class NukiBatterySensor(NukiEntity, SensorEntity):
         return f"{self._nuki_device.nuki_id}_battery_level"
 
     @property
-    def device_class(self) -> str:
+    def device_class(self):
         """Return the device class."""
         return SensorDeviceClass.BATTERY
 
@@ -59,12 +53,12 @@ class NukiBatterySensor(NukiEntity, SensorEntity):
         return data
 
     @property
-    def entity_category(self) -> str:
+    def entity_category(self):
         """Device entity category."""
         return EntityCategory.DIAGNOSTIC
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> float:
         """Return the state of the sensor."""
         return self._nuki_device.battery_charge
 
