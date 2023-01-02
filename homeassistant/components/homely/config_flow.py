@@ -110,7 +110,7 @@ class HomelyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         schema = vol.Schema(
             {
-                vol.Required("location",): vol.In(
+                vol.Required("location"): vol.In(
                     {location.location_id: location.name for location in self.locations}
                 )
             }
