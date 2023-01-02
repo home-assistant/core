@@ -42,6 +42,7 @@ from .const import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
+    DEFAULT_OPTIMISTIC,
 )
 from .debug_info import log_messages
 from .mixins import (
@@ -84,7 +85,6 @@ TILT_PAYLOAD = "tilt"
 COVER_PAYLOAD = "cover"
 
 DEFAULT_NAME = "MQTT Cover"
-DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_CLOSE = "CLOSE"
 DEFAULT_PAYLOAD_OPEN = "OPEN"
 DEFAULT_PAYLOAD_STOP = "STOP"

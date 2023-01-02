@@ -136,7 +136,6 @@ MQTT_LIGHT_ATTRIBUTES_BLOCKED = frozenset(
 
 DEFAULT_BRIGHTNESS_SCALE = 255
 DEFAULT_NAME = "MQTT LightEntity"
-DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_OFF = "OFF"
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_WHITE_SCALE = 255
@@ -195,7 +194,6 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_ON_COMMAND_TYPE, default=DEFAULT_ON_COMMAND_TYPE): vol.In(
                 VALUES_ON_COMMAND_TYPE
             ),
-            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
             vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
             vol.Optional(CONF_RGB_COMMAND_TEMPLATE): cv.template,
