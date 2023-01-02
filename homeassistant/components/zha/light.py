@@ -68,6 +68,7 @@ DEFAULT_EXTRA_TRANSITION_DELAY_SHORT = 0.25
 DEFAULT_EXTRA_TRANSITION_DELAY_LONG = 2.0
 DEFAULT_LONG_TRANSITION_TIME = 10
 DEFAULT_MIN_BRIGHTNESS = 2
+ASSUME_UPDATE_GROUP_FROM_CHILD_DELAY = 0.01
 
 FLASH_EFFECTS = {
     light.FLASH_SHORT: Identify.EffectIdentifier.Blink,
@@ -1004,7 +1005,7 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             False,
         )
         if self._zha_config_group_members_assume_state:
-            self._update_group_from_child_delay = 0.01
+            self._update_group_from_child_delay = ASSUME_UPDATE_GROUP_FROM_CHILD_DELAY
         self._zha_config_enhanced_light_transition = False
         self._attr_color_mode = None
 
