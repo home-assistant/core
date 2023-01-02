@@ -41,6 +41,7 @@ _ZhaGroupEntitySelfT = TypeVar("_ZhaGroupEntitySelfT", bound="ZhaGroupEntity")
 _LOGGER = logging.getLogger(__name__)
 
 ENTITY_SUFFIX = "entity_suffix"
+DEFAULT_UPDATE_GROUP_FROM_CHILD_DELAY = 0.5
 
 
 class BaseZhaEntity(LogMixin, entity.Entity):
@@ -269,7 +270,7 @@ class ZhaGroupEntity(BaseZhaEntity):
         self._async_unsub_state_changed: CALLBACK_TYPE | None = None
         self._handled_group_membership = False
         self._change_listener_debouncer: Debouncer | None = None
-        self._update_group_from_child_delay = 0.5
+        self._update_group_from_child_delay = DEFAULT_UPDATE_GROUP_FROM_CHILD_DELAY
 
     @property
     def available(self) -> bool:
