@@ -74,11 +74,6 @@ class CleaningTime(IRobotEntity, SensorEntity):
         return f"total_cleaning_time_{self._blid}"
 
     @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return SensorDeviceClass.DURATION
-
-    @property
     def native_unit_of_measurement(self):
         """Return the unit_of_measurement of the device."""
         return "hours"
