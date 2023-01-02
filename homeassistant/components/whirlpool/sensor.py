@@ -204,22 +204,17 @@ class WasherDryerClass(SensorEntity):
     ) -> None:
         """Initialize the washer sensor."""
         self._name = name.capitalize()
-        self._said = said
-
         self._wd: WasherDryer = washdry
 
         if self._name == "Dryer":
             self._attr_icon = ICON_D
+
         self.entity_description: WhirlpoolSensorEntityDescription = description
         self._attr_unique_id = f"{said}-{description.key}"
         self._running = True
         self._timestamp = utcnow()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Device information for Whirlpool washer sensors."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._said)},
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, said)},
             name=self._name,
             manufacturer="Whirlpool",
         )
