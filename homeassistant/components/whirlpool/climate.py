@@ -108,13 +108,13 @@ class AirConEntity(ClimateEntity):
     def __init__(self, hass, said, name, backend_selector: BackendSelector, auth: Auth):
         """Initialize the entity."""
         self._aircon = Aircon(backend_selector, auth, said)
-        self._aircon.register_attr_callback(self.async_write_ha_state)
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, said, hass=hass)
         self._attr_name = name if name is not None else said
         self._attr_unique_id = said
 
     async def async_added_to_hass(self) -> None:
         """Connect aircon to the cloud."""
+        self._aircon.register_attr_callback(self.async_write_ha_state)
         await self._aircon.connect()
 
     async def async_will_remove_from_hass(self) -> None:
