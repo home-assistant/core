@@ -536,8 +536,7 @@ async def test_sum_sensor_no_state(hass: HomeAssistant) -> None:
     [
         ([10, STATE_UNKNOWN, 10]),
         ([10, STATE_UNAVAILABLE, 10]),
-        ([10, None, 10]),
-        ([10, STATE_UNAVAILABLE, None]),
+        ([10, STATE_UNAVAILABLE, STATE_UNKNOWN]),
     ],
 )
 async def test_sensor_states_no_logging(

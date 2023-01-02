@@ -300,7 +300,6 @@ class MinMaxSensor(SensorEntity):
         _LOGGER.debug("states %s", states)
         for entity_id, state in states:
             if state is None or state.state in (
-                "None",
                 STATE_UNKNOWN,
                 STATE_UNAVAILABLE,
             ):
