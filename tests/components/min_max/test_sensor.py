@@ -300,7 +300,9 @@ async def test_not_enough_sensor_value(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.test_max")
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get("min_entity_id") is None
+    assert state.attributes.get("min_value") is None
     assert state.attributes.get("max_entity_id") is None
+    assert state.attributes.get("max_value") is None
     assert state.attributes.get("median") is None
 
     hass.states.async_set(entity_ids[1], VALUES[1])
@@ -323,7 +325,9 @@ async def test_not_enough_sensor_value(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.test_max")
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get("min_entity_id") is None
+    assert state.attributes.get("min_value") is None
     assert state.attributes.get("max_entity_id") is None
+    assert state.attributes.get("max_value") is None
 
 
 async def test_different_unit_of_measurement(hass: HomeAssistant) -> None:
