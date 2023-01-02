@@ -163,6 +163,7 @@ async def test_supported_features(hass, mqtt_mock_entry_with_yaml_config):
         | ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.AUX_HEAT
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        | ClimateEntityFeature.TARGET_HUMIDITY
     )
 
     assert state.attributes.get("supported_features") == support
@@ -503,7 +504,7 @@ async def test_set_target_humidity(hass, mqtt_mock_entry_with_yaml_config):
     mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("humidity") == 50
+    assert state.attributes.get("humidity") is None
     await common.async_set_humidity(hass, humidity=82, entity_id=ENTITY_CLIMATE)
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("humidity") == 82
@@ -1671,8 +1672,8 @@ async def test_precision_whole(hass, mqtt_mock_entry_with_yaml_config):
         (
             climate.SERVICE_SET_HUMIDITY,
             "target_humidity_command_topic",
-            {"humidity": "82.1"},
-            82.1,
+            {"humidity": "82"},
+            82,
             "target_humidity_command_template",
         ),
     ],
