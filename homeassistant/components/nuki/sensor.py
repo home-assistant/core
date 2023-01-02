@@ -29,10 +29,12 @@ async def async_setup_entry(
 class NukiBatterySensor(NukiEntity, SensorEntity):
     """Representation of a Nuki Lock Battery sensor."""
 
+    _attr_has_entity_name = True
+
     @property
     def name(self):
         """Return the name of the lock."""
-        return f"{self._nuki_device.name} Battery level"
+        return "Battery"
 
     @property
     def unique_id(self) -> str:
