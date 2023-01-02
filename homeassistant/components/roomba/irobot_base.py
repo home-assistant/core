@@ -190,10 +190,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
             state_attrs[ATTR_ERROR] = self.vacuum.error_message
             state_attrs[ATTR_ERROR_CODE] = self.vacuum.error_code
 
-        battery_cycles = self._battery_stats.get("nLithChrg")
-        if battery_cycles == 0:
-            battery_cycles = self._battery_stats.get("nNimhChrg")
-        state_attrs[ATTR_BATTERY_CYCLES] = battery_cycles
+        state_attrs[ATTR_BATTERY_CYCLES] = self._battery_stats.get("nLithChrg") or self._battery_stats.get("nNimhChrg")
 
         average_mission_time = self._mission_stats.get("aMssnM")
         state_attrs[ATTR_AVERAGE_MISSION_TIME] = f"{average_mission_time} minutes"
