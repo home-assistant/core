@@ -16,7 +16,7 @@ jobs:
       # - PRs
       # - No PRs marked as no-stale
       # - No issues (-1)
-      - name: 90 days stale issues & PRs policy
+      - name: 90 days stale PRs policy
         uses: actions/stale@v7.0.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -50,7 +50,7 @@ jobs:
       # - Issues
       # - No issues marked as no-stale or help-wanted
       # - No PRs (-1)
-      - name: 90 days stale issues & PRs policy
+      - name: 90 days stale issues
         uses: actions/stale@v7.0.0
         with:
           repo-token: ${{ steps.token.outputs.token }}
