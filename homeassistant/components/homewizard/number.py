@@ -3,10 +3,13 @@ from __future__ import annotations
 
 from typing import Optional, cast
 
+from homewizard_energy.errors import RequestError
+
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -54,7 +57,10 @@ class HWEnergyNumberEntity(
 
     async def async_set_native_value(self, value: float) -> None:
         """Set a new value."""
-        await self.coordinator.api.state_set(brightness=value * (255 / 100))
+        try:
+            await self.coordinator.api.state_set(brightness=value * (255 / 100))
+        except RequestError as ex:
+            raise HomeAssistantError(str(ex)) from ex
         await self.coordinator.async_refresh()
 
     @property
