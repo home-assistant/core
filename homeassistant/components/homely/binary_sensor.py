@@ -1,11 +1,14 @@
 """Sensors provided by Homely."""
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
 
-from homelypy.devices import Device, MotionSensorMini, SmokeAlarm, State, WindowSensor
+from homelypy.devices import Device, MotionSensorMini, SmokeAlarm, WindowSensor
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -31,88 +34,101 @@ async def async_setup_entry(
     entities: list[BinarySensorEntity] = []
     for homely_device in homely_home.devices.values():
         if isinstance(homely_device.homely_api_device, WindowSensor):
-            entities.append(WindowSensorEntity(homely_home, homely_device))
+            entities.append(
+                HomelyBinarySensorEntity(
+                    homely_home, homely_device, WINDOW_SENSOR_DESCRIPTION
+                )
+            )
         elif isinstance(homely_device.homely_api_device, SmokeAlarm):
-            entities.append(SmokeAlarmEntity(homely_home, homely_device))
+            entities.append(
+                HomelyBinarySensorEntity(
+                    homely_home, homely_device, SMOKE_ALARM_DESCRIPTION
+                )
+            )
         elif isinstance(homely_device.homely_api_device, MotionSensorMini):
-            entities.append(MotionSensorEntity(homely_home, homely_device))
-        entities.append(BatteryLowEntity(homely_home, homely_device))
+            entities.append(
+                HomelyBinarySensorEntity(
+                    homely_home, homely_device, MOTION_SENSOR_DESCRIPTION
+                )
+            )
+        entities.append(
+            HomelyBinarySensorEntity(
+                homely_home, homely_device, BATTERY_SENSOR_DESCRIPTION
+            )
+        )
     async_add_entities(entities)
+
+
+@dataclass
+class HomelyBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Class describing a Homely sensor entity."""
+
+    value_fn: Callable[[Device], bool] = lambda _: _
 
 
 class HomelyBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
     """Abstract binary sensor class."""
 
+    _attr_has_entity_name = True
+    entity_description: HomelyBinarySensorEntityDescription
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
         homely_device: HomelyDevice,
+        description: HomelyBinarySensorEntityDescription,
     ) -> None:
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
         self.homely_device = homely_device
-        self._attr_is_on = self.get_is_on_from_device(
-            self.homely_device.homely_api_device
-        )
+        self.entity_description = description
+        self._homely_device_state: Device = self.get_homely_device_state()
         self._attr_device_info = homely_device.device_info
-        self._attr_unique_id = f"{homely_device.homely_api_device.id}_{self._attr_name}"
+        self._attr_unique_id = f"{homely_device.homely_api_device.id}_{self.name}"
 
-    def get_is_on_from_device(self, device: Device) -> bool:
-        """Get the current state of the sensor."""
-        raise NotImplementedError
+    @property
+    def is_on(self) -> bool:
+        """Return the on state of the entity."""
+        return self.entity_description.value_fn(self._homely_device_state)
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        device: State = next(
+        self._homely_device_state = self.get_homely_device_state()
+        self.async_write_ha_state()
+
+    def get_homely_device_state(self) -> Device:
+        """Find my updated device."""
+        return next(
             filter(
                 lambda device: (device.id == self.homely_device.homely_api_device.id),
                 self.coordinator.location.devices,
             )
         )
-        self._attr_is_on = self.get_is_on_from_device(device)
-        self.async_write_ha_state()
 
 
-class WindowSensorEntity(HomelyBinarySensorEntity):
-    """Represent a window sensor."""
+WINDOW_SENSOR_DESCRIPTION = HomelyBinarySensorEntityDescription(
+    key="WindowSensorAlarm",
+    name="Door/window",
+    device_class=BinarySensorDeviceClass.WINDOW,
+    value_fn=lambda device: device.alarm.alarm,
+)
 
-    _attr_name = "Window"
-    _attr_device_class = BinarySensorDeviceClass.WINDOW
-
-    def get_is_on_from_device(self, device: Device) -> bool:
-        """Get the current state of the sensor."""
-        return device.alarm.alarm
-
-
-class MotionSensorEntity(HomelyBinarySensorEntity):
-    """Represent a motion sensor."""
-
-    _attr_name = "Motion"
-    _attr_device_class = BinarySensorDeviceClass.MOTION
-
-    def get_is_on_from_device(self, device: Device) -> bool:
-        """Get the current state of the sensor."""
-        return device.alarm.alarm
-
-
-class SmokeAlarmEntity(HomelyBinarySensorEntity):
-    """Represent a smoke alarm."""
-
-    _attr_name = "Smoke"
-    _attr_device_class = BinarySensorDeviceClass.SMOKE
-
-    def get_is_on_from_device(self, device: Device) -> bool:
-        """Get the current state of the sensor."""
-        return device.alarm.fire
-
-
-class BatteryLowEntity(HomelyBinarySensorEntity):
-    """Represent battery low state."""
-
-    _attr_name = "Battery low"
-    _attr_device_class = BinarySensorDeviceClass.BATTERY
-
-    def get_is_on_from_device(self, device: Device) -> bool:
-        """Get the current state of the sensor."""
-        return device.battery.low
+MOTION_SENSOR_DESCRIPTION = HomelyBinarySensorEntityDescription(
+    key="MotionSensorAlarm",
+    name="Motion",
+    device_class=BinarySensorDeviceClass.MOTION,
+    value_fn=lambda device: device.alarm.alarm,
+)
+SMOKE_ALARM_DESCRIPTION = HomelyBinarySensorEntityDescription(
+    key="SmokeAlarmAlarm",
+    name="Smoke",
+    device_class=BinarySensorDeviceClass.SMOKE,
+    value_fn=lambda device: device.alarm.fire,
+)
+BATTERY_SENSOR_DESCRIPTION = HomelyBinarySensorEntityDescription(
+    key="BatteryLowAlarm",
+    name="Battery low",
+    device_class=BinarySensorDeviceClass.BATTERY,
+    value_fn=lambda device: device.battery.low,
+)
