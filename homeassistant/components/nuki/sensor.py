@@ -20,7 +20,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            entities.append(NukiBatterySensor(coordinator, lock))
+            NukiBatterySensor(coordinator, lock)
             for lock in data[DATA_LOCKS]
         ]
     )
