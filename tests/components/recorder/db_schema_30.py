@@ -1,11 +1,14 @@
-"""Models for SQLAlchemy."""
+"""Models for SQLAlchemy.
+
+This file contains the model definitions for schema version 30.
+It is used to test the schema migration logic.
+"""
 from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-import time
-from typing import Any, TypeVar, cast
+from typing import Any, TypedDict, TypeVar, cast, overload
 
 import ciso8601
 from fnvhash import fnv1a_32
@@ -32,6 +35,9 @@ from sqlalchemy.orm import aliased, declarative_base, relationship
 from sqlalchemy.orm.session import Session
 
 from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_RESTORED,
+    ATTR_SUPPORTED_FEATURES,
     MAX_LENGTH_EVENT_CONTEXT_ID,
     MAX_LENGTH_EVENT_EVENT_TYPE,
     MAX_LENGTH_EVENT_ORIGIN,
@@ -47,14 +53,13 @@ from homeassistant.helpers.json import (
 )
 import homeassistant.util.dt as dt_util
 
-from .const import ALL_DOMAIN_EXCLUDE_ATTRS
-from .models import StatisticData, StatisticMetaData, process_timestamp
+ALL_DOMAIN_EXCLUDE_ATTRS = {ATTR_ATTRIBUTION, ATTR_RESTORED, ATTR_SUPPORTED_FEATURES}
 
 # SQLAlchemy Schema
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 32
+SCHEMA_VERSION = 30
 
 _StatisticsBaseSelfT = TypeVar("_StatisticsBaseSelfT", bound="StatisticsBase")
 
@@ -91,8 +96,8 @@ TABLES_TO_CHECK = [
     TABLE_SCHEMA_CHANGES,
 ]
 
-LAST_UPDATED_INDEX_TS = "ix_states_last_updated_ts"
-ENTITY_ID_LAST_UPDATED_INDEX_TS = "ix_states_entity_id_last_updated_ts"
+LAST_UPDATED_INDEX = "ix_states_last_updated"
+ENTITY_ID_LAST_UPDATED_INDEX = "ix_states_entity_id_last_updated"
 EVENTS_CONTEXT_ID_INDEX = "ix_events_context_id"
 STATES_CONTEXT_ID_INDEX = "ix_states_context_id"
 
@@ -126,6 +131,48 @@ DOUBLE_TYPE = (
 TIMESTAMP_TYPE = DOUBLE_TYPE
 
 
+class UnsupportedDialect(Exception):
+    """The dialect or its version is not supported."""
+
+
+class StatisticResult(TypedDict):
+    """Statistic result data class.
+
+    Allows multiple datapoints for the same statistic_id.
+    """
+
+    meta: StatisticMetaData
+    stat: StatisticData
+
+
+class StatisticDataBase(TypedDict):
+    """Mandatory fields for statistic data class."""
+
+    start: datetime
+
+
+class StatisticData(StatisticDataBase, total=False):
+    """Statistic data class."""
+
+    mean: float
+    min: float
+    max: float
+    last_reset: datetime | None
+    state: float
+    sum: float
+
+
+class StatisticMetaData(TypedDict):
+    """Statistic meta data class."""
+
+    has_mean: bool
+    has_sum: bool
+    name: str | None
+    source: str
+    statistic_id: str
+    unit_of_measurement: str | None
+
+
 class JSONLiteral(JSON):  # type: ignore[misc]
     """Teach SA how to literalize json."""
 
@@ -149,7 +196,7 @@ class Events(Base):  # type: ignore[misc,valid-type]
     __table_args__ = (
         # Used for fetching events at a specific time
         # see logbook
-        Index("ix_events_event_type_time_fired_ts", "event_type", "time_fired_ts"),
+        Index("ix_events_event_type_time_fired", "event_type", "time_fired"),
         {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
     __tablename__ = TABLE_EVENTS
@@ -158,8 +205,7 @@ class Events(Base):  # type: ignore[misc,valid-type]
     event_data = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
     origin = Column(String(MAX_LENGTH_EVENT_ORIGIN))  # no longer used for new rows
     origin_idx = Column(SmallInteger)
-    time_fired = Column(DATETIME_TYPE)  # no longer used for new rows
-    time_fired_ts = Column(TIMESTAMP_TYPE, index=True)
+    time_fired = Column(DATETIME_TYPE, index=True)
     context_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
     context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
     context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
@@ -171,17 +217,9 @@ class Events(Base):  # type: ignore[misc,valid-type]
         return (
             "<recorder.Events("
             f"id={self.event_id}, type='{self.event_type}', "
-            f"origin_idx='{self.origin_idx}', time_fired='{self.time_fired_isotime}'"
+            f"origin_idx='{self.origin_idx}', time_fired='{self.time_fired}'"
             f", data_id={self.data_id})>"
         )
-
-    @property
-    def time_fired_isotime(self) -> str:
-        """Return time_fired as an isotime string."""
-        date_time = dt_util.utc_from_timestamp(self.time_fired_ts) or process_timestamp(
-            self.time_fired
-        )
-        return date_time.isoformat(sep=" ", timespec="seconds")
 
     @staticmethod
     def from_event(event: Event) -> Events:
@@ -190,8 +228,7 @@ class Events(Base):  # type: ignore[misc,valid-type]
             event_type=event.event_type,
             event_data=None,
             origin_idx=EVENT_ORIGIN_TO_IDX.get(event.origin),
-            time_fired=None,
-            time_fired_ts=dt_util.utc_to_timestamp(event.time_fired),
+            time_fired=event.time_fired,
             context_id=event.context.id,
             context_user_id=event.context.user_id,
             context_parent_id=event.context.parent_id,
@@ -211,7 +248,7 @@ class Events(Base):  # type: ignore[misc,valid-type]
                 EventOrigin(self.origin)
                 if self.origin
                 else EVENT_ORIGIN_ORDER[self.origin_idx],
-                dt_util.utc_from_timestamp(self.time_fired_ts),
+                process_timestamp(self.time_fired),
                 context=context,
             )
         except JSON_DECODE_EXCEPTIONS:
@@ -274,7 +311,7 @@ class States(Base):  # type: ignore[misc,valid-type]
     __table_args__ = (
         # Used for fetching the state of entities at a specific time
         # (get_states in history.py)
-        Index(ENTITY_ID_LAST_UPDATED_INDEX_TS, "entity_id", "last_updated_ts"),
+        Index(ENTITY_ID_LAST_UPDATED_INDEX, "entity_id", "last_updated"),
         {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
     __tablename__ = TABLE_STATES
@@ -287,10 +324,8 @@ class States(Base):  # type: ignore[misc,valid-type]
     event_id = Column(  # no longer used for new rows
         Integer, ForeignKey("events.event_id", ondelete="CASCADE"), index=True
     )
-    last_changed = Column(DATETIME_TYPE)  # no longer used for new rows
-    last_changed_ts = Column(TIMESTAMP_TYPE)
-    last_updated = Column(DATETIME_TYPE)  # no longer used for new rows
-    last_updated_ts = Column(TIMESTAMP_TYPE, default=time.time, index=True)
+    last_changed = Column(DATETIME_TYPE)
+    last_updated = Column(DATETIME_TYPE, default=dt_util.utcnow, index=True)
     old_state_id = Column(Integer, ForeignKey("states.state_id"), index=True)
     attributes_id = Column(
         Integer, ForeignKey("state_attributes.attributes_id"), index=True
@@ -307,17 +342,9 @@ class States(Base):  # type: ignore[misc,valid-type]
         return (
             f"<recorder.States(id={self.state_id}, entity_id='{self.entity_id}',"
             f" state='{self.state}', event_id='{self.event_id}',"
-            f" last_updated='{self.last_updated_isotime}',"
+            f" last_updated='{self.last_updated.isoformat(sep=' ', timespec='seconds')}',"
             f" old_state_id={self.old_state_id}, attributes_id={self.attributes_id})>"
         )
-
-    @property
-    def last_updated_isotime(self) -> str:
-        """Return last_updated as an isotime string."""
-        date_time = dt_util.utc_from_timestamp(
-            self.last_updated_ts
-        ) or process_timestamp(self.last_updated)
-        return date_time.isoformat(sep=" ", timespec="seconds")
 
     @staticmethod
     def from_event(event: Event) -> States:
@@ -331,22 +358,21 @@ class States(Base):  # type: ignore[misc,valid-type]
             context_user_id=event.context.user_id,
             context_parent_id=event.context.parent_id,
             origin_idx=EVENT_ORIGIN_TO_IDX.get(event.origin),
-            last_updated=None,
-            last_changed=None,
         )
+
         # None state means the state was removed from the state machine
         if state is None:
             dbstate.state = ""
-            dbstate.last_updated_ts = dt_util.utc_to_timestamp(event.time_fired)
-            dbstate.last_changed_ts = None
+            dbstate.last_updated = event.time_fired
+            dbstate.last_changed = None
             return dbstate
 
         dbstate.state = state.state
-        dbstate.last_updated_ts = dt_util.utc_to_timestamp(state.last_updated)
+        dbstate.last_updated = state.last_updated
         if state.last_updated == state.last_changed:
-            dbstate.last_changed_ts = None
+            dbstate.last_changed = None
         else:
-            dbstate.last_changed_ts = dt_util.utc_to_timestamp(state.last_changed)
+            dbstate.last_changed = state.last_changed
 
         return dbstate
 
@@ -363,13 +389,11 @@ class States(Base):  # type: ignore[misc,valid-type]
             # When json_loads fails
             _LOGGER.exception("Error converting row to state: %s", self)
             return None
-        if self.last_changed_ts is None or self.last_changed_ts == self.last_updated_ts:
-            last_changed = last_updated = dt_util.utc_from_timestamp(
-                self.last_updated_ts or 0
-            )
+        if self.last_changed is None or self.last_changed == self.last_updated:
+            last_changed = last_updated = process_timestamp(self.last_updated)
         else:
-            last_updated = dt_util.utc_from_timestamp(self.last_updated_ts or 0)
-            last_changed = dt_util.utc_from_timestamp(self.last_changed_ts or 0)
+            last_updated = process_timestamp(self.last_updated)
+            last_changed = process_timestamp(self.last_changed)
         return State(
             self.entity_id,
             self.state,
@@ -628,3 +652,23 @@ ENTITY_ID_IN_EVENT: Column = EVENT_DATA_JSON["entity_id"]
 OLD_ENTITY_ID_IN_EVENT: Column = OLD_FORMAT_EVENT_DATA_JSON["entity_id"]
 DEVICE_ID_IN_EVENT: Column = EVENT_DATA_JSON["device_id"]
 OLD_STATE = aliased(States, name="old_state")
+
+
+@overload
+def process_timestamp(ts: None) -> None:
+    ...
+
+
+@overload
+def process_timestamp(ts: datetime) -> datetime:
+    ...
+
+
+def process_timestamp(ts: datetime | None) -> datetime | None:
+    """Process a timestamp into datetime object."""
+    if ts is None:
+        return None
+    if ts.tzinfo is None:
+        return ts.replace(tzinfo=dt_util.UTC)
+
+    return dt_util.as_utc(ts)
