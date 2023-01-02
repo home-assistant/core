@@ -20,7 +20,7 @@ async def test_service_show_view(hass, mock_zeroconf):
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             "cast",
-            "show_lovelace_view",
+            "show_dashboard",
             {"entity_id": "media_player.kitchen", "view_path": "mock_path"},
             blocking=True,
         )
@@ -32,7 +32,7 @@ async def test_service_show_view(hass, mock_zeroconf):
     )
     await hass.services.async_call(
         "cast",
-        "show_lovelace_view",
+        "show_dashboard",
         {"entity_id": "media_player.kitchen", "view_path": "mock_path"},
         blocking=True,
     )
@@ -59,7 +59,7 @@ async def test_service_show_view_dashboard(hass, mock_zeroconf):
 
     await hass.services.async_call(
         "cast",
-        "show_lovelace_view",
+        "show_dashboard",
         {
             "entity_id": "media_player.kitchen",
             "view_path": "mock_path",
@@ -92,7 +92,7 @@ async def test_use_cloud_url(hass, mock_zeroconf):
     ):
         await hass.services.async_call(
             "cast",
-            "show_lovelace_view",
+            "show_dashboard",
             {"entity_id": "media_player.kitchen", "view_path": "mock_path"},
             blocking=True,
         )
