@@ -7,7 +7,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.48
+AIOAladdinConnect==0.1.50
 
 # homeassistant.components.adax
 Adax-local==0.1.5
