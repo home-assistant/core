@@ -5,5 +5,6 @@
   "requirements": ["py-schluter==0.1.7"],
   "codeowners": ["@prairieapps"],
   "iot_class": "cloud_polling",
-  "loggers": ["schluter"]
+  "loggers": ["schluter"],
+  "version": "2023.01.02"
 }

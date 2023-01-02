@@ -25,13 +25,23 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from . import DATA_SCHLUTER_API, DATA_SCHLUTER_SESSION, DOMAIN
+#from . import DATA_SCHLUTER_API, DATA_SCHLUTER_SESSION, DOMAIN, schluter_auth
+#from . import DATA_SCHLUTER_API, DATA_SCHLUTER_USER, DATA_SCHLUTER_PASS, DATA_SCHLUTER_SESSIONFILE, DOMAIN, schluter_auth
+from . import DOMAIN, schluter_auth_update, DATA_SCHLUTER_API
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_SCAN_INTERVAL): vol.All(vol.Coerce(int), vol.Range(min=1))}
 )
 
+def sch_get_thermostats(hass_domain):
+    sid = schluter_auth_update(hass_domain);
+    api = hass_domain[DATA_SCHLUTER_API];
+
+    if sid is not None:
+         return api.get_thermostats(sid);
+    else:
+         return None;
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -42,13 +52,13 @@ async def async_setup_platform(
     """Set up the Schluter thermostats."""
     if discovery_info is None:
         return
-    session_id = hass.data[DOMAIN][DATA_SCHLUTER_SESSION]
-    api = hass.data[DOMAIN][DATA_SCHLUTER_API]
+    #session_id = hass.data[DOMAIN][DATA_SCHLUTER_SESSION]
+    hass_domain = hass.data[DOMAIN];
 
     async def async_update_data():
         try:
             thermostats = await hass.async_add_executor_job(
-                api.get_thermostats, session_id
+                sch_get_thermostats, hass_domain
             )
         except RequestException as err:
             raise UpdateFailed(f"Error communicating with Schluter API: {err}") from err
@@ -69,7 +79,7 @@ async def async_setup_platform(
     await coordinator.async_refresh()
 
     async_add_entities(
-        SchluterThermostat(coordinator, serial_number, api, session_id)
+        SchluterThermostat(coordinator, serial_number)
         for serial_number, thermostat in coordinator.data.items()
     )
 
@@ -82,12 +92,16 @@ class SchluterThermostat(CoordinatorEntity, ClimateEntity):
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, coordinator, serial_number, api, session_id):
+    def __init__(self, coordinator, serial_number):
         """Initialize the thermostat."""
         super().__init__(coordinator)
-        self._serial_number = serial_number
-        self._api = api
-        self._session_id = session_id
+        
+        #
+        # This dict will be updated inside schluter_auth_update().
+        #
+        self._hass_domain = coordinator.hass.data[DOMAIN];
+        self._serial_number = serial_number;
+        #self._session_id = session_id
 
     @property
     def unique_id(self):
@@ -111,6 +125,7 @@ class SchluterThermostat(CoordinatorEntity, ClimateEntity):
             return HVACAction.HEATING
         return HVACAction.IDLE
 
+    # tcp: there is also .manual_temp which it seems is the last manually setup temp
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
@@ -138,6 +153,9 @@ class SchluterThermostat(CoordinatorEntity, ClimateEntity):
 
         try:
             if target_temp is not None:
-                self._api.set_temperature(self._session_id, serial_number, target_temp)
+                sid = schluter_auth_update(self._hass_domain);
+                if sid is not None:
+                    api = self._hass_domain[DATA_SCHLUTER_API];
+                    api.set_temperature(sid, serial_number, target_temp)
         except RequestException as ex:
             _LOGGER.error("An error occurred while setting temperature: %s", ex)
