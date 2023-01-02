@@ -49,12 +49,6 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         return await self.async_step_init(user_input)
 
-    async def async_step_import(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle a flow initiated by import."""
-        return await self.async_step_init(user_input, is_import=True)
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None, is_import: bool = False
     ) -> FlowResult:
