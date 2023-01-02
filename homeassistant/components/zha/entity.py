@@ -77,7 +77,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
 
     @property
     def zha_device(self) -> ZHADevice:
-        """Return the zha device this entity is attached to."""
+        """Return the ZHA device this entity is attached to."""
         return self._zha_device
 
     @property
@@ -258,7 +258,7 @@ class ZhaGroupEntity(BaseZhaEntity):
         zha_device: ZHADevice,
         **kwargs: Any,
     ) -> None:
-        """Initialize a light group."""
+        """Initialize a ZHA group."""
         super().__init__(unique_id, zha_device, **kwargs)
         self._available = False
         self._group = zha_device.gateway.groups.get(group_id)
