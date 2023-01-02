@@ -32,7 +32,7 @@ DATA_REGISTRY = "device_registry"
 EVENT_DEVICE_REGISTRY_UPDATED = "device_registry_updated"
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 4
+STORAGE_VERSION_MINOR = 3
 SAVE_DELAY = 10
 CLEANUP_DELAY = 10
 
@@ -70,7 +70,6 @@ class DeviceEntryType(StrEnum):
 class DeviceEntry:
     """Device Registry Entry."""
 
-    aliases: set[str] = attr.ib(factory=set)
     area_id: str | None = attr.ib(default=None)
     config_entries: set[str] = attr.ib(converter=set, factory=set)
     configuration_url: str | None = attr.ib(default=None)
@@ -175,9 +174,6 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 # Version 1.3 adds hw_version
                 for device in old_data["devices"]:
                     device["hw_version"] = None
-            if old_minor_version < 4:
-                for device in old_data["devices"]:
-                    device["aliases"] = []
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -382,7 +378,6 @@ class DeviceRegistry:
         device_id: str,
         *,
         add_config_entry_id: str | UndefinedType = UNDEFINED,
-        aliases: set[str] | UndefinedType = UNDEFINED,
         area_id: str | None | UndefinedType = UNDEFINED,
         configuration_url: str | None | UndefinedType = UNDEFINED,
         disabled_by: DeviceEntryDisabler | None | UndefinedType = UNDEFINED,
@@ -473,7 +468,6 @@ class DeviceRegistry:
             old_values["identifiers"] = old.identifiers
 
         for attr_name, value in (
-            ("aliases", aliases),
             ("area_id", area_id),
             ("configuration_url", configuration_url),
             ("disabled_by", disabled_by),
@@ -552,7 +546,6 @@ class DeviceRegistry:
         if data is not None:
             for device in data["devices"]:
                 devices[device["id"]] = DeviceEntry(
-                    aliases=set(device["aliases"]),
                     area_id=device["area_id"],
                     config_entries=set(device["config_entries"]),
                     configuration_url=device["configuration_url"],
@@ -600,7 +593,6 @@ class DeviceRegistry:
 
         data["devices"] = [
             {
-                "aliases": list(entry.aliases),
                 "area_id": entry.area_id,
                 "config_entries": list(entry.config_entries),
                 "configuration_url": entry.configuration_url,
