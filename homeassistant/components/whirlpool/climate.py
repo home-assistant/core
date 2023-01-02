@@ -104,14 +104,13 @@ class AirConEntity(ClimateEntity):
     _attr_target_temperature_step = SUPPORTED_TARGET_TEMPERATURE_STEP
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_should_poll = False
-    _attr_has_entity_name = True
 
     def __init__(self, hass, said, name, backend_selector: BackendSelector, auth: Auth):
         """Initialize the entity."""
         self._aircon = Aircon(backend_selector, auth, said, self.async_write_ha_state)
 
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, said, hass=hass)
-        self._name = name if name is not None else said
+        self._attr_name = name if name is not None else said
         self._attr_unique_id = said
         self._said = said
 
@@ -120,7 +119,7 @@ class AirConEntity(ClimateEntity):
         """Device information for Whirlpool 6th Sense air conditioners."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._said)},
-            name=self._name,
+            name=self.name,
             manufacturer="Whirlpool",
             model="Sixth Sense",
         )
