@@ -1,7 +1,7 @@
 """Support for Axis lights."""
 from typing import Any
 
-from axis.event_stream import CLASS_LIGHT, AxisBinaryEvent, AxisEvent
+from axis.event_stream import AxisBinaryEvent, AxisEvent, EventTopic
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
@@ -33,7 +33,7 @@ async def async_setup_entry(
         """Add light from Axis device."""
         event: AxisEvent = device.api.event[event_id]
 
-        if event.group == CLASS_LIGHT and event.type == "Light":
+        if event.topic_base == EventTopic.LIGHT_STATUS:
             async_add_entities([AxisLight(event, device)])
 
     config_entry.async_on_unload(
@@ -57,7 +57,7 @@ class AxisLight(AxisEventBase, LightEntity):
         self.max_intensity = 0
 
         light_type = device.api.vapix.light_control[self.light_id].light_type
-        self._attr_name = f"{light_type} {event.type} {event.id}"
+        self._attr_name = f"{light_type} {self.event_type} {event.id}"
 
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         self._attr_color_mode = ColorMode.BRIGHTNESS

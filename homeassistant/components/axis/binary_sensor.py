@@ -4,14 +4,10 @@ from __future__ import annotations
 from datetime import timedelta
 
 from axis.event_stream import (
-    CLASS_INPUT,
-    CLASS_LIGHT,
-    CLASS_MOTION,
-    CLASS_OUTPUT,
-    CLASS_PTZ,
-    CLASS_SOUND,
     AxisBinaryEvent,
     AxisEvent,
+    EventGroup,
+    EventTopic,
     FenceGuard,
     LoiteringGuard,
     MotionGuard,
@@ -35,10 +31,10 @@ from .const import DOMAIN as AXIS_DOMAIN
 from .device import AxisNetworkDevice
 
 DEVICE_CLASS = {
-    CLASS_INPUT: BinarySensorDeviceClass.CONNECTIVITY,
-    CLASS_LIGHT: BinarySensorDeviceClass.LIGHT,
-    CLASS_MOTION: BinarySensorDeviceClass.MOTION,
-    CLASS_SOUND: BinarySensorDeviceClass.SOUND,
+    EventGroup.INPUT: BinarySensorDeviceClass.CONNECTIVITY,
+    EventGroup.LIGHT: BinarySensorDeviceClass.LIGHT,
+    EventGroup.MOTION: BinarySensorDeviceClass.MOTION,
+    EventGroup.SOUND: BinarySensorDeviceClass.SOUND,
 }
 
 
@@ -55,8 +51,8 @@ async def async_setup_entry(
         """Add binary sensor from Axis device."""
         event: AxisEvent = device.api.event[event_id]
 
-        if event.group not in (CLASS_OUTPUT, CLASS_PTZ) and not (
-            event.group == CLASS_LIGHT and event.type == "Light"
+        if event.group not in (EventGroup.OUTPUT, EventGroup.PTZ) and not (
+            event.topic_base == EventTopic.LIGHT_STATUS
         ):
             async_add_entities([AxisBinarySensor(event, device)])
 
@@ -110,13 +106,13 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
     def name(self) -> str | None:
         """Return the name of the event."""
         if (
-            self.event.group == CLASS_INPUT
+            self.event.group == EventGroup.INPUT
             and self.event.id in self.device.api.vapix.ports
             and self.device.api.vapix.ports[self.event.id].name
         ):
             return self.device.api.vapix.ports[self.event.id].name
 
-        if self.event.group == CLASS_MOTION:
+        if self.event.group == EventGroup.MOTION:
 
             for event_class, event_data in (
                 (FenceGuard, self.device.api.vapix.fence_guard),
@@ -130,6 +126,6 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
                     and event_data
                     and self.event.id in event_data
                 ):
-                    return f"{self.event.type} {event_data[self.event.id].name}"
+                    return f"{self.event_type} {event_data[self.event.id].name}"
 
         return self._attr_name

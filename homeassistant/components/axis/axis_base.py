@@ -1,5 +1,5 @@
 """Base classes for Axis entities."""
-from axis.event_stream import AxisEvent
+from axis.event_stream import AxisEvent, EventTopic
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -7,6 +7,25 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN as AXIS_DOMAIN
 from .device import AxisNetworkDevice
+
+TOPIC_TO_NAME = {
+    EventTopic.DAY_NIGHT_VISION: "DayNight",
+    EventTopic.FENCE_GUARD: "Fence Guard",
+    EventTopic.LIGHT_STATUS: "Light",
+    EventTopic.LOITERING_GUARD: "Loitering Guard",
+    EventTopic.MOTION_DETECTION: "Motion",
+    EventTopic.MOTION_DETECTION_3: "VMD3",
+    EventTopic.MOTION_DETECTION_4: "VMD4",
+    EventTopic.MOTION_GUARD: "Motion Guard",
+    EventTopic.OBJECT_ANALYTICS: "Object Analytics",
+    EventTopic.PIR: "PIR",
+    EventTopic.PORT_INPUT: "Input",
+    EventTopic.PORT_SUPERVISED_INPUT: "Supervised Input",
+    EventTopic.PTZ_IS_MOVING: "is_moving",
+    EventTopic.PTZ_ON_PRESET: "on_preset",
+    EventTopic.RELAY: "Relay",
+    EventTopic.SOUND_TRIGGER_LEVEL: "Sound",
+}
 
 
 class AxisEntityBase(Entity):
@@ -51,10 +70,11 @@ class AxisEventBase(AxisEntityBase):
         super().__init__(device)
         self.event = event
 
-        self._attr_name = f"{event.type} {event.id}"
+        self.event_type = TOPIC_TO_NAME[event.topic_base]
+        self._attr_name = f"{self.event_type} {event.id}"
         self._attr_unique_id = f"{device.unique_id}-{event.topic}-{event.id}"
 
-        self._attr_device_class = event.group
+        self._attr_device_class = event.group.value
 
     async def async_added_to_hass(self) -> None:
         """Subscribe sensors events."""

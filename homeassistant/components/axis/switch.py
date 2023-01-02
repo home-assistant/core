@@ -1,7 +1,7 @@
 """Support for Axis switches."""
 from typing import Any
 
-from axis.event_stream import CLASS_OUTPUT, AxisBinaryEvent, AxisEvent
+from axis.event_stream import AxisBinaryEvent, AxisEvent, EventGroup
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -27,7 +27,7 @@ async def async_setup_entry(
         """Add switch from Axis device."""
         event: AxisEvent = device.api.event[event_id]
 
-        if event.group == CLASS_OUTPUT:
+        if event.group == EventGroup.OUTPUT:
             async_add_entities([AxisSwitch(event, device)])
 
     config_entry.async_on_unload(
