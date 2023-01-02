@@ -107,7 +107,6 @@ CONF_HUMIDITY_COMMAND_TEMPLATE = "target_humidity_command_template"
 CONF_HUMIDITY_COMMAND_TOPIC = "target_humidity_command_topic"
 CONF_HUMIDITY_STATE_TEMPLATE = "target_humidity_state_template"
 CONF_HUMIDITY_STATE_TOPIC = "target_humidity_state_topic"
-CONF_HUMIDITY_INITIAL = "initial_humidity"
 CONF_HUMIDITY_MAX = "max_humidity"
 CONF_HUMIDITY_MIN = "min_humidity"
 CONF_MODE_COMMAND_TEMPLATE = "mode_command_template"
@@ -264,7 +263,6 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_FAN_MODE_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_HUMIDITY_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_HUMIDITY_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_HUMIDITY_INITIAL, default=None): cv.positive_int,
         vol.Optional(CONF_HUMIDITY_MIN, default=DEFAULT_MIN_HUMIDITY): vol.Coerce(
             float
         ),
@@ -466,9 +464,6 @@ class MqttClimate(MqttEntity, ClimateEntity):
             self._attr_target_temperature_low = config[CONF_TEMP_INITIAL]
         if self._topic[CONF_TEMP_HIGH_STATE_TOPIC] is None:
             self._attr_target_temperature_high = config[CONF_TEMP_INITIAL]
-
-        if self._topic[CONF_HUMIDITY_STATE_TOPIC] is None:
-            self._attr_target_humidity = config[CONF_HUMIDITY_INITIAL]
 
         if self._topic[CONF_FAN_MODE_STATE_TOPIC] is None:
             self._attr_fan_mode = FAN_LOW

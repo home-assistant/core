@@ -108,7 +108,6 @@ async def test_setup_params(hass, mqtt_mock_entry_with_yaml_config):
 
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("temperature") == 21
-    assert state.attributes.get("humidity") == 50
     assert state.attributes.get("fan_mode") == "low"
     assert state.attributes.get("swing_mode") == "off"
     assert state.state == "off"
@@ -672,7 +671,7 @@ async def test_set_target_humidity_pessimistic(hass, mqtt_mock_entry_with_yaml_c
 
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("humidity") is None
-    await common.async_set_humidity(hass, humidity=None, entity_id=ENTITY_CLIMATE)
+    await common.async_set_humidity(hass, humidity=50, entity_id=ENTITY_CLIMATE)
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("humidity") is None
 
