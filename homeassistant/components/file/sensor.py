@@ -11,6 +11,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_FILE_PATH,
     CONF_NAME,
+    CONF_ICON,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
@@ -23,13 +24,13 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "File"
-
-ICON = "mdi:file"
+DEFAULT_ICON = "mdi:file"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_FILE_PATH): cv.isfile,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_ICON, default=DEFAULT_ICON): cv.icon,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
@@ -45,6 +46,7 @@ async def async_setup_platform(
     """Set up the file sensor."""
     file_path: str = config[CONF_FILE_PATH]
     name: str = config[CONF_NAME]
+    icon: str | None = config.get(CONF_ICON)
     unit: str | None = config.get(CONF_UNIT_OF_MEASUREMENT)
     value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
 
@@ -52,7 +54,7 @@ async def async_setup_platform(
         value_template.hass = hass
 
     if hass.config.is_allowed_path(file_path):
-        async_add_entities([FileSensor(name, file_path, unit, value_template)], True)
+        async_add_entities([FileSensor(name, icon, file_path, unit, value_template)], True)
     else:
         _LOGGER.error("'%s' is not an allowed directory", file_path)
 
@@ -60,17 +62,17 @@ async def async_setup_platform(
 class FileSensor(SensorEntity):
     """Implementation of a file sensor."""
 
-    _attr_icon = ICON
-
     def __init__(
         self,
         name: str,
+        icon: str,
         file_path: str,
         unit_of_measurement: str | None,
         value_template: Template | None,
     ) -> None:
         """Initialize the file sensor."""
         self._attr_name = name
+        self._attr_icon = icon
         self._file_path = file_path
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._val_tpl = value_template
@@ -96,3 +98,4 @@ class FileSensor(SensorEntity):
             )
         else:
             self._attr_native_value = data
+
