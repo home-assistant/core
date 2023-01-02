@@ -60,7 +60,7 @@ class HWEnergyNumberEntity(
         try:
             await self.coordinator.api.state_set(brightness=value * (255 / 100))
         except RequestError as ex:
-            raise HomeAssistantError(str(ex)) from ex
+            raise HomeAssistantError from ex
         await self.coordinator.async_refresh()
 
     @property
