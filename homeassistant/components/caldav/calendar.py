@@ -1,7 +1,7 @@
 """Support for WebDav Calendar."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import logging
 import re
 
@@ -185,8 +185,8 @@ class WebDavCalendarData:
             event_list.append(
                 CalendarEvent(
                     summary=self.get_attr_value(vevent, "summary") or "",
-                    start=vevent.dtstart.value,
-                    end=self.get_end_date(vevent),
+                    start=self.to_local(vevent.dtstart.value),
+                    end=self.to_local(self.get_end_date(vevent)),
                     location=self.get_attr_value(vevent, "location"),
                     description=self.get_attr_value(vevent, "description"),
                 )
@@ -269,8 +269,8 @@ class WebDavCalendarData:
         )
         self.event = CalendarEvent(
             summary=summary,
-            start=vevent.dtstart.value,
-            end=self.get_end_date(vevent),
+            start=self.to_local(vevent.dtstart.value),
+            end=self.to_local(self.get_end_date(vevent)),
             location=self.get_attr_value(vevent, "location"),
             description=self.get_attr_value(vevent, "description"),
         )
@@ -308,14 +308,22 @@ class WebDavCalendarData:
     def to_datetime(obj):
         """Return a datetime."""
         if isinstance(obj, datetime):
-            if obj.tzinfo is None:
-                # floating value, not bound to any time zone in particular
-                # represent same time regardless of which time zone is currently being observed
-                return obj.replace(tzinfo=dt.DEFAULT_TIME_ZONE)
-            return obj
+            return WebDavCalendarData.to_local(obj)
         return dt.dt.datetime.combine(obj, dt.dt.time.min).replace(
             tzinfo=dt.DEFAULT_TIME_ZONE
         )
+
+    @staticmethod
+    def to_local(obj: datetime | date) -> datetime | date:
+        """Return a datetime as a local datetime, leaving dates unchanged.
+
+        This handles giving floating times a timezone for comparison
+        with all day events and dropping the custom timezone object
+        used by the caldav client and dateutil so the datetime can be copied.
+        """
+        if isinstance(obj, datetime):
+            return dt.as_local(obj)
+        return obj
 
     @staticmethod
     def get_attr_value(obj, attribute):
