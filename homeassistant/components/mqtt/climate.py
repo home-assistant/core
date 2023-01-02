@@ -527,9 +527,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
         ):
             support |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
 
-        if (self._topic[CONF_HUMIDITY_STATE_TOPIC] is not None) or (
-            self._topic[CONF_HUMIDITY_COMMAND_TOPIC] is not None
-        ):
+        if self._topic[CONF_HUMIDITY_COMMAND_TOPIC] is not None:
             support |= ClimateEntityFeature.TARGET_HUMIDITY
 
         if (self._topic[CONF_FAN_MODE_STATE_TOPIC] is not None) or (
