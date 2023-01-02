@@ -39,72 +39,72 @@ DHCP_DATA = {**BASE_DATA, "host": DHCP_IP}
 )
 async def test_ok_setup(hass: HomeAssistant, init_data, init_context, entry) -> None:
     """Test we get the form."""
-    result = await hass.config_entries.flow.async_init(
+    init_result = await hass.config_entries.flow.async_init(
         DOMAIN,
         data=init_data,
         context=init_context,
     )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == config_entries.SOURCE_USER
-    assert result["errors"] is None
+    assert init_result["type"] == FlowResultType.FORM
+    assert init_result["step_id"] == config_entries.SOURCE_USER
+    assert init_result["errors"] is None
 
     with patch_gateway_ok(), patch_setup_entry_ok() as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+        config_result = await hass.config_entries.flow.async_configure(
+            init_result["flow_id"],
             entry,
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == EXPECTED_TITLE
-    assert result2["data"] == entry
-    assert result2["context"]["unique_id"] == GATEWAY_MAC
+    assert config_result["type"] == FlowResultType.CREATE_ENTRY
+    assert config_result["title"] == EXPECTED_TITLE
+    assert config_result["data"] == entry
+    assert config_result["context"]["unique_id"] == GATEWAY_MAC
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
-    result = await hass.config_entries.flow.async_init(
+    init_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(GET_GATEWAY_HISTORY_DATA, side_effect=InvalidAuth):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+        config_result = await hass.config_entries.flow.async_configure(
+            init_result["flow_id"],
             BASE_DATA,
         )
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert config_result["type"] == FlowResultType.FORM
+    assert config_result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
+    init_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(GET_GATEWAY_HISTORY_DATA, side_effect=CannotConnect):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+        config_result = await hass.config_entries.flow.async_configure(
+            init_result["flow_id"],
             BASE_DATA,
         )
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert config_result["type"] == FlowResultType.FORM
+    assert config_result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_unexpected(hass: HomeAssistant) -> None:
     """Test we handle unexpected errors."""
-    result = await hass.config_entries.flow.async_init(
+    init_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(GET_GATEWAY_HISTORY_DATA, side_effect=MemoryError):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+        config_result = await hass.config_entries.flow.async_configure(
+            init_result["flow_id"],
             BASE_DATA,
         )
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
+    assert config_result["type"] == FlowResultType.FORM
+    assert config_result["errors"] == {"base": "unknown"}
