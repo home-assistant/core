@@ -739,47 +739,10 @@ class Light(BaseLight, ZhaEntity):
             signal_override=True,
         )
 
-        @callback
-        def assume_group_state(signal, update_params):
-            """Handle an assume group state event from a group."""
-            if self.entity_id in signal["entity_ids"] and self._attr_available:
-                self.debug("member assuming group state with: %s", update_params)
-
-                # state is always set (light.turn_on/light.turn_off)
-                self._attr_state = update_params.get("state")
-
-                brightness = update_params.get(light.ATTR_BRIGHTNESS)
-                color_mode = update_params.get(light.ATTR_COLOR_MODE)
-                color_temp = update_params.get(light.ATTR_COLOR_TEMP)
-                xy_color = update_params.get(light.ATTR_XY_COLOR)
-                hs_color = update_params.get(light.ATTR_HS_COLOR)
-                effect = update_params.get(light.ATTR_EFFECT)
-
-                supported_modes = self._attr_supported_color_modes
-
-                # before assuming a group state attribute, check if the attribute was actually set in that call
-                if brightness is not None and brightness_supported(supported_modes):
-                    self._attr_brightness = brightness
-                if color_mode is not None and color_mode in supported_modes:
-                    self._attr_color_mode = color_mode
-                if color_temp is not None and ColorMode.COLOR_TEMP in supported_modes:
-                    self._attr_color_temp = color_temp
-                if xy_color is not None and ColorMode.XY in supported_modes:
-                    self._attr_xy_color = xy_color
-                if hs_color is not None and ColorMode.HS in supported_modes:
-                    self._attr_hs_color = hs_color
-                # the effect is always deactivated in async_turn_on if not provided
-                if effect is None:
-                    self._attr_effect = None
-                elif effect in self._attr_effect_list:
-                    self._attr_effect = effect
-
-                self.async_write_ha_state()
-
         self.async_accept_signal(
             None,
             SIGNAL_LIGHT_GROUP_ASSUME_GROUP_STATE,
-            assume_group_state,
+            self._assume_group_state,
             signal_override=True,
         )
 
@@ -920,6 +883,43 @@ class Light(BaseLight, ZhaEntity):
                 self.debug("skipping _maybe_force_refresh while transitioning")
                 return
             await self.async_get_state()
+            self.async_write_ha_state()
+
+    @callback
+    def _assume_group_state(self, signal, update_params):
+        """Handle an assume group state event from a group."""
+        if self.entity_id in signal["entity_ids"] and self._attr_available:
+            self.debug("member assuming group state with: %s", update_params)
+
+            # state is always set (light.turn_on/light.turn_off)
+            self._attr_state = update_params.get("state")
+
+            brightness = update_params.get(light.ATTR_BRIGHTNESS)
+            color_mode = update_params.get(light.ATTR_COLOR_MODE)
+            color_temp = update_params.get(light.ATTR_COLOR_TEMP)
+            xy_color = update_params.get(light.ATTR_XY_COLOR)
+            hs_color = update_params.get(light.ATTR_HS_COLOR)
+            effect = update_params.get(light.ATTR_EFFECT)
+
+            supported_modes = self._attr_supported_color_modes
+
+            # before assuming a group state attribute, check if the attribute was actually set in that call
+            if brightness is not None and brightness_supported(supported_modes):
+                self._attr_brightness = brightness
+            if color_mode is not None and color_mode in supported_modes:
+                self._attr_color_mode = color_mode
+            if color_temp is not None and ColorMode.COLOR_TEMP in supported_modes:
+                self._attr_color_temp = color_temp
+            if xy_color is not None and ColorMode.XY in supported_modes:
+                self._attr_xy_color = xy_color
+            if hs_color is not None and ColorMode.HS in supported_modes:
+                self._attr_hs_color = hs_color
+            # the effect is always deactivated in async_turn_on if not provided
+            if effect is None:
+                self._attr_effect = None
+            elif effect in self._attr_effect_list:
+                self._attr_effect = effect
+
             self.async_write_ha_state()
 
 
