@@ -107,8 +107,14 @@ class AirConEntity(ClimateEntity):
         """Initialize the entity."""
         self._aircon = Aircon(backend_selector, auth, said)
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, said, hass=hass)
-        self._name = name if name is not None else said
         self._attr_unique_id = said
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, said)},
+            name=name if name is not None else said,
+            manufacturer="Whirlpool",
+            model="Sixth Sense",
+        )
 
     async def async_added_to_hass(self) -> None:
         """Connect aircon to the cloud."""
