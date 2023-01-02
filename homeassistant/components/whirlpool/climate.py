@@ -112,9 +112,9 @@ class AirConEntity(ClimateEntity):
 
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, said, hass=hass)
         self._attr_unique_id = said
-        self._said = said
+
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._said)},
+            identifiers={(DOMAIN, said)},
             name=name if name is not None else said,
             manufacturer="Whirlpool",
             model="Sixth Sense",
