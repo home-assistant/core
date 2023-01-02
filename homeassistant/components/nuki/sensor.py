@@ -18,12 +18,12 @@ async def async_setup_entry(
     data = hass.data[NUKI_DOMAIN][entry.entry_id]
     coordinator = data[DATA_COORDINATOR]
 
-    entities = []
-
-    for lock in data[DATA_LOCKS]:
-        entities.append(NukiBatterySensor(coordinator, lock))
-
-    async_add_entities(entities)
+    async_add_entities(
+        [
+            entities.append(NukiBatterySensor(coordinator, lock))
+            for lock in data[DATA_LOCKS]
+        ]
+    )
 
 
 class NukiBatterySensor(NukiEntity, SensorEntity):
