@@ -296,8 +296,6 @@ async def test_setup_entry_wait_usb(
         assert config_entry.disabled_by is None
         assert config_entry.state == ConfigEntryState.LOADED
 
-        assert 1 == 2
-
 
 async def test_setup_entry_addon_info_fails(
     hass: HomeAssistant, addon_store_info
