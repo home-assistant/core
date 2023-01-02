@@ -65,7 +65,7 @@ class FileSensor(SensorEntity):
     def __init__(
         self,
         name: str,
-        icon: str,
+        icon: str | None,
         file_path: str,
         unit_of_measurement: str | None,
         value_template: Template | None,
