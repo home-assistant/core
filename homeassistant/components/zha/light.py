@@ -752,6 +752,7 @@ class Light(BaseLight, ZhaEntity):
                 color_temp = update_params.get(light.ATTR_COLOR_TEMP)
                 xy_color = update_params.get(light.ATTR_XY_COLOR)
                 hs_color = update_params.get(light.ATTR_HS_COLOR)
+                effect = update_params.get(light.ATTR_EFFECT)
 
                 supported_modes = self._attr_supported_color_modes
 
@@ -766,6 +767,11 @@ class Light(BaseLight, ZhaEntity):
                     self._attr_xy_color = xy_color
                 if hs_color is not None and ColorMode.HS in supported_modes:
                     self._attr_hs_color = hs_color
+                # the effect is always deactivated in async_turn_on if not provided
+                if effect is None:
+                    self._attr_effect = None
+                elif effect in self._attr_effect_list:
+                    self._attr_effect = effect
 
                 self.async_write_ha_state()
 
@@ -1152,6 +1158,9 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         if light.ATTR_HS_COLOR in service_kwargs:
             update_params[light.ATTR_COLOR_MODE] = self._attr_color_mode
             update_params[light.ATTR_HS_COLOR] = self._attr_hs_color
+
+        if light.ATTR_EFFECT in service_kwargs:
+            update_params[light.ATTR_EFFECT] = self._attr_effect
 
         async_dispatcher_send(
             self.hass,
