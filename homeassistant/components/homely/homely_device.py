@@ -2,6 +2,8 @@
 from datetime import timedelta
 import logging
 
+from homelypy.devices import Device, SingleLocation, State
+from homelypy.homely import ConnectionFailedException, Homely
 from requests import ConnectTimeout, HTTPError
 
 from homeassistant.config_entries import ConfigEntry
@@ -9,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homelypy.devices import Device, SingleLocation, State
-from homelypy.homely import ConnectionFailedException, Homely
 
 from .const import DOMAIN
 
@@ -33,8 +33,8 @@ class HomelyHome:
 
     async def setup(self) -> None:
         """Perform initial setup."""
+        self.homely = Homely(self.username, self.password)
         try:
-            self.homely = Homely(self.username, self.password)
             self.location = await self.hass.async_add_executor_job(
                 self.homely.get_location, self.location_id
             )

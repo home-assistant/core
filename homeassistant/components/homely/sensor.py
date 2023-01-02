@@ -31,11 +31,15 @@ async def async_setup_entry(
     coordinator = homely_home.coordinator
     await coordinator.async_config_entry_first_refresh()
 
-    entities: list[SensorEntity] = []
-    for homely_device in homely_home.devices.values():
-        entities.append(TemperatureEntity(coordinator, homely_device))
-        entities.append(SignalStrengthEntity(coordinator, homely_device))
-        entities.append(BatteryVoltageEntity(coordinator, homely_device))
+    entities: list[SensorEntity] = [
+        EntityType(coordinator, homely_device)
+        for homely_device in homely_home.devices.values()
+        for EntityType in (
+            TemperatureEntity,
+            SignalStrengthEntity,
+            BatteryVoltageEntity,
+        )
+    ]
     async_add_entities(entities)
 
 
