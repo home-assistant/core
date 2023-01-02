@@ -88,6 +88,24 @@ async def test_get_active_dataset(
     )
 
 
+async def test_get_active_dataset_tlvs(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_running
+):
+    """Test async_get_active_dataset."""
+
+    mock_response = (
+        "0E080000000000010000000300001035060004001FFFE00208F642646DA209B1C00708FDF57B5A"
+        "0FE2AAF60510DE98B5BA1A528FEE049D4B4B01835375030D4F70656E5468726561642048410102"
+        "25A40410F5DD18371BFD29E1A601EF6FFAD94C030C0402A0F7F8"
+    )
+
+    aioclient_mock.get(f"{BASE_URL}/node/dataset/active", text=mock_response)
+
+    assert await thread.async_get_active_dataset_tlvs(hass) == bytes.fromhex(
+        mock_response
+    )
+
+
 async def test_set_active_dataset(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_running
 ):
@@ -119,3 +137,24 @@ async def test_set_active_dataset(
         "NetworkName": "OpenThread HA",
         "Channel": 15,
     }
+
+
+async def test_set_active_dataset_tlvs(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_running
+):
+    """Test async_get_active_dataset."""
+
+    dataset = bytes.fromhex(
+        "0E080000000000010000000300001035060004001FFFE00208F642646DA209B1C00708FDF57B5A"
+        "0FE2AAF60510DE98B5BA1A528FEE049D4B4B01835375030D4F70656E5468726561642048410102"
+        "25A40410F5DD18371BFD29E1A601EF6FFAD94C030C0402A0F7F8"
+    )
+
+    aioclient_mock.post(f"{BASE_URL}/node/dataset/active")
+
+    await thread.async_set_active_dataset_tlvs(hass, dataset)
+    assert aioclient_mock.call_count == 1
+    assert aioclient_mock.mock_calls[-1][0] == "POST"
+    assert aioclient_mock.mock_calls[-1][1].path == "/node/dataset/active"
+    assert aioclient_mock.mock_calls[-1][2] == dataset.hex()
+    assert aioclient_mock.mock_calls[-1][3] == {"Content-Type": "text/plain"}

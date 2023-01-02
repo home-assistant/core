@@ -86,10 +86,33 @@ async def async_get_active_dataset(hass: HomeAssistant) -> OperationalDataSet:
         raise HomeAssistantError from exc
 
 
+async def async_get_active_dataset_tlvs(hass: HomeAssistant) -> bytes:
+    """Get current active operational dataset in TLVS format.
+
+    Raises if the http status is 400 or higher or if the response is invalid.
+    """
+
+    response = await async_get_clientsession(hass).get(
+        f"{await _async_get_thread_rest_service_url(hass)}/node/dataset/active",
+        headers={"Accept": "text/plain"},
+        timeout=aiohttp.ClientTimeout(total=10),
+    )
+
+    response.raise_for_status()
+    if response.status != HTTPStatus.OK:
+        raise HomeAssistantError
+
+    try:
+        tmp = await response.read()
+        return bytes.fromhex(tmp.decode("ASCII"))
+    except vol.Error as exc:
+        raise HomeAssistantError from exc
+
+
 async def async_set_active_dataset(
     hass: HomeAssistant, dataset: OperationalDataSet
 ) -> None:
-    """Get current active operational dataset.
+    """Set current active operational dataset.
 
     Raises if the http status is 400 or higher or if the response is invalid.
     """
@@ -97,6 +120,24 @@ async def async_set_active_dataset(
     response = await async_get_clientsession(hass).post(
         f"{await _async_get_thread_rest_service_url(hass)}/node/dataset/active",
         json=dataset.as_json(),
+        timeout=aiohttp.ClientTimeout(total=10),
+    )
+
+    response.raise_for_status()
+    if response.status != HTTPStatus.OK:
+        raise HomeAssistantError
+
+
+async def async_set_active_dataset_tlvs(hass: HomeAssistant, dataset: bytes) -> None:
+    """Set current active operational dataset.
+
+    Raises if the http status is 400 or higher or if the response is invalid.
+    """
+
+    response = await async_get_clientsession(hass).post(
+        f"{await _async_get_thread_rest_service_url(hass)}/node/dataset/active",
+        data=dataset.hex(),
+        headers={"Content-Type": "text/plain"},
         timeout=aiohttp.ClientTimeout(total=10),
     )
 
