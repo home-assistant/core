@@ -89,9 +89,11 @@ class AirConEntity(ClimateEntity):
     """Representation of an air conditioner."""
 
     _attr_fan_modes = SUPPORTED_FAN_MODES
+    _attr_has_entity_name = True
     _attr_hvac_modes = SUPPORTED_HVAC_MODES
     _attr_max_temp = SUPPORTED_MAX_TEMP
     _attr_min_temp = SUPPORTED_MIN_TEMP
+    _attr_should_poll = False
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
@@ -100,7 +102,6 @@ class AirConEntity(ClimateEntity):
     _attr_swing_modes = SUPPORTED_SWING_MODES
     _attr_target_temperature_step = SUPPORTED_TARGET_TEMPERATURE_STEP
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_should_poll = False
 
     def __init__(self, hass, said, name, backend_selector: BackendSelector, auth: Auth):
         """Initialize the entity."""
@@ -108,18 +109,6 @@ class AirConEntity(ClimateEntity):
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, said, hass=hass)
         self._name = name if name is not None else said
         self._attr_unique_id = said
-        self._said = said
-        self._attr_has_entity_name = True
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Device information for Aladdin Connect sensors."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._said)},
-            name=self._name,
-            manufacturer="Whirlpool",
-            model="Sixth Sense",
-        )
 
     async def async_added_to_hass(self) -> None:
         """Connect aircon to the cloud."""
