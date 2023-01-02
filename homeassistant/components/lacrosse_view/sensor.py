@@ -50,8 +50,8 @@ def get_value(sensor: Sensor, field: str) -> float | int | str:
     try:
         value = float(value)
     except ValueError:
-        return str(value)  # str
-    return int(value) if value.is_integer() else value  # int, else float
+        return str(value)  # handle non-numericals
+    return int(value) if value.is_integer() else value
 
 
 PARALLEL_UPDATES = 0
@@ -95,17 +95,6 @@ SENSOR_DESCRIPTIONS = {
         value_fn=get_value,
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
-    ),
-    "WindHeading": LaCrosseSensorEntityDescription(
-        key="WindHeading",
-        name="Wind heading",
-        value_fn=get_value,
-        native_unit_of_measurement=DEGREE,
-    ),
-    "WetDry": LaCrosseSensorEntityDescription(
-        key="WetDry",
-        name="Wet/Dry",
-        value_fn=get_value,
     ),
     "WindHeading": LaCrosseSensorEntityDescription(
         key="WindHeading",

@@ -1,5 +1,9 @@
 """Test the LaCrosse View sensors."""
+from typing import Any
 from unittest.mock import patch
+
+from lacrosse_view import Sensor
+import pytest
 
 from homeassistant.components.lacrosse_view import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -77,19 +81,25 @@ async def test_field_not_supported(hass: HomeAssistant, caplog) -> None:
     assert "Unsupported sensor field" in caplog.text
 
 
-async def test_field_types(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "test_input,expected,entity_id",
+    [
+        (TEST_FLOAT_SENSOR, "2.3", "temperature"),
+        (TEST_STRING_SENSOR, "dry", "wet_dry"),
+        (TEST_ALREADY_FLOAT_SENSOR, "-16.5", "heat_index"),
+        (TEST_ALREADY_INT_SENSOR, "2", "wind_speed"),
+    ],
+)
+async def test_field_types(
+    hass: HomeAssistant, test_input: Sensor, expected: Any, entity_id: str
+) -> None:
     """Test the different data types for fields."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
     with patch("lacrosse_view.LaCrosse.login", return_value=True), patch(
         "lacrosse_view.LaCrosse.get_sensors",
-        return_value=[
-            TEST_FLOAT_SENSOR,
-            TEST_STRING_SENSOR,
-            TEST_ALREADY_FLOAT_SENSOR,
-            TEST_ALREADY_INT_SENSOR,
-        ],
+        return_value=[test_input],
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -99,7 +109,4 @@ async def test_field_types(hass: HomeAssistant) -> None:
     assert entries
     assert len(entries) == 1
     assert entries[0].state == ConfigEntryState.LOADED
-    assert hass.states.get("sensor.test_temperature")
-    assert hass.states.get("sensor.test_wet_dry")
-    assert hass.states.get("sensor.test_wind_speed")
-    assert hass.states.get("sensor.test_heat_index")
+    assert hass.states.get(f"sensor.test_{entity_id}").state == expected
