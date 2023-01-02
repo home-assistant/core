@@ -116,7 +116,7 @@ class AirConEntity(ClimateEntity):
         self._said = said
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._said)},
-            name=name,
+            name=name if name is not None else said,
             manufacturer="Whirlpool",
             model="Sixth Sense",
         )
