@@ -162,7 +162,7 @@ async def test_browse_media(hass, mock_yaml_dashboard, mock_https_url):
 
 async def test_play_media(hass, mock_yaml_dashboard):
     """Test playing media."""
-    calls = async_mock_service(hass, "cast", "show_lovelace_view")
+    calls = async_mock_service(hass, "cast", "show_dashboard")
 
     await lovelace_cast.async_play_media(
         hass, "media_player.my_cast", None, "lovelace", lovelace_cast.DEFAULT_DASHBOARD
