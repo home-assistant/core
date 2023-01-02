@@ -27,7 +27,7 @@ async def async_setup_entry(
         """Add switch from Axis device."""
         event: AxisEvent = device.api.event[event_id]
 
-        if event.CLASS == CLASS_OUTPUT:
+        if event.group == CLASS_OUTPUT:
             async_add_entities([AxisSwitch(event, device)])
 
     config_entry.async_on_unload(

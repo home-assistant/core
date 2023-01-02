@@ -3,7 +3,7 @@
   "name": "Axis",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/axis",
-  "requirements": ["axis==44"],
+  "requirements": ["axis==45"],
   "dhcp": [
     {
       "registered_devices": true
