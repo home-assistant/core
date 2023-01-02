@@ -334,7 +334,7 @@ auroranoaa==0.0.2
 aurorapy==0.2.7
 
 # homeassistant.components.axis
-axis==44
+axis==45
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.7.0
@@ -957,7 +957,7 @@ pilight==0.1.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==9.3.0
+pillow==9.4.0
 
 # homeassistant.components.plex
 plexapi==4.13.2
@@ -1792,7 +1792,7 @@ wakeonlan==2.1.0
 wallbox==0.4.12
 
 # homeassistant.components.folder_watcher
-watchdog==2.2.0
+watchdog==2.2.1
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.0
