@@ -662,6 +662,30 @@ async def test_set_target_temperature_low_high_optimistic(
     assert state.attributes.get("target_temp_high") == 25
 
 
+async def test_set_target_humidity_optimistic(hass, mqtt_mock_entry_with_yaml_config):
+    """Test setting the target humidity optimistic."""
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
+    config["climate"]["target_humidity_state_topic"] = "humidity-state"
+    config["climate"]["optimistic"] = True
+    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("humidity") is None
+    await common.async_set_humidity(hass, humidity=52, entity_id=ENTITY_CLIMATE)
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("humidity") == 52
+
+    async_fire_mqtt_message(hass, "humidity-state", "53")
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("humidity") == 53
+
+    async_fire_mqtt_message(hass, "humidity-state", "not a number")
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("humidity") == 53
+
+
 async def test_set_target_humidity_pessimistic(hass, mqtt_mock_entry_with_yaml_config):
     """Test setting the target humidity."""
     config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
