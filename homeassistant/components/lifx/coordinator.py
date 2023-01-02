@@ -358,7 +358,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
         return self.active_effect.value
 
 
-class LIFXSensorUpdateCoordinator(DataUpdateCoordinator):
+class LIFXSensorUpdateCoordinator(DataUpdateCoordinator[None]):
     """DataUpdateCoordinator to gather data for a specific lifx device."""
 
     def __init__(
