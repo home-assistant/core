@@ -44,7 +44,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     bearer_token=user_input[CONF_TOKEN],
                 )
             await self.async_set_unique_id(resp.gw_mac, raise_on_progress=False)
-            self._abort_if_unique_id_configured()
+            self._abort_if_unique_id_configured(
+                updates={CONF_HOST: user_input[CONF_HOST]}
+            )
             info = {"title": f"Ruuvi Gateway {resp.gw_mac_suffix}"}
             return (
                 self.async_create_entry(title=info["title"], data=user_input),
