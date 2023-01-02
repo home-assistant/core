@@ -834,6 +834,38 @@ async def test_automation_with_non_existing_integration(hass, caplog):
     assert "Integration 'beer' not found" in caplog.text
 
 
+async def test_automation_with_device_action(hass, caplog, fake_integration):
+    """Test automation with a device action."""
+
+    module_cache = hass.data.setdefault(loader.DATA_COMPONENTS, {})
+    module = module_cache["fake_integration.device_action"]
+    module.async_call_action_from_config = AsyncMock()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "event", "event_type": "test_event1"},
+                "action": {
+                    "device_id": "",
+                    "domain": "fake_integration",
+                    "entity_id": "blah.blah",
+                    "type": "turn_on",
+                },
+            }
+        },
+    )
+
+    module.async_call_action_from_config.assert_not_called()
+
+    hass.bus.async_fire("test_event1")
+    await hass.async_block_till_done()
+
+    module.async_call_action_from_config.assert_awaited_once()
+
+
 async def test_automation_with_dynamically_validated_action(
     hass, caplog, fake_integration
 ):
@@ -876,6 +908,35 @@ async def test_automation_with_integration_without_device_action(hass, caplog):
     assert (
         "Integration 'test' does not support device automation actions" in caplog.text
     )
+
+
+async def test_automation_with_device_condition(hass, caplog, fake_integration):
+    """Test automation with a device condition."""
+
+    module_cache = hass.data.setdefault(loader.DATA_COMPONENTS, {})
+    module = module_cache["fake_integration.device_condition"]
+    module.async_condition_from_config = Mock()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "event", "event_type": "test_event1"},
+                "condition": {
+                    "condition": "device",
+                    "device_id": "none",
+                    "domain": "fake_integration",
+                    "entity_id": "blah.blah",
+                    "type": "is_on",
+                },
+                "action": {"service": "test.automation", "entity_id": "hello.world"},
+            }
+        },
+    )
+
+    module.async_condition_from_config.assert_called_once()
 
 
 async def test_automation_with_dynamically_validated_condition(
@@ -931,6 +992,34 @@ async def test_automation_with_integration_without_device_condition(hass, caplog
         "Integration 'test' does not support device automation conditions"
         in caplog.text
     )
+
+
+async def test_automation_with_device_trigger(hass, caplog, fake_integration):
+    """Test automation with a device trigger."""
+
+    module_cache = hass.data.setdefault(loader.DATA_COMPONENTS, {})
+    module = module_cache["fake_integration.device_trigger"]
+    module.async_attach_trigger = AsyncMock()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {
+                    "platform": "device",
+                    "device_id": "none",
+                    "domain": "fake_integration",
+                    "entity_id": "blah.blah",
+                    "type": "turned_off",
+                },
+                "action": {"service": "test.automation", "entity_id": "hello.world"},
+            }
+        },
+    )
+
+    module.async_attach_trigger.assert_awaited_once()
 
 
 async def test_automation_with_dynamically_validated_trigger(
