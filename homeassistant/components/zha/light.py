@@ -135,7 +135,8 @@ class BaseLight(LogMixin, light.LightEntity):
         self._level_channel = None
         self._color_channel = None
         self._identify_channel = None
-        self._transitioning: bool = False
+        self._transitioning_individual: bool = False
+        self._transitioning_group: bool = False
         self._transition_listener: Callable[[], None] | None = None
 
     @property
@@ -162,7 +163,7 @@ class BaseLight(LogMixin, light.LightEntity):
         on at `on_level` Zigbee attribute value, regardless of the last set
         level
         """
-        if self._transitioning:
+        if self.is_transitioning:
             self.debug(
                 "received level %s while transitioning - skipping update",
                 value,
@@ -506,11 +507,17 @@ class BaseLight(LogMixin, light.LightEntity):
 
         return True
 
+    @property
+    def is_transitioning(self) -> bool:
+        """Return if the light is transitioning."""
+        return self._transitioning_individual or self._transitioning_group
+
     @callback
     def async_transition_set_flag(self) -> None:
         """Set _transitioning to True."""
         self.debug("setting transitioning flag to True")
-        self._transitioning = True
+        self._transitioning_individual = True
+        self._transitioning_group = False
         if isinstance(self, LightGroup):
             async_dispatcher_send(
                 self.hass,
@@ -522,7 +529,7 @@ class BaseLight(LogMixin, light.LightEntity):
 
     @callback
     def async_transition_start_timer(self, transition_time) -> None:
-        """Start a timer to unset _transitioning after transition_time if necessary."""
+        """Start a timer to unset _transitioning_individual after transition_time if necessary."""
         if not transition_time:
             return
         # For longer transitions, we want to extend the timer a bit more
@@ -537,9 +544,9 @@ class BaseLight(LogMixin, light.LightEntity):
 
     @callback
     def async_transition_complete(self, _=None) -> None:
-        """Set _transitioning to False and write HA state."""
+        """Set _transitioning_individual to False and write HA state."""
         self.debug("transition complete - future attribute reports will write HA state")
-        self._transitioning = False
+        self._transitioning_individual = False
         if self._transition_listener:
             self._transition_listener()
             self._transition_listener = None
@@ -674,7 +681,7 @@ class Light(BaseLight, ZhaEntity):
     @callback
     def async_set_state(self, attr_id, attr_name, value):
         """Set the state."""
-        if self._transitioning:
+        if self.is_transitioning:
             self.debug(
                 "received onoff %s while transitioning - skipping update",
                 value,
@@ -714,7 +721,7 @@ class Light(BaseLight, ZhaEntity):
                 self.debug(
                     "group transition started - setting member transitioning flag"
                 )
-                self._transitioning = True
+                self._transitioning_group = True
 
         self.async_accept_signal(
             None,
@@ -730,7 +737,7 @@ class Light(BaseLight, ZhaEntity):
                 self.debug(
                     "group transition completed - unsetting member transitioning flag"
                 )
-                self._transitioning = False
+                self._transitioning_group = False
 
         self.async_accept_signal(
             None,
@@ -863,14 +870,14 @@ class Light(BaseLight, ZhaEntity):
 
     async def async_update(self) -> None:
         """Update to the latest state."""
-        if self._transitioning:
+        if self.is_transitioning:
             self.debug("skipping async_update while transitioning")
             return
         await self.async_get_state()
 
     async def _refresh(self, time):
         """Call async_get_state at an interval."""
-        if self._transitioning:
+        if self.is_transitioning:
             self.debug("skipping _refresh while transitioning")
             return
         await self.async_get_state()
@@ -879,7 +886,7 @@ class Light(BaseLight, ZhaEntity):
     async def _maybe_force_refresh(self, signal):
         """Force update the state if the signal contains the entity id for this entity."""
         if self.entity_id in signal["entity_ids"]:
-            if self._transitioning:
+            if self.is_transitioning:
                 self.debug("skipping _maybe_force_refresh while transitioning")
                 return
             await self.async_get_state()
@@ -1033,7 +1040,7 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         await super().async_turn_on(**kwargs)
         if self._zha_config_group_members_assume_state:
             self._send_member_assume_state_event(True, kwargs)
-        if self._transitioning:  # when transitioning, state is refreshed at the end
+        if self.is_transitioning:  # when transitioning, state is refreshed at the end
             return
         if self._debounced_member_refresh:
             await self._debounced_member_refresh.async_call()
@@ -1043,7 +1050,7 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         await super().async_turn_off(**kwargs)
         if self._zha_config_group_members_assume_state:
             self._send_member_assume_state_event(False, kwargs)
-        if self._transitioning:
+        if self.is_transitioning:
             return
         if self._debounced_member_refresh:
             await self._debounced_member_refresh.async_call()
