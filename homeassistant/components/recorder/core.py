@@ -1022,6 +1022,10 @@ class Recorder(threading.Thread):
         self.event_session = self.get_session()
         self.event_session.expire_on_commit = False
 
+    def _post_schema_migration(self, old_version: int, new_version: int) -> None:
+        """Run post schema migration tasks."""
+        migration.post_schema_migration(self.event_session, old_version, new_version)
+
     def _send_keep_alive(self) -> None:
         """Send a keep alive to keep the db connection open."""
         assert self.event_session is not None

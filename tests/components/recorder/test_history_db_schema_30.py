@@ -4,145 +4,69 @@ from __future__ import annotations
 # pylint: disable=protected-access,invalid-name
 from copy import copy
 from datetime import datetime, timedelta
+import importlib
 import json
+import sys
 from unittest.mock import patch, sentinel
 
-from freezegun import freeze_time
 import pytest
-from sqlalchemy import text
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import get_instance, history
-from homeassistant.components.recorder.db_schema import (
-    Events,
-    RecorderRuns,
-    StateAttributes,
-    States,
-)
-from homeassistant.components.recorder.models import (
-    LazyState,
-    LazyStatePreSchema31,
-    process_timestamp,
-)
+from homeassistant.components.recorder import core, history, statistics
+from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.components.recorder.util import session_scope
-import homeassistant.core as ha
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import State
 from homeassistant.helpers.json import JSONEncoder
 import homeassistant.util.dt as dt_util
 
-from .common import (
-    async_recorder_block_till_done,
-    async_wait_recording_done,
-    wait_recording_done,
-)
+from .common import wait_recording_done
 
-from tests.common import SetupRecorderInstanceT, mock_state_change_event
+CREATE_ENGINE_TARGET = "homeassistant.components.recorder.core.create_engine"
+SCHEMA_MODULE = "tests.components.recorder.db_schema_30"
 
 
-async def _async_get_states(
-    hass: HomeAssistant,
-    utc_point_in_time: datetime,
-    entity_ids: list[str] | None = None,
-    run: RecorderRuns | None = None,
-    no_attributes: bool = False,
-):
-    """Get states from the database."""
+def _create_engine_test(*args, **kwargs):
+    """Test version of create_engine that initializes with old schema.
 
-    def _get_states_with_session():
-        if get_instance(hass).schema_version < 31:
-            klass = LazyStatePreSchema31
-        else:
-            klass = LazyState
-        with session_scope(hass=hass) as session:
-            attr_cache = {}
-            return [
-                klass(row, attr_cache, None)
-                for row in history._get_rows_with_session(
-                    hass,
-                    session,
-                    utc_point_in_time,
-                    entity_ids,
-                    run,
-                    None,
-                    no_attributes,
-                )
-            ]
-
-    return await recorder.get_instance(hass).async_add_executor_job(
-        _get_states_with_session
-    )
-
-
-def _add_db_entries(
-    hass: ha.HomeAssistant, point: datetime, entity_ids: list[str]
-) -> None:
-    with session_scope(hass=hass) as session:
-        for idx, entity_id in enumerate(entity_ids):
-            session.add(
-                Events(
-                    event_id=1001 + idx,
-                    event_type="state_changed",
-                    event_data="{}",
-                    origin="LOCAL",
-                    time_fired=point,
-                )
+    This simulates an existing db with the old schema.
+    """
+    importlib.import_module(SCHEMA_MODULE)
+    old_db_schema = sys.modules[SCHEMA_MODULE]
+    engine = create_engine(*args, **kwargs)
+    old_db_schema.Base.metadata.create_all(engine)
+    with Session(engine) as session:
+        session.add(
+            recorder.db_schema.StatisticsRuns(start=statistics.get_start_time())
+        )
+        session.add(
+            recorder.db_schema.SchemaChanges(
+                schema_version=old_db_schema.SCHEMA_VERSION
             )
-            session.add(
-                States(
-                    entity_id=entity_id,
-                    state="on",
-                    attributes='{"name":"the light"}',
-                    last_changed=None,
-                    last_updated=point,
-                    event_id=1001 + idx,
-                    attributes_id=1002 + idx,
-                )
-            )
-            session.add(
-                StateAttributes(
-                    shared_attrs='{"name":"the shared light"}',
-                    hash=1234 + idx,
-                    attributes_id=1002 + idx,
-                )
-            )
+        )
+        session.commit()
+    return engine
 
 
-def _setup_get_states(hass):
-    """Set up for testing get_states."""
-    states = []
-    now = dt_util.utcnow()
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=now
+@pytest.fixture(autouse=True)
+def db_schema_30():
+    """Fixture to initialize the db with the old schema."""
+    importlib.import_module(SCHEMA_MODULE)
+    old_db_schema = sys.modules[SCHEMA_MODULE]
+
+    with patch.object(recorder, "db_schema", old_db_schema), patch.object(
+        recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
+    ), patch.object(core, "EventData", old_db_schema.EventData), patch.object(
+        core, "States", old_db_schema.States
+    ), patch.object(
+        core, "Events", old_db_schema.Events
+    ), patch.object(
+        core, "StateAttributes", old_db_schema.StateAttributes
+    ), patch(
+        CREATE_ENGINE_TARGET, new=_create_engine_test
     ):
-        for i in range(5):
-            state = ha.State(
-                f"test.point_in_time_{i % 5}",
-                f"State {i}",
-                {"attribute_test": i},
-            )
-
-            mock_state_change_event(hass, state)
-
-            states.append(state)
-
-        wait_recording_done(hass)
-
-    future = now + timedelta(seconds=1)
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=future
-    ):
-        for i in range(5):
-            state = ha.State(
-                f"test.point_in_time_{i % 5}",
-                f"State {i}",
-                {"attribute_test": i},
-            )
-
-            mock_state_change_event(hass, state)
-
-        wait_recording_done(hass)
-
-    return now, future, states
+        yield
 
 
 def test_get_full_significant_states_with_session_entity_no_matches(hass_recorder):
@@ -400,7 +324,6 @@ def test_get_significant_states_minimal_response(hass_recorder):
 
     When minimal responses is set only the first and
     last states return a complete state.
-
     We should get back every thermostat change that
     includes an attribute change, but only the state updates for
     media player (attribute changes are not significant and not returned).
@@ -592,27 +515,6 @@ def test_get_significant_states_only(hass_recorder):
     assert states == hist[entity_id]
 
 
-async def test_get_significant_states_only_minimal_response(recorder_mock, hass):
-    """Test significant states when significant_states_only is True."""
-    now = dt_util.utcnow()
-    await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", "on", attributes={"any": "attr"})
-    await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", "off", attributes={"any": "attr"})
-    await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", "off", attributes={"any": "changed"})
-    await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", "off", attributes={"any": "again"})
-    await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", "on", attributes={"any": "attr"})
-    await async_wait_recording_done(hass)
-
-    hist = history.get_significant_states(
-        hass, now, minimal_response=True, significant_changes_only=False
-    )
-    assert len(hist["sensor.test"]) == 3
-
-
 def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
     """Record some test states.
 
@@ -693,257 +595,6 @@ def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
     return zero, four, states
 
 
-async def test_state_changes_during_period_query_during_migration_to_schema_25(
-    async_setup_recorder_instance: SetupRecorderInstanceT,
-    hass: ha.HomeAssistant,
-    recorder_db_url: str,
-):
-    """Test we can query data prior to schema 25 and during migration to schema 25."""
-    if recorder_db_url.startswith("mysql://"):
-        # This test doesn't run on MySQL / MariaDB; we can't drop table state_attributes
-        return
-
-    instance = await async_setup_recorder_instance(hass, {})
-
-    start = dt_util.utcnow()
-    point = start + timedelta(seconds=1)
-    end = point + timedelta(seconds=1)
-    entity_id = "light.test"
-    await recorder.get_instance(hass).async_add_executor_job(
-        _add_db_entries, hass, point, [entity_id]
-    )
-
-    no_attributes = True
-    hist = history.state_changes_during_period(
-        hass, start, end, entity_id, no_attributes, include_start_time_state=False
-    )
-    state = hist[entity_id][0]
-    assert state.attributes == {}
-
-    no_attributes = False
-    hist = history.state_changes_during_period(
-        hass, start, end, entity_id, no_attributes, include_start_time_state=False
-    )
-    state = hist[entity_id][0]
-    assert state.attributes == {"name": "the shared light"}
-
-    with instance.engine.connect() as conn:
-        conn.execute(text("update states set attributes_id=NULL;"))
-        conn.execute(text("drop table state_attributes;"))
-        conn.commit()
-
-    with patch.object(instance, "schema_version", 24):
-        no_attributes = True
-        hist = history.state_changes_during_period(
-            hass, start, end, entity_id, no_attributes, include_start_time_state=False
-        )
-        state = hist[entity_id][0]
-        assert state.attributes == {}
-
-        no_attributes = False
-        hist = history.state_changes_during_period(
-            hass, start, end, entity_id, no_attributes, include_start_time_state=False
-        )
-        state = hist[entity_id][0]
-        assert state.attributes == {"name": "the light"}
-
-
-async def test_get_states_query_during_migration_to_schema_25(
-    async_setup_recorder_instance: SetupRecorderInstanceT,
-    hass: ha.HomeAssistant,
-    recorder_db_url: str,
-):
-    """Test we can query data prior to schema 25 and during migration to schema 25."""
-    if recorder_db_url.startswith("mysql://"):
-        # This test doesn't run on MySQL / MariaDB; we can't drop table state_attributes
-        return
-
-    instance = await async_setup_recorder_instance(hass, {})
-
-    start = dt_util.utcnow()
-    point = start + timedelta(seconds=1)
-    end = point + timedelta(seconds=1)
-    entity_id = "light.test"
-    await recorder.get_instance(hass).async_add_executor_job(
-        _add_db_entries, hass, point, [entity_id]
-    )
-
-    no_attributes = True
-    hist = await _async_get_states(hass, end, [entity_id], no_attributes=no_attributes)
-    state = hist[0]
-    assert state.attributes == {}
-
-    no_attributes = False
-    hist = await _async_get_states(hass, end, [entity_id], no_attributes=no_attributes)
-    state = hist[0]
-    assert state.attributes == {"name": "the shared light"}
-
-    with instance.engine.connect() as conn:
-        conn.execute(text("update states set attributes_id=NULL;"))
-        conn.execute(text("drop table state_attributes;"))
-        conn.commit()
-
-    with patch.object(instance, "schema_version", 24):
-        no_attributes = True
-        hist = await _async_get_states(
-            hass, end, [entity_id], no_attributes=no_attributes
-        )
-        state = hist[0]
-        assert state.attributes == {}
-
-        no_attributes = False
-        hist = await _async_get_states(
-            hass, end, [entity_id], no_attributes=no_attributes
-        )
-        state = hist[0]
-        assert state.attributes == {"name": "the light"}
-
-
-async def test_get_states_query_during_migration_to_schema_25_multiple_entities(
-    async_setup_recorder_instance: SetupRecorderInstanceT,
-    hass: ha.HomeAssistant,
-    recorder_db_url: str,
-):
-    """Test we can query data prior to schema 25 and during migration to schema 25."""
-    if recorder_db_url.startswith("mysql://"):
-        # This test doesn't run on MySQL / MariaDB; we can't drop table state_attributes
-        return
-
-    instance = await async_setup_recorder_instance(hass, {})
-
-    start = dt_util.utcnow()
-    point = start + timedelta(seconds=1)
-    end = point + timedelta(seconds=1)
-    entity_id_1 = "light.test"
-    entity_id_2 = "switch.test"
-    entity_ids = [entity_id_1, entity_id_2]
-
-    await recorder.get_instance(hass).async_add_executor_job(
-        _add_db_entries, hass, point, entity_ids
-    )
-
-    no_attributes = True
-    hist = await _async_get_states(hass, end, entity_ids, no_attributes=no_attributes)
-    assert hist[0].attributes == {}
-    assert hist[1].attributes == {}
-
-    no_attributes = False
-    hist = await _async_get_states(hass, end, entity_ids, no_attributes=no_attributes)
-    assert hist[0].attributes == {"name": "the shared light"}
-    assert hist[1].attributes == {"name": "the shared light"}
-
-    with instance.engine.connect() as conn:
-        conn.execute(text("update states set attributes_id=NULL;"))
-        conn.execute(text("drop table state_attributes;"))
-        conn.commit()
-
-    with patch.object(instance, "schema_version", 24):
-        no_attributes = True
-        hist = await _async_get_states(
-            hass, end, entity_ids, no_attributes=no_attributes
-        )
-        assert hist[0].attributes == {}
-        assert hist[1].attributes == {}
-
-        no_attributes = False
-        hist = await _async_get_states(
-            hass, end, entity_ids, no_attributes=no_attributes
-        )
-        assert hist[0].attributes == {"name": "the light"}
-        assert hist[1].attributes == {"name": "the light"}
-
-
-async def test_get_full_significant_states_handles_empty_last_changed(
-    async_setup_recorder_instance: SetupRecorderInstanceT,
-    hass: ha.HomeAssistant,
-):
-    """Test getting states when last_changed is null."""
-    await async_setup_recorder_instance(hass, {})
-
-    now = dt_util.utcnow()
-    hass.states.async_set("sensor.one", "on", {"attr": "original"})
-    state0 = hass.states.get("sensor.one")
-    await hass.async_block_till_done()
-    hass.states.async_set("sensor.one", "on", {"attr": "new"})
-    state1 = hass.states.get("sensor.one")
-
-    assert state0.last_changed == state1.last_changed
-    assert state0.last_updated != state1.last_updated
-    await async_wait_recording_done(hass)
-
-    def _get_entries():
-        with session_scope(hass=hass) as session:
-            return history.get_full_significant_states_with_session(
-                hass,
-                session,
-                now,
-                dt_util.utcnow(),
-                entity_ids=["sensor.one"],
-                significant_changes_only=False,
-            )
-
-    states = await recorder.get_instance(hass).async_add_executor_job(_get_entries)
-    sensor_one_states: list[State] = states["sensor.one"]
-    assert sensor_one_states[0] == state0
-    assert sensor_one_states[1] == state1
-    assert sensor_one_states[0].last_changed == sensor_one_states[1].last_changed
-    assert sensor_one_states[0].last_updated != sensor_one_states[1].last_updated
-
-    def _fetch_native_states() -> list[State]:
-        with session_scope(hass=hass) as session:
-            native_states = []
-            db_state_attributes = {
-                state_attributes.attributes_id: state_attributes
-                for state_attributes in session.query(StateAttributes)
-            }
-            for db_state in session.query(States):
-                state = db_state.to_native()
-                state.attributes = db_state_attributes[
-                    db_state.attributes_id
-                ].to_native()
-                native_states.append(state)
-            return native_states
-
-    native_sensor_one_states = await recorder.get_instance(hass).async_add_executor_job(
-        _fetch_native_states
-    )
-    assert native_sensor_one_states[0] == state0
-    assert native_sensor_one_states[1] == state1
-    assert (
-        native_sensor_one_states[0].last_changed
-        == native_sensor_one_states[1].last_changed
-    )
-    assert (
-        native_sensor_one_states[0].last_updated
-        != native_sensor_one_states[1].last_updated
-    )
-
-    def _fetch_db_states() -> list[States]:
-        with session_scope(hass=hass) as session:
-            states = list(session.query(States))
-            session.expunge_all()
-            return states
-
-    db_sensor_one_states = await recorder.get_instance(hass).async_add_executor_job(
-        _fetch_db_states
-    )
-    assert db_sensor_one_states[0].last_changed is None
-    assert db_sensor_one_states[0].last_changed_ts is None
-
-    assert (
-        process_timestamp(
-            dt_util.utc_from_timestamp(db_sensor_one_states[1].last_changed_ts)
-        )
-        == state0.last_changed
-    )
-    assert db_sensor_one_states[0].last_updated_ts is not None
-    assert db_sensor_one_states[1].last_updated_ts is not None
-    assert (
-        db_sensor_one_states[0].last_updated_ts
-        != db_sensor_one_states[1].last_updated_ts
-    )
-
-
 def test_state_changes_during_period_multiple_entities_single_test(hass_recorder):
     """Test state change during period with multiple entities in the same test.
 
@@ -971,38 +622,3 @@ def test_state_changes_during_period_multiple_entities_single_test(hass_recorder
     hist = history.state_changes_during_period(hass, start, end, None)
     for entity_id, value in test_entites.items():
         hist[entity_id][0].state == value
-
-
-async def test_get_full_significant_states_past_year_2038(
-    async_setup_recorder_instance: SetupRecorderInstanceT,
-    hass: ha.HomeAssistant,
-):
-    """Test we can store times past year 2038."""
-    await async_setup_recorder_instance(hass, {})
-    past_2038_time = dt_util.parse_datetime("2039-01-19 03:14:07.555555-00:00")
-
-    with freeze_time(past_2038_time):
-        hass.states.async_set("sensor.one", "on", {"attr": "original"})
-        state0 = hass.states.get("sensor.one")
-        await hass.async_block_till_done()
-        hass.states.async_set("sensor.one", "on", {"attr": "new"})
-        state1 = hass.states.get("sensor.one")
-        await async_wait_recording_done(hass)
-
-        def _get_entries():
-            with session_scope(hass=hass) as session:
-                return history.get_full_significant_states_with_session(
-                    hass,
-                    session,
-                    past_2038_time - timedelta(days=365),
-                    past_2038_time + timedelta(days=365),
-                    entity_ids=["sensor.one"],
-                    significant_changes_only=False,
-                )
-
-        states = await recorder.get_instance(hass).async_add_executor_job(_get_entries)
-        sensor_one_states: list[State] = states["sensor.one"]
-        assert sensor_one_states[0] == state0
-        assert sensor_one_states[1] == state1
-        assert sensor_one_states[0].last_changed == past_2038_time
-        assert sensor_one_states[0].last_updated == past_2038_time
