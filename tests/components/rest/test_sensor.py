@@ -4,6 +4,7 @@ from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
 import httpx
+import pytest
 import respx
 
 from homeassistant import config as hass_config
@@ -24,19 +25,21 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
 
 
-async def test_setup_missing_config(hass):
+async def test_setup_missing_config(hass: HomeAssistant) -> None:
     """Test setup with configuration missing required entries."""
     assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "rest"}})
     await hass.async_block_till_done()
     assert len(hass.states.async_all("sensor")) == 0
 
 
-async def test_setup_missing_schema(hass):
+async def test_setup_missing_schema(hass: HomeAssistant) -> None:
     """Test setup with resource missing schema."""
     assert await async_setup_component(
         hass,
@@ -48,7 +51,9 @@ async def test_setup_missing_schema(hass):
 
 
 @respx.mock
-async def test_setup_failed_connect(hass, caplog):
+async def test_setup_failed_connect(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test setup when connection error occurs."""
     respx.get("http://localhost").mock(
         side_effect=httpx.RequestError("server offline", request=MagicMock())
@@ -70,7 +75,7 @@ async def test_setup_failed_connect(hass, caplog):
 
 
 @respx.mock
-async def test_setup_timeout(hass):
+async def test_setup_timeout(hass: HomeAssistant) -> None:
     """Test setup when connection timeout occurs."""
     respx.get("http://localhost").mock(side_effect=asyncio.TimeoutError())
     assert await async_setup_component(
@@ -83,7 +88,7 @@ async def test_setup_timeout(hass):
 
 
 @respx.mock
-async def test_setup_minimum(hass):
+async def test_setup_minimum(hass: HomeAssistant) -> None:
     """Test setup with minimum configuration."""
     respx.get("http://localhost") % HTTPStatus.OK
     assert await async_setup_component(
@@ -102,7 +107,7 @@ async def test_setup_minimum(hass):
 
 
 @respx.mock
-async def test_manual_update(hass):
+async def test_manual_update(hass: HomeAssistant) -> None:
     """Test setup with minimum configuration."""
     await async_setup_component(hass, "homeassistant", {})
     respx.get("http://localhost").respond(
@@ -138,7 +143,7 @@ async def test_manual_update(hass):
 
 
 @respx.mock
-async def test_setup_minimum_resource_template(hass):
+async def test_setup_minimum_resource_template(hass: HomeAssistant) -> None:
     """Test setup with minimum configuration (resource_template)."""
     respx.get("http://localhost") % HTTPStatus.OK
     assert await async_setup_component(
@@ -156,7 +161,7 @@ async def test_setup_minimum_resource_template(hass):
 
 
 @respx.mock
-async def test_setup_duplicate_resource_template(hass):
+async def test_setup_duplicate_resource_template(hass: HomeAssistant) -> None:
     """Test setup with duplicate resources."""
     respx.get("http://localhost") % HTTPStatus.OK
     assert await async_setup_component(
@@ -175,7 +180,7 @@ async def test_setup_duplicate_resource_template(hass):
 
 
 @respx.mock
-async def test_setup_get(hass):
+async def test_setup_get(hass: HomeAssistant) -> None:
     """Test setup with valid configuration."""
     respx.get("http://localhost").respond(status_code=HTTPStatus.OK, json={})
     assert await async_setup_component(
@@ -221,7 +226,9 @@ async def test_setup_get(hass):
 
 
 @respx.mock
-async def test_setup_timestamp(hass, caplog):
+async def test_setup_timestamp(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test setup with valid configuration."""
     respx.get("http://localhost").respond(
         status_code=HTTPStatus.OK, json={"key": "2021-11-11 11:39Z"}
@@ -236,7 +243,6 @@ async def test_setup_timestamp(hass, caplog):
                 "method": "GET",
                 "value_template": "{{ value_json.key }}",
                 "device_class": SensorDeviceClass.TIMESTAMP,
-                "state_class": SensorStateClass.MEASUREMENT,
             }
         },
     )
@@ -248,7 +254,6 @@ async def test_setup_timestamp(hass, caplog):
     state = hass.states.get("sensor.rest_sensor")
     assert state.state == "2021-11-11T11:39:00+00:00"
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TIMESTAMP
-    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.MEASUREMENT
     assert "sensor.rest_sensor rendered invalid timestamp" not in caplog.text
     assert "sensor.rest_sensor rendered timestamp without timezone" not in caplog.text
 
@@ -284,7 +289,7 @@ async def test_setup_timestamp(hass, caplog):
 
 
 @respx.mock
-async def test_setup_get_templated_headers_params(hass):
+async def test_setup_get_templated_headers_params(hass: HomeAssistant) -> None:
     """Test setup with valid configuration."""
     respx.get("http://localhost").respond(status_code=200, json={})
     assert await async_setup_component(
@@ -318,7 +323,7 @@ async def test_setup_get_templated_headers_params(hass):
 
 
 @respx.mock
-async def test_setup_get_digest_auth(hass):
+async def test_setup_get_digest_auth(hass: HomeAssistant) -> None:
     """Test setup with valid configuration."""
     respx.get("http://localhost").respond(status_code=HTTPStatus.OK, json={})
     assert await async_setup_component(
@@ -347,7 +352,7 @@ async def test_setup_get_digest_auth(hass):
 
 
 @respx.mock
-async def test_setup_post(hass):
+async def test_setup_post(hass: HomeAssistant) -> None:
     """Test setup with valid configuration."""
     respx.post("http://localhost").respond(status_code=HTTPStatus.OK, json={})
     assert await async_setup_component(
@@ -376,7 +381,7 @@ async def test_setup_post(hass):
 
 
 @respx.mock
-async def test_setup_get_xml(hass):
+async def test_setup_get_xml(hass: HomeAssistant) -> None:
     """Test setup with valid xml configuration."""
     respx.get("http://localhost").respond(
         status_code=HTTPStatus.OK,
@@ -408,7 +413,7 @@ async def test_setup_get_xml(hass):
 
 
 @respx.mock
-async def test_setup_query_params(hass):
+async def test_setup_query_params(hass: HomeAssistant) -> None:
     """Test setup with query params."""
     respx.get("http://localhost", params={"search": "something"}) % HTTPStatus.OK
     assert await async_setup_component(
@@ -428,7 +433,7 @@ async def test_setup_query_params(hass):
 
 
 @respx.mock
-async def test_update_with_json_attrs(hass):
+async def test_update_with_json_attrs(hass: HomeAssistant) -> None:
     """Test attributes get extracted from a JSON result."""
 
     respx.get("http://localhost").respond(
@@ -461,7 +466,7 @@ async def test_update_with_json_attrs(hass):
 
 
 @respx.mock
-async def test_update_with_no_template(hass):
+async def test_update_with_no_template(hass: HomeAssistant) -> None:
     """Test update when there is no value template."""
 
     respx.get("http://localhost").respond(
@@ -493,7 +498,9 @@ async def test_update_with_no_template(hass):
 
 
 @respx.mock
-async def test_update_with_json_attrs_no_data(hass, caplog):
+async def test_update_with_json_attrs_no_data(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test attributes when no JSON result fetched."""
 
     respx.get("http://localhost").respond(
@@ -529,7 +536,9 @@ async def test_update_with_json_attrs_no_data(hass, caplog):
 
 
 @respx.mock
-async def test_update_with_json_attrs_not_dict(hass, caplog):
+async def test_update_with_json_attrs_not_dict(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test attributes get extracted from a JSON result."""
 
     respx.get("http://localhost").respond(
@@ -564,7 +573,9 @@ async def test_update_with_json_attrs_not_dict(hass, caplog):
 
 
 @respx.mock
-async def test_update_with_json_attrs_bad_JSON(hass, caplog):
+async def test_update_with_json_attrs_bad_JSON(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test attributes get extracted from a JSON result."""
 
     respx.get("http://localhost").respond(
@@ -600,7 +611,7 @@ async def test_update_with_json_attrs_bad_JSON(hass, caplog):
 
 
 @respx.mock
-async def test_update_with_json_attrs_with_json_attrs_path(hass):
+async def test_update_with_json_attrs_with_json_attrs_path(hass: HomeAssistant) -> None:
     """Test attributes get extracted from a JSON result with a template for the attributes."""
 
     respx.get("http://localhost").respond(
@@ -644,7 +655,9 @@ async def test_update_with_json_attrs_with_json_attrs_path(hass):
 
 
 @respx.mock
-async def test_update_with_xml_convert_json_attrs_with_json_attrs_path(hass):
+async def test_update_with_xml_convert_json_attrs_with_json_attrs_path(
+    hass: HomeAssistant,
+) -> None:
     """Test attributes get extracted from a JSON result that was converted from XML with a template for the attributes."""
 
     respx.get("http://localhost").respond(
@@ -680,7 +693,9 @@ async def test_update_with_xml_convert_json_attrs_with_json_attrs_path(hass):
 
 
 @respx.mock
-async def test_update_with_xml_convert_json_attrs_with_jsonattr_template(hass):
+async def test_update_with_xml_convert_json_attrs_with_jsonattr_template(
+    hass: HomeAssistant,
+) -> None:
     """Test attributes get extracted from a JSON result that was converted from XML."""
 
     respx.get("http://localhost").respond(
@@ -720,8 +735,8 @@ async def test_update_with_xml_convert_json_attrs_with_jsonattr_template(hass):
 
 @respx.mock
 async def test_update_with_application_xml_convert_json_attrs_with_jsonattr_template(
-    hass,
-):
+    hass: HomeAssistant,
+) -> None:
     """Test attributes get extracted from a JSON result that was converted from XML with application/xml mime type."""
 
     respx.get("http://localhost").respond(
@@ -757,7 +772,9 @@ async def test_update_with_application_xml_convert_json_attrs_with_jsonattr_temp
 
 
 @respx.mock
-async def test_update_with_xml_convert_bad_xml(hass, caplog):
+async def test_update_with_xml_convert_bad_xml(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test attributes get extracted from a XML result with bad xml."""
 
     respx.get("http://localhost").respond(
@@ -792,7 +809,9 @@ async def test_update_with_xml_convert_bad_xml(hass, caplog):
 
 
 @respx.mock
-async def test_update_with_failed_get(hass, caplog):
+async def test_update_with_failed_get(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test attributes get extracted from a XML result with bad xml."""
 
     respx.get("http://localhost").respond(
@@ -827,7 +846,7 @@ async def test_update_with_failed_get(hass, caplog):
 
 
 @respx.mock
-async def test_reload(hass):
+async def test_reload(hass: HomeAssistant) -> None:
     """Verify we can reload reset sensors."""
 
     respx.get("http://localhost") % HTTPStatus.OK
@@ -864,3 +883,43 @@ async def test_reload(hass):
 
     assert hass.states.get("sensor.mockreset") is None
     assert hass.states.get("sensor.rollout")
+
+
+@respx.mock
+async def test_entity_config(hass: HomeAssistant) -> None:
+    """Test entity configuration."""
+
+    config = {
+        DOMAIN: {
+            # REST configuration
+            "platform": "rest",
+            "method": "GET",
+            "resource": "http://localhost",
+            # Entity configuration
+            "icon": "{{'mdi:one_two_three'}}",
+            "picture": "{{'blabla.png'}}",
+            "device_class": "temperature",
+            "name": "{{'REST' + ' ' + 'Sensor'}}",
+            "state_class": "measurement",
+            "unique_id": "very_unique",
+            "unit_of_measurement": "°C",
+        },
+    }
+
+    respx.get("http://localhost") % HTTPStatus.OK
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_get("sensor.rest_sensor").unique_id == "very_unique"
+
+    state = hass.states.get("sensor.rest_sensor")
+    assert state.state == ""
+    assert state.attributes == {
+        "device_class": "temperature",
+        "entity_picture": "blabla.png",
+        "friendly_name": "REST Sensor",
+        "icon": "mdi:one_two_three",
+        "state_class": "measurement",
+        "unit_of_measurement": "°C",
+    }

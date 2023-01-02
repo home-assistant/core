@@ -13,8 +13,7 @@
                 "data": {
                     "access_token": "Token Akses"
                 },
-                "description": "Masukkan token akses Anda dari https://developer.tibber.com/settings/accesstoken",
-                "title": "Tibber"
+                "description": "Masukkan token akses Anda dari https://developer.tibber.com/settings/accesstoken"
             }
         }
     }

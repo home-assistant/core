@@ -35,14 +35,12 @@
                 "title": "Plex Server auswielen"
             },
             "user": {
-                "description": "Verbann dech mat [plex.tv](https://pley.tv) fir ee Plex Server ze verlinken.",
-                "title": "Plex Media Server"
+                "description": "Verbann dech mat [plex.tv](https://pley.tv) fir ee Plex Server ze verlinken."
             },
             "user_advanced": {
                 "data": {
                     "setup_method": "Setup Method"
-                },
-                "title": "Plex Media Server"
+                }
             }
         }
     },

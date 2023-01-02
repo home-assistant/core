@@ -15,6 +15,9 @@
         }
     },
     "options": {
+        "error": {
+            "invalid_api_key": "API \u91d1\u9470\u7121\u6548"
+        },
         "step": {
             "init": {
                 "data": {
@@ -25,7 +28,7 @@
                     "inverter_size": "\u8b8a\u6d41\u5668\u5c3a\u5bf8\uff08Watt\uff09",
                     "modules power": "\u7e3d\u5cf0\u503c\u529f\u7387"
                 },
-                "description": "\u6b64\u4e9b\u6578\u503c\u5141\u8a31\u5fae\u8abf Solar.Forecast \u7d50\u679c\u3002\u5982\u679c\u6709\u4e0d\u6e05\u695a\u7684\u5730\u65b9\u3001\u8acb\u53c3\u8003\u6587\u4ef6\u8aaa\u660e\u3002"
+                "description": "\u6b64\u4e9b\u6578\u503c\u5141\u8a31\u5fae\u8abf Forecast.Solar \u7d50\u679c\u3002\u5982\u679c\u6709\u4e0d\u6e05\u695a\u7684\u5730\u65b9\u3001\u8acb\u53c3\u8003\u6587\u4ef6\u8aaa\u660e\u3002"
             }
         }
     }

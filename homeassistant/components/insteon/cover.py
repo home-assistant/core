@@ -1,5 +1,6 @@
 """Support for Insteon covers via PowerLinc Modem."""
 import math
+from typing import Any
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -46,7 +47,7 @@ class InsteonCoverEntity(InsteonEntity, CoverEntity):
     )
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int:
         """Return the current cover position."""
         if self._insteon_device_group.value is not None:
             pos = self._insteon_device_group.value
@@ -55,19 +56,19 @@ class InsteonCoverEntity(InsteonEntity, CoverEntity):
         return int(math.ceil(pos * 100 / 255))
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return the boolean response if the node is on."""
         return bool(self.current_cover_position)
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
         await self._insteon_device.async_open()
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         await self._insteon_device.async_close()
 
-    async def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the cover position."""
         position = int(kwargs[ATTR_POSITION] * 255 / 100)
         if position == 0:

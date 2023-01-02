@@ -1,0 +1,56 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "already_in_progress": "Konfigurationsfl\u00f6det p\u00e5g\u00e5r redan",
+            "ignore_ip6_link_local": "IPv6-l\u00e4nkens lokala adress st\u00f6ds inte.",
+            "reauth_successful": "\u00c5terautentisering lyckades"
+        },
+        "error": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "already_in_progress": "Konfigurationsfl\u00f6det p\u00e5g\u00e5r redan",
+            "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_auth": "Ogiltig autentisering",
+            "upnp_not_configured": "UPnP-inst\u00e4llningar saknas p\u00e5 enheten."
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "Anv\u00e4ndarnamn"
+                },
+                "description": "Uppt\u00e4ckte FRITZ!Box: {name} \n\n St\u00e4ll in FRITZ!Box-verktyg f\u00f6r att styra ditt {name}",
+                "title": "St\u00e4ll in FRITZ!Box Tools"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "Anv\u00e4ndarnamn"
+                },
+                "description": "Uppdatera FRITZ! Box Tools autentiseringsuppgifter f\u00f6r: {host}.\n\nFRITZ! Box Tools kan inte logga in p\u00e5 din FRITZ!Box.",
+                "title": "Uppdaterar FRITZ!Box Tools - referenser"
+            },
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd",
+                    "password": "L\u00f6senord",
+                    "port": "Port",
+                    "username": "Anv\u00e4ndarnamn"
+                },
+                "description": "Konfigurera FRITZ!Box Tools f\u00f6r att styra din FRITZ!Box.\nMinimikrav: anv\u00e4ndarnamn och l\u00f6senord.",
+                "title": "St\u00e4ll in FRITZ!Box Tools"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Sekunder att \u00f6verv\u00e4ga en enhet hemma",
+                    "old_discovery": "Aktivera gammal uppt\u00e4cktsmetod"
+                }
+            }
+        }
+    }
+}

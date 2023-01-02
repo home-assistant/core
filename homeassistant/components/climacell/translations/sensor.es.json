@@ -4,21 +4,21 @@
             "good": "Bueno",
             "hazardous": "Peligroso",
             "moderate": "Moderado",
-            "unhealthy": "Insalubre",
-            "unhealthy_for_sensitive_groups": "Insalubre para grupos sensibles",
+            "unhealthy": "No saludable",
+            "unhealthy_for_sensitive_groups": "No es saludable para grupos sensibles",
             "very_unhealthy": "Muy poco saludable"
         },
         "climacell__pollen_index": {
             "high": "Alto",
             "low": "Bajo",
             "medium": "Medio",
-            "none": "Ninguna",
+            "none": "Ninguno",
             "very_high": "Muy alto",
             "very_low": "Muy bajo"
         },
         "climacell__precipitation_type": {
-            "freezing_rain": "Lluvia g\u00e9lida",
-            "ice_pellets": "Perdigones de hielo",
+            "freezing_rain": "Lluvia helada",
+            "ice_pellets": "Granizo",
             "none": "Ninguna",
             "rain": "Lluvia",
             "snow": "Nieve"

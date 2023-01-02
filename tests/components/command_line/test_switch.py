@@ -419,3 +419,16 @@ async def test_unique_id(hass: HomeAssistant) -> None:
         ent_reg.async_get_entity_id("switch", "command_line", "not-so-unique-anymore")
         is not None
     )
+
+
+async def test_command_failure(caplog: LogCaptureFixture, hass: HomeAssistant) -> None:
+    """Test command failure."""
+
+    await setup_test_entity(
+        hass,
+        {"test": {"command_off": "exit 33"}},
+    )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "switch.test"}, blocking=True
+    )
+    assert "return code 33" in caplog.text

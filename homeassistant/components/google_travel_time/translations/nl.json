@@ -1,10 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Locatie is al geconfigureerd."
+            "already_configured": "Locatie is al geconfigureerd"
         },
         "error": {
-            "cannot_connect": "Kan geen verbinding maken"
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie"
         },
         "step": {
             "user": {

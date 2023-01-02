@@ -1,0 +1,38 @@
+{
+    "config": {
+        "error": {
+            "need_lower_upper": "\ud558\ud55c\uacfc \uc0c1\ud55c\uc744 \ubaa8\ub450 \ube44\uc6cc\ub458 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "entity_id": "\uc785\ub825 \uc13c\uc11c",
+                    "hysteresis": "\ud788\uc2a4\ud14c\ub9ac\uc2dc\uc2a4",
+                    "lower": "\ud558\ud55c",
+                    "name": "\uc774\ub984",
+                    "upper": "\uc0c1\ud55c"
+                },
+                "description": "\uc13c\uc11c \uac12\uc5d0 \ub530\ub77c \ucf1c\uc9c0\uace0 \uaebc\uc9c0\ub294 \uc774\uc9c4 \uc13c\uc11c\ub97c \uc0dd\uc131\ud569\ub2c8\ub2e4.\n\n\ud558\ud55c\ub9cc \uad6c\uc131\ub41c \uacbd\uc6b0 - \uc13c\uc11c \uac12\uc774 \ud558\ud55c \uc774\ud558\uc77c \ub54c \ucf1c\uc9d1\ub2c8\ub2e4.\n\uc0c1\ud55c\ub9cc \uad6c\uc131\ub41c \uacbd\uc6b0 - \uc13c\uc11c \uac12\uc774 \uc0c1\ud55c \uc774\uc0c1\uc77c \ub54c \ucf1c\uc9d1\ub2c8\ub2e4.\n\uc0c1\ud55c, \ud558\ud55c \ubaa8\ub450 \uad6c\uc131\ub41c \uacbd\uc6b0 - \uc13c\uc11c \uac12\uc774 [\ud558\ud55c .. \uc0c1\ud55c] \ubc94\uc704\uc77c \ub54c \ucf1c\uc9d1\ub2c8\ub2e4.",
+                "title": "\uc784\uacc4\uac12 \uc13c\uc11c \ucd94\uac00"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "need_lower_upper": "\ud558\ud55c\uacfc \uc0c1\ud55c\uc744 \ubaa8\ub450 \ube44\uc6cc\ub458 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "entity_id": "\uc785\ub825 \uc13c\uc11c",
+                    "hysteresis": "\ud788\uc2a4\ud14c\ub9ac\uc2dc\uc2a4",
+                    "lower": "\ud558\ud55c",
+                    "name": "\uc774\ub984",
+                    "upper": "\uc0c1\ud55c"
+                },
+                "description": "\ud558\ud55c\ub9cc \uad6c\uc131\ub41c \uacbd\uc6b0 - \uc13c\uc11c \uac12\uc774 \ud558\ud55c \uc774\ud558\uc77c \ub54c \ucf1c\uc9d1\ub2c8\ub2e4.\n\uc0c1\ud55c\ub9cc \uad6c\uc131\ub41c \uacbd\uc6b0 - \uc13c\uc11c \uac12\uc774 \uc0c1\ud55c \uc774\uc0c1\uc77c \ub54c \ucf1c\uc9d1\ub2c8\ub2e4.\n\uc0c1\ud55c, \ud558\ud55c \ubaa8\ub450 \uad6c\uc131\ub41c \uacbd\uc6b0 - \uc13c\uc11c \uac12\uc774 [\ud558\ud55c .. \uc0c1\ud55c] \ubc94\uc704\uc77c \ub54c \ucf1c\uc9d1\ub2c8\ub2e4."
+            }
+        }
+    },
+    "title": "\uc784\uacc4\uac12 \uc13c\uc11c"
+}

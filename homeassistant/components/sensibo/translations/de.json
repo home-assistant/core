@@ -15,12 +15,34 @@
             "reauth_confirm": {
                 "data": {
                     "api_key": "API-Schl\u00fcssel"
+                },
+                "data_description": {
+                    "api_key": "Folge der Dokumentation, um deinen API-Schl\u00fcssel zu erhalten."
                 }
             },
             "user": {
                 "data": {
-                    "api_key": "API-Schl\u00fcssel",
-                    "name": "Name"
+                    "api_key": "API-Schl\u00fcssel"
+                },
+                "data_description": {
+                    "api_key": "Folge der Dokumentation, um deinen API-Schl\u00fcssel zu erhalten."
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "sensitivity": {
+                "state": {
+                    "n": "Normal",
+                    "s": "Empfindlich"
+                }
+            },
+            "smart_type": {
+                "state": {
+                    "feelslike": "F\u00fchlt sich an wie",
+                    "humidity": "Luftfeuchtigkeit",
+                    "temperature": "Temperatur"
                 }
             }
         }

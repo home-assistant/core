@@ -2,6 +2,15 @@
 from __future__ import annotations
 
 from synology_dsm.api.surveillance_station.const import SNAPSHOT_PROFILE_BALANCED
+from synology_dsm.exceptions import (
+    SynologyDSMAPIErrorException,
+    SynologyDSMLogin2SARequiredException,
+    SynologyDSMLoginDisabledAccountException,
+    SynologyDSMLoginFailedException,
+    SynologyDSMLoginInvalidException,
+    SynologyDSMLoginPermissionDeniedException,
+    SynologyDSMRequestException,
+)
 
 from homeassistant.const import Platform
 
@@ -15,16 +24,8 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.UPDATE,
 ]
-COORDINATOR_CAMERAS = "coordinator_cameras"
-COORDINATOR_CENTRAL = "coordinator_central"
-COORDINATOR_SWITCHES = "coordinator_switches"
-SYSTEM_LOADED = "system_loaded"
 EXCEPTION_DETAILS = "details"
 EXCEPTION_UNKNOWN = "unknown"
-
-# Entry keys
-SYNO_API = "syno_api"
-UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 # Configuration
 CONF_SERIAL = "serial"
@@ -43,6 +44,9 @@ DEFAULT_SNAPSHOT_QUALITY = SNAPSHOT_PROFILE_BALANCED
 
 ENTITY_UNIT_LOAD = "load"
 
+# Signals
+SIGNAL_CAMERA_SOURCE_CHANGED = "synology_dsm.camera_stream_source_changed"
+
 # Services
 SERVICE_REBOOT = "reboot"
 SERVICE_SHUTDOWN = "shutdown"
@@ -50,3 +54,16 @@ SERVICES = [
     SERVICE_REBOOT,
     SERVICE_SHUTDOWN,
 ]
+
+SYNOLOGY_AUTH_FAILED_EXCEPTIONS = (
+    SynologyDSMLogin2SARequiredException,
+    SynologyDSMLoginDisabledAccountException,
+    SynologyDSMLoginInvalidException,
+    SynologyDSMLoginPermissionDeniedException,
+)
+
+SYNOLOGY_CONNECTION_EXCEPTIONS = (
+    SynologyDSMAPIErrorException,
+    SynologyDSMLoginFailedException,
+    SynologyDSMRequestException,
+)

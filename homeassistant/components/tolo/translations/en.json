@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured",
-            "no_devices_found": "No devices found on the network"
+            "already_configured": "Device is already configured"
         },
         "error": {
             "cannot_connect": "Failed to connect"
@@ -10,13 +9,23 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Do you want to start set up?"
+                "description": "Do you want to start setup?"
             },
             "user": {
                 "data": {
                     "host": "Host"
                 },
                 "description": "Enter the hostname or IP address of your TOLO Sauna device."
+            }
+        }
+    },
+    "entity": {
+        "select": {
+            "lamp_mode": {
+                "state": {
+                    "automatic": "Automatic",
+                    "manual": "Manual"
+                }
             }
         }
     }

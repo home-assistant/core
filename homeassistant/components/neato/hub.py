@@ -32,7 +32,7 @@ class NeatoHub:
 
     def download_map(self, url: str) -> HTTPResponse:
         """Download a new map image."""
-        map_image_data = self.my_neato.get_map_image(url)
+        map_image_data: HTTPResponse = self.my_neato.get_map_image(url)
         return map_image_data
 
     async def async_update_entry_unique_id(self, entry: ConfigEntry) -> str:

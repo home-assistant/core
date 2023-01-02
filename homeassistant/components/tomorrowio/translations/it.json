@@ -10,12 +10,43 @@
             "user": {
                 "data": {
                     "api_key": "Chiave API",
-                    "latitude": "Latitudine",
                     "location": "Posizione",
-                    "longitude": "Logitudine",
                     "name": "Nome"
                 },
                 "description": "Per ottenere una chiave API, registrati su [Tomorrow.io](https://app.tomorrow.io/signup)."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "health_concern": {
+                "state": {
+                    "good": "Buono",
+                    "hazardous": "Pericoloso",
+                    "moderate": "Moderato",
+                    "unhealthy": "Malsano",
+                    "unhealthy_for_sensitive_groups": "Malsano per i gruppi sensibili",
+                    "very_unhealthy": "Molto malsano"
+                }
+            },
+            "pollen_index": {
+                "state": {
+                    "high": "Alto",
+                    "low": "Basso",
+                    "medium": "Medio",
+                    "none": "Nessuno",
+                    "very_high": "Molto alto",
+                    "very_low": "Molto basso"
+                }
+            },
+            "precipitation_type": {
+                "state": {
+                    "freezing_rain": "Pioggia gelata",
+                    "ice_pellets": "Pellet di ghiaccio",
+                    "none": "Nessuno",
+                    "rain": "Pioggia",
+                    "snow": "Neve"
+                }
             }
         }
     },

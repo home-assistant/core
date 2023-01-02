@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -27,29 +27,36 @@ from .const import DOMAIN
 
 
 @dataclass
-class MeaterSensorEntityDescription(SensorEntityDescription):
-    """Describes meater sensor entity."""
+class MeaterSensorEntityDescriptionMixin:
+    """Mixin for MeaterSensorEntityDescription."""
 
-    available: Callable[
-        [MeaterProbe | None], bool | type[NotImplementedError]
-    ] = lambda x: NotImplementedError
-    value: Callable[
-        [MeaterProbe], datetime | float | str | None | type[NotImplementedError]
-    ] = lambda x: NotImplementedError
+    available: Callable[[MeaterProbe | None], bool]
+    value: Callable[[MeaterProbe], datetime | float | str | None]
+
+
+@dataclass
+class MeaterSensorEntityDescription(
+    SensorEntityDescription, MeaterSensorEntityDescriptionMixin
+):
+    """Describes meater sensor entity."""
 
 
 def _elapsed_time_to_timestamp(probe: MeaterProbe) -> datetime | None:
     """Convert elapsed time to timestamp."""
-    if not probe.cook:
+    if not probe.cook or not hasattr(probe.cook, "time_elapsed"):
         return None
     return dt_util.utcnow() - timedelta(seconds=probe.cook.time_elapsed)
 
 
 def _remaining_time_to_timestamp(probe: MeaterProbe) -> datetime | None:
     """Convert remaining time to timestamp."""
-    if not probe.cook or probe.cook.time_remaining < 0:
+    if (
+        not probe.cook
+        or not hasattr(probe.cook, "time_remaining")
+        or probe.cook.time_remaining < 0
+    ):
         return None
-    return dt_util.utcnow() + timedelta(probe.cook.time_remaining)
+    return dt_util.utcnow() + timedelta(seconds=probe.cook.time_remaining)
 
 
 SENSOR_TYPES = (
@@ -58,7 +65,7 @@ SENSOR_TYPES = (
         key="ambient",
         device_class=SensorDeviceClass.TEMPERATURE,
         name="Ambient",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         available=lambda probe: probe is not None,
         value=lambda probe: probe.ambient_temperature,
@@ -68,7 +75,7 @@ SENSOR_TYPES = (
         key="internal",
         device_class=SensorDeviceClass.TEMPERATURE,
         name="Internal",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         available=lambda probe: probe is not None,
         value=lambda probe: probe.internal_temperature,
@@ -93,22 +100,27 @@ SENSOR_TYPES = (
         key="cook_target_temp",
         device_class=SensorDeviceClass.TEMPERATURE,
         name="Target",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         available=lambda probe: probe is not None and probe.cook is not None,
-        value=lambda probe: probe.cook.target_temperature if probe.cook else None,
+        value=lambda probe: probe.cook.target_temperature
+        if probe.cook and hasattr(probe.cook, "target_temperature")
+        else None,
     ),
     # Peak temperature
     MeaterSensorEntityDescription(
         key="cook_peak_temp",
         device_class=SensorDeviceClass.TEMPERATURE,
         name="Peak",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         available=lambda probe: probe is not None and probe.cook is not None,
-        value=lambda probe: probe.cook.peak_temperature if probe.cook else None,
+        value=lambda probe: probe.cook.peak_temperature
+        if probe.cook and hasattr(probe.cook, "peak_temperature")
+        else None,
     ),
-    # Time since the start of cook in seconds. Default: 0.
+    # Remaining time in seconds. When unknown/calculating default is used. Default: -1
+    # Exposed as a TIMESTAMP sensor where the timestamp is current time + remaining time.
     MeaterSensorEntityDescription(
         key="cook_time_remaining",
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -116,7 +128,8 @@ SENSOR_TYPES = (
         available=lambda probe: probe is not None and probe.cook is not None,
         value=_remaining_time_to_timestamp,
     ),
-    # Remaining time in seconds. When unknown/calculating default is used. Default: -1
+    # Time since the start of cook in seconds. Default: 0. Exposed as a TIMESTAMP sensor
+    # where the timestamp is current time - elapsed time.
     MeaterSensorEntityDescription(
         key="cook_time_elapsed",
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -131,9 +144,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the entry."""
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        "coordinator"
-    ]
+    coordinator: DataUpdateCoordinator[dict[str, MeaterProbe]] = hass.data[DOMAIN][
+        entry.entry_id
+    ]["coordinator"]
 
     @callback
     def async_update_data():
@@ -146,17 +159,17 @@ async def async_setup_entry(
         known_probes: set = hass.data[DOMAIN]["known_probes"]
 
         # Add entities for temperature probes which we've not yet seen
-        for dev in devices:
-            if dev in known_probes:
+        for device_id in devices:
+            if device_id in known_probes:
                 continue
 
             entities.extend(
                 [
-                    MeaterProbeTemperature(coordinator, dev, sensor_description)
+                    MeaterProbeTemperature(coordinator, device_id, sensor_description)
                     for sensor_description in SENSOR_TYPES
                 ]
             )
-            known_probes.add(dev)
+            known_probes.add(device_id)
 
         async_add_entities(entities)
 
@@ -171,8 +184,6 @@ class MeaterProbeTemperature(
 ):
     """Meater Temperature Sensor Entity."""
 
-    _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = TEMP_CELSIUS
     entity_description: MeaterSensorEntityDescription
 
     def __init__(
@@ -204,7 +215,7 @@ class MeaterProbeTemperature(
         return self.entity_description.value(device)
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if entity is available."""
         # See if the device was returned from the API. If not, it's offline
         return (

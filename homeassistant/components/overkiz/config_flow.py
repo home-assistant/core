@@ -1,6 +1,7 @@
 """Config flow for Overkiz (by Somfy) integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any, cast
 
 from aiohttp import ClientError
@@ -8,9 +9,11 @@ from pyoverkiz.client import OverkizClient
 from pyoverkiz.const import SUPPORTED_SERVERS
 from pyoverkiz.exceptions import (
     BadCredentialsException,
+    CozyTouchBadCredentialsException,
     MaintenanceException,
     TooManyAttemptsBannedException,
     TooManyRequestsException,
+    UnknownUserException,
 )
 from pyoverkiz.models import obfuscate_id
 import voluptuous as vol
@@ -65,6 +68,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step via config flow."""
         errors = {}
+        description_placeholders = {}
 
         if user_input:
             self._default_user = user_input[CONF_USERNAME]
@@ -74,14 +78,27 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.async_validate_input(user_input)
             except TooManyRequestsException:
                 errors["base"] = "too_many_requests"
-            except BadCredentialsException:
-                errors["base"] = "invalid_auth"
+            except BadCredentialsException as exception:
+                # If authentication with CozyTouch auth server is valid, but token is invalid
+                # for Overkiz API server, the hardware is not supported.
+                if user_input[CONF_HUB] == "atlantic_cozytouch" and not isinstance(
+                    exception, CozyTouchBadCredentialsException
+                ):
+                    description_placeholders["unsupported_device"] = "CozyTouch"
+                    errors["base"] = "unsupported_hardware"
+                else:
+                    errors["base"] = "invalid_auth"
             except (TimeoutError, ClientError):
                 errors["base"] = "cannot_connect"
             except MaintenanceException:
                 errors["base"] = "server_in_maintenance"
             except TooManyAttemptsBannedException:
                 errors["base"] = "too_many_attempts"
+            except UnknownUserException:
+                # Somfy Protect accounts are not supported since they don't use
+                # the Overkiz API server. Login will return unknown user.
+                description_placeholders["unsupported_device"] = "Somfy Protect"
+                errors["base"] = "unsupported_hardware"
             except Exception as exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
                 LOGGER.exception(exception)
@@ -125,6 +142,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ),
                 }
             ),
+            description_placeholders=description_placeholders,
             errors=errors,
         )
 
@@ -154,9 +172,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
-    async def async_step_reauth(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle reauth."""
         self._config_entry = cast(
             ConfigEntry,
@@ -170,4 +186,4 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._default_user = self._config_entry.data[CONF_USERNAME]
         self._default_hub = self._config_entry.data[CONF_HUB]
 
-        return await self.async_step_user(user_input)
+        return await self.async_step_user(dict(entry_data))

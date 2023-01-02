@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Er kan slechts \u00e9\u00e9n Atag-apparaat worden toegevoegd aan Home Assistant "
+            "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
@@ -11,7 +11,7 @@
             "user": {
                 "data": {
                     "host": "Host",
-                    "port": "Poort "
+                    "port": "Poort"
                 },
                 "title": "Verbinding maken met het apparaat"
             }

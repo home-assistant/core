@@ -20,6 +20,13 @@
                 "description": "Hive kimlik do\u011frulama kodunuzu girin. \n\n Ba\u015fka bir kod istemek i\u00e7in l\u00fctfen 0000 kodunu girin.",
                 "title": "Hive \u0130ki Fakt\u00f6rl\u00fc Kimlik Do\u011frulama."
             },
+            "configuration": {
+                "data": {
+                    "device_name": "Cihaz ad\u0131"
+                },
+                "description": "Hive yap\u0131land\u0131rman\u0131z\u0131 girin",
+                "title": "Hive Yap\u0131land\u0131rmas\u0131."
+            },
             "reauth": {
                 "data": {
                     "password": "Parola",
@@ -34,7 +41,7 @@
                     "scan_interval": "Tarama Aral\u0131\u011f\u0131 (saniye)",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
                 },
-                "description": "Hive oturum a\u00e7ma bilgilerinizi ve yap\u0131land\u0131rman\u0131z\u0131 girin.",
+                "description": "Hive giri\u015f bilgilerinizi girin.",
                 "title": "Hive Giri\u015f yap"
             }
         }

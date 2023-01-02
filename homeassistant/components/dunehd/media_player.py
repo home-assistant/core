@@ -4,41 +4,22 @@ from __future__ import annotations
 from typing import Any, Final
 
 from pdunehd import DuneHDPlayer
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    STATE_OFF,
-    STATE_ON,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import ATTR_MANUFACTURER, DEFAULT_NAME, DOMAIN
 
 CONF_SOURCES: Final = "sources"
 
-PLATFORM_SCHEMA: Final = PARENT_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_SOURCES): vol.Schema({cv.string: cv.string}),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
-
-DUNEHD_PLAYER_SUPPORT: Final[int] = (
+DUNEHD_PLAYER_SUPPORT: Final[MediaPlayerEntityFeature] = (
     MediaPlayerEntityFeature.PAUSE
     | MediaPlayerEntityFeature.TURN_ON
     | MediaPlayerEntityFeature.TURN_OFF
@@ -46,22 +27,6 @@ DUNEHD_PLAYER_SUPPORT: Final[int] = (
     | MediaPlayerEntityFeature.NEXT_TRACK
     | MediaPlayerEntityFeature.PLAY
 )
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Dune HD media player platform."""
-    host: str = config[CONF_HOST]
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_HOST: host}
-        )
-    )
 
 
 async def async_setup_entry(
@@ -92,17 +57,17 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
         self.__update_title()
 
     @property
-    def state(self) -> str | None:
+    def state(self) -> MediaPlayerState:
         """Return player state."""
-        state = STATE_OFF
+        state = MediaPlayerState.OFF
         if "playback_position" in self._state:
-            state = STATE_PLAYING
+            state = MediaPlayerState.PLAYING
         if self._state.get("player_state") in ("playing", "buffering", "photo_viewer"):
-            state = STATE_PLAYING
+            state = MediaPlayerState.PLAYING
         if int(self._state.get("playback_speed", 1234)) == 0:
-            state = STATE_PAUSED
+            state = MediaPlayerState.PAUSED
         if self._state.get("player_state") == "navigator":
-            state = STATE_ON
+            state = MediaPlayerState.ON
         return state
 
     @property
@@ -140,7 +105,7 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
         return int(self._state.get("playback_mute", 0)) == 1
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         return DUNEHD_PLAYER_SUPPORT
 

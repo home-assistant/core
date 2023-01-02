@@ -5,18 +5,12 @@ import logging
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    LENGTH_KILOMETERS,
-)
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, UnitOfLength
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_conversion import DistanceConverter
 
 from .const import (
     ATTR_ACTIVITY,
@@ -26,6 +20,7 @@ from .const import (
     DEFAULT_ICON,
     DOMAIN,
     FEED,
+    IMPERIAL_UNITS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,6 +56,8 @@ async def async_setup_entry(
 class GeonetnzVolcanoSensor(SensorEntity):
     """This represents an external event with GeoNet NZ Volcano feed data."""
 
+    _attr_should_poll = False
+
     def __init__(self, config_entry_id, feed_manager, external_id, unit_system):
         """Initialize entity with data from feed entry."""
         self._config_entry_id = config_entry_id
@@ -79,7 +76,7 @@ class GeonetnzVolcanoSensor(SensorEntity):
         self._feed_last_update_successful = None
         self._remove_signal_update = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self._remove_signal_update = async_dispatcher_connect(
             self.hass,
@@ -97,12 +94,7 @@ class GeonetnzVolcanoSensor(SensorEntity):
         """Call update method."""
         self.async_schedule_update_ha_state(True)
 
-    @property
-    def should_poll(self):
-        """No polling needed for GeoNet NZ Volcano feed location events."""
-        return False
-
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update this entity from the data held in the feed manager."""
         _LOGGER.debug("Updating %s", self._external_id)
         feed_entry = self._feed_manager.get_entry(self._external_id)
@@ -115,16 +107,20 @@ class GeonetnzVolcanoSensor(SensorEntity):
         """Update the internal state from the provided feed entry."""
         self._title = feed_entry.title
         # Convert distance if not metric system.
-        if self._unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
+        if self._unit_system == IMPERIAL_UNITS:
             self._distance = round(
-                IMPERIAL_SYSTEM.length(feed_entry.distance_to_home, LENGTH_KILOMETERS),
+                DistanceConverter.convert(
+                    feed_entry.distance_to_home,
+                    UnitOfLength.KILOMETERS,
+                    UnitOfLength.MILES,
+                ),
                 1,
             )
         else:
             self._distance = round(feed_entry.distance_to_home, 1)
         self._latitude = round(feed_entry.coordinates[0], 5)
         self._longitude = round(feed_entry.coordinates[1], 5)
-        self._attribution = feed_entry.attribution
+        self._attr_attribution = feed_entry.attribution
         self._alert_level = feed_entry.alert_level
         self._activity = feed_entry.activity
         self._hazards = feed_entry.hazards
@@ -159,7 +155,6 @@ class GeonetnzVolcanoSensor(SensorEntity):
         attributes = {}
         for key, value in (
             (ATTR_EXTERNAL_ID, self._external_id),
-            (ATTR_ATTRIBUTION, self._attribution),
             (ATTR_ACTIVITY, self._activity),
             (ATTR_HAZARDS, self._hazards),
             (ATTR_LONGITUDE, self._longitude),

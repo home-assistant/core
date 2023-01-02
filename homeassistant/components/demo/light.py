@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import random
+from typing import Any
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -105,30 +106,31 @@ async def async_setup_entry(
 class DemoLight(LightEntity):
     """Representation of a demo light."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
-        unique_id,
-        name,
-        state,
-        available=False,
-        brightness=180,
-        ct=None,  # pylint: disable=invalid-name
-        effect_list=None,
-        effect=None,
-        hs_color=None,
-        rgbw_color=None,
-        rgbww_color=None,
-        supported_color_modes=None,
-    ):
+        unique_id: str,
+        name: str,
+        state: bool,
+        available: bool = False,
+        brightness: int = 180,
+        ct: int | None = None,  # pylint: disable=invalid-name
+        effect_list: list[str] | None = None,
+        effect: str | None = None,
+        hs_color: tuple[int, int] | None = None,
+        rgbw_color: tuple[int, int, int, int] | None = None,
+        rgbww_color: tuple[int, int, int, int, int] | None = None,
+        supported_color_modes: set[ColorMode] | None = None,
+    ) -> None:
         """Initialize the light."""
         self._available = True
         self._brightness = brightness
         self._ct = ct or random.choice(LIGHT_TEMPS)
         self._effect = effect
         self._effect_list = effect_list
-        self._features = 0
         self._hs_color = hs_color
-        self._name = name
+        self._attr_name = name
         self._rgbw_color = rgbw_color
         self._rgbww_color = rgbww_color
         self._state = state
@@ -145,7 +147,7 @@ class DemoLight(LightEntity):
             supported_color_modes = SUPPORT_DEMO
         self._color_modes = supported_color_modes
         if self._effect_list is not None:
-            self._features |= LightEntityFeature.EFFECT
+            self._attr_supported_features |= LightEntityFeature.EFFECT
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -159,17 +161,7 @@ class DemoLight(LightEntity):
         )
 
     @property
-    def should_poll(self) -> bool:
-        """No polling needed for a demo light."""
-        return False
-
-    @property
-    def name(self) -> str:
-        """Return the name of the light if any."""
-        return self._name
-
-    @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return unique ID for light."""
         return self._unique_id
 
@@ -191,17 +183,17 @@ class DemoLight(LightEntity):
         return self._color_mode
 
     @property
-    def hs_color(self) -> tuple[float, float]:
+    def hs_color(self) -> tuple[int, int] | None:
         """Return the hs color value."""
         return self._hs_color
 
     @property
-    def rgbw_color(self) -> tuple[int, int, int, int]:
+    def rgbw_color(self) -> tuple[int, int, int, int] | None:
         """Return the rgbw color value."""
         return self._rgbw_color
 
     @property
-    def rgbww_color(self) -> tuple[int, int, int, int, int]:
+    def rgbww_color(self) -> tuple[int, int, int, int, int] | None:
         """Return the rgbww color value."""
         return self._rgbww_color
 
@@ -211,12 +203,12 @@ class DemoLight(LightEntity):
         return self._ct
 
     @property
-    def effect_list(self) -> list:
+    def effect_list(self) -> list[str] | None:
         """Return the list of supported effects."""
         return self._effect_list
 
     @property
-    def effect(self) -> str:
+    def effect(self) -> str | None:
         """Return the current effect."""
         return self._effect
 
@@ -226,16 +218,11 @@ class DemoLight(LightEntity):
         return self._state
 
     @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return self._features
-
-    @property
-    def supported_color_modes(self) -> set | None:
+    def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
         return self._color_modes
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         self._state = True
 
@@ -269,7 +256,7 @@ class DemoLight(LightEntity):
         # Home Assistant about updates in our state ourselves.
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         self._state = False
 

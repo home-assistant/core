@@ -1,0 +1,49 @@
+{
+    "config": {
+        "error": {
+            "invalid_account_format": "Kontot \u00e4r inte ett hexadecimalt v\u00e4rde, anv\u00e4nd endast 0-9 och AF.",
+            "invalid_account_length": "Kontot har inte r\u00e4tt l\u00e4ngd, det m\u00e5ste vara mellan 3 och 16 tecken.",
+            "invalid_key_format": "Nyckeln \u00e4r inte ett hexadecimalt v\u00e4rde, anv\u00e4nd endast 0-9 och AF.",
+            "invalid_key_length": "Nyckeln har inte r\u00e4tt l\u00e4ngd, den m\u00e5ste vara 16, 24 eller 32 hexadecken.",
+            "invalid_ping": "Pingintervallet m\u00e5ste vara mellan 1 och 1440 minuter.",
+            "invalid_zones": "Det m\u00e5ste finnas minst 1 zon.",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "additional_account": {
+                "data": {
+                    "account": "Konto-ID",
+                    "additional_account": "Ytterligare konton",
+                    "encryption_key": "Krypteringsnyckel",
+                    "ping_interval": "Pingintervall (min)",
+                    "zones": "Antal zoner f\u00f6r kontot"
+                },
+                "title": "L\u00e4gg till ett annat konto till den aktuella porten."
+            },
+            "user": {
+                "data": {
+                    "account": "Konto-ID",
+                    "additional_account": "Ytterligare konton",
+                    "encryption_key": "Krypteringsnyckel",
+                    "ping_interval": "Pingintervall (min)",
+                    "port": "Port",
+                    "protocol": "Protokoll",
+                    "zones": "Antal zoner f\u00f6r kontot"
+                },
+                "title": "Skapa en anslutning f\u00f6r SIA-baserade larmsystem."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "options": {
+                "data": {
+                    "ignore_timestamps": "Ignorera tidsst\u00e4mpelkontrollen f\u00f6r SIA-h\u00e4ndelserna",
+                    "zones": "Antal zoner f\u00f6r kontot"
+                },
+                "description": "St\u00e4ll in alternativen f\u00f6r kontot: {account}",
+                "title": "Alternativ f\u00f6r SIA-installationen."
+            }
+        }
+    }
+}

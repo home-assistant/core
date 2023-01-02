@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 from homeassistant.components.input_boolean import DOMAIN
-from homeassistant.components.recorder.models import StateAttributes, States
+from homeassistant.components.recorder.db_schema import StateAttributes, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import ATTR_EDITABLE
 from homeassistant.core import HomeAssistant, State
@@ -16,7 +16,7 @@ from tests.components.recorder.common import async_wait_recording_done
 
 
 async def test_exclude_attributes(
-    hass: HomeAssistant, recorder_mock, enable_custom_integrations: None
+    recorder_mock, hass: HomeAssistant, enable_custom_integrations: None
 ):
     """Test attributes to be excluded."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"test": {}}})

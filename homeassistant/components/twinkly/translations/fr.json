@@ -8,7 +8,7 @@
         },
         "step": {
             "discovery_confirm": {
-                "description": "Voulez-vous configurer {name} - {model} ( {host} )\u00a0?"
+                "description": "Voulez-vous configurer {name} - {model} ({host})\u00a0?"
             },
             "user": {
                 "data": {

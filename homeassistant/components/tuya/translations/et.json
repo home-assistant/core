@@ -1,82 +1,215 @@
 {
     "config": {
-        "abort": {
-            "cannot_connect": "\u00dchendamine nurjus",
-            "invalid_auth": "Tuvastamise viga",
-            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks sidumine."
-        },
         "error": {
             "invalid_auth": "Tuvastamise viga",
             "login_error": "Sisenemine nurjus ( {code} ): {msg}"
         },
-        "flow_title": "Tuya seaded",
         "step": {
-            "login": {
-                "data": {
-                    "access_id": "Juurdep\u00e4\u00e4su ID",
-                    "access_secret": "API salas\u00f5na",
-                    "country_code": "Riigi kood",
-                    "endpoint": "Seadmete regioon",
-                    "password": "Salas\u00f5na",
-                    "tuya_app_type": "Mobiilirakendus",
-                    "username": "Konto"
-                },
-                "description": "Sisesta oma Tuya mandaat",
-                "title": "Tuya"
-            },
             "user": {
                 "data": {
                     "access_id": "Tuya IoT kasutajatunnus",
                     "access_secret": "Tuya IoT salas\u00f5na",
                     "country_code": "Riik",
                     "password": "Salas\u00f5na",
-                    "platform": "\u00c4pp kus konto registreeriti",
-                    "region": "Piirkond",
-                    "tuya_project_type": "Tuya pilveprojekti t\u00fc\u00fcp",
                     "username": "Kasutajanimi"
                 },
-                "description": "Sisesta oma Tuya konto andmed.",
-                "title": "Tuya sidumine"
+                "description": "Sisesta oma Tuya konto andmed."
             }
         }
     },
-    "options": {
-        "abort": {
-            "cannot_connect": "\u00dchendamine nurjus"
-        },
-        "error": {
-            "dev_multi_type": "Mitu h\u00e4\u00e4lestatavat seadet peavad olema sama t\u00fc\u00fcpi",
-            "dev_not_config": "Seda t\u00fc\u00fcpi seade pole seadistatav",
-            "dev_not_found": "Seadet ei leitud"
-        },
-        "step": {
-            "device": {
-                "data": {
-                    "brightness_range_mode": "Seadme kasutatav heledusvahemik",
-                    "curr_temp_divider": "Praeguse temperatuuri v\u00e4\u00e4rtuse eraldaja (0 = kasuta vaikev\u00e4\u00e4rtust)",
-                    "max_kelvin": "Maksimaalne v\u00f5imalik v\u00e4rvitemperatuur (Kelvinites)",
-                    "max_temp": "Maksimaalne sihttemperatuur (vaikimisi kasuta min ja max = 0)",
-                    "min_kelvin": "Minimaalne v\u00f5imalik v\u00e4rvitemperatuur (Kelvinites)",
-                    "min_temp": "Minimaalne sihttemperatuur (vaikimisi kasuta min ja max = 0)",
-                    "set_temp_divided": "M\u00e4\u00e4ratud temperatuuri k\u00e4su jaoks kasuta jagatud temperatuuri v\u00e4\u00e4rtust",
-                    "support_color": "Luba v\u00e4rvuse juhtimine",
-                    "temp_divider": "Temperatuuri v\u00e4\u00e4rtuse eraldaja (0 = kasuta vaikev\u00e4\u00e4rtust)",
-                    "temp_step_override": "Sihttemperatuuri samm",
-                    "tuya_max_coltemp": "Seadme teatatud maksimaalne v\u00e4rvitemperatuur",
-                    "unit_of_measurement": "Seadme temperatuuri\u00fchik"
-                },
-                "description": "Suvandid \u00fcksuse {device_type} {device_name} kuvatava teabe muutmiseks",
-                "title": "H\u00e4\u00e4lesta Tuya seade"
+    "entity": {
+        "select": {
+            "basic_anti_flicker": {
+                "state": {
+                    "0": "Keelatud",
+                    "1": "50 Hz",
+                    "2": "60 Hz"
+                }
             },
-            "init": {
-                "data": {
-                    "discovery_interval": "Seadme leidmisp\u00e4ringute intervall (sekundites)",
-                    "list_devices": "Vali seadistatavad seadmed v\u00f5i j\u00e4ta s\u00e4tete salvestamiseks t\u00fchjaks",
-                    "query_device": "Vali seade, mis kasutab oleku kiiremaks v\u00e4rskendamiseks p\u00e4ringumeetodit",
-                    "query_interval": "P\u00e4ringute intervall (sekundites)"
-                },
-                "description": "\u00c4ra m\u00e4\u00e4ra k\u00fcsitlusintervalli v\u00e4\u00e4rtusi liiga madalaks, vastasel korral v\u00f5ivad p\u00e4ringud logis t\u00f5rketeate genereerida",
-                "title": "Tuya suvandite seadistamine"
+            "basic_nightvision": {
+                "state": {
+                    "0": "Automaatne",
+                    "1": "V\u00e4ljas",
+                    "2": "Sees"
+                }
+            },
+            "countdown": {
+                "state": {
+                    "1h": "1 tund",
+                    "2h": "2 tundi",
+                    "3h": "3 tundi",
+                    "4h": "4 tundi",
+                    "5h": "5 tundi",
+                    "6h": "6 tundi",
+                    "cancel": "Loobu"
+                }
+            },
+            "curtain_mode": {
+                "state": {
+                    "morning": "Hommik",
+                    "night": "\u00d6\u00f6"
+                }
+            },
+            "curtain_motor_mode": {
+                "state": {
+                    "back": "Tagasi",
+                    "forward": "Edasi"
+                }
+            },
+            "decibel_sensitivity": {
+                "state": {
+                    "0": "Madal tundlikkus",
+                    "1": "K\u00f5rge tundlikkus"
+                }
+            },
+            "fan_angle": {
+                "state": {
+                    "30": "30\u00b0",
+                    "60": "60\u00b0",
+                    "90": "90\u00b0"
+                }
+            },
+            "fingerbot_mode": {
+                "state": {
+                    "click": "Vajutus",
+                    "switch": "L\u00fcliti"
+                }
+            },
+            "humidifier_level": {
+                "state": {
+                    "level_1": "Tase 1",
+                    "level_10": "Tase 10",
+                    "level_2": "Tase 2",
+                    "level_3": "Tase 3",
+                    "level_4": "Tase 4",
+                    "level_5": "Tase 5",
+                    "level_6": "Tase 6",
+                    "level_7": "Tase 7",
+                    "level_8": "Tase 8",
+                    "level_9": "Tase 9"
+                }
+            },
+            "humidifier_moodlighting": {
+                "state": {
+                    "1": "Meeleolu 1",
+                    "2": "Meeleolu 2",
+                    "3": "Meeleolu 3",
+                    "4": "Meeleolu 4",
+                    "5": "Meeleolu 5"
+                }
+            },
+            "humidifier_spray_mode": {
+                "state": {
+                    "auto": "Automaatne",
+                    "health": "Tervis",
+                    "humidity": "Niiskus",
+                    "sleep": "Uneaeg",
+                    "work": "T\u00f6\u00f6aeg"
+                }
+            },
+            "ipc_work_mode": {
+                "state": {
+                    "0": "Madala energiatarbega re\u017eiim",
+                    "1": "Pidev t\u00f6\u00f6re\u017eiim"
+                }
+            },
+            "led_type": {
+                "state": {
+                    "halogen": "Halogeenlamp",
+                    "incandescent": "H\u00f5\u00f5glamp",
+                    "led": "LED"
+                }
+            },
+            "light_mode": {
+                "state": {
+                    "none": "V\u00e4ljas",
+                    "pos": "Kuva l\u00fcliti olekut",
+                    "relay": "Kuva l\u00fcliti sees/v\u00e4ljas olekut"
+                }
+            },
+            "motion_sensitivity": {
+                "state": {
+                    "0": "Madal tundlikkus",
+                    "1": "Keskmine tundlikkus",
+                    "2": "K\u00f5rge tundlikkus"
+                }
+            },
+            "record_mode": {
+                "state": {
+                    "1": "Salvesta ainult s\u00fcndmused",
+                    "2": "Pidev salvestamine"
+                }
+            },
+            "relay_status": {
+                "state": {
+                    "last": "J\u00e4ta viimane olek meelde",
+                    "memory": "J\u00e4ta viimane olek meelde",
+                    "off": "V\u00e4ljas",
+                    "on": "Sees",
+                    "power_off": "V\u00e4ljas",
+                    "power_on": "Sees"
+                }
+            },
+            "vacuum_cistern": {
+                "state": {
+                    "closed": "Suletud",
+                    "high": "K\u00f5rge",
+                    "low": "Madal",
+                    "middle": "Keskmine"
+                }
+            },
+            "vacuum_collection": {
+                "state": {
+                    "large": "Suur",
+                    "middle": "Keskmine",
+                    "small": "V\u00e4ike"
+                }
+            },
+            "vacuum_mode": {
+                "state": {
+                    "bow": "Kaar",
+                    "chargego": "Tagasi kaadimisjaama",
+                    "left_bow": "Keera vasakule",
+                    "left_spiral": "Spiraal vasakule",
+                    "mop": "Pese",
+                    "part": "Osaline",
+                    "partial_bow": "Osaline kaar",
+                    "pick_zone": "Vali ala",
+                    "point": "Punkt",
+                    "pose": "Avalda",
+                    "random": "Juhuslik",
+                    "right_bow": "Kaar paremale",
+                    "right_spiral": "Spiraal paremale",
+                    "single": "\u00dchekordne",
+                    "smart": "Nutikas",
+                    "spiral": "Spiraalne",
+                    "standby": "Ootel",
+                    "wall_follow": "J\u00e4rgi seina",
+                    "zone": "Ala"
+                }
+            }
+        },
+        "sensor": {
+            "air_quality": {
+                "state": {
+                    "good": "Hea",
+                    "great": "Suurep\u00e4rane",
+                    "mild": "Talutav",
+                    "severe": "Ohtlik"
+                }
+            },
+            "status": {
+                "state": {
+                    "boiling_temp": "Keemistemperatuur",
+                    "cooling": "Jahutamine",
+                    "heating": "K\u00fcte",
+                    "heating_temp": "K\u00fcttetemperatuur",
+                    "reserve_1": "Reserv 1",
+                    "reserve_2": "Reserv 2",
+                    "reserve_3": "Reserv 3",
+                    "standby": "Ootel",
+                    "warm": "Soojussalvestus"
+                }
             }
         }
     }

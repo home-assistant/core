@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "device_key": "Cihaz\u0131n\u0131z\u0131n cihaz anahtar\u0131",
+                    "event": "Olaylar i\u00e7in olay.",
+                    "name": "Ad",
+                    "password": "Cihaz\u0131n\u0131z taraf\u0131ndan kullan\u0131lan \u015fifreleme parolas\u0131",
+                    "salt": "Cihaz\u0131n\u0131z taraf\u0131ndan kullan\u0131lan tuz."
+                }
+            }
+        }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "Simplepush'u YAML kullanarak yap\u0131land\u0131rma kald\u0131r\u0131ld\u0131. \n\n Mevcut YAML yap\u0131land\u0131rman\u0131z Home Assistant taraf\u0131ndan kullan\u0131lm\u0131yor. \n\n Simplepush YAML yap\u0131land\u0131rmas\u0131n\u0131 configuration.yaml dosyan\u0131zdan kald\u0131r\u0131n ve bu sorunu gidermek i\u00e7in Home Assistant'\u0131 yeniden ba\u015flat\u0131n.",
+            "title": "Simplepush YAML yap\u0131land\u0131rmas\u0131 kald\u0131r\u0131ld\u0131"
+        }
+    }
+}

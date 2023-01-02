@@ -1,6 +1,8 @@
 """Support for Sesame, by CANDY HOUSE."""
 from __future__ import annotations
 
+from typing import Any
+
 import pysesame2
 import voluptuous as vol
 
@@ -61,11 +63,11 @@ class SesameDevice(LockEntity):
         """Return True if the device is currently locked, else False."""
         return self._is_locked
 
-    def lock(self, **kwargs) -> None:
+    def lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         self._sesame.lock()
 
-    def unlock(self, **kwargs) -> None:
+    def unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         self._sesame.unlock()
 
@@ -80,7 +82,7 @@ class SesameDevice(LockEntity):
         self._responsive = status["responsive"]
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
             ATTR_DEVICE_ID: self._device_id,

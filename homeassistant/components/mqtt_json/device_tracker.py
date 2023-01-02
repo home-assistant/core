@@ -1,7 +1,6 @@
 """Support for GPS tracking MQTT enabled devices."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 import json
 import logging
 
@@ -10,6 +9,7 @@ import voluptuous as vol
 from homeassistant.components import mqtt
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    AsyncSeeCallback,
 )
 from homeassistant.components.mqtt import CONF_QOS
 from homeassistant.const import (
@@ -35,7 +35,7 @@ GPS_JSON_PAYLOAD_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(mqtt.SCHEMA_BASE).extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(mqtt.config.SCHEMA_BASE).extend(
     {vol.Required(CONF_DEVICES): {cv.string: mqtt.valid_subscribe_topic}}
 )
 
@@ -43,7 +43,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(mqtt.SCHEMA_BASE).extend(
 async def async_setup_scanner(
     hass: HomeAssistant,
     config: ConfigType,
-    async_see: Callable[..., Awaitable[None]],
+    async_see: AsyncSeeCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Set up the MQTT JSON tracker."""
@@ -59,8 +59,10 @@ async def async_setup_scanner(
                 data = GPS_JSON_PAYLOAD_SCHEMA(json.loads(msg.payload))
             except vol.MultipleInvalid:
                 _LOGGER.error(
-                    "Skipping update for following data "
-                    "because of missing or malformatted data: %s",
+                    (
+                        "Skipping update for following data "
+                        "because of missing or malformatted data: %s"
+                    ),
                     msg.payload,
                 )
                 return

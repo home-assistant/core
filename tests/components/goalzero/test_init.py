@@ -68,7 +68,7 @@ async def test_update_failed(
 async def test_device_info(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
     """Test device info."""
     entry = await async_init_integration(hass, aioclient_mock)
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
 
     device = device_registry.async_get_device({(DOMAIN, entry.entry_id)})
 

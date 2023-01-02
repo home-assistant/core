@@ -1,4 +1,4 @@
-"""Common stuff for AVM Fritz!Box tests."""
+"""Common stuff for Fritz!Tools tests."""
 from homeassistant.components import ssdp
 from homeassistant.components.fritz.const import DOMAIN
 from homeassistant.components.ssdp import ATTR_UPNP_FRIENDLY_NAME, ATTR_UPNP_UDN
@@ -30,8 +30,11 @@ MOCK_IPS = {"fritz.box": "192.168.178.1", "printer": "192.168.178.2"}
 MOCK_MODELNAME = "FRITZ!Box 7530 AX"
 MOCK_FIRMWARE = "256.07.29"
 MOCK_FIRMWARE_AVAILABLE = "256.07.50"
+MOCK_FIRMWARE_RELEASE_URL = (
+    "http://download.avm.de/fritzbox/fritzbox-7530-ax/deutschland/fritz.os/info_de.txt"
+)
 MOCK_SERIAL_NUMBER = "fake_serial_number"
-MOCK_FIRMWARE_INFO = [True, "1.1.1"]
+MOCK_FIRMWARE_INFO = [True, "1.1.1", "some-release-url"]
 MOCK_MESH_SSID = "TestSSID"
 MOCK_MESH_MASTER_MAC = "1C:ED:6F:12:34:11"
 MOCK_MESH_MASTER_WIFI1_MAC = "1C:ED:6F:12:34:12"
@@ -135,6 +138,7 @@ MOCK_FB_SERVICES: dict[str, dict] = {
             "NewUptime": 35307,
         },
         "GetExternalIPAddress": {"NewExternalIPAddress": "1.2.3.4"},
+        "X_AVM_DE_GetExternalIPv6Address": {"NewExternalIPv6Address": "fec0::1"},
     },
     "WANPPPConnection1": {
         "GetInfo": {
@@ -190,6 +194,7 @@ MOCK_FB_SERVICES: dict[str, dict] = {
         }
     },
 }
+
 
 MOCK_MESH_DATA = {
     "schema_version": "1.9",

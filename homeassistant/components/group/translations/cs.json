@@ -15,56 +15,25 @@
                 "data": {
                     "entities": "\u010clenov\u00e9",
                     "hide_members": "Skr\u00fdt \u010dleny",
-                    "name": "Jm\u00e9no",
-                    "title": "Nov\u00e1 skupina"
+                    "name": "Jm\u00e9no"
                 },
-                "description": "Vyberte mo\u017enosti skupiny",
                 "title": "Nov\u00e1 skupina"
-            },
-            "cover_options": {
-                "data": {
-                    "entities": "\u010clenov\u00e9 skupiny"
-                },
-                "description": "Vyberte mo\u017enosti skupiny"
             },
             "fan": {
                 "data": {
                     "entities": "\u010clenov\u00e9",
                     "hide_members": "Skr\u00fdt \u010dleny",
-                    "name": "Jm\u00e9no",
-                    "title": "Nov\u00e1 skupina"
+                    "name": "Jm\u00e9no"
                 },
-                "description": "Vyberte mo\u017enosti skupiny",
                 "title": "Nov\u00e1 skupina"
-            },
-            "fan_options": {
-                "data": {
-                    "entities": "\u010clenov\u00e9 skupiny"
-                },
-                "description": "Vyberte mo\u017enosti skupiny"
-            },
-            "init": {
-                "data": {
-                    "group_type": "Typ skupiny"
-                },
-                "description": "Vyberte typ skupiny"
             },
             "light": {
                 "data": {
-                    "all": "V\u0161echny entity",
                     "entities": "\u010clenov\u00e9",
                     "hide_members": "Skr\u00fdt \u010dleny",
-                    "name": "Jm\u00e9no",
-                    "title": "Nov\u00e1 skupina"
+                    "name": "Jm\u00e9no"
                 },
-                "description": "Pokud je povoleno \"v\u0161echny entity\", je stav skupiny zapnut\u00fd pouze tehdy, pokud jsou zapnuti v\u0161ichni \u010dlenov\u00e9.\nPokud je mo\u017enost \"v\u0161echny entity\" zak\u00e1z\u00e1na, je stav skupiny zapnut\u00fd, pokud je zapnut\u00fd kter\u00fdkoli \u010dlen.",
                 "title": "Nov\u00e1 skupina"
-            },
-            "light_options": {
-                "data": {
-                    "entities": "\u010clenov\u00e9 skupiny"
-                },
-                "description": "Vyberte mo\u017enosti skupiny"
             },
             "lock": {
                 "data": {
@@ -78,17 +47,9 @@
                 "data": {
                     "entities": "\u010clenov\u00e9",
                     "hide_members": "Skr\u00fdt \u010dleny",
-                    "name": "Jm\u00e9no",
-                    "title": "Nov\u00e1 skupina"
+                    "name": "Jm\u00e9no"
                 },
-                "description": "Vyberte mo\u017enosti skupiny",
                 "title": "Nov\u00e1 skupina"
-            },
-            "media_player_options": {
-                "data": {
-                    "entities": "\u010clenov\u00e9 skupiny"
-                },
-                "description": "Vyberte mo\u017enosti skupiny"
             },
             "switch": {
                 "data": {
@@ -99,9 +60,6 @@
                 "title": "Nov\u00e1 skupina"
             },
             "user": {
-                "data": {
-                    "group_type": "Typ skupiny"
-                },
                 "description": "Vyberte typ skupiny",
                 "menu_options": {
                     "binary_sensor": "Skupina bin\u00e1rn\u00edch senzor\u016f",
@@ -126,32 +84,16 @@
                 },
                 "description": "Pokud je povoleno \"v\u0161echny entity\", je stav skupiny zapnut\u00fd pouze tehdy, pokud jsou zapnuti v\u0161ichni \u010dlenov\u00e9.\nPokud je mo\u017enost \"v\u0161echny entity\" zak\u00e1z\u00e1na, je stav skupiny zapnut\u00fd, pokud je zapnut\u00fd kter\u00fdkoli \u010dlen."
             },
-            "binary_sensor_options": {
-                "data": {
-                    "all": "V\u0161echny entity",
-                    "entities": "\u010clenov\u00e9"
-                }
-            },
             "cover": {
                 "data": {
                     "entities": "\u010clenov\u00e9",
                     "hide_members": "Skr\u00fdt \u010dleny"
                 }
             },
-            "cover_options": {
-                "data": {
-                    "entities": "\u010clenov\u00e9"
-                }
-            },
             "fan": {
                 "data": {
                     "entities": "\u010clenov\u00e9",
                     "hide_members": "Skr\u00fdt \u010dleny"
-                }
-            },
-            "fan_options": {
-                "data": {
-                    "entities": "\u010clenov\u00e9"
                 }
             },
             "light": {
@@ -161,12 +103,6 @@
                     "hide_members": "Skr\u00fdt \u010dleny"
                 },
                 "description": "Pokud je povoleno \"v\u0161echny entity\", je stav skupiny zapnut\u00fd pouze tehdy, pokud jsou zapnuti v\u0161ichni \u010dlenov\u00e9.\nPokud je mo\u017enost \"v\u0161echny entity\" zak\u00e1z\u00e1na, je stav skupiny zapnut\u00fd, pokud je zapnut\u00fd kter\u00fdkoli \u010dlen."
-            },
-            "light_options": {
-                "data": {
-                    "all": "V\u0161echny entity",
-                    "entities": "\u010clenov\u00e9"
-                }
             },
             "lock": {
                 "data": {
@@ -178,11 +114,6 @@
                 "data": {
                     "entities": "\u010clenov\u00e9",
                     "hide_members": "Skr\u00fdt \u010dleny"
-                }
-            },
-            "media_player_options": {
-                "data": {
-                    "entities": "\u010clenov\u00e9"
                 }
             },
             "switch": {

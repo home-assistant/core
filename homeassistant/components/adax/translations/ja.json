@@ -7,8 +7,7 @@
             "invalid_auth": "\u7121\u52b9\u306a\u8a8d\u8a3c"
         },
         "error": {
-            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
-            "invalid_auth": "\u7121\u52b9\u306a\u8a8d\u8a3c"
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f"
         },
         "step": {
             "cloud": {
@@ -26,10 +25,7 @@
             },
             "user": {
                 "data": {
-                    "account_id": "\u30a2\u30ab\u30a6\u30f3\u30c8ID",
-                    "connection_type": "\u63a5\u7d9a\u30bf\u30a4\u30d7\u306e\u9078\u629e",
-                    "host": "\u30db\u30b9\u30c8",
-                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
+                    "connection_type": "\u63a5\u7d9a\u30bf\u30a4\u30d7\u306e\u9078\u629e"
                 },
                 "description": "\u63a5\u7d9a\u30bf\u30a4\u30d7\u3092\u9078\u629e\u3057\u307e\u3059\u3002\u30ed\u30fc\u30ab\u30eb\u306b\u306fBluetooth\u4ed8\u304d\u306e\u30d2\u30fc\u30bf\u30fc\u304c\u5fc5\u8981\u3067\u3059"
             }

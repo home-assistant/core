@@ -20,9 +20,6 @@
     "options": {
         "step": {
             "advanced": {
-                "data": {
-                    "auto_start": "Inicio autom\u00e1tico (deshabilitar si se usa Z-Wave u otro sistema de inicio diferido)"
-                },
                 "description": "Esta configuraci\u00f3n solo necesita ser ajustada si el puente HomeKit no es funcional.",
                 "title": "Configuraci\u00f3n avanzada"
             },

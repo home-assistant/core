@@ -1,11 +1,14 @@
 """Support for setting the Transmission BitTorrent client Turtle Mode."""
 import logging
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, SWITCH_TYPES
@@ -33,15 +36,23 @@ async def async_setup_entry(
 class TransmissionSwitch(SwitchEntity):
     """Representation of a Transmission switch."""
 
-    def __init__(self, switch_type, switch_name, tm_client, name):
+    _attr_should_poll = False
+
+    def __init__(self, switch_type, switch_name, tm_client, client_name):
         """Initialize the Transmission switch."""
         self._name = switch_name
-        self.client_name = name
+        self.client_name = client_name
         self.type = switch_type
         self._tm_client = tm_client
         self._state = STATE_OFF
         self._data = None
         self.unsub_update = None
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, tm_client.config_entry.entry_id)},
+            manufacturer="Transmission",
+            name=client_name,
+        )
 
     @property
     def name(self):
@@ -54,21 +65,16 @@ class TransmissionSwitch(SwitchEntity):
         return f"{self._tm_client.api.host}-{self.name}"
 
     @property
-    def should_poll(self):
-        """Poll for status regularly."""
-        return False
-
-    @property
     def is_on(self):
         """Return true if device is on."""
         return self._state == STATE_ON
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Could the device be accessed during the last update call."""
         return self._tm_client.api.available
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if self.type == "on_off":
             _LOGGING.debug("Starting all torrents")
@@ -78,7 +84,7 @@ class TransmissionSwitch(SwitchEntity):
             self._tm_client.api.set_alt_speed_enabled(True)
         self._tm_client.api.update()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if self.type == "on_off":
             _LOGGING.debug("Stopping all torrents")
@@ -88,7 +94,7 @@ class TransmissionSwitch(SwitchEntity):
             self._tm_client.api.set_alt_speed_enabled(False)
         self._tm_client.api.update()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         self.unsub_update = async_dispatcher_connect(
             self.hass,
@@ -106,7 +112,7 @@ class TransmissionSwitch(SwitchEntity):
             self.unsub_update()
             self.unsub_update = None
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from Transmission and updates the state."""
         active = None
         if self.type == "on_off":

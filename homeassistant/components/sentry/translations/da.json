@@ -3,12 +3,6 @@
         "error": {
             "bad_dsn": "Ugyldigt DSN",
             "unknown": "Uventet fejl"
-        },
-        "step": {
-            "user": {
-                "description": "Indtast dit Sentry-DSN",
-                "title": "Sentry"
-            }
         }
     }
 }

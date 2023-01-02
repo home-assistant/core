@@ -9,9 +9,6 @@
         },
         "flow_title": "{name}",
         "step": {
-            "confirm": {
-                "description": "Vuoi iniziare la configurazione?"
-            },
             "user": {
                 "data": {
                     "host": "Host"
@@ -23,6 +20,5 @@
                 "title": "Rilevato il dispositivo ventilatore di Modern Forms"
             }
         }
-    },
-    "title": "Modern Forms"
+    }
 }

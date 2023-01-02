@@ -7,7 +7,7 @@ from bizkaibus.bizkaibus import BizkaibusData
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_NAME, TIME_MINUTES
+from homeassistant.const import CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -47,14 +47,14 @@ def setup_platform(
 class BizkaibusSensor(SensorEntity):
     """The class for handling the data."""
 
-    _attr_native_unit_of_measurement = TIME_MINUTES
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
     def __init__(self, data, name):
         """Initialize the sensor."""
         self.data = data
         self._attr_name = name
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from the webservice."""
         self.data.update()
         with suppress(TypeError):

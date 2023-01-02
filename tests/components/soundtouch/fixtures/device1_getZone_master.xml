@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<zone master="020000000001">
+    <member ipaddress="192.168.42.1">020000000001</member>
+    <member ipaddress="192.168.42.2">020000000002</member>
+    <member ipaddress="192.168.42.3">020000000003</member>
+</zone>

@@ -66,7 +66,7 @@ async def test_step_import(
     flow = init_config_flow(hass)
 
     result = await flow.async_step_import()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "auth"
 
 
@@ -86,18 +86,18 @@ async def test_full_flow_implementation(
     flow = init_config_flow(hass)
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await flow.async_step_user({"flow_impl": "test-other"})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "auth"
     assert result["description_placeholders"] == {
         "authorization_url": "http://example.com"
     }
 
     result = await flow.async_step_code("123ABC")
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "Logi Circle ({})".format("testId")
 
 
@@ -115,7 +115,7 @@ async def test_abort_if_no_implementation_registered(hass):
     flow.hass = hass
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "missing_configuration"
 
 
@@ -128,21 +128,21 @@ async def test_abort_if_already_setup(hass):
         config_flow.DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     with pytest.raises(data_entry_flow.AbortFlow):
         result = await flow.async_step_code()
 
     result = await flow.async_step_auth()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "external_setup"
 
 
@@ -161,7 +161,7 @@ async def test_abort_if_authorize_fails(
     mock_logi_circle.authorize.side_effect = side_effect
 
     result = await flow.async_step_code("123ABC")
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "external_error"
 
     result = await flow.async_step_auth()
@@ -173,7 +173,7 @@ async def test_not_pick_implementation_if_only_one(hass):
     flow = init_config_flow(hass)
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "auth"
 
 

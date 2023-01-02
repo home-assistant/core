@@ -7,7 +7,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -51,7 +51,9 @@ class VerisureThermometer(
     """Representation of a Verisure thermometer."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = TEMP_CELSIUS
+    _attr_has_entity_name = True
+    _attr_name = "Temperature"
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
@@ -61,12 +63,6 @@ class VerisureThermometer(
         super().__init__(coordinator)
         self._attr_unique_id = f"{serial_number}_temperature"
         self.serial_number = serial_number
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        name = self.coordinator.data["climate"][self.serial_number]["deviceArea"]
-        return f"{name} Temperature"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -106,6 +102,8 @@ class VerisureHygrometer(
     """Representation of a Verisure hygrometer."""
 
     _attr_device_class = SensorDeviceClass.HUMIDITY
+    _attr_has_entity_name = True
+    _attr_name = "Humidity"
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_state_class = SensorStateClass.MEASUREMENT
 
@@ -116,12 +114,6 @@ class VerisureHygrometer(
         super().__init__(coordinator)
         self._attr_unique_id = f"{serial_number}_humidity"
         self.serial_number = serial_number
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        name = self.coordinator.data["climate"][self.serial_number]["deviceArea"]
-        return f"{name} Humidity"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -160,6 +152,8 @@ class VerisureMouseDetection(
 ):
     """Representation of a Verisure mouse detector."""
 
+    _attr_name = "Mouse"
+    _attr_has_entity_name = True
     _attr_native_unit_of_measurement = "Mice"
 
     def __init__(
@@ -169,12 +163,6 @@ class VerisureMouseDetection(
         super().__init__(coordinator)
         self._attr_unique_id = f"{serial_number}_mice"
         self.serial_number = serial_number
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        name = self.coordinator.data["mice"][self.serial_number]["area"]
-        return f"{name} Mouse"
 
     @property
     def device_info(self) -> DeviceInfo:

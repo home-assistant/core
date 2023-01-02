@@ -21,9 +21,7 @@
             },
             "user": {
                 "data": {
-                    "connection_type": "Ba\u011flant\u0131 t\u00fcr\u00fcn\u00fc se\u00e7in",
-                    "password": "Parola",
-                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                    "connection_type": "Ba\u011flant\u0131 t\u00fcr\u00fcn\u00fc se\u00e7in"
                 },
                 "description": "Ba\u011flant\u0131 t\u00fcr\u00fcn\u00fc se\u00e7in. Yerel, 3. nesil \u0131s\u0131t\u0131c\u0131lar gerektirir"
             }

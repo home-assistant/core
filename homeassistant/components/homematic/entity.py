@@ -11,6 +11,7 @@ from pyhomematic.devicetypes.generic import HMGeneric
 from homeassistant.const import ATTR_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.event import track_time_interval
 
 from .const import (
     ATTR_ADDRESS,
@@ -34,6 +35,7 @@ class HMDevice(Entity):
 
     _homematic: HMConnection
     _hmdevice: HMGeneric
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -67,11 +69,6 @@ class HMDevice(Entity):
     def unique_id(self):
         """Return unique ID. HomeMatic entity IDs are unique by default."""
         return self._unique_id.replace(" ", "_")
-
-    @property
-    def should_poll(self):
-        """Return false. HomeMatic states are pushed by the XML-RPC Server."""
-        return False
 
     @property
     def name(self):
@@ -212,6 +209,8 @@ class HMDevice(Entity):
 class HMHub(Entity):
     """The HomeMatic hub. (CCU2/HomeGear)."""
 
+    _attr_should_poll = False
+
     def __init__(self, hass, homematic, name):
         """Initialize HomeMatic hub."""
         self.hass = hass
@@ -222,23 +221,16 @@ class HMHub(Entity):
         self._state = None
 
         # Load data
-        self.hass.helpers.event.track_time_interval(self._update_hub, SCAN_INTERVAL_HUB)
+        track_time_interval(self.hass, self._update_hub, SCAN_INTERVAL_HUB)
         self.hass.add_job(self._update_hub, None)
 
-        self.hass.helpers.event.track_time_interval(
-            self._update_variables, SCAN_INTERVAL_VARIABLES
-        )
+        track_time_interval(self.hass, self._update_variables, SCAN_INTERVAL_VARIABLES)
         self.hass.add_job(self._update_variables, None)
 
     @property
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """Return false. HomeMatic Hub object updates variables."""
-        return False
 
     @property
     def state(self):

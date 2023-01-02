@@ -15,6 +15,5 @@
                 "description": "Connectez votre profil Habitica pour permettre la surveillance du profil et des t\u00e2ches de votre utilisateur. Notez que api_id et api_key doivent \u00eatre obtenus de https://habitica.com/user/settings/api"
             }
         }
-    },
-    "title": "Habitica"
+    }
 }

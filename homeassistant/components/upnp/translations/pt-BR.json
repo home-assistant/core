@@ -5,6 +5,10 @@
             "incomplete_discovery": "Descoberta incompleta",
             "no_devices_found": "Nenhum dispositivo encontrado na rede"
         },
+        "error": {
+            "one": "",
+            "other": ""
+        },
         "flow_title": "{name}",
         "step": {
             "ssdp_confirm": {
@@ -12,9 +16,7 @@
             },
             "user": {
                 "data": {
-                    "scan_interval": "Intervalo de atualiza\u00e7\u00e3o (segundos, m\u00ednimo 30)",
-                    "unique_id": "Dispositivo",
-                    "usn": "Dispositivo"
+                    "unique_id": "Dispositivo"
                 }
             }
         }

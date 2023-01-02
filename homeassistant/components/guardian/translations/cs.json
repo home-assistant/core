@@ -12,9 +12,6 @@
                     "port": "Port"
                 },
                 "description": "Nastate m\u00edstn\u00ed za\u0159\u00edzen\u00ed Elexa Guardian."
-            },
-            "zeroconf_confirm": {
-                "description": "Chcete nastavit toto za\u0159\u00edzen\u00ed Guardian?"
             }
         }
     }

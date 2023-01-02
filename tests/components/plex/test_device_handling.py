@@ -2,14 +2,15 @@
 
 from homeassistant.components.plex.const import DOMAIN
 from homeassistant.const import Platform
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 
 async def test_cleanup_orphaned_devices(hass, entry, setup_plex_server):
     """Test cleaning up orphaned devices on startup."""
     test_device_id = {(DOMAIN, "temporary_device_123")}
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
 
     test_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -44,8 +45,8 @@ async def test_migrate_transient_devices(
     non_plexweb_device_id = {(DOMAIN, "1234567890123456-com-plexapp-android")}
     plex_client_service_device_id = {(DOMAIN, "plex.tv-clients")}
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
 
     # Pre-create devices and entities to test device migration
     plexweb_device = device_registry.async_get_or_create(
@@ -87,16 +88,12 @@ async def test_migrate_transient_devices(
     )
 
     assert (
-        len(
-            hass.helpers.entity_registry.async_entries_for_device(
-                entity_registry, device_id=plexweb_device.id
-            )
-        )
+        len(er.async_entries_for_device(entity_registry, device_id=plexweb_device.id))
         == 1
     )
     assert (
         len(
-            hass.helpers.entity_registry.async_entries_for_device(
+            er.async_entries_for_device(
                 entity_registry, device_id=non_plexweb_device.id
             )
         )
@@ -112,16 +109,12 @@ async def test_migrate_transient_devices(
     )
 
     assert (
-        len(
-            hass.helpers.entity_registry.async_entries_for_device(
-                entity_registry, device_id=plexweb_device.id
-            )
-        )
+        len(er.async_entries_for_device(entity_registry, device_id=plexweb_device.id))
         == 0
     )
     assert (
         len(
-            hass.helpers.entity_registry.async_entries_for_device(
+            er.async_entries_for_device(
                 entity_registry, device_id=non_plexweb_device.id
             )
         )
@@ -129,7 +122,7 @@ async def test_migrate_transient_devices(
     )
     assert (
         len(
-            hass.helpers.entity_registry.async_entries_for_device(
+            er.async_entries_for_device(
                 entity_registry, device_id=plex_service_device.id
             )
         )

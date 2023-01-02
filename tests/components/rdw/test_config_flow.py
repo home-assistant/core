@@ -7,7 +7,7 @@ from vehicle.exceptions import RDWConnectionError, RDWUnknownLicensePlateError
 from homeassistant.components.rdw.const import CONF_LICENSE_PLATE, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
 
 
 async def test_full_user_flow(
@@ -18,9 +18,8 @@ async def test_full_user_flow(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -29,7 +28,7 @@ async def test_full_user_flow(
         },
     )
 
-    assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result2.get("type") == FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "11-ZKZ-3"
     assert result2.get("data") == {CONF_LICENSE_PLATE: "11ZKZ3"}
 
@@ -46,9 +45,8 @@ async def test_full_flow_with_authentication_error(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
 
     mock_rdw_config_flow.vehicle.side_effect = RDWUnknownLicensePlateError
     result2 = await hass.config_entries.flow.async_configure(
@@ -58,10 +56,9 @@ async def test_full_flow_with_authentication_error(
         },
     )
 
-    assert result2.get("type") == RESULT_TYPE_FORM
+    assert result2.get("type") == FlowResultType.FORM
     assert result2.get("step_id") == SOURCE_USER
     assert result2.get("errors") == {"base": "unknown_license_plate"}
-    assert "flow_id" in result2
 
     mock_rdw_config_flow.vehicle.side_effect = None
     result3 = await hass.config_entries.flow.async_configure(
@@ -71,7 +68,7 @@ async def test_full_flow_with_authentication_error(
         },
     )
 
-    assert result3.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result3.get("type") == FlowResultType.CREATE_ENTRY
     assert result3.get("title") == "11-ZKZ-3"
     assert result3.get("data") == {CONF_LICENSE_PLATE: "11ZKZ3"}
 
@@ -88,5 +85,5 @@ async def test_connection_error(
         data={CONF_LICENSE_PLATE: "0001TJ"},
     )
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("errors") == {"base": "cannot_connect"}

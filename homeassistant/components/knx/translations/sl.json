@@ -11,7 +11,6 @@
             "manual_tunnel": {
                 "data": {
                     "host": "Gostitelj",
-                    "individual_address": "Posamezni naslov za povezavo",
                     "port": "Vrata"
                 }
             },
@@ -23,21 +22,6 @@
             },
             "tunnel": {
                 "description": "Prosimo, izberite prehod s seznama."
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "individual_address": "Privzet individualni naslov"
-                }
-            },
-            "tunnel": {
-                "data": {
-                    "host": "Gostitelj",
-                    "port": "Vrata"
-                }
             }
         }
     }

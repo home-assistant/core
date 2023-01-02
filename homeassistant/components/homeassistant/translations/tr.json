@@ -2,6 +2,7 @@
     "system_health": {
         "info": {
             "arch": "CPU Mimarisi",
+            "config_dir": "Yap\u0131land\u0131rma Dizini",
             "dev": "Geli\u015ftirme",
             "docker": "Docker",
             "hassio": "S\u00fcperviz\u00f6r",

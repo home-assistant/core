@@ -94,8 +94,14 @@ def run_callback_threadsafe(
     return future
 
 
-def check_loop(func: Callable[..., Any], strict: bool = True) -> None:
-    """Warn if called inside the event loop. Raise if `strict` is True."""
+def check_loop(
+    func: Callable[..., Any], strict: bool = True, advise_msg: str | None = None
+) -> None:
+    """Warn if called inside the event loop. Raise if `strict` is True.
+
+    The default advisory message is 'Use `await hass.async_add_executor_job()'
+    Set `advise_msg` to an alternate message if the solution differs.
+    """
     try:
         get_running_loop()
         in_loop = True
@@ -134,6 +140,7 @@ def check_loop(func: Callable[..., Any], strict: bool = True) -> None:
     if found_frame is None:
         raise RuntimeError(
             f"Detected blocking call to {func.__name__} inside the event loop. "
+            f"{advise_msg or 'Use `await hass.async_add_executor_job()`'}; "
             "This is causing stability issues. Please report issue"
         )
 
@@ -143,13 +150,16 @@ def check_loop(func: Callable[..., Any], strict: bool = True) -> None:
     integration = found_frame.filename[start:end]
 
     if path == "custom_components/":
-        extra = " to the custom component author"
+        extra = " to the custom integration author"
     else:
         extra = ""
 
     _LOGGER.warning(
-        "Detected blocking call to %s inside the event loop. This is causing stability issues. "
-        "Please report issue%s for %s doing blocking calls at %s, line %s: %s",
+        (
+            "Detected blocking call to %s inside the event loop. This is causing"
+            " stability issues. Please report issue%s for %s doing blocking calls at"
+            " %s, line %s: %s"
+        ),
         func.__name__,
         extra,
         integration,
@@ -159,9 +169,10 @@ def check_loop(func: Callable[..., Any], strict: bool = True) -> None:
     )
     if strict:
         raise RuntimeError(
-            "Blocking calls must be done in the executor or a separate thread; "
-            "Use `await hass.async_add_executor_job()` "
-            f"at {found_frame.filename[index:]}, line {found_frame.lineno}: {(found_frame.line or '?').strip()}"
+            "Blocking calls must be done in the executor or a separate thread;"
+            f" {advise_msg or 'Use `await hass.async_add_executor_job()`'}; at"
+            f" {found_frame.filename[index:]}, line {found_frame.lineno}:"
+            f" {(found_frame.line or '?').strip()}"
         )
 
 

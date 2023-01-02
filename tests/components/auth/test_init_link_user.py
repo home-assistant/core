@@ -46,7 +46,11 @@ async def async_get_code(hass, aiohttp_client):
 
     resp = await client.post(
         f"/auth/login_flow/{step['flow_id']}",
-        json={"client_id": CLIENT_ID, "username": "2nd-user", "password": "2nd-pass"},
+        json={
+            "client_id": CLIENT_ID,
+            "username": "2nd-user",
+            "password": "2nd-pass",
+        },
     )
 
     assert resp.status == HTTPStatus.OK

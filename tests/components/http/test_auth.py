@@ -17,6 +17,7 @@ from homeassistant.components import websocket_api
 from homeassistant.components.http.auth import (
     CONTENT_USER_NAME,
     DATA_SIGN_SECRET,
+    SIGN_QUERY_PARAM,
     STORAGE_KEY,
     async_setup_auth,
     async_sign_path,
@@ -291,6 +292,108 @@ async def test_auth_access_signed_path_with_refresh_token(
     # refresh token gone should also invalidate signature
     await hass.auth.async_remove_refresh_token(refresh_token)
     req = await client.get(signed_path)
+    assert req.status == HTTPStatus.UNAUTHORIZED
+
+
+async def test_auth_access_signed_path_with_query_param(
+    hass, app, aiohttp_client, hass_access_token
+):
+    """Test access with signed url and query params."""
+    app.router.add_post("/", mock_handler)
+    app.router.add_get("/another_path", mock_handler)
+    await async_setup_auth(hass, app)
+    client = await aiohttp_client(app)
+
+    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+
+    signed_path = async_sign_path(
+        hass, "/?test=test", timedelta(seconds=5), refresh_token_id=refresh_token.id
+    )
+
+    req = await client.get(signed_path)
+    assert req.status == HTTPStatus.OK
+    data = await req.json()
+    assert data["user_id"] == refresh_token.user.id
+
+
+async def test_auth_access_signed_path_with_query_param_order(
+    hass, app, aiohttp_client, hass_access_token
+):
+    """Test access with signed url and query params different order."""
+    app.router.add_post("/", mock_handler)
+    app.router.add_get("/another_path", mock_handler)
+    await async_setup_auth(hass, app)
+    client = await aiohttp_client(app)
+
+    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+
+    signed_path = async_sign_path(
+        hass,
+        "/?test=test&foo=bar",
+        timedelta(seconds=5),
+        refresh_token_id=refresh_token.id,
+    )
+    url = yarl.URL(signed_path)
+    signed_path = f"{url.path}?{SIGN_QUERY_PARAM}={url.query.get(SIGN_QUERY_PARAM)}&foo=bar&test=test"
+
+    req = await client.get(signed_path)
+    assert req.status == HTTPStatus.OK
+    data = await req.json()
+    assert data["user_id"] == refresh_token.user.id
+
+
+async def test_auth_access_signed_path_with_query_param_safe_param(
+    hass, app, aiohttp_client, hass_access_token
+):
+    """Test access with signed url and changing a safe param."""
+    app.router.add_post("/", mock_handler)
+    app.router.add_get("/another_path", mock_handler)
+    await async_setup_auth(hass, app)
+    client = await aiohttp_client(app)
+
+    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+
+    signed_path = async_sign_path(
+        hass,
+        "/?test=test&foo=bar",
+        timedelta(seconds=5),
+        refresh_token_id=refresh_token.id,
+    )
+    signed_path = f"{signed_path}&width=100"
+
+    req = await client.get(signed_path)
+    assert req.status == HTTPStatus.OK
+    data = await req.json()
+    assert data["user_id"] == refresh_token.user.id
+
+
+@pytest.mark.parametrize(
+    "base_url,test_url",
+    [
+        ("/?test=test", "/?test=test&foo=bar"),
+        ("/", "/?test=test"),
+        ("/?test=test&foo=bar", "/?test=test&foo=baz"),
+        ("/?test=test&foo=bar", "/?test=test"),
+    ],
+)
+async def test_auth_access_signed_path_with_query_param_tamper(
+    hass, app, aiohttp_client, hass_access_token, base_url: str, test_url: str
+):
+    """Test access with signed url and query params that have been tampered with."""
+    app.router.add_post("/", mock_handler)
+    app.router.add_get("/another_path", mock_handler)
+    await async_setup_auth(hass, app)
+    client = await aiohttp_client(app)
+
+    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+
+    signed_path = async_sign_path(
+        hass, base_url, timedelta(seconds=5), refresh_token_id=refresh_token.id
+    )
+    url = yarl.URL(signed_path)
+    token = url.query.get(SIGN_QUERY_PARAM)
+
+    req = await client.get(f"{test_url}&{SIGN_QUERY_PARAM}={token}")
     assert req.status == HTTPStatus.UNAUTHORIZED
 
 

@@ -2,8 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Unifi Network site is al geconfigureerd",
-            "configuration_updated": "Configuratie bijgewerkt.",
-            "reauth_successful": "Herauthenticatie was succesvol"
+            "configuration_updated": "Configuratie bijgewerkt",
+            "reauth_successful": "Herauthenticatie geslaagd"
         },
         "error": {
             "faulty_credentials": "Ongeldige authenticatie",
@@ -26,6 +26,9 @@
         }
     },
     "options": {
+        "abort": {
+            "integration_not_setup": "UniFi-integratie is niet ingesteld"
+        },
         "step": {
             "client_control": {
                 "data": {

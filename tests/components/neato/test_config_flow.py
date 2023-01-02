@@ -27,7 +27,6 @@ async def test_full_flow(
         "neato",
         {
             "neato": {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET},
-            "http": {"base_url": "https://example.com"},
         },
     )
 
@@ -86,7 +85,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant):
     result = await hass.config_entries.flow.async_init(
         "neato", context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -99,7 +98,6 @@ async def test_reauth(
         "neato",
         {
             "neato": {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET},
-            "http": {"base_url": "https://example.com"},
         },
     )
 
@@ -113,7 +111,7 @@ async def test_reauth(
     result = await hass.config_entries.flow.async_init(
         "neato", context={"source": config_entries.SOURCE_REAUTH}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     # Confirm reauth flow
@@ -150,7 +148,7 @@ async def test_reauth(
 
     new_entry = hass.config_entries.async_get_entry("my_entry")
 
-    assert result3["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result3["type"] == data_entry_flow.FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
     assert new_entry.state == config_entries.ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(NEATO_DOMAIN)) == 1

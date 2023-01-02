@@ -7,9 +7,7 @@
             "user": {
                 "data": {
                     "county": "Comtat"
-                },
-                "description": "Trieu el teu comtat a continuaci\u00f3.",
-                "title": "Comptador d'interrupcions PECO"
+                }
             }
         }
     }

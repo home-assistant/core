@@ -29,12 +29,6 @@
                 "data_description": {
                     "round": "\u00c7\u0131kt\u0131daki ondal\u0131k basamak say\u0131s\u0131n\u0131 kontrol eder."
                 }
-            },
-            "options": {
-                "data": {
-                    "round": "Hassas"
-                },
-                "description": "Kesinlik, \u00e7\u0131kt\u0131daki ondal\u0131k basamak say\u0131s\u0131n\u0131 kontrol eder."
             }
         }
     },

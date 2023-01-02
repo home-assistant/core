@@ -11,13 +11,6 @@
             "cannot_connect": "Sikertelen csatlakoz\u00e1s"
         },
         "step": {
-            "auth": {
-                "data": {
-                    "password": "Jelsz\u00f3",
-                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
-                },
-                "title": "Hiteles\u00edt\u00e9s konfigur\u00e1l\u00e1sa"
-            },
             "configure": {
                 "data": {
                     "host": "C\u00edm",
@@ -41,14 +34,6 @@
                 },
                 "title": "ONVIF eszk\u00f6z kiv\u00e1laszt\u00e1sa"
             },
-            "manual_input": {
-                "data": {
-                    "host": "C\u00edm",
-                    "name": "Elnevez\u00e9s",
-                    "port": "Port"
-                },
-                "title": "ONVIF eszk\u00f6z konfigur\u00e1l\u00e1sa"
-            },
             "user": {
                 "data": {
                     "auto": "Automatikus keres\u00e9s"
@@ -63,7 +48,8 @@
             "onvif_devices": {
                 "data": {
                     "extra_arguments": "Extra FFMPEG opci\u00f3k",
-                    "rtsp_transport": "RTSP sz\u00e1ll\u00edt\u00e1si mechanizmus"
+                    "rtsp_transport": "RTSP sz\u00e1ll\u00edt\u00e1si mechanizmus",
+                    "use_wallclock_as_timestamps": "\u00d3ra haszn\u00e1lata id\u0151b\u00e9lyegk\u00e9nt"
                 },
                 "title": "ONVIF eszk\u00f6z opci\u00f3i"
             }

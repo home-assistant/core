@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 import urllib
 
 from pyW215.pyW215 import SmartPlug
@@ -15,7 +16,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -84,7 +85,9 @@ class SmartPlugSwitch(SwitchEntity):
     def extra_state_attributes(self):
         """Return the state attributes of the device."""
         try:
-            ui_temp = self.units.temperature(int(self.data.temperature), TEMP_CELSIUS)
+            ui_temp = self.units.temperature(
+                int(self.data.temperature), UnitOfTemperature.CELSIUS
+            )
             temperature = ui_temp
         except (ValueError, TypeError):
             temperature = None
@@ -106,15 +109,15 @@ class SmartPlugSwitch(SwitchEntity):
         """Return true if switch is on."""
         return self.data.state == "ON"
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self.data.smartplug.state = "ON"
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self.data.smartplug.state = "OFF"
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from the smart plug and updates the states."""
         self.data.update()
 

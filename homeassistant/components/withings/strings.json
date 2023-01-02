@@ -10,7 +10,7 @@
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
-      "reauth": {
+      "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The \"{profile}\" profile needs to be re-authenticated in order to continue receiving Withings data."
       }

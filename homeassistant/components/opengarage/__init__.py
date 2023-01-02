@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 import opengarage
 
@@ -11,6 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import update_coordinator
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_DEVICE_KEY, DOMAIN
 
@@ -36,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await open_garage_data_coordinator.async_config_entry_first_refresh()
     hass.data[DOMAIN][entry.entry_id] = open_garage_data_coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -50,7 +52,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class OpenGarageDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
+class OpenGarageDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching Opengarage data."""
 
     def __init__(
@@ -69,7 +71,7 @@ class OpenGarageDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
             update_interval=timedelta(seconds=5),
         )
 
-    async def _async_update_data(self) -> None:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data."""
         data = await self.open_garage_connection.update_state()
         if data is None:

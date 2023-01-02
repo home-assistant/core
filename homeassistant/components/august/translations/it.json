@@ -24,7 +24,7 @@
                     "username": "Nome utente"
                 },
                 "description": "Se il metodo di accesso \u00e8 'email', il nome utente \u00e8 l'indirizzo email. Se il metodo di accesso \u00e8 'phone', il nome utente \u00e8 il numero di telefono nel formato '+NNNNNNNNNN'.",
-                "title": "Configura un account di August"
+                "title": "Configura un account August"
             },
             "validation": {
                 "data": {

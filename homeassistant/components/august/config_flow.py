@@ -1,11 +1,14 @@
 """Config flow for August integration."""
+from collections.abc import Mapping
 import logging
+from typing import Any
 
 import voluptuous as vol
 from yalexs.authenticator import ValidationResult
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_LOGIN_METHOD, DOMAIN, LOGIN_METHODS, VERIFICATION_CODE_KEY
 from .exceptions import CannotConnect, InvalidAuth, RequireValidation
@@ -109,9 +112,9 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_reauth(self, data):
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
-        self._user_auth_details = dict(data)
+        self._user_auth_details = dict(entry_data)
         self._mode = "reauth"
         self._needs_reset = True
         self._august_gateway = AugustGateway(self.hass)

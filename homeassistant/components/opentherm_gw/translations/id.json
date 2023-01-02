@@ -3,7 +3,8 @@
         "error": {
             "already_configured": "Perangkat sudah dikonfigurasi",
             "cannot_connect": "Gagal terhubung",
-            "id_exists": "ID gateway sudah ada"
+            "id_exists": "ID gateway sudah ada",
+            "timeout_connect": "Tenggang waktu membuat koneksi habis"
         },
         "step": {
             "init": {
@@ -11,8 +12,7 @@
                     "device": "Jalur atau URL",
                     "id": "ID",
                     "name": "Nama"
-                },
-                "title": "Gateway OpenTherm"
+                }
             }
         }
     },
@@ -24,8 +24,7 @@
                     "read_precision": "Tingkat Presisi Baca",
                     "set_precision": "Atur Presisi",
                     "temporary_override_mode": "Mode Penimpaan Setpoint Sementara"
-                },
-                "description": "Pilihan untuk Gateway OpenTherm"
+                }
             }
         }
     }

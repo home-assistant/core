@@ -1,0 +1,31 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP \u4f4d\u5740"
+                },
+                "title": "\u9023\u7dda\u81f3\u88dd\u7f6e"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "source_1": "\u4f86\u6e90 #1 \u540d\u7a31",
+                    "source_2": "\u4f86\u6e90 #2 \u540d\u7a31",
+                    "source_3": "\u4f86\u6e90 #3 \u540d\u7a31",
+                    "source_4": "\u4f86\u6e90 #4 \u540d\u7a31",
+                    "source_5": "\u4f86\u6e90 #5 \u540d\u7a31",
+                    "source_6": "\u4f86\u6e90 #6 \u540d\u7a31"
+                },
+                "title": "\u8a2d\u5b9a\u4f86\u6e90"
+            }
+        }
+    }
+}

@@ -15,6 +15,13 @@ def get_multizone_status_mock():
 
 
 @pytest.fixture()
+def get_cast_type_mock():
+    """Mock pychromecast dial."""
+    mock = MagicMock(spec_set=pychromecast.dial.get_cast_type)
+    return mock
+
+
+@pytest.fixture()
 def castbrowser_mock():
     """Mock pychromecast CastBrowser."""
     return MagicMock(spec=pychromecast.discovery.CastBrowser)
@@ -43,6 +50,7 @@ def cast_mock(
     mz_mock,
     quick_play_mock,
     castbrowser_mock,
+    get_cast_type_mock,
     get_chromecast_mock,
     get_multizone_status_mock,
 ):
@@ -52,6 +60,9 @@ def cast_mock(
     with patch(
         "homeassistant.components.cast.discovery.pychromecast.discovery.CastBrowser",
         castbrowser_mock,
+    ), patch(
+        "homeassistant.components.cast.helpers.dial.get_cast_type",
+        get_cast_type_mock,
     ), patch(
         "homeassistant.components.cast.helpers.dial.get_multizone_status",
         get_multizone_status_mock,

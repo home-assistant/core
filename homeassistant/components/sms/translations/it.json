@@ -11,6 +11,7 @@
         "step": {
             "user": {
                 "data": {
+                    "baud_speed": "Velocit\u00e0 Baud",
                     "device": "Dispositivo"
                 },
                 "title": "Connettiti al modem"

@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La ubicaci\u00f3n ya est\u00e1 configurada",
+            "cannot_connect": "No se pudo conectar",
+            "max_regions": "Se pueden configurar un m\u00e1ximo de 5 regiones",
+            "rate_limit": "Demasiadas peticiones",
+            "timeout": "Tiempo de espera agotado para establecer la conexi\u00f3n",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "community": {
+                "data": {
+                    "region": "Regi\u00f3n"
+                },
+                "description": "Si quieres supervisar no solo el estado y el distrito, elige tu comunidad espec\u00edfica"
+            },
+            "district": {
+                "data": {
+                    "region": "Regi\u00f3n"
+                },
+                "description": "Si quieres supervisar no s\u00f3lo el estado, elige el distrito espec\u00edfico"
+            },
+            "user": {
+                "data": {
+                    "region": "Regi\u00f3n"
+                },
+                "description": "Elige el estado para supervisar"
+            }
+        }
+    }
+}

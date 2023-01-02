@@ -17,8 +17,7 @@
                     "mode": "Mode",
                     "name": "Name"
                 },
-                "description": "To generate API key go to https://openweathermap.org/appid",
-                "title": "OpenWeatherMap"
+                "description": "To generate API key go to https://openweathermap.org/appid"
             }
         }
     },

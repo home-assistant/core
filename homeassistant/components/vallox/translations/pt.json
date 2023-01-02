@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "invalid_host": "Endere\u00e7o IP ou hostname inv\u00e1lido."
+        },
         "error": {
             "unknown": "Erro inesperado"
         }

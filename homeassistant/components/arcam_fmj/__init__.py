@@ -2,6 +2,7 @@
 import asyncio
 from contextlib import suppress
 import logging
+from typing import Any
 
 from arcam.fmj import ConnectionFailed
 from arcam.fmj.client import Client
@@ -11,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -30,7 +32,7 @@ CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
-async def _await_cancel(task):
+async def _await_cancel(task: asyncio.Task) -> None:
     task.cancel()
     with suppress(asyncio.CancelledError):
         await task
@@ -41,7 +43,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN_DATA_ENTRIES] = {}
     hass.data[DOMAIN_DATA_TASKS] = {}
 
-    async def _stop(_):
+    async def _stop(_: Any) -> None:
         asyncio.gather(
             *(_await_cancel(task) for task in hass.data[DOMAIN_DATA_TASKS].values())
         )
@@ -62,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     task = asyncio.create_task(_run_client(hass, client, DEFAULT_SCAN_INTERVAL))
     tasks[entry.entry_id] = task
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -79,9 +81,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def _run_client(hass, client, interval):
-    def _listen(_):
-        hass.helpers.dispatcher.async_dispatcher_send(SIGNAL_CLIENT_DATA, client.host)
+async def _run_client(hass: HomeAssistant, client: Client, interval: float) -> None:
+    def _listen(_: Any) -> None:
+        async_dispatcher_send(hass, SIGNAL_CLIENT_DATA, client.host)
 
     while True:
         try:
@@ -89,9 +91,7 @@ async def _run_client(hass, client, interval):
                 await client.start()
 
             _LOGGER.debug("Client connected %s", client.host)
-            hass.helpers.dispatcher.async_dispatcher_send(
-                SIGNAL_CLIENT_STARTED, client.host
-            )
+            async_dispatcher_send(hass, SIGNAL_CLIENT_STARTED, client.host)
 
             try:
                 with client.listen(_listen):
@@ -100,9 +100,7 @@ async def _run_client(hass, client, interval):
                 await client.stop()
 
                 _LOGGER.debug("Client disconnected %s", client.host)
-                hass.helpers.dispatcher.async_dispatcher_send(
-                    SIGNAL_CLIENT_STOPPED, client.host
-                )
+                async_dispatcher_send(hass, SIGNAL_CLIENT_STOPPED, client.host)
 
         except ConnectionFailed:
             await asyncio.sleep(interval)

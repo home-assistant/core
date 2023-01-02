@@ -16,16 +16,16 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     EVENT_CORE_CONFIG_UPDATE,
-    LENGTH_FEET,
-    LENGTH_METERS,
     Platform,
+    UnitOfLength,
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.distance import convert as convert_distance
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import DistanceConverter
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
     CONF_TRACK_HOME,
@@ -67,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 
@@ -95,7 +95,7 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator["MetWeatherData"]):
         """Initialize global Met data updater."""
         self._unsub_track_home: Callable[[], None] | None = None
         self.weather = MetWeatherData(
-            hass, config_entry.data, hass.config.units.is_metric
+            hass, config_entry.data, hass.config.units is METRIC_SYSTEM
         )
         self.weather.set_coordinates()
 
@@ -160,7 +160,11 @@ class MetWeatherData:
 
         if not self._is_metric:
             elevation = int(
-                round(convert_distance(elevation, LENGTH_FEET, LENGTH_METERS))
+                round(
+                    DistanceConverter.convert(
+                        elevation, UnitOfLength.FEET, UnitOfLength.METERS
+                    )
+                )
             )
 
         coordinates = {

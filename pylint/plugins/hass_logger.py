@@ -1,7 +1,8 @@
 """Plugin for logger invocations."""
-import astroid
+from __future__ import annotations
+
+from astroid import nodes
 from pylint.checkers import BaseChecker
-from pylint.interfaces import IAstroidChecker
 from pylint.lint import PyLinter
 
 LOGGER_NAMES = ("LOGGER", "_LOGGER")
@@ -11,17 +12,15 @@ LOG_LEVEL_ALLOWED_LOWER_START = ("debug",)
 class HassLoggerFormatChecker(BaseChecker):  # type: ignore[misc]
     """Checker for logger invocations."""
 
-    __implements__ = IAstroidChecker
-
     name = "hass_logger"
     priority = -1
     msgs = {
-        "W0001": (
+        "W7401": (
             "User visible logger messages must not end with a period",
             "hass-logger-period",
             "Periods are not permitted at the end of logger messages",
         ),
-        "W0002": (
+        "W7402": (
             "User visible logger messages must start with a capital letter or downgrade to debug",
             "hass-logger-capital",
             "All logger messages must start with a capital letter",
@@ -29,10 +28,10 @@ class HassLoggerFormatChecker(BaseChecker):  # type: ignore[misc]
     }
     options = ()
 
-    def visit_call(self, node: astroid.Call) -> None:
+    def visit_call(self, node: nodes.Call) -> None:
         """Called when a Call node is visited."""
-        if not isinstance(node.func, astroid.Attribute) or not isinstance(
-            node.func.expr, astroid.Name
+        if not isinstance(node.func, nodes.Attribute) or not isinstance(
+            node.func.expr, nodes.Name
         ):
             return
 
@@ -44,7 +43,7 @@ class HassLoggerFormatChecker(BaseChecker):  # type: ignore[misc]
 
         first_arg = node.args[0]
 
-        if not isinstance(first_arg, astroid.Const) or not first_arg.value:
+        if not isinstance(first_arg, nodes.Const) or not first_arg.value:
             return
 
         log_message = first_arg.value

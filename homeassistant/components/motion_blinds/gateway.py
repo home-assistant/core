@@ -3,13 +3,20 @@ import contextlib
 import logging
 import socket
 
-from motionblinds import AsyncMotionMulticast, MotionGateway
+from motionblinds import DEVICE_TYPES_WIFI, AsyncMotionMulticast, MotionGateway
 
 from homeassistant.components import network
 
 from .const import DEFAULT_INTERFACE
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def device_name(blind):
+    """Construct common name part of a device."""
+    if blind.device_type in DEVICE_TYPES_WIFI:
+        return blind.blind_type
+    return f"{blind.blind_type} {blind.mac[12:]}"
 
 
 class ConnectMotionGateway:
@@ -101,6 +108,8 @@ class ConnectMotionGateway:
                 await check_multicast.Start_listen()
             except socket.gaierror:
                 continue
+            except OSError:
+                continue
 
             # trigger test multicast
             self._gateway_device = MotionGateway(
@@ -124,7 +133,10 @@ class ConnectMotionGateway:
                 return interface
 
         _LOGGER.error(
-            "Could not find working interface for Motion Blinds host %s, using interface '%s'",
+            (
+                "Could not find working interface for Motion Blinds host %s, using"
+                " interface '%s'"
+            ),
             host,
             self._interface,
         )

@@ -35,6 +35,8 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -98,6 +100,7 @@ async def async_setup_entry(
 class CoverGroup(GroupEntity, CoverEntity):
     """Representation of a CoverGroup."""
 
+    _attr_available: bool = False
     _attr_is_closed: bool | None = None
     _attr_is_opening: bool | None = False
     _attr_is_closing: bool | None = False
@@ -267,29 +270,38 @@ class CoverGroup(GroupEntity, CoverEntity):
         """Update state and attributes."""
         self._attr_assumed_state = False
 
+        states = [
+            state.state
+            for entity_id in self._entities
+            if (state := self.hass.states.get(entity_id)) is not None
+        ]
+
+        valid_state = any(
+            state not in (STATE_UNKNOWN, STATE_UNAVAILABLE) for state in states
+        )
+
+        # Set group as unavailable if all members are unavailable or missing
+        self._attr_available = any(state != STATE_UNAVAILABLE for state in states)
+
         self._attr_is_closed = True
         self._attr_is_closing = False
         self._attr_is_opening = False
-        has_valid_state = False
         for entity_id in self._entities:
             if not (state := self.hass.states.get(entity_id)):
                 continue
             if state.state == STATE_OPEN:
                 self._attr_is_closed = False
-                has_valid_state = True
                 continue
             if state.state == STATE_CLOSED:
-                has_valid_state = True
                 continue
             if state.state == STATE_CLOSING:
                 self._attr_is_closing = True
-                has_valid_state = True
                 continue
             if state.state == STATE_OPENING:
                 self._attr_is_opening = True
-                has_valid_state = True
                 continue
-        if not has_valid_state:
+        if not valid_state:
+            # Set as unknown if all members are unknown or unavailable
             self._attr_is_closed = None
 
         position_covers = self._covers[KEY_POSITION]
@@ -312,7 +324,7 @@ class CoverGroup(GroupEntity, CoverEntity):
             tilt_states, ATTR_CURRENT_TILT_POSITION
         )
 
-        supported_features = 0
+        supported_features = CoverEntityFeature(0)
         if self._covers[KEY_OPEN_CLOSE]:
             supported_features |= CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
         supported_features |= CoverEntityFeature.STOP if self._covers[KEY_STOP] else 0

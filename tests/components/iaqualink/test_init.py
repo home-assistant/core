@@ -4,15 +4,15 @@ import asyncio
 import logging
 from unittest.mock import AsyncMock, patch
 
-from iaqualink.device import (
-    AqualinkAuxToggle,
-    AqualinkBinarySensor,
-    AqualinkDevice,
-    AqualinkLightToggle,
-    AqualinkSensor,
-    AqualinkThermostat,
-)
 from iaqualink.exception import AqualinkServiceException
+from iaqualink.systems.iaqua.device import (
+    IaquaAuxSwitch,
+    IaquaBinarySensor,
+    IaquaLightSwitch,
+    IaquaSensor,
+    IaquaThermostat,
+)
+from iaqualink.systems.iaqua.system import IaquaSystem
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
@@ -24,8 +24,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.util import dt as dt_util
 
+from .conftest import get_aqualink_device, get_aqualink_system
+
 from tests.common import async_fire_time_changed
-from tests.components.iaqualink.conftest import get_aqualink_device, get_aqualink_system
 
 
 async def _ffwd_next_update_interval(hass):
@@ -100,7 +101,7 @@ async def test_setup_devices_exception(hass, config_entry, client):
     """Test setup encountering an exception while retrieving devices."""
     config_entry.add_to_hass(hass)
 
-    system = get_aqualink_system(client)
+    system = get_aqualink_system(client, cls=IaquaSystem)
     systems = {system.serial: system}
 
     with patch(
@@ -123,10 +124,10 @@ async def test_setup_all_good_no_recognized_devices(hass, config_entry, client):
     """Test setup ending in no devices recognized."""
     config_entry.add_to_hass(hass)
 
-    system = get_aqualink_system(client)
+    system = get_aqualink_system(client, cls=IaquaSystem)
     systems = {system.serial: system}
 
-    device = get_aqualink_device(system, AqualinkDevice, data={"name": "dev_1"})
+    device = get_aqualink_device(system, name="dev_1")
     devices = {device.name: device}
 
     with patch(
@@ -160,19 +161,15 @@ async def test_setup_all_good_all_device_types(hass, config_entry, client):
     """Test setup ending in one device of each type recognized."""
     config_entry.add_to_hass(hass)
 
-    system = get_aqualink_system(client)
+    system = get_aqualink_system(client, cls=IaquaSystem)
     systems = {system.serial: system}
 
     devices = [
-        get_aqualink_device(system, AqualinkAuxToggle, data={"name": "aux_1"}),
-        get_aqualink_device(
-            system, AqualinkBinarySensor, data={"name": "freeze_protection"}
-        ),
-        get_aqualink_device(system, AqualinkLightToggle, data={"name": "aux_2"}),
-        get_aqualink_device(system, AqualinkSensor, data={"name": "ph"}),
-        get_aqualink_device(
-            system, AqualinkThermostat, data={"name": "pool_set_point"}
-        ),
+        get_aqualink_device(system, name="aux_1", cls=IaquaAuxSwitch),
+        get_aqualink_device(system, name="freeze_protection", cls=IaquaBinarySensor),
+        get_aqualink_device(system, name="aux_2", cls=IaquaLightSwitch),
+        get_aqualink_device(system, name="ph", cls=IaquaSensor),
+        get_aqualink_device(system, name="pool_set_point", cls=IaquaThermostat),
     ]
     devices = {d.name: d for d in devices}
 
@@ -206,7 +203,7 @@ async def test_multiple_updates(hass, config_entry, caplog, client):
     """Test all possible results of online status transition after update."""
     config_entry.add_to_hass(hass)
 
-    system = get_aqualink_system(client)
+    system = get_aqualink_system(client, cls=IaquaSystem)
     systems = {system.serial: system}
 
     system.get_devices = AsyncMock(return_value={})
@@ -268,7 +265,7 @@ async def test_multiple_updates(hass, config_entry, caplog, client):
     system.update.side_effect = set_online_to_true
     await _ffwd_next_update_interval(hass)
     assert len(caplog.records) == 1
-    assert "Reconnected" in caplog.text
+    assert "reconnected" in caplog.text
 
     # False -> None / ServiceException
     system.online = False
@@ -291,7 +288,7 @@ async def test_multiple_updates(hass, config_entry, caplog, client):
     system.update.side_effect = set_online_to_true
     await _ffwd_next_update_interval(hass)
     assert len(caplog.records) == 1
-    assert "Reconnected" in caplog.text
+    assert "reconnected" in caplog.text
 
     # None -> False
     system.online = None
@@ -310,11 +307,11 @@ async def test_entity_assumed_and_available(hass, config_entry, client):
     """Test assumed_state and_available properties for all values of online."""
     config_entry.add_to_hass(hass)
 
-    system = get_aqualink_system(client)
+    system = get_aqualink_system(client, cls=IaquaSystem)
     systems = {system.serial: system}
 
     light = get_aqualink_device(
-        system, AqualinkLightToggle, data={"name": "aux_1", "state": "1"}
+        system, name="aux_1", cls=IaquaLightSwitch, data={"state": "1"}
     )
     devices = {d.name: d for d in [light]}
     system.get_devices = AsyncMock(return_value=devices)

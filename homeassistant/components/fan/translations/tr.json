@@ -1,6 +1,7 @@
 {
     "device_automation": {
         "action_type": {
+            "toggle": "{entity_name} de\u011fi\u015ftir",
             "turn_off": "{entity_name} kapat",
             "turn_on": "{entity_name} a\u00e7\u0131n"
         },
@@ -10,7 +11,6 @@
         },
         "trigger_type": {
             "changed_states": "{entity_name} a\u00e7\u0131ld\u0131 veya kapat\u0131ld\u0131",
-            "toggled": "{entity_name} a\u00e7\u0131ld\u0131 veya kapat\u0131ld\u0131",
             "turned_off": "{entity_name} kapat\u0131ld\u0131",
             "turned_on": "{entity_name} a\u00e7\u0131ld\u0131"
         }

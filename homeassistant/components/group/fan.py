@@ -32,6 +32,8 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIQUE_ID,
     STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -98,6 +100,7 @@ async def async_setup_entry(
 class FanGroup(GroupEntity, FanEntity):
     """Representation of a FanGroup."""
 
+    _attr_available: bool = False
     _attr_assumed_state: bool = True
 
     def __init__(self, unique_id: str | None, name: str, entities: list[str]) -> None:
@@ -107,17 +110,11 @@ class FanGroup(GroupEntity, FanEntity):
         self._percentage = None
         self._oscillating = None
         self._direction = None
-        self._supported_features = 0
         self._speed_count = 100
-        self._is_on = False
+        self._is_on: bool | None = False
         self._attr_name = name
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entities}
         self._attr_unique_id = unique_id
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return self._supported_features
 
     @property
     def speed_count(self) -> int:
@@ -125,7 +122,7 @@ class FanGroup(GroupEntity, FanEntity):
         return self._speed_count
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if the entity is on."""
         return self._is_on
 
@@ -270,11 +267,25 @@ class FanGroup(GroupEntity, FanEntity):
         """Update state and attributes."""
         self._attr_assumed_state = False
 
-        on_states: list[State] = list(
-            filter(None, [self.hass.states.get(x) for x in self._entities])
+        states = [
+            state
+            for entity_id in self._entities
+            if (state := self.hass.states.get(entity_id)) is not None
+        ]
+        self._attr_assumed_state |= not states_equal(states)
+
+        # Set group as unavailable if all members are unavailable or missing
+        self._attr_available = any(state.state != STATE_UNAVAILABLE for state in states)
+
+        valid_state = any(
+            state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE) for state in states
         )
-        self._is_on = any(state.state == STATE_ON for state in on_states)
-        self._attr_assumed_state |= not states_equal(on_states)
+        if not valid_state:
+            # Set as unknown if all members are unknown or unavailable
+            self._is_on = None
+        else:
+            # Set as ON if any member is ON
+            self._is_on = any(state.state == STATE_ON for state in states)
 
         percentage_states = self._async_states_by_support_flag(
             FanEntityFeature.SET_SPEED
@@ -302,9 +313,11 @@ class FanGroup(GroupEntity, FanEntity):
             "_direction", FanEntityFeature.DIRECTION, ATTR_DIRECTION
         )
 
-        self._supported_features = reduce(
-            ior, [feature for feature in SUPPORTED_FLAGS if self._fans[feature]], 0
+        self._attr_supported_features = FanEntityFeature(
+            reduce(
+                ior, [feature for feature in SUPPORTED_FLAGS if self._fans[feature]], 0
+            )
         )
         self._attr_assumed_state |= any(
-            state.attributes.get(ATTR_ASSUMED_STATE) for state in on_states
+            state.attributes.get(ATTR_ASSUMED_STATE) for state in states
         )

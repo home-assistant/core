@@ -26,8 +26,7 @@
                     "username": "Benotzernumm",
                     "verify_ssl": "SSL Zertifikat iwwerpr\u00e9iwen"
                 },
-                "description": "Soll {name} ({host}) konfigur\u00e9iert ginn?",
-                "title": "Synology DSM"
+                "description": "Soll {name} ({host}) konfigur\u00e9iert ginn?"
             },
             "user": {
                 "data": {
@@ -37,8 +36,7 @@
                     "ssl": "Benotzt ee SSL Zertifikat",
                     "username": "Benotzernumm",
                     "verify_ssl": "SSL Zertifikat iwwerpr\u00e9iwen"
-                },
-                "title": "Synology DSM"
+                }
             }
         }
     },

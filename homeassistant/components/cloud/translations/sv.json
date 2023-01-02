@@ -1,0 +1,17 @@
+{
+    "system_health": {
+        "info": {
+            "alexa_enabled": "Alexa Aktiverad",
+            "can_reach_cert_server": "N\u00e5 certifikatserver",
+            "can_reach_cloud": "N\u00e5 Home Assistant Cloud",
+            "can_reach_cloud_auth": "N\u00e5 autentiseringsserver",
+            "google_enabled": "Google Aktiverad",
+            "logged_in": "Inloggad",
+            "relayer_connected": "Vidarebefodrare Ansluten",
+            "remote_connected": "Fj\u00e4rransluten",
+            "remote_enabled": "Fj\u00e4rr\u00e5tkomst Aktiverad",
+            "remote_server": "Fj\u00e4rrserver",
+            "subscription_expiration": "Prenumerationens utg\u00e5ng"
+        }
+    }
+}

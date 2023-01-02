@@ -1,82 +1,94 @@
 {
     "config": {
-        "abort": {
-            "cannot_connect": "Kan geen verbinding maken",
-            "invalid_auth": "Ongeldige authenticatie",
-            "single_instance_allowed": "Al geconfigureerd. Er is maar een configuratie mogelijk."
-        },
         "error": {
             "invalid_auth": "Ongeldige authenticatie",
             "login_error": "Aanmeldingsfout ({code}): {msg}"
         },
-        "flow_title": "Tuya-configuratie",
         "step": {
-            "login": {
-                "data": {
-                    "access_id": "Toegangs-ID",
-                    "access_secret": "Access Secret",
-                    "country_code": "Landcode",
-                    "endpoint": "Beschikbaarheidszone",
-                    "password": "Wachtwoord",
-                    "tuya_app_type": "Mobiele app",
-                    "username": "Account"
-                },
-                "description": "Voer uw Tuya-inloggegevens in",
-                "title": "Tuya"
-            },
             "user": {
                 "data": {
                     "access_id": "Tuya IoT-toegangs-ID",
                     "access_secret": "Tuya IoT Access Secret",
                     "country_code": "Land",
                     "password": "Wachtwoord",
-                    "platform": "De app waar uw account is geregistreerd",
-                    "region": "Regio",
-                    "tuya_project_type": "Tuya cloud project type",
                     "username": "Gebruikersnaam"
                 },
-                "description": "Voer uw Tuya-inloggegevens in.",
-                "title": "Tuya-integratie"
+                "description": "Voer uw Tuya-inloggegevens in."
             }
         }
     },
-    "options": {
-        "abort": {
-            "cannot_connect": "Kan geen verbinding maken"
-        },
-        "error": {
-            "dev_multi_type": "Meerdere geselecteerde apparaten om te configureren moeten van hetzelfde type zijn",
-            "dev_not_config": "Apparaattype kan niet worden geconfigureerd",
-            "dev_not_found": "Apparaat niet gevonden"
-        },
-        "step": {
-            "device": {
-                "data": {
-                    "brightness_range_mode": "Helderheidsbereik gebruikt door apparaat",
-                    "curr_temp_divider": "Huidige temperatuurwaarde deler (0 = standaardwaarde)",
-                    "max_kelvin": "Max kleurtemperatuur in kelvin",
-                    "max_temp": "Maximale doeltemperatuur (gebruik min en max = 0 voor standaardwaarde)",
-                    "min_kelvin": "Minimaal ondersteunde kleurtemperatuur in kelvin",
-                    "min_temp": "Min. gewenste temperatuur (gebruik min en max = 0 voor standaard)",
-                    "set_temp_divided": "Gedeelde temperatuurwaarde gebruiken voor ingestelde temperatuuropdracht",
-                    "support_color": "Forceer kleurenondersteuning",
-                    "temp_divider": "Temperatuurwaarde deler (0 = standaardwaarde)",
-                    "temp_step_override": "Doeltemperatuur stap",
-                    "tuya_max_coltemp": "Max. kleurtemperatuur gerapporteerd door apparaat",
-                    "unit_of_measurement": "Temperatuureenheid gebruikt door apparaat"
-                },
-                "description": "Configureer opties om weergegeven informatie aan te passen voor {device_type} apparaat `{device_name}`",
-                "title": "Configureer Tuya Apparaat"
+    "entity": {
+        "select": {
+            "basic_anti_flicker": {
+                "state": {
+                    "0": "Uitgeschakeld",
+                    "1": "50 Hz",
+                    "2": "60 Hz"
+                }
             },
-            "init": {
-                "data": {
-                    "discovery_interval": "Polling-interval van nieuwe apparaten in seconden",
-                    "list_devices": "Selecteer de te configureren apparaten of laat leeg om de configuratie op te slaan",
-                    "query_device": "Selecteer apparaat dat query-methode zal gebruiken voor snellere statusupdate",
-                    "query_interval": "Ververstijd van het apparaat in seconden"
-                },
-                "description": "Stel de waarden voor het pollinginterval niet te laag in, anders zullen de oproepen geen foutmelding in het logboek genereren",
-                "title": "Configureer Tuya opties"
+            "basic_nightvision": {
+                "state": {
+                    "1": "Uit",
+                    "2": "Aan"
+                }
+            },
+            "countdown": {
+                "state": {
+                    "1h": "1 uur",
+                    "2h": "2 uur",
+                    "3h": "3 uur",
+                    "4h": "4 uur",
+                    "5h": "5 uur",
+                    "6h": "6 uur"
+                }
+            },
+            "curtain_mode": {
+                "state": {
+                    "night": "Nacht"
+                }
+            },
+            "fan_angle": {
+                "state": {
+                    "30": "30\u00b0",
+                    "60": "60\u00b0",
+                    "90": "90\u00b0"
+                }
+            },
+            "fingerbot_mode": {
+                "state": {
+                    "switch": "Schakelaar"
+                }
+            },
+            "humidifier_spray_mode": {
+                "state": {
+                    "humidity": "Vochtigheid"
+                }
+            },
+            "led_type": {
+                "state": {
+                    "halogen": "Halogeen",
+                    "incandescent": "Gloeilamp",
+                    "led": "LED"
+                }
+            },
+            "light_mode": {
+                "state": {
+                    "none": "Uit"
+                }
+            },
+            "relay_status": {
+                "state": {
+                    "off": "Uit",
+                    "on": "Aan",
+                    "power_off": "Uit"
+                }
+            }
+        },
+        "sensor": {
+            "air_quality": {
+                "state": {
+                    "good": "Goed"
+                }
             }
         }
     }

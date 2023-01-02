@@ -183,8 +183,8 @@ async def test_modern_turn_on_invalid(hass, start_state):
     set_preset_mode = async_mock_service(hass, "fan", "set_preset_mode")
 
     # Turn on with an invalid config (speed, percentage, preset_modes all None)
-    await hass.helpers.state.async_reproduce_state(
-        [State(MODERN_FAN_ENTITY, "on", MODERN_FAN_ON_INVALID_STATE)]
+    await async_reproduce_state(
+        hass, [State(MODERN_FAN_ENTITY, "on", MODERN_FAN_ON_INVALID_STATE)]
     )
 
     assert len(turn_on_calls) == 1
@@ -227,8 +227,8 @@ async def test_modern_turn_on_percentage_from_different_speed(hass, start_state)
     set_percentage_mode = async_mock_service(hass, "fan", "set_percentage")
     set_preset_mode = async_mock_service(hass, "fan", "set_preset_mode")
 
-    await hass.helpers.state.async_reproduce_state(
-        [State(MODERN_FAN_ENTITY, "on", MODERN_FAN_ON_PERCENTAGE15_STATE)]
+    await async_reproduce_state(
+        hass, [State(MODERN_FAN_ENTITY, "on", MODERN_FAN_ON_PERCENTAGE15_STATE)]
     )
 
     assert len(turn_on_calls) == 1
@@ -256,8 +256,8 @@ async def test_modern_turn_on_percentage_from_same_speed(hass):
     set_percentage_mode = async_mock_service(hass, "fan", "set_percentage")
     set_preset_mode = async_mock_service(hass, "fan", "set_preset_mode")
 
-    await hass.helpers.state.async_reproduce_state(
-        [State(MODERN_FAN_ENTITY, "on", MODERN_FAN_ON_PERCENTAGE15_STATE)]
+    await async_reproduce_state(
+        hass, [State(MODERN_FAN_ENTITY, "on", MODERN_FAN_ON_PERCENTAGE15_STATE)]
     )
 
     assert len(turn_on_calls) == 1
@@ -293,8 +293,8 @@ async def test_modern_turn_on_preset_mode_from_different_speed(hass, start_state
     set_percentage_mode = async_mock_service(hass, "fan", "set_percentage")
     set_preset_mode = async_mock_service(hass, "fan", "set_preset_mode")
 
-    await hass.helpers.state.async_reproduce_state(
-        [State(MODERN_FAN_ENTITY, "on", MODERN_FAN_ON_PRESET_MODE_AUTO_STATE)]
+    await async_reproduce_state(
+        hass, [State(MODERN_FAN_ENTITY, "on", MODERN_FAN_ON_PRESET_MODE_AUTO_STATE)]
     )
 
     assert len(turn_on_calls) == 1
@@ -324,8 +324,8 @@ async def test_modern_turn_on_preset_mode_from_same_speed(hass):
     set_percentage_mode = async_mock_service(hass, "fan", "set_percentage")
     set_preset_mode = async_mock_service(hass, "fan", "set_preset_mode")
 
-    await hass.helpers.state.async_reproduce_state(
-        [State(MODERN_FAN_ENTITY, "on", MODERN_FAN_ON_PRESET_MODE_AUTO_STATE)]
+    await async_reproduce_state(
+        hass, [State(MODERN_FAN_ENTITY, "on", MODERN_FAN_ON_PRESET_MODE_AUTO_STATE)]
     )
 
     assert len(turn_on_calls) == 1
@@ -361,8 +361,9 @@ async def test_modern_turn_on_preset_mode_reverse(hass, start_state):
     set_percentage_mode = async_mock_service(hass, "fan", "set_percentage")
     set_preset_mode = async_mock_service(hass, "fan", "set_preset_mode")
 
-    await hass.helpers.state.async_reproduce_state(
-        [State(MODERN_FAN_ENTITY, "on", MODERN_FAN_PRESET_MODE_AUTO_REVERSE_STATE)]
+    await async_reproduce_state(
+        hass,
+        [State(MODERN_FAN_ENTITY, "on", MODERN_FAN_PRESET_MODE_AUTO_REVERSE_STATE)],
     )
 
     assert len(turn_on_calls) == 1
@@ -403,8 +404,8 @@ async def test_modern_to_preset(hass, start_state):
     set_percentage_mode = async_mock_service(hass, "fan", "set_percentage")
     set_preset_mode = async_mock_service(hass, "fan", "set_preset_mode")
 
-    await hass.helpers.state.async_reproduce_state(
-        [State(MODERN_FAN_ENTITY, "on", MODERN_FAN_ON_PRESET_MODE_AUTO_STATE)]
+    await async_reproduce_state(
+        hass, [State(MODERN_FAN_ENTITY, "on", MODERN_FAN_ON_PRESET_MODE_AUTO_STATE)]
     )
 
     assert len(turn_on_calls) == 0
@@ -439,8 +440,8 @@ async def test_modern_to_percentage(hass, start_state):
     set_percentage_mode = async_mock_service(hass, "fan", "set_percentage")
     set_preset_mode = async_mock_service(hass, "fan", "set_preset_mode")
 
-    await hass.helpers.state.async_reproduce_state(
-        [State(MODERN_FAN_ENTITY, "on", MODERN_FAN_ON_PERCENTAGE15_STATE)]
+    await async_reproduce_state(
+        hass, [State(MODERN_FAN_ENTITY, "on", MODERN_FAN_ON_PERCENTAGE15_STATE)]
     )
 
     assert len(turn_on_calls) == 0
@@ -467,8 +468,9 @@ async def test_modern_direction(hass):
     set_percentage_mode = async_mock_service(hass, "fan", "set_percentage")
     set_preset_mode = async_mock_service(hass, "fan", "set_preset_mode")
 
-    await hass.helpers.state.async_reproduce_state(
-        [State(MODERN_FAN_ENTITY, "on", MODERN_FAN_PRESET_MODE_AUTO_REVERSE_STATE)]
+    await async_reproduce_state(
+        hass,
+        [State(MODERN_FAN_ENTITY, "on", MODERN_FAN_PRESET_MODE_AUTO_REVERSE_STATE)],
     )
 
     assert len(turn_on_calls) == 0

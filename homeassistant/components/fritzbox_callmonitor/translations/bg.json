@@ -1,6 +1,12 @@
 {
     "config": {
+        "flow_title": "{name}",
         "step": {
+            "phonebook": {
+                "data": {
+                    "phonebook": "\u0422\u0435\u043b\u0435\u0444\u043e\u043d\u0435\u043d \u0443\u043a\u0430\u0437\u0430\u0442\u0435\u043b"
+                }
+            },
             "user": {
                 "data": {
                     "password": "\u041f\u0430\u0440\u043e\u043b\u0430",

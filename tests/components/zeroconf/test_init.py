@@ -3,7 +3,6 @@ from ipaddress import ip_address
 from typing import Any
 from unittest.mock import call, patch
 
-import pytest
 from zeroconf import InterfaceChoice, IPVersion, ServiceStateChange
 from zeroconf.asyncio import AsyncServiceInfo
 
@@ -14,12 +13,13 @@ from homeassistant.components.zeroconf import (
     _get_announced_addresses,
 )
 from homeassistant.const import (
+    EVENT_COMPONENT_LOADED,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.generated import zeroconf as zc_gen
-from homeassistant.setup import async_setup_component
+from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 
 NON_UTF8_VALUE = b"ABCDEF\x8a"
 NON_ASCII_KEY = b"non-ascii-key\x8a"
@@ -147,7 +147,17 @@ def get_zeroconf_info_mock_model(model):
 
 async def test_setup(hass, mock_async_zeroconf):
     """Test configured options for a device are loaded via config entry."""
-    with patch.object(
+    mock_zc = {
+        "_http._tcp.local.": [
+            {
+                "domain": "shelly",
+                "name": "shelly*",
+                "properties": {"macaddress": "ffaadd*"},
+            }
+        ],
+        "_Volumio._tcp.local.": [{"domain": "volumio"}],
+    }
+    with patch.dict(zc_gen.ZEROCONF, mock_zc, clear=True,), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow, patch.object(
         zeroconf, "HaAsyncServiceBrowser", side_effect=service_update_mock
@@ -161,7 +171,7 @@ async def test_setup(hass, mock_async_zeroconf):
 
     assert len(mock_service_browser.mock_calls) == 1
     expected_flow_calls = 0
-    for matching_components in zc_gen.ZEROCONF.values():
+    for matching_components in mock_zc.values():
         domains = set()
         for component in matching_components:
             if len(component) == 1:
@@ -318,6 +328,7 @@ async def test_zeroconf_match_macaddress(hass, mock_async_zeroconf):
     assert len(mock_service_browser.mock_calls) == 1
     assert len(mock_config_flow.mock_calls) == 1
     assert mock_config_flow.mock_calls[0][1][0] == "shelly"
+    assert mock_config_flow.mock_calls[0][2]["context"] == {"source": "zeroconf"}
 
 
 async def test_zeroconf_match_manufacturer(hass, mock_async_zeroconf):
@@ -521,8 +532,13 @@ async def test_homekit_match_partial_space(hass, mock_async_zeroconf):
         await hass.async_block_till_done()
 
     assert len(mock_service_browser.mock_calls) == 1
-    assert len(mock_config_flow.mock_calls) == 1
+    # One for HKC, and one for LIFX since lifx is local polling
+    assert len(mock_config_flow.mock_calls) == 2
     assert mock_config_flow.mock_calls[0][1][0] == "lifx"
+    assert mock_config_flow.mock_calls[1][2]["context"] == {
+        "source": "zeroconf",
+        "alternative_domain": "lifx",
+    }
 
 
 async def test_homekit_match_partial_dash(hass, mock_async_zeroconf):
@@ -732,6 +748,44 @@ async def test_homekit_controller_still_discovered_unpaired_for_cloud(
     assert mock_config_flow.mock_calls[1][1][0] == "homekit_controller"
 
 
+async def test_homekit_controller_still_discovered_unpaired_for_polling(
+    hass, mock_async_zeroconf
+):
+    """Test discovery is still passed to homekit controller when unpaired and discovered by polling integration.
+
+    Since we prefer local push, if the integration that is being discovered
+    is polling AND the homekit device is unpaired we still want to discovery it
+    """
+    with patch.dict(
+        zc_gen.ZEROCONF,
+        {"_hap._udp.local.": [{"domain": "homekit_controller"}]},
+        clear=True,
+    ), patch.dict(
+        zc_gen.HOMEKIT,
+        {"iSmartGate": "gogogate2"},
+        clear=True,
+    ), patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_config_flow, patch.object(
+        zeroconf,
+        "HaAsyncServiceBrowser",
+        side_effect=lambda *args, **kwargs: service_update_mock(
+            *args, **kwargs, limit_service="_hap._udp.local."
+        ),
+    ) as mock_service_browser, patch(
+        "homeassistant.components.zeroconf.AsyncServiceInfo",
+        side_effect=get_homekit_info_mock("iSmartGate", HOMEKIT_STATUS_UNPAIRED),
+    ):
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert len(mock_service_browser.mock_calls) == 1
+    assert len(mock_config_flow.mock_calls) == 2
+    assert mock_config_flow.mock_calls[0][1][0] == "gogogate2"
+    assert mock_config_flow.mock_calls[1][1][0] == "homekit_controller"
+
+
 async def test_info_from_service_non_utf8(hass):
     """Test info_from_service handles non UTF-8 property keys and values correctly."""
     service_type = "_test._tcp.local."
@@ -763,6 +817,24 @@ async def test_info_from_service_with_link_local_address_first(hass):
     service_info.addresses = ["169.254.12.3", "192.168.66.12"]
     info = zeroconf.info_from_service(service_info)
     assert info.host == "192.168.66.12"
+
+
+async def test_info_from_service_with_unspecified_address_first(hass):
+    """Test that the unspecified address is ignored."""
+    service_type = "_test._tcp.local."
+    service_info = get_service_info_mock(service_type, f"test.{service_type}")
+    service_info.addresses = ["0.0.0.0", "192.168.66.12"]
+    info = zeroconf.info_from_service(service_info)
+    assert info.host == "192.168.66.12"
+
+
+async def test_info_from_service_with_unspecified_address_only(hass):
+    """Test that the unspecified address is ignored."""
+    service_type = "_test._tcp.local."
+    service_info = get_service_info_mock(service_type, f"test.{service_type}")
+    service_info.addresses = ["0.0.0.0"]
+    info = zeroconf.info_from_service(service_info)
+    assert info is None
 
 
 async def test_info_from_service_with_link_local_address_second(hass):
@@ -1108,31 +1180,30 @@ async def test_no_name(hass, mock_async_zeroconf):
     assert info.name == "Home._home-assistant._tcp.local."
 
 
-@pytest.mark.usefixtures("mock_integration_frame")
-async def test_service_info_compatibility(hass, caplog):
-    """Test compatibility with old-style dict.
+async def test_setup_with_disallowed_characters_in_local_name(
+    hass, mock_async_zeroconf, caplog
+):
+    """Test we still setup with disallowed characters in the location name."""
+    with patch.object(hass.config_entries.flow, "async_init"), patch.object(
+        zeroconf, "HaAsyncServiceBrowser", side_effect=service_update_mock
+    ), patch.object(
+        hass.config,
+        "location_name",
+        "My.House",
+    ):
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
 
-    To be removed in 2022.6
-    """
-    discovery_info = zeroconf.ZeroconfServiceInfo(
-        host="mock_host",
-        addresses=["mock_host"],
-        port=None,
-        hostname="mock_hostname",
-        type="mock_type",
-        name="mock_name",
-        properties={},
-    )
+    calls = mock_async_zeroconf.async_register_service.mock_calls
+    assert calls[0][1][0].name == "My House._home-assistant._tcp.local."
 
-    with patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()):
-        assert discovery_info["host"] == "mock_host"
-    assert "Detected integration that accessed discovery_info['host']" in caplog.text
 
-    with patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()):
-        assert discovery_info.get("host") == "mock_host"
-    assert (
-        "Detected integration that accessed discovery_info.get('host')" in caplog.text
-    )
+async def test_start_with_frontend(hass, mock_async_zeroconf):
+    """Test we start with the frontend."""
+    with patch("homeassistant.components.zeroconf.HaZeroconf"):
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: "frontend"})
+        await hass.async_block_till_done()
 
-    assert discovery_info.get("host", "fallback_host") == "mock_host"
-    assert discovery_info.get("invalid_key", "fallback_host") == "fallback_host"
+    mock_async_zeroconf.async_register_service.assert_called_once()

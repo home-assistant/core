@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from greeclimate.device import (
     TEMP_MAX,
@@ -15,8 +16,7 @@ from greeclimate.device import (
     VerticalSwing,
 )
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -30,16 +30,12 @@ from homeassistant.components.climate.const import (
     SWING_HORIZONTAL,
     SWING_OFF,
     SWING_VERTICAL,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    PRECISION_WHOLE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -47,6 +43,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .bridge import DeviceDataUpdateCoordinator
 from .const import (
     COORDINATORS,
     DISPATCH_DEVICE_DISCOVERED,
@@ -109,9 +106,10 @@ async def async_setup_entry(
     )
 
 
-class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
+class GreeClimateEntity(CoordinatorEntity[DeviceDataUpdateCoordinator], ClimateEntity):
     """Representation of a Gree HVAC device."""
 
+    _attr_precision = PRECISION_WHOLE
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
@@ -119,7 +117,7 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
         | ClimateEntityFeature.SWING_MODE
     )
 
-    def __init__(self, coordinator):
+    def __init__(self, coordinator: DeviceDataUpdateCoordinator) -> None:
         """Initialize the Gree device."""
         super().__init__(coordinator)
         self._name = coordinator.device.device_info.name
@@ -149,12 +147,9 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
     def temperature_unit(self) -> str:
         """Return the temperature units for the device."""
         units = self.coordinator.device.temperature_units
-        return TEMP_CELSIUS if units == TemperatureUnits.C else TEMP_FAHRENHEIT
-
-    @property
-    def precision(self) -> float:
-        """Return the precision of temperature for the device."""
-        return PRECISION_WHOLE
+        if units == TemperatureUnits.C:
+            return UnitOfTemperature.CELSIUS
+        return UnitOfTemperature.FAHRENHEIT
 
     @property
     def current_temperature(self) -> float:
@@ -166,7 +161,7 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
         """Return the target temperature for the device."""
         return self.coordinator.device.target_temperature
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if ATTR_TEMPERATURE not in kwargs:
             raise ValueError(f"Missing parameter {ATTR_TEMPERATURE}")
@@ -185,12 +180,16 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature supported by the device."""
-        return TEMP_MIN if self.temperature_unit == TEMP_CELSIUS else TEMP_MIN_F
+        if self.temperature_unit == UnitOfTemperature.CELSIUS:
+            return TEMP_MIN
+        return TEMP_MIN_F
 
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature supported by the device."""
-        return TEMP_MAX if self.temperature_unit == TEMP_CELSIUS else TEMP_MAX_F
+        if self.temperature_unit == UnitOfTemperature.CELSIUS:
+            return TEMP_MAX
+        return TEMP_MAX_F
 
     @property
     def target_temperature_step(self) -> float:
@@ -198,14 +197,14 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
         return TARGET_TEMPERATURE_STEP
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode | None:
         """Return the current HVAC mode for the device."""
         if not self.coordinator.device.power:
             return HVACMode.OFF
 
         return HVAC_MODES.get(self.coordinator.device.mode)
 
-    async def async_set_hvac_mode(self, hvac_mode) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode not in self.hvac_modes:
             raise ValueError(f"Invalid hvac_mode: {hvac_mode}")
@@ -246,7 +245,7 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
         self.async_write_ha_state()
 
     @property
-    def hvac_modes(self) -> list[str]:
+    def hvac_modes(self) -> list[HVACMode]:
         """Return the HVAC modes support by the device."""
         modes = [*HVAC_MODES_REVERSE]
         modes.append(HVACMode.OFF)
@@ -265,7 +264,7 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
             return PRESET_BOOST
         return PRESET_NONE
 
-    async def async_set_preset_mode(self, preset_mode):
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if preset_mode not in PRESET_MODES:
             raise ValueError(f"Invalid preset mode: {preset_mode}")
@@ -299,12 +298,12 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
         return PRESET_MODES
 
     @property
-    def fan_mode(self) -> str:
+    def fan_mode(self) -> str | None:
         """Return the current fan mode for the device."""
         speed = self.coordinator.device.fan_speed
         return FAN_MODES.get(speed)
 
-    async def async_set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         if fan_mode not in FAN_MODES_REVERSE:
             raise ValueError(f"Invalid fan mode: {fan_mode}")
@@ -332,7 +331,7 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
             return SWING_VERTICAL
         return SWING_OFF
 
-    async def async_set_swing_mode(self, swing_mode):
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
         if swing_mode not in SWING_MODES:
             raise ValueError(f"Invalid swing mode: {swing_mode}")

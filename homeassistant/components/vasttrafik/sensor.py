@@ -8,7 +8,7 @@ import vasttrafik
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_DELAY, CONF_NAME
+from homeassistant.const import CONF_DELAY, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -22,7 +22,6 @@ ATTR_ACCESSIBILITY = "accessibility"
 ATTR_DIRECTION = "direction"
 ATTR_LINE = "line"
 ATTR_TRACK = "track"
-ATTRIBUTION = "Data provided by Västtrafik"
 
 CONF_DEPARTURES = "departures"
 CONF_FROM = "from"
@@ -83,6 +82,8 @@ def setup_platform(
 class VasttrafikDepartureSensor(SensorEntity):
     """Implementation of a Vasttrafik Departure Sensor."""
 
+    _attr_attribution = "Data provided by Västtrafik"
+
     def __init__(self, planner, name, departure, heading, lines, delay):
         """Initialize the sensor."""
         self._planner = planner
@@ -125,7 +126,7 @@ class VasttrafikDepartureSensor(SensorEntity):
         return self._state
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def update(self) -> None:
         """Get the departure board."""
         try:
             self._departureboard = self._planner.departureboard(
@@ -139,7 +140,7 @@ class VasttrafikDepartureSensor(SensorEntity):
 
         if not self._departureboard:
             _LOGGER.debug(
-                "No departures from departure station %s " "to destination station %s",
+                "No departures from departure station %s to destination station %s",
                 self._departure["station_name"],
                 self._heading["station_name"] if self._heading else "ANY",
             )
@@ -158,7 +159,6 @@ class VasttrafikDepartureSensor(SensorEntity):
 
                     params = {
                         ATTR_ACCESSIBILITY: departure.get("accessibility"),
-                        ATTR_ATTRIBUTION: ATTRIBUTION,
                         ATTR_DIRECTION: departure.get("direction"),
                         ATTR_LINE: departure.get("sname"),
                         ATTR_TRACK: departure.get("track"),

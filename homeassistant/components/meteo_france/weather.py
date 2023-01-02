@@ -2,18 +2,26 @@
 import logging
 import time
 
+from meteofrance_api.model.forecast import Forecast
+
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_PRECIPITATION,
+    ATTR_FORECAST_NATIVE_TEMP,
+    ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_WIND_SPEED,
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MODE, TEMP_CELSIUS
+from homeassistant.const import (
+    CONF_MODE,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -50,7 +58,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Meteo-France weather platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR_FORECAST]
+    coordinator: DataUpdateCoordinator[Forecast] = hass.data[DOMAIN][entry.entry_id][
+        COORDINATOR_FORECAST
+    ]
 
     async_add_entities(
         [
@@ -68,10 +78,17 @@ async def async_setup_entry(
     )
 
 
-class MeteoFranceWeather(CoordinatorEntity, WeatherEntity):
+class MeteoFranceWeather(
+    CoordinatorEntity[DataUpdateCoordinator[Forecast]], WeatherEntity
+):
     """Representation of a weather condition."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, mode: str) -> None:
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
+    _attr_native_pressure_unit = UnitOfPressure.HPA
+    _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
+
+    def __init__(self, coordinator: DataUpdateCoordinator[Forecast], mode: str) -> None:
         """Initialise the platform with a data instance and station name."""
         super().__init__(coordinator)
         self._city_name = self.coordinator.data.position["name"]
@@ -91,6 +108,11 @@ class MeteoFranceWeather(CoordinatorEntity, WeatherEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
+        assert (
+            self.platform
+            and self.platform.config_entry
+            and self.platform.config_entry.unique_id
+        )
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, self.platform.config_entry.unique_id)},
@@ -107,17 +129,12 @@ class MeteoFranceWeather(CoordinatorEntity, WeatherEntity):
         )
 
     @property
-    def temperature(self):
+    def native_temperature(self):
         """Return the temperature."""
         return self.coordinator.data.current_forecast["T"]["value"]
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
-    def pressure(self):
+    def native_pressure(self):
         """Return the pressure."""
         return self.coordinator.data.current_forecast["sea_level"]
 
@@ -127,10 +144,9 @@ class MeteoFranceWeather(CoordinatorEntity, WeatherEntity):
         return self.coordinator.data.current_forecast["humidity"]
 
     @property
-    def wind_speed(self):
+    def native_wind_speed(self):
         """Return the wind speed."""
-        # convert from API m/s to km/h
-        return round(self.coordinator.data.current_forecast["wind"]["speed"] * 3.6)
+        return self.coordinator.data.current_forecast["wind"]["speed"]
 
     @property
     def wind_bearing(self):
@@ -158,9 +174,9 @@ class MeteoFranceWeather(CoordinatorEntity, WeatherEntity):
                         ATTR_FORECAST_CONDITION: format_condition(
                             forecast["weather"]["desc"]
                         ),
-                        ATTR_FORECAST_TEMP: forecast["T"]["value"],
-                        ATTR_FORECAST_PRECIPITATION: forecast["rain"].get("1h"),
-                        ATTR_FORECAST_WIND_SPEED: forecast["wind"]["speed"],
+                        ATTR_FORECAST_NATIVE_TEMP: forecast["T"]["value"],
+                        ATTR_FORECAST_NATIVE_PRECIPITATION: forecast["rain"].get("1h"),
+                        ATTR_FORECAST_NATIVE_WIND_SPEED: forecast["wind"]["speed"],
                         ATTR_FORECAST_WIND_BEARING: forecast["wind"]["direction"]
                         if forecast["wind"]["direction"] != -1
                         else None,
@@ -168,7 +184,7 @@ class MeteoFranceWeather(CoordinatorEntity, WeatherEntity):
                 )
         else:
             for forecast in self.coordinator.data.daily_forecast:
-                # stop when we don't have a weather condition (can happen around last days of forcast, max 14)
+                # stop when we don't have a weather condition (can happen around last days of forecast, max 14)
                 if not forecast.get("weather12H"):
                     break
                 forecast_data.append(
@@ -179,9 +195,11 @@ class MeteoFranceWeather(CoordinatorEntity, WeatherEntity):
                         ATTR_FORECAST_CONDITION: format_condition(
                             forecast["weather12H"]["desc"]
                         ),
-                        ATTR_FORECAST_TEMP: forecast["T"]["max"],
-                        ATTR_FORECAST_TEMP_LOW: forecast["T"]["min"],
-                        ATTR_FORECAST_PRECIPITATION: forecast["precipitation"]["24h"],
+                        ATTR_FORECAST_NATIVE_TEMP: forecast["T"]["max"],
+                        ATTR_FORECAST_NATIVE_TEMP_LOW: forecast["T"]["min"],
+                        ATTR_FORECAST_NATIVE_PRECIPITATION: forecast["precipitation"][
+                            "24h"
+                        ],
                     }
                 )
         return forecast_data

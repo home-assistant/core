@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "single_instance_allowed": "\u5df2\u7ecf\u914d\u7f6e\u8fc7\u4e86\uff0c\u4e14\u53ea\u80fd\u914d\u7f6e\u4e00\u6b21\u3002"
-        },
         "error": {
             "cannot_connect": "\u8fde\u63a5\u5931\u8d25",
             "invalid_host": "\u65e0\u6548\u7684\u4e3b\u673a\u5730\u5740\u6216 IP \u5730\u5740",

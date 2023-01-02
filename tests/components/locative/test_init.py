@@ -18,11 +18,10 @@ from homeassistant.setup import async_setup_component
 @pytest.fixture(autouse=True)
 def mock_dev_track(mock_device_tracker_conf):
     """Mock device tracker config loading."""
-    pass
 
 
 @pytest.fixture
-async def locative_client(loop, hass, hass_client):
+async def locative_client(event_loop, hass, hass_client):
     """Locative mock client."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
@@ -41,10 +40,10 @@ async def webhook_id(hass, locative_client):
     result = await hass.config_entries.flow.async_init(
         "locative", context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM, result
+    assert result["type"] == data_entry_flow.FlowResultType.FORM, result
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
 
     return result["result"].data["webhook_id"]

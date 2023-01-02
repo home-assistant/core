@@ -1,8 +1,7 @@
 """Support for Brunt Blind Engine covers."""
 from __future__ import annotations
 
-from collections.abc import MutableMapping
-from typing import Any
+from typing import Any, Optional
 
 from aiohttp.client_exceptions import ClientResponseError
 from brunt import BruntClientAsync, Thing
@@ -43,7 +42,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the brunt platform."""
     bapi: BruntClientAsync = hass.data[DOMAIN][entry.entry_id][DATA_BAPI]
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][DATA_COOR]
+    coordinator: DataUpdateCoordinator[dict[str | None, Thing]] = hass.data[DOMAIN][
+        entry.entry_id
+    ][DATA_COOR]
 
     async_add_entities(
         BruntDevice(coordinator, serial, thing, bapi, entry.entry_id)
@@ -51,7 +52,9 @@ async def async_setup_entry(
     )
 
 
-class BruntDevice(CoordinatorEntity, CoverEntity):
+class BruntDevice(
+    CoordinatorEntity[DataUpdateCoordinator[dict[Optional[str], Thing]]], CoverEntity
+):
     """
     Representation of a Brunt cover device.
 
@@ -66,8 +69,8 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
-        serial: str,
+        coordinator: DataUpdateCoordinator[dict[str | None, Thing]],
+        serial: str | None,
         thing: Thing,
         bapi: BruntClientAsync,
         entry_id: str,
@@ -85,7 +88,7 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
         self._attr_device_class = CoverDeviceClass.BLIND
         self._attr_attribution = ATTRIBUTION
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
+            identifiers={(DOMAIN, self._attr_unique_id)},  # type: ignore[arg-type]
             name=self._attr_name,
             via_device=(DOMAIN, self._entry_id),
             manufacturer="Brunt",
@@ -140,7 +143,7 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
         return self.move_state == 2
 
     @property
-    def extra_state_attributes(self) -> MutableMapping[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the detailed device state attributes."""
         return {
             ATTR_REQUEST_POSITION: self.request_cover_position,

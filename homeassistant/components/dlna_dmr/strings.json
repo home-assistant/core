@@ -44,7 +44,8 @@
         "data": {
           "listen_port": "Event listener port (random if not set)",
           "callback_url_override": "Event listener callback URL",
-          "poll_availability": "Poll for device availability"
+          "poll_availability": "Poll for device availability",
+          "browse_unfiltered": "Show incompatible media when browsing"
         }
       }
     },

@@ -2,6 +2,8 @@
 
 Used by UI to setup a wiffi integration.
 """
+from __future__ import annotations
+
 import errno
 
 import voluptuous as vol
@@ -21,7 +23,9 @@ class WiffiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OptionsFlowHandler:
         """Create Wiffi server setup option flow."""
         return OptionsFlowHandler(config_entry)
 
@@ -66,7 +70,7 @@ class WiffiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Wiffi server setup option flow."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 

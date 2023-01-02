@@ -2,7 +2,7 @@
     "config": {
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
-            "invalid_auth": "Aktiviere die Authentifizierung in den Einstellungen von m\u00fctesync > Authentifizierung",
+            "invalid_auth": "Aktiviere die Authentifizierung in den Einstellungen von m\u00fctesync \u2192 Authentifizierung",
             "unknown": "Unerwarteter Fehler"
         },
         "step": {

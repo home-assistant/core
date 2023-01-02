@@ -4,7 +4,6 @@
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "alternative_integration": "Seadet toetab paremini teine sidumine",
             "cannot_connect": "\u00dchendamine nurjus",
-            "could_not_connect": "DLNA seadmega \u00fchenduse loomine nurjus",
             "discovery_error": "Sobiva DLNA -seadme leidmine nurjus",
             "incomplete_config": "Seadetes puudub n\u00f5utav muutuja",
             "non_unique_id": "Leiti mitu sama unikaalse ID-ga seadet",
@@ -12,7 +11,6 @@
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
-            "could_not_connect": "DLNA seadmega \u00fchenduse loomine nurjus",
             "not_dmr": "Seade ei ole toetatud digitaalne meediumiedastusseade"
         },
         "flow_title": "{name}",
@@ -32,8 +30,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host",
-                    "url": "URL"
+                    "host": "Host"
                 },
                 "description": "Vali h\u00e4\u00e4lestatav seade v\u00f5i j\u00e4ta URL -i sisestamiseks t\u00fchjaks",
                 "title": "Avastatud DLNA DMR-seadmed"
@@ -47,6 +44,7 @@
         "step": {
             "init": {
                 "data": {
+                    "browse_unfiltered": "Kuva sirvimisel \u00fchildumatu meedia",
                     "callback_url_override": "S\u00fcndmuse kuulaja URL",
                     "listen_port": "S\u00fcndmuste kuulaja port (juhuslik kui pole m\u00e4\u00e4ratud)",
                     "poll_availability": "K\u00fcsitle seadme saadavuse kohta"

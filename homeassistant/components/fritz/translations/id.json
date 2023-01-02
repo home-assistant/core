@@ -10,7 +10,6 @@
             "already_configured": "Perangkat sudah dikonfigurasi",
             "already_in_progress": "Alur konfigurasi sedang berlangsung",
             "cannot_connect": "Gagal terhubung",
-            "connection_error": "Gagal terhubung",
             "invalid_auth": "Autentikasi tidak valid",
             "upnp_not_configured": "Pengaturan UPnP pada perangkat tidak ada."
         },
@@ -31,16 +30,6 @@
                 },
                 "description": "Perbarui kredensial FRITZ!Box Tools untuk: {host} . \n\nFRITZ!Box Tools tidak dapat masuk ke FRITZ!Box Anda.",
                 "title": "Memperbarui FRITZ!Box Tools - kredensial"
-            },
-            "start_config": {
-                "data": {
-                    "host": "Host",
-                    "password": "Kata Sandi",
-                    "port": "Port",
-                    "username": "Nama Pengguna"
-                },
-                "description": "Siapkan FRITZ!Box Tools untuk mengontrol FRITZ!Box Anda.\nDiperlukan minimal: nama pengguna dan kata sandi.",
-                "title": "Siapkan FRITZ!Box Tools - wajib"
             },
             "user": {
                 "data": {

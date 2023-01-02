@@ -1,82 +1,215 @@
 {
     "config": {
-        "abort": {
-            "cannot_connect": "\u9023\u7dda\u5931\u6557",
-            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
-            "single_instance_allowed": "\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3001\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
-        },
         "error": {
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
             "login_error": "\u767b\u5165\u932f\u8aa4\uff08{code}\uff09\uff1a{msg}"
         },
-        "flow_title": "Tuya \u8a2d\u5b9a",
         "step": {
-            "login": {
-                "data": {
-                    "access_id": "Access ID",
-                    "access_secret": "\u5b58\u53d6\u79c1\u9470",
-                    "country_code": "\u570b\u78bc",
-                    "endpoint": "\u53ef\u7528\u5340\u57df",
-                    "password": "\u5bc6\u78bc",
-                    "tuya_app_type": "\u624b\u6a5f App",
-                    "username": "\u5e33\u865f"
-                },
-                "description": "\u8f38\u5165 Tuya \u6191\u8b49",
-                "title": "Tuya"
-            },
             "user": {
                 "data": {
                     "access_id": "Tuya IoT Access ID",
                     "access_secret": "Tuya IoT \u5b58\u53d6\u79c1\u9470",
                     "country_code": "\u570b\u5bb6",
                     "password": "\u5bc6\u78bc",
-                    "platform": "\u5e33\u6236\u8a3b\u518a\u6240\u5728\u4f4d\u7f6e",
-                    "region": "\u5340\u57df",
-                    "tuya_project_type": "Tuya \u96f2\u5c08\u6848\u985e\u5225",
                     "username": "\u5e33\u865f"
                 },
-                "description": "\u8f38\u5165 Tuya \u6191\u8b49",
-                "title": "Tuya \u6574\u5408"
+                "description": "\u8f38\u5165 Tuya \u6191\u8b49"
             }
         }
     },
-    "options": {
-        "abort": {
-            "cannot_connect": "\u9023\u7dda\u5931\u6557"
-        },
-        "error": {
-            "dev_multi_type": "\u591a\u91cd\u9078\u64c7\u8a2d\u88dd\u7f6e\u4ee5\u8a2d\u5b9a\u4f7f\u7528\u76f8\u540c\u985e\u5225",
-            "dev_not_config": "\u88dd\u7f6e\u985e\u5225\u7121\u6cd5\u8a2d\u5b9a",
-            "dev_not_found": "\u627e\u4e0d\u5230\u88dd\u7f6e"
-        },
-        "step": {
-            "device": {
-                "data": {
-                    "brightness_range_mode": "\u88dd\u7f6e\u6240\u4f7f\u7528\u4e4b\u4eae\u5ea6\u7bc4\u570d",
-                    "curr_temp_divider": "\u76ee\u524d\u8272\u6eab\u503c\u5206\u914d\u5668\uff080 = \u4f7f\u7528\u9810\u8a2d\uff09",
-                    "max_kelvin": "Kelvin \u652f\u63f4\u6700\u9ad8\u8272\u6eab",
-                    "max_temp": "\u6700\u9ad8\u76ee\u6a19\u8272\u6eab\uff08\u4f7f\u7528\u6700\u4f4e\u8207\u6700\u9ad8 = 0 \u4f7f\u7528\u9810\u8a2d\uff09",
-                    "min_kelvin": "Kelvin \u652f\u63f4\u6700\u4f4e\u8272\u6eab",
-                    "min_temp": "\u6700\u4f4e\u76ee\u6a19\u8272\u6eab\uff08\u4f7f\u7528\u6700\u4f4e\u8207\u6700\u9ad8 = 0 \u4f7f\u7528\u9810\u8a2d\uff09",
-                    "set_temp_divided": "\u4f7f\u7528\u5206\u9694\u865f\u6eab\u5ea6\u503c\u4ee5\u57f7\u884c\u8a2d\u5b9a\u6eab\u5ea6\u6307\u4ee4",
-                    "support_color": "\u5f37\u5236\u8272\u6eab\u652f\u63f4",
-                    "temp_divider": "\u8272\u6eab\u503c\u5206\u914d\u5668\uff080 = \u4f7f\u7528\u9810\u8a2d\uff09",
-                    "temp_step_override": "\u76ee\u6a19\u6eab\u5ea6\u8a2d\u5b9a",
-                    "tuya_max_coltemp": "\u88dd\u7f6e\u56de\u5831\u6700\u9ad8\u8272\u6eab",
-                    "unit_of_measurement": "\u88dd\u7f6e\u6240\u4f7f\u7528\u4e4b\u6eab\u5ea6\u55ae\u4f4d"
-                },
-                "description": "\u8a2d\u5b9a\u9078\u9805\u4ee5\u8abf\u6574 {device_type} \u88dd\u7f6e `{device_name}` \u986f\u793a\u8cc7\u8a0a",
-                "title": "\u8a2d\u5b9a Tuya \u88dd\u7f6e"
+    "entity": {
+        "select": {
+            "basic_anti_flicker": {
+                "state": {
+                    "0": "\u5df2\u95dc\u9589",
+                    "1": "50 Hz",
+                    "2": "60 Hz"
+                }
             },
-            "init": {
-                "data": {
-                    "discovery_interval": "\u641c\u7d22\u88dd\u7f6e\u66f4\u65b0\u79d2\u9593\u8ddd",
-                    "list_devices": "\u9078\u64c7\u6240\u8981\u8a2d\u5b9a\u7684\u88dd\u7f6e\u3001\u6216\u4fdd\u6301\u7a7a\u767d\u4ee5\u5132\u5b58\u8a2d\u5b9a",
-                    "query_device": "\u9078\u64c7\u88dd\u7f6e\u5c07\u4f7f\u7528\u67e5\u8a62\u65b9\u5f0f\u4ee5\u7372\u5f97\u66f4\u5feb\u7684\u72c0\u614b\u66f4\u65b0",
-                    "query_interval": "\u67e5\u8a62\u88dd\u7f6e\u66f4\u65b0\u79d2\u9593\u8ddd"
-                },
-                "description": "\u66f4\u65b0\u9593\u8ddd\u4e0d\u8981\u8a2d\u5b9a\u7684\u904e\u4f4e\u3001\u53ef\u80fd\u6703\u5c0e\u81f4\u65bc\u65e5\u8a8c\u4e2d\u7522\u751f\u932f\u8aa4\u8a0a\u606f",
-                "title": "\u8a2d\u5b9a Tuya \u9078\u9805"
+            "basic_nightvision": {
+                "state": {
+                    "0": "\u81ea\u52d5",
+                    "1": "\u95dc\u9589",
+                    "2": "\u958b\u555f"
+                }
+            },
+            "countdown": {
+                "state": {
+                    "1h": "1 \u5c0f\u6642",
+                    "2h": "2 \u5c0f\u6642",
+                    "3h": "3 \u5c0f\u6642",
+                    "4h": "4 \u5c0f\u6642",
+                    "5h": "5 \u5c0f\u6642",
+                    "6h": "6 \u5c0f\u6642",
+                    "cancel": "\u53d6\u6d88"
+                }
+            },
+            "curtain_mode": {
+                "state": {
+                    "morning": "\u65e9\u6668",
+                    "night": "\u591c\u9593"
+                }
+            },
+            "curtain_motor_mode": {
+                "state": {
+                    "back": "\u5f8c\u9000",
+                    "forward": "\u524d\u9032"
+                }
+            },
+            "decibel_sensitivity": {
+                "state": {
+                    "0": "\u4f4e\u654f\u611f\u5ea6",
+                    "1": "\u9ad8\u654f\u611f\u5ea6"
+                }
+            },
+            "fan_angle": {
+                "state": {
+                    "30": "30\u00b0",
+                    "60": "60\u00b0",
+                    "90": "90\u00b0"
+                }
+            },
+            "fingerbot_mode": {
+                "state": {
+                    "click": "\u63a8",
+                    "switch": "\u958b\u95dc"
+                }
+            },
+            "humidifier_level": {
+                "state": {
+                    "level_1": "\u7b49\u7d1a 1",
+                    "level_10": "\u7b49\u7d1a 10",
+                    "level_2": "\u7b49\u7d1a 2",
+                    "level_3": "\u7b49\u7d1a 3",
+                    "level_4": "\u7b49\u7d1a 4",
+                    "level_5": "\u7b49\u7d1a 5",
+                    "level_6": "\u7b49\u7d1a 6",
+                    "level_7": "\u7b49\u7d1a 7",
+                    "level_8": "\u7b49\u7d1a 8",
+                    "level_9": "\u7b49\u7d1a 9"
+                }
+            },
+            "humidifier_moodlighting": {
+                "state": {
+                    "1": "\u5fc3\u60c5\u60c5\u5883 1",
+                    "2": "\u5fc3\u60c5\u60c5\u5883 2",
+                    "3": "\u5fc3\u60c5\u60c5\u5883 3",
+                    "4": "\u5fc3\u60c5\u60c5\u5883 4",
+                    "5": "\u5fc3\u60c5\u60c5\u5883 5"
+                }
+            },
+            "humidifier_spray_mode": {
+                "state": {
+                    "auto": "\u81ea\u52d5",
+                    "health": "\u5065\u5eb7\u6a21\u5f0f",
+                    "humidity": "\u6fd5\u5ea6",
+                    "sleep": "\u7761\u7720\u6a21\u5f0f",
+                    "work": "\u5de5\u4f5c\u6a21\u5f0f"
+                }
+            },
+            "ipc_work_mode": {
+                "state": {
+                    "0": "\u4f4e\u529f\u8017\u6a21\u5f0f",
+                    "1": "\u6301\u7e8c\u5de5\u4f5c\u6a21\u5f0f"
+                }
+            },
+            "led_type": {
+                "state": {
+                    "halogen": "\u9e75\u7d20\u71c8",
+                    "incandescent": "\u767d\u71be\u71c8",
+                    "led": "LED"
+                }
+            },
+            "light_mode": {
+                "state": {
+                    "none": "\u95dc\u9589",
+                    "pos": "\u6307\u793a\u958b\u95dc\u4f4d\u7f6e",
+                    "relay": "\u6307\u793a\u958b\u95dc\u958b\u555f/\u95dc\u9589\u72c0\u614b"
+                }
+            },
+            "motion_sensitivity": {
+                "state": {
+                    "0": "\u4f4e\u654f\u611f\u5ea6",
+                    "1": "\u4e2d\u654f\u611f\u5ea6",
+                    "2": "\u9ad8\u654f\u611f\u5ea6"
+                }
+            },
+            "record_mode": {
+                "state": {
+                    "1": "\u50c5\u8a18\u9304\u4e8b\u4ef6",
+                    "2": "\u6301\u7e8c\u7d00\u9304"
+                }
+            },
+            "relay_status": {
+                "state": {
+                    "last": "\u8a18\u4f4f\u6700\u5f8c\u72c0\u614b",
+                    "memory": "\u8a18\u4f4f\u6700\u5f8c\u72c0\u614b",
+                    "off": "\u95dc\u9589",
+                    "on": "\u958b\u555f",
+                    "power_off": "\u95dc\u9589",
+                    "power_on": "\u958b\u555f"
+                }
+            },
+            "vacuum_cistern": {
+                "state": {
+                    "closed": "\u95dc\u9589",
+                    "high": "\u9ad8",
+                    "low": "\u4f4e",
+                    "middle": "\u4e2d"
+                }
+            },
+            "vacuum_collection": {
+                "state": {
+                    "large": "\u5927",
+                    "middle": "\u4e2d",
+                    "small": "\u5c0f"
+                }
+            },
+            "vacuum_mode": {
+                "state": {
+                    "bow": "\u5f27\u578b",
+                    "chargego": "\u8fd4\u56de\u5145\u96fb",
+                    "left_bow": "\u5de6\u5f27\u5f62",
+                    "left_spiral": "\u5de6\u87ba\u65cb",
+                    "mop": "\u62d6\u5730",
+                    "part": "\u5c40\u90e8",
+                    "partial_bow": "\u5c40\u90e8\u5f27\u5f62",
+                    "pick_zone": "\u9078\u64c7\u5340\u57df",
+                    "point": "\u5b9a\u9ede",
+                    "pose": "\u8def\u5f91",
+                    "random": "\u96a8\u6a5f",
+                    "right_bow": "\u53f3\u5f27\u5f62",
+                    "right_spiral": "\u53f3\u87ba\u65cb",
+                    "single": "\u55ae\u6b21",
+                    "smart": "\u667a\u80fd",
+                    "spiral": "\u87ba\u65cb",
+                    "standby": "\u5f85\u6a5f\u4e2d",
+                    "wall_follow": "\u8ddf\u96a8\u7246\u9762",
+                    "zone": "\u5340\u57df"
+                }
+            }
+        },
+        "sensor": {
+            "air_quality": {
+                "state": {
+                    "good": "\u826f\u597d",
+                    "great": "\u6975\u4f73",
+                    "mild": "\u8f15\u5fae",
+                    "severe": "\u56b4\u91cd"
+                }
+            },
+            "status": {
+                "state": {
+                    "boiling_temp": "\u6cb8\u9a30\u6eab\u5ea6",
+                    "cooling": "\u51b7\u6c23",
+                    "heating": "\u6696\u6c23",
+                    "heating_temp": "\u52a0\u71b1\u6eab\u5ea6",
+                    "reserve_1": "\u9810\u7559 1",
+                    "reserve_2": "\u9810\u7559 2",
+                    "reserve_3": "\u9810\u7559 3",
+                    "standby": "\u5f85\u547d",
+                    "warm": "\u4fdd\u6eab"
+                }
             }
         }
     }

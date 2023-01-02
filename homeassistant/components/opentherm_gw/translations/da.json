@@ -10,8 +10,7 @@
                     "device": "Sti eller webadresse",
                     "id": "Id",
                     "name": "Navn"
-                },
-                "title": "OpenTherm Gateway"
+                }
             }
         }
     },
@@ -20,8 +19,7 @@
             "init": {
                 "data": {
                     "floor_temperature": "Gulvtemperatur"
-                },
-                "description": "Indstillinger for OpenTherm Gateway"
+                }
             }
         }
     }

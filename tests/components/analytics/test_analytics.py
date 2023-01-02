@@ -10,11 +10,9 @@ from homeassistant.components.analytics.const import (
     ANALYTICS_ENDPOINT_URL_DEV,
     ATTR_BASE,
     ATTR_DIAGNOSTICS,
-    ATTR_PREFERENCES,
     ATTR_STATISTICS,
     ATTR_USAGE,
 )
-from homeassistant.components.api import ATTR_UUID
 from homeassistant.const import ATTR_DOMAIN
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.setup import async_setup_component
@@ -58,7 +56,7 @@ async def test_load_with_supervisor_diagnostics(hass):
 async def test_load_with_supervisor_without_diagnostics(hass):
     """Test loading with a supervisor that has not diagnostics enabled."""
     analytics = Analytics(hass)
-    analytics._data[ATTR_PREFERENCES][ATTR_DIAGNOSTICS] = True
+    analytics._data.preferences[ATTR_DIAGNOSTICS] = True
 
     assert analytics.preferences[ATTR_DIAGNOSTICS]
 
@@ -269,8 +267,8 @@ async def test_send_statistics_one_integration_fails(hass, caplog, aioclient_moc
     hass.config.components = ["default_config"]
 
     with patch(
-        "homeassistant.components.analytics.analytics.async_get_integration",
-        side_effect=IntegrationNotFound("any"),
+        "homeassistant.components.analytics.analytics.async_get_integrations",
+        return_value={"any": IntegrationNotFound("any")},
     ), patch("homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
         await analytics.send_analytics()
 
@@ -291,8 +289,8 @@ async def test_send_statistics_async_get_integration_unknown_exception(
     hass.config.components = ["default_config"]
 
     with pytest.raises(ValueError), patch(
-        "homeassistant.components.analytics.analytics.async_get_integration",
-        side_effect=ValueError,
+        "homeassistant.components.analytics.analytics.async_get_integrations",
+        return_value={"any": ValueError()},
     ), patch("homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
         await analytics.send_analytics()
 
@@ -349,7 +347,7 @@ async def test_reusing_uuid(hass, aioclient_mock):
     """Test reusing the stored UUID."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
-    analytics._data[ATTR_UUID] = "NOT_MOCK_UUID"
+    analytics._data.uuid = "NOT_MOCK_UUID"
 
     await analytics.save_preferences({ATTR_BASE: True})
 
@@ -451,7 +449,7 @@ async def test_send_with_no_energy(hass, aioclient_mock):
     assert "energy" not in postdata
 
 
-async def test_send_with_no_energy_config(hass, aioclient_mock, recorder_mock):
+async def test_send_with_no_energy_config(recorder_mock, hass, aioclient_mock):
     """Test send base preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
@@ -473,7 +471,7 @@ async def test_send_with_no_energy_config(hass, aioclient_mock, recorder_mock):
     assert not postdata["energy"]["configured"]
 
 
-async def test_send_with_energy_config(hass, aioclient_mock, recorder_mock):
+async def test_send_with_energy_config(recorder_mock, hass, aioclient_mock):
     """Test send base preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)

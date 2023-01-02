@@ -1,0 +1,31 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP \uc8fc\uc18c"
+                },
+                "title": "\uae30\uae30\uc5d0 \uc5f0\uacb0\ud558\uae30"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "source_1": "\uc18c\uc2a4 \uc774\ub984 #1",
+                    "source_2": "\uc18c\uc2a4 \uc774\ub984 #2",
+                    "source_3": "\uc18c\uc2a4 \uc774\ub984 #3",
+                    "source_4": "\uc18c\uc2a4 \uc774\ub984 #4",
+                    "source_5": "\uc18c\uc2a4 \uc774\ub984 #5",
+                    "source_6": "\uc18c\uc2a4 \uc774\ub984 #6"
+                },
+                "title": "\uc785\ub825 \uc18c\uc2a4 \uad6c\uc131\ud558\uae30"
+            }
+        }
+    }
+}

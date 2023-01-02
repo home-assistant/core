@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
+            "reauth_successful": "Herauthenticatie geslaagd",
             "unsupported_firmware": "Het apparaat gebruikt een niet-ondersteunde firmwareversie."
         },
         "error": {
@@ -15,6 +16,12 @@
                 "description": "Wilt u het {model} bij {host} opzetten?\n\nApparaten, die op batterijen werken en met een wachtwoord zijn beveiligd, moeten worden gewekt voordat u verder kunt gaan met het instellen.\nApparaten, op batterijen die niet beveiligd zijn met een wachtwoord worden toegevoegd wanneer het apparaat wakker wordt. U kunt het apparaat nu handmatig wakker maken met een knop op het apparaat of wachten op de volgende gegevensupdate van het apparaat."
             },
             "credentials": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                }
+            },
+            "reauth_confirm": {
                 "data": {
                     "password": "Wachtwoord",
                     "username": "Gebruikersnaam"
@@ -48,6 +55,19 @@
             "single_long": "{subtype} een keer geklikt en daarna lang geklikt",
             "single_push": "{subtype} een druk",
             "triple": "{subtype} driemaal geklikt"
+        }
+    },
+    "options": {
+        "abort": {
+            "ble_unsupported": "Bluetooth ondersteuning vereist firmwareversie {ble_min_version} of later."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "ble_scanner_mode": "Bluetooth scannermodus"
+                },
+                "description": "Het scannen van Bluetooth kan actief of passief worden ingesteld. In de actieve modus zal Shelly de gegevens opvragen van apparaten van dichtbij. In de passieve modus zal Shelly ongevraagd gegevens van apparaten dichtbij opvragen."
+            }
         }
     }
 }

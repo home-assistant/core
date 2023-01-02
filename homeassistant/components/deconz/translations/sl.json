@@ -4,7 +4,6 @@
             "already_configured": "Most je \u017ee nastavljen",
             "already_in_progress": "Konfiguracijski tok za most je \u017ee v teku.",
             "no_bridges": "Ni odkritih mostov deCONZ",
-            "not_deconz_bridge": "Ni deCONZ most",
             "updated_instance": "Posodobljen deCONZ z novim naslovom gostitelja"
         },
         "error": {

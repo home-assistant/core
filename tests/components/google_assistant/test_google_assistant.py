@@ -10,16 +10,16 @@ import pytest
 from homeassistant import const, core, setup
 from homeassistant.components import (
     alarm_control_panel,
+    climate,
     cover,
     fan,
     google_assistant as ga,
+    humidifier,
     light,
     lock,
     media_player,
     switch,
 )
-from homeassistant.components.climate import const as climate
-from homeassistant.components.humidifier import const as humidifier
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
@@ -42,8 +42,9 @@ def auth_header(hass_access_token):
 
 
 @pytest.fixture
-def assistant_client(loop, hass, hass_client_no_auth):
+def assistant_client(event_loop, hass, hass_client_no_auth):
     """Create web client for the Google Assistant API."""
+    loop = event_loop
     loop.run_until_complete(
         setup.async_setup_component(
             hass,
@@ -66,8 +67,10 @@ def assistant_client(loop, hass, hass_client_no_auth):
 
 
 @pytest.fixture
-def hass_fixture(loop, hass):
+def hass_fixture(event_loop, hass):
     """Set up a Home Assistant instance for these tests."""
+    loop = event_loop
+
     # We need to do this to get access to homeassistant/turn_(on,off)
     loop.run_until_complete(setup.async_setup_component(hass, core.DOMAIN, {}))
 
@@ -149,18 +152,11 @@ async def test_sync_request(hass_fixture, assistant_client, auth_header):
     entity_entry3 = entity_registry.async_get_or_create(
         "switch",
         "test",
-        "switch_system_id",
-        suggested_object_id="system_switch",
-        entity_category=EntityCategory.SYSTEM,
-    )
-    entity_entry4 = entity_registry.async_get_or_create(
-        "switch",
-        "test",
         "switch_hidden_integration_id",
         suggested_object_id="hidden_integration_switch",
         hidden_by=er.RegistryEntryHider.INTEGRATION,
     )
-    entity_entry5 = entity_registry.async_get_or_create(
+    entity_entry4 = entity_registry.async_get_or_create(
         "switch",
         "test",
         "switch_hidden_user_id",
@@ -173,7 +169,6 @@ async def test_sync_request(hass_fixture, assistant_client, auth_header):
     hass_fixture.states.async_set(entity_entry2.entity_id, "something_else")
     hass_fixture.states.async_set(entity_entry3.entity_id, "blah")
     hass_fixture.states.async_set(entity_entry4.entity_id, "foo")
-    hass_fixture.states.async_set(entity_entry5.entity_id, "bar")
 
     reqid = "5711642932632160983"
     data = {"requestId": reqid, "inputs": [{"intent": "action.devices.SYNC"}]}
@@ -233,7 +228,7 @@ async def test_query_request(hass_fixture, assistant_client, auth_header):
     assert len(devices) == 4
     assert devices["light.bed_light"]["on"] is False
     assert devices["light.ceiling_lights"]["on"] is True
-    assert devices["light.ceiling_lights"]["brightness"] == 70
+    assert devices["light.ceiling_lights"]["brightness"] == 71
     assert devices["light.ceiling_lights"]["color"]["temperatureK"] == 2631
     assert devices["light.kitchen_lights"]["color"]["spectrumHsv"] == {
         "hue": 345,

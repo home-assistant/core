@@ -18,10 +18,6 @@
             "user": {
                 "data": {
                     "api_key": "API Anahtar\u0131",
-                    "base_path": "API yolu",
-                    "host": "Ana Bilgisayar",
-                    "port": "Port",
-                    "ssl": "SSL sertifikas\u0131 kullan\u0131r",
                     "url": "URL",
                     "verify_ssl": "SSL sertifikas\u0131n\u0131 do\u011frulay\u0131n"
                 }

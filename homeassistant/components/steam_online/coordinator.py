@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Union
 
 import steam
 from steam.api import _interface_method as INTMethod
@@ -15,7 +16,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import CONF_ACCOUNTS, DOMAIN, LOGGER
 
 
-class SteamDataUpdateCoordinator(DataUpdateCoordinator):
+class SteamDataUpdateCoordinator(
+    DataUpdateCoordinator[dict[str, dict[str, Union[str, int]]]]
+):
     """Data update coordinator for the Steam integration."""
 
     config_entry: ConfigEntry
@@ -56,7 +59,7 @@ class SteamDataUpdateCoordinator(DataUpdateCoordinator):
         }
         for k in players:
             data = self.player_interface.GetSteamLevel(steamid=players[k]["steamid"])
-            players[k]["level"] = data["response"]["player_level"]
+            players[k]["level"] = data["response"].get("player_level")
         return players
 
     async def _async_update_data(self) -> dict[str, dict[str, str | int]]:

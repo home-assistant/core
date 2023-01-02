@@ -1,12 +1,15 @@
 """Config Flow to configure UniFi Protect Integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
 from aiohttp import CookieJar
-from pyunifiprotect import NotAuthorized, NvrError, ProtectApiClient
-from pyunifiprotect.data.nvr import NVR
+from pyunifiprotect import ProtectApiClient
+from pyunifiprotect.data import NVR
+from pyunifiprotect.exceptions import ClientError, NotAuthorized
+from unifi_discovery import async_console_is_alive
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -21,25 +24,37 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.aiohttp_client import (
+    async_create_clientsession,
+    async_get_clientsession,
+)
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.loader import async_get_integration
 from homeassistant.util.network import is_ip_address
 
 from .const import (
     CONF_ALL_UPDATES,
+    CONF_ALLOW_EA,
     CONF_DISABLE_RTSP,
+    CONF_MAX_MEDIA,
     CONF_OVERRIDE_CHOST,
+    DEFAULT_MAX_MEDIA,
     DEFAULT_PORT,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     MIN_REQUIRED_PROTECT_V,
     OUTDATED_LOG_MESSAGE,
 )
+from .data import async_last_update_was_successful
 from .discovery import async_start_discovery
 from .utils import _async_resolve, _async_short_mac, _async_unifi_mac_from_hass
 
 _LOGGER = logging.getLogger(__name__)
+
+ENTRY_FAILURE_STATES = (
+    config_entries.ConfigEntryState.SETUP_ERROR,
+    config_entries.ConfigEntryState.SETUP_RETRY,
+)
 
 
 async def async_local_user_documentation_url(hass: HomeAssistant) -> str:
@@ -51,6 +66,25 @@ async def async_local_user_documentation_url(hass: HomeAssistant) -> str:
 def _host_is_direct_connect(host: str) -> bool:
     """Check if a host is a unifi direct connect domain."""
     return host.endswith(".ui.direct")
+
+
+async def _async_console_is_offline(
+    hass: HomeAssistant,
+    entry: config_entries.ConfigEntry,
+) -> bool:
+    """Check if a console is offline.
+
+    We define offline by the config entry
+    is in a failure/retry state or the updates
+    are failing and the console is unreachable
+    since protect may be updating.
+    """
+    return bool(
+        entry.state in ENTRY_FAILURE_STATES
+        or not async_last_update_was_successful(hass, entry)
+    ) and not await async_console_is_alive(
+        async_get_clientsession(hass, verify_ssl=False), entry.data[CONF_HOST]
+    )
 
 
 class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -110,6 +144,7 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     not entry_has_direct_connect
                     and is_ip_address(entry_host)
                     and entry_host != source_ip
+                    and await _async_console_is_offline(self.hass, entry)
                 ):
                     new_host = source_ip
                 if new_host:
@@ -143,7 +178,7 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_VERIFY_SSL] = False
                 nvr_data, errors = await self._async_get_nvr_data(user_input)
             if nvr_data and not errors:
-                return self._async_create_entry(nvr_data.name, user_input)
+                return self._async_create_entry(nvr_data.display_name, user_input)
 
         placeholders = {
             "name": discovery_info["hostname"]
@@ -189,6 +224,8 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_DISABLE_RTSP: False,
                 CONF_ALL_UPDATES: False,
                 CONF_OVERRIDE_CHOST: False,
+                CONF_MAX_MEDIA: DEFAULT_MAX_MEDIA,
+                CONF_ALLOW_EA: False,
             },
         )
 
@@ -220,7 +257,7 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except NotAuthorized as ex:
             _LOGGER.debug(ex)
             errors[CONF_PASSWORD] = "invalid_auth"
-        except NvrError as ex:
+        except ClientError as ex:
             _LOGGER.debug(ex)
             errors["base"] = "cannot_connect"
         else:
@@ -234,7 +271,7 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return nvr_data, errors
 
-    async def async_step_reauth(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
 
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
@@ -289,7 +326,7 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(nvr_data.mac)
                 self._abort_if_unique_id_configured()
 
-                return self._async_create_entry(nvr_data.name, user_input)
+                return self._async_create_entry(nvr_data.display_name, user_input)
 
         user_input = user_input or {}
         return self.async_show_form(
@@ -350,6 +387,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         default=self.config_entry.options.get(
                             CONF_OVERRIDE_CHOST, False
                         ),
+                    ): bool,
+                    vol.Optional(
+                        CONF_MAX_MEDIA,
+                        default=self.config_entry.options.get(
+                            CONF_MAX_MEDIA, DEFAULT_MAX_MEDIA
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=100, max=10000)),
+                    vol.Optional(
+                        CONF_ALLOW_EA,
+                        default=self.config_entry.options.get(CONF_ALLOW_EA, False),
                     ): bool,
                 }
             ),

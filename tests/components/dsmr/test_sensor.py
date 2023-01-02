@@ -13,6 +13,7 @@ from unittest.mock import DEFAULT, MagicMock
 
 from homeassistant import config_entries
 from homeassistant.components.sensor import (
+    ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
@@ -22,8 +23,10 @@ from homeassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     ENERGY_KILO_WATT_HOUR,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     VOLUME_CUBIC_METERS,
+    UnitOfPower,
 )
 from homeassistant.helpers import entity_registry as er
 
@@ -55,13 +58,13 @@ async def test_default_setup(hass, dsmr_connection_fixture):
 
     telegram = {
         CURRENT_ELECTRICITY_USAGE: CosemObject(
-            [{"value": Decimal("0.0"), "unit": ENERGY_KILO_WATT_HOUR}]
+            [{"value": Decimal("0.0"), "unit": UnitOfPower.WATT}]
         ),
         ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0001", "unit": ""}]),
         GAS_METER_READING: MBusObject(
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
-                {"value": Decimal(745.695), "unit": "m3"},
+                {"value": Decimal(745.695), "unit": VOLUME_CUBIC_METERS},
             ]
         ),
     }
@@ -77,19 +80,19 @@ async def test_default_setup(hass, dsmr_connection_fixture):
 
     registry = er.async_get(hass)
 
-    entry = registry.async_get("sensor.power_consumption")
+    entry = registry.async_get("sensor.electricity_meter_power_consumption")
     assert entry
-    assert entry.unique_id == "1234_Power_Consumption"
+    assert entry.unique_id == "1234_current_electricity_usage"
 
-    entry = registry.async_get("sensor.gas_consumption")
+    entry = registry.async_get("sensor.gas_meter_gas_consumption")
     assert entry
-    assert entry.unique_id == "5678_Gas_Consumption"
+    assert entry.unique_id == "5678_gas_meter_reading"
 
     telegram_callback = connection_factory.call_args_list[0][0][2]
 
-    # make sure entities have been created and return 'unknown' state
-    power_consumption = hass.states.get("sensor.power_consumption")
-    assert power_consumption.state == STATE_UNKNOWN
+    # make sure entities have been created and return 'unavailable' state
+    power_consumption = hass.states.get("sensor.electricity_meter_power_consumption")
+    assert power_consumption.state == STATE_UNAVAILABLE
     assert (
         power_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
     )
@@ -107,22 +110,21 @@ async def test_default_setup(hass, dsmr_connection_fixture):
     await asyncio.sleep(0)
 
     # ensure entities have new state value after incoming telegram
-    power_consumption = hass.states.get("sensor.power_consumption")
+    power_consumption = hass.states.get("sensor.electricity_meter_power_consumption")
     assert power_consumption.state == "0.0"
-    assert (
-        power_consumption.attributes.get("unit_of_measurement") == ENERGY_KILO_WATT_HOUR
-    )
+    assert power_consumption.attributes.get("unit_of_measurement") == UnitOfPower.WATT
 
     # tariff should be translated in human readable and have no unit
-    power_tariff = hass.states.get("sensor.power_tariff")
-    assert power_tariff.state == "low"
-    assert power_tariff.attributes.get(ATTR_DEVICE_CLASS) is None
-    assert power_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
-    assert power_tariff.attributes.get(ATTR_STATE_CLASS) is None
-    assert power_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
+    active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
+    assert active_tariff.state == "low"
+    assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
+    assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
+    assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
+    assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
+    assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
 
     # check if gas consumption is parsed correctly
-    gas_consumption = hass.states.get("sensor.gas_consumption")
+    gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
     assert gas_consumption.state == "745.695"
     assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
     assert (
@@ -155,11 +157,11 @@ async def test_setup_only_energy(hass, dsmr_connection_fixture):
 
     registry = er.async_get(hass)
 
-    entry = registry.async_get("sensor.power_consumption")
+    entry = registry.async_get("sensor.electricity_meter_power_consumption")
     assert entry
-    assert entry.unique_id == "1234_Power_Consumption"
+    assert entry.unique_id == "1234_current_electricity_usage"
 
-    entry = registry.async_get("sensor.gas_consumption")
+    entry = registry.async_get("sensor.gas_meter_gas_consumption")
     assert not entry
 
 
@@ -213,15 +215,16 @@ async def test_v4_meter(hass, dsmr_connection_fixture):
     await asyncio.sleep(0)
 
     # tariff should be translated in human readable and have no unit
-    power_tariff = hass.states.get("sensor.power_tariff")
-    assert power_tariff.state == "low"
-    assert power_tariff.attributes.get(ATTR_DEVICE_CLASS) is None
-    assert power_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
-    assert power_tariff.attributes.get(ATTR_STATE_CLASS) is None
-    assert power_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
+    active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
+    assert active_tariff.state == "low"
+    assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
+    assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
+    assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
+    assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
+    assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
 
     # check if gas consumption is parsed correctly
-    gas_consumption = hass.states.get("sensor.gas_consumption")
+    gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
     assert gas_consumption.state == "745.695"
     assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
     assert gas_consumption.attributes.get("unit_of_measurement") == VOLUME_CUBIC_METERS
@@ -284,15 +287,16 @@ async def test_v5_meter(hass, dsmr_connection_fixture):
     await asyncio.sleep(0)
 
     # tariff should be translated in human readable and have no unit
-    power_tariff = hass.states.get("sensor.power_tariff")
-    assert power_tariff.state == "low"
-    assert power_tariff.attributes.get(ATTR_DEVICE_CLASS) is None
-    assert power_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
-    assert power_tariff.attributes.get(ATTR_STATE_CLASS) is None
-    assert power_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
+    active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
+    assert active_tariff.state == "low"
+    assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
+    assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
+    assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
+    assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
+    assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
 
     # check if gas consumption is parsed correctly
-    gas_consumption = hass.states.get("sensor.gas_consumption")
+    gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
     assert gas_consumption.state == "745.695"
     assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
     assert (
@@ -359,24 +363,24 @@ async def test_luxembourg_meter(hass, dsmr_connection_fixture):
     # after receiving telegram entities need to have the chance to update
     await asyncio.sleep(0)
 
-    power_tariff = hass.states.get("sensor.energy_consumption_total")
-    assert power_tariff.state == "123.456"
-    assert power_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
-    assert power_tariff.attributes.get(ATTR_ICON) is None
+    active_tariff = hass.states.get("sensor.electricity_meter_energy_consumption_total")
+    assert active_tariff.state == "123.456"
+    assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
+    assert active_tariff.attributes.get(ATTR_ICON) is None
     assert (
-        power_tariff.attributes.get(ATTR_STATE_CLASS)
+        active_tariff.attributes.get(ATTR_STATE_CLASS)
         == SensorStateClass.TOTAL_INCREASING
     )
     assert (
-        power_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+        active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
     )
 
-    power_tariff = hass.states.get("sensor.energy_production_total")
-    assert power_tariff.state == "654.321"
-    assert power_tariff.attributes.get("unit_of_measurement") == ENERGY_KILO_WATT_HOUR
+    active_tariff = hass.states.get("sensor.electricity_meter_energy_production_total")
+    assert active_tariff.state == "654.321"
+    assert active_tariff.attributes.get("unit_of_measurement") == ENERGY_KILO_WATT_HOUR
 
     # check if gas consumption is parsed correctly
-    gas_consumption = hass.states.get("sensor.gas_consumption")
+    gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
     assert gas_consumption.state == "745.695"
     assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
     assert (
@@ -393,7 +397,7 @@ async def test_belgian_meter(hass, dsmr_connection_fixture):
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import (
-        BELGIUM_HOURLY_GAS_METER_READING,
+        BELGIUM_5MIN_GAS_METER_READING,
         ELECTRICITY_ACTIVE_TARIFF,
     )
     from dsmr_parser.objects import CosemObject, MBusObject
@@ -411,7 +415,7 @@ async def test_belgian_meter(hass, dsmr_connection_fixture):
     }
 
     telegram = {
-        BELGIUM_HOURLY_GAS_METER_READING: MBusObject(
+        BELGIUM_5MIN_GAS_METER_READING: MBusObject(
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal(745.695), "unit": "m3"},
@@ -438,15 +442,16 @@ async def test_belgian_meter(hass, dsmr_connection_fixture):
     await asyncio.sleep(0)
 
     # tariff should be translated in human readable and have no unit
-    power_tariff = hass.states.get("sensor.power_tariff")
-    assert power_tariff.state == "normal"
-    assert power_tariff.attributes.get(ATTR_DEVICE_CLASS) is None
-    assert power_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
-    assert power_tariff.attributes.get(ATTR_STATE_CLASS) is None
-    assert power_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
+    active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
+    assert active_tariff.state == "normal"
+    assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
+    assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
+    assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
+    assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
+    assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
 
     # check if gas consumption is parsed correctly
-    gas_consumption = hass.states.get("sensor.gas_consumption")
+    gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
     assert gas_consumption.state == "745.695"
     assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
     assert (
@@ -497,12 +502,13 @@ async def test_belgian_meter_low(hass, dsmr_connection_fixture):
     await asyncio.sleep(0)
 
     # tariff should be translated in human readable and have no unit
-    power_tariff = hass.states.get("sensor.power_tariff")
-    assert power_tariff.state == "low"
-    assert power_tariff.attributes.get(ATTR_DEVICE_CLASS) is None
-    assert power_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
-    assert power_tariff.attributes.get(ATTR_STATE_CLASS) is None
-    assert power_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
+    active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
+    assert active_tariff.state == "low"
+    assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
+    assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
+    assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
+    assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
+    assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
 
 
 async def test_swedish_meter(hass, dsmr_connection_fixture):
@@ -553,26 +559,26 @@ async def test_swedish_meter(hass, dsmr_connection_fixture):
     # after receiving telegram entities need to have the chance to update
     await asyncio.sleep(0)
 
-    power_tariff = hass.states.get("sensor.energy_consumption_total")
-    assert power_tariff.state == "123.456"
-    assert power_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
-    assert power_tariff.attributes.get(ATTR_ICON) is None
+    active_tariff = hass.states.get("sensor.electricity_meter_energy_consumption_total")
+    assert active_tariff.state == "123.456"
+    assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
+    assert active_tariff.attributes.get(ATTR_ICON) is None
     assert (
-        power_tariff.attributes.get(ATTR_STATE_CLASS)
+        active_tariff.attributes.get(ATTR_STATE_CLASS)
         == SensorStateClass.TOTAL_INCREASING
     )
     assert (
-        power_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+        active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
     )
 
-    power_tariff = hass.states.get("sensor.energy_production_total")
-    assert power_tariff.state == "654.321"
+    active_tariff = hass.states.get("sensor.electricity_meter_energy_production_total")
+    assert active_tariff.state == "654.321"
     assert (
-        power_tariff.attributes.get(ATTR_STATE_CLASS)
+        active_tariff.attributes.get(ATTR_STATE_CLASS)
         == SensorStateClass.TOTAL_INCREASING
     )
     assert (
-        power_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+        active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
     )
 
 
@@ -627,26 +633,26 @@ async def test_easymeter(hass, dsmr_connection_fixture):
     # after receiving telegram entities need to have the chance to update
     await asyncio.sleep(0)
 
-    power_tariff = hass.states.get("sensor.energy_consumption_total")
-    assert power_tariff.state == "54184.6316"
-    assert power_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
-    assert power_tariff.attributes.get(ATTR_ICON) is None
+    active_tariff = hass.states.get("sensor.electricity_meter_energy_consumption_total")
+    assert active_tariff.state == "54184.6316"
+    assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
+    assert active_tariff.attributes.get(ATTR_ICON) is None
     assert (
-        power_tariff.attributes.get(ATTR_STATE_CLASS)
+        active_tariff.attributes.get(ATTR_STATE_CLASS)
         == SensorStateClass.TOTAL_INCREASING
     )
     assert (
-        power_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+        active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
     )
 
-    power_tariff = hass.states.get("sensor.energy_production_total")
-    assert power_tariff.state == "19981.1069"
+    active_tariff = hass.states.get("sensor.electricity_meter_energy_production_total")
+    assert active_tariff.state == "19981.1069"
     assert (
-        power_tariff.attributes.get(ATTR_STATE_CLASS)
+        active_tariff.attributes.get(ATTR_STATE_CLASS)
         == SensorStateClass.TOTAL_INCREASING
     )
     assert (
-        power_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+        active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
     )
 
 
@@ -777,6 +783,10 @@ async def test_reconnect(hass, dsmr_connection_fixture):
     await hass.async_block_till_done()
 
     assert connection_factory.call_count == 1
+
+    state = hass.states.get("sensor.electricity_meter_power_consumption")
+    assert state
+    assert state.state == STATE_UNKNOWN
 
     # indicate disconnect, release wait lock and allow reconnect to happen
     closed.set()

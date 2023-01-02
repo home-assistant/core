@@ -1,0 +1,32 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "azimuth": "Azimuth (360 grader, 0 = norr, 90 = \u00f6st, 180 = s\u00f6der, 270 = v\u00e4ster)",
+                    "declination": "Deklination (0 = horisontell, 90 = vertikal)",
+                    "latitude": "Latitud",
+                    "longitude": "Longitud",
+                    "modules power": "Total maxeffekt (Watt) p\u00e5 dina solpaneler",
+                    "name": "Namn"
+                },
+                "description": "Fyll i data f\u00f6r dina solpaneler. Se dokumentationen om ett f\u00e4lt \u00e4r otydligt."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "api_key": "API-nyckel f\u00f6r Forecast.Solar (valfritt)",
+                    "azimuth": "Azimuth (360 grader, 0 = norr, 90 = \u00f6st, 180 = s\u00f6der, 270 = v\u00e4ster)",
+                    "damping": "D\u00e4mpningsfaktor: justerar resultaten p\u00e5 morgonen och kv\u00e4llen",
+                    "declination": "Deklination (0 = horisontell, 90 = vertikal)",
+                    "inverter_size": "V\u00e4xelriktarens storlek (Watt)",
+                    "modules power": "Total maxeffekt (Watt) p\u00e5 dina solpaneler"
+                },
+                "description": "Dessa v\u00e4rden till\u00e5ter justering av Solar.Forecast-resultatet. Se dokumentationen om ett f\u00e4lt \u00e4r otydligt."
+            }
+        }
+    }
+}

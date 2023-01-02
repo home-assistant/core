@@ -11,9 +11,7 @@
                 "data": {
                     "email": "E-Mail",
                     "password": "Passwort"
-                },
-                "description": "M\u00f6chtest Du mit der Einrichtung beginnen?",
-                "title": "PoolSense"
+                }
             }
         }
     }

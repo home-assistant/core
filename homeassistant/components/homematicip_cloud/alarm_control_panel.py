@@ -41,6 +41,7 @@ async def async_setup_entry(
 class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
     """Representation of the HomematicIP alarm control panel."""
 
+    _attr_should_poll = False
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
@@ -83,15 +84,15 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
     def _security_and_alarm(self) -> SecurityAndAlarmHome:
         return self._home.get_functionalHome(SecurityAndAlarmHome)
 
-    async def async_alarm_disarm(self, code=None) -> None:
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         await self._home.set_security_zones_activation(False, False)
 
-    async def async_alarm_arm_home(self, code=None) -> None:
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         await self._home.set_security_zones_activation(False, True)
 
-    async def async_alarm_arm_away(self, code=None) -> None:
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self._home.set_security_zones_activation(True, True)
 
@@ -108,7 +109,10 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
             self.async_write_ha_state()
         else:
             _LOGGER.debug(
-                "Device Changed Event for %s (Alarm Control Panel) not fired. Entity is disabled",
+                (
+                    "Device Changed Event for %s (Alarm Control Panel) not fired."
+                    " Entity is disabled"
+                ),
                 self.name,
             )
 
@@ -119,11 +123,6 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
         if self._home.name:
             name = f"{self._home.name} {name}"
         return name
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
 
     @property
     def available(self) -> bool:

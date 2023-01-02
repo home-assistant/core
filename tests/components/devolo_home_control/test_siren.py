@@ -4,7 +4,12 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.siren import DOMAIN
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 
 from . import configure_integration
@@ -27,6 +32,7 @@ async def test_siren(hass: HomeAssistant):
     state = hass.states.get(f"{DOMAIN}.test")
     assert state is not None
     assert state.state == STATE_OFF
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Test"
 
     # Emulate websocket message: sensor turned on
     test_gateway.publisher.dispatch("Test", ("devolo.SirenMultiLevelSwitch:Test", 1))

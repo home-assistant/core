@@ -5,7 +5,7 @@
         },
         "step": {
             "pairing": {
-                "description": "Sidumise l\u00f5puleviimiseks j\u00e4rgi jaotises \"HomeKiti sidumine\" toodud juhiseid alajaotises \"Teatised\".",
+                "description": "Sidumise l\u00f5puleviimiseks j\u00e4rgi jaotises \"HomeKiti sidumine\" jaotises \"Teatised\" olevaid juhiseid.",
                 "title": "HomeKiti sidumine"
             },
             "user": {
@@ -27,7 +27,6 @@
             },
             "advanced": {
                 "data": {
-                    "auto_start": "Autostart (keela kui kasutad homekit.start teenust k\u00e4sitsi)",
                     "devices": "Seadmed (p\u00e4\u00e4stikud)"
                 },
                 "description": "Iga valitud seadme jaoks luuakse programmeeritavad l\u00fclitid. Seadme p\u00e4\u00e4stiku k\u00e4ivitamisel saab HomeKiti seadistada automaatiseeringu v\u00f5i stseeni k\u00e4ivitamiseks.",

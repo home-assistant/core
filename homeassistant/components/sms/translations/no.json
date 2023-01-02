@@ -11,6 +11,7 @@
         "step": {
             "user": {
                 "data": {
+                    "baud_speed": "Overf\u00f8ringshastighet",
                     "device": "Enhet"
                 },
                 "title": "Koble til modemet"

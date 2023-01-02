@@ -11,13 +11,6 @@
             "cannot_connect": "Feeler beim verbannen"
         },
         "step": {
-            "auth": {
-                "data": {
-                    "password": "Passwuert",
-                    "username": "Benotzernumm"
-                },
-                "title": "Authentifikatioun konfigur\u00e9ieren"
-            },
             "configure_profile": {
                 "data": {
                     "include": "Kamera Entit\u00e9it erstellen"
@@ -30,14 +23,6 @@
                     "host": "Entdeckten ONVIF Apparat auswielen"
                 },
                 "title": "ONVIF Apparat auswielen"
-            },
-            "manual_input": {
-                "data": {
-                    "host": "Apparat",
-                    "name": "Numm",
-                    "port": "Port"
-                },
-                "title": "ONVIF Apparat ariichten"
             },
             "user": {
                 "description": "Andeems du op ofsch\u00e9cke klicks, g\u00ebtt dain Netzwierk fir ONVIF Apparater duerchsicht d\u00e9i den Profile S. \u00ebnnerst\u00ebtzen.\n\nVerschidde Hiersteller hunn ugefaang ONVIF standardm\u00e9isseg ze d\u00e9aktiv\u00e9ieren. Stell s\u00e9cher dass ONVIF an denger Kamera ugeschalt ass.",

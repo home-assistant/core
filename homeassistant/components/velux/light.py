@@ -1,6 +1,8 @@
 """Support for Velux lights."""
 from __future__ import annotations
 
+from typing import Any
+
 from pyvlx import Intensity, LighteningDevice
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
@@ -9,6 +11,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DATA_VELUX, VeluxEntity
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_platform(
@@ -41,7 +45,7 @@ class VeluxLight(VeluxEntity, LightEntity):
         """Return true if light is on."""
         return not self.node.intensity.off and self.node.intensity.known
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         if ATTR_BRIGHTNESS in kwargs:
             intensity_percent = int(100 - kwargs[ATTR_BRIGHTNESS] / 255 * 100)
@@ -52,6 +56,6 @@ class VeluxLight(VeluxEntity, LightEntity):
         else:
             await self.node.turn_on(wait_for_completion=True)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         await self.node.turn_off(wait_for_completion=True)

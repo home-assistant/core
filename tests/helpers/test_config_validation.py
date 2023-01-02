@@ -11,7 +11,7 @@ import pytest
 import voluptuous as vol
 
 import homeassistant
-from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers import config_validation as cv, selector, template
 
 
 def test_boolean():
@@ -720,6 +720,17 @@ def test_string_in_serializer():
     }
 
 
+def test_selector_in_serializer():
+    """Test selector with custom_serializer."""
+    assert cv.custom_serializer(selector.selector({"text": {}})) == {
+        "selector": {
+            "text": {
+                "multiline": False,
+            }
+        }
+    }
+
+
 def test_positive_time_period_dict_in_serializer():
     """Test positive_time_period_dict with custom_serializer."""
     assert cv.custom_serializer(cv.positive_time_period_dict) == {
@@ -1320,4 +1331,40 @@ def test_currency():
             schema(value)
 
     for value in ("EUR", "USD"):
+        assert schema(value)
+
+
+def test_historic_currency():
+    """Test historic currency validator."""
+    schema = vol.Schema(cv.historic_currency)
+
+    for value in (None, "BTC", "EUR"):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in ("DEM", "NLG"):
+        assert schema(value)
+
+
+def test_country():
+    """Test country validator."""
+    schema = vol.Schema(cv.country)
+
+    for value in (None, "Candyland", "USA"):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in ("NL", "SE"):
+        assert schema(value)
+
+
+def test_language():
+    """Test language validator."""
+    schema = vol.Schema(cv.language)
+
+    for value in (None, "Klingon", "english"):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in ("en", "sv"):
         assert schema(value)

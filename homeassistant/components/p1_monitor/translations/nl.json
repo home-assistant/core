@@ -1,14 +1,12 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "Kan geen verbinding maken",
-            "unknown": "Onverwachte fout"
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "Host",
-                    "name": "Naam"
+                    "host": "Host"
                 },
                 "description": "Stel P1 Monitor in om te integreren met Home Assistant."
             }

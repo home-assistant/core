@@ -11,10 +11,11 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import CONF_CONTROLLER, DOMAIN as UNIFI_DOMAIN
+from .const import DOMAIN as UNIFI_DOMAIN
+from .controller import UniFiController
 
-TO_REDACT = {CONF_CONTROLLER, CONF_PASSWORD}
-REDACT_CONFIG = {CONF_CONTROLLER, CONF_HOST, CONF_PASSWORD, CONF_USERNAME}
+TO_REDACT = {CONF_PASSWORD}
+REDACT_CONFIG = {CONF_HOST, CONF_PASSWORD, CONF_USERNAME}
 REDACT_CLIENTS = {"bssid", "essid"}
 REDACT_DEVICES = {
     "anon_id",
@@ -56,7 +57,7 @@ def async_replace_list_data(
     """Redact sensitive data in a list."""
     redacted = []
     for item in data:
-        new_value = None
+        new_value: Any | None = None
         if isinstance(item, (list, set, tuple)):
             new_value = async_replace_list_data(item, to_replace)
         elif isinstance(item, Mapping):
@@ -74,7 +75,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     diag: dict[str, Any] = {}
     macs_to_redact: dict[str, str] = {}
 
@@ -94,7 +95,6 @@ async def async_get_config_entry_diagnostics(
         async_replace_dict_data(config_entry.as_dict(), macs_to_redact), REDACT_CONFIG
     )
     diag["site_role"] = controller.site_role
-    diag["entities"] = async_replace_dict_data(controller.entities, macs_to_redact)
     diag["clients"] = {
         macs_to_redact[k]: async_redact_data(
             async_replace_dict_data(v.raw, macs_to_redact), REDACT_CLIENTS

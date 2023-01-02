@@ -27,6 +27,7 @@ from .const import (
     CONF_USB_SPHERE,
     DOMAIN,
     PLATFORMS,
+    PROJECT_NAME,
     SSE_LISTENERS,
     UART_LISTENERS,
 )
@@ -84,6 +85,7 @@ class CrownstoneEntryManager:
             password=password,
             access_token=self.cloud.access_token,
             websession=aiohttp_client.async_create_clientsession(self.hass),
+            project_name=PROJECT_NAME,
         )
         # Listen for events in the background, without task tracking
         asyncio.create_task(self.async_process_events(self.sse))
@@ -97,7 +99,9 @@ class CrownstoneEntryManager:
         # Makes HA aware of the Crownstone environment HA is placed in, a user can have multiple
         self.usb_sphere_id = self.config_entry.options[CONF_USB_SPHERE]
 
-        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
+        await self.hass.config_entries.async_forward_entry_setups(
+            self.config_entry, PLATFORMS
+        )
 
         # HA specific listeners
         self.config_entry.async_on_unload(
@@ -142,9 +146,13 @@ class CrownstoneEntryManager:
             # Show notification to ensure the user knows the cloud is now used
             persistent_notification.async_create(
                 self.hass,
-                f"Setup of Crownstone USB dongle was unsuccessful on port {serial_port}.\n \
-                Crownstone Cloud will be used to switch Crownstones.\n \
-                Please check if your port is correct and set up the USB again from integration options.",
+                (
+                    "Setup of Crownstone USB dongle was unsuccessful on port"
+                    f" {serial_port}.\n Crownstone Cloud will be used"
+                    " to switch Crownstones.\n Please check if your"
+                    " port is correct and set up the USB again from integration"
+                    " options."
+                ),
                 "Crownstone",
                 "crownstone_usb_dongle_setup",
             )

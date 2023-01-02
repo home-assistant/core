@@ -59,7 +59,7 @@ def _get_homegraph_jwt(time, iss, key):
 
 async def _get_homegraph_token(
     hass: HomeAssistant, jwt_signed: str
-) -> dict[str, Any] | list[str, Any] | Any:
+) -> dict[str, Any] | list[Any] | Any:
     headers = {
         "Authorization": f"Bearer {jwt_signed}",
         "Content-Type": "application/x-www-form-urlencoded",

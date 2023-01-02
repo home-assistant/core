@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
-            "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden"
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen"
@@ -17,6 +16,16 @@
                     "host": "Host"
                 },
                 "description": "Gib den Hostnamen oder die IP-Adresse deines TOLO Sauna-Ger\u00e4ts ein."
+            }
+        }
+    },
+    "entity": {
+        "select": {
+            "lamp_mode": {
+                "state": {
+                    "automatic": "Automatisch",
+                    "manual": "Manuell"
+                }
             }
         }
     }

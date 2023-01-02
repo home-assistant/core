@@ -7,8 +7,7 @@
             "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed"
         },
         "error": {
-            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
-            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed"
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
         },
         "step": {
             "cloud": {
@@ -26,10 +25,7 @@
             },
             "user": {
                 "data": {
-                    "account_id": "ID \u00fa\u010dtu",
-                    "connection_type": "Vyberte typ p\u0159ipojen\u00ed",
-                    "host": "Hostitel",
-                    "password": "Heslo"
+                    "connection_type": "Vyberte typ p\u0159ipojen\u00ed"
                 },
                 "description": "Vyberte typ p\u0159ipojen\u00ed. Lok\u00e1ln\u00ed vy\u017eaduje oh\u0159\u00edva\u010de s bluetooth"
             }

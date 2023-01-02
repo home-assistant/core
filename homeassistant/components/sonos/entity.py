@@ -26,6 +26,7 @@ class SonosEntity(Entity):
     """Representation of a Sonos entity."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, speaker: SonosSpeaker) -> None:
         """Initialize a SonosEntity."""
@@ -57,12 +58,21 @@ class SonosEntity(Entity):
         """Poll the entity if subscriptions fail."""
         if not self.speaker.subscriptions_failed:
             if soco_config.EVENT_ADVERTISE_IP:
-                listener_msg = f"{self.speaker.subscription_address} (advertising as {soco_config.EVENT_ADVERTISE_IP})"
+                listener_msg = (
+                    f"{self.speaker.subscription_address}"
+                    f" (advertising as {soco_config.EVENT_ADVERTISE_IP})"
+                )
             else:
                 listener_msg = self.speaker.subscription_address
-            message = f"{self.speaker.zone_name} cannot reach {listener_msg}, falling back to polling, functionality may be limited"
+            message = (
+                f"{self.speaker.zone_name} cannot reach {listener_msg},"
+                " falling back to polling, functionality may be limited"
+            )
             log_link_msg = f", see {SUB_FAIL_URL} for more details"
-            notification_link_msg = f'.\n\nSee <a href="{SUB_FAIL_URL}">Sonos documentation</a> for more details.'
+            notification_link_msg = (
+                f'.\n\nSee <a href="{SUB_FAIL_URL}">Sonos documentation</a>'
+                " for more details."
+            )
             _LOGGER.warning(message + log_link_msg)
             persistent_notification.async_create(
                 self.hass,

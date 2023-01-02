@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 from homeassistant.components import vacuum
-from homeassistant.components.recorder.models import StateAttributes, States
+from homeassistant.components.recorder.db_schema import StateAttributes, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.vacuum import ATTR_FAN_SPEED_LIST
 from homeassistant.const import ATTR_FRIENDLY_NAME
@@ -16,7 +16,7 @@ from tests.common import async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
 
 
-async def test_exclude_attributes(hass, recorder_mock):
+async def test_exclude_attributes(recorder_mock, hass):
     """Test vacuum registered attributes to be excluded."""
     await async_setup_component(
         hass, vacuum.DOMAIN, {vacuum.DOMAIN: {"platform": "demo"}}

@@ -147,25 +147,32 @@ class TriggerEntity(CoordinatorEntity[TriggerUpdateCoordinator]):
     @callback
     def _process_data(self) -> None:
         """Process new data."""
+
+        this = None
+        if state := self.hass.states.get(self.entity_id):
+            this = state.as_dict()
+        run_variables = self.coordinator.data["run_variables"]
+        variables = {"this": this, **(run_variables or {})}
+
         try:
             rendered = dict(self._static_rendered)
 
             for key in self._to_render_simple:
                 rendered[key] = self._config[key].async_render(
-                    self.coordinator.data["run_variables"],
+                    variables,
                     parse_result=key in self._parse_result,
                 )
 
             for key in self._to_render_complex:
                 rendered[key] = template.render_complex(
                     self._config[key],
-                    self.coordinator.data["run_variables"],
+                    variables,
                 )
 
             if CONF_ATTRIBUTES in self._config:
                 rendered[CONF_ATTRIBUTES] = template.render_complex(
                     self._config[CONF_ATTRIBUTES],
-                    self.coordinator.data["run_variables"],
+                    variables,
                 )
 
             self._rendered = rendered

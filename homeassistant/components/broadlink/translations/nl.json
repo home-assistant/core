@@ -2,14 +2,14 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
-            "already_in_progress": "De configuratiestroom is al aan de gang",
-            "cannot_connect": "Kon niet verbinden",
+            "already_in_progress": "De configuratie is momenteel al bezig",
+            "cannot_connect": "Kan geen verbinding maken",
             "invalid_host": "Ongeldige hostnaam of IP-adres",
             "not_supported": "Apparaat wordt niet ondersteund",
             "unknown": "Onverwachte fout"
         },
         "error": {
-            "cannot_connect": "Kon niet verbinden",
+            "cannot_connect": "Kan geen verbinding maken",
             "invalid_host": "Ongeldige hostnaam of IP-adres",
             "unknown": "Onverwachte fout"
         },

@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Enheten er allerede konfigurert",
-            "no_devices_found": "Ingen enheter funnet p\u00e5 nettverket"
+            "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes"
@@ -17,6 +16,16 @@
                     "host": "Vert"
                 },
                 "description": "Skriv inn vertsnavnet eller IP-adressen til TOLO Sauna-enheten."
+            }
+        }
+    },
+    "entity": {
+        "select": {
+            "lamp_mode": {
+                "state": {
+                    "automatic": "Automatisk",
+                    "manual": "Manuell"
+                }
             }
         }
     }

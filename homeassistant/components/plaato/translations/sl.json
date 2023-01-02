@@ -5,7 +5,7 @@
         },
         "step": {
             "user": {
-                "description": "Ali ste prepri\u010dani, da \u017eelite nastaviti Plaato Webhook?",
+                "description": "Ali \u017eelite za\u010deti z nastavitvijo?",
                 "title": "Nastavite Plaato Webhook"
             }
         }

@@ -1,0 +1,12 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "Per completare la configurazione dell'integrazione, utilizzare l'App Ecowitt (sul telefono) o accedere all'Ecowitt WebUI in un browser all'indirizzo IP della stazione. \n\nScegli la tua stazione - > Menu Altri - > Server di caricamento fai-da-te. Premi Avanti e seleziona \"Personalizzata\" \n\n - IP del server: `{server}`\n - Percorso: `{path}`\n - Porta: `{port}` \n\n Fai clic su \"Salva\"."
+        },
+        "step": {
+            "user": {
+                "description": "Sei sicuro di voler configurare Ecowitt?"
+            }
+        }
+    }
+}

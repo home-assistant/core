@@ -1,4 +1,6 @@
 """Support for Rflink devices."""
+from __future__ import annotations
+
 import asyncio
 from collections import defaultdict
 import logging
@@ -223,9 +225,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         keepalive_idle_timer = config[DOMAIN][CONF_KEEPALIVE_IDLE]
         if keepalive_idle_timer < 0:
             _LOGGER.error(
-                "A bogus TCP Keepalive IDLE timer was provided (%d secs), "
-                "it will be disabled. "
-                "Recommended values: 60-3600 (seconds)",
+                (
+                    "A bogus TCP Keepalive IDLE timer was provided (%d secs), "
+                    "it will be disabled. "
+                    "Recommended values: 60-3600 (seconds)"
+                ),
                 keepalive_idle_timer,
             )
             keepalive_idle_timer = None
@@ -233,9 +237,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             keepalive_idle_timer = None
         elif keepalive_idle_timer <= 30:
             _LOGGER.warning(
-                "A very short TCP Keepalive IDLE timer was provided (%d secs) "
-                "and may produce unexpected disconnections from RFlink device."
-                " Recommended values: 60-3600 (seconds)",
+                (
+                    "A very short TCP Keepalive IDLE timer was provided (%d secs) "
+                    "and may produce unexpected disconnections from RFlink device."
+                    " Recommended values: 60-3600 (seconds)"
+                ),
                 keepalive_idle_timer,
             )
 
@@ -315,8 +321,9 @@ class RflinkDevice(Entity):
     """
 
     platform = None
-    _state = None
+    _state: bool | None = None
     _available = True
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -334,6 +341,7 @@ class RflinkDevice(Entity):
         # Rflink specific attributes for every component type
         self._initial_event = initial_event
         self._device_id = device_id
+        self._attr_unique_id = device_id
         if name:
             self._name = name
         else:
@@ -368,11 +376,6 @@ class RflinkDevice(Entity):
     def _handle_event(self, event):
         """Platform specific event handler."""
         raise NotImplementedError()
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def name(self):

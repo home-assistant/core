@@ -15,6 +15,5 @@
                 "description": "Po\u0142\u0105cz sw\u00f3j profil Habitica, aby umo\u017cliwi\u0107 monitorowanie profilu i zada\u0144 u\u017cytkownika. Pami\u0119taj, \u017ce api_id i api_key musz\u0105 zosta\u0107 pobrane z https://habitica.com/user/settings/api"
             }
         }
-    },
-    "title": "Habitica"
+    }
 }

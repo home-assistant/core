@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from time import monotonic
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -30,13 +31,13 @@ async def async_setup_entry(
 class VerisureSmartplug(CoordinatorEntity[VerisureDataUpdateCoordinator], SwitchEntity):
     """Representation of a Verisure smartplug."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
     ) -> None:
         """Initialize the Verisure device."""
         super().__init__(coordinator)
-
-        self._attr_name = coordinator.data["smart_plugs"][serial_number]["area"]
         self._attr_unique_id = serial_number
 
         self.serial_number = serial_number
@@ -76,14 +77,14 @@ class VerisureSmartplug(CoordinatorEntity[VerisureDataUpdateCoordinator], Switch
             and self.serial_number in self.coordinator.data["smart_plugs"]
         )
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Set smartplug status on."""
         self.coordinator.verisure.set_smartplug_state(self.serial_number, True)
         self._state = True
         self._change_timestamp = monotonic()
         self.schedule_update_ha_state()
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Set smartplug status off."""
         self.coordinator.verisure.set_smartplug_state(self.serial_number, False)
         self._state = False

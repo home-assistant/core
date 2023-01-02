@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "cannot_connect": "Tidak dapat terhubung ke cloud Eight Sleep: {error}"
+        },
+        "error": {
+            "cannot_connect": "Tidak dapat terhubung ke cloud Eight Sleep: {error}"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                }
+            }
+        }
+    }
+}

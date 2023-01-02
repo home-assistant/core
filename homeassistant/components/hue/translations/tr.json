@@ -44,6 +44,8 @@
             "button_2": "\u0130kinci d\u00fc\u011fme",
             "button_3": "\u00dc\u00e7\u00fcnc\u00fc d\u00fc\u011fme",
             "button_4": "D\u00f6rd\u00fcnc\u00fc d\u00fc\u011fme",
+            "clock_wise": "Saat y\u00f6n\u00fcnde d\u00f6n\u00fc\u015f",
+            "counter_clock_wise": "Saat y\u00f6n\u00fcn\u00fcn tersine d\u00f6n\u00fc\u015f",
             "dim_down": "K\u0131sma",
             "dim_up": "A\u00e7ma",
             "double_buttons_1_3": "Birinci ve \u00dc\u00e7\u00fcnc\u00fc d\u00fc\u011fmeler",
@@ -53,15 +55,16 @@
         },
         "trigger_type": {
             "double_short_release": "Her iki \"{subtype}\" de b\u0131rak\u0131ld\u0131",
-            "initial_press": "Ba\u015flang\u0131\u00e7ta \" {subtype} \" d\u00fc\u011fmesine bas\u0131ld\u0131",
-            "long_release": "\" {subtype} \" d\u00fc\u011fmesi uzun bas\u0131ld\u0131ktan sonra b\u0131rak\u0131ld\u0131",
-            "remote_button_long_release": "\" {subtype} \" d\u00fc\u011fmesi uzun bas\u0131ld\u0131ktan sonra b\u0131rak\u0131ld\u0131",
-            "remote_button_short_press": "\" {subtype} \" d\u00fc\u011fmesine bas\u0131ld\u0131",
-            "remote_button_short_release": "\" {subtype} \" d\u00fc\u011fmesi b\u0131rak\u0131ld\u0131",
+            "initial_press": "\" {subtype} \" ba\u015flang\u0131\u00e7ta bas\u0131ld\u0131",
+            "long_release": "\"{subtype}\" uzun s\u00fcren bask\u0131lar\u0131n ard\u0131ndan yay\u0131nland\u0131",
+            "remote_button_long_release": "\" {subtype} \" uzun bas\u0131\u015ftan sonra \u00e7\u0131kt\u0131",
+            "remote_button_short_press": "\" {subtype} \" bas\u0131ld\u0131",
+            "remote_button_short_release": "\" {subtype} \" yay\u0131nland\u0131",
             "remote_double_button_long_press": "Her iki \" {subtype} \" uzun bas\u0131\u015ftan sonra b\u0131rak\u0131ld\u0131",
             "remote_double_button_short_press": "Her iki \"{subtype}\" de b\u0131rak\u0131ld\u0131",
-            "repeat": "\" {subtype} \" d\u00fc\u011fmesi bas\u0131l\u0131 tutuldu",
-            "short_release": "K\u0131sa bas\u0131ld\u0131ktan sonra \"{subtype}\" d\u00fc\u011fmesi b\u0131rak\u0131ld\u0131"
+            "repeat": "\" {subtype} \" bas\u0131l\u0131 tutuldu",
+            "short_release": "\" {subtype} \" k\u0131sa bas\u0131\u015ftan sonra yay\u0131nland\u0131",
+            "start": "\" {subtype} \" ba\u015flang\u0131\u00e7ta bas\u0131ld\u0131"
         }
     },
     "options": {

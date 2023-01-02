@@ -25,17 +25,8 @@
             "cannot_connect": "Impossibile connettersi"
         },
         "step": {
-            "entity_config": {
-                "data": {
-                    "reverse": "La serranda \u00e8 invertita"
-                },
-                "description": "Configura le opzioni per `{entity_id}`",
-                "title": "Configura entit\u00e0"
-            },
             "init": {
                 "data": {
-                    "default_reverse": "Stato d'inversione predefinito per le serrande non configurate",
-                    "entity_id": "Configura un'entit\u00e0 specifica.",
                     "target_id": "Configura opzioni per una tapparella"
                 },
                 "title": "Configura le opzioni MyLink"
@@ -48,6 +39,5 @@
                 "title": "Configura serranda MyLink"
             }
         }
-    },
-    "title": "Somfy MyLink"
+    }
 }

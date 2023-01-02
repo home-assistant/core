@@ -11,9 +11,7 @@
             "user": {
                 "data": {
                     "dsn": "Sentinela DSN"
-                },
-                "description": "Digite seu DSN Sentry",
-                "title": "Sentry"
+                }
             }
         }
     },

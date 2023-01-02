@@ -12,7 +12,7 @@
         },
         "step": {
             "reauth_confirm": {
-                "description": "L'integrazione di Steam richiede una nuova autenticazione manuale \n\nPuoi trovare la tua chiave qui: https://steamcommunity.com/dev/apikey",
+                "description": "L'integrazione Steam richiede una nuova autenticazione manuale \n\nPuoi trovare la tua chiave qui: {api_key_url}",
                 "title": "Autentica nuovamente l'integrazione"
             },
             "user": {
@@ -20,11 +20,20 @@
                     "account": "ID dell'account Steam",
                     "api_key": "Chiave API"
                 },
-                "description": "Usa https://steamid.io per trovare l'ID del tuo account Steam"
+                "description": "Usa {account_id_url} per trovare l'ID del tuo account Steam"
             }
         }
     },
+    "issues": {
+        "removed_yaml": {
+            "description": "La configurazione di Steam tramite YAML \u00e8 stata rimossa. \n\n La tua configurazione YAML esistente non \u00e8 utilizzata da Home Assistant. \n\nRimuovi la configurazione YAML dal file configuration.yaml e riavvia Home Assistant per risolvere questo problema.",
+            "title": "La configurazione YAML di Steam \u00e8 stata rimossa"
+        }
+    },
     "options": {
+        "error": {
+            "unauthorized": "Elenco amici limitato: consultare la documentazione su come vedere tutti gli altri amici."
+        },
         "step": {
             "init": {
                 "data": {

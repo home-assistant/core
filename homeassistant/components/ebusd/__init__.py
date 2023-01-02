@@ -111,7 +111,7 @@ class EbusdData:
             raise RuntimeError(err) from err
 
     def write(self, call: ServiceCall) -> None:
-        """Call write methon on ebusd."""
+        """Call write method on ebusd."""
         name = call.data.get("name")
         value = call.data.get("value")
 

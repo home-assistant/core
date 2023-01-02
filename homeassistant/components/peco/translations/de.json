@@ -7,9 +7,7 @@
             "user": {
                 "data": {
                     "county": "Bundesland"
-                },
-                "description": "Bitte w\u00e4hle unten dein Bundesland aus.",
-                "title": "PECO-St\u00f6rungsz\u00e4hler"
+                }
             }
         }
     }

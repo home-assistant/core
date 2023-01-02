@@ -1,18 +1,20 @@
 """Config flow for Homewizard."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, cast
 
-import aiohwenergy
-from aiohwenergy.hwenergy import SUPPORTED_DEVICES
-import async_timeout
+from homewizard_energy import HomeWizardEnergy
+from homewizard_energy.errors import DisabledError, RequestError, UnsupportedError
+from homewizard_energy.models import Device
 from voluptuous import Required, Schema
 
 from homeassistant import config_entries
 from homeassistant.components import persistent_notification, zeroconf
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
     CONF_API_ENABLED,
@@ -34,6 +36,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the HomeWizard config flow."""
         self.config: dict[str, str | int] = {}
+        self.entry: config_entries.ConfigEntry | None = None
 
     async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Handle a flow initiated by older `homewizard_energy` component."""
@@ -43,8 +46,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass,
             title="HomeWizard Energy",
             message=(
-                "The custom integration of HomeWizard Energy has been migrated to core. "
-                "You can safely remove the custom integration from the custom_integrations folder."
+                "The custom integration of HomeWizard Energy has been migrated to core."
+                " You can safely remove the custom integration from the"
+                " custom_integrations folder."
             ),
             notification_id=f"homewizard_energy_to_{DOMAIN}",
         )
@@ -58,27 +62,36 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         _LOGGER.debug("config_flow async_step_user")
 
+        data_schema = Schema(
+            {
+                Required(CONF_IP_ADDRESS): str,
+            }
+        )
+
         if user_input is None:
             return self.async_show_form(
                 step_id="user",
-                data_schema=Schema(
-                    {
-                        Required(CONF_IP_ADDRESS): str,
-                    }
-                ),
+                data_schema=data_schema,
                 errors=None,
             )
 
-        device_info = await self._async_try_connect_and_fetch(
-            user_input[CONF_IP_ADDRESS]
-        )
+        # Fetch device information
+        try:
+            device_info = await self._async_try_connect(user_input[CONF_IP_ADDRESS])
+        except RecoverableError as ex:
+            _LOGGER.error(ex)
+            return self.async_show_form(
+                step_id="user",
+                data_schema=data_schema,
+                errors={"base": ex.error_code},
+            )
 
         # Sets unique ID and aborts if it is already exists
         await self._async_set_and_check_unique_id(
             {
                 CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
-                CONF_PRODUCT_TYPE: device_info[CONF_PRODUCT_TYPE],
-                CONF_SERIAL: device_info[CONF_SERIAL],
+                CONF_PRODUCT_TYPE: device_info.product_type,
+                CONF_SERIAL: device_info.serial,
             }
         )
 
@@ -91,7 +104,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Add entry
         return self.async_create_entry(
-            title=f"{device_info[CONF_PRODUCT_NAME]} ({device_info[CONF_SERIAL]})",
+            title=f"{device_info.product_name} ({device_info.serial})",
             data=data,
         )
 
@@ -139,11 +152,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Confirm discovery."""
         if user_input is not None:
-            if (self.config[CONF_API_ENABLED]) != "1":
-                raise AbortFlow(reason="api_not_enabled")
 
-            # Check connection
-            await self._async_try_connect_and_fetch(str(self.config[CONF_IP_ADDRESS]))
+            try:
+                await self._async_try_connect(str(self.config[CONF_IP_ADDRESS]))
+            except RecoverableError as ex:
+                _LOGGER.error(ex)
+                return self.async_show_form(
+                    step_id="discovery_confirm",
+                    errors={"base": ex.error_code},
+                )
 
             return self.async_create_entry(
                 title=f"{self.config[CONF_PRODUCT_NAME]} ({self.config[CONF_SERIAL]})",
@@ -161,60 +178,75 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={
-                CONF_PRODUCT_TYPE: self.config[CONF_PRODUCT_TYPE],
-                CONF_SERIAL: self.config[CONF_SERIAL],
-                CONF_IP_ADDRESS: self.config[CONF_IP_ADDRESS],
+                CONF_PRODUCT_TYPE: cast(str, self.config[CONF_PRODUCT_TYPE]),
+                CONF_SERIAL: cast(str, self.config[CONF_SERIAL]),
+                CONF_IP_ADDRESS: cast(str, self.config[CONF_IP_ADDRESS]),
             },
         )
 
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Handle re-auth if API was disabled."""
+
+        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm reauth dialog."""
+
+        if user_input is not None:
+            assert self.entry is not None
+
+            try:
+                await self._async_try_connect(self.entry.data[CONF_IP_ADDRESS])
+            except RecoverableError as ex:
+                _LOGGER.error(ex)
+                return self.async_show_form(
+                    step_id="reauth_confirm",
+                    errors={"base": ex.error_code},
+                )
+
+            await self.hass.config_entries.async_reload(self.entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+        )
+
     @staticmethod
-    async def _async_try_connect_and_fetch(ip_address: str) -> dict[str, Any]:
+    async def _async_try_connect(ip_address: str) -> Device:
         """Try to connect."""
 
-        _LOGGER.debug("config_flow _async_try_connect_and_fetch")
+        _LOGGER.debug("config_flow _async_try_connect")
 
         # Make connection with device
         # This is to test the connection and to get info for unique_id
-        energy_api = aiohwenergy.HomeWizardEnergy(ip_address)
+        energy_api = HomeWizardEnergy(ip_address)
 
         try:
-            with async_timeout.timeout(10):
-                await energy_api.initialize()
+            return await energy_api.device()
 
-        except aiohwenergy.DisabledError as ex:
-            _LOGGER.error("API disabled, API must be enabled in the app")
-            raise AbortFlow("api_not_enabled") from ex
+        except DisabledError as ex:
+            raise RecoverableError(
+                "API disabled, API must be enabled in the app", "api_not_enabled"
+            ) from ex
+
+        except UnsupportedError as ex:
+            _LOGGER.error("API version unsuppored")
+            raise AbortFlow("unsupported_api_version") from ex
+
+        except RequestError as ex:
+            raise RecoverableError(
+                "Device unreachable or unexpected response", "network_error"
+            ) from ex
 
         except Exception as ex:
-            _LOGGER.exception(
-                "Error connecting with Energy Device at %s",
-                ip_address,
-            )
+            _LOGGER.exception(ex)
             raise AbortFlow("unknown_error") from ex
 
         finally:
             await energy_api.close()
-
-        if energy_api.device is None:
-            _LOGGER.error("Initialization failed")
-            raise AbortFlow("unknown_error")
-
-        # Validate metadata
-        if energy_api.device.api_version != "v1":
-            raise AbortFlow("unsupported_api_version")
-
-        if energy_api.device.product_type not in SUPPORTED_DEVICES:
-            _LOGGER.error(
-                "Device (%s) not supported by integration",
-                energy_api.device.product_type,
-            )
-            raise AbortFlow("device_not_supported")
-
-        return {
-            CONF_PRODUCT_NAME: energy_api.device.product_name,
-            CONF_PRODUCT_TYPE: energy_api.device.product_type,
-            CONF_SERIAL: energy_api.device.serial,
-        }
 
     async def _async_set_and_check_unique_id(self, entry_info: dict[str, Any]) -> None:
         """Validate if entry exists."""
@@ -227,3 +259,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(
             updates={CONF_IP_ADDRESS: entry_info[CONF_IP_ADDRESS]}
         )
+
+
+class RecoverableError(HomeAssistantError):
+    """Raised when a connection has been failed but can be retried."""
+
+    def __init__(self, message: str, error_code: str) -> None:
+        """Init RecoverableError."""
+        super().__init__(message)
+        self.error_code = error_code

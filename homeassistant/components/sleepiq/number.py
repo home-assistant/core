@@ -47,7 +47,10 @@ async def _async_set_actuator_position(
 
 def _get_actuator_name(bed: SleepIQBed, actuator: SleepIQActuator) -> str:
     if actuator.side:
-        return f"SleepNumber {bed.name} {actuator.side_full} {actuator.actuator_full} {ENTITY_TYPES[ACTUATOR]}"
+        return (
+            "SleepNumber"
+            f" {bed.name} {actuator.side_full} {actuator.actuator_full} {ENTITY_TYPES[ACTUATOR]}"
+        )
 
     return f"SleepNumber {bed.name} {actuator.actuator_full} {ENTITY_TYPES[ACTUATOR]}"
 
@@ -70,9 +73,9 @@ def _get_sleeper_unique_id(bed: SleepIQBed, sleeper: SleepIQSleeper) -> str:
 NUMBER_DESCRIPTIONS: dict[str, SleepIQNumberEntityDescription] = {
     FIRMNESS: SleepIQNumberEntityDescription(
         key=FIRMNESS,
-        min_value=5,
-        max_value=100,
-        step=5,
+        native_min_value=5,
+        native_max_value=100,
+        native_step=5,
         name=ENTITY_TYPES[FIRMNESS],
         icon=ICON_OCCUPIED,
         value_fn=lambda sleeper: cast(float, sleeper.sleep_number),
@@ -82,9 +85,9 @@ NUMBER_DESCRIPTIONS: dict[str, SleepIQNumberEntityDescription] = {
     ),
     ACTUATOR: SleepIQNumberEntityDescription(
         key=ACTUATOR,
-        min_value=0,
-        max_value=100,
-        step=1,
+        native_min_value=0,
+        native_max_value=100,
+        native_step=1,
         name=ENTITY_TYPES[ACTUATOR],
         icon=ICON_OCCUPIED,
         value_fn=lambda actuator: cast(float, actuator.position),
@@ -152,10 +155,10 @@ class SleepIQNumberEntity(SleepIQBedEntity, NumberEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Update number attributes."""
-        self._attr_value = float(self.entity_description.value_fn(self.device))
+        self._attr_native_value = float(self.entity_description.value_fn(self.device))
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set the number value."""
         await self.entity_description.set_value_fn(self.device, int(value))
-        self._attr_value = value
+        self._attr_native_value = value
         self.async_write_ha_state()

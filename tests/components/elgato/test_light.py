@@ -24,6 +24,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
@@ -183,13 +184,15 @@ async def test_light_unavailable(
     mock_elgato.state.side_effect = ElgatoError
     mock_elgato.light.side_effect = ElgatoError
 
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        service,
-        {ATTR_ENTITY_ID: "light.frenck"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: "light.frenck"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
     state = hass.states.get("light.frenck")
     assert state
     assert state.state == STATE_UNAVAILABLE
@@ -218,18 +221,20 @@ async def test_light_identify_error(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_elgato: MagicMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test error occurred during identifying an Elgato Light."""
     mock_elgato.identify.side_effect = ElgatoError
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_IDENTIFY,
-        {
-            ATTR_ENTITY_ID: "light.frenck",
-        },
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with pytest.raises(
+        HomeAssistantError, match="An error occurred while identifying the Elgato Light"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_IDENTIFY,
+            {
+                ATTR_ENTITY_ID: "light.frenck",
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
     assert len(mock_elgato.identify.mock_calls) == 1
-    assert "An error occurred while identifying the Elgato Light" in caplog.text

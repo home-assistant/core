@@ -37,9 +37,7 @@ class RuckusUnleashedDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _fetch_clients(self) -> dict:
         """Fetch clients from the API and format them."""
-        clients = await self.hass.async_add_executor_job(
-            self.ruckus.current_active_clients
-        )
+        clients = await self.ruckus.current_active_clients()
         return {e[API_MAC]: e for e in clients[API_CURRENT_ACTIVE_CLIENTS][API_CLIENTS]}
 
     async def _async_update_data(self) -> dict:

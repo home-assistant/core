@@ -381,7 +381,7 @@ def hubs_music_library_fixture():
 
 
 @pytest.fixture(name="entry")
-def mock_config_entry():
+async def mock_config_entry():
     """Return the default mocked config entry."""
     return MockConfigEntry(
         domain=DOMAIN,

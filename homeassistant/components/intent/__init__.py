@@ -19,20 +19,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, DOMAIN, _async_process_intent
     )
 
-    hass.helpers.intent.async_register(
+    intent.async_register(
+        hass,
         intent.ServiceIntentHandler(
             intent.INTENT_TURN_ON, HA_DOMAIN, SERVICE_TURN_ON, "Turned {} on"
-        )
+        ),
     )
-    hass.helpers.intent.async_register(
+    intent.async_register(
+        hass,
         intent.ServiceIntentHandler(
             intent.INTENT_TURN_OFF, HA_DOMAIN, SERVICE_TURN_OFF, "Turned {} off"
-        )
+        ),
     )
-    hass.helpers.intent.async_register(
+    intent.async_register(
+        hass,
         intent.ServiceIntentHandler(
             intent.INTENT_TOGGLE, HA_DOMAIN, SERVICE_TOGGLE, "Toggled {}"
-        )
+        ),
     )
 
     return True
@@ -60,6 +63,7 @@ class IntentHandleView(http.HomeAssistantView):
     async def post(self, request, data):
         """Handle intent with name/data."""
         hass = request.app["hass"]
+        language = hass.config.language
 
         try:
             intent_name = data["name"]
@@ -70,11 +74,11 @@ class IntentHandleView(http.HomeAssistantView):
                 hass, DOMAIN, intent_name, slots, "", self.context(request)
             )
         except intent.IntentHandleError as err:
-            intent_result = intent.IntentResponse()
+            intent_result = intent.IntentResponse(language=language)
             intent_result.async_set_speech(str(err))
 
         if intent_result is None:
-            intent_result = intent.IntentResponse()
+            intent_result = intent.IntentResponse(language=language)
             intent_result.async_set_speech("Sorry, I couldn't handle that")
 
         return self.json(intent_result)

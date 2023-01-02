@@ -8,8 +8,9 @@ from homeassistant import config_entries
 from homeassistant.components.ruckus_unleashed.const import DOMAIN
 from homeassistant.util import utcnow
 
+from . import CONFIG, DEFAULT_SYSTEM_INFO, DEFAULT_TITLE
+
 from tests.common import async_fire_time_changed
-from tests.components.ruckus_unleashed import CONFIG, DEFAULT_SYSTEM_INFO, DEFAULT_TITLE
 
 
 async def test_form(hass):

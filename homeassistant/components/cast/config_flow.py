@@ -1,12 +1,18 @@
 """Config flow for Cast."""
+from __future__ import annotations
+
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
+from homeassistant.components import onboarding, zeroconf
+from homeassistant.const import CONF_UUID
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_IGNORE_CEC, CONF_KNOWN_HOSTS, CONF_UUID, DOMAIN
+from .const import CONF_IGNORE_CEC, CONF_KNOWN_HOSTS, DOMAIN
 
 IGNORE_CEC_SCHEMA = vol.Schema(vol.All(cv.ensure_list, [cv.string]))
 KNOWN_HOSTS_SCHEMA = vol.Schema(vol.All(cv.ensure_list, [cv.string]))
@@ -25,7 +31,10 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._wanted_uuid = set()
 
     @staticmethod
-    def async_get_options_flow(config_entry):
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> CastOptionsFlowHandler:
         """Get the options flow for this handler."""
         return CastOptionsFlowHandler(config_entry)
 
@@ -94,7 +103,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         data = self._get_data()
 
-        if user_input is not None:
+        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             return self.async_create_entry(title="Google Cast", data=data)
 
         return self.async_show_form(step_id="confirm")
@@ -110,10 +119,10 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class CastOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Google Cast options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize Google Cast options flow."""
         self.config_entry = config_entry
-        self.updated_config = {}
+        self.updated_config: dict[str, Any] = {}
 
     async def async_step_init(self, user_input=None):
         """Manage the Google Cast options."""

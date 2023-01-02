@@ -22,10 +22,8 @@
             },
             "user": {
                 "data": {
-                    "api_key": "API Schl\u00ebssel",
                     "host": "IP Adresse"
-                },
-                "title": "Steierbar Jalousien"
+                }
             }
         }
     }

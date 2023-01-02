@@ -149,3 +149,29 @@ async def test_form_homekit(hass):
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
+
+
+async def test_form_homekit_ignored(hass):
+    """Test that we abort from homekit if rachio is ignored."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="AA:BB:CC:DD:EE:FF",
+        source=config_entries.SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HOMEKIT},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="mock_host",
+            addresses=["mock_host"],
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={zeroconf.ATTR_PROPERTIES_ID: "AA:BB:CC:DD:EE:FF"},
+            type="mock_type",
+        ),
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"

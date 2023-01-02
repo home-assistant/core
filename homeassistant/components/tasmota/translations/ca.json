@@ -10,13 +10,21 @@
             "config": {
                 "data": {
                     "discovery_prefix": "Prefix del topic de descoberta (discovery)"
-                },
-                "description": "Introdureix la configuraci\u00f3 de Tasmota.",
-                "title": "Tasmota"
+                }
             },
             "confirm": {
                 "description": "Vols configurar Tasmota?"
             }
+        }
+    },
+    "issues": {
+        "topic_duplicated": {
+            "description": "Hi ha m\u00faltiples dispositius Tasmota amb el mateix 'topic' {topic}.\n\n Dispositius Tasmota amb aquest problema: {offenders}.",
+            "title": "M\u00faltiples dispositius Tasmota amb el mateix 'topic'"
+        },
+        "topic_no_prefix": {
+            "description": "El dispositiu Tasmota {name} amb IP {ip} no inclou `%prefix%` al seu 'topic' complet. \n\n Les entitats d'aquests dispositius es desactiven fins que s'hagi corregit el problema.",
+            "title": "El dispositiu Tasmota {name} t\u00e9 un 'topic' MQTT inv\u00e0lid"
         }
     }
 }

@@ -1,0 +1,31 @@
+{
+    "state": {
+        "litterrobot__status_code": {
+            "br": "Bolsa extra\u00edda",
+            "ccc": "Ciclo de limpieza completado",
+            "ccp": "Ciclo de limpieza en curso",
+            "cd": "Gato detectado",
+            "csf": "Fallo del sensor de gatos",
+            "csi": "Sensor de gatos interrumpido",
+            "cst": "Sincronizaci\u00f3n del sensor de gatos",
+            "df1": "Caj\u00f3n casi lleno - Quedan 2 ciclos",
+            "df2": "Caj\u00f3n casi lleno - Queda 1 ciclo",
+            "dfs": "Caj\u00f3n lleno",
+            "dhf": "Fallo de volcado + posici\u00f3n inicial",
+            "dpf": "Fallo de posici\u00f3n de descarga",
+            "ec": "Ciclo vac\u00edo",
+            "hpf": "Fallo de posici\u00f3n inicial",
+            "off": "Apagado",
+            "offline": "Sin conexi\u00f3n",
+            "otf": "Fallo de par excesivo",
+            "p": "En pausa",
+            "pd": "Detecci\u00f3n de pellizcos",
+            "pwrd": "Apagando",
+            "pwru": "Encendiendo",
+            "rdy": "Listo",
+            "scf": "Fallo del sensor de gatos al inicio",
+            "sdf": "Caj\u00f3n lleno al inicio",
+            "spf": "Detecci\u00f3n de pellizco al inicio"
+        }
+    }
+}

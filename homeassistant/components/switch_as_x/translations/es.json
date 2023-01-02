@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "entity_id": "Interruptor",
+                    "target_domain": "Nuevo tipo"
+                },
+                "description": "Elige un interruptor que desees que aparezca en Home Assistant como luz, cubierta o cualquier otra cosa. El interruptor original se ocultar\u00e1."
+            }
+        }
+    },
+    "title": "Cambiar el tipo de dispositivo de un interruptor"
+}

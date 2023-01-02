@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     STATE_UNKNOWN,
-    TIME_DAYS,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -75,7 +75,7 @@ SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (
         key=ATTR_UPTIME,
         primary_key="system",
         sensor_key="uptime",
-        native_unit_of_measurement=TIME_DAYS,
+        native_unit_of_measurement=UnitOfTime.DAYS,
         icon="mdi:timelapse",
     ),
     GoogleWifiSensorEntityDescription(
@@ -136,18 +136,23 @@ class GoogleWifiSensor(SensorEntity):
 
     entity_description: GoogleWifiSensorEntityDescription
 
-    def __init__(self, api, name, description: GoogleWifiSensorEntityDescription):
+    def __init__(
+        self,
+        api: GoogleWifiAPI,
+        name: str,
+        description: GoogleWifiSensorEntityDescription,
+    ) -> None:
         """Initialize a Google Wifi sensor."""
         self.entity_description = description
         self._api = api
         self._attr_name = f"{name}_{description.key}"
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return availability of Google Wifi API."""
         return self._api.available
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from the Google Wifi API."""
         self._api.update()
         if self.available:
@@ -223,8 +228,10 @@ class GoogleWifiAPI:
                     self.data[attr_key] = sensor_value
             except KeyError:
                 _LOGGER.error(
-                    "Router does not support %s field. "
-                    "Please remove %s from monitored_conditions",
+                    (
+                        "Router does not support %s field. "
+                        "Please remove %s from monitored_conditions"
+                    ),
                     description.sensor_key,
                     attr_key,
                 )

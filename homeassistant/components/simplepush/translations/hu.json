@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "device_key": "Az eszk\u00f6z kulcsa",
+                    "event": "Az esem\u00e9ny",
+                    "name": "Elnevez\u00e9s",
+                    "password": "A k\u00e9sz\u00fcl\u00e9k \u00e1ltal haszn\u00e1lt titkos\u00edt\u00e1s jelszava",
+                    "salt": "A k\u00e9sz\u00fcl\u00e9k \u00e1ltal haszn\u00e1lt 'salt'."
+                }
+            }
+        }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "A Simplepush YAML-ban t\u00f6rt\u00e9n\u0151 konfigur\u00e1l\u00e1sa elt\u00e1vol\u00edt\u00e1sra ker\u00fclt.\n\nA megl\u00e9v\u0151 YAML konfigur\u00e1ci\u00f3t a Home Assistant nem haszn\u00e1lja.\n\nA probl\u00e9ma megold\u00e1s\u00e1hoz t\u00e1vol\u00edtsa el a Simplepush YAML konfigur\u00e1ci\u00f3t a configuration.yaml f\u00e1jlb\u00f3l, \u00e9s ind\u00edtsa \u00fajra a Home Assistantot.",
+            "title": "A Simplepush YAML konfigur\u00e1ci\u00f3ja elt\u00e1vol\u00edt\u00e1sra ker\u00fclt"
+        }
+    }
+}

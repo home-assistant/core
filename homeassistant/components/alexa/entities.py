@@ -11,9 +11,11 @@ from homeassistant.components import (
     binary_sensor,
     button,
     camera,
+    climate,
     cover,
     fan,
     group,
+    humidifier,
     image_processing,
     input_boolean,
     input_button,
@@ -28,7 +30,6 @@ from homeassistant.components import (
     timer,
     vacuum,
 )
-from homeassistant.components.climate import const as climate
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_SUPPORTED_FEATURES,
@@ -36,8 +37,7 @@ from homeassistant.const import (
     CLOUD_NEVER_EXPOSED_ENTITIES,
     CONF_DESCRIPTION,
     CONF_NAME,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
     __version__,
 )
 from homeassistant.core import HomeAssistant, State, callback
@@ -99,6 +99,9 @@ class DisplayCategory:
     # Netflix" scene might require the: 1. TV to be powered on & 2. Input set
     # to HDMI1. Applies to Scenes
     ACTIVITY_TRIGGER = "ACTIVITY_TRIGGER"
+
+    # Indicates a device that cools the air in interior spaces.
+    AIR_CONDITIONER = "AIR_CONDITIONER"
 
     # Indicates a device that emits pleasant odors and masks unpleasant odors in interior spaces.
     AIR_FRESHENER = "AIR_FRESHENER"
@@ -300,12 +303,6 @@ class AlexaEntity:
         """
         raise NotImplementedError
 
-    def get_interface(self, capability) -> AlexaCapability:
-        """Return the given AlexaInterface.
-
-        Raises _UnsupportedInterface.
-        """
-
     def interfaces(self) -> list[AlexaCapability]:
         """Return a list of supported interfaces.
 
@@ -382,7 +379,6 @@ def async_get_entities(hass, config) -> list[AlexaEntity]:
 @ENTITY_ADAPTERS.register(alert.DOMAIN)
 @ENTITY_ADAPTERS.register(automation.DOMAIN)
 @ENTITY_ADAPTERS.register(group.DOMAIN)
-@ENTITY_ADAPTERS.register(input_boolean.DOMAIN)
 class GenericCapabilities(AlexaEntity):
     """A generic, on/off device.
 
@@ -405,12 +401,16 @@ class GenericCapabilities(AlexaEntity):
         ]
 
 
+@ENTITY_ADAPTERS.register(input_boolean.DOMAIN)
 @ENTITY_ADAPTERS.register(switch.DOMAIN)
 class SwitchCapabilities(AlexaEntity):
     """Class to represent Switch capabilities."""
 
     def default_display_categories(self):
         """Return the display categories for this entity."""
+        if self.entity.domain == input_boolean.DOMAIN:
+            return [DisplayCategory.OTHER]
+
         device_class = self.entity.attributes.get(ATTR_DEVICE_CLASS)
         if device_class == switch.SwitchDeviceClass.OUTLET:
             return [DisplayCategory.SMARTPLUG]
@@ -421,6 +421,7 @@ class SwitchCapabilities(AlexaEntity):
         """Yield the supported interfaces."""
         return [
             AlexaPowerController(self.entity),
+            AlexaContactSensor(self.hass, self.entity),
             AlexaEndpointHealth(self.hass, self.entity),
             Alexa(self.hass),
         ]
@@ -439,6 +440,8 @@ class ButtonCapabilities(AlexaEntity):
         """Yield the supported interfaces."""
         return [
             AlexaSceneController(self.entity, supports_deactivation=False),
+            AlexaEventDetectionSensor(self.hass, self.entity),
+            AlexaEndpointHealth(self.hass, self.entity),
             Alexa(self.hass),
         ]
 
@@ -454,7 +457,7 @@ class ClimateCapabilities(AlexaEntity):
     def interfaces(self):
         """Yield the supported interfaces."""
         # If we support two modes, one being off, we allow turning on too.
-        if climate.HVAC_MODE_OFF in self.entity.attributes.get(
+        if climate.HVACMode.OFF in self.entity.attributes.get(
             climate.ATTR_HVAC_MODES, []
         ):
             yield AlexaPowerController(self.entity)
@@ -578,6 +581,30 @@ class FanCapabilities(AlexaEntity):
             yield AlexaRangeController(
                 self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}"
             )
+
+        yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.hass)
+
+
+@ENTITY_ADAPTERS.register(humidifier.DOMAIN)
+class HumidifierCapabilities(AlexaEntity):
+    """Class to represent Humidifier capabilities."""
+
+    def default_display_categories(self):
+        """Return the display categories for this entity."""
+        return [DisplayCategory.OTHER]
+
+    def interfaces(self):
+        """Yield the supported interfaces."""
+        yield AlexaPowerController(self.entity)
+        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        if supported & humidifier.HumidifierEntityFeature.MODES:
+            yield AlexaModeController(
+                self.entity, instance=f"{humidifier.DOMAIN}.{humidifier.ATTR_MODE}"
+            )
+        yield AlexaRangeController(
+            self.entity, instance=f"{humidifier.DOMAIN}.{humidifier.ATTR_HUMIDITY}"
+        )
 
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.hass)
@@ -717,7 +744,10 @@ class SensorCapabilities(AlexaEntity):
     def interfaces(self):
         """Yield the supported interfaces."""
         attrs = self.entity.attributes
-        if attrs.get(ATTR_UNIT_OF_MEASUREMENT) in (TEMP_FAHRENHEIT, TEMP_CELSIUS):
+        if attrs.get(ATTR_UNIT_OF_MEASUREMENT) in {
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
+        }:
             yield AlexaTemperatureSensor(self.hass, self.entity)
             yield AlexaEndpointHealth(self.hass, self.entity)
             yield Alexa(self.hass)

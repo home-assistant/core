@@ -5,7 +5,7 @@
             "not_songpal_device": "Geen Songpal-apparaat"
         },
         "error": {
-            "cannot_connect": "Kon niet verbinden"
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "flow_title": "{name} ({host})",
         "step": {

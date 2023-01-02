@@ -1,13 +1,18 @@
 """Support for the Dynalite channels as covers."""
 
-from homeassistant.components.cover import DEVICE_CLASSES, CoverDeviceClass, CoverEntity
+from contextlib import suppress
+from typing import Any
+
+from homeassistant.components.cover import (
+    ATTR_CURRENT_POSITION,
+    CoverDeviceClass,
+    CoverEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .dynalitebase import DynaliteBase, async_setup_entry_base
-
-DEFAULT_COVER_CLASS = CoverDeviceClass.SHUTTER
 
 
 async def async_setup_entry(
@@ -32,13 +37,12 @@ class DynaliteCover(DynaliteBase, CoverEntity):
     """Representation of a Dynalite Channel as a Home Assistant Cover."""
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> CoverDeviceClass:
         """Return the class of the device."""
-        dev_cls = self._device.device_class
-        ret_val = DEFAULT_COVER_CLASS
-        if dev_cls in DEVICE_CLASSES:
-            ret_val = dev_cls
-        return ret_val
+        if device_class := self._device.device_class:
+            with suppress(ValueError):
+                return CoverDeviceClass(device_class)
+        return CoverDeviceClass.SHUTTER
 
     @property
     def current_cover_position(self) -> int:
@@ -60,21 +64,27 @@ class DynaliteCover(DynaliteBase, CoverEntity):
         """Return true if cover is closed."""
         return self._device.is_closed
 
-    async def async_open_cover(self, **kwargs) -> None:
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self._device.async_open_cover(**kwargs)
 
-    async def async_close_cover(self, **kwargs) -> None:
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self._device.async_close_cover(**kwargs)
 
-    async def async_set_cover_position(self, **kwargs) -> None:
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the cover position."""
         await self._device.async_set_cover_position(**kwargs)
 
-    async def async_stop_cover(self, **kwargs) -> None:
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self._device.async_stop_cover(**kwargs)
+
+    def initialize_state(self, state):
+        """Initialize the state from cache."""
+        target_level = state.attributes.get(ATTR_CURRENT_POSITION)
+        if target_level is not None:
+            self._device.init_level(target_level)
 
 
 class DynaliteCoverWithTilt(DynaliteCover):
@@ -85,18 +95,18 @@ class DynaliteCoverWithTilt(DynaliteCover):
         """Return the current tilt position."""
         return self._device.current_cover_tilt_position
 
-    async def async_open_cover_tilt(self, **kwargs) -> None:
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open cover tilt."""
         await self._device.async_open_cover_tilt(**kwargs)
 
-    async def async_close_cover_tilt(self, **kwargs) -> None:
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close cover tilt."""
         await self._device.async_close_cover_tilt(**kwargs)
 
-    async def async_set_cover_tilt_position(self, **kwargs) -> None:
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Set the cover tilt position."""
         await self._device.async_set_cover_tilt_position(**kwargs)
 
-    async def async_stop_cover_tilt(self, **kwargs) -> None:
+    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover tilt."""
         await self._device.async_stop_cover_tilt(**kwargs)

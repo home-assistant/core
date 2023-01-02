@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "unknown": "Errore imprevisto"
+        },
+        "flow_title": "{name} {model} ({host})",
+        "step": {
+            "confirm": {
+                "description": "Vuoi configurare {name} {model} ({host})?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "La configurazione della piattaforma climatica Radio Thermostat tramite YAML sar\u00e0 rimossa in Home Assistant 2022.9. \n\nLa configurazione esistente \u00e8 stata importata automaticamente nell'interfaccia utente. Rimuovi la configurazione YAML dal file configuration.yaml e riavvia Home Assistant per risolvere questo problema.",
+            "title": "La configurazione YAML di Radio Thermostat sar\u00e0 rimossa"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "hold_temp": "Imposta un blocco permanente quando si regola la temperatura."
+                }
+            }
+        }
+    }
+}

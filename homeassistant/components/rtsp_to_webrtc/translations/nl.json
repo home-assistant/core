@@ -3,7 +3,7 @@
         "abort": {
             "server_failure": "RtsPtoWebRTC-server retourneerde een fout. Raadpleeg de logboeken voor meer informatie.",
             "server_unreachable": "Kan niet communiceren met de RTSPtoWebRTC-server. Controleer logboeken voor meer informatie.",
-            "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk."
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
         },
         "error": {
             "invalid_url": "Moet een geldige RTSPtoWebRTC server URL zijn, b.v. https://example.com",

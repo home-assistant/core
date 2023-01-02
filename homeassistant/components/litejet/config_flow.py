@@ -19,7 +19,7 @@ from .const import CONF_DEFAULT_TRANSITION, DOMAIN
 class LiteJetOptionsFlow(config_entries.OptionsFlow):
     """Handle LiteJet options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize LiteJet options flow."""
         self.config_entry = config_entry
 
@@ -85,6 +85,8 @@ class LiteJetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> LiteJetOptionsFlow:
         """Get the options flow for this handler."""
         return LiteJetOptionsFlow(config_entry)

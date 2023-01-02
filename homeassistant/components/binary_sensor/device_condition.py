@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.device_automation.const import CONF_IS_OFF, CONF_IS_ON
+from homeassistant.components.device_automation import CONF_IS_OFF, CONF_IS_ON
 from homeassistant.const import (
     CONF_CONDITION,
     CONF_ENTITY_ID,
@@ -12,12 +12,12 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import condition, config_validation as cv
-from homeassistant.helpers.entity import get_device_class
-from homeassistant.helpers.entity_registry import (
-    async_entries_for_device,
-    async_get_registry,
+from homeassistant.helpers import (
+    condition,
+    config_validation as cv,
+    entity_registry as er,
 )
+from homeassistant.helpers.entity import get_device_class
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN, BinarySensorDeviceClass
@@ -268,10 +268,10 @@ async def async_get_conditions(
 ) -> list[dict[str, str]]:
     """List device conditions."""
     conditions: list[dict[str, str]] = []
-    entity_registry = await async_get_registry(hass)
+    entity_registry = er.async_get(hass)
     entries = [
         entry
-        for entry in async_entries_for_device(entity_registry, device_id)
+        for entry in er.async_entries_for_device(entity_registry, device_id)
         if entry.domain == DOMAIN
     ]
 

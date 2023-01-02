@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.cover import CoverEntity, CoverEntityFeature
-from homeassistant.components.switch.const import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -32,6 +32,7 @@ async def async_setup_entry(
     )
     wrapped_switch = registry.async_get(entity_id)
     device_id = wrapped_switch.device_id if wrapped_switch else None
+    entity_category = wrapped_switch.entity_category if wrapped_switch else None
 
     async_add_entities(
         [
@@ -40,6 +41,7 @@ async def async_setup_entry(
                 entity_id,
                 config_entry.entry_id,
                 device_id,
+                entity_category,
             )
         ]
     )

@@ -10,8 +10,7 @@
             "config": {
                 "data": {
                     "discovery_prefix": "Prefixo do t\u00f3pico para descoberta"
-                },
-                "title": ""
+                }
             }
         }
     }

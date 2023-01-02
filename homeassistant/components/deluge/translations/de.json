@@ -16,7 +16,7 @@
                     "username": "Benutzername",
                     "web_port": "Webport (f\u00fcr Besuchsdienste)"
                 },
-                "description": "Um diese Integration nutzen zu k\u00f6nnen, musst du die folgende Option in den Deluge-Einstellungen aktivieren: Daemon > Fernsteuerungen zulassen"
+                "description": "Um diese Integration nutzen zu k\u00f6nnen, musst du die folgende Option in den Deluge-Einstellungen aktivieren: Daemon \u2192 Fernsteuerungen zulassen"
             }
         }
     }

@@ -1,6 +1,7 @@
 {
     "system_health": {
         "info": {
+            "agent_version": "Arac\u0131 S\u00fcr\u00fcm\u00fc",
             "board": "Panel",
             "disk_total": "Disk Toplam\u0131",
             "disk_used": "Kullan\u0131lan Disk",

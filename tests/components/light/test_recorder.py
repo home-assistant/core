@@ -10,7 +10,7 @@ from homeassistant.components.light import (
     ATTR_MIN_MIREDS,
     ATTR_SUPPORTED_COLOR_MODES,
 )
-from homeassistant.components.recorder.models import StateAttributes, States
+from homeassistant.components.recorder.db_schema import StateAttributes, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import State
@@ -21,7 +21,7 @@ from tests.common import async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
 
 
-async def test_exclude_attributes(hass, recorder_mock):
+async def test_exclude_attributes(recorder_mock, hass):
     """Test light registered attributes to be excluded."""
     await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {"platform": "demo"}}

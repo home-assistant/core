@@ -6,14 +6,12 @@ import logging
 
 from coinbase.wallet.client import Client
 from coinbase.wallet.error import AuthenticationError
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from .const import (
@@ -22,7 +20,6 @@ from .const import (
     CONF_CURRENCIES,
     CONF_EXCHANGE_BASE,
     CONF_EXCHANGE_RATES,
-    CONF_YAML_API_TOKEN,
     DOMAIN,
 )
 
@@ -32,37 +29,7 @@ PLATFORMS = [Platform.SENSOR]
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 
-CONFIG_SCHEMA = vol.Schema(
-    cv.deprecated(DOMAIN),
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_API_KEY): cv.string,
-                vol.Required(CONF_YAML_API_TOKEN): cv.string,
-                vol.Optional(CONF_CURRENCIES): vol.All(cv.ensure_list, [cv.string]),
-                vol.Optional(CONF_EXCHANGE_RATES, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
-                ),
-            },
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Coinbase component."""
-    if DOMAIN not in config:
-        return True
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config[DOMAIN],
-        )
-    )
-
-    return True
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -76,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.entry_id] = instance
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

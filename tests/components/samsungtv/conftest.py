@@ -22,7 +22,7 @@ from samsungtvws.remote import ChannelEmitCommand
 from homeassistant.components.samsungtv.const import WEBSOCKET_SSL_PORT
 import homeassistant.util.dt as dt_util
 
-from .const import SAMPLE_DEVICE_INFO_WIFI
+from .const import SAMPLE_DEVICE_INFO_UE48JU6400, SAMPLE_DEVICE_INFO_WIFI
 
 
 @pytest.fixture(autouse=True)
@@ -32,6 +32,10 @@ async def silent_ssdp_scanner(hass):
         "homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"
     ), patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
         "homeassistant.components.ssdp.Scanner.async_scan"
+    ), patch(
+        "homeassistant.components.ssdp.Server._async_start_upnp_servers"
+    ), patch(
+        "homeassistant.components.ssdp.Server._async_stop_upnp_servers"
     ):
         yield
 
@@ -177,7 +181,7 @@ def rest_api_fixture_non_ssl_only() -> Mock:
             """Mock rest_device_info to fail for ssl and work for non-ssl."""
             if self.port == WEBSOCKET_SSL_PORT:
                 raise ResponseError
-            return SAMPLE_DEVICE_INFO_WIFI
+            return SAMPLE_DEVICE_INFO_UE48JU6400
 
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest",

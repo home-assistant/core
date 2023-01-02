@@ -3,13 +3,12 @@
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
             "not_intellifire_device": "Ikke en IntelliFire-enhet.",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+            "reauth_successful": "Re-autentisering var vellykket"
         },
         "error": {
             "api_error": "Innlogging feilet",
             "cannot_connect": "Tilkobling mislyktes",
-            "iftapi_connect": "Feil ved tilkobling til iftapi.net",
-            "unknown": "Uventet feil"
+            "iftapi_connect": "Feil ved tilkobling til iftapi.net"
         },
         "flow_title": "{serial} ( {host} )",
         "step": {
@@ -20,7 +19,7 @@
                 }
             },
             "dhcp_confirm": {
-                "description": "Vil du konfigurere {host}\n Serienummer: {serial} ?"
+                "description": "Vil du sette opp {host}\n Serie: {serial} ?"
             },
             "manual_device_entry": {
                 "data": {
@@ -34,11 +33,6 @@
                 },
                 "description": "F\u00f8lgende IntelliFire-enheter ble oppdaget. Velg hvilken du \u00f8nsker \u00e5 konfigurere.",
                 "title": "Enhetsvalg"
-            },
-            "user": {
-                "data": {
-                    "host": "Vert"
-                }
             }
         }
     }

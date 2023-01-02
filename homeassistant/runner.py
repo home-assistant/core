@@ -36,6 +36,7 @@ class RuntimeConfig:
 
     config_dir: str
     skip_pip: bool = False
+    skip_pip_packages: list[str] = dataclasses.field(default_factory=list)
     safe_mode: bool = False
 
     verbose: bool = False

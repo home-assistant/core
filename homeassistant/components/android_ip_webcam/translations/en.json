@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Port",
+                    "username": "Username"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Configuring Android IP Webcam using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Android IP Webcam YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
+            "title": "The Android IP Webcam YAML configuration is being removed"
+        }
+    }
+}

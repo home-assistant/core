@@ -1,4 +1,6 @@
 """Tests for the collection helper."""
+from __future__ import annotations
+
 import logging
 
 import pytest
@@ -6,11 +8,11 @@ import voluptuous as vol
 
 from homeassistant.helpers import (
     collection,
-    entity,
     entity_component,
     entity_registry as er,
     storage,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from tests.common import flush_store
 
@@ -29,12 +31,22 @@ def track_changes(coll: collection.ObservableCollection):
     return changes
 
 
-class MockEntity(entity.Entity):
+class MockEntity(collection.CollectionEntity):
     """Entity that is config based."""
 
     def __init__(self, config):
         """Initialize entity."""
         self._config = config
+
+    @classmethod
+    def from_storage(cls, config: ConfigType) -> MockEntity:
+        """Create instance from storage."""
+        return cls(config)
+
+    @classmethod
+    def from_yaml(cls, config: ConfigType) -> MockEntity:
+        """Create instance from storage."""
+        raise NotImplementedError
 
     @property
     def unique_id(self):
@@ -55,6 +67,17 @@ class MockEntity(entity.Entity):
         """Update entity config."""
         self._config = config
         self.async_write_ha_state()
+
+
+class MockObservableCollection(collection.ObservableCollection):
+    """Mock observable collection which can create entities."""
+
+    @staticmethod
+    def create_entity(
+        entity_class: type[collection.CollectionEntity], config: ConfigType
+    ) -> collection.CollectionEntity:
+        """Create a CollectionEntity instance."""
+        return entity_class.from_storage(config)
 
 
 class MockStorageCollection(collection.StorageCollection):
@@ -231,7 +254,7 @@ async def test_storage_collection(hass):
 async def test_attach_entity_component_collection(hass):
     """Test attaching collection to entity component."""
     ent_comp = entity_component.EntityComponent(_LOGGER, "test", hass)
-    coll = collection.ObservableCollection(_LOGGER)
+    coll = MockObservableCollection(_LOGGER)
     collection.sync_entity_lifecycle(hass, "test", "test", ent_comp, coll, MockEntity)
 
     await coll.notify_changes(
@@ -270,7 +293,7 @@ async def test_attach_entity_component_collection(hass):
 async def test_entity_component_collection_abort(hass):
     """Test aborted entity adding is handled."""
     ent_comp = entity_component.EntityComponent(_LOGGER, "test", hass)
-    coll = collection.ObservableCollection(_LOGGER)
+    coll = MockObservableCollection(_LOGGER)
 
     async_update_config_calls = []
     async_remove_calls = []
@@ -336,7 +359,7 @@ async def test_entity_component_collection_abort(hass):
 async def test_entity_component_collection_entity_removed(hass):
     """Test entity removal is handled."""
     ent_comp = entity_component.EntityComponent(_LOGGER, "test", hass)
-    coll = collection.ObservableCollection(_LOGGER)
+    coll = MockObservableCollection(_LOGGER)
 
     async_update_config_calls = []
     async_remove_calls = []

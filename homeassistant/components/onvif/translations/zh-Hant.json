@@ -11,13 +11,6 @@
             "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
         "step": {
-            "auth": {
-                "data": {
-                    "password": "\u5bc6\u78bc",
-                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
-                },
-                "title": "\u8a2d\u5b9a\u9a57\u8b49"
-            },
             "configure": {
                 "data": {
                     "host": "\u4e3b\u6a5f\u7aef",
@@ -41,14 +34,6 @@
                 },
                 "title": "\u9078\u64c7 ONVIF \u88dd\u7f6e"
             },
-            "manual_input": {
-                "data": {
-                    "host": "\u4e3b\u6a5f\u7aef",
-                    "name": "\u540d\u7a31",
-                    "port": "\u901a\u8a0a\u57e0"
-                },
-                "title": "\u8a2d\u5b9a ONVIF \u88dd\u7f6e"
-            },
             "user": {
                 "data": {
                     "auto": "\u81ea\u52d5\u641c\u5c0b"
@@ -63,7 +48,8 @@
             "onvif_devices": {
                 "data": {
                     "extra_arguments": "\u984d\u5916 FFMPEG \u53c3\u6578",
-                    "rtsp_transport": "RTSP \u50b3\u8f38\u5354\u5b9a"
+                    "rtsp_transport": "RTSP \u50b3\u8f38\u5354\u5b9a",
+                    "use_wallclock_as_timestamps": "\u4f7f\u7528\u6642\u9418\u4f5c\u70ba\u6642\u9593\u6233"
                 },
                 "title": "ONVIF \u88dd\u7f6e\u9078\u9805"
             }

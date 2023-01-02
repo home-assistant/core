@@ -53,6 +53,6 @@ class NextcloudBinarySensor(BinarySensorEntity):
         """Return the unique ID for this binary sensor."""
         return f"{self.hass.data[DOMAIN]['instance']}#{self._name}"
 
-    def update(self):
+    def update(self) -> None:
         """Update the binary sensor."""
         self._is_on = self.hass.data[DOMAIN][self._name]

@@ -15,7 +15,6 @@
         "trigger_type": {
             "changed_states": "{entity_name} turned on or off",
             "target_humidity_changed": "{entity_name} target humidity changed",
-            "toggled": "{entity_name} turned on or off",
             "turned_off": "{entity_name} turned off",
             "turned_on": "{entity_name} turned on"
         }

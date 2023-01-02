@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 
 import lupupy.constants as CONST
 
@@ -39,11 +40,11 @@ def setup_platform(
 class LupusecSwitch(LupusecDevice, SwitchEntity):
     """Representation of a Lupusec switch."""
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
         self._device.switch_on()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
         self._device.switch_off()
 

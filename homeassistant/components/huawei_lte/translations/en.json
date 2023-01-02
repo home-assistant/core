@@ -1,9 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured",
-            "already_in_progress": "Configuration flow is already in progress",
-            "not_huawei_lte": "Not a Huawei LTE device"
+            "not_huawei_lte": "Not a Huawei LTE device",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "connection_timeout": "Connection timeout",
@@ -17,6 +16,14 @@
         },
         "flow_title": "{name}",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Enter device access credentials.",
+                "title": "Reauthenticate Integration"
+            },
             "user": {
                 "data": {
                     "password": "Password",
@@ -34,7 +41,6 @@
                 "data": {
                     "name": "Notification service name (change requires restart)",
                     "recipient": "SMS notification recipients",
-                    "track_new_devices": "Track new devices",
                     "track_wired_clients": "Track wired network clients",
                     "unauthenticated_mode": "Unauthenticated mode (change requires reload)"
                 }

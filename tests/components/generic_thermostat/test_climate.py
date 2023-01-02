@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config as hass_config
 from homeassistant.components import input_boolean, switch
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
     DOMAIN,
     PRESET_ACTIVITY,
@@ -37,7 +37,7 @@ from homeassistant.core import DOMAIN as HASS_DOMAIN, CoreState, State, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.common import (
     assert_setup_component,
@@ -749,7 +749,7 @@ async def test_temp_change_ac_trigger_on_not_long_enough(hass, setup_comp_4):
 
 async def test_temp_change_ac_trigger_on_long_enough(hass, setup_comp_4):
     """Test if temperature change turn ac on."""
-    fake_changed = datetime.datetime(1918, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
+    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
     with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
@@ -775,7 +775,7 @@ async def test_temp_change_ac_trigger_off_not_long_enough(hass, setup_comp_4):
 
 async def test_temp_change_ac_trigger_off_long_enough(hass, setup_comp_4):
     """Test if temperature change turn ac on."""
-    fake_changed = datetime.datetime(1918, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
+    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
     with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
@@ -855,7 +855,7 @@ async def test_temp_change_ac_trigger_on_not_long_enough_2(hass, setup_comp_5):
 
 async def test_temp_change_ac_trigger_on_long_enough_2(hass, setup_comp_5):
     """Test if temperature change turn ac on."""
-    fake_changed = datetime.datetime(1918, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
+    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
     with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
@@ -881,7 +881,7 @@ async def test_temp_change_ac_trigger_off_not_long_enough_2(hass, setup_comp_5):
 
 async def test_temp_change_ac_trigger_off_long_enough_2(hass, setup_comp_5):
     """Test if temperature change turn ac on."""
-    fake_changed = datetime.datetime(1918, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
+    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
     with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
@@ -969,7 +969,7 @@ async def test_temp_change_heater_trigger_on_not_long_enough(hass, setup_comp_6)
 
 async def test_temp_change_heater_trigger_on_long_enough(hass, setup_comp_6):
     """Test if temperature change turn heater on after min cycle."""
-    fake_changed = datetime.datetime(1918, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
+    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
     with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
@@ -986,7 +986,7 @@ async def test_temp_change_heater_trigger_on_long_enough(hass, setup_comp_6):
 
 async def test_temp_change_heater_trigger_off_long_enough(hass, setup_comp_6):
     """Test if temperature change turn heater off after min cycle."""
-    fake_changed = datetime.datetime(1918, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
+    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
     with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
@@ -1201,7 +1201,7 @@ async def setup_comp_9(hass):
 
 async def test_precision(hass, setup_comp_9):
     """Test that setting precision to tenths works as intended."""
-    hass.config.units = IMPERIAL_SYSTEM
+    hass.config.units = US_CUSTOMARY_SYSTEM
     await common.async_set_temperature(hass, 23.27)
     state = hass.states.get(ENTITY)
     assert state.attributes.get("temperature") == 23.3

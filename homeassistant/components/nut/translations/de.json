@@ -8,16 +8,9 @@
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
-            "resources": {
-                "data": {
-                    "resources": "Ressourcen"
-                },
-                "title": "W\u00e4hle die zu \u00fcberwachenden Ressourcen aus"
-            },
             "ups": {
                 "data": {
-                    "alias": "Alias",
-                    "resources": "Ressourcen"
+                    "alias": "Alias"
                 },
                 "title": "W\u00e4hle die zu \u00fcberwachende USV"
             },
@@ -33,17 +26,11 @@
         }
     },
     "options": {
-        "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen",
-            "unknown": "Unerwarteter Fehler"
-        },
         "step": {
             "init": {
                 "data": {
-                    "resources": "Ressourcen",
                     "scan_interval": "Scan-Intervall (Sekunden)"
-                },
-                "description": "W\u00e4hle Sensorressourcen."
+                }
             }
         }
     }

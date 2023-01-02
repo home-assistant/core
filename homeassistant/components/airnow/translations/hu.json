@@ -17,10 +17,8 @@
                     "longitude": "Hossz\u00fas\u00e1g",
                     "radius": "\u00c1llom\u00e1s sugara (m\u00e9rf\u00f6ld; opcion\u00e1lis)"
                 },
-                "description": "Az API-kulcs l\u00e9trehoz\u00e1s\u00e1hoz keresse fel a https://docs.airnowapi.org/account/request/ webhelyet",
-                "title": "AirNow"
+                "description": "Az API-kulcs l\u00e9trehoz\u00e1s\u00e1hoz keresse fel a https://docs.airnowapi.org/account/request/ webhelyet"
             }
         }
-    },
-    "title": "AirNow"
+    }
 }

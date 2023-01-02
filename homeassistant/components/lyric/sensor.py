@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import cast
 
+from aiolyric import Lyric
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
 
@@ -16,6 +17,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -47,9 +49,11 @@ class LyricSensorEntityDescription(SensorEntityDescription):
     value: Callable[[LyricDevice], StateType | datetime] = round
 
 
-def get_datetime_from_future_time(time: str) -> datetime:
+def get_datetime_from_future_time(time_str: str) -> datetime:
     """Get datetime from future time provided."""
-    time = dt_util.parse_time(time)
+    time = dt_util.parse_time(time_str)
+    if time is None:
+        raise ValueError(f"Unable to parse time {time_str}")
     now = dt_util.utcnow()
     if time <= now.time():
         now = now + timedelta(days=1)
@@ -60,11 +64,11 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Honeywell Lyric sensor platform based on a config entry."""
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: DataUpdateCoordinator[Lyric] = hass.data[DOMAIN][entry.entry_id]
 
     entities = []
 
-    def get_setpoint_status(status: str, time: str) -> str:
+    def get_setpoint_status(status: str, time: str) -> str | None:
         if status == PRESET_HOLD_UNTIL:
             return f"Held until {time}"
         return LYRIC_SETPOINT_STATUS_NAMES.get(status, None)
@@ -82,6 +86,22 @@ async def async_setup_entry(
                             state_class=SensorStateClass.MEASUREMENT,
                             native_unit_of_measurement=hass.config.units.temperature_unit,
                             value=lambda device: device.indoorTemperature,
+                        ),
+                        location,
+                        device,
+                    )
+                )
+            if device.indoorHumidity:
+                entities.append(
+                    LyricSensor(
+                        coordinator,
+                        LyricSensorEntityDescription(
+                            key=f"{device.macID}_indoor_humidity",
+                            name="Indoor Humidity",
+                            device_class=SensorDeviceClass.HUMIDITY,
+                            state_class=SensorStateClass.MEASUREMENT,
+                            native_unit_of_measurement=PERCENTAGE,
+                            value=lambda device: device.indoorHumidity,
                         ),
                         location,
                         device,
@@ -112,7 +132,7 @@ async def async_setup_entry(
                             name="Outdoor Humidity",
                             device_class=SensorDeviceClass.HUMIDITY,
                             state_class=SensorStateClass.MEASUREMENT,
-                            native_unit_of_measurement="%",
+                            native_unit_of_measurement=PERCENTAGE,
                             value=lambda device: device.displayedOutdoorHumidity,
                         ),
                         location,
@@ -160,12 +180,12 @@ async def async_setup_entry(
 class LyricSensor(LyricDeviceEntity, SensorEntity):
     """Define a Honeywell Lyric sensor."""
 
-    coordinator: DataUpdateCoordinator
+    coordinator: DataUpdateCoordinator[Lyric]
     entity_description: LyricSensorEntityDescription
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[Lyric],
         description: LyricSensorEntityDescription,
         location: LyricLocation,
         device: LyricDevice,

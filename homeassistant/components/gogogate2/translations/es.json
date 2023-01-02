@@ -13,10 +13,10 @@
                 "data": {
                     "ip_address": "Direcci\u00f3n IP",
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "description": "Proporciona la informaci\u00f3n requerida a continuaci\u00f3n.",
-                "title": "Configurar GotoGate2"
+                "title": "Configurar Gogogate2 o ismartgate"
             }
         }
     }

@@ -1,0 +1,25 @@
+{
+  "config": {
+    "step": {
+      "init": {
+        "description": "Please enter your personal Auth Code that is shown in the laundrify-App.",
+        "data": {
+          "code": "Auth Code (xxx-xxx)"
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The laundrify integration needs to re-authenticate."
+      }
+    },
+    "error": {
+      "invalid_format": "Invalid format. Please specify as xxx-xxx.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  }
+}

@@ -2,16 +2,17 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
-from bluepy.btle import BTLEException  # pylint: disable=import-error
 import eq3bt as eq3  # pylint: disable=import-error
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA,
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -20,7 +21,7 @@ from homeassistant.const import (
     CONF_DEVICES,
     CONF_MAC,
     PRECISION_HALVES,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -100,36 +101,25 @@ def setup_platform(
 class EQ3BTSmartThermostat(ClimateEntity):
     """Representation of an eQ-3 Bluetooth Smart thermostat."""
 
+    _attr_hvac_modes = list(HA_TO_EQ_HVAC)
+    _attr_precision = PRECISION_HALVES
+    _attr_preset_modes = list(HA_TO_EQ_PRESET)
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, _mac, _name):
+    def __init__(self, mac: str, name: str) -> None:
         """Initialize the thermostat."""
         # We want to avoid name clash with this module.
-        self._name = _name
-        self._mac = _mac
-        self._thermostat = eq3.Thermostat(_mac)
+        self._attr_name = name
+        self._attr_unique_id = format_mac(mac)
+        self._thermostat = eq3.Thermostat(mac)
 
     @property
     def available(self) -> bool:
         """Return if thermostat is available."""
         return self._thermostat.mode >= 0
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement that is used."""
-        return TEMP_CELSIUS
-
-    @property
-    def precision(self):
-        """Return eq3bt's precision 0.5."""
-        return PRECISION_HALVES
 
     @property
     def current_temperature(self):
@@ -141,25 +131,20 @@ class EQ3BTSmartThermostat(ClimateEntity):
         """Return the temperature we try to reach."""
         return self._thermostat.target_temperature
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         self._thermostat.target_temperature = temperature
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return the current operation mode."""
         if self._thermostat.mode < 0:
             return HVACMode.OFF
         return EQ_TO_HA_HVAC[self._thermostat.mode]
 
-    @property
-    def hvac_modes(self):
-        """Return the list of available operation modes."""
-        return list(HA_TO_EQ_HVAC)
-
-    def set_hvac_mode(self, hvac_mode):
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set operation mode."""
         self._thermostat.mode = HA_TO_EQ_HVAC[hvac_mode]
 
@@ -174,9 +159,9 @@ class EQ3BTSmartThermostat(ClimateEntity):
         return self._thermostat.max_temp
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
-        dev_specific = {
+        return {
             ATTR_STATE_AWAY_END: self._thermostat.away_end,
             ATTR_STATE_LOCKED: self._thermostat.locked,
             ATTR_STATE_LOW_BAT: self._thermostat.low_battery,
@@ -184,39 +169,24 @@ class EQ3BTSmartThermostat(ClimateEntity):
             ATTR_STATE_WINDOW_OPEN: self._thermostat.window_open,
         }
 
-        return dev_specific
-
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp.
 
         Requires ClimateEntityFeature.PRESET_MODE.
         """
         return EQ_TO_HA_PRESET.get(self._thermostat.mode)
 
-    @property
-    def preset_modes(self):
-        """Return a list of available preset modes.
-
-        Requires ClimateEntityFeature.PRESET_MODE.
-        """
-        return list(HA_TO_EQ_PRESET)
-
-    @property
-    def unique_id(self) -> str:
-        """Return the MAC address of the thermostat."""
-        return format_mac(self._mac)
-
-    def set_preset_mode(self, preset_mode):
+    def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if preset_mode == PRESET_NONE:
             self.set_hvac_mode(HVACMode.HEAT)
         self._thermostat.mode = HA_TO_EQ_PRESET[preset_mode]
 
-    def update(self):
+    def update(self) -> None:
         """Update the data from the thermostat."""
 
         try:
             self._thermostat.update()
-        except BTLEException as ex:
+        except eq3.BackendException as ex:
             _LOGGER.warning("Updating the state failed: %s", ex)

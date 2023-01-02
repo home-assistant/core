@@ -14,6 +14,7 @@ from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.storage import Store
 
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
@@ -60,10 +61,10 @@ class Data:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the user data store."""
         self.hass = hass
-        self._store = hass.helpers.storage.Store(
-            STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
+        self._store = Store[dict[str, list[dict[str, str]]]](
+            hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
-        self._data: dict[str, Any] | None = None
+        self._data: dict[str, list[dict[str, str]]] | None = None
         # Legacy mode will allow usernames to start/end with whitespace
         # and will compare usernames case-insensitive.
         # Remove in 2020 or when we launch 1.0.
@@ -80,7 +81,7 @@ class Data:
     async def async_load(self) -> None:
         """Load stored data."""
         if (data := await self._store.async_load()) is None:
-            data = {"users": []}
+            data = cast(dict[str, list[dict[str, str]]], {"users": []})
 
         seen: set[str] = set()
 
@@ -92,9 +93,11 @@ class Data:
                 self.is_legacy = True
 
                 logging.getLogger(__name__).warning(
-                    "Home Assistant auth provider is running in legacy mode "
-                    "because we detected usernames that are case-insensitive"
-                    "equivalent. Please change the username: '%s'.",
+                    (
+                        "Home Assistant auth provider is running in legacy mode "
+                        "because we detected usernames that are case-insensitive"
+                        "equivalent. Please change the username: '%s'."
+                    ),
                     username,
                 )
 
@@ -107,9 +110,11 @@ class Data:
                 self.is_legacy = True
 
                 logging.getLogger(__name__).warning(
-                    "Home Assistant auth provider is running in legacy mode "
-                    "because we detected usernames that start or end in a "
-                    "space. Please change the username: '%s'.",
+                    (
+                        "Home Assistant auth provider is running in legacy mode "
+                        "because we detected usernames that start or end in a "
+                        "space. Please change the username: '%s'."
+                    ),
                     username,
                 )
 
@@ -120,7 +125,8 @@ class Data:
     @property
     def users(self) -> list[dict[str, str]]:
         """Return users."""
-        return self._data["users"]  # type: ignore[index,no-any-return]
+        assert self._data is not None
+        return self._data["users"]
 
     def validate_login(self, username: str, password: str) -> None:
         """Validate a username and password.
@@ -203,7 +209,8 @@ class Data:
 
     async def async_save(self) -> None:
         """Save data."""
-        await self._store.async_save(self._data)
+        if self._data is not None:
+            await self._store.async_save(self._data)
 
 
 @AUTH_PROVIDERS.register("homeassistant")

@@ -8,8 +8,7 @@
         "error": {
             "api_error": "Gagal masuk",
             "cannot_connect": "Gagal terhubung",
-            "iftapi_connect": "Kesalahan saat menyambung ke iftapi.net",
-            "unknown": "Kesalahan yang tidak diharapkan"
+            "iftapi_connect": "Kesalahan saat menyambung ke iftapi.net"
         },
         "flow_title": "{serial} ({host})",
         "step": {
@@ -20,7 +19,7 @@
                 }
             },
             "dhcp_confirm": {
-                "description": "Ingin menyiapkan {host}\nSerial: ({serial})?"
+                "description": "Ingin menyiapkan {host}\nSerial: {serial}?"
             },
             "manual_device_entry": {
                 "data": {
@@ -34,11 +33,6 @@
                 },
                 "description": "Perangkat IntelliFire berikut ditemukan. Pilih yang ingin dikonfigurasikan.",
                 "title": "Pemilihan Perangkat"
-            },
-            "user": {
-                "data": {
-                    "host": "Host"
-                }
             }
         }
     }

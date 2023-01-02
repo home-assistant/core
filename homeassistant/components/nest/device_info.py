@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
-from google_nest_sdm.device import Device
-from google_nest_sdm.device_traits import InfoTrait
+from collections.abc import Mapping
 
+from google_nest_sdm.device import Device
+from google_nest_sdm.device_traits import ConnectivityTrait, InfoTrait
+
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
 
-from .const import DOMAIN
+from .const import CONNECTIVITY_TRAIT_OFFLINE, DATA_DEVICE_MANAGER, DOMAIN
 
 DEVICE_TYPE_MAP: dict[str, str] = {
     "sdm.devices.types.CAMERA": "Camera",
@@ -25,6 +29,15 @@ class NestDeviceInfo:
     def __init__(self, device: Device) -> None:
         """Initialize the DeviceInfo."""
         self._device = device
+
+    @property
+    def available(self) -> bool:
+        """Return device availability."""
+        if ConnectivityTrait.NAME in self._device.traits:
+            trait: ConnectivityTrait = self._device.traits[ConnectivityTrait.NAME]
+            if trait.status == CONNECTIVITY_TRAIT_OFFLINE:
+                return False
+        return True
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -66,3 +79,27 @@ class NestDeviceInfo:
             names = [name for id, name in items]
             return " ".join(names)
         return None
+
+
+@callback
+def async_nest_devices(hass: HomeAssistant) -> Mapping[str, Device]:
+    """Return a mapping of all nest devices for all config entries."""
+    devices = {}
+    for entry_id in hass.data[DOMAIN]:
+        if not (device_manager := hass.data[DOMAIN][entry_id].get(DATA_DEVICE_MANAGER)):
+            continue
+        devices.update(
+            {device.name: device for device in device_manager.devices.values()}
+        )
+    return devices
+
+
+@callback
+def async_nest_devices_by_device_id(hass: HomeAssistant) -> Mapping[str, Device]:
+    """Return a mapping of all nest devices by home assistant device id, for all config entries."""
+    device_registry = dr.async_get(hass)
+    devices = {}
+    for nest_device_id, device in async_nest_devices(hass).items():
+        if device_entry := device_registry.async_get_device({(DOMAIN, nest_device_id)}):
+            devices[device_entry.id] = device
+    return devices

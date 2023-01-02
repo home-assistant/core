@@ -1,0 +1,20 @@
+{
+    "state": {
+        "airvisual__pollutant_label": {
+            "co": "Oxid uho\u013enat\u00fd",
+            "n2": "Oxid dusi\u010dit\u00fd",
+            "o3": "Oz\u00f3n",
+            "p1": "PM10",
+            "p2": "PM2,5",
+            "s2": "Oxid siri\u010dit\u00fd"
+        },
+        "airvisual__pollutant_level": {
+            "good": "Dobr\u00e9",
+            "hazardous": "Nebezpe\u010dn\u00e9",
+            "moderate": "Mierne",
+            "unhealthy": "Nezdrav\u00e9",
+            "unhealthy_sensitive": "Nezdrav\u00e9 pre citliv\u00e9 skupiny",
+            "very_unhealthy": "Ve\u013emi nezdrav\u00e9"
+        }
+    }
+}

@@ -1,6 +1,7 @@
 {
     "system_health": {
         "info": {
+            "agent_version": "\u30a8\u30fc\u30b8\u30a7\u30f3\u30c8\u306e\u30d0\u30fc\u30b8\u30e7\u30f3",
             "board": "\u30dc\u30fc\u30c9",
             "disk_total": "\u30c7\u30a3\u30b9\u30af\u5408\u8a08",
             "disk_used": "\u4f7f\u7528\u6e08\u307f\u30c7\u30a3\u30b9\u30af",

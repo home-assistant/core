@@ -59,8 +59,6 @@
             "connected": "nast\u0105pi pod\u0142\u0105czenie {entity_name}",
             "gas": "sensor {entity_name} wykryje gaz",
             "hot": "sensor {entity_name} wykryje gor\u0105co",
-            "is_not_tampered": "sensor {entity_name} przestanie wykrywa\u0107 naruszenie",
-            "is_tampered": "sensor {entity_name} wykryje naruszenie",
             "light": "sensor {entity_name} wykryje \u015bwiat\u0142o",
             "locked": "nast\u0105pi zamkni\u0119cie {entity_name}",
             "moist": "nast\u0105pi wykrycie wilgoci {entity_name}",
@@ -108,18 +106,18 @@
         }
     },
     "device_class": {
-        "co": "tlenek_w\u0119gla",
-        "cold": "zimno",
+        "co": "tlenek w\u0119gla",
+        "cold": "ch\u0142\u00f3d",
         "gas": "gaz",
-        "heat": "gor\u0105co",
-        "moisture": "wilgotno\u015b\u0107",
+        "heat": "ciep\u0142o",
+        "moisture": "wilgo\u0107",
         "motion": "ruch",
         "occupancy": "obecno\u015b\u0107",
         "power": "zasilanie",
         "problem": "problem",
         "smoke": "dym",
         "sound": "d\u017awi\u0119k",
-        "vibration": "wibracja"
+        "vibration": "wibracje"
     },
     "state": {
         "_": {
@@ -135,10 +133,6 @@
             "on": "\u0142adowanie"
         },
         "carbon_monoxide": {
-            "off": "brak",
-            "on": "wykryto"
-        },
-        "co": {
             "off": "brak",
             "on": "wykryto"
         },

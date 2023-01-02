@@ -55,15 +55,15 @@ async def test_verify_login(hass, provider):
 async def test_login_flow_works(hass, manager):
     """Test wrong config."""
     result = await manager.login_flow.async_init(handler=("legacy_api_password", None))
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     result = await manager.login_flow.async_configure(
         flow_id=result["flow_id"], user_input={"password": "not-hello"}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_auth"
 
     result = await manager.login_flow.async_configure(
         flow_id=result["flow_id"], user_input={"password": "test-password"}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY

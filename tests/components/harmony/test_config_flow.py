@@ -201,7 +201,7 @@ async def test_options_flow(hass, mock_hc, mock_write_config):
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -209,7 +209,7 @@ async def test_options_flow(hass, mock_hc, mock_write_config):
         user_input={"activity": PREVIOUS_ACTIVE_ACTIVITY, "delay_secs": 0.4},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         "activity": PREVIOUS_ACTIVE_ACTIVITY,
         "delay_secs": 0.4,

@@ -15,9 +15,8 @@
                 "title": "Pick Authentication Method"
             },
             "reauth_confirm": {
-                "title": "Do you want to start set up?"
+                "title": "Do you want to start setup?"
             }
         }
-    },
-    "title": "Neato Botvac"
+    }
 }

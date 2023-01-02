@@ -42,7 +42,7 @@ def base_unique_id(latitude, longitude):
     return f"{latitude}_{longitude}"
 
 
-class NwsDataUpdateCoordinator(DataUpdateCoordinator):
+class NwsDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """
     NWS data update coordinator.
 
@@ -57,7 +57,7 @@ class NwsDataUpdateCoordinator(DataUpdateCoordinator):
         name: str,
         update_interval: datetime.timedelta,
         failed_update_interval: datetime.timedelta,
-        update_method: Callable[[], Awaitable] | None = None,
+        update_method: Callable[[], Awaitable[None]] | None = None,
         request_refresh_debouncer: debounce.Debouncer | None = None,
     ) -> None:
         """Initialize NWS coordinator."""
@@ -159,7 +159,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator_forecast.async_refresh()
     await coordinator_forecast_hourly.async_refresh()
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

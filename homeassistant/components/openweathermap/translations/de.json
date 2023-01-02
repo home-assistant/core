@@ -17,8 +17,7 @@
                     "mode": "Modus",
                     "name": "Name"
                 },
-                "description": "Um den API-Schl\u00fcssel zu generieren, besuche https://openweathermap.org/appid",
-                "title": "OpenWeatherMap"
+                "description": "Um den API-Schl\u00fcssel zu generieren, besuche https://openweathermap.org/appid"
             }
         }
     },

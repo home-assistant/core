@@ -1,8 +1,17 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad"
+        },
+        "error": {
+            "invalid_auth": "Ogiltig autentisering"
+        },
         "step": {
             "user": {
-                "description": "Vill du starta konfigurationen?"
+                "data": {
+                    "email": "E-post",
+                    "password": "L\u00f6senord"
+                }
             }
         }
     }

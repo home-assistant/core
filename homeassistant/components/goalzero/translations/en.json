@@ -12,16 +12,14 @@
         },
         "step": {
             "confirm_discovery": {
-                "description": "DHCP reservation on your router is recommended. If not set up, the device may become unavailable until Home Assistant detects the new ip address. Refer to your router's user manual.",
-                "title": "Goal Zero Yeti"
+                "description": "DHCP reservation on your router is recommended. If not set up, the device may become unavailable until Home Assistant detects the new ip address. Refer to your router's user manual."
             },
             "user": {
                 "data": {
                     "host": "Host",
                     "name": "Name"
                 },
-                "description": "Please refer to the documentation to make sure all requirements are met.",
-                "title": "Goal Zero Yeti"
+                "description": "Please refer to the documentation to make sure all requirements are met."
             }
         }
     }

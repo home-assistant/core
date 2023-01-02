@@ -1,0 +1,13 @@
+{
+    "state": {
+        "sensibo__sensitivity": {
+            "n": "Normal",
+            "s": "Sensitif"
+        },
+        "sensibo__smart_type": {
+            "feelslike": "Terasa seperti",
+            "humidity": "Kelembaban",
+            "temperature": "Suhu"
+        }
+    }
+}

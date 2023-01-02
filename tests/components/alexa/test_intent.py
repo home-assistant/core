@@ -27,8 +27,9 @@ NPR_NEWS_MP3_URL = "https://pd.npr.org/anon.npr-mp3/npr/news/newscast.mp3"
 
 
 @pytest.fixture
-def alexa_client(loop, hass, hass_client):
+def alexa_client(event_loop, hass, hass_client):
     """Initialize a Home Assistant server for testing this module."""
+    loop = event_loop
 
     @callback
     def mock_service(call):
@@ -490,8 +491,11 @@ async def test_intent_session_ended_request(alexa_client):
 
     req = await _intent_req(alexa_client, data)
     assert req.status == HTTPStatus.OK
-    text = await req.text()
-    assert text == ""
+    data = await req.json()
+    assert (
+        data["response"]["outputSpeech"]["text"]
+        == "This intent is not yet configured within Home Assistant."
+    )
 
 
 async def test_intent_from_built_in_intent_library(alexa_client):

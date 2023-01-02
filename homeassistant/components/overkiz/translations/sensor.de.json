@@ -28,7 +28,7 @@
             "wind": "Wind"
         },
         "overkiz__sensor_defect": {
-            "dead": "nicht Erreichbar",
+            "dead": "Nicht Erreichbar",
             "low_battery": "Niedriger Batteriestatus",
             "maintenance_required": "Wartung erforderlich",
             "no_defect": "Kein Fehler"
@@ -36,6 +36,11 @@
         "overkiz__sensor_room": {
             "clean": "Sauber",
             "dirty": "Schmutzig"
+        },
+        "overkiz__three_way_handle_direction": {
+            "closed": "Geschlossen",
+            "open": "Offen",
+            "tilt": "Kippen"
         }
     }
 }

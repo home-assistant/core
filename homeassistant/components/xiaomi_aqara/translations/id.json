@@ -18,8 +18,7 @@
                 "data": {
                     "select_ip": "Alamat IP"
                 },
-                "description": "Pilih Gateway Xiaomi Aqara yang ingin disambungkan",
-                "title": "Pilih Gateway Xiaomi Aqara yang ingin dihubungkan"
+                "description": "Pilih Gateway Xiaomi Aqara yang ingin disambungkan"
             },
             "settings": {
                 "data": {
@@ -35,8 +34,7 @@
                     "interface": "Antarmuka jaringan yang akan digunakan",
                     "mac": "Alamat MAC (opsional)"
                 },
-                "description": "Jika alamat IP dan MAC dikosongkan, penemuan otomatis digunakan",
-                "title": "Xiaomi Aqara Gateway"
+                "description": "Jika alamat IP dan MAC dikosongkan, penemuan otomatis digunakan"
             }
         }
     }

@@ -35,7 +35,7 @@ async def test_already_paired(hass, mock_entry_setup):
             result["flow_id"], {"host": "123.123.123.123", "security_code": "abcd"}
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_authenticate"}
 
 
@@ -53,7 +53,7 @@ async def test_user_connection_successful(hass, mock_auth, mock_entry_setup):
 
     assert len(mock_entry_setup.mock_calls) == 1
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["result"].data == {
         "host": "123.123.123.123",
         "gateway_id": "bla",
@@ -74,7 +74,7 @@ async def test_user_connection_timeout(hass, mock_auth, mock_entry_setup):
 
     assert len(mock_entry_setup.mock_calls) == 0
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {"base": "timeout"}
 
 
@@ -92,7 +92,7 @@ async def test_user_connection_bad_key(hass, mock_auth, mock_entry_setup):
 
     assert len(mock_entry_setup.mock_calls) == 0
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {"security_code": "invalid_security_code"}
 
 
@@ -120,7 +120,7 @@ async def test_discovery_connection(hass, mock_auth, mock_entry_setup):
 
     assert len(mock_entry_setup.mock_calls) == 1
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == "homekit-id"
     assert result["result"].data == {
         "host": "123.123.123.123",
@@ -149,7 +149,7 @@ async def test_discovery_duplicate_aborted(hass):
         ),
     )
 
-    assert flow["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert flow["type"] == data_entry_flow.FlowResultType.ABORT
     assert flow["reason"] == "already_configured"
 
     assert entry.data["host"] == "new-host"
@@ -165,7 +165,7 @@ async def test_import_duplicate_aborted(hass):
         data={"host": "some-host"},
     )
 
-    assert flow["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert flow["type"] == data_entry_flow.FlowResultType.ABORT
     assert flow["reason"] == "already_configured"
 
 
@@ -185,7 +185,7 @@ async def test_duplicate_discovery(hass, mock_auth, mock_entry_setup):
         ),
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     result2 = await hass.config_entries.flow.async_init(
         "tradfri",
@@ -201,7 +201,7 @@ async def test_duplicate_discovery(hass, mock_auth, mock_entry_setup):
         ),
     )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
 
 
 async def test_discovery_updates_unique_id(hass):
@@ -226,7 +226,7 @@ async def test_discovery_updates_unique_id(hass):
         ),
     )
 
-    assert flow["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert flow["type"] == data_entry_flow.FlowResultType.ABORT
     assert flow["reason"] == "already_configured"
 
     assert entry.unique_id == "homekit-id"

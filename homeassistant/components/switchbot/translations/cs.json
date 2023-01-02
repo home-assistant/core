@@ -5,14 +5,13 @@
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
-        "error": {
-            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
-        },
         "flow_title": "{name}",
         "step": {
-            "user": {
+            "confirm": {
+                "description": "Chcete nastavit {name}?"
+            },
+            "password": {
                 "data": {
-                    "name": "Jm\u00e9no",
                     "password": "Heslo"
                 }
             }

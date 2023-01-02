@@ -11,13 +11,6 @@
             "cannot_connect": "Falha ao conectar"
         },
         "step": {
-            "auth": {
-                "data": {
-                    "password": "Senha",
-                    "username": "Usu\u00e1rio"
-                },
-                "title": "Configurar autentica\u00e7\u00e3o"
-            },
             "configure": {
                 "data": {
                     "host": "Nome do host",
@@ -41,14 +34,6 @@
                 },
                 "title": "Selecionar dispositivo ONVIF"
             },
-            "manual_input": {
-                "data": {
-                    "host": "Nome do host",
-                    "name": "Nome",
-                    "port": "Porta"
-                },
-                "title": "Configurar dispositivo ONVIF"
-            },
             "user": {
                 "data": {
                     "auto": "Pesquisar automaticamente"
@@ -63,7 +48,8 @@
             "onvif_devices": {
                 "data": {
                     "extra_arguments": "Argumentos FFMPEG extras",
-                    "rtsp_transport": "Mecanismo de transporte RTSP"
+                    "rtsp_transport": "Mecanismo de transporte RTSP",
+                    "use_wallclock_as_timestamps": "Use o rel\u00f3gio de parede como carimbo de data/hora"
                 },
                 "title": "Op\u00e7\u00f5es do dispositivo ONVIF"
             }

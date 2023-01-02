@@ -1,6 +1,7 @@
 """Adds config flow for Trafikverket Train integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from pytrafikverket import TrafikverketTrain
@@ -54,9 +55,7 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await train_api.async_get_train_station(train_from)
         await train_api.async_get_train_station(train_to)
 
-    async def async_step_reauth(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle re-authentication with Trafikverket."""
 
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
@@ -101,11 +100,6 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=DATA_SCHEMA_REAUTH,
             errors=errors,
         )
-
-    async def async_step_import(self, config: dict[str, Any] | None) -> FlowResult:
-        """Import a configuration from config.yaml."""
-
-        return await self.async_step_user(user_input=config)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

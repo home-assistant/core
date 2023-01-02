@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "no_stations": "Inga \u00f6vervakningsstationer f\u00f6r \u00f6versv\u00e4mningar hittades."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "station": "Station"
+                },
+                "description": "V\u00e4lj den station du vill \u00f6vervaka",
+                "title": "Sp\u00e5ra en station f\u00f6r \u00f6vervakning av \u00f6versv\u00e4mningar"
+            }
+        }
+    }
+}

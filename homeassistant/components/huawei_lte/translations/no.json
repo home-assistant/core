@@ -1,9 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Enheten er allerede konfigurert",
-            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
-            "not_huawei_lte": "Ikke en Huawei LTE-enhet"
+            "not_huawei_lte": "Ikke en Huawei LTE-enhet",
+            "reauth_successful": "Re-autentisering var vellykket"
         },
         "error": {
             "connection_timeout": "Tilkoblingsavbrudd",
@@ -17,6 +16,14 @@
         },
         "flow_title": "{name}",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                },
+                "description": "Angi legitimasjon for enhetstilgang.",
+                "title": "Godkjenne integrering p\u00e5 nytt"
+            },
             "user": {
                 "data": {
                     "password": "Passord",
@@ -34,7 +41,6 @@
                 "data": {
                     "name": "Navn p\u00e5 varslingstjeneste (endring krever omstart)",
                     "recipient": "Mottakere av SMS-varsling",
-                    "track_new_devices": "Spor nye enheter",
                     "track_wired_clients": "Spor kablede nettverksklienter",
                     "unauthenticated_mode": "Uautentisert modus (endring krever omlasting)"
                 }

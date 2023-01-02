@@ -1,0 +1,57 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La cuenta ya est\u00e1 configurada"
+        },
+        "error": {
+            "db_url_invalid": "URL de la base de datos no v\u00e1lida",
+            "query_invalid": "Consulta SQL no v\u00e1lida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "column": "Columna",
+                    "db_url": "URL de la base de datos",
+                    "name": "Nombre",
+                    "query": "Selecciona la consulta",
+                    "unit_of_measurement": "Unidad de medida",
+                    "value_template": "Plantilla de valor"
+                },
+                "data_description": {
+                    "column": "Columna de respuesta de la consulta para presentar como estado",
+                    "db_url": "URL de la base de datos, d\u00e9jalo en blanco para usar la predeterminada de HA",
+                    "name": "Nombre que se usar\u00e1 para la entrada de configuraci\u00f3n y tambi\u00e9n para el sensor",
+                    "query": "Consulta a ejecutar, debe empezar por 'SELECT'",
+                    "unit_of_measurement": "Unidad de medida (opcional)",
+                    "value_template": "Plantilla de valor (opcional)"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "db_url_invalid": "URL de la base de datos no v\u00e1lida",
+            "query_invalid": "Consulta SQL no v\u00e1lida"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "column": "Columna",
+                    "db_url": "URL de la base de datos",
+                    "name": "Nombre",
+                    "query": "Selecciona la consulta",
+                    "unit_of_measurement": "Unidad de medida",
+                    "value_template": "Plantilla de valor"
+                },
+                "data_description": {
+                    "column": "Columna de respuesta de la consulta para presentar como estado",
+                    "db_url": "URL de la base de datos, d\u00e9jalo en blanco para usar la predeterminada de HA",
+                    "name": "Nombre que se usar\u00e1 para la entrada de configuraci\u00f3n y tambi\u00e9n para el sensor",
+                    "query": "Consulta a ejecutar, debe empezar por 'SELECT'",
+                    "unit_of_measurement": "Unidad de medida (opcional)",
+                    "value_template": "Plantilla de valor (opcional)"
+                }
+            }
+        }
+    }
+}

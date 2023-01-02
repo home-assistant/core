@@ -1,0 +1,19 @@
+{
+    "state": {
+        "xiaomi_miio__display_orientation": {
+            "forward": "Dopredu",
+            "left": "V\u013eavo",
+            "right": "Vpravo"
+        },
+        "xiaomi_miio__led_brightness": {
+            "bright": "Jas",
+            "dim": "Dim",
+            "off": "Vypnut\u00e9"
+        },
+        "xiaomi_miio__ptc_level": {
+            "high": "Vysok\u00e9",
+            "low": "N\u00edzke",
+            "medium": "Stredn\u00e9"
+        }
+    }
+}

@@ -1,8 +1,7 @@
 """Creates Homewizard sensor entities."""
 from __future__ import annotations
 
-import logging
-from typing import Final
+from typing import Final, cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -11,14 +10,9 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
-    PERCENTAGE,
-    POWER_WATT,
-    VOLUME_CUBIC_METERS,
-)
+from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfPower, UnitOfVolume
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -26,30 +20,30 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, DeviceResponseEntry
 from .coordinator import HWEnergyDeviceUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 1
 
 SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
     SensorEntityDescription(
         key="smr_version",
-        name="DSMR Version",
+        name="DSMR version",
         icon="mdi:counter",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="meter_model",
-        name="Smart Meter Model",
+        name="Smart meter model",
         icon="mdi:gauge",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="wifi_ssid",
-        name="Wifi SSID",
+        name="Wi-Fi SSID",
         icon="mdi:wifi",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="wifi_strength",
-        name="Wifi Strength",
+        name="Wi-Fi strength",
         icon="mdi:wifi",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -58,65 +52,80 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
     ),
     SensorEntityDescription(
         key="total_power_import_t1_kwh",
-        name="Total Power Import T1",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        name="Total power import T1",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="total_power_import_t2_kwh",
-        name="Total Power Import T2",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        name="Total power import T2",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="total_power_export_t1_kwh",
-        name="Total Power Export T1",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        name="Total power export T1",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="total_power_export_t2_kwh",
-        name="Total Power Export T2",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        name="Total power export T2",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="active_power_w",
-        name="Active Power",
-        native_unit_of_measurement=POWER_WATT,
+        name="Active power",
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="active_power_l1_w",
-        name="Active Power L1",
-        native_unit_of_measurement=POWER_WATT,
+        name="Active power L1",
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="active_power_l2_w",
-        name="Active Power L2",
-        native_unit_of_measurement=POWER_WATT,
+        name="Active power L2",
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="active_power_l3_w",
-        name="Active Power L3",
-        native_unit_of_measurement=POWER_WATT,
+        name="Active power L3",
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="total_gas_m3",
-        name="Total Gas",
-        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        name="Total gas",
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         device_class=SensorDeviceClass.GAS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="active_liter_lpm",
+        name="Active water usage",
+        native_unit_of_measurement="l/min",
+        icon="mdi:water",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="total_liter_m3",
+        name="Total water usage",
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        icon="mdi:gauge",
+        device_class=SensorDeviceClass.WATER,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 )
@@ -129,18 +138,17 @@ async def async_setup_entry(
     coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     entities = []
-    if coordinator.api.data is not None:
+    if coordinator.data["data"] is not None:
         for description in SENSORS:
-            if (
-                description.key in coordinator.api.data.available_datapoints
-                and getattr(coordinator.api.data, description.key) is not None
-            ):
+            if getattr(coordinator.data["data"], description.key) is not None:
                 entities.append(HWEnergySensor(coordinator, entry, description))
     async_add_entities(entities)
 
 
 class HWEnergySensor(CoordinatorEntity[HWEnergyDeviceUpdateCoordinator], SensorEntity):
     """Representation of a HomeWizard Sensor."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -155,9 +163,9 @@ class HWEnergySensor(CoordinatorEntity[HWEnergyDeviceUpdateCoordinator], SensorE
         self.entry = entry
 
         # Config attributes.
-        self._attr_name = f"{entry.title} {description.name}"
         self.data_type = description.key
         self._attr_unique_id = f"{entry.unique_id}_{description.key}"
+        self._attr_device_info = coordinator.device_info
 
         # Special case for export, not everyone has solarpanels
         # The chance that 'export' is non-zero when you have solar panels is nil
@@ -165,19 +173,8 @@ class HWEnergySensor(CoordinatorEntity[HWEnergyDeviceUpdateCoordinator], SensorE
             "total_power_export_t1_kwh",
             "total_power_export_t2_kwh",
         ]:
-            if self.data["data"][self.data_type] == 0:
+            if self.native_value == 0:
                 self._attr_entity_registry_enabled_default = False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        return {
-            "name": self.entry.title,
-            "manufacturer": "HomeWizard",
-            "sw_version": self.data["device"].firmware_version,
-            "model": self.data["device"].product_type,
-            "identifiers": {(DOMAIN, self.data["device"].serial)},
-        }
 
     @property
     def data(self) -> DeviceResponseEntry:
@@ -187,9 +184,9 @@ class HWEnergySensor(CoordinatorEntity[HWEnergyDeviceUpdateCoordinator], SensorE
     @property
     def native_value(self) -> StateType:
         """Return state of meter."""
-        return self.data["data"][self.data_type]
+        return cast(StateType, getattr(self.data["data"], self.data_type))
 
     @property
     def available(self) -> bool:
         """Return availability of meter."""
-        return super().available and self.data_type in self.data["data"]
+        return super().available and self.native_value is not None

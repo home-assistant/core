@@ -18,8 +18,12 @@ from homeassistant.components.wallbox.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.components.wallbox import entry, setup_integration
-from tests.components.wallbox.const import ERROR, JWT, STATUS, TTL, USER_ID
+from . import (
+    authorisation_response,
+    authorisation_response_unauthorised,
+    entry,
+    setup_integration,
+)
 
 test_response = json.loads(
     json.dumps(
@@ -34,30 +38,6 @@ test_response = json.loads(
     )
 )
 
-authorisation_response = json.loads(
-    json.dumps(
-        {
-            JWT: "fakekeyhere",
-            USER_ID: 12345,
-            TTL: 145656758,
-            ERROR: "false",
-            STATUS: 200,
-        }
-    )
-)
-
-authorisation_response_unauthorised = json.loads(
-    json.dumps(
-        {
-            JWT: "fakekeyhere",
-            USER_ID: 12345,
-            TTL: 145656758,
-            ERROR: "false",
-            STATUS: 404,
-        }
-    )
-)
-
 
 async def test_show_set_form(hass: HomeAssistant) -> None:
     """Test that the setup form is served."""
@@ -65,7 +45,7 @@ async def test_show_set_form(hass: HomeAssistant) -> None:
     flow.hass = hass
     result = await flow.async_step_user(user_input=None)
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -77,7 +57,7 @@ async def test_form_cannot_authenticate(hass: HomeAssistant) -> None:
 
     with requests_mock.Mocker() as mock_request:
         mock_request.get(
-            "https://api.wall-box.com/auth/token/user",
+            "https://user-api.wall-box.com/users/signin",
             json=authorisation_response,
             status_code=HTTPStatus.FORBIDDEN,
         )
@@ -107,7 +87,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with requests_mock.Mocker() as mock_request:
         mock_request.get(
-            "https://api.wall-box.com/auth/token/user",
+            "https://user-api.wall-box.com/users/signin",
             json=authorisation_response_unauthorised,
             status_code=HTTPStatus.NOT_FOUND,
         )
@@ -137,7 +117,7 @@ async def test_form_validate_input(hass: HomeAssistant) -> None:
 
     with requests_mock.Mocker() as mock_request:
         mock_request.get(
-            "https://api.wall-box.com/auth/token/user",
+            "https://user-api.wall-box.com/users/signin",
             json=authorisation_response,
             status_code=HTTPStatus.OK,
         )
@@ -166,8 +146,8 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
 
     with requests_mock.Mocker() as mock_request:
         mock_request.get(
-            "https://api.wall-box.com/auth/token/user",
-            text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
+            "https://user-api.wall-box.com/users/signin",
+            json=authorisation_response,
             status_code=200,
         )
         mock_request.get(
@@ -206,7 +186,7 @@ async def test_form_reauth_invalid(hass: HomeAssistant) -> None:
 
     with requests_mock.Mocker() as mock_request:
         mock_request.get(
-            "https://api.wall-box.com/auth/token/user",
+            "https://user-api.wall-box.com/users/signin",
             text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
             status_code=200,
         )

@@ -1,0 +1,9 @@
+{
+  "domain": "laundrify",
+  "name": "laundrify",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/laundrify",
+  "requirements": ["laundrify_aio==1.1.2"],
+  "codeowners": ["@xLarry"],
+  "iot_class": "cloud_polling"
+}

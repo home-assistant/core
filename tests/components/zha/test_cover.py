@@ -1,4 +1,4 @@
-"""Test zha cover."""
+"""Test ZHA cover."""
 import asyncio
 from unittest.mock import AsyncMock, patch
 
@@ -17,6 +17,7 @@ from homeassistant.components.cover import (
     SERVICE_SET_COVER_POSITION,
     SERVICE_STOP_COVER,
 )
+from homeassistant.components.zha.core.const import ZHA_EVENT
 from homeassistant.const import (
     ATTR_COMMAND,
     STATE_CLOSED,
@@ -36,6 +37,21 @@ from .common import (
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 from tests.common import async_capture_events, mock_coro, mock_restore_cache
+
+
+@pytest.fixture(autouse=True)
+def cover_platform_only():
+    """Only set up the cover and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.COVER,
+            Platform.DEVICE_TRACKER,
+            Platform.NUMBER,
+            Platform.SELECT,
+        ),
+    ):
+        yield
 
 
 @pytest.fixture
@@ -105,7 +121,7 @@ def zigpy_keen_vent(zigpy_device_mock):
 
 
 async def test_cover(hass, zha_device_joined_restored, zigpy_cover_device):
-    """Test zha cover platform."""
+    """Test ZHA cover platform."""
 
     # load up cover domain
     cluster = zigpy_cover_device.endpoints.get(1).window_covering
@@ -196,7 +212,7 @@ async def test_cover(hass, zha_device_joined_restored, zigpy_cover_device):
 
 
 async def test_shade(hass, zha_device_joined_restored, zigpy_shade_device):
-    """Test zha cover platform for shade device type."""
+    """Test ZHA cover platform for shade device type."""
 
     # load up cover domain
     zha_device = await zha_device_joined_restored(zigpy_shade_device)
@@ -329,7 +345,7 @@ async def test_restore_state(hass, zha_device_restored, zigpy_shade_device):
         hass,
         (
             State(
-                "cover.fakemanufacturer_fakemodel_e769900a_level_on_off_shade",
+                "cover.fakemanufacturer_fakemodel_shade",
                 STATE_OPEN,
                 {ATTR_CURRENT_POSITION: 50},
             ),
@@ -402,7 +418,7 @@ async def test_keen_vent(hass, zha_device_joined_restored, zigpy_keen_vent):
 
 
 async def test_cover_remote(hass, zha_device_joined_restored, zigpy_cover_remote):
-    """Test zha cover remote."""
+    """Test ZHA cover remote."""
 
     # load up cover domain
     await zha_device_joined_restored(zigpy_cover_remote)
@@ -410,7 +426,7 @@ async def test_cover_remote(hass, zha_device_joined_restored, zigpy_cover_remote
     cluster = zigpy_cover_remote.endpoints[1].out_clusters[
         closures.WindowCovering.cluster_id
     ]
-    zha_events = async_capture_events(hass, "zha_event")
+    zha_events = async_capture_events(hass, ZHA_EVENT)
 
     # up command
     hdr = make_zcl_header(0, global_command=False)

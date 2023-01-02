@@ -9,11 +9,7 @@ from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.squeezebox.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -50,7 +46,7 @@ async def test_user_form(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "edit"
         assert CONF_HOST in result["data_schema"].schema
         for key in result["data_schema"].schema:
@@ -62,7 +58,7 @@ async def test_user_form(hass):
             result["flow_id"],
             {CONF_HOST: HOST, CONF_PORT: PORT, CONF_USERNAME: "", CONF_PASSWORD: ""},
         )
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["title"] == HOST
         assert result["data"] == {
             CONF_HOST: HOST,
@@ -84,14 +80,14 @@ async def test_user_form_timeout(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["errors"] == {"base": "no_server_found"}
 
         # simulate manual input of host
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: HOST2}
         )
-        assert result2["type"] == RESULT_TYPE_FORM
+        assert result2["type"] == FlowResultType.FORM
         assert result2["step_id"] == "edit"
         assert CONF_HOST in result2["data_schema"].schema
         for key in result2["data_schema"].schema:
@@ -113,7 +109,7 @@ async def test_user_form_duplicate(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["errors"] == {"base": "no_server_found"}
 
 
@@ -138,7 +134,7 @@ async def test_form_invalid_auth(hass):
             },
         )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
 
@@ -162,7 +158,7 @@ async def test_form_cannot_connect(hass):
             },
         )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -177,7 +173,7 @@ async def test_discovery(hass):
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data={CONF_HOST: HOST, CONF_PORT: PORT, "uuid": UUID},
         )
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "edit"
 
 
@@ -189,7 +185,7 @@ async def test_discovery_no_uuid(hass):
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data={CONF_HOST: HOST, CONF_PORT: PORT},
         )
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "edit"
 
 
@@ -207,7 +203,7 @@ async def test_dhcp_discovery(hass):
                 hostname="any",
             ),
         )
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "edit"
 
 
@@ -226,7 +222,7 @@ async def test_dhcp_discovery_no_server_found(hass):
                 hostname="any",
             ),
         )
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "user"
 
 
@@ -245,4 +241,4 @@ async def test_dhcp_discovery_existing_player(hass):
                 hostname="any",
             ),
         )
-        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["type"] == FlowResultType.ABORT

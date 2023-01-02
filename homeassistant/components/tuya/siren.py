@@ -22,6 +22,14 @@ from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
 # All descriptions can be found here:
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 SIRENS: dict[str, tuple[SirenEntityDescription, ...]] = {
+    # Multi-functional Sensor
+    # https://developer.tuya.com/en/docs/iot/categorydgnbj?id=Kaiuz3yorvzg3
+    "dgnbj": (
+        SirenEntityDescription(
+            key=DPCode.ALARM_SWITCH,
+            name="Siren",
+        ),
+    ),
     # Siren Alarm
     # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
     "sgbj": (

@@ -1,23 +1,23 @@
 """Geolocation support for GeoNet NZ Quakes Feeds."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
+from typing import Any
+
+from aio_geojson_geonetnz_quakes.feed_entry import GeonetnzQuakesFeedEntry
 
 from homeassistant.components.geo_location import GeolocationEvent
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_TIME,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
-)
+from homeassistant.const import ATTR_TIME, UnitOfLength
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import async_get_registry
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_conversion import DistanceConverter
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
+from . import GeonetnzQuakesFeedEntityManager
 from .const import DOMAIN, FEED
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,10 +40,14 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the GeoNet NZ Quakes Feed platform."""
-    manager = hass.data[DOMAIN][FEED][entry.entry_id]
+    manager: GeonetnzQuakesFeedEntityManager = hass.data[DOMAIN][FEED][entry.entry_id]
 
     @callback
-    def async_add_geolocation(feed_manager, integration_id, external_id):
+    def async_add_geolocation(
+        feed_manager: GeonetnzQuakesFeedEntityManager,
+        integration_id: str,
+        external_id: str,
+    ) -> None:
         """Add geolocation entity from feed."""
         new_entity = GeonetnzQuakesEvent(feed_manager, integration_id, external_id)
         _LOGGER.debug("Adding geolocation %s", new_entity)
@@ -63,27 +67,34 @@ async def async_setup_entry(
 class GeonetnzQuakesEvent(GeolocationEvent):
     """This represents an external event with GeoNet NZ Quakes feed data."""
 
-    def __init__(self, feed_manager, integration_id, external_id):
+    _attr_icon = "mdi:pulse"
+    _attr_should_poll = False
+    _attr_source = SOURCE
+
+    def __init__(
+        self,
+        feed_manager: GeonetnzQuakesFeedEntityManager,
+        integration_id: str,
+        external_id: str,
+    ) -> None:
         """Initialize entity with data from feed entry."""
         self._feed_manager = feed_manager
-        self._integration_id = integration_id
         self._external_id = external_id
-        self._title = None
-        self._distance = None
-        self._latitude = None
-        self._longitude = None
-        self._attribution = None
+        self._attr_unique_id = f"{integration_id}_{external_id}"
+        self._attr_unit_of_measurement = UnitOfLength.KILOMETERS
         self._depth = None
         self._locality = None
         self._magnitude = None
         self._mmi = None
         self._quality = None
         self._time = None
-        self._remove_signal_delete = None
-        self._remove_signal_update = None
+        self._remove_signal_delete: Callable[[], None]
+        self._remove_signal_update: Callable[[], None]
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
+        if self.hass.config.units is US_CUSTOMARY_SYSTEM:
+            self._attr_unit_of_measurement = UnitOfLength.MILES
         self._remove_signal_delete = async_dispatcher_connect(
             self.hass,
             f"geonetnz_quakes_delete_{self._external_id}",
@@ -100,45 +111,40 @@ class GeonetnzQuakesEvent(GeolocationEvent):
         self._remove_signal_delete()
         self._remove_signal_update()
         # Remove from entity registry.
-        entity_registry = await async_get_registry(self.hass)
+        entity_registry = er.async_get(self.hass)
         if self.entity_id in entity_registry.entities:
             entity_registry.async_remove(self.entity_id)
 
     @callback
-    def _delete_callback(self):
+    def _delete_callback(self) -> None:
         """Remove this entity."""
         self.hass.async_create_task(self.async_remove(force_remove=True))
 
     @callback
-    def _update_callback(self):
+    def _update_callback(self) -> None:
         """Call update method."""
         self.async_schedule_update_ha_state(True)
 
-    @property
-    def should_poll(self):
-        """No polling needed for GeoNet NZ Quakes feed location events."""
-        return False
-
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update this entity from the data held in the feed manager."""
         _LOGGER.debug("Updating %s", self._external_id)
         feed_entry = self._feed_manager.get_entry(self._external_id)
         if feed_entry:
             self._update_from_feed(feed_entry)
 
-    def _update_from_feed(self, feed_entry):
+    def _update_from_feed(self, feed_entry: GeonetnzQuakesFeedEntry) -> None:
         """Update the internal state from the provided feed entry."""
-        self._title = feed_entry.title
+        self._attr_name = feed_entry.title
         # Convert distance if not metric system.
-        if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
-            self._distance = IMPERIAL_SYSTEM.length(
-                feed_entry.distance_to_home, LENGTH_KILOMETERS
+        if self.hass.config.units is US_CUSTOMARY_SYSTEM:
+            self._attr_distance = DistanceConverter.convert(
+                feed_entry.distance_to_home, UnitOfLength.KILOMETERS, UnitOfLength.MILES
             )
         else:
-            self._distance = feed_entry.distance_to_home
-        self._latitude = feed_entry.coordinates[0]
-        self._longitude = feed_entry.coordinates[1]
-        self._attribution = feed_entry.attribution
+            self._attr_distance = feed_entry.distance_to_home
+        self._attr_latitude = feed_entry.coordinates[0]
+        self._attr_longitude = feed_entry.coordinates[1]
+        self._attr_attribution = feed_entry.attribution
         self._depth = feed_entry.depth
         self._locality = feed_entry.locality
         self._magnitude = feed_entry.magnitude
@@ -147,54 +153,11 @@ class GeonetnzQuakesEvent(GeolocationEvent):
         self._time = feed_entry.time
 
     @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID containing latitude/longitude and external id."""
-        return f"{self._integration_id}_{self._external_id}"
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return "mdi:pulse"
-
-    @property
-    def source(self) -> str:
-        """Return source value of this external event."""
-        return SOURCE
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the entity."""
-        return self._title
-
-    @property
-    def distance(self) -> float | None:
-        """Return distance value of this external event."""
-        return self._distance
-
-    @property
-    def latitude(self) -> float | None:
-        """Return latitude value of this external event."""
-        return self._latitude
-
-    @property
-    def longitude(self) -> float | None:
-        """Return longitude value of this external event."""
-        return self._longitude
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
-            return LENGTH_MILES
-        return LENGTH_KILOMETERS
-
-    @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         attributes = {}
         for key, value in (
             (ATTR_EXTERNAL_ID, self._external_id),
-            (ATTR_ATTRIBUTION, self._attribution),
             (ATTR_DEPTH, self._depth),
             (ATTR_LOCALITY, self._locality),
             (ATTR_MAGNITUDE, self._magnitude),

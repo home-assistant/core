@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "cannot_connect": "No se pudo conectar",
+            "station_not_found": "ID de estaci\u00f3n no encontrado en zamg"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "station_not_found": "ID de estaci\u00f3n no encontrado en zamg"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "station_id": "ID de la estaci\u00f3n (por defecto, la estaci\u00f3n m\u00e1s cercana)"
+                },
+                "description": "Configura ZAMG para que se integre con Home Assistant."
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Se va a eliminar la configuraci\u00f3n de ZAMG mediante YAML. \n\nTu configuraci\u00f3n YAML existente se ha importado a la IU autom\u00e1ticamente. \n\nElimina la configuraci\u00f3n YAML de ZAMG de tu archivo configuration.yaml y reinicia Home Assistant para solucionar este problema.",
+            "title": "Se va a eliminar la configuraci\u00f3n YAML de ZAMG"
+        }
+    }
+}

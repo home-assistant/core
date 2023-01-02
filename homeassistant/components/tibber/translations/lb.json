@@ -13,8 +13,7 @@
                 "data": {
                     "access_token": "Acc\u00e8ss Jeton"
                 },
-                "description": "F\u00ebll d\u00e4in Acc\u00e8s Jeton vun https://developer.tibber.com/settings/accesstoken aus",
-                "title": "Tibber"
+                "description": "F\u00ebll d\u00e4in Acc\u00e8s Jeton vun https://developer.tibber.com/settings/accesstoken aus"
             }
         }
     }

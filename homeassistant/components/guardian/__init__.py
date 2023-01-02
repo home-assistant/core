@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 from typing import cast
 
 from aioguardian import Client
@@ -24,10 +25,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     API_SENSOR_PAIR_DUMP,
@@ -37,9 +36,6 @@ from .const import (
     API_VALVE_STATUS,
     API_WIFI_STATUS,
     CONF_UID,
-    DATA_CLIENT,
-    DATA_COORDINATOR,
-    DATA_COORDINATOR_PAIRED_SENSOR,
     DOMAIN,
     LOGGER,
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
@@ -48,20 +44,12 @@ from .util import GuardianDataUpdateCoordinator
 
 DATA_PAIRED_SENSOR_MANAGER = "paired_sensor_manager"
 
-SERVICE_NAME_DISABLE_AP = "disable_ap"
-SERVICE_NAME_ENABLE_AP = "enable_ap"
 SERVICE_NAME_PAIR_SENSOR = "pair_sensor"
-SERVICE_NAME_REBOOT = "reboot"
-SERVICE_NAME_RESET_VALVE_DIAGNOSTICS = "reset_valve_diagnostics"
 SERVICE_NAME_UNPAIR_SENSOR = "unpair_sensor"
 SERVICE_NAME_UPGRADE_FIRMWARE = "upgrade_firmware"
 
 SERVICES = (
-    SERVICE_NAME_DISABLE_AP,
-    SERVICE_NAME_ENABLE_AP,
     SERVICE_NAME_PAIR_SENSOR,
-    SERVICE_NAME_REBOOT,
-    SERVICE_NAME_RESET_VALVE_DIAGNOSTICS,
     SERVICE_NAME_UNPAIR_SENSOR,
     SERVICE_NAME_UPGRADE_FIRMWARE,
 )
@@ -88,8 +76,17 @@ SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.Schema(
     },
 )
 
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
+
+@dataclass
+class GuardianData:
+    """Define an object to be stored in `hass.data`."""
+
+    entry: ConfigEntry
+    client: Client
+    valve_controller_coordinators: dict[str, GuardianDataUpdateCoordinator]
+    paired_sensor_manager: PairedSensorManager
 
 
 @callback
@@ -98,12 +95,55 @@ def async_get_entry_id_for_service_call(hass: HomeAssistant, call: ServiceCall) 
     device_id = call.data[CONF_DEVICE_ID]
     device_registry = dr.async_get(hass)
 
-    if device_entry := device_registry.async_get(device_id):
-        for entry in hass.config_entries.async_entries(DOMAIN):
-            if entry.entry_id in device_entry.config_entries:
-                return entry.entry_id
+    if (device_entry := device_registry.async_get(device_id)) is None:
+        raise ValueError(f"Invalid Guardian device ID: {device_id}")
 
-    raise ValueError(f"No client for device ID: {device_id}")
+    for entry_id in device_entry.config_entries:
+        if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
+            continue
+        if entry.domain == DOMAIN:
+            return entry_id
+
+    raise ValueError(f"No config entry for device ID: {device_id}")
+
+
+@callback
+def async_log_deprecated_service_call(
+    hass: HomeAssistant,
+    call: ServiceCall,
+    alternate_service: str,
+    alternate_target: str,
+    breaks_in_ha_version: str,
+) -> None:
+    """Log a warning about a deprecated service call."""
+    deprecated_service = f"{call.domain}.{call.service}"
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecated_service_{deprecated_service}",
+        breaks_in_ha_version=breaks_in_ha_version,
+        is_fixable=True,
+        is_persistent=True,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_service",
+        translation_placeholders={
+            "alternate_service": alternate_service,
+            "alternate_target": alternate_target,
+            "deprecated_service": deprecated_service,
+        },
+    )
+
+    LOGGER.warning(
+        (
+            'The "%s" service is deprecated and will be removed in %s; use the "%s" '
+            'service and pass it a target entity ID of "%s"'
+        ),
+        deprecated_service,
+        breaks_in_ha_version,
+        alternate_service,
+        alternate_target,
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -114,8 +154,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # so we use a lock to ensure that only one API request is reaching it at a time:
     api_lock = asyncio.Lock()
 
-    # Set up DataUpdateCoordinators for the valve controller:
-    coordinators: dict[str, GuardianDataUpdateCoordinator] = {}
+    async def async_init_coordinator(
+        coordinator: GuardianDataUpdateCoordinator,
+    ) -> None:
+        """Initialize a GuardianDataUpdateCoordinator."""
+        await coordinator.async_initialize()
+        await coordinator.async_config_entry_first_refresh()
+
+    # Set up GuardianDataUpdateCoordinators for the valve controller:
+    valve_controller_coordinators: dict[str, GuardianDataUpdateCoordinator] = {}
     init_valve_controller_tasks = []
     for api, api_coro in (
         (API_SENSOR_PAIR_DUMP, client.sensor.pair_dump),
@@ -124,57 +171,55 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         (API_VALVE_STATUS, client.valve.status),
         (API_WIFI_STATUS, client.wifi.status),
     ):
-        coordinator = coordinators[api] = GuardianDataUpdateCoordinator(
+        coordinator = valve_controller_coordinators[
+            api
+        ] = GuardianDataUpdateCoordinator(
             hass,
+            entry=entry,
             client=client,
             api_name=api,
             api_coro=api_coro,
             api_lock=api_lock,
             valve_controller_uid=entry.data[CONF_UID],
         )
-        init_valve_controller_tasks.append(coordinator.async_refresh())
+        init_valve_controller_tasks.append(async_init_coordinator(coordinator))
 
     await asyncio.gather(*init_valve_controller_tasks)
 
     # Set up an object to evaluate each batch of paired sensor UIDs and add/remove
     # devices as appropriate:
-    paired_sensor_manager = PairedSensorManager(hass, entry, client, api_lock)
-    await paired_sensor_manager.async_process_latest_paired_sensor_uids()
+    paired_sensor_manager = PairedSensorManager(
+        hass,
+        entry,
+        client,
+        api_lock,
+        valve_controller_coordinators[API_SENSOR_PAIR_DUMP],
+    )
+    await paired_sensor_manager.async_initialize()
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_CLIENT: client,
-        DATA_COORDINATOR: coordinators,
-        DATA_COORDINATOR_PAIRED_SENSOR: {},
-        DATA_PAIRED_SENSOR_MANAGER: paired_sensor_manager,
-    }
-
-    @callback
-    def async_process_paired_sensor_uids() -> None:
-        """Define a callback for when new paired sensor data is received."""
-        hass.async_create_task(
-            paired_sensor_manager.async_process_latest_paired_sensor_uids()
-        )
-
-    coordinators[API_SENSOR_PAIR_DUMP].async_add_listener(
-        async_process_paired_sensor_uids
+    hass.data[DOMAIN][entry.entry_id] = GuardianData(
+        entry=entry,
+        client=client,
+        valve_controller_coordinators=valve_controller_coordinators,
+        paired_sensor_manager=paired_sensor_manager,
     )
 
     # Set up all of the Guardian entity platforms:
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     @callback
-    def extract_client(func: Callable) -> Callable:
-        """Define a decorator to get the correct client for a service call."""
+    def call_with_data(func: Callable) -> Callable:
+        """Hydrate a service call with the appropriate GuardianData object."""
 
         async def wrapper(call: ServiceCall) -> None:
             """Wrap the service function."""
             entry_id = async_get_entry_id_for_service_call(hass, call)
-            client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+            data = hass.data[DOMAIN][entry_id]
 
             try:
-                async with client:
-                    await func(call, client)
+                async with data.client:
+                    await func(call, data)
             except GuardianError as err:
                 raise HomeAssistantError(
                     f"Error while executing {func.__name__}: {err}"
@@ -182,68 +227,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         return wrapper
 
-    @extract_client
-    async def async_disable_ap(call: ServiceCall, client: Client) -> None:
-        """Disable the onboard AP."""
-        await client.wifi.disable_ap()
-
-    @extract_client
-    async def async_enable_ap(call: ServiceCall, client: Client) -> None:
-        """Enable the onboard AP."""
-        await client.wifi.enable_ap()
-
-    @extract_client
-    async def async_pair_sensor(call: ServiceCall, client: Client) -> None:
+    @call_with_data
+    async def async_pair_sensor(call: ServiceCall, data: GuardianData) -> None:
         """Add a new paired sensor."""
-        entry_id = async_get_entry_id_for_service_call(hass, call)
-        paired_sensor_manager = hass.data[DOMAIN][entry_id][DATA_PAIRED_SENSOR_MANAGER]
         uid = call.data[CONF_UID]
+        await data.client.sensor.pair_sensor(uid)
+        await data.paired_sensor_manager.async_pair_sensor(uid)
 
-        await client.sensor.pair_sensor(uid)
-        await paired_sensor_manager.async_pair_sensor(uid)
-
-    @extract_client
-    async def async_reboot(call: ServiceCall, client: Client) -> None:
-        """Reboot the valve controller."""
-        await client.system.reboot()
-
-    @extract_client
-    async def async_reset_valve_diagnostics(call: ServiceCall, client: Client) -> None:
-        """Fully reset system motor diagnostics."""
-        await client.valve.reset()
-
-    @extract_client
-    async def async_unpair_sensor(call: ServiceCall, client: Client) -> None:
+    @call_with_data
+    async def async_unpair_sensor(call: ServiceCall, data: GuardianData) -> None:
         """Remove a paired sensor."""
-        entry_id = async_get_entry_id_for_service_call(hass, call)
-        paired_sensor_manager = hass.data[DOMAIN][entry_id][DATA_PAIRED_SENSOR_MANAGER]
         uid = call.data[CONF_UID]
+        await data.client.sensor.unpair_sensor(uid)
+        await data.paired_sensor_manager.async_unpair_sensor(uid)
 
-        await client.sensor.unpair_sensor(uid)
-        await paired_sensor_manager.async_unpair_sensor(uid)
-
-    @extract_client
-    async def async_upgrade_firmware(call: ServiceCall, client: Client) -> None:
+    @call_with_data
+    async def async_upgrade_firmware(call: ServiceCall, data: GuardianData) -> None:
         """Upgrade the device firmware."""
-        await client.system.upgrade_firmware(
+        await data.client.system.upgrade_firmware(
             url=call.data[CONF_URL],
             port=call.data[CONF_PORT],
             filename=call.data[CONF_FILENAME],
         )
 
     for service_name, schema, method in (
-        (SERVICE_NAME_DISABLE_AP, SERVICE_BASE_SCHEMA, async_disable_ap),
-        (SERVICE_NAME_ENABLE_AP, SERVICE_BASE_SCHEMA, async_enable_ap),
         (
             SERVICE_NAME_PAIR_SENSOR,
             SERVICE_PAIR_UNPAIR_SENSOR_SCHEMA,
             async_pair_sensor,
-        ),
-        (SERVICE_NAME_REBOOT, SERVICE_BASE_SCHEMA, async_reboot),
-        (
-            SERVICE_NAME_RESET_VALVE_DIAGNOSTICS,
-            SERVICE_BASE_SCHEMA,
-            async_reset_valve_diagnostics,
         ),
         (
             SERVICE_NAME_UNPAIR_SENSOR,
@@ -292,6 +303,7 @@ class PairedSensorManager:
         entry: ConfigEntry,
         client: Client,
         api_lock: asyncio.Lock,
+        sensor_pair_dump_coordinator: GuardianDataUpdateCoordinator,
     ) -> None:
         """Initialize."""
         self._api_lock = api_lock
@@ -299,6 +311,22 @@ class PairedSensorManager:
         self._entry = entry
         self._hass = hass
         self._paired_uids: set[str] = set()
+        self._sensor_pair_dump_coordinator = sensor_pair_dump_coordinator
+        self.coordinators: dict[str, GuardianDataUpdateCoordinator] = {}
+
+    async def async_initialize(self) -> None:
+        """Initialize the manager."""
+
+        @callback
+        def async_create_process_task() -> None:
+            """Define a callback for when new paired sensor data is received."""
+            self._hass.async_create_task(self.async_process_latest_paired_sensor_uids())
+
+        self._entry.async_on_unload(
+            self._sensor_pair_dump_coordinator.async_add_listener(
+                async_create_process_task
+            )
+        )
 
     async def async_pair_sensor(self, uid: str) -> None:
         """Add a new paired sensor coordinator."""
@@ -306,10 +334,9 @@ class PairedSensorManager:
 
         self._paired_uids.add(uid)
 
-        coordinator = self._hass.data[DOMAIN][self._entry.entry_id][
-            DATA_COORDINATOR_PAIRED_SENSOR
-        ][uid] = GuardianDataUpdateCoordinator(
+        coordinator = self.coordinators[uid] = GuardianDataUpdateCoordinator(
             self._hass,
+            entry=self._entry,
             client=self._client,
             api_name=f"{API_SENSOR_PAIRED_SENSOR_STATUS}_{uid}",
             api_coro=lambda: cast(
@@ -329,11 +356,7 @@ class PairedSensorManager:
     async def async_process_latest_paired_sensor_uids(self) -> None:
         """Process a list of new UIDs."""
         try:
-            uids = set(
-                self._hass.data[DOMAIN][self._entry.entry_id][DATA_COORDINATOR][
-                    API_SENSOR_PAIR_DUMP
-                ].data["paired_uids"]
-            )
+            uids = set(self._sensor_pair_dump_coordinator.data["paired_uids"])
         except KeyError:
             # Sometimes the paired_uids key can fail to exist; the user can't do anything
             # about it, so in this case, we quietly abort and return:
@@ -357,38 +380,48 @@ class PairedSensorManager:
 
         # Clear out objects related to this paired sensor:
         self._paired_uids.remove(uid)
-        self._hass.data[DOMAIN][self._entry.entry_id][
-            DATA_COORDINATOR_PAIRED_SENSOR
-        ].pop(uid)
+        self.coordinators.pop(uid)
 
         # Remove the paired sensor device from the device registry (which will
         # clean up entities and the entity registry):
-        dev_reg = await self._hass.helpers.device_registry.async_get_registry()
+        dev_reg = dr.async_get(self._hass)
         device = dev_reg.async_get_or_create(
             config_entry_id=self._entry.entry_id, identifiers={(DOMAIN, uid)}
         )
         dev_reg.async_remove_device(device.id)
 
 
-class GuardianEntity(CoordinatorEntity):
+class GuardianEntity(CoordinatorEntity[GuardianDataUpdateCoordinator]):
     """Define a base Guardian entity."""
 
-    def __init__(  # pylint: disable=super-init-not-called
-        self, entry: ConfigEntry, description: EntityDescription
+    _attr_has_entity_name = True
+
+    def __init__(
+        self, coordinator: GuardianDataUpdateCoordinator, description: EntityDescription
     ) -> None:
         """Initialize."""
-        self._attr_device_info = DeviceInfo(manufacturer="Elexa")
+        super().__init__(coordinator)
+
         self._attr_extra_state_attributes = {}
-        self._entry = entry
         self.entity_description = description
 
     @callback
     def _async_update_from_latest_data(self) -> None:
-        """Update the entity.
+        """Update the entity's underlying data.
 
         This should be extended by Guardian platforms.
         """
-        raise NotImplementedError
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Respond to a DataUpdateCoordinator update."""
+        self._async_update_from_latest_data()
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self._async_update_from_latest_data()
 
 
 class PairedSensorEntity(GuardianEntity):
@@ -397,27 +430,35 @@ class PairedSensorEntity(GuardianEntity):
     def __init__(
         self,
         entry: ConfigEntry,
-        coordinator: DataUpdateCoordinator,
+        coordinator: GuardianDataUpdateCoordinator,
         description: EntityDescription,
     ) -> None:
         """Initialize."""
-        super().__init__(entry, description)
+        super().__init__(coordinator, description)
 
         paired_sensor_uid = coordinator.data["uid"]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, paired_sensor_uid)},
-            name=f"Guardian Paired Sensor {paired_sensor_uid}",
+            manufacturer="Elexa",
+            model=coordinator.data["codename"],
+            name=f"Guardian paired sensor {paired_sensor_uid}",
             via_device=(DOMAIN, entry.data[CONF_UID]),
         )
-        self._attr_name = (
-            f"Guardian Paired Sensor {paired_sensor_uid}: {description.name}"
-        )
         self._attr_unique_id = f"{paired_sensor_uid}_{description.key}"
-        self.coordinator = coordinator
 
-    async def async_added_to_hass(self) -> None:
-        """Perform tasks when the entity is added."""
-        self._async_update_from_latest_data()
+
+@dataclass
+class ValveControllerEntityDescriptionMixin:
+    """Define an entity description mixin for valve controller entities."""
+
+    api_category: str
+
+
+@dataclass
+class ValveControllerEntityDescription(
+    EntityDescription, ValveControllerEntityDescriptionMixin
+):
+    """Describe a Guardian valve controller entity."""
 
 
 class ValveControllerEntity(GuardianEntity):
@@ -426,65 +467,18 @@ class ValveControllerEntity(GuardianEntity):
     def __init__(
         self,
         entry: ConfigEntry,
-        coordinators: dict[str, DataUpdateCoordinator],
-        description: EntityDescription,
+        coordinators: dict[str, GuardianDataUpdateCoordinator],
+        description: ValveControllerEntityDescription,
     ) -> None:
         """Initialize."""
-        super().__init__(entry, description)
+        super().__init__(coordinators[description.api_category], description)
+
+        self._diagnostics_coordinator = coordinators[API_SYSTEM_DIAGNOSTICS]
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.data[CONF_UID])},
-            model=coordinators[API_SYSTEM_DIAGNOSTICS].data["firmware"],
-            name=f"Guardian Valve Controller {entry.data[CONF_UID]}",
+            manufacturer="Elexa",
+            model=self._diagnostics_coordinator.data["firmware"],
+            name=f"Guardian valve controller {entry.data[CONF_UID]}",
         )
-        self._attr_name = f"Guardian {entry.data[CONF_UID]}: {description.name}"
         self._attr_unique_id = f"{entry.data[CONF_UID]}_{description.key}"
-        self.coordinators = coordinators
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return any(
-            coordinator.last_update_success
-            for coordinator in self.coordinators.values()
-        )
-
-    async def _async_continue_entity_setup(self) -> None:
-        """Perform additional, internal tasks when the entity is about to be added.
-
-        This should be extended by Guardian platforms.
-        """
-        raise NotImplementedError
-
-    @callback
-    def async_add_coordinator_update_listener(self, api: str) -> None:
-        """Add a listener to a DataUpdateCoordinator based on the API referenced."""
-
-        @callback
-        def update() -> None:
-            """Update the entity's state."""
-            self._async_update_from_latest_data()
-            self.async_write_ha_state()
-
-        self.async_on_remove(self.coordinators[api].async_add_listener(update))
-
-    async def async_added_to_hass(self) -> None:
-        """Perform tasks when the entity is added."""
-        await self._async_continue_entity_setup()
-        self.async_add_coordinator_update_listener(API_SYSTEM_DIAGNOSTICS)
-        self._async_update_from_latest_data()
-
-    async def async_update(self) -> None:
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
-        # Ignore manual update requests if the entity is disabled
-        if not self.enabled:
-            return
-
-        refresh_tasks = [
-            coordinator.async_request_refresh()
-            for coordinator in self.coordinators.values()
-        ]
-        await asyncio.gather(*refresh_tasks)

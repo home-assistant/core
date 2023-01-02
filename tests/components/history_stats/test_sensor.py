@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant import config as hass_config
 from homeassistant.components.history_stats import DOMAIN
-from homeassistant.const import SERVICE_RELOAD, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import ATTR_DEVICE_CLASS, SERVICE_RELOAD, STATE_UNKNOWN
 import homeassistant.core as ha
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component, setup_component
@@ -50,7 +50,7 @@ class TestHistoryStatsSensor(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test")
-        assert state.state == STATE_UNKNOWN
+        assert state.state == "0.0"
 
     def test_setup_multiple_states(self):
         """Test the history statistics sensor setup for multiple states."""
@@ -71,7 +71,7 @@ class TestHistoryStatsSensor(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test")
-        assert state.state == STATE_UNKNOWN
+        assert state.state == "0.0"
 
     def test_wrong_duration(self):
         """Test when duration value is not a timedelta."""
@@ -136,7 +136,7 @@ class TestHistoryStatsSensor(unittest.TestCase):
         self.hass.start()
 
 
-async def test_invalid_date_for_start(hass, recorder_mock):
+async def test_invalid_date_for_start(recorder_mock, hass):
     """Verify with an invalid date for start."""
     await async_setup_component(
         hass,
@@ -153,15 +153,15 @@ async def test_invalid_date_for_start(hass, recorder_mock):
         },
     )
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.test").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.test") is None
     next_update_time = dt_util.utcnow() + timedelta(minutes=1)
     with freeze_time(next_update_time):
         async_fire_time_changed(hass, next_update_time)
         await hass.async_block_till_done()
-    assert hass.states.get("sensor.test").state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.test") is None
 
 
-async def test_invalid_date_for_end(hass, recorder_mock):
+async def test_invalid_date_for_end(recorder_mock, hass):
     """Verify with an invalid date for end."""
     await async_setup_component(
         hass,
@@ -178,15 +178,15 @@ async def test_invalid_date_for_end(hass, recorder_mock):
         },
     )
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.test").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.test") is None
     next_update_time = dt_util.utcnow() + timedelta(minutes=1)
     with freeze_time(next_update_time):
         async_fire_time_changed(hass, next_update_time)
         await hass.async_block_till_done()
-    assert hass.states.get("sensor.test").state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.test") is None
 
 
-async def test_invalid_entity_in_template(hass, recorder_mock):
+async def test_invalid_entity_in_template(recorder_mock, hass):
     """Verify with an invalid entity in the template."""
     await async_setup_component(
         hass,
@@ -203,15 +203,15 @@ async def test_invalid_entity_in_template(hass, recorder_mock):
         },
     )
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.test").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.test") is None
     next_update_time = dt_util.utcnow() + timedelta(minutes=1)
     with freeze_time(next_update_time):
         async_fire_time_changed(hass, next_update_time)
         await hass.async_block_till_done()
-    assert hass.states.get("sensor.test").state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.test") is None
 
 
-async def test_invalid_entity_returning_none_in_template(hass, recorder_mock):
+async def test_invalid_entity_returning_none_in_template(recorder_mock, hass):
     """Verify with an invalid entity returning none in the template."""
     await async_setup_component(
         hass,
@@ -228,15 +228,15 @@ async def test_invalid_entity_returning_none_in_template(hass, recorder_mock):
         },
     )
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.test").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.test") is None
     next_update_time = dt_util.utcnow() + timedelta(minutes=1)
     with freeze_time(next_update_time):
         async_fire_time_changed(hass, next_update_time)
         await hass.async_block_till_done()
-    assert hass.states.get("sensor.test").state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.test") is None
 
 
-async def test_reload(hass, recorder_mock):
+async def test_reload(recorder_mock, hass):
     """Verify we can reload history_stats sensors."""
     hass.state = ha.CoreState.not_running
     hass.states.async_set("binary_sensor.test_id", "on")
@@ -279,7 +279,7 @@ async def test_reload(hass, recorder_mock):
     assert hass.states.get("sensor.second_test")
 
 
-async def test_measure_multiple(hass, recorder_mock):
+async def test_measure_multiple(recorder_mock, hass):
     """Test the history statistics sensor measure for multiple ."""
     start_time = dt_util.utcnow() - timedelta(minutes=60)
     t0 = start_time + timedelta(minutes=20)
@@ -302,67 +302,66 @@ async def test_measure_multiple(hass, recorder_mock):
             ]
         }
 
-    await async_setup_component(
-        hass,
-        "sensor",
-        {
-            "sensor": [
-                {
-                    "platform": "history_stats",
-                    "entity_id": "input_select.test_id",
-                    "name": "sensor1",
-                    "state": ["orange", "blue"],
-                    "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ now() }}",
-                    "type": "time",
-                },
-                {
-                    "platform": "history_stats",
-                    "entity_id": "unknown.test_id",
-                    "name": "sensor2",
-                    "state": ["orange", "blue"],
-                    "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ now() }}",
-                    "type": "time",
-                },
-                {
-                    "platform": "history_stats",
-                    "entity_id": "input_select.test_id",
-                    "name": "sensor3",
-                    "state": ["orange", "blue"],
-                    "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ now() }}",
-                    "type": "count",
-                },
-                {
-                    "platform": "history_stats",
-                    "entity_id": "input_select.test_id",
-                    "name": "sensor4",
-                    "state": ["orange", "blue"],
-                    "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ now() }}",
-                    "type": "ratio",
-                },
-            ]
-        },
-    )
-    await hass.async_block_till_done()
-
     with patch(
         "homeassistant.components.recorder.history.state_changes_during_period",
         _fake_states,
     ):
+        await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "input_select.test_id",
+                        "name": "sensor1",
+                        "state": ["orange", "blue"],
+                        "start": "{{ as_timestamp(now()) - 3600 }}",
+                        "end": "{{ now() }}",
+                        "type": "time",
+                    },
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "unknown.test_id",
+                        "name": "sensor2",
+                        "state": ["orange", "blue"],
+                        "start": "{{ as_timestamp(now()) - 3600 }}",
+                        "end": "{{ now() }}",
+                        "type": "time",
+                    },
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "input_select.test_id",
+                        "name": "sensor3",
+                        "state": ["orange", "blue"],
+                        "start": "{{ as_timestamp(now()) - 3600 }}",
+                        "end": "{{ now() }}",
+                        "type": "count",
+                    },
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "input_select.test_id",
+                        "name": "sensor4",
+                        "state": ["orange", "blue"],
+                        "start": "{{ as_timestamp(now()) - 3600 }}",
+                        "end": "{{ now() }}",
+                        "type": "ratio",
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
         for i in range(1, 5):
             await async_update_entity(hass, f"sensor.sensor{i}")
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.sensor1").state == "0.5"
-    assert hass.states.get("sensor.sensor2").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.sensor2").state == "0.0"
     assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "50.0"
 
 
-async def test_measure(hass, recorder_mock):
+async def test_measure(recorder_mock, hass):
     """Test the history statistics sensor measure."""
     start_time = dt_util.utcnow() - timedelta(minutes=60)
     t0 = start_time + timedelta(minutes=20)
@@ -382,67 +381,66 @@ async def test_measure(hass, recorder_mock):
             ]
         }
 
-    await async_setup_component(
-        hass,
-        "sensor",
-        {
-            "sensor": [
-                {
-                    "platform": "history_stats",
-                    "entity_id": "binary_sensor.test_id",
-                    "name": "sensor1",
-                    "state": "on",
-                    "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ now() }}",
-                    "type": "time",
-                },
-                {
-                    "platform": "history_stats",
-                    "entity_id": "binary_sensor.test_id",
-                    "name": "sensor2",
-                    "state": "on",
-                    "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ now() }}",
-                    "type": "time",
-                },
-                {
-                    "platform": "history_stats",
-                    "entity_id": "binary_sensor.test_id",
-                    "name": "sensor3",
-                    "state": "on",
-                    "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ now() }}",
-                    "type": "count",
-                },
-                {
-                    "platform": "history_stats",
-                    "entity_id": "binary_sensor.test_id",
-                    "name": "sensor4",
-                    "state": "on",
-                    "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ now() }}",
-                    "type": "ratio",
-                },
-            ]
-        },
-    )
-    await hass.async_block_till_done()
-
     with patch(
         "homeassistant.components.recorder.history.state_changes_during_period",
         _fake_states,
     ):
+        await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.test_id",
+                        "name": "sensor1",
+                        "state": "on",
+                        "start": "{{ as_timestamp(now()) - 3600 }}",
+                        "end": "{{ now() }}",
+                        "type": "time",
+                    },
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.test_id",
+                        "name": "sensor2",
+                        "state": "on",
+                        "start": "{{ as_timestamp(now()) - 3600 }}",
+                        "end": "{{ now() }}",
+                        "type": "time",
+                    },
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.test_id",
+                        "name": "sensor3",
+                        "state": "on",
+                        "start": "{{ as_timestamp(now()) - 3600 }}",
+                        "end": "{{ now() }}",
+                        "type": "count",
+                    },
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.test_id",
+                        "name": "sensor4",
+                        "state": "on",
+                        "start": "{{ as_timestamp(now()) - 3600 }}",
+                        "end": "{{ now() }}",
+                        "type": "ratio",
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
         for i in range(1, 5):
             await async_update_entity(hass, f"sensor.sensor{i}")
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.sensor1").state == "0.83"
     assert hass.states.get("sensor.sensor2").state == "0.83"
-    assert hass.states.get("sensor.sensor3").state == "1"
+    assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "83.3"
 
 
-async def test_async_on_entire_period(hass, recorder_mock):
+async def test_async_on_entire_period(recorder_mock, hass):
     """Test the history statistics sensor measuring as on the entire period."""
     start_time = dt_util.utcnow() - timedelta(minutes=60)
     t0 = start_time + timedelta(minutes=20)
@@ -463,67 +461,66 @@ async def test_async_on_entire_period(hass, recorder_mock):
             ]
         }
 
-    await async_setup_component(
-        hass,
-        "sensor",
-        {
-            "sensor": [
-                {
-                    "platform": "history_stats",
-                    "entity_id": "binary_sensor.test_on_id",
-                    "name": "on_sensor1",
-                    "state": "on",
-                    "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ now() }}",
-                    "type": "time",
-                },
-                {
-                    "platform": "history_stats",
-                    "entity_id": "binary_sensor.test_on_id",
-                    "name": "on_sensor2",
-                    "state": "on",
-                    "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ now() }}",
-                    "type": "time",
-                },
-                {
-                    "platform": "history_stats",
-                    "entity_id": "binary_sensor.test_on_id",
-                    "name": "on_sensor3",
-                    "state": "on",
-                    "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ now() }}",
-                    "type": "count",
-                },
-                {
-                    "platform": "history_stats",
-                    "entity_id": "binary_sensor.test_on_id",
-                    "name": "on_sensor4",
-                    "state": "on",
-                    "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ now() }}",
-                    "type": "ratio",
-                },
-            ]
-        },
-    )
-    await hass.async_block_till_done()
-
     with patch(
         "homeassistant.components.recorder.history.state_changes_during_period",
         _fake_states,
     ):
+        await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.test_on_id",
+                        "name": "on_sensor1",
+                        "state": "on",
+                        "start": "{{ as_timestamp(now()) - 3600 }}",
+                        "end": "{{ now() }}",
+                        "type": "time",
+                    },
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.test_on_id",
+                        "name": "on_sensor2",
+                        "state": "on",
+                        "start": "{{ as_timestamp(now()) - 3600 }}",
+                        "end": "{{ now() }}",
+                        "type": "time",
+                    },
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.test_on_id",
+                        "name": "on_sensor3",
+                        "state": "on",
+                        "start": "{{ as_timestamp(now()) - 3600 }}",
+                        "end": "{{ now() }}",
+                        "type": "count",
+                    },
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.test_on_id",
+                        "name": "on_sensor4",
+                        "state": "on",
+                        "start": "{{ as_timestamp(now()) - 3600 }}",
+                        "end": "{{ now() }}",
+                        "type": "ratio",
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
         for i in range(1, 5):
             await async_update_entity(hass, f"sensor.on_sensor{i}")
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.on_sensor1").state == "1.0"
     assert hass.states.get("sensor.on_sensor2").state == "1.0"
-    assert hass.states.get("sensor.on_sensor3").state == "0"
+    assert hass.states.get("sensor.on_sensor3").state == "1"
     assert hass.states.get("sensor.on_sensor4").state == "100.0"
 
 
-async def test_async_off_entire_period(hass, recorder_mock):
+async def test_async_off_entire_period(recorder_mock, hass):
     """Test the history statistics sensor measuring as off the entire period."""
     start_time = dt_util.utcnow() - timedelta(minutes=60)
     t0 = start_time + timedelta(minutes=20)
@@ -605,8 +602,8 @@ async def test_async_off_entire_period(hass, recorder_mock):
 
 
 async def test_async_start_from_history_and_switch_to_watching_state_changes_single(
-    hass,
     recorder_mock,
+    hass,
 ):
     """Test we startup from history and switch to watching state changes."""
     hass.config.set_time_zone("UTC")
@@ -705,8 +702,8 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
 
 
 async def test_async_start_from_history_and_switch_to_watching_state_changes_single_expanding_window(
-    hass,
     recorder_mock,
+    hass,
 ):
     """Test we startup from history and switch to watching state changes with an expanding end time."""
     hass.config.set_time_zone("UTC")
@@ -804,8 +801,8 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
 
 
 async def test_async_start_from_history_and_switch_to_watching_state_changes_multiple(
-    hass,
     recorder_mock,
+    hass,
 ):
     """Test we startup from history and switch to watching state changes."""
     hass.config.set_time_zone("UTC")
@@ -886,7 +883,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
 
     assert hass.states.get("sensor.sensor1").state == "0.0"
     assert hass.states.get("sensor.sensor2").state == "0.0"
-    assert hass.states.get("sensor.sensor3").state == "0"
+    assert hass.states.get("sensor.sensor3").state == "1"
     assert hass.states.get("sensor.sensor4").state == "0.0"
 
     one_hour_in = start_time + timedelta(minutes=60)
@@ -896,7 +893,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
 
     assert hass.states.get("sensor.sensor1").state == "1.0"
     assert hass.states.get("sensor.sensor2").state == "1.0"
-    assert hass.states.get("sensor.sensor3").state == "0"
+    assert hass.states.get("sensor.sensor3").state == "1"
     assert hass.states.get("sensor.sensor4").state == "50.0"
 
     turn_off_time = start_time + timedelta(minutes=90)
@@ -908,7 +905,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
 
     assert hass.states.get("sensor.sensor1").state == "1.5"
     assert hass.states.get("sensor.sensor2").state == "1.5"
-    assert hass.states.get("sensor.sensor3").state == "0"
+    assert hass.states.get("sensor.sensor3").state == "1"
     assert hass.states.get("sensor.sensor4").state == "75.0"
 
     turn_back_on_time = start_time + timedelta(minutes=105)
@@ -918,7 +915,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
 
     assert hass.states.get("sensor.sensor1").state == "1.5"
     assert hass.states.get("sensor.sensor2").state == "1.5"
-    assert hass.states.get("sensor.sensor3").state == "0"
+    assert hass.states.get("sensor.sensor3").state == "1"
     assert hass.states.get("sensor.sensor4").state == "75.0"
 
     with freeze_time(turn_back_on_time):
@@ -927,7 +924,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
 
     assert hass.states.get("sensor.sensor1").state == "1.5"
     assert hass.states.get("sensor.sensor2").state == "1.5"
-    assert hass.states.get("sensor.sensor3").state == "1"
+    assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "75.0"
 
     end_time = start_time + timedelta(minutes=120)
@@ -937,11 +934,11 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
 
     assert hass.states.get("sensor.sensor1").state == "1.75"
     assert hass.states.get("sensor.sensor2").state == "1.75"
-    assert hass.states.get("sensor.sensor3").state == "1"
+    assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "87.5"
 
 
-async def test_does_not_work_into_the_future(hass, recorder_mock):
+async def test_does_not_work_into_the_future(recorder_mock, hass):
     """Test history cannot tell the future.
 
     Verifies we do not regress https://github.com/home-assistant/core/pull/20589
@@ -1081,7 +1078,7 @@ async def test_does_not_work_into_the_future(hass, recorder_mock):
     assert hass.states.get("sensor.sensor1").state == "0.0"
 
 
-async def test_reload_before_start_event(hass, recorder_mock):
+async def test_reload_before_start_event(recorder_mock, hass):
     """Verify we can reload history_stats sensors before the start event."""
     hass.state = ha.CoreState.not_running
     hass.states.async_set("binary_sensor.test_id", "on")
@@ -1122,7 +1119,7 @@ async def test_reload_before_start_event(hass, recorder_mock):
     assert hass.states.get("sensor.second_test")
 
 
-async def test_measure_sliding_window(hass, recorder_mock):
+async def test_measure_sliding_window(recorder_mock, hass):
     """Test the history statistics sensor with a moving end and a moving start."""
     start_time = dt_util.utcnow() - timedelta(minutes=60)
     t0 = start_time + timedelta(minutes=20)
@@ -1198,7 +1195,7 @@ async def test_measure_sliding_window(hass, recorder_mock):
 
     assert hass.states.get("sensor.sensor1").state == "0.83"
     assert hass.states.get("sensor.sensor2").state == "0.83"
-    assert hass.states.get("sensor.sensor3").state == "1"
+    assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "41.7"
 
     past_next_update = start_time + timedelta(minutes=30)
@@ -1211,11 +1208,11 @@ async def test_measure_sliding_window(hass, recorder_mock):
 
     assert hass.states.get("sensor.sensor1").state == "0.83"
     assert hass.states.get("sensor.sensor2").state == "0.83"
-    assert hass.states.get("sensor.sensor3").state == "1"
+    assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "41.7"
 
 
-async def test_measure_from_end_going_backwards(hass, recorder_mock):
+async def test_measure_from_end_going_backwards(recorder_mock, hass):
     """Test the history statistics sensor with a moving end and a duration to find the start."""
     start_time = dt_util.utcnow() - timedelta(minutes=60)
     t0 = start_time + timedelta(minutes=20)
@@ -1235,63 +1232,62 @@ async def test_measure_from_end_going_backwards(hass, recorder_mock):
             ]
         }
 
-    await async_setup_component(
-        hass,
-        "sensor",
-        {
-            "sensor": [
-                {
-                    "platform": "history_stats",
-                    "entity_id": "binary_sensor.test_id",
-                    "name": "sensor1",
-                    "state": "on",
-                    "duration": {"hours": 1},
-                    "end": "{{ now() }}",
-                    "type": "time",
-                },
-                {
-                    "platform": "history_stats",
-                    "entity_id": "binary_sensor.test_id",
-                    "name": "sensor2",
-                    "state": "on",
-                    "duration": {"hours": 1},
-                    "end": "{{ now() }}",
-                    "type": "time",
-                },
-                {
-                    "platform": "history_stats",
-                    "entity_id": "binary_sensor.test_id",
-                    "name": "sensor3",
-                    "state": "on",
-                    "duration": {"hours": 1},
-                    "end": "{{ now() }}",
-                    "type": "count",
-                },
-                {
-                    "platform": "history_stats",
-                    "entity_id": "binary_sensor.test_id",
-                    "name": "sensor4",
-                    "state": "on",
-                    "duration": {"hours": 1},
-                    "end": "{{ now() }}",
-                    "type": "ratio",
-                },
-            ]
-        },
-    )
-    await hass.async_block_till_done()
-
     with patch(
         "homeassistant.components.recorder.history.state_changes_during_period",
         _fake_states,
     ), freeze_time(start_time):
+        await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.test_id",
+                        "name": "sensor1",
+                        "state": "on",
+                        "duration": {"hours": 1},
+                        "end": "{{ now() }}",
+                        "type": "time",
+                    },
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.test_id",
+                        "name": "sensor2",
+                        "state": "on",
+                        "duration": {"hours": 1},
+                        "end": "{{ now() }}",
+                        "type": "time",
+                    },
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.test_id",
+                        "name": "sensor3",
+                        "state": "on",
+                        "duration": {"hours": 1},
+                        "end": "{{ now() }}",
+                        "type": "count",
+                    },
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.test_id",
+                        "name": "sensor4",
+                        "state": "on",
+                        "duration": {"hours": 1},
+                        "end": "{{ now() }}",
+                        "type": "ratio",
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
         for i in range(1, 5):
             await async_update_entity(hass, f"sensor.sensor{i}")
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.sensor1").state == "0.83"
     assert hass.states.get("sensor.sensor2").state == "0.83"
-    assert hass.states.get("sensor.sensor3").state == "1"
+    assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "83.3"
 
     past_next_update = start_time + timedelta(minutes=30)
@@ -1304,11 +1300,11 @@ async def test_measure_from_end_going_backwards(hass, recorder_mock):
 
     assert hass.states.get("sensor.sensor1").state == "0.83"
     assert hass.states.get("sensor.sensor2").state == "0.83"
-    assert hass.states.get("sensor.sensor3").state == "1"
+    assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "83.3"
 
 
-async def test_measure_cet(hass, recorder_mock):
+async def test_measure_cet(recorder_mock, hass):
     """Test the history statistics sensor measure with a non-UTC timezone."""
     hass.config.set_time_zone("Europe/Berlin")
     start_time = dt_util.utcnow() - timedelta(minutes=60)
@@ -1329,6 +1325,183 @@ async def test_measure_cet(hass, recorder_mock):
             ]
         }
 
+    with patch(
+        "homeassistant.components.recorder.history.state_changes_during_period",
+        _fake_states,
+    ):
+        await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.test_id",
+                        "name": "sensor1",
+                        "state": "on",
+                        "start": "{{ as_timestamp(now()) - 3600 }}",
+                        "end": "{{ now() }}",
+                        "type": "time",
+                    },
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.test_id",
+                        "name": "sensor2",
+                        "state": "on",
+                        "start": "{{ as_timestamp(now()) - 3600 }}",
+                        "end": "{{ now() }}",
+                        "type": "time",
+                    },
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.test_id",
+                        "name": "sensor3",
+                        "state": "on",
+                        "start": "{{ as_timestamp(now()) - 3600 }}",
+                        "end": "{{ now() }}",
+                        "type": "count",
+                    },
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.test_id",
+                        "name": "sensor4",
+                        "state": "on",
+                        "start": "{{ as_timestamp(now()) - 3600 }}",
+                        "end": "{{ now() }}",
+                        "type": "ratio",
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+        for i in range(1, 5):
+            await async_update_entity(hass, f"sensor.sensor{i}")
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.sensor1").state == "0.83"
+    assert hass.states.get("sensor.sensor2").state == "0.83"
+    assert hass.states.get("sensor.sensor3").state == "2"
+    assert hass.states.get("sensor.sensor4").state == "83.3"
+
+
+@pytest.mark.parametrize("time_zone", ["Europe/Berlin", "America/Chicago", "US/Hawaii"])
+async def test_end_time_with_microseconds_zeroed(time_zone, recorder_mock, hass):
+    """Test the history statistics sensor that has the end time microseconds zeroed out."""
+    hass.config.set_time_zone(time_zone)
+    start_of_today = dt_util.now().replace(
+        day=9, month=7, year=1986, hour=0, minute=0, second=0, microsecond=0
+    )
+    start_time = start_of_today + timedelta(minutes=60)
+    t0 = start_time + timedelta(minutes=20)
+    t1 = t0 + timedelta(minutes=10)
+    t2 = t1 + timedelta(minutes=10)
+    time_200 = start_of_today + timedelta(hours=2)
+
+    def _fake_states(*args, **kwargs):
+        return {
+            "binary_sensor.heatpump_compressor_state": [
+                ha.State(
+                    "binary_sensor.heatpump_compressor_state", "on", last_changed=t0
+                ),
+                ha.State(
+                    "binary_sensor.heatpump_compressor_state",
+                    "off",
+                    last_changed=t1,
+                ),
+                ha.State(
+                    "binary_sensor.heatpump_compressor_state", "on", last_changed=t2
+                ),
+            ]
+        }
+
+    with freeze_time(time_200), patch(
+        "homeassistant.components.recorder.history.state_changes_during_period",
+        _fake_states,
+    ):
+        await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.heatpump_compressor_state",
+                        "name": "heatpump_compressor_today",
+                        "state": "on",
+                        "start": "{{ now().replace(hour=0, minute=0, second=0, microsecond=0) }}",
+                        "end": "{{ now().replace(microsecond=0) }}",
+                        "type": "time",
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+        await async_update_entity(hass, "sensor.heatpump_compressor_today")
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.heatpump_compressor_today").state == "1.83"
+        async_fire_time_changed(hass, time_200)
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.heatpump_compressor_today").state == "1.83"
+        hass.states.async_set("binary_sensor.heatpump_compressor_state", "off")
+        await hass.async_block_till_done()
+
+    time_400 = start_of_today + timedelta(hours=4)
+    with freeze_time(time_400):
+        async_fire_time_changed(hass, time_400)
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.heatpump_compressor_today").state == "1.83"
+        hass.states.async_set("binary_sensor.heatpump_compressor_state", "on")
+        await hass.async_block_till_done()
+    time_600 = start_of_today + timedelta(hours=6)
+    with freeze_time(time_600):
+        async_fire_time_changed(hass, time_600)
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.heatpump_compressor_today").state == "3.83"
+
+    rolled_to_next_day = start_of_today + timedelta(days=1)
+    assert rolled_to_next_day.hour == 0
+    assert rolled_to_next_day.minute == 0
+    assert rolled_to_next_day.second == 0
+    assert rolled_to_next_day.microsecond == 0
+
+    with freeze_time(rolled_to_next_day):
+        async_fire_time_changed(hass, rolled_to_next_day)
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.heatpump_compressor_today").state == "0.0"
+
+    rolled_to_next_day_plus_12 = start_of_today + timedelta(
+        days=1, hours=12, microseconds=0
+    )
+    with freeze_time(rolled_to_next_day_plus_12):
+        async_fire_time_changed(hass, rolled_to_next_day_plus_12)
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.heatpump_compressor_today").state == "12.0"
+
+    rolled_to_next_day_plus_14 = start_of_today + timedelta(
+        days=1, hours=14, microseconds=0
+    )
+    with freeze_time(rolled_to_next_day_plus_14):
+        async_fire_time_changed(hass, rolled_to_next_day_plus_14)
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.heatpump_compressor_today").state == "14.0"
+
+    rolled_to_next_day_plus_16_860000 = start_of_today + timedelta(
+        days=1, hours=16, microseconds=860000
+    )
+    with freeze_time(rolled_to_next_day_plus_16_860000):
+        hass.states.async_set("binary_sensor.heatpump_compressor_state", "off")
+        async_fire_time_changed(hass, rolled_to_next_day_plus_16_860000)
+        await hass.async_block_till_done()
+
+    rolled_to_next_day_plus_18 = start_of_today + timedelta(days=1, hours=18)
+    with freeze_time(rolled_to_next_day_plus_18):
+        async_fire_time_changed(hass, rolled_to_next_day_plus_18)
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.heatpump_compressor_today").state == "16.0"
+
+
+async def test_device_classes(recorder_mock, hass):
+    """Test the device classes."""
     await async_setup_component(
         hass,
         "sensor",
@@ -1337,53 +1510,34 @@ async def test_measure_cet(hass, recorder_mock):
                 {
                     "platform": "history_stats",
                     "entity_id": "binary_sensor.test_id",
-                    "name": "sensor1",
+                    "name": "time",
                     "state": "on",
                     "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ now() }}",
+                    "end": "{{ as_timestamp(now()) + 3600 }}",
                     "type": "time",
                 },
                 {
                     "platform": "history_stats",
                     "entity_id": "binary_sensor.test_id",
-                    "name": "sensor2",
+                    "name": "count",
                     "state": "on",
                     "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ now() }}",
-                    "type": "time",
-                },
-                {
-                    "platform": "history_stats",
-                    "entity_id": "binary_sensor.test_id",
-                    "name": "sensor3",
-                    "state": "on",
-                    "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ now() }}",
+                    "end": "{{ as_timestamp(now()) + 3600 }}",
                     "type": "count",
                 },
                 {
                     "platform": "history_stats",
                     "entity_id": "binary_sensor.test_id",
-                    "name": "sensor4",
+                    "name": "ratio",
                     "state": "on",
                     "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ now() }}",
+                    "end": "{{ as_timestamp(now()) + 3600 }}",
                     "type": "ratio",
                 },
             ]
         },
     )
     await hass.async_block_till_done()
-
-    with patch(
-        "homeassistant.components.recorder.history.state_changes_during_period",
-        _fake_states,
-    ):
-        for i in range(1, 5):
-            await async_update_entity(hass, f"sensor.sensor{i}")
-        await hass.async_block_till_done()
-
-    assert hass.states.get("sensor.sensor1").state == "0.83"
-    assert hass.states.get("sensor.sensor2").state == "0.83"
-    assert hass.states.get("sensor.sensor3").state == "1"
-    assert hass.states.get("sensor.sensor4").state == "83.3"
+    assert hass.states.get("sensor.time").attributes[ATTR_DEVICE_CLASS] == "duration"
+    assert ATTR_DEVICE_CLASS not in hass.states.get("sensor.ratio").attributes
+    assert ATTR_DEVICE_CLASS not in hass.states.get("sensor.count").attributes

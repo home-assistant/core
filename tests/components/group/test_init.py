@@ -26,8 +26,9 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import TRACK_STATE_CHANGE_CALLBACKS
 from homeassistant.setup import async_setup_component
 
+from . import common
+
 from tests.common import MockConfigEntry, assert_setup_component
-from tests.components.group import common
 
 
 async def test_setup_group_with_mixed_groupable_states(hass):
@@ -1421,12 +1422,12 @@ async def test_setup_and_remove_config_entry(
 @pytest.mark.parametrize(
     "hide_members,hidden_by_initial,hidden_by",
     (
-        (False, "integration", "integration"),
+        (False, er.RegistryEntryHider.INTEGRATION, er.RegistryEntryHider.INTEGRATION),
         (False, None, None),
-        (False, "user", "user"),
-        (True, "integration", None),
+        (False, er.RegistryEntryHider.USER, er.RegistryEntryHider.USER),
+        (True, er.RegistryEntryHider.INTEGRATION, None),
         (True, None, None),
-        (True, "user", "user"),
+        (True, er.RegistryEntryHider.USER, er.RegistryEntryHider.USER),
     ),
 )
 @pytest.mark.parametrize(
@@ -1444,7 +1445,7 @@ async def test_unhide_members_on_remove(
     group_type: str,
     extra_options: dict[str, Any],
     hide_members: bool,
-    hidden_by_initial: str,
+    hidden_by_initial: er.RegistryEntryHider,
     hidden_by: str,
 ) -> None:
     """Test removing a config entry."""

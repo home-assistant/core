@@ -1,0 +1,56 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "alternative_integration": "Zariadenie je lep\u0161ie podporovan\u00e9 inou integr\u00e1ciou",
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "discovery_error": "Nepodarilo sa n\u00e1js\u0165 zodpovedaj\u00face zariadenie DLNA",
+            "incomplete_config": "V konfigur\u00e1cii ch\u00fdba povinn\u00e1 premenn\u00e1",
+            "non_unique_id": "Viacer\u00e9 zariadenia n\u00e1jden\u00e9 s rovnak\u00fdm jedine\u010dn\u00fdm identifik\u00e1torom",
+            "not_dmr": "Zariadenie nie je podporovan\u00e9 DMR"
+        },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "not_dmr": "Zariadenie nie je podporovan\u00e9 DMR"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "Chcete za\u010da\u0165 nastavova\u0165?"
+            },
+            "import_turn_on": {
+                "description": "Ak chcete pokra\u010dova\u0165 v migr\u00e1cii, zapnite zariadenie a kliknite na tla\u010didlo Odosla\u0165"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                },
+                "description": "URL adresa k XML s\u00faboru popisu zariadenia",
+                "title": "Manu\u00e1lne pripojenie zariadenia DLNA DMR"
+            },
+            "user": {
+                "data": {
+                    "host": "Hostite\u013e"
+                },
+                "description": "Vyberte zariadenie, ktor\u00e9 chcete nakonfigurova\u0165, alebo nechajte pr\u00e1zdne a zadajte adresu URL",
+                "title": "Objaven\u00e9 zariadenia DLNA DMR"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_url": "Neplatn\u00e1 adresa URL"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "browse_unfiltered": "Zobrazi\u0165 nekompatibiln\u00e9 m\u00e9di\u00e1 pri prehliadan\u00ed",
+                    "callback_url_override": "Adresa URL sp\u00e4tn\u00e9ho volania prij\u00edma\u010da udalost\u00ed",
+                    "listen_port": "Port prij\u00edma\u010da udalost\u00ed (n\u00e1hodn\u00fd, ak nie je nastaven\u00fd)",
+                    "poll_availability": "Dopytovanie sa na dostupnos\u0165 zariadenia"
+                },
+                "title": "Konfigur\u00e1cia DLNA Digital Media Renderer"
+            }
+        }
+    }
+}

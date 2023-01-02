@@ -25,7 +25,8 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "invalid_unique_id": "Impossible to determine a valid unique id for the device",
+      "no_unique_id": "A device without a valid unique id is already configured. Configuration of multiple instance is not possible"
     }
   },
   "options": {

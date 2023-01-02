@@ -3,9 +3,7 @@
         "step": {
             "user": {
                 "data": {
-                    "after": "Kestus sissel\u00fclitumisest",
                     "after_time": "Seesoleku aeg",
-                    "before": "Kestus v\u00e4ljal\u00fclitumisest",
                     "before_time": "V\u00e4ljasoleku aeg",
                     "name": "Nimi"
                 },
@@ -18,12 +16,9 @@
         "step": {
             "init": {
                 "data": {
-                    "after": "Kestus sissel\u00fclitumisest",
                     "after_time": "Seesoleku aeg",
-                    "before": "Kestus v\u00e4ljal\u00fclitumisest",
                     "before_time": "V\u00e4ljasoleku aeg"
-                },
-                "description": "Vali millal andur on sisse v\u00f5i v\u00e4lja l\u00fclitatud."
+                }
             }
         }
     },

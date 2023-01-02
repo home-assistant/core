@@ -1,6 +1,8 @@
 """Websocekt API handlers for the hassio integration."""
 import logging
+from numbers import Number
 import re
+from typing import Any
 
 import voluptuous as vol
 
@@ -38,9 +40,11 @@ SCHEMA_WEBSOCKET_EVENT = vol.Schema(
 )
 
 # Endpoints needed for ingress can't require admin because addons can set `panel_admin: false`
+# pylint: disable=implicit-str-concat
 WS_NO_ADMIN_ENDPOINTS = re.compile(
     r"^(?:" r"|/ingress/(session|validate_session)" r"|/addons/[^/]+/info" r")$"
 )
+# pylint: enable=implicit-str-concat
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -54,10 +58,10 @@ def async_load_websocket_api(hass: HomeAssistant):
 
 
 @websocket_api.require_admin
-@websocket_api.async_response
 @websocket_api.websocket_command({vol.Required(WS_TYPE): WS_TYPE_SUBSCRIBE})
+@websocket_api.async_response
 async def websocket_subscribe(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ):
     """Subscribe to supervisor events."""
 
@@ -72,33 +76,33 @@ async def websocket_subscribe(
     connection.send_message(websocket_api.result_message(msg[WS_ID]))
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required(WS_TYPE): WS_TYPE_EVENT,
         vol.Required(ATTR_DATA): SCHEMA_WEBSOCKET_EVENT,
     }
 )
+@websocket_api.async_response
 async def websocket_supervisor_event(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ):
     """Publish events from the Supervisor."""
-    async_dispatcher_send(hass, EVENT_SUPERVISOR_EVENT, msg[ATTR_DATA])
     connection.send_result(msg[WS_ID])
+    async_dispatcher_send(hass, EVENT_SUPERVISOR_EVENT, msg[ATTR_DATA])
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required(WS_TYPE): WS_TYPE_API,
         vol.Required(ATTR_ENDPOINT): cv.string,
         vol.Required(ATTR_METHOD): cv.string,
         vol.Optional(ATTR_DATA): dict,
-        vol.Optional(ATTR_TIMEOUT): vol.Any(cv.Number, None),
+        vol.Optional(ATTR_TIMEOUT): vol.Any(Number, None),
     }
 )
+@websocket_api.async_response
 async def websocket_supervisor_api(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ):
     """Websocket handler to call Supervisor API."""
     if not connection.user.is_admin and not WS_NO_ADMIN_ENDPOINTS.match(

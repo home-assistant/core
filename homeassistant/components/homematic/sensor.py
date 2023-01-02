@@ -15,18 +15,18 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
-    ELECTRIC_CURRENT_MILLIAMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_WATT_HOUR,
-    FREQUENCY_HERTZ,
-    LENGTH_MILLIMETERS,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_WATT,
-    PRESSURE_HPA,
-    SPEED_KILOMETERS_PER_HOUR,
-    TEMP_CELSIUS,
-    VOLUME_CUBIC_METERS,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfFrequency,
+    UnitOfPower,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -63,13 +63,13 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     "ACTUAL_TEMPERATURE": SensorEntityDescription(
         key="ACTUAL_TEMPERATURE",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "TEMPERATURE": SensorEntityDescription(
         key="TEMPERATURE",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -111,19 +111,19 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     "POWER": SensorEntityDescription(
         key="POWER",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "IEC_POWER": SensorEntityDescription(
         key="IEC_POWER",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "CURRENT": SensorEntityDescription(
         key="CURRENT",
-        native_unit_of_measurement=ELECTRIC_CURRENT_MILLIAMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -135,41 +135,43 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     "ENERGY_COUNTER": SensorEntityDescription(
         key="ENERGY_COUNTER",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     "IEC_ENERGY_COUNTER": SensorEntityDescription(
         key="IEC_ENERGY_COUNTER",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     "VOLTAGE": SensorEntityDescription(
         key="VOLTAGE",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "GAS_POWER": SensorEntityDescription(
         key="GAS_POWER",
-        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "GAS_ENERGY_COUNTER": SensorEntityDescription(
         key="GAS_ENERGY_COUNTER",
-        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     "RAIN_COUNTER": SensorEntityDescription(
         key="RAIN_COUNTER",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
     ),
     "WIND_SPEED": SensorEntityDescription(
         key="WIND_SPEED",
-        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
         icon="mdi:weather-windy",
     ),
     "WIND_DIRECTION": SensorEntityDescription(
@@ -186,13 +188,14 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     "AIR_PRESSURE": SensorEntityDescription(
         key="AIR_PRESSURE",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "FREQUENCY": SensorEntityDescription(
         key="FREQUENCY",
-        native_unit_of_measurement=FREQUENCY_HERTZ,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        device_class=SensorDeviceClass.FREQUENCY,
     ),
     "VALUE": SensorEntityDescription(
         key="VALUE",
@@ -251,6 +254,36 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.PM10,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    "STATE": SensorEntityDescription(
+        key="STATE",
+    ),
+    "SMOKE_DETECTOR_ALARM_STATUS": SensorEntityDescription(
+        key="SMOKE_DETECTOR_ALARM_STATUS",
+    ),
+    "WIND_DIR": SensorEntityDescription(
+        key="WIND_DIR",
+    ),
+    "WIND_DIR_RANGE": SensorEntityDescription(
+        key="WIND_DIR_RANGE",
+    ),
+    "CONCENTRATION_STATUS": SensorEntityDescription(
+        key="CONCENTRATION_STATUS",
+    ),
+    "PASSAGE_COUNTER_VALUE": SensorEntityDescription(
+        key="PASSAGE_COUNTER_VALUE",
+    ),
+    "LEVEL": SensorEntityDescription(
+        key="LEVEL",
+    ),
+    "LEVEL_2": SensorEntityDescription(
+        key="LEVEL_2",
+    ),
+    "DOOR_STATE": SensorEntityDescription(
+        key="DOOR_STATE",
+    ),
+    "FILLING_LEVEL": SensorEntityDescription(
+        key="FILLING_LEVEL",
+    ),
 }
 
 DEFAULT_SENSOR_DESCRIPTION = SensorEntityDescription(
@@ -275,7 +308,10 @@ def setup_platform(
         if (entity_desc := SENSOR_DESCRIPTIONS.get(state)) is None:
             name = conf.get(ATTR_NAME)
             _LOGGER.warning(
-                "Sensor (%s) entity description is missing. Sensor state (%s) needs to be maintained",
+                (
+                    "Sensor (%s) entity description is missing. Sensor state (%s) needs"
+                    " to be maintained"
+                ),
                 name,
                 state,
             )

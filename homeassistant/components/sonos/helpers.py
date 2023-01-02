@@ -62,7 +62,7 @@ def soco_error(
 
         def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> _R | None:
             """Wrap for all soco UPnP exception."""
-            args_soco = next((arg for arg in args if isinstance(arg, SoCo)), None)  # type: ignore[attr-defined]
+            args_soco = next((arg for arg in args if isinstance(arg, SoCo)), None)
             try:
                 result = funct(self, *args, **kwargs)
             except (OSError, SoCoException, SoCoUPnPException) as err:
@@ -94,7 +94,7 @@ def soco_error(
 
 
 def _find_target_identifier(instance: Any, fallback_soco: SoCo | None) -> str | None:
-    """Extract the the best available target identifier from the provided instance object."""
+    """Extract the best available target identifier from the provided instance object."""
     if entity_id := getattr(instance, "entity_id", None):
         # SonosEntity instance
         return entity_id

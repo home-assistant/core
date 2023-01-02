@@ -1,18 +1,14 @@
 {
     "config": {
         "step": {
-            "config": {
-                "user": {
-                    "entity_id": "Kontakt-entitet"
-                }
-            },
             "user": {
                 "data": {
+                    "entity_id": "Brytare",
                     "target_domain": "Typ"
                 },
-                "title": "G\u00f6r en kontakt till ..."
+                "description": "V\u00e4lj en brytare som du vill visa i Home Assistant som lampa, gardin eller n\u00e5got annat. Den ursprungliga brytaren kommer att d\u00f6ljas."
             }
         }
     },
-    "title": "Kontakt som X"
+    "title": "\u00c4ndra enhetstyp f\u00f6r en brytare"
 }

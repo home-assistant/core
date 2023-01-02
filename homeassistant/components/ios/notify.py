@@ -4,7 +4,6 @@ import logging
 
 import requests
 
-from homeassistant.components import ios
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_MESSAGE,
@@ -14,6 +13,8 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 import homeassistant.util.dt as dt_util
+
+from .. import ios
 
 _LOGGER = logging.getLogger(__name__)
 

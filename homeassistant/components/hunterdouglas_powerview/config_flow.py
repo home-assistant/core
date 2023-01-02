@@ -14,7 +14,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import async_get_device_info
-from .const import DEVICE_NAME, DEVICE_SERIAL_NUMBER, DOMAIN, HUB_EXCEPTIONS
+from .const import DOMAIN, HUB_EXCEPTIONS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,14 +35,14 @@ async def validate_input(hass: core.HomeAssistant, hub_address: str) -> dict[str
 
     try:
         async with async_timeout.timeout(10):
-            device_info = await async_get_device_info(pv_request)
+            device_info = await async_get_device_info(pv_request, hub_address)
     except HUB_EXCEPTIONS as err:
         raise CannotConnect from err
 
     # Return info that you want to store in the config entry.
     return {
-        "title": device_info[DEVICE_NAME],
-        "unique_id": device_info[DEVICE_SERIAL_NUMBER],
+        "title": device_info.name,
+        "unique_id": device_info.serial_number,
     }
 
 

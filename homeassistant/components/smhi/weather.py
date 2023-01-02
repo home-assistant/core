@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from datetime import datetime, timedelta
 import logging
-from typing import Final
+from typing import Any, Final
 
 import aiohttp
 import async_timeout
@@ -27,21 +28,28 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_WINDY,
     ATTR_CONDITION_WINDY_VARIANT,
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_PRECIPITATION,
+    ATTR_FORECAST_NATIVE_PRESSURE,
+    ATTR_FORECAST_NATIVE_TEMP,
+    ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_TIME,
+    ATTR_FORECAST_WIND_BEARING,
+    ROUNDING_PRECISION,
     Forecast,
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_NAME,
-    LENGTH_KILOMETERS,
-    LENGTH_MILLIMETERS,
-    TEMP_CELSIUS,
+    UnitOfLength,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
@@ -50,6 +58,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import Throttle, slugify
+from homeassistant.util.unit_conversion import SpeedConverter
 
 from .const import (
     ATTR_SMHI_CLOUDINESS,
@@ -99,8 +108,8 @@ async def async_setup_entry(
 
     entity = SmhiWeather(
         location[CONF_NAME],
-        location[CONF_LATITUDE],
-        location[CONF_LONGITUDE],
+        location[CONF_LOCATION][CONF_LATITUDE],
+        location[CONF_LOCATION][CONF_LONGITUDE],
         session=session,
     )
     entity.entity_id = ENTITY_ID_SENSOR_FORMAT.format(name)
@@ -112,9 +121,13 @@ class SmhiWeather(WeatherEntity):
     """Representation of a weather entity."""
 
     _attr_attribution = "Swedish weather institute (SMHI)"
-    _attr_temperature_unit = TEMP_CELSIUS
-    _attr_visibility_unit = LENGTH_KILOMETERS
-    _attr_precipitation_unit = LENGTH_MILLIMETERS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_visibility_unit = UnitOfLength.KILOMETERS
+    _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
+    _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
+    _attr_native_pressure_unit = UnitOfPressure.HPA
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -124,8 +137,6 @@ class SmhiWeather(WeatherEntity):
         session: aiohttp.ClientSession,
     ) -> None:
         """Initialize the SMHI weather entity."""
-
-        self._attr_name = name
         self._attr_unique_id = f"{latitude}, {longitude}"
         self._forecasts: list[SmhiForecast] | None = None
         self._fail_count = 0
@@ -139,7 +150,23 @@ class SmhiWeather(WeatherEntity):
             configuration_url="http://opendata.smhi.se/apidocs/metfcst/parameters.html",
         )
         self._attr_condition = None
-        self._attr_temperature = None
+        self._attr_native_temperature = None
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return additional attributes."""
+        if self._forecasts:
+            wind_gust = SpeedConverter.convert(
+                self._forecasts[0].wind_gust,
+                UnitOfSpeed.METERS_PER_SECOND,
+                self._wind_speed_unit,
+            )
+            return {
+                ATTR_SMHI_CLOUDINESS: self._forecasts[0].cloudiness,
+                ATTR_SMHI_WIND_GUST_SPEED: round(wind_gust, ROUNDING_PRECISION),
+                ATTR_SMHI_THUNDER_PROBABILITY: self._forecasts[0].thunder,
+            }
+        return None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
@@ -156,13 +183,12 @@ class SmhiWeather(WeatherEntity):
                 return
 
         if self._forecasts:
-            self._attr_temperature = self._forecasts[0].temperature
+            self._attr_native_temperature = self._forecasts[0].temperature
             self._attr_humidity = self._forecasts[0].humidity
-            # Convert from m/s to km/h
-            self._attr_wind_speed = round(self._forecasts[0].wind_speed * 18 / 5)
+            self._attr_native_wind_speed = self._forecasts[0].wind_speed
             self._attr_wind_bearing = self._forecasts[0].wind_direction
-            self._attr_visibility = self._forecasts[0].horizontal_visibility
-            self._attr_pressure = self._forecasts[0].pressure
+            self._attr_native_visibility = self._forecasts[0].horizontal_visibility
+            self._attr_native_pressure = self._forecasts[0].pressure
             self._attr_condition = next(
                 (
                     k
@@ -171,12 +197,6 @@ class SmhiWeather(WeatherEntity):
                 ),
                 None,
             )
-            self._attr_extra_state_attributes = {
-                ATTR_SMHI_CLOUDINESS: self._forecasts[0].cloudiness,
-                # Convert from m/s to km/h
-                ATTR_SMHI_WIND_GUST_SPEED: round(self._forecasts[0].wind_gust * 18 / 5),
-                ATTR_SMHI_THUNDER_PROBABILITY: self._forecasts[0].thunder,
-            }
 
     async def retry_update(self, _: datetime) -> None:
         """Retry refresh weather forecast."""
@@ -200,10 +220,13 @@ class SmhiWeather(WeatherEntity):
             data.append(
                 {
                     ATTR_FORECAST_TIME: forecast.valid_time.isoformat(),
-                    ATTR_FORECAST_TEMP: forecast.temperature_max,
-                    ATTR_FORECAST_TEMP_LOW: forecast.temperature_min,
-                    ATTR_FORECAST_PRECIPITATION: round(forecast.total_precipitation, 1),
+                    ATTR_FORECAST_NATIVE_TEMP: forecast.temperature_max,
+                    ATTR_FORECAST_NATIVE_TEMP_LOW: forecast.temperature_min,
+                    ATTR_FORECAST_NATIVE_PRECIPITATION: forecast.total_precipitation,
                     ATTR_FORECAST_CONDITION: condition,
+                    ATTR_FORECAST_NATIVE_PRESSURE: forecast.pressure,
+                    ATTR_FORECAST_WIND_BEARING: forecast.wind_direction,
+                    ATTR_FORECAST_NATIVE_WIND_SPEED: forecast.wind_speed,
                 }
             )
 

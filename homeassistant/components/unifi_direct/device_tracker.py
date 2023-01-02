@@ -34,7 +34,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> UnifiDeviceScanner | None:
     """Validate the configuration and return a Unifi direct scanner."""
     scanner = UnifiDeviceScanner(config[DOMAIN])
     if not scanner.connected:
@@ -80,7 +80,7 @@ class UnifiDeviceScanner(DeviceScanner):
     def _connect(self):
         """Connect to the Unifi AP SSH server."""
 
-        self.ssh = pxssh.pxssh()
+        self.ssh = pxssh.pxssh(options={"HostKeyAlgorithms": "ssh-rsa"})
         try:
             self.ssh.login(
                 self.host, self.username, password=self.password, port=self.port

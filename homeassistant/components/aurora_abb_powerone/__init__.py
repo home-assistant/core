@@ -10,15 +10,13 @@
 
 import logging
 
-from aurorapy.client import AuroraError, AuroraSerialClient
+from aurorapy.client import AuroraSerialClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
-from .config_flow import validate_and_connect
-from .const import ATTR_SERIAL_NUMBER, DOMAIN
+from .const import DOMAIN
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -31,44 +29,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     comport = entry.data[CONF_PORT]
     address = entry.data[CONF_ADDRESS]
     ser_client = AuroraSerialClient(address, comport, parity="N", timeout=1)
-    # To handle yaml import attempts in darkness, (re)try connecting only if
-    # unique_id not yet assigned.
-    if entry.unique_id is None:
-        try:
-            res = await hass.async_add_executor_job(
-                validate_and_connect, hass, entry.data
-            )
-        except AuroraError as error:
-            if "No response after" in str(error):
-                raise ConfigEntryNotReady("No response (could be dark)") from error
-            _LOGGER.error("Failed to connect to inverter: %s", error)
-            return False
-        except OSError as error:
-            if error.errno == 19:  # No such device.
-                _LOGGER.error("Failed to connect to inverter: no such COM port")
-                return False
-            _LOGGER.error("Failed to connect to inverter: %s", error)
-            return False
-        else:
-            # If we got here, the device is now communicating (maybe after
-            # being in darkness). But there's a small risk that the user has
-            # configured via the UI since we last attempted the yaml setup,
-            # which means we'd get a duplicate unique ID.
-            new_id = res[ATTR_SERIAL_NUMBER]
-            # Check if this unique_id has already been used
-            for existing_entry in hass.config_entries.async_entries(DOMAIN):
-                if existing_entry.unique_id == new_id:
-                    _LOGGER.debug(
-                        "Remove already configured config entry for id %s", new_id
-                    )
-                    hass.async_create_task(
-                        hass.config_entries.async_remove(entry.entry_id)
-                    )
-                    return False
-            hass.config_entries.async_update_entry(entry, unique_id=new_id)
-
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = ser_client
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

@@ -127,6 +127,7 @@ def setup_platform(
 class IFTTTAlarmPanel(AlarmControlPanelEntity):
     """Representation of an alarm control panel controlled through IFTTT."""
 
+    _attr_assumed_state = True
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
@@ -145,7 +146,7 @@ class IFTTTAlarmPanel(AlarmControlPanelEntity):
         optimistic,
     ):
         """Initialize the alarm control panel."""
-        self._name = name
+        self._attr_name = name
         self._code = code
         self._code_arm_required = code_arm_required
         self._event_away = event_away
@@ -153,25 +154,9 @@ class IFTTTAlarmPanel(AlarmControlPanelEntity):
         self._event_night = event_night
         self._event_disarm = event_disarm
         self._optimistic = optimistic
-        self._state = None
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def assumed_state(self):
-        """Notify that this platform return an assumed state."""
-        return True
-
-    @property
-    def code_format(self):
+    def code_format(self) -> CodeFormat | None:
         """Return one or more digits/characters."""
         if self._code is None:
             return None
@@ -179,25 +164,25 @@ class IFTTTAlarmPanel(AlarmControlPanelEntity):
             return CodeFormat.NUMBER
         return CodeFormat.TEXT
 
-    def alarm_disarm(self, code=None):
+    def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if not self._check_code(code):
             return
         self.set_alarm_state(self._event_disarm, STATE_ALARM_DISARMED)
 
-    def alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         if self._code_arm_required and not self._check_code(code):
             return
         self.set_alarm_state(self._event_away, STATE_ALARM_ARMED_AWAY)
 
-    def alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         if self._code_arm_required and not self._check_code(code):
             return
         self.set_alarm_state(self._event_home, STATE_ALARM_ARMED_HOME)
 
-    def alarm_arm_night(self, code=None):
+    def alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         if self._code_arm_required and not self._check_code(code):
             return
@@ -210,13 +195,13 @@ class IFTTTAlarmPanel(AlarmControlPanelEntity):
         self.hass.services.call(DOMAIN, SERVICE_TRIGGER, data)
         _LOGGER.debug("Called IFTTT integration to trigger event %s", event)
         if self._optimistic:
-            self._state = state
+            self._attr_state = state
 
     def push_alarm_state(self, value):
         """Push the alarm state to the given value."""
         if value in ALLOWED_STATES:
             _LOGGER.debug("Pushed the alarm state to %s", value)
-            self._state = value
+            self._attr_state = value
 
-    def _check_code(self, code):
+    def _check_code(self, code: str | None) -> bool:
         return self._code is None or self._code == code

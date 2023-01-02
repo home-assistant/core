@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "unknown": "Error inesperat"
+        },
+        "flow_title": "{name} {model} ({host})",
+        "step": {
+            "confirm": {
+                "description": "Vols configurar {name} {model} ({host})?"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "La configuraci\u00f3 de la plataforma 'Radio Thermostat' mitjan\u00e7ant YAML s'eliminar\u00e0 de Home Assistant a la versi\u00f3 2022.9. \n\nLa configuraci\u00f3 existent s'ha importat autom\u00e0ticament a la interf\u00edcie d'usuari. Elimina la configuraci\u00f3 YAML corresponent del fitxer configuration.yaml i reinicia Home Assistant per solucionar aquest problema.",
+            "title": "La configuraci\u00f3 YAML de Thermostat Radio est\u00e0 sent eliminada"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "hold_temp": "Configura bloqueig permanent quan s'ajusti la temperatura."
+                }
+            }
+        }
+    }
+}

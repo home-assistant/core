@@ -1,16 +1,18 @@
 """Offer webhook triggered automation rules."""
-from functools import partial
+from __future__ import annotations
+
+from dataclasses import dataclass
 
 from aiohttp import hdrs
 import voluptuous as vol
 
 from homeassistant.const import CONF_PLATFORM, CONF_WEBHOOK_ID
-from homeassistant.core import HassJob, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+from homeassistant.helpers.typing import ConfigType
 
-from . import async_register, async_unregister
-
-# mypy: allow-untyped-defs
+from . import DOMAIN, async_register, async_unregister
 
 DEPENDENCIES = ("webhook",)
 
@@ -21,38 +23,70 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     }
 )
 
+WEBHOOK_TRIGGERS = f"{DOMAIN}_triggers"
 
-async def _handle_webhook(job, trigger_data, hass, webhook_id, request):
+
+@dataclass
+class TriggerInstance:
+    """Attached trigger settings."""
+
+    trigger_info: TriggerInfo
+    job: HassJob
+
+
+async def _handle_webhook(hass, webhook_id, request):
     """Handle incoming webhook."""
-    result = {"platform": "webhook", "webhook_id": webhook_id}
+    base_result = {"platform": "webhook", "webhook_id": webhook_id}
 
     if "json" in request.headers.get(hdrs.CONTENT_TYPE, ""):
-        result["json"] = await request.json()
+        base_result["json"] = await request.json()
     else:
-        result["data"] = await request.post()
+        base_result["data"] = await request.post()
 
-    result["query"] = request.query
-    result["description"] = "webhook"
-    result.update(**trigger_data)
-    hass.async_run_hass_job(job, {"trigger": result})
+    base_result["query"] = request.query
+    base_result["description"] = "webhook"
 
-
-async def async_attach_trigger(hass, config, action, automation_info):
-    """Trigger based on incoming webhooks."""
-    trigger_data = automation_info["trigger_data"]
-    webhook_id = config.get(CONF_WEBHOOK_ID)
-    job = HassJob(action)
-    async_register(
-        hass,
-        automation_info["domain"],
-        automation_info["name"],
-        webhook_id,
-        partial(_handle_webhook, job, trigger_data),
+    triggers: dict[str, list[TriggerInstance]] = hass.data.setdefault(
+        WEBHOOK_TRIGGERS, {}
     )
+    for trigger in triggers[webhook_id]:
+        result = {**base_result, **trigger.trigger_info["trigger_data"]}
+        hass.async_run_hass_job(trigger.job, {"trigger": result})
+
+
+async def async_attach_trigger(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+) -> CALLBACK_TYPE:
+    """Trigger based on incoming webhooks."""
+    webhook_id: str = config[CONF_WEBHOOK_ID]
+    job = HassJob(action)
+
+    triggers: dict[str, list[TriggerInstance]] = hass.data.setdefault(
+        WEBHOOK_TRIGGERS, {}
+    )
+
+    if webhook_id not in triggers:
+        async_register(
+            hass,
+            trigger_info["domain"],
+            trigger_info["name"],
+            webhook_id,
+            _handle_webhook,
+        )
+        triggers[webhook_id] = []
+
+    trigger_instance = TriggerInstance(trigger_info, job)
+    triggers[webhook_id].append(trigger_instance)
 
     @callback
     def unregister():
         """Unregister webhook."""
-        async_unregister(hass, webhook_id)
+        triggers[webhook_id].remove(trigger_instance)
+        if not triggers[webhook_id]:
+            async_unregister(hass, webhook_id)
+            triggers.pop(webhook_id)
 
     return unregister

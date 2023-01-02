@@ -10,12 +10,33 @@
             "user": {
                 "data": {
                     "api_key": "API-sleutel",
-                    "latitude": "Breedtegraad",
                     "location": "Locatie",
-                    "longitude": "Lengtegraad",
                     "name": "Naam"
                 },
                 "description": "Om een API sleutel te krijgen, meld je aan bij [Tomorrow.io](https://app.tomorrow.io/signup)."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "health_concern": {
+                "state": {
+                    "good": "Goed"
+                }
+            },
+            "pollen_index": {
+                "state": {
+                    "high": "Hoog",
+                    "low": "Laag",
+                    "none": "Geen"
+                }
+            },
+            "precipitation_type": {
+                "state": {
+                    "none": "Geen",
+                    "rain": "Regen",
+                    "snow": "Sneeuw"
+                }
             }
         }
     },

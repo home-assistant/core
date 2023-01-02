@@ -15,6 +15,5 @@
                 "description": "Connecta el perfil d'Habitica per permetre el seguiment del teu perfil i tasques d'usuari. Tingues en compte que l'api_id i l'api_key els has d'obtenir des de https://habitica.com/user/settings/api"
             }
         }
-    },
-    "title": "Habitica"
+    }
 }

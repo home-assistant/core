@@ -12,6 +12,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -107,8 +108,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             favorites = await controller.get_favorites()
         else:
             _LOGGER.warning(
-                "%s is not logged in to a HEOS account and will be unable to retrieve "
-                "HEOS favorites: Use the 'heos.sign_in' service to sign-in to a HEOS account",
+                (
+                    "%s is not logged in to a HEOS account and will be unable to"
+                    " retrieve HEOS favorites: Use the 'heos.sign_in' service to"
+                    " sign-in to a HEOS account"
+                ),
                 host,
             )
         inputs = await controller.get_input_sources()
@@ -167,10 +171,9 @@ class ControllerManager:
 
     async def connect_listeners(self):
         """Subscribe to events of interest."""
-        self._device_registry, self._entity_registry = await asyncio.gather(
-            self._hass.helpers.device_registry.async_get_registry(),
-            self._hass.helpers.entity_registry.async_get_registry(),
-        )
+        self._device_registry = dr.async_get(self._hass)
+        self._entity_registry = er.async_get(self._hass)
+
         # Handle controller events
         self._signals.append(
             self.controller.dispatcher.connect(
@@ -289,7 +292,8 @@ class GroupManager:
         leader_id = entity_id_to_player_id_map.get(leader_entity_id)
         if not leader_id:
             raise HomeAssistantError(
-                f"The group leader {leader_entity_id} could not be resolved to a HEOS player."
+                f"The group leader {leader_entity_id} could not be resolved to a HEOS"
+                " player."
             )
         member_ids = [
             entity_id_to_player_id_map[member]

@@ -5,14 +5,14 @@
         },
         "error": {
             "db_url_invalid": "URL database non valido",
-            "query_invalid": "Query SQL non valida",
-            "value_template_invalid": "Modello di valore non valido"
+            "query_invalid": "Query SQL non valida"
         },
         "step": {
             "user": {
                 "data": {
                     "column": "Colonna",
                     "db_url": "URL del database",
+                    "name": "Nome",
                     "query": "Query Select",
                     "unit_of_measurement": "Unit\u00e0 di misura",
                     "value_template": "Modello di valore"
@@ -20,6 +20,7 @@
                 "data_description": {
                     "column": "Colonna per la query restituita da presentare come stato",
                     "db_url": "URL del database, lascia vuoto per utilizzare il database predefinito di Home Assistant",
+                    "name": "Nome che sar\u00e0 utilizzato per la voce di configurazione e anche per il sensore",
                     "query": "Query da eseguire, deve iniziare con 'SELECT'",
                     "unit_of_measurement": "Unit\u00e0 di misura (opzionale)",
                     "value_template": "Modello di valore (opzionale)"
@@ -30,14 +31,14 @@
     "options": {
         "error": {
             "db_url_invalid": "URL database non valido",
-            "query_invalid": "Query SQL non valida",
-            "value_template_invalid": "Modello di valore non valido"
+            "query_invalid": "Query SQL non valida"
         },
         "step": {
             "init": {
                 "data": {
                     "column": "Colonna",
                     "db_url": "URL del database",
+                    "name": "Nome",
                     "query": "Query Select",
                     "unit_of_measurement": "Unit\u00e0 di misura",
                     "value_template": "Modello di valore"
@@ -45,6 +46,7 @@
                 "data_description": {
                     "column": "Colonna per la query restituita da presentare come stato",
                     "db_url": "URL del database, lascia vuoto per utilizzare il database predefinito di Home Assistant",
+                    "name": "Nome che sar\u00e0 utilizzato per la voce di configurazione e anche per il sensore",
                     "query": "Query da eseguire, deve iniziare con 'SELECT'",
                     "unit_of_measurement": "Unit\u00e0 di misura (opzionale)",
                     "value_template": "Modello di valore (opzionale)"

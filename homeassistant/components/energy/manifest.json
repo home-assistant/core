@@ -5,5 +5,6 @@
   "codeowners": ["@home-assistant/core"],
   "iot_class": "calculated",
   "dependencies": ["websocket_api", "history", "recorder"],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "integration_type": "system"
 }

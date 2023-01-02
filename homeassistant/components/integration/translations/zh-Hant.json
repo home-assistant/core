@@ -29,12 +29,6 @@
                 "data_description": {
                     "round": "\u63a7\u5236\u8f38\u51fa\u4e2d\u7684\u5c0f\u6578\u4f4d\u6578\u3002"
                 }
-            },
-            "options": {
-                "data": {
-                    "round": "\u6e96\u78ba\u5ea6"
-                },
-                "description": "\u7cbe\u6e96\u5ea6\u63a7\u5236\u8f38\u51fa\u4e2d\u7684\u5c0f\u6578\u4f4d\u6578\u3002"
             }
         }
     },

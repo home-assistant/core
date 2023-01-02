@@ -1,0 +1,27 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "device_key": "The device key of your device",
+          "event": "The event for the events.",
+          "password": "The password of the encryption used by your device",
+          "salt": "The salt used by your device."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "issues": {
+    "removed_yaml": {
+      "title": "The Simplepush YAML configuration has been removed",
+      "description": "Configuring Simplepush using YAML has been removed.\n\nYour existing YAML configuration is not used by Home Assistant.\n\nRemove the Simplepush YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    }
+  }
+}

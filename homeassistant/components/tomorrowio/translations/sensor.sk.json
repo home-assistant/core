@@ -1,0 +1,27 @@
+{
+    "state": {
+        "tomorrowio__health_concern": {
+            "good": "Dobr\u00e9",
+            "hazardous": "Nebezpe\u010dn\u00e9",
+            "moderate": "Mierne",
+            "unhealthy": "Nezdrav\u00e9",
+            "unhealthy_for_sensitive_groups": "Nezdrav\u00e9 pre citliv\u00e9 skupiny",
+            "very_unhealthy": "Ve\u013emi nezdrav\u00e9"
+        },
+        "tomorrowio__pollen_index": {
+            "high": "Vysok\u00fd",
+            "low": "N\u00edzky",
+            "medium": "Stredn\u00fd",
+            "none": "\u017diadne",
+            "very_high": "Ve\u013emi vysok\u00e9",
+            "very_low": "Ve\u013emi n\u00edzke"
+        },
+        "tomorrowio__precipitation_type": {
+            "freezing_rain": "Mrzn\u00faci d\u00e1\u017e\u010f",
+            "ice_pellets": "\u013dadovec",
+            "none": "\u017diadne",
+            "rain": "D\u00e1\u017e\u010f",
+            "snow": "Sneh"
+        }
+    }
+}

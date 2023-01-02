@@ -14,11 +14,7 @@ from homeassistant.components.minecraft_server.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -86,7 +82,7 @@ async def test_show_config_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -97,7 +93,7 @@ async def test_invalid_ip(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_IPV4
         )
 
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["errors"] == {"base": "invalid_ip"}
 
 
@@ -122,7 +118,7 @@ async def test_same_host(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
         )
 
-        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 
@@ -136,7 +132,7 @@ async def test_port_too_small(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_PORT_TOO_SMALL
         )
 
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["errors"] == {"base": "invalid_port"}
 
 
@@ -150,7 +146,7 @@ async def test_port_too_large(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_PORT_TOO_LARGE
         )
 
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["errors"] == {"base": "invalid_port"}
 
 
@@ -164,7 +160,7 @@ async def test_connection_failed(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
         )
 
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -178,7 +174,7 @@ async def test_connection_succeeded_with_srv_record(hass: HomeAssistant) -> None
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_SRV
         )
 
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["title"] == USER_INPUT_SRV[CONF_HOST]
         assert result["data"][CONF_NAME] == USER_INPUT_SRV[CONF_NAME]
         assert result["data"][CONF_HOST] == USER_INPUT_SRV[CONF_HOST]
@@ -194,7 +190,7 @@ async def test_connection_succeeded_with_host(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
         )
 
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["title"] == USER_INPUT[CONF_HOST]
         assert result["data"][CONF_NAME] == USER_INPUT[CONF_NAME]
         assert result["data"][CONF_HOST] == "mc.dummyserver.com"
@@ -213,7 +209,7 @@ async def test_connection_succeeded_with_ip4(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_IPV4
         )
 
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["title"] == USER_INPUT_IPV4[CONF_HOST]
         assert result["data"][CONF_NAME] == USER_INPUT_IPV4[CONF_NAME]
         assert result["data"][CONF_HOST] == "1.1.1.1"
@@ -232,7 +228,7 @@ async def test_connection_succeeded_with_ip6(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_IPV6
         )
 
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["title"] == USER_INPUT_IPV6[CONF_HOST]
         assert result["data"][CONF_NAME] == USER_INPUT_IPV6[CONF_NAME]
         assert result["data"][CONF_HOST] == "::ffff:0101:0101"

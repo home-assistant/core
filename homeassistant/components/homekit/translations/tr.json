@@ -27,7 +27,6 @@
             },
             "advanced": {
                 "data": {
-                    "auto_start": "Otomatik ba\u015flatma (homekit.start hizmetini manuel olarak ar\u0131yorsan\u0131z devre d\u0131\u015f\u0131 b\u0131rak\u0131n)",
                     "devices": "Cihazlar (Tetikleyiciler)"
                 },
                 "description": "Se\u00e7ilen her cihaz i\u00e7in programlanabilir anahtarlar olu\u015fturulur. Bir cihaz tetikleyicisi tetiklendi\u011finde, HomeKit bir otomasyon veya sahne \u00e7al\u0131\u015ft\u0131racak \u015fekilde yap\u0131land\u0131r\u0131labilir.",

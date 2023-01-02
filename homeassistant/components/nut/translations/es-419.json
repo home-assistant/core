@@ -8,16 +8,9 @@
             "unknown": "Error inesperado"
         },
         "step": {
-            "resources": {
-                "data": {
-                    "resources": "Recursos"
-                },
-                "title": "Seleccione los recursos para monitorear"
-            },
             "ups": {
                 "data": {
-                    "alias": "Alias",
-                    "resources": "Recursos"
+                    "alias": "Alias"
                 },
                 "title": "Seleccione el UPS para monitorear"
             },
@@ -36,10 +29,8 @@
         "step": {
             "init": {
                 "data": {
-                    "resources": "Recursos",
                     "scan_interval": "Intervalo de escaneo (segundos)"
-                },
-                "description": "Seleccione los Recursos del sensor."
+                }
             }
         }
     }

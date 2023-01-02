@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Sunucu"
+                }
+            },
+            "zeroconf_confirm": {
+                "description": "` {name} ` adl\u0131 SoundTouch cihaz\u0131n\u0131 Home Assistant'a eklemek \u00fczeresiniz.",
+                "title": "Bose SoundTouch cihaz\u0131 eklemeyi onaylay\u0131n"
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "YAML kullanarak Bose SoundTouch'\u0131 yap\u0131land\u0131rmak kald\u0131r\u0131l\u0131yor. \n\n Mevcut YAML yap\u0131land\u0131rman\u0131z otomatik olarak kullan\u0131c\u0131 aray\u00fcz\u00fcne aktar\u0131ld\u0131. \n\n Bu sorunu \u00e7\u00f6zmek i\u00e7in Bose SoundTouch YAML yap\u0131land\u0131rmas\u0131n\u0131 configuration.yaml dosyan\u0131zdan kald\u0131r\u0131n ve Home Assistant'\u0131 yeniden ba\u015flat\u0131n.",
+            "title": "Bose SoundTouch YAML yap\u0131land\u0131rmas\u0131 kald\u0131r\u0131l\u0131yor"
+        }
+    }
+}

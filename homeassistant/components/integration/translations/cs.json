@@ -28,12 +28,6 @@
                 "data_description": {
                     "round": "Ur\u010duje po\u010det desetinn\u00fdch m\u00edst ve v\u00fdstupu."
                 }
-            },
-            "options": {
-                "data": {
-                    "round": "P\u0159esnost"
-                },
-                "description": "P\u0159esnost ur\u010duje po\u010det desetinn\u00fdch m\u00edst ve v\u00fdstupu."
             }
         }
     },

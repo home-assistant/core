@@ -42,6 +42,8 @@ def setup_platform(
 class TellstickSwitch(TellstickDevice, SwitchEntity):
     """Representation of a Tellstick switch."""
 
+    _attr_force_update = True
+
     def _parse_ha_data(self, kwargs):
         """Turn the value from HA into something useful."""
 
@@ -58,8 +60,3 @@ class TellstickSwitch(TellstickDevice, SwitchEntity):
             self._tellcore_device.turn_on()
         else:
             self._tellcore_device.turn_off()
-
-    @property
-    def force_update(self) -> bool:
-        """Will trigger anytime the state property is updated."""
-        return True

@@ -14,7 +14,7 @@
                     "longitude": "Longitude",
                     "name": "Nome"
                 },
-                "title": ""
+                "description": "Para gerar a chave API v\u00e1 a https://developer.airly.eu/register"
             }
         }
     }

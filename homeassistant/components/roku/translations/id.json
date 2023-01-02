@@ -11,12 +11,7 @@
         "flow_title": "{name}",
         "step": {
             "discovery_confirm": {
-                "description": "Ingin menyiapkan {name}?",
-                "title": "Roku"
-            },
-            "ssdp_confirm": {
-                "description": "Ingin menyiapkan {name}?",
-                "title": "Roku"
+                "description": "Ingin menyiapkan {name}?"
             },
             "user": {
                 "data": {

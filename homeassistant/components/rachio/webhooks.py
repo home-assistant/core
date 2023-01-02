@@ -1,9 +1,12 @@
 """Webhooks used by rachio."""
+from __future__ import annotations
+
 from aiohttp import web
 
 from homeassistant.components import cloud, webhook
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import URL_API
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
@@ -18,6 +21,7 @@ from .const import (
     SIGNAL_RACHIO_SCHEDULE_UPDATE,
     SIGNAL_RACHIO_ZONE_UPDATE,
 )
+from .device import RachioPerson
 
 # Device webhook values
 TYPE_CONTROLLER_STATUS = "DEVICE_STATUS"
@@ -79,16 +83,22 @@ SIGNAL_MAP = {
 
 
 @callback
-def async_register_webhook(hass, webhook_id, entry_id):
+def async_register_webhook(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Register a webhook."""
+    webhook_id: str = entry.data[CONF_WEBHOOK_ID]
 
-    async def _async_handle_rachio_webhook(hass, webhook_id, request):
+    async def _async_handle_rachio_webhook(
+        hass: HomeAssistant, webhook_id: str, request: web.Request
+    ) -> web.Response:
         """Handle webhook calls from the server."""
+        person: RachioPerson = hass.data[DOMAIN][entry.entry_id]
         data = await request.json()
 
         try:
-            auth = data.get(KEY_EXTERNAL_ID, "").split(":")[1]
-            assert auth == hass.data[DOMAIN][entry_id].rachio.webhook_auth
+            assert (
+                data.get(KEY_EXTERNAL_ID, "").split(":")[1]
+                == person.rachio.webhook_auth
+            )
         except (AssertionError, IndexError):
             return web.Response(status=web.HTTPForbidden.status_code)
 
@@ -103,8 +113,17 @@ def async_register_webhook(hass, webhook_id, entry_id):
     )
 
 
-async def async_get_or_create_registered_webhook_id_and_url(hass, entry):
-    """Generate webhook ID."""
+@callback
+def async_unregister_webhook(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Unregister a webhook."""
+    webhook_id: str = entry.data[CONF_WEBHOOK_ID]
+    webhook.async_unregister(hass, webhook_id)
+
+
+async def async_get_or_create_registered_webhook_id_and_url(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> str:
+    """Generate webhook url."""
     config = entry.data.copy()
 
     updated_config = False
@@ -128,4 +147,4 @@ async def async_get_or_create_registered_webhook_id_and_url(hass, entry):
     if updated_config:
         hass.config_entries.async_update_entry(entry, data=config)
 
-    return webhook_id, webhook_url
+    return webhook_url

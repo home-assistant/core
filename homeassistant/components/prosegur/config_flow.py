@@ -1,5 +1,7 @@
 """Config flow for Prosegur Alarm integration."""
+from collections.abc import Mapping
 import logging
+from typing import Any, cast
 
 from pyprosegur.auth import COUNTRY, Auth
 from pyprosegur.installation import Installation
@@ -8,6 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
 from .const import CONF_COUNTRY, DOMAIN
@@ -75,9 +78,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(self, data):
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle initiation of re-authentication with Prosegur."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        self.entry = cast(
+            ConfigEntry,
+            self.hass.config_entries.async_get_entry(self.context["entry_id"]),
+        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(self, user_input=None):

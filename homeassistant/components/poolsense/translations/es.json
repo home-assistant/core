@@ -11,9 +11,7 @@
                 "data": {
                     "email": "Correo electr\u00f3nico",
                     "password": "Contrase\u00f1a"
-                },
-                "description": "[%key:common::config_flow::description%]",
-                "title": "PoolSense"
+                }
             }
         }
     }

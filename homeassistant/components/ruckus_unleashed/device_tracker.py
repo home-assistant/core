@@ -1,8 +1,7 @@
 """Support for Ruckus Unleashed devices."""
 from __future__ import annotations
 
-from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
-from homeassistant.components.device_tracker.config_entry import ScannerEntity
+from homeassistant.components.device_tracker import ScannerEntity, SourceType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
@@ -38,7 +37,7 @@ async def async_setup_entry(
         coordinator.async_add_listener(router_update)
     )
 
-    registry = await entity_registry.async_get_registry(hass)
+    registry = entity_registry.async_get(hass)
     restore_entities(registry, coordinator, entry, async_add_entities, tracked)
 
 
@@ -55,8 +54,7 @@ def add_new_entities(coordinator, async_add_entities, tracked):
         new_tracked.append(RuckusUnleashedDevice(coordinator, mac, device[API_NAME]))
         tracked.add(mac)
 
-    if new_tracked:
-        async_add_entities(new_tracked)
+    async_add_entities(new_tracked)
 
 
 @callback
@@ -77,8 +75,7 @@ def restore_entities(registry, coordinator, entry, async_add_entities, tracked):
             )
             tracked.add(entity.unique_id)
 
-    if missing:
-        async_add_entities(missing)
+    async_add_entities(missing)
 
 
 class RuckusUnleashedDevice(CoordinatorEntity, ScannerEntity):
@@ -111,6 +108,6 @@ class RuckusUnleashedDevice(CoordinatorEntity, ScannerEntity):
         return self._mac in self.coordinator.data[API_CLIENTS]
 
     @property
-    def source_type(self) -> str:
+    def source_type(self) -> SourceType:
         """Return the source type."""
-        return SOURCE_TYPE_ROUTER
+        return SourceType.ROUTER

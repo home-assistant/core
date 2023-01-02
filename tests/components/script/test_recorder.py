@@ -4,7 +4,7 @@ from __future__ import annotations
 import pytest
 
 from homeassistant.components import script
-from homeassistant.components.recorder.models import StateAttributes, States
+from homeassistant.components.recorder.db_schema import StateAttributes, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.script import (
     ATTR_CUR,
@@ -27,7 +27,7 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_exclude_attributes(hass, recorder_mock, calls):
+async def test_exclude_attributes(recorder_mock, hass, calls):
     """Test automation registered attributes to be excluded."""
     await hass.async_block_till_done()
     calls = []

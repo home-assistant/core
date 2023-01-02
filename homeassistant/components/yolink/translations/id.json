@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Akun sudah dikonfigurasi",
+            "already_in_progress": "Alur konfigurasi sedang berlangsung",
+            "authorize_url_timeout": "Tenggang waktu pembuatan URL otorisasi habis.",
+            "missing_configuration": "Komponen tidak dikonfigurasi. Ikuti petunjuk dalam dokumentasi.",
+            "no_url_available": "Tidak ada URL yang tersedia. Untuk informasi tentang kesalahan ini, [lihat bagian bantuan]({docs_url})",
+            "oauth_error": "Menerima respons token yang tidak valid.",
+            "reauth_successful": "Autentikasi ulang berhasil"
+        },
+        "create_entry": {
+            "default": "Berhasil diautentikasi"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Pilih Metode Autentikasi"
+            },
+            "reauth_confirm": {
+                "description": "Integrasi yolink perlu mengautentikasi ulang akun Anda",
+                "title": "Autentikasi Ulang Integrasi"
+            }
+        }
+    }
+}

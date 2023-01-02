@@ -1,0 +1,12 @@
+{
+  "domain": "nextdns",
+  "name": "NextDNS",
+  "documentation": "https://www.home-assistant.io/integrations/nextdns",
+  "codeowners": ["@bieniu"],
+  "requirements": ["nextdns==1.2.2"],
+  "config_flow": true,
+  "iot_class": "cloud_polling",
+  "loggers": ["nextdns"],
+  "quality_scale": "platinum",
+  "integration_type": "service"
+}

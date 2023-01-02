@@ -9,11 +9,9 @@
         "step": {
             "user": {
                 "data": {
-                    "email": "Email",
+                    "email": "",
                     "password": "Palavra-passe"
-                },
-                "description": "[%key:common::config_flow::description%]",
-                "title": "PoolSense"
+                }
             }
         }
     }

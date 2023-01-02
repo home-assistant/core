@@ -53,11 +53,11 @@ class ZWaveMeCover(ZWaveMeEntity, CoverEntity):
         | CoverEntityFeature.SET_POSITION
     )
 
-    def close_cover(self, **kwargs):
+    def close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         self.controller.zwave_api.send_command(self.device.id, "exact?level=0")
 
-    def open_cover(self, **kwargs):
+    def open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
         self.controller.zwave_api.send_command(self.device.id, "exact?level=99")
 

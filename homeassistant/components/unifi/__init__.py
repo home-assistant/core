@@ -1,19 +1,16 @@
 """Integration to UniFi Network and its various features."""
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    ATTR_MANUFACTURER,
-    CONF_CONTROLLER,
-    DOMAIN as UNIFI_DOMAIN,
-    LOGGER,
-    UNIFI_WIRELESS_CLIENTS,
-)
-from .controller import UniFiController
+from .const import DOMAIN as UNIFI_DOMAIN, PLATFORMS, UNIFI_WIRELESS_CLIENTS
+from .controller import UniFiController, get_unifi_controller
+from .errors import AuthenticationRequired, CannotConnect
 from .services import async_setup_services, async_unload_services
 
 SAVE_DELAY = 10
@@ -33,41 +30,31 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     """Set up the UniFi Network integration."""
     hass.data.setdefault(UNIFI_DOMAIN, {})
 
-    # Flat configuration was introduced with 2021.3
-    await async_flatten_entry_data(hass, config_entry)
+    # Removal of legacy PoE control was introduced with 2022.12
+    async_remove_poe_client_entities(hass, config_entry)
 
-    controller = UniFiController(hass, config_entry)
-    if not await controller.async_setup():
-        return False
+    try:
+        api = await get_unifi_controller(hass, config_entry.data)
+        controller = UniFiController(hass, config_entry, api)
+        await controller.initialize()
 
-    # Unique ID was introduced with 2021.3
-    if config_entry.unique_id is None:
-        hass.config_entries.async_update_entry(
-            config_entry, unique_id=controller.site_id
-        )
+    except CannotConnect as err:
+        raise ConfigEntryNotReady from err
 
-    if not hass.data[UNIFI_DOMAIN]:
-        async_setup_services(hass)
+    except AuthenticationRequired as err:
+        raise ConfigEntryAuthFailed from err
 
     hass.data[UNIFI_DOMAIN][config_entry.entry_id] = controller
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    await controller.async_update_device_registry()
+
+    if len(hass.data[UNIFI_DOMAIN]) == 1:
+        async_setup_services(hass)
+
+    api.start_websocket()
 
     config_entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, controller.shutdown)
-    )
-
-    LOGGER.debug("UniFi Network config options %s", config_entry.options)
-
-    if controller.mac is None:
-        return True
-
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        configuration_url=controller.api.url,
-        connections={(CONNECTION_NETWORK_MAC, controller.mac)},
-        default_manufacturer=ATTR_MANUFACTURER,
-        default_model="UniFi Network",
-        default_name="UniFi Network",
     )
 
     return True
@@ -83,17 +70,22 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return await controller.async_reset()
 
 
-async def async_flatten_entry_data(
+@callback
+def async_remove_poe_client_entities(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> None:
-    """Simpler configuration structure for entry data.
+    """Remove PoE client entities."""
+    ent_reg = er.async_get(hass)
 
-    Keep controller key layer in case user rollbacks.
-    """
+    entity_ids_to_be_removed = [
+        entry.entity_id
+        for entry in ent_reg.entities.values()
+        if entry.config_entry_id == config_entry.entry_id
+        and entry.unique_id.startswith("poe-")
+    ]
 
-    data: dict = {**config_entry.data, **config_entry.data[CONF_CONTROLLER]}
-    if config_entry.data != data:
-        hass.config_entries.async_update_entry(config_entry, data=data)
+    for entity_id in entity_ids_to_be_removed:
+        ent_reg.async_remove(entity_id)
 
 
 class UnifiWirelessClients:
@@ -102,30 +94,30 @@ class UnifiWirelessClients:
     This is needed since wireless devices going offline might get marked as wired by UniFi.
     """
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Set up client storage."""
         self.hass = hass
-        self.data = {}
-        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        self.data: dict[str, dict[str, list[str]]] = {}
+        self._store: Store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
 
-    async def async_load(self):
+    async def async_load(self) -> None:
         """Load data from file."""
         if (data := await self._store.async_load()) is not None:
             self.data = data
 
     @callback
-    def get_data(self, config_entry):
+    def get_data(self, config_entry: ConfigEntry) -> set[str]:
         """Get data related to a specific controller."""
         data = self.data.get(config_entry.entry_id, {"wireless_devices": []})
         return set(data["wireless_devices"])
 
     @callback
-    def update_data(self, data, config_entry):
+    def update_data(self, data: set[str], config_entry: ConfigEntry) -> None:
         """Update data and schedule to save to file."""
         self.data[config_entry.entry_id] = {"wireless_devices": list(data)}
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
     @callback
-    def _data_to_save(self):
+    def _data_to_save(self) -> dict[str, dict[str, list[str]]]:
         """Return data of UniFi wireless clients to store in a file."""
         return self.data

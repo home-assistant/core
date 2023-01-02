@@ -8,12 +8,19 @@
             "invalid_system_id": "ID syst\u00e8me Airzone non valide"
         },
         "step": {
+            "discovered_connection": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "id": "ID syst\u00e8me",
+                    "port": "Port"
+                }
+            },
             "user": {
                 "data": {
                     "host": "H\u00f4te",
+                    "id": "ID syst\u00e8me",
                     "port": "Port"
-                },
-                "description": "Configurer l'int\u00e9gration Airzone."
+                }
             }
         }
     }

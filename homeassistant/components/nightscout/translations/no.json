@@ -8,7 +8,6 @@
             "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
         },
-        "flow_title": "",
         "step": {
             "user": {
                 "data": {

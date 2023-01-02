@@ -25,17 +25,8 @@
             "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
         "step": {
-            "entity_config": {
-                "data": {
-                    "reverse": "\u7a97\u7c3e\u53cd\u5411"
-                },
-                "description": "`{entity_id}` \u8a2d\u5b9a\u9078\u9805",
-                "title": "\u8a2d\u5b9a\u5be6\u9ad4"
-            },
             "init": {
                 "data": {
-                    "default_reverse": "\u672a\u8a2d\u5b9a\u7a97\u7c3e\u9810\u8a2d\u70ba\u53cd\u5411",
-                    "entity_id": "\u8a2d\u5b9a\u7279\u5b9a\u5be6\u9ad4\u3002",
                     "target_id": "\u7a97\u7c3e\u8a2d\u5b9a\u9078\u9805\u3002"
                 },
                 "title": "MyLink \u8a2d\u5b9a\u9078\u9805"
@@ -48,6 +39,5 @@
                 "title": "\u8a2d\u5b9a MyLink \u7a97\u7c3e"
             }
         }
-    },
-    "title": "Somfy MyLink"
+    }
 }

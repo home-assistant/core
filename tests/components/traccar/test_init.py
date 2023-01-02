@@ -24,7 +24,7 @@ def mock_dev_track(mock_device_tracker_conf):
 
 
 @pytest.fixture(name="client")
-async def traccar_client(loop, hass, hass_client_no_auth):
+async def traccar_client(event_loop, hass, hass_client_no_auth):
     """Mock client for Traccar (unauthenticated)."""
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -36,7 +36,7 @@ async def traccar_client(loop, hass, hass_client_no_auth):
 
 
 @pytest.fixture(autouse=True)
-async def setup_zones(loop, hass):
+async def setup_zones(event_loop, hass):
     """Set up Zone config in HA."""
     assert await async_setup_component(
         hass,
@@ -63,10 +63,10 @@ async def webhook_id_fixture(hass, client):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM, result
+    assert result["type"] == data_entry_flow.FlowResultType.FORM, result
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
     return result["result"].data["webhook_id"]

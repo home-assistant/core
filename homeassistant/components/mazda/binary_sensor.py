@@ -22,9 +22,6 @@ from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
 class MazdaBinarySensorRequiredKeysMixin:
     """Mixin for required keys."""
 
-    # Suffix to be appended to the vehicle name to obtain the binary sensor name
-    name_suffix: str
-
     # Function to determine the value for this binary sensor, given the coordinator data
     value_fn: Callable[[dict[str, Any]], bool]
 
@@ -49,49 +46,49 @@ def _plugged_in_supported(data):
 BINARY_SENSOR_ENTITIES = [
     MazdaBinarySensorEntityDescription(
         key="driver_door",
-        name_suffix="Driver Door",
+        name="Driver door",
         icon="mdi:car-door",
         device_class=BinarySensorDeviceClass.DOOR,
         value_fn=lambda data: data["status"]["doors"]["driverDoorOpen"],
     ),
     MazdaBinarySensorEntityDescription(
         key="passenger_door",
-        name_suffix="Passenger Door",
+        name="Passenger door",
         icon="mdi:car-door",
         device_class=BinarySensorDeviceClass.DOOR,
         value_fn=lambda data: data["status"]["doors"]["passengerDoorOpen"],
     ),
     MazdaBinarySensorEntityDescription(
         key="rear_left_door",
-        name_suffix="Rear Left Door",
+        name="Rear left door",
         icon="mdi:car-door",
         device_class=BinarySensorDeviceClass.DOOR,
         value_fn=lambda data: data["status"]["doors"]["rearLeftDoorOpen"],
     ),
     MazdaBinarySensorEntityDescription(
         key="rear_right_door",
-        name_suffix="Rear Right Door",
+        name="Rear right door",
         icon="mdi:car-door",
         device_class=BinarySensorDeviceClass.DOOR,
         value_fn=lambda data: data["status"]["doors"]["rearRightDoorOpen"],
     ),
     MazdaBinarySensorEntityDescription(
         key="trunk",
-        name_suffix="Trunk",
+        name="Trunk",
         icon="mdi:car-back",
         device_class=BinarySensorDeviceClass.DOOR,
         value_fn=lambda data: data["status"]["doors"]["trunkOpen"],
     ),
     MazdaBinarySensorEntityDescription(
         key="hood",
-        name_suffix="Hood",
+        name="Hood",
         icon="mdi:car",
         device_class=BinarySensorDeviceClass.DOOR,
         value_fn=lambda data: data["status"]["doors"]["hoodOpen"],
     ),
     MazdaBinarySensorEntityDescription(
         key="ev_plugged_in",
-        name_suffix="Plugged In",
+        name="Plugged in",
         device_class=BinarySensorDeviceClass.PLUG,
         is_supported=_plugged_in_supported,
         value_fn=lambda data: data["evStatus"]["chargeInfo"]["pluggedIn"],
@@ -126,7 +123,6 @@ class MazdaBinarySensorEntity(MazdaEntity, BinarySensorEntity):
         super().__init__(client, coordinator, index)
         self.entity_description = description
 
-        self._attr_name = f"{self.vehicle_name} {description.name_suffix}"
         self._attr_unique_id = f"{self.vin}_{description.key}"
 
     @property

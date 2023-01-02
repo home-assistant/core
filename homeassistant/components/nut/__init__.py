@@ -1,4 +1,7 @@
 """The nut component."""
+from __future__ import annotations
+
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -7,9 +10,6 @@ from pynut2.nut2 import PyNUTClient, PyNUTError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_SW_VERSION,
     CONF_ALIAS,
     CONF_HOST,
     CONF_PASSWORD,
@@ -59,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     data = PyNUTData(host, port, alias, username, password)
 
-    async def async_update_data():
+    async def async_update_data() -> dict[str, str]:
         """Fetch data from NUT."""
         async with async_timeout.timeout(10):
             await hass.async_add_executor_job(data.update)
@@ -98,12 +98,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, unique_id)},
         name=data.name.title(),
-        manufacturer=data.device_info.get(ATTR_MANUFACTURER),
-        model=data.device_info.get(ATTR_MODEL),
-        sw_version=data.device_info.get(ATTR_SW_VERSION),
+        manufacturer=data.device_info.manufacturer,
+        model=data.device_info.model,
+        sw_version=data.device_info.firmware,
     )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -120,7 +120,7 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-def _manufacturer_from_status(status):
+def _manufacturer_from_status(status: dict[str, str]) -> str | None:
     """Find the best manufacturer value from the status."""
     return (
         status.get("device.mfr")
@@ -130,7 +130,7 @@ def _manufacturer_from_status(status):
     )
 
 
-def _model_from_status(status):
+def _model_from_status(status: dict[str, str]) -> str | None:
     """Find the best model value from the status."""
     return (
         status.get("device.model")
@@ -139,22 +139,22 @@ def _model_from_status(status):
     )
 
 
-def _firmware_from_status(status):
+def _firmware_from_status(status: dict[str, str]) -> str | None:
     """Find the best firmware value from the status."""
     return status.get("ups.firmware") or status.get("ups.firmware.aux")
 
 
-def _serial_from_status(status):
+def _serial_from_status(status: dict[str, str]) -> str | None:
     """Find the best serialvalue from the status."""
     serial = status.get("device.serial") or status.get("ups.serial")
     if serial and (
-        serial.lower() in NUT_FAKE_SERIAL or serial.count("0") == len(serial)
+        serial.lower() in NUT_FAKE_SERIAL or serial.count("0") == len(serial.strip())
     ):
         return None
     return serial
 
 
-def _unique_id_from_status(status):
+def _unique_id_from_status(status: dict[str, str]) -> str | None:
     """Find the best unique id value from the status."""
     serial = _serial_from_status(status)
     # We must have a serial for this to be unique
@@ -174,6 +174,15 @@ def _unique_id_from_status(status):
     return "_".join(unique_id_group)
 
 
+@dataclass
+class NUTDeviceInfo:
+    """Device information for NUT."""
+
+    manufacturer: str | None = None
+    model: str | None = None
+    firmware: str | None = None
+
+
 class PyNUTData:
     """Stores the data retrieved from NUT.
 
@@ -181,7 +190,14 @@ class PyNUTData:
     updates from the server.
     """
 
-    def __init__(self, host, port, alias, username, password):
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        alias: str | None,
+        username: str | None,
+        password: str | None,
+    ) -> None:
         """Initialize the data object."""
 
         self._host = host
@@ -190,29 +206,29 @@ class PyNUTData:
         # Establish client with persistent=False to open/close connection on
         # each update call.  This is more reliable with async.
         self._client = PyNUTClient(self._host, port, username, password, 5, False)
-        self.ups_list = None
-        self._status = None
-        self._device_info = None
+        self.ups_list: dict[str, str] | None = None
+        self._status: dict[str, str] | None = None
+        self._device_info: NUTDeviceInfo | None = None
 
     @property
-    def status(self):
+    def status(self) -> dict[str, str] | None:
         """Get latest update if throttle allows. Return status."""
         return self._status
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the ups."""
-        return self._alias
+        return self._alias or f"Nut-{self._host}"
 
     @property
-    def device_info(self):
+    def device_info(self) -> NUTDeviceInfo:
         """Return the device info for the ups."""
-        return self._device_info or {}
+        return self._device_info or NUTDeviceInfo()
 
-    def _get_alias(self):
+    def _get_alias(self) -> str | None:
         """Get the ups alias from NUT."""
         try:
-            ups_list = self._client.list_ups()
+            ups_list: dict[str, str] = self._client.list_ups()
         except PyNUTError as err:
             _LOGGER.error("Failure getting NUT ups alias, %s", err)
             return None
@@ -224,7 +240,7 @@ class PyNUTData:
         self.ups_list = ups_list
         return list(ups_list)[0]
 
-    def _get_device_info(self):
+    def _get_device_info(self) -> NUTDeviceInfo | None:
         """Get the ups device info from NUT."""
         if not self._status:
             return None
@@ -232,27 +248,24 @@ class PyNUTData:
         manufacturer = _manufacturer_from_status(self._status)
         model = _model_from_status(self._status)
         firmware = _firmware_from_status(self._status)
-        device_info = {}
-        if model:
-            device_info[ATTR_MODEL] = model
-        if manufacturer:
-            device_info[ATTR_MANUFACTURER] = manufacturer
-        if firmware:
-            device_info[ATTR_SW_VERSION] = firmware
+        device_info = NUTDeviceInfo(manufacturer, model, firmware)
+
         return device_info
 
-    def _get_status(self):
+    def _get_status(self) -> dict[str, str] | None:
         """Get the ups status from NUT."""
         if self._alias is None:
             self._alias = self._get_alias()
 
         try:
-            return self._client.list_vars(self._alias)
+            status: dict[str, str] = self._client.list_vars(self._alias)
         except (PyNUTError, ConnectionResetError) as err:
             _LOGGER.debug("Error getting NUT vars for host %s: %s", self._host, err)
             return None
 
-    def update(self):
+        return status
+
+    def update(self) -> None:
         """Fetch the latest status from NUT."""
         self._status = self._get_status()
         if self._device_info is None:

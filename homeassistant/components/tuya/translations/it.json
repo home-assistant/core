@@ -1,82 +1,215 @@
 {
     "config": {
-        "abort": {
-            "cannot_connect": "Impossibile connettersi",
-            "invalid_auth": "Autenticazione non valida",
-            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
-        },
         "error": {
             "invalid_auth": "Autenticazione non valida",
             "login_error": "Errore di accesso ({code}): {msg}"
         },
-        "flow_title": "Configurazione di Tuya",
         "step": {
-            "login": {
-                "data": {
-                    "access_id": "Access ID",
-                    "access_secret": "Access Secret",
-                    "country_code": "Prefisso internazionale",
-                    "endpoint": "Zona di disponibilit\u00e0",
-                    "password": "Password",
-                    "tuya_app_type": "App per dispositivi mobili",
-                    "username": "Account"
-                },
-                "description": "Inserisci le tue credenziali Tuya",
-                "title": "Tuya"
-            },
             "user": {
                 "data": {
                     "access_id": "Tuya IoT Access ID",
                     "access_secret": "Tuya IoT Access Secret",
                     "country_code": "Nazione",
                     "password": "Password",
-                    "platform": "L'app in cui \u00e8 registrato il tuo account",
-                    "region": "Area geografica",
-                    "tuya_project_type": "Tipo di progetto Tuya cloud",
                     "username": "Account"
                 },
-                "description": "Inserisci le tue credenziali Tuya",
-                "title": "Integrazione Tuya"
+                "description": "Inserisci le tue credenziali Tuya"
             }
         }
     },
-    "options": {
-        "abort": {
-            "cannot_connect": "Impossibile connettersi"
-        },
-        "error": {
-            "dev_multi_type": "I dispositivi multipli selezionati da configurare devono essere dello stesso tipo",
-            "dev_not_config": "Tipo di dispositivo non configurabile",
-            "dev_not_found": "Dispositivo non trovato"
-        },
-        "step": {
-            "device": {
-                "data": {
-                    "brightness_range_mode": "Intervallo di luminosit\u00e0 utilizzato dal dispositivo",
-                    "curr_temp_divider": "Divisore del valore della temperatura corrente (0 = usa il valore predefinito)",
-                    "max_kelvin": "Temperatura colore massima supportata in kelvin",
-                    "max_temp": "Temperatura di destinazione massima (utilizzare min e max = 0 per impostazione predefinita)",
-                    "min_kelvin": "Temperatura colore minima supportata in kelvin",
-                    "min_temp": "Temperatura di destinazione minima (utilizzare min e max = 0 per impostazione predefinita)",
-                    "set_temp_divided": "Utilizzare il valore temperatura diviso per impostare il comando temperatura",
-                    "support_color": "Forza il supporto del colore",
-                    "temp_divider": "Divisore dei valori di temperatura (0 = utilizzare il valore predefinito)",
-                    "temp_step_override": "Passo della temperatura da raggiungere",
-                    "tuya_max_coltemp": "Temperatura di colore massima riportata dal dispositivo",
-                    "unit_of_measurement": "Unit\u00e0 di temperatura utilizzata dal dispositivo"
-                },
-                "description": "Configura le opzioni per regolare le informazioni visualizzate per il dispositivo {device_type} `{device_name}`",
-                "title": "Configura il dispositivo Tuya"
+    "entity": {
+        "select": {
+            "basic_anti_flicker": {
+                "state": {
+                    "0": "Disabilitato",
+                    "1": "50 Hz",
+                    "2": "60 Hz"
+                }
             },
-            "init": {
-                "data": {
-                    "discovery_interval": "Intervallo di scansione di rilevamento dispositivo in secondi",
-                    "list_devices": "Seleziona i dispositivi da configurare o lascia vuoto per salvare la configurazione",
-                    "query_device": "Seleziona il dispositivo che utilizzer\u00e0 il metodo di interrogazione per un pi\u00f9 rapido aggiornamento dello stato",
-                    "query_interval": "Intervallo di scansione di interrogazione dispositivo in secondi"
-                },
-                "description": "Non impostare valori dell'intervallo di scansione troppo bassi o le chiamate non riusciranno a generare un messaggio di errore nel registro",
-                "title": "Configura le opzioni Tuya"
+            "basic_nightvision": {
+                "state": {
+                    "0": "Automatico",
+                    "1": "Spento",
+                    "2": "Acceso"
+                }
+            },
+            "countdown": {
+                "state": {
+                    "1h": "1 ora",
+                    "2h": "2 ore",
+                    "3h": "3 ore",
+                    "4h": "4 ore",
+                    "5h": "5 ore",
+                    "6h": "6 ore",
+                    "cancel": "Annulla"
+                }
+            },
+            "curtain_mode": {
+                "state": {
+                    "morning": "Mattina",
+                    "night": "Notte"
+                }
+            },
+            "curtain_motor_mode": {
+                "state": {
+                    "back": "Indietro",
+                    "forward": "Avanti"
+                }
+            },
+            "decibel_sensitivity": {
+                "state": {
+                    "0": "Bassa sensibilit\u00e0",
+                    "1": "Alta sensibilit\u00e0"
+                }
+            },
+            "fan_angle": {
+                "state": {
+                    "30": "30\u00b0",
+                    "60": "60\u00b0",
+                    "90": "90\u00b0"
+                }
+            },
+            "fingerbot_mode": {
+                "state": {
+                    "click": "Premi",
+                    "switch": "Commuta"
+                }
+            },
+            "humidifier_level": {
+                "state": {
+                    "level_1": "Livello 1",
+                    "level_10": "Livello 10",
+                    "level_2": "Livello 2",
+                    "level_3": "Livello 3",
+                    "level_4": "Livello 4",
+                    "level_5": "Livello 5",
+                    "level_6": "Livello 6",
+                    "level_7": "Livello 7",
+                    "level_8": "Livello 8",
+                    "level_9": "Livello 9"
+                }
+            },
+            "humidifier_moodlighting": {
+                "state": {
+                    "1": "Umore 1",
+                    "2": "Umore 2",
+                    "3": "Umore 3",
+                    "4": "Umore 4",
+                    "5": "Umore 5"
+                }
+            },
+            "humidifier_spray_mode": {
+                "state": {
+                    "auto": "Auto",
+                    "health": "Salute",
+                    "humidity": "Umidit\u00e0",
+                    "sleep": "Sonno",
+                    "work": "Lavoro"
+                }
+            },
+            "ipc_work_mode": {
+                "state": {
+                    "0": "Modalit\u00e0 a basso consumo",
+                    "1": "Modalit\u00e0 di lavoro continuo"
+                }
+            },
+            "led_type": {
+                "state": {
+                    "halogen": "Alogena",
+                    "incandescent": "Incandescenza",
+                    "led": "LED"
+                }
+            },
+            "light_mode": {
+                "state": {
+                    "none": "Spento",
+                    "pos": "Indicare la posizione dell'interruttore",
+                    "relay": "Indica lo stato di accensione/spegnimento dell'interruttore"
+                }
+            },
+            "motion_sensitivity": {
+                "state": {
+                    "0": "Bassa sensibilit\u00e0",
+                    "1": "Sensibilit\u00e0 media",
+                    "2": "Alta sensibilit\u00e0"
+                }
+            },
+            "record_mode": {
+                "state": {
+                    "1": "Registra solo gli eventi",
+                    "2": "Registrazione continua"
+                }
+            },
+            "relay_status": {
+                "state": {
+                    "last": "Ricorda l'ultimo stato",
+                    "memory": "Ricorda l'ultimo stato",
+                    "off": "Spento",
+                    "on": "Acceso",
+                    "power_off": "Spento",
+                    "power_on": "Acceso"
+                }
+            },
+            "vacuum_cistern": {
+                "state": {
+                    "closed": "Chiuso",
+                    "high": "Alto",
+                    "low": "Basso",
+                    "middle": "Medio"
+                }
+            },
+            "vacuum_collection": {
+                "state": {
+                    "large": "Largo",
+                    "middle": "Medio",
+                    "small": "Piccolo"
+                }
+            },
+            "vacuum_mode": {
+                "state": {
+                    "bow": "Arco",
+                    "chargego": "Ritorna alla base",
+                    "left_bow": "Arco a sinistra",
+                    "left_spiral": "Spirale a sinistra",
+                    "mop": "Mocio",
+                    "part": "Parte",
+                    "partial_bow": "Arco Parziale",
+                    "pick_zone": "Zona di prelievo",
+                    "point": "Punto",
+                    "pose": "Posa",
+                    "random": "Casuale",
+                    "right_bow": "Arco a destra",
+                    "right_spiral": "Spirale a destra",
+                    "single": "Singolo",
+                    "smart": "Inteligente",
+                    "spiral": "Spirale",
+                    "standby": "Pausa",
+                    "wall_follow": "Segui il muro",
+                    "zone": "Zona"
+                }
+            }
+        },
+        "sensor": {
+            "air_quality": {
+                "state": {
+                    "good": "Buono",
+                    "great": "Grande",
+                    "mild": "Lieve",
+                    "severe": "Grave"
+                }
+            },
+            "status": {
+                "state": {
+                    "boiling_temp": "Temperatura di ebollizione",
+                    "cooling": "Raffreddamento",
+                    "heating": "Riscaldamento",
+                    "heating_temp": "Temperatura di riscaldamento",
+                    "reserve_1": "Riserva 1",
+                    "reserve_2": "Riserva 2",
+                    "reserve_3": "Riserva 3",
+                    "standby": "Pausa",
+                    "warm": "Conservazione del calore"
+                }
             }
         }
     }

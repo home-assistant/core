@@ -36,8 +36,9 @@ async def async_setup_services(hass):
 
     async def async_scan_clients_service(_: ServiceCall) -> None:
         _LOGGER.warning(
-            "This service is deprecated in favor of the scan_clients button entity. "
-            "Service calls will still work for now but the service will be removed in a future release"
+            "This service is deprecated in favor of the scan_clients button entity."
+            " Service calls will still work for now but the service will be removed in"
+            " a future release"
         )
         for server_id in hass.data[DOMAIN][SERVERS]:
             async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
@@ -103,7 +104,8 @@ def get_plex_server(hass, plex_server_name=None, plex_server_id=None):
 
     friendly_names = [x.friendly_name for x in plex_servers]
     raise HomeAssistantError(
-        f"Multiple Plex servers configured, choose with 'plex_server' key: {friendly_names}"
+        "Multiple Plex servers configured, choose with 'plex_server' key:"
+        f" {friendly_names}"
     )
 
 
@@ -123,8 +125,10 @@ def process_plex_payload(
         plex_url = URL(content_id)
         if plex_url.name:
             if len(plex_url.parts) == 2:
-                # The path contains a single item, will always be a ratingKey
-                content = int(plex_url.name)
+                if plex_url.name == "search":
+                    content = {}
+                else:
+                    content = int(plex_url.name)
             else:
                 # For "special" items like radio stations
                 content = plex_url.path
@@ -132,7 +136,10 @@ def process_plex_payload(
             plex_server = get_plex_server(hass, plex_server_id=server_id)
         else:
             # Handle legacy payloads without server_id in URL host position
-            content = int(plex_url.host)  # type: ignore[arg-type]
+            if plex_url.host == "search":
+                content = {}
+            else:
+                content = int(plex_url.host)  # type: ignore[arg-type]
         extra_params = dict(plex_url.query)
     else:
         content = json.loads(content_id)

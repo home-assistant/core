@@ -1,5 +1,6 @@
 """Support for Freedompro cover."""
 import json
+from typing import Any
 
 from pyfreedompro import put_state
 
@@ -17,6 +18,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import FreedomproDataUpdateCoordinator
 from .const import DOMAIN
 
 DEVICE_CLASS_MAP = {
@@ -34,8 +36,8 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Freedompro cover."""
-    api_key = entry.data[CONF_API_KEY]
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    api_key: str = entry.data[CONF_API_KEY]
+    coordinator: FreedomproDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         Device(hass, api_key, device, coordinator)
         for device in coordinator.data
@@ -43,10 +45,16 @@ async def async_setup_entry(
     )
 
 
-class Device(CoordinatorEntity, CoverEntity):
+class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], CoverEntity):
     """Representation of an Freedompro cover."""
 
-    def __init__(self, hass, api_key, device, coordinator):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        api_key: str,
+        device: dict[str, Any],
+        coordinator: FreedomproDataUpdateCoordinator,
+    ) -> None:
         """Initialize the Freedompro cover."""
         super().__init__(coordinator)
         self._session = aiohttp_client.async_get_clientsession(hass)
@@ -55,7 +63,7 @@ class Device(CoordinatorEntity, CoverEntity):
         self._attr_unique_id = device["uid"]
         self._attr_device_info = DeviceInfo(
             identifiers={
-                (DOMAIN, self.unique_id),
+                (DOMAIN, device["uid"]),
             },
             manufacturer="Freedompro",
             model=device["type"],
@@ -96,23 +104,21 @@ class Device(CoordinatorEntity, CoverEntity):
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.async_set_cover_position(position=100)
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.async_set_cover_position(position=0)
 
-    async def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Async function to set position to cover."""
-        payload = {}
-        payload["position"] = kwargs[ATTR_POSITION]
-        payload = json.dumps(payload)
+        payload = {"position": kwargs[ATTR_POSITION]}
         await put_state(
             self._session,
             self._api_key,
             self.unique_id,
-            payload,
+            json.dumps(payload),
         )
         await self.coordinator.async_request_refresh()

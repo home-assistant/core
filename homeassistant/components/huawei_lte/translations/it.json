@@ -1,9 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
-            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
-            "not_huawei_lte": "Non \u00e8 un dispositivo Huawei LTE"
+            "not_huawei_lte": "Non \u00e8 un dispositivo Huawei LTE",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
             "connection_timeout": "Timeout di connessione",
@@ -17,6 +16,14 @@
         },
         "flow_title": "{name}",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Nome utente"
+                },
+                "description": "Immettere le credenziali di accesso al dispositivo.",
+                "title": "Autentica nuovamente l'integrazione"
+            },
             "user": {
                 "data": {
                     "password": "Password",
@@ -34,7 +41,6 @@
                 "data": {
                     "name": "Nome del servizio di notifica (la modifica richiede il riavvio)",
                     "recipient": "Destinatari della notifica SMS",
-                    "track_new_devices": "Traccia nuovi dispositivi",
                     "track_wired_clients": "Tieni traccia dei client di rete cablata",
                     "unauthenticated_mode": "Modalit\u00e0 non autenticata (la modifica richiede il ricaricamento)"
                 }

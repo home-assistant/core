@@ -1,0 +1,89 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado"
+        },
+        "error": {
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "unknown": "Erro inesperado"
+        },
+        "step": {
+            "destination_coordinates": {
+                "data": {
+                    "destination": "Destino como coordenadas GPS"
+                },
+                "title": "Escolha o destino"
+            },
+            "destination_entity_id": {
+                "data": {
+                    "destination_entity_id": "Destino usando uma entidade"
+                },
+                "title": "Escolha o destino"
+            },
+            "destination_menu": {
+                "menu_options": {
+                    "destination_coordinates": "Usando uma localiza\u00e7\u00e3o no mapa",
+                    "destination_entity": "Usando uma entidade"
+                },
+                "title": "Escolha o destino"
+            },
+            "origin_coordinates": {
+                "data": {
+                    "origin": "Origem como coordenadas GPS"
+                },
+                "title": "Escolha a Origem"
+            },
+            "origin_entity_id": {
+                "data": {
+                    "origin_entity_id": "Origem usando uma entidade"
+                },
+                "title": "Escolha a Origem"
+            },
+            "origin_menu": {
+                "menu_options": {
+                    "origin_coordinates": "Usando uma localiza\u00e7\u00e3o no mapa",
+                    "origin_entity": "Usando uma entidade"
+                },
+                "title": "Escolha a Origem"
+            },
+            "user": {
+                "data": {
+                    "api_key": "Chave da API",
+                    "mode": "Modo de viagem",
+                    "name": "Nome"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "arrival_time": {
+                "data": {
+                    "arrival_time": "Hora da chegada"
+                },
+                "title": "Escolha a hora de chegada"
+            },
+            "departure_time": {
+                "data": {
+                    "departure_time": "Hora de partida"
+                },
+                "title": "Escolha o hor\u00e1rio de partida"
+            },
+            "init": {
+                "data": {
+                    "route_mode": "Modo de rota",
+                    "traffic_mode": "Modo de tr\u00e2nsito",
+                    "unit_system": "Sistema de unidades"
+                }
+            },
+            "time_menu": {
+                "menu_options": {
+                    "arrival_time": "Configurar um hor\u00e1rio de chegada",
+                    "departure_time": "Configurar um hor\u00e1rio de partida",
+                    "no_time": "N\u00e3o configure um hor\u00e1rio"
+                },
+                "title": "Escolha o tipo de hor\u00e1rio"
+            }
+        }
+    }
+}

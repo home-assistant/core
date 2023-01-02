@@ -77,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     await data.async_update()
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = data
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
 
@@ -90,7 +90,7 @@ async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> Non
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Unload the config config and platforms."""
+    """Unload the config and platforms."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     )
@@ -162,7 +162,8 @@ class HoneywellData:
                 self.devices[updated_device.deviceid] = updated_device
             else:
                 _LOGGER.info(
-                    "New device with ID %s detected, reload the honeywell integration if you want to access it in Home Assistant"
+                    "New device with ID %s detected, reload the honeywell integration"
+                    " if you want to access it in Home Assistant"
                 )
 
         await self._hass.config_entries.async_reload(self._config.entry_id)

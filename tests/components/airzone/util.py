@@ -19,19 +19,22 @@ from aioairzone.const import (
     API_MODES,
     API_NAME,
     API_ON,
+    API_POWER,
     API_ROOM_TEMP,
     API_SET_POINT,
+    API_SYSTEM_FIRMWARE,
     API_SYSTEM_ID,
+    API_SYSTEM_TYPE,
     API_SYSTEMS,
     API_THERMOS_FIRMWARE,
     API_THERMOS_RADIO,
     API_THERMOS_TYPE,
     API_UNITS,
+    API_VERSION,
     API_WIFI_CHANNEL,
     API_WIFI_RSSI,
     API_ZONE_ID,
 )
-from aioairzone.exceptions import InvalidMethod, SystemOutOfRange
 
 from homeassistant.components.airzone import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
@@ -174,8 +177,43 @@ HVAC_MOCK = {
                     API_FLOOR_DEMAND: 0,
                 },
             ]
+        },
+        {
+            API_DATA: [
+                {
+                    API_SYSTEM_ID: 2,
+                    API_ZONE_ID: 1,
+                    API_ON: 0,
+                    API_MAX_TEMP: 30,
+                    API_MIN_TEMP: 15,
+                    API_SET_POINT: 19,
+                    API_ROOM_TEMP: 22.299999,
+                    API_COLD_STAGES: 1,
+                    API_COLD_STAGE: 1,
+                    API_HEAT_STAGES: 1,
+                    API_HEAT_STAGE: 1,
+                    API_HUMIDITY: 62,
+                    API_UNITS: 0,
+                    API_ERRORS: [],
+                },
+            ]
+        },
+    ]
+}
+
+HVAC_SYSTEMS_MOCK = {
+    API_SYSTEMS: [
+        {
+            API_SYSTEM_ID: 1,
+            API_POWER: 0,
+            API_SYSTEM_FIRMWARE: "3.31",
+            API_SYSTEM_TYPE: 1,
         }
     ]
+}
+
+HVAC_VERSION_MOCK = {
+    API_VERSION: "1.62",
 }
 
 HVAC_WEBSERVER_MOCK = {
@@ -202,10 +240,10 @@ async def async_init_integration(
         return_value=HVAC_MOCK,
     ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
-        side_effect=SystemOutOfRange,
+        return_value=HVAC_SYSTEMS_MOCK,
     ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
-        side_effect=InvalidMethod,
+        return_value=HVAC_WEBSERVER_MOCK,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

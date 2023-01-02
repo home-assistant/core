@@ -8,8 +8,7 @@
         "error": {
             "api_error": "Login failed",
             "cannot_connect": "Failed to connect",
-            "iftapi_connect": "Error conecting to iftapi.net",
-            "unknown": "Unexpected error"
+            "iftapi_connect": "Error conecting to iftapi.net"
         },
         "flow_title": "{serial} ({host})",
         "step": {
@@ -20,7 +19,7 @@
                 }
             },
             "dhcp_confirm": {
-                "description": "Do you want to setup {host}\nSerial: {serial}?"
+                "description": "Do you want to set up {host}\nSerial: {serial}?"
             },
             "manual_device_entry": {
                 "data": {
@@ -34,11 +33,6 @@
                 },
                 "description": "The following IntelliFire devices were discovered. Please select which you wish to configure.",
                 "title": "Device Selection"
-            },
-            "user": {
-                "data": {
-                    "host": "Host"
-                }
             }
         }
     }

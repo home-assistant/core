@@ -7,7 +7,7 @@ import sys
 import threading
 import time
 import traceback
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -68,7 +68,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         persistent_notification.async_create(
             hass,
-            "Object growth logging has started. See [the logs](/config/logs) to track the growth of new objects.",
+            (
+                "Object growth logging has started. See [the logs](/config/logs) to"
+                " track the growth of new objects."
+            ),
             title="Object growth logging started",
             notification_id="profile_object_logging",
         )
@@ -111,7 +114,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         persistent_notification.create(
             hass,
-            f"Objects with type {obj_type} have been dumped to the log. See [the logs](/config/logs) to review the repr of the objects.",
+            (
+                f"Objects with type {obj_type} have been dumped to the log. See [the"
+                " logs](/config/logs) to review the repr of the objects."
+            ),
             title="Object dump completed",
             notification_id="profile_object_dump",
         )
@@ -123,10 +129,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for thread in threading.enumerate():
             if thread == main_thread:
                 continue
+            ident = cast(int, thread.ident)
             _LOGGER.critical(
                 "Thread [%s]: %s",
                 thread.name,
-                "".join(traceback.format_stack(frames.get(thread.ident))).strip(),
+                "".join(traceback.format_stack(frames.get(ident))).strip(),
             )
 
     async def _async_dump_scheduled(call: ServiceCall) -> None:
@@ -136,13 +143,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         original_maxother = arepr.maxother
         arepr.maxstring = 300
         arepr.maxother = 300
+        handle: asyncio.Handle
         try:
-            for handle in hass.loop._scheduled:  # pylint: disable=protected-access
+            for handle in getattr(hass.loop, "_scheduled"):
                 if not handle.cancelled():
                     _LOGGER.critical("Scheduled: %s", handle)
         finally:
-            arepr.max_string = original_maxstring
-            arepr.max_other = original_maxother
+            arepr.maxstring = original_maxstring
+            arepr.maxother = original_maxother
 
     async_register_admin_service(
         hass,
@@ -229,7 +237,10 @@ async def _async_generate_profile(hass: HomeAssistant, call: ServiceCall):
     start_time = int(time.time() * 1000000)
     persistent_notification.async_create(
         hass,
-        "The profile has started. This notification will be updated when it is complete.",
+        (
+            "The profile has started. This notification will be updated when it is"
+            " complete."
+        ),
         title="Profile Started",
         notification_id=f"profiler_{start_time}",
     )
@@ -245,7 +256,10 @@ async def _async_generate_profile(hass: HomeAssistant, call: ServiceCall):
     )
     persistent_notification.async_create(
         hass,
-        f"Wrote cProfile data to {cprofile_path} and callgrind data to {callgrind_path}",
+        (
+            f"Wrote cProfile data to {cprofile_path} and callgrind data to"
+            f" {callgrind_path}"
+        ),
         title="Profile Complete",
         notification_id=f"profiler_{start_time}",
     )
@@ -260,7 +274,10 @@ async def _async_generate_memory_profile(hass: HomeAssistant, call: ServiceCall)
     start_time = int(time.time() * 1000000)
     persistent_notification.async_create(
         hass,
-        "The memory profile has started. This notification will be updated when it is complete.",
+        (
+            "The memory profile has started. This notification will be updated when it"
+            " is complete."
+        ),
         title="Profile Started",
         notification_id=f"memory_profiler_{start_time}",
     )

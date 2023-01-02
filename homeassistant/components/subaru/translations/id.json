@@ -11,7 +11,7 @@
             "incorrect_pin": "PIN salah",
             "incorrect_validation_code": "Kode validasi salah",
             "invalid_auth": "Autentikasi tidak valid",
-            "two_factor_request_failed": "Permintaan kode 2FA gagal, silakan coba lagi"
+            "two_factor_request_failed": "Permintaan kode 2FA gagal, coba lagi"
         },
         "step": {
             "pin": {

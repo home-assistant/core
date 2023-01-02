@@ -9,9 +9,9 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
-    PRESSURE_PSI,
-    TEMP_FAHRENHEIT,
-    VOLUME_GALLONS,
+    UnitOfPressure,
+    UnitOfTemperature,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -22,12 +22,12 @@ from .entity import FloEntity
 
 WATER_ICON = "mdi:water"
 GAUGE_ICON = "mdi:gauge"
-NAME_DAILY_USAGE = "Today's Water Usage"
-NAME_CURRENT_SYSTEM_MODE = "Current System Mode"
-NAME_FLOW_RATE = "Water Flow Rate"
-NAME_WATER_TEMPERATURE = "Water Temperature"
+NAME_DAILY_USAGE = "Today's water usage"
+NAME_CURRENT_SYSTEM_MODE = "Current system mode"
+NAME_FLOW_RATE = "Water flow rate"
+NAME_WATER_TEMPERATURE = "Water temperature"
 NAME_AIR_TEMPERATURE = "Temperature"
-NAME_WATER_PRESSURE = "Water Pressure"
+NAME_WATER_PRESSURE = "Water pressure"
 NAME_HUMIDITY = "Humidity"
 NAME_BATTERY = "Battery"
 
@@ -68,8 +68,9 @@ class FloDailyUsageSensor(FloEntity, SensorEntity):
     """Monitors the daily water usage."""
 
     _attr_icon = WATER_ICON
-    _attr_native_unit_of_measurement = VOLUME_GALLONS
+    _attr_native_unit_of_measurement = UnitOfVolume.GALLONS
     _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
+    _attr_device_class = SensorDeviceClass.WATER
 
     def __init__(self, device):
         """Initialize the daily water usage sensor."""
@@ -124,7 +125,7 @@ class FloTemperatureSensor(FloEntity, SensorEntity):
     """Monitors the temperature."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = TEMP_FAHRENHEIT
+    _attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
 
     def __init__(self, name, device):
@@ -164,7 +165,7 @@ class FloPressureSensor(FloEntity, SensorEntity):
     """Monitors the water pressure."""
 
     _attr_device_class = SensorDeviceClass.PRESSURE
-    _attr_native_unit_of_measurement = PRESSURE_PSI
+    _attr_native_unit_of_measurement = UnitOfPressure.PSI
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
 
     def __init__(self, device):

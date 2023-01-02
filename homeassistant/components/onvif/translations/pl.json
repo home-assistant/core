@@ -11,13 +11,6 @@
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "step": {
-            "auth": {
-                "data": {
-                    "password": "Has\u0142o",
-                    "username": "Nazwa u\u017cytkownika"
-                },
-                "title": "Konfiguracja uwierzytelniania"
-            },
             "configure": {
                 "data": {
                     "host": "Nazwa hosta lub adres IP",
@@ -41,14 +34,6 @@
                 },
                 "title": "Wybierz urz\u0105dzenie ONVIF"
             },
-            "manual_input": {
-                "data": {
-                    "host": "Nazwa hosta lub adres IP",
-                    "name": "Nazwa",
-                    "port": "Port"
-                },
-                "title": "Konfiguracja urz\u0105dzenia ONVIF"
-            },
             "user": {
                 "data": {
                     "auto": "Wyszukaj automatycznie"
@@ -63,7 +48,8 @@
             "onvif_devices": {
                 "data": {
                     "extra_arguments": "Dodatkowe argumenty FFMPEG",
-                    "rtsp_transport": "Mechanizm transportu RTSP"
+                    "rtsp_transport": "Mechanizm transportu RTSP",
+                    "use_wallclock_as_timestamps": "U\u017cyj wallclock jako znacznika czasu"
                 },
                 "title": "Opcje urz\u0105dzenia ONVIF"
             }

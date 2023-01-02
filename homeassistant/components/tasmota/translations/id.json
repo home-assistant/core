@@ -10,13 +10,21 @@
             "config": {
                 "data": {
                     "discovery_prefix": "Prefiks topik penemuan"
-                },
-                "description": "Masukkan konfigurasi Tasmota.",
-                "title": "Tasmota"
+                }
             },
             "confirm": {
                 "description": "Ingin menyiapkan Tasmota?"
             }
+        }
+    },
+    "issues": {
+        "topic_duplicated": {
+            "description": "Beberapa perangkat Tasmota sedang berbagi topik {topic}.\n\n Perangkat Tasmota terkait masalah ini yaitu: {offenders}.",
+            "title": "Beberapa perangkat Tasmota sedang berbagi topik yang sama."
+        },
+        "topic_no_prefix": {
+            "description": "Perangkat Tasmota {name} dengan IP {ip} tidak menyertakan `%prefix%` dalam fulltopic-nya.\n\nEntitas untuk perangkat ini dinonaktifkan hingga konfigurasi telah diperbaiki.",
+            "title": "Perangkat Tasmota {name} memiliki topik MQTT yang tidak valid"
         }
     }
 }

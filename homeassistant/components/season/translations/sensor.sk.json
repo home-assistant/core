@@ -1,0 +1,16 @@
+{
+    "state": {
+        "season__season": {
+            "autumn": "Jese\u0148",
+            "spring": "Jar",
+            "summer": "Leto",
+            "winter": "Zima"
+        },
+        "season__season__": {
+            "autumn": "Jese\u0148",
+            "spring": "Jar",
+            "summer": "Leto",
+            "winter": "Zima"
+        }
+    }
+}

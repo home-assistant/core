@@ -1,4 +1,6 @@
 """Config flow to configure the honeywell integration."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -52,7 +54,9 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> HoneywellOptionsFlowHandler:
         """Options callback for Honeywell."""
         return HoneywellOptionsFlowHandler(config_entry)
 

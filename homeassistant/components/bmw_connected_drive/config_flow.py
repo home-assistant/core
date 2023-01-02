@@ -3,8 +3,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from bimmer_connected.account import ConnectedDriveAccount
-from bimmer_connected.country_selector import get_region_from_name
+from bimmer_connected.api.authentication import MyBMWAuthentication
+from bimmer_connected.api.regions import get_region_from_name
+from httpx import HTTPError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -13,7 +14,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
 from . import DOMAIN
-from .const import CONF_ALLOWED_REGIONS, CONF_READ_ONLY
+from .const import CONF_ALLOWED_REGIONS, CONF_READ_ONLY, CONF_REFRESH_TOKEN
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -31,22 +32,26 @@ async def validate_input(
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
+    auth = MyBMWAuthentication(
+        data[CONF_USERNAME],
+        data[CONF_PASSWORD],
+        get_region_from_name(data[CONF_REGION]),
+    )
+
     try:
-        await hass.async_add_executor_job(
-            ConnectedDriveAccount,
-            data[CONF_USERNAME],
-            data[CONF_PASSWORD],
-            get_region_from_name(data[CONF_REGION]),
-        )
-    except OSError as ex:
+        await auth.login()
+    except HTTPError as ex:
         raise CannotConnect from ex
 
     # Return info that you want to store in the config entry.
-    return {"title": f"{data[CONF_USERNAME]}{data.get(CONF_SOURCE, '')}"}
+    retval = {"title": f"{data[CONF_USERNAME]}{data.get(CONF_SOURCE, '')}"}
+    if auth.refresh_token:
+        retval[CONF_REFRESH_TOKEN] = auth.refresh_token
+    return retval
 
 
-class BMWConnectedDriveConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for BMW ConnectedDrive."""
+class BMWConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for MyBMW."""
 
     VERSION = 1
 
@@ -68,7 +73,13 @@ class BMWConnectedDriveConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
 
             if info:
-                return self.async_create_entry(title=info["title"], data=user_input)
+                return self.async_create_entry(
+                    title=info["title"],
+                    data={
+                        **user_input,
+                        CONF_REFRESH_TOKEN: info.get(CONF_REFRESH_TOKEN),
+                    },
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
@@ -78,18 +89,13 @@ class BMWConnectedDriveConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
-    ) -> BMWConnectedDriveOptionsFlow:
-        """Return a BWM ConnectedDrive option flow."""
-        return BMWConnectedDriveOptionsFlow(config_entry)
+    ) -> BMWOptionsFlow:
+        """Return a MyBMW option flow."""
+        return BMWOptionsFlow(config_entry)
 
 
-class BMWConnectedDriveOptionsFlow(config_entries.OptionsFlow):
-    """Handle a option flow for BMW ConnectedDrive."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize BMW ConnectedDrive option flow."""
-        self.config_entry = config_entry
-        self.options = dict(config_entry.options)
+class BMWOptionsFlow(config_entries.OptionsFlowWithConfigEntry):
+    """Handle a option flow for MyBMW."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -102,6 +108,16 @@ class BMWConnectedDriveOptionsFlow(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Handle the initial step."""
         if user_input is not None:
+            # Manually update & reload the config entry after options change.
+            # Required as each successful login will store the latest refresh_token
+            # using async_update_entry, which would otherwise trigger a full reload
+            # if the options would be refreshed using a listener.
+            changed = self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                options=user_input,
+            )
+            if changed:
+                await self.hass.config_entries.async_reload(self.config_entry.entry_id)
             return self.async_create_entry(title="", data=user_input)
         return self.async_show_form(
             step_id="account_options",
