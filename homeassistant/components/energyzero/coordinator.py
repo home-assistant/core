@@ -25,7 +25,7 @@ class EnergyZeroData(NamedTuple):
 
     energy_today: Electricity
     energy_tomorrow: Electricity | None
-    gas_today: Gas
+    gas_today: Gas | None
 
 
 class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
@@ -47,15 +47,19 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
     async def _async_update_data(self) -> EnergyZeroData:
         """Fetch data from EnergyZero."""
         today = dt.now().date()
+        gas_today = None
         energy_tomorrow = None
 
         try:
             energy_today = await self.energyzero.energy_prices(
                 start_date=today, end_date=today
             )
-            gas_today = await self.energyzero.gas_prices(
-                start_date=today, end_date=today
-            )
+            try:
+                gas_today = await self.energyzero.gas_prices(
+                    start_date=today, end_date=today
+                )
+            except EnergyZeroNoDataError:
+                LOGGER.debug("No data for gas prices for EnergyZero integration")
             # Energy for tomorrow only after 14:00 UTC
             if dt.utcnow().hour >= THRESHOLD_HOUR:
                 tomorrow = today + timedelta(days=1)
