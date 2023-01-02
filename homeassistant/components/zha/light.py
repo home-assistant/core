@@ -893,7 +893,7 @@ class Light(BaseLight, ZhaEntity):
             self.async_write_ha_state()
 
     @callback
-    def _assume_group_state(self, signal, update_params):
+    def _assume_group_state(self, signal, update_params) -> None:
         """Handle an assume group state event from a group."""
         if self.entity_id in signal["entity_ids"] and self._attr_available:
             self.debug("member assuming group state with: %s", update_params)
@@ -924,7 +924,7 @@ class Light(BaseLight, ZhaEntity):
             # the effect is always deactivated in async_turn_on if not provided
             if effect is None:
                 self._attr_effect = None
-            elif effect in self._attr_effect_list:
+            elif self._attr_effect_list and effect in self._attr_effect_list:
                 self._attr_effect = effect
 
             self.async_write_ha_state()
