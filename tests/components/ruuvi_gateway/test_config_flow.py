@@ -13,30 +13,37 @@ from homeassistant.data_entry_flow import FlowResultType
 from .consts import BASE_DATA, EXPECTED_TITLE, GATEWAY_MAC, GET_GATEWAY_HISTORY_DATA
 from .utils import patch_gateway_ok, patch_setup_entry_ok
 
+DHCP_IP = "1.2.3.4"
+DHCP_DATA = {**BASE_DATA, "host": DHCP_IP}
 
-@pytest.mark.parametrize("method", ["user", "dhcp"])
-async def test_ok_setup(hass: HomeAssistant, method: str) -> None:
-    """Test we get the form."""
-    if method == "user":
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-        )
-        data = entry = BASE_DATA
-    elif method == "dhcp":
-        dhcp_ip = "1.2.3.4"
-        data = entry = {**BASE_DATA, "host": dhcp_ip}
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            data=dhcp.DhcpServiceInfo(
+
+@pytest.mark.parametrize(
+    "init_data, init_context, entry",
+    [
+        (
+            None,
+            {"source": config_entries.SOURCE_USER},
+            BASE_DATA,
+        ),
+        (
+            dhcp.DhcpServiceInfo(
                 hostname="RuuviGateway1234",
-                ip=dhcp_ip,
+                ip=DHCP_IP,
                 macaddress="12:34:56:78:90:ab",
             ),
-            context={"source": config_entries.SOURCE_DHCP},
-        )
-    else:
-        raise NotImplementedError("...")
+            {"source": config_entries.SOURCE_DHCP},
+            DHCP_DATA,
+        ),
+    ],
+    ids=["user", "dhcp"],
+)
+async def test_ok_setup(hass: HomeAssistant, init_data, init_context, entry) -> None:
+    """Test we get the form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=init_data,
+        context=init_context,
+    )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == config_entries.SOURCE_USER
     assert result["errors"] is None
@@ -50,7 +57,7 @@ async def test_ok_setup(hass: HomeAssistant, method: str) -> None:
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == EXPECTED_TITLE
-    assert result2["data"] == data
+    assert result2["data"] == entry
     assert result2["context"]["unique_id"] == GATEWAY_MAC
     assert len(mock_setup_entry.mock_calls) == 1
 
