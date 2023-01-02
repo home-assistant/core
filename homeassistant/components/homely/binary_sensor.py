@@ -28,8 +28,6 @@ async def async_setup_entry(
     """Set up binary sensors based on a config entry."""
     homely_home: HomelyHomeCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    await homely_home.async_config_entry_first_refresh()
-
     entities: list[BinarySensorEntity] = []
     for homely_device in homely_home.devices.values():
         if isinstance(homely_device.homely_api_device, WindowSensor):

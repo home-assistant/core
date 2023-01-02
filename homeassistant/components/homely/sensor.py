@@ -25,7 +25,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up Plate Relays as switch based on a config entry."""
     homely_home: HomelyHomeCoordinator = hass.data[DOMAIN][entry.entry_id]
-    await homely_home.async_config_entry_first_refresh()
 
     entities: list[SensorEntity] = [
         EntityType(homely_home, homely_device)
