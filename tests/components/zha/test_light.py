@@ -1410,7 +1410,7 @@ async def async_test_flash_from_hass(hass, cluster, entity_id, flash):
     new=AsyncMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
 )
 @patch(
-    "homeassistant.components.zha.entity.UPDATE_GROUP_FROM_CHILD_DELAY",
+    "homeassistant.components.zha.entity.DEFAULT_UPDATE_GROUP_FROM_CHILD_DELAY",
     new=0,
 )
 async def test_zha_group_light_entity(
