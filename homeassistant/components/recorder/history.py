@@ -912,42 +912,38 @@ def _sorted_states_to_dict(
         # changes so we can filter out duplicate states
         if schema_version < 31:
             for row in group:
-                if (state := row.state) == prev_state:
-                    continue
-                ent_results.append(
-                    {
-                        attr_state: state,
-                        attr_time: _process_timestamp(row.last_updated),
-                    }
-                )
-                prev_state = state
+                if (state := row.state) != prev_state:
+                    ent_results.append(
+                        {
+                            attr_state: state,
+                            attr_time: _process_timestamp(row.last_updated),
+                        }
+                    )
+                    prev_state = state
             continue
 
         if compressed_state_format:
             for row in group:
-                if (state := row.state) == prev_state:
-                    continue
+                if (state := row.state) != prev_state:
+                    ent_results.append(
+                        {
+                            attr_state: state,
+                            attr_time: row.last_updated_ts,
+                        }
+                    )
+                    prev_state = state
+
+        for row in group:
+            if (state := row.state) != prev_state:
                 ent_results.append(
                     {
                         attr_state: state,
-                        attr_time: row.last_updated_ts,
+                        attr_time: process_timestamp_to_utc_isoformat(
+                            dt_util.utc_from_timestamp(row.last_updated_ts)
+                        ),
                     }
                 )
                 prev_state = state
-            continue
-
-        for row in group:
-            if (state := row.state) == prev_state:
-                continue
-            ent_results.append(
-                {
-                    attr_state: state,
-                    attr_time: process_timestamp_to_utc_isoformat(
-                        dt_util.utc_from_timestamp(row.last_updated_ts)
-                    ),
-                }
-            )
-            prev_state = state
 
     # If there are no states beyond the initial state,
     # the state a was never popped from initial_states
