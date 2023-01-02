@@ -158,6 +158,7 @@ class ConfigEntryChange(StrEnum):
 class ConfigEntryDisabler(StrEnum):
     """What disabled a config entry."""
 
+    INTEGRATION = "integration"
     USER = "user"
 
 
