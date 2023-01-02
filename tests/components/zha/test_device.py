@@ -1,4 +1,4 @@
-"""Test zha device switch."""
+"""Test ZHA device switch."""
 from datetime import timedelta
 import time
 from unittest import mock
@@ -26,7 +26,7 @@ from tests.common import async_fire_time_changed
 
 @pytest.fixture(autouse=True)
 def required_platforms_only():
-    """Only setup the required platform and required base platforms to speed up tests."""
+    """Only set up the required platform and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
@@ -86,13 +86,13 @@ def zigpy_device_mains(zigpy_device_mock):
 
 @pytest.fixture
 def device_with_basic_channel(zigpy_device_mains):
-    """Return a zha device with a basic channel present."""
+    """Return a ZHA device with a basic channel present."""
     return zigpy_device_mains(with_basic_channel=True)
 
 
 @pytest.fixture
 def device_without_basic_channel(zigpy_device):
-    """Return a zha device with a basic channel present."""
+    """Return a ZHA device with a basic channel present."""
     return zigpy_device(with_basic_channel=False)
 
 
@@ -197,7 +197,7 @@ async def test_check_available_unsuccessful(
         time.time() - zha_device.consider_unavailable_time - 2
     )
 
-    # unsuccessfuly ping zigpy device, but zha_device is still available
+    # unsuccessfully ping zigpy device, but zha_device is still available
     _send_time_changed(hass, 91)
     await hass.async_block_till_done()
     assert basic_ch.read_attributes.await_count == 1

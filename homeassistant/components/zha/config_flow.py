@@ -286,7 +286,7 @@ class BaseZhaFlow(FlowHandler):
     async def async_step_form_new_network(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Form a brand new network."""
+        """Form a brand-new network."""
         await self._radio_mgr.async_form_network()
         return await self._async_create_radio_entry()
 
@@ -422,7 +422,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle a zha config flow start."""
+        """Handle a ZHA config flow start."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
