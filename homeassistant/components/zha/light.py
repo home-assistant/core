@@ -998,7 +998,7 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             False,
         )
         if self._zha_config_group_members_assume_state:
-            self._update_group_from_child_delay = 0.05
+            self._update_group_from_child_delay = 0.01
         self._zha_config_enhanced_light_transition = False
         self._attr_color_mode = None
 
