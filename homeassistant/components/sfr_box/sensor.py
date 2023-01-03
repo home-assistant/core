@@ -154,7 +154,7 @@ async def async_setup_entry(
         SFRBoxSensor(data.dsl, description, data.system.data)
         for description in SENSOR_TYPES
     ]
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class SFRBoxSensor(CoordinatorEntity[SFRDataUpdateCoordinator[DslInfo]], SensorEntity):

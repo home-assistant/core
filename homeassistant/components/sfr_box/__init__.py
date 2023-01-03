@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 
 from sfrbox_api.bridge import SFRBox
-from sfrbox_api.models import SystemInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -32,10 +31,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ]
     await asyncio.gather(*tasks)
 
-    system_info: SystemInfo = data.system.data
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data
 
-    hass.data.setdefault(DOMAIN, {})
-
+    system_info = data.system.data
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -45,8 +43,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         sw_version=system_info.version_mainfirmware,
         configuration_url=f"http://{entry.data[CONF_HOST]}",
     )
-
-    hass.data[DOMAIN][entry.entry_id] = data
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
