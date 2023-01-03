@@ -2,7 +2,7 @@
 
 import logging
 
-from homewizard_energy.errors import RequestError
+from homewizard_energy.errors import DisabledError, RequestError
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
@@ -60,4 +60,7 @@ class HomeWizardIdentifyButton(
         try:
             await self.coordinator.api.identify()
         except RequestError as ex:
+            raise HomeAssistantError from ex
+        except DisabledError as ex:
+            await self.hass.config_entries.async_reload(self.coordinator.entry_id)
             raise HomeAssistantError from ex

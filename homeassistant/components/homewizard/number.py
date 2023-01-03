@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Optional, cast
 
-from homewizard_energy.errors import RequestError
+from homewizard_energy.errors import DisabledError, RequestError
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
@@ -61,6 +61,10 @@ class HWEnergyNumberEntity(
             await self.coordinator.api.state_set(brightness=value * (255 / 100))
         except RequestError as ex:
             raise HomeAssistantError from ex
+        except DisabledError as ex:
+            await self.hass.config_entries.async_reload(self.coordinator.entry_id)
+            raise HomeAssistantError from ex
+
         await self.coordinator.async_refresh()
 
     @property
