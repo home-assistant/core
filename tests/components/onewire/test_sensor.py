@@ -1,4 +1,5 @@
 """Tests for 1-Wire sensors."""
+from collections.abc import Generator
 import logging
 from unittest.mock import MagicMock, patch
 
@@ -21,7 +22,7 @@ from tests.common import mock_device_registry, mock_registry
 
 
 @pytest.fixture(autouse=True)
-def override_platforms():
+def override_platforms() -> Generator[None, None, None]:
     """Override PLATFORMS."""
     with patch("homeassistant.components.onewire.PLATFORMS", [Platform.SENSOR]):
         yield
@@ -33,7 +34,7 @@ async def test_sensors(
     owproxy: MagicMock,
     device_id: str,
     caplog: pytest.LogCaptureFixture,
-):
+) -> None:
     """Test for 1-Wire device.
 
     As they would be on a clean setup: all binary-sensors and switches disabled.

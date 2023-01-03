@@ -52,8 +52,19 @@
     },
     "issues": {
         "deprecate_smart_sensor": {
-            "description": "\u00dchtse \"Avastatud objekti\" andur arukate tuvastuste jaoks on n\u00fc\u00fcdseks kaotanud kehtivuse. See on asendatud iga aruka avastamise t\u00fc\u00fcbi jaoks eraldi aruka avastamise binaarsete anduritega. Palun ajakohasta vastavalt k\u00f5ik mallid v\u00f5i automaatika.",
+            "description": "Nutikate tuvastuste jaoks m\u00f5eldud \u00fchtne andur \"Tuvastatud objekt\" on n\u00fc\u00fcd kasutuselt k\u00f5rvaldatud. See on asendatud individuaalsete nutika tuvastamise binaarsete anduritega iga nutika tuvastust\u00fc\u00fcbi jaoks.\n\nAllpool on tuvastatud automatiseerimised v\u00f5i skriptid, mis kasutavad \u00fchte v\u00f5i mitut aegunud olemit:\n{items}\n\u00dclaltoodud loend v\u00f5ib olla puudulik ja see ei sisalda armatuurlaudade sees olevaid mallikasutusi. Palun v\u00e4rskenda vastavalt k\u00f5iki malle, automaatikaid v\u00f5i skripte.",
             "title": "Nutika tuvastamise andur on aegunud"
+        },
+        "deprecated_service_set_doorbell_message": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Teenus `unifiprotect.set_doorbell_message` on kaotanud oma kehtivuse, asendades selle uue, igale uksekella seadmele lisatud uksekella teksti olemiga. See eemaldatakse versioonis v2023.3.0. Palun ajakohasta, et kasutada teenust [`text.set_value` ({link}).",
+                        "title": "set_doorbell_message on aegunud"
+                    }
+                }
+            },
+            "title": "set_doorbell_message on aegunud"
         },
         "ea_setup_failed": {
             "description": "Kasutad UniFi Protecti v {version} mis on varajase juurdep\u00e4\u00e4su versioon. Sidumise laadimisel ilmnes parandamatu viga. Sidumise kasutamise j\u00e4tkamiseks [alanda UniFi Protecti stabiilsele versioonile](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect). \n\n Viga: {error}",

@@ -13,13 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
-    PERCENTAGE,
-    PRESSURE_HPA,
-    UnitOfVolume,
-)
+from homeassistant.const import PERCENTAGE, UnitOfLength, UnitOfPressure, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -55,7 +49,7 @@ FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS = "L/100km"
 FUEL_CONSUMPTION_MILES_PER_GALLON = "mi/gal"
 
 L_PER_GAL = VolumeConverter.convert(1, UnitOfVolume.GALLONS, UnitOfVolume.LITERS)
-KM_PER_MI = DistanceConverter.convert(1, LENGTH_MILES, LENGTH_KILOMETERS)
+KM_PER_MI = DistanceConverter.convert(1, UnitOfLength.MILES, UnitOfLength.KILOMETERS)
 
 # Sensor available to "Subaru Safety Plus" subscribers with Gen1 or Gen2 vehicles
 SAFETY_SENSORS = [
@@ -64,7 +58,7 @@ SAFETY_SENSORS = [
         device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:road-variant",
         name="Odometer",
-        native_unit_of_measurement=LENGTH_KILOMETERS,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 ]
@@ -83,35 +77,35 @@ API_GEN_2_SENSORS = [
         device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:gas-station",
         name="Range",
-        native_unit_of_measurement=LENGTH_KILOMETERS,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.TIRE_PRESSURE_FL,
         device_class=SensorDeviceClass.PRESSURE,
         name="Tire pressure FL",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.TIRE_PRESSURE_FR,
         device_class=SensorDeviceClass.PRESSURE,
         name="Tire pressure FR",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.TIRE_PRESSURE_RL,
         device_class=SensorDeviceClass.PRESSURE,
         name="Tire pressure RL",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.TIRE_PRESSURE_RR,
         device_class=SensorDeviceClass.PRESSURE,
         name="Tire pressure RR",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 ]
@@ -123,7 +117,7 @@ EV_SENSORS = [
         device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:ev-station",
         name="EV range",
-        native_unit_of_measurement=LENGTH_MILES,
+        native_unit_of_measurement=UnitOfLength.MILES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(

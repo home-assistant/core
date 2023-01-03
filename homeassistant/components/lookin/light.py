@@ -4,8 +4,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aiolookin import Remote
-
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -33,7 +31,7 @@ async def async_setup_entry(
             continue
         uuid = remote["UUID"]
         coordinator = lookin_data.device_coordinators[uuid]
-        device: Remote = coordinator.data
+        device = coordinator.data
         entities.append(
             LookinLightEntity(
                 coordinator=coordinator,

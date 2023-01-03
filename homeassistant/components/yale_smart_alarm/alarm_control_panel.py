@@ -81,7 +81,8 @@ class YaleAlarmDevice(YaleAlarmEntity, AlarmControlPanelEntity):
                 )
         except YALE_ALL_ERRORS as error:
             raise HomeAssistantError(
-                f"Could not set alarm for {self.coordinator.entry.data[CONF_NAME]}: {error}"
+                f"Could not set alarm for {self.coordinator.entry.data[CONF_NAME]}:"
+                f" {error}"
             ) from error
 
         if alarm_state:

@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 import functools
 import gc
 import itertools
-from json import JSONDecoder, loads
+from json import JSONDecoder
 import logging
 import sqlite3
 import ssl
@@ -45,6 +45,7 @@ from homeassistant.components.websocket_api.http import URL
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, recorder as recorder_helper
+from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, location
@@ -73,9 +74,6 @@ from tests.components.recorder.common import (  # noqa: E402, isort:skip
 
 _LOGGER = logging.getLogger(__name__)
 
-logging.basicConfig(level=logging.DEBUG)
-logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
-
 asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 # Disable fixtures overriding our beautiful policy
 asyncio.set_event_loop_policy = lambda policy: None
@@ -91,6 +89,11 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "no_fail_on_log_exception: mark test to not fail on logged exception"
     )
+    if config.getoption("verbose"):
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
+    logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 
 
 def pytest_runtest_setup():
@@ -188,6 +191,19 @@ location.async_detect_location_info = check_real(location.async_detect_location_
 util.get_local_ip = lambda: "127.0.0.1"
 
 
+@pytest.fixture(autouse=True, scope="module")
+def garbage_collection():
+    """Run garbage collection at known locations.
+
+    This is to mimic the behavior of pytest-aiohttp, and is
+    required to avoid warnings during garbage collection from
+    spilling over into next test case. We run it per module which
+    handles the most common cases and let each module override
+    to run per test case if needed.
+    """
+    gc.collect()
+
+
 @pytest.fixture(autouse=True)
 def verify_cleanup(event_loop: asyncio.AbstractEventLoop):
     """Verify that the test has cleaned up resources correctly."""
@@ -203,10 +219,6 @@ def verify_cleanup(event_loop: asyncio.AbstractEventLoop):
             inst.stop()
         pytest.exit(f"Detected non stopped instances ({count}), aborting test run")
 
-    threads = frozenset(threading.enumerate()) - threads_before
-    for thread in threads:
-        assert isinstance(thread, threading._DummyThread)
-
     # Warn and clean-up lingering tasks and timers
     # before moving on to the next test.
     tasks = asyncio.all_tasks(event_loop) - tasks_before
@@ -221,11 +233,12 @@ def verify_cleanup(event_loop: asyncio.AbstractEventLoop):
             _LOGGER.warning("Lingering timer after test %r", handle)
             handle.cancel()
 
-    # Make sure garbage collect run in same test as allocation
-    # this is to mimic the behavior of pytest-aiohttp, and is
-    # required to avoid warnings from spilling over into next
-    # test case.
-    gc.collect()
+    # Verify no threads where left behind.
+    threads = frozenset(threading.enumerate()) - threads_before
+    for thread in threads:
+        assert isinstance(thread, threading._DummyThread) or thread.name.startswith(
+            "waitpid-"
+        )
 
 
 @pytest.fixture(autouse=True)
@@ -271,7 +284,7 @@ class CoalescingResponse(client.ClientWebSocketResponse):
     async def receive_json(
         self,
         *,
-        loads: JSONDecoder = loads,
+        loads: JSONDecoder = json_loads,
         timeout: float | None = None,
     ) -> Any:
         """receive_json or from buffer."""
