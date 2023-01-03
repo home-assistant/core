@@ -2,7 +2,6 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from sfrbox_api.bridge import SFRBox
 from sfrbox_api.models import DslInfo, SystemInfo
 
 from homeassistant.components.sensor import (
@@ -20,7 +19,8 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import DslDataUpdateCoordinator
+from .coordinator import SFRDataUpdateCoordinator
+from .models import DomainData
 
 
 @dataclass
@@ -156,18 +156,16 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the sensors."""
-    data = hass.data[DOMAIN][entry.entry_id]
-    box: SFRBox = data["box"]
-    system_info = await box.system_get_info()
+    data: DomainData = hass.data[DOMAIN][entry.entry_id]
 
     entities = [
-        SFRBoxSensor(data["dsl_coordinator"], description, system_info)
+        SFRBoxSensor(data.dsl, description, data.system.data)
         for description in SENSOR_TYPES
     ]
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
-class SFRBoxSensor(CoordinatorEntity[DslDataUpdateCoordinator], SensorEntity):
+class SFRBoxSensor(CoordinatorEntity[SFRDataUpdateCoordinator[DslInfo]], SensorEntity):
     """SFR Box sensor."""
 
     entity_description: SFRBoxSensorEntityDescription
@@ -175,7 +173,7 @@ class SFRBoxSensor(CoordinatorEntity[DslDataUpdateCoordinator], SensorEntity):
 
     def __init__(
         self,
-        coordinator: DslDataUpdateCoordinator,
+        coordinator: SFRDataUpdateCoordinator[DslInfo],
         description: SFRBoxSensorEntityDescription,
         system_info: SystemInfo,
     ) -> None:
