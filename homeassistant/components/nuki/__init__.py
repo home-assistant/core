@@ -13,7 +13,7 @@ from homeassistant import exceptions
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -73,11 +73,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Device registration for the bridge
     info = bridge.info()
     bridge_id = parse_id(info["ids"]["hardwareId"])
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    dr = device_registry.async_get(hass)
+    dr.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, bridge_id)},
-        manufacturer="Nuki",
+        manufacturer="Nuki Home Solutions GmbH",
         name=f"Nuki Bridge {bridge_id}",
         model="Hardware Bridge",
         sw_version=info["versions"]["firmwareVersion"],
@@ -126,18 +126,14 @@ class NukiEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
         self._nuki_device = nuki_device
-
-    @property
-    def name(self) -> str:
-        """Return the name of the lock."""
-        return self._nuki_device.name
+        self._attr_name = nuki_device.name
 
     @property
     def device_info(self):
         """Device info for Nuki entities."""
         return {
             "identifiers": {(DOMAIN, parse_id(self._nuki_device.nuki_id))},
-            "name": self.name,
+            "name": self._attr_name,
             "manufacturer": "Nuki",
             "model": self._nuki_device.device_type_str.capitalize(),
             "sw_version": self._nuki_device.firmware_version,
@@ -181,7 +177,7 @@ class NukiCoordinator(DataUpdateCoordinator):
         except RequestException as err:
             raise UpdateFailed(f"Error communicating with Bridge: {err}") from err
 
-        ent_reg = er.async_get(self.hass)
+        ent_reg = entity_registry.async_get(self.hass)
         for event, device_ids in events.items():
             for device_id in device_ids:
                 entity_id = ent_reg.async_get_entity_id(
