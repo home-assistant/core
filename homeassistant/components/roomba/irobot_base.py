@@ -75,10 +75,6 @@ class IRobotEntity(Entity):
         self._version = self.vacuum_state.get("softwareVer")
         self._sku = self.vacuum_state.get("sku")
 
-        self._run_stats = self.vacuum_state.get("bbrun")
-        self._mission_stats = self.vacuum_state.get("bbmssn")
-        self._battery_stats = self.vacuum_state.get("bbchg3")
-
     @property
     def robot_unique_id(self):
         """Return the uniqueid of the vacuum cleaner."""
@@ -110,6 +106,18 @@ class IRobotEntity(Entity):
     def _battery_level(self):
         """Return the battery level of the vacuum cleaner."""
         return self.vacuum_state.get("batPct")
+
+    @property
+    def _run_stats(self):
+        return self.vacuum_state.get("bbrun")
+
+    @property
+    def _mission_stats(self):
+        return self.vacuum_state.get("bbmssn")
+
+    @property
+    def _battery_stats(self):
+        return self.vacuum_state.get("bbchg3")
 
     @property
     def _robot_state(self):
@@ -190,7 +198,9 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
             state_attrs[ATTR_ERROR] = self.vacuum.error_message
             state_attrs[ATTR_ERROR_CODE] = self.vacuum.error_code
 
-        state_attrs[ATTR_BATTERY_CYCLES] = self._battery_stats.get("nLithChrg") or self._battery_stats.get("nNimhChrg")
+        state_attrs[ATTR_BATTERY_CYCLES] = self._battery_stats.get(
+            "nLithChrg"
+        ) or self._battery_stats.get("nNimhChrg")
 
         average_mission_time = self._mission_stats.get("aMssnM")
         state_attrs[ATTR_AVERAGE_MISSION_TIME] = f"{average_mission_time} minutes"
