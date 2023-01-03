@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
+from types import MappingProxyType
 from typing import Any
 
 from aioimaplib import AUTH, IMAP4_SSL, SELECTED, AioImapException
@@ -20,7 +21,7 @@ from .errors import InvalidAuth, InvalidFolder
 _LOGGER = logging.getLogger(__name__)
 
 
-async def connect_to_server(data: dict[str, Any]) -> IMAP4_SSL:
+async def connect_to_server(data: MappingProxyType[str, Any]) -> IMAP4_SSL:
     """Connect to imap server and return client."""
     client = IMAP4_SSL(data[CONF_SERVER], data[CONF_PORT])
     await client.wait_hello_from_server()
@@ -54,7 +55,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int]):
         """Update the number of unread emails."""
         try:
             if self.imap_client is None:
-                self.imap_client = await connect_to_server(dict(self.config_entry.data))
+                self.imap_client = await connect_to_server(self.config_entry.data)
         except (AioImapException, asyncio.TimeoutError) as err:
             raise UpdateFailed(err) from err
 
@@ -99,6 +100,5 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int]):
     async def shutdown(self, *_) -> None:
         """Close resources."""
         if self.imap_client:
-            if self.imap_client.has_pending_idle():
-                self.imap_client.idle_done()
+            await self.imap_client.stop_wait_server_push()
             await self.imap_client.logout()

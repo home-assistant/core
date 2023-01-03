@@ -101,6 +101,5 @@ class ImapSensor(CoordinatorEntity[ImapDataUpdateCoordinator], SensorEntity):
 
     async def async_update(self) -> None:
         """Check for idle state before updating."""
-        if self.coordinator.imap_client.has_pending_idle():
-            self.coordinator.imap_client.idle_done()
-        return await super().async_update()
+        if not await self.coordinator.imap_client.stop_wait_server_push():
+            await super().async_update()
