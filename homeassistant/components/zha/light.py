@@ -1057,6 +1057,7 @@ class LightGroup(BaseLight, ZhaGroupEntity):
 
     async def async_update(self) -> None:
         """Query all members and determine the light group state."""
+        self.debug("updating group state")
         all_states = [self.hass.states.get(x) for x in self._entity_ids]
         states: list[State] = list(filter(None, all_states))
         on_states = [state for state in states if state.state == STATE_ON]
