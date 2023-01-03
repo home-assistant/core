@@ -146,6 +146,11 @@ class SuccessMissions(IRobotEntity, SensorEntity):
         return "mdi:counter"
 
     @property
+    def entity_registry_enabled_default(self):
+        """Disable sensor by default."""
+        return False
+
+    @property
     def native_value(self):
         """Return the state of the sensor."""
         return self._mission_stats.get("nMssnOk")
@@ -175,6 +180,11 @@ class CancelledMissions(IRobotEntity, SensorEntity):
     def icon(self):
         """Return the counter icon."""
         return "mdi:counter"
+
+    @property
+    def entity_registry_enabled_default(self):
+        """Disable sensor by default."""
+        return False
 
     @property
     def native_value(self):
@@ -208,6 +218,11 @@ class FailedMissions(IRobotEntity, SensorEntity):
         return "mdi:counter"
 
     @property
+    def entity_registry_enabled_default(self):
+        """Disable sensor by default."""
+        return False
+
+    @property
     def native_value(self):
         """Return the state of the sensor."""
         return self._mission_stats.get("nMssnF")
@@ -237,6 +252,11 @@ class ScrubsCount(IRobotEntity, SensorEntity):
     def icon(self):
         """Return the counter icon."""
         return "mdi:counter"
+
+    @property
+    def entity_registry_enabled_default(self):
+        """Disable sensor by default."""
+        return False
 
     @property
     def native_value(self):
