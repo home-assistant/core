@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "incorrect_password": "Neteisingas slapta\u017eodis"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Slapta\u017eodis"
+                }
+            }
+        }
+    }
+}

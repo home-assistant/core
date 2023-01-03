@@ -57,7 +57,6 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         name="Light level",
         native_unit_of_measurement="Level",
         state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.ILLUMINANCE,
     ),
     "humidity": SensorEntityDescription(
         key="humidity",

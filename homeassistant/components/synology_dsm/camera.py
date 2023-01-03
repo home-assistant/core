@@ -20,7 +20,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import SynoApi
 from .const import (
@@ -29,6 +28,7 @@ from .const import (
     DOMAIN,
     SIGNAL_CAMERA_SOURCE_CHANGED,
 )
+from .coordinator import SynologyDSMCameraUpdateCoordinator
 from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
 from .models import SynologyDSMData
 
@@ -54,17 +54,16 @@ async def async_setup_entry(
         )
 
 
-class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
+class SynoDSMCamera(SynologyDSMBaseEntity[SynologyDSMCameraUpdateCoordinator], Camera):
     """Representation a Synology camera."""
 
     _attr_supported_features = CameraEntityFeature.STREAM
-    coordinator: DataUpdateCoordinator[dict[str, dict[str, SynoCamera]]]
     entity_description: SynologyDSMCameraEntityDescription
 
     def __init__(
         self,
         api: SynoApi,
-        coordinator: DataUpdateCoordinator[dict[str, dict[str, SynoCamera]]],
+        coordinator: SynologyDSMCameraUpdateCoordinator,
         camera_id: str,
     ) -> None:
         """Initialize a Synology camera."""

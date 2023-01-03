@@ -83,5 +83,18 @@
                 "description": "Verbindungsmethode zum Gateway w\u00e4hlen"
             }
         }
+    },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Aktualisiere alle Automatisierungen oder Skripte, die diesen Dienst verwenden, um stattdessen den Dienst `{alternate_service}` mit einer Ziel-Entit\u00e4ts-ID von `{alternate_target}` zu verwenden.",
+                        "title": "Der Dienst {deprecated_service} wird entfernt"
+                    }
+                }
+            },
+            "title": "Der Dienst {deprecated_service} wird entfernt"
+        }
     }
 }

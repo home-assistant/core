@@ -27,9 +27,11 @@ VALID_UNITS = PressureConverter.VALID_UNITS
 def convert(value: float, from_unit: str, to_unit: str) -> float:
     """Convert one unit of measurement to another."""
     report(
-        "uses pressure utility. This is deprecated since 2022.10 and will "
-        "stop working in Home Assistant 2023.4, it should be updated to use "
-        "unit_conversion.PressureConverter instead",
+        (
+            "uses pressure utility. This is deprecated since 2022.10 and will "
+            "stop working in Home Assistant 2023.4, it should be updated to use "
+            "unit_conversion.PressureConverter instead"
+        ),
         error_if_core=False,
     )
     return PressureConverter.convert(value, from_unit, to_unit)

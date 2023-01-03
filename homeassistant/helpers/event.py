@@ -884,7 +884,10 @@ class TrackTemplateResultInfo:
         )
         self._update_time_listeners()
         _LOGGER.debug(
-            "Template group %s listens for %s, first render blocker by super template: %s",
+            (
+                "Template group %s listens for %s, first render blocker by super"
+                " template: %s"
+            ),
             self._track_templates,
             self.listeners,
             block_render,
@@ -1106,7 +1109,10 @@ class TrackTemplateResultInfo:
                 )
             )
             _LOGGER.debug(
-                "Template group %s listens for %s, re-render blocker by super template: %s",
+                (
+                    "Template group %s listens for %s, re-render blocker by super"
+                    " template: %s"
+                ),
                 self._track_templates,
                 self.listeners,
                 block_updates,

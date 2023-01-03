@@ -62,7 +62,7 @@ class APCUPSdData:
         """Initialize the data object."""
         self._host = host
         self._port = port
-        self.status: dict[str, Any] = {}
+        self.status: dict[str, str] = {}
 
     @property
     def name(self) -> str | None:
@@ -100,7 +100,7 @@ class APCUPSdData:
         return self.status.get("STATFLAG")
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self, **kwargs):
+    def update(self, **kwargs: Any) -> None:
         """Fetch the latest status from APCUPSd.
 
         Note that the result dict uses upper case for each resource, where our

@@ -324,7 +324,7 @@ class ElectricalMeasurementRMSVoltage(ElectricalMeasurement, id_suffix="rms_volt
     """RMS Voltage measurement."""
 
     SENSOR_ATTR = "rms_voltage"
-    _attr_device_class: SensorDeviceClass = SensorDeviceClass.CURRENT
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.VOLTAGE
     _attr_should_poll = False  # Poll indirectly by ElectricalMeasurementSensor
     _attr_name: str = "RMS voltage"
     _attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
@@ -871,7 +871,7 @@ class AqaraPetFeederPortionsDispensed(Sensor, id_suffix="portions_dispensed"):
 
 @MULTI_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
 class AqaraPetFeederWeightDispensed(Sensor, id_suffix="weight_dispensed"):
-    """Sensor that displays the weight weight dispensed by the pet feeder."""
+    """Sensor that displays the weight dispensed by the pet feeder."""
 
     SENSOR_ATTR = "weight_dispensed"
     _attr_name: str = "Weight dispensed today"
