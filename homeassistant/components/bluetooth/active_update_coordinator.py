@@ -21,7 +21,7 @@ _T = TypeVar("_T")
 
 
 class ActiveBluetoothDataUpdateCoordinator(
-    Generic[_T], PassiveBluetoothDataUpdateCoordinator
+    PassiveBluetoothDataUpdateCoordinator, Generic[_T]
 ):
     """
     A coordinator that receives passive data from advertisements but can also poll.

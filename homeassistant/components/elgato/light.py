@@ -76,7 +76,7 @@ class ElgatoLight(
     ) -> None:
         """Initialize Elgato Light."""
         super().__init__(client, info, mac)
-        CoordinatorEntity.__init__(self, coordinator)
+        super(CoordinatorEntity, self).__init__(coordinator)
 
         self._attr_min_mireds = 143
         self._attr_max_mireds = 344
