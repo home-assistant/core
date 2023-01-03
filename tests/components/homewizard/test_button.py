@@ -60,8 +60,8 @@ async def test_identify_button_is_loaded(
     assert entry.unique_id == "aabbccddeeff_identify"
 
 
-async def test_cloud_connection_on_off(hass, mock_config_entry_data, mock_config_entry):
-    """Test the creation and values of the Litter-Robot button."""
+async def test_identify_press(hass, mock_config_entry_data, mock_config_entry):
+    """Test button press is handled correctly."""
 
     api = get_mock_device(product_type="HWE-SKT", firmware_version="3.02")
 
