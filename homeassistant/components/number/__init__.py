@@ -223,7 +223,7 @@ class NumberDeviceClass(StrEnum):
     """
 
     PRECIPITATION = "precipitation"
-    """Precipitation.
+    """Accumulated precipitation.
 
     Unit of measurement: UnitOfPrecipitationDepth
     - SI / metric: `cm`, `mm`

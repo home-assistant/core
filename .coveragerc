@@ -196,9 +196,6 @@ omit =
     homeassistant/components/control4/const.py
     homeassistant/components/control4/director_utils.py
     homeassistant/components/control4/light.py
-    homeassistant/components/coolmaster/__init__.py
-    homeassistant/components/coolmaster/climate.py
-    homeassistant/components/coolmaster/const.py
     homeassistant/components/cppm_tracker/device_tracker.py
     homeassistant/components/crownstone/__init__.py
     homeassistant/components/crownstone/const.py
@@ -1118,8 +1115,6 @@ omit =
     homeassistant/components/sesame/lock.py
     homeassistant/components/seven_segments/image_processing.py
     homeassistant/components/seventeentrack/sensor.py
-    homeassistant/components/sfr_box/__init__.py
-    homeassistant/components/sfr_box/coordinator.py
     homeassistant/components/sfr_box/sensor.py
     homeassistant/components/shiftr/*
     homeassistant/components/shodan/sensor.py
@@ -1597,6 +1592,11 @@ omit =
     homeassistant/components/zerproc/__init__.py
     homeassistant/components/zerproc/const.py
     homeassistant/components/zestimate/sensor.py
+    homeassistant/components/zeversolar/__init__.py
+    homeassistant/components/zeversolar/const.py
+    homeassistant/components/zeversolar/coordinator.py
+    homeassistant/components/zeversolar/entity.py
+    homeassistant/components/zeversolar/sensor.py
     homeassistant/components/zha/api.py
     homeassistant/components/zha/core/channels/*
     homeassistant/components/zha/core/const.py
