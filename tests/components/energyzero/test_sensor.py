@@ -1,8 +1,12 @@
 """Tests for the sensors provided by the EnergyZero integration."""
 
+from unittest.mock import MagicMock
+
+from energyzero import EnergyZeroNoDataError
 import pytest
 
 from homeassistant.components.energyzero.const import DOMAIN
+from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
@@ -10,15 +14,18 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     CURRENCY_EURO,
     ENERGY_KILO_WATT_HOUR,
+    STATE_UNKNOWN,
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -149,3 +156,25 @@ async def test_gas_today(
     assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
     assert not device_entry.model
     assert not device_entry.sw_version
+
+
+@pytest.mark.freeze_time("2022-12-07 15:00:00")
+async def test_no_gas_today(
+    hass: HomeAssistant, mock_energyzero: MagicMock, init_integration: MockConfigEntry
+) -> None:
+    """Test the EnergyZero - No gas sensors available."""
+    await async_setup_component(hass, "homeassistant", {})
+
+    mock_energyzero.gas_prices.side_effect = EnergyZeroNoDataError
+
+    await hass.services.async_call(
+        "homeassistant",
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ["sensor.energyzero_today_gas_current_hour_price"]},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energyzero_today_gas_current_hour_price")
+    assert state
+    assert state.state == STATE_UNKNOWN
