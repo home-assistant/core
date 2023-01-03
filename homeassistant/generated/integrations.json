@@ -2543,7 +2543,7 @@
       "iot_class": "cloud_polling"
     },
     "isy994": {
-      "name": "Universal Devices ISY994",
+      "name": "Universal Devices ISY/IoX",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
@@ -4739,6 +4739,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
+    },
+    "sfr_box": {
+      "name": "SFR Box",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "sharkiq": {
       "name": "Shark IQ",

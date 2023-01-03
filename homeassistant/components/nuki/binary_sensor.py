@@ -9,6 +9,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import NukiEntity
 from .const import ATTR_NUKI_ID, DATA_COORDINATOR, DATA_LOCKS, DOMAIN as NUKI_DOMAIN
@@ -19,7 +20,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Nuki lock binary sensor."""
     data = hass.data[NUKI_DOMAIN][entry.entry_id]
-    coordinator = data[DATA_COORDINATOR]
+    coordinator: DataUpdateCoordinator[None] = data[DATA_COORDINATOR]
 
     entities = []
 

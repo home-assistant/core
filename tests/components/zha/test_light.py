@@ -1,4 +1,4 @@
-"""Test zha light."""
+"""Test ZHA light."""
 from datetime import timedelta
 from unittest.mock import AsyncMock, call, patch, sentinel
 
@@ -86,7 +86,7 @@ LIGHT_COLOR = {
 
 @pytest.fixture(autouse=True)
 def light_platform_only():
-    """Only setup the light and required base platforms to speed up tests."""
+    """Only set up the light and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
@@ -104,7 +104,7 @@ def light_platform_only():
 
 @pytest.fixture
 async def coordinator(hass, zigpy_device_mock, zha_device_joined):
-    """Test zha light platform."""
+    """Test ZHA light platform."""
 
     zigpy_device = zigpy_device_mock(
         {
@@ -126,7 +126,7 @@ async def coordinator(hass, zigpy_device_mock, zha_device_joined):
 
 @pytest.fixture
 async def device_light_1(hass, zigpy_device_mock, zha_device_joined):
-    """Test zha light platform."""
+    """Test ZHA light platform."""
 
     zigpy_device = zigpy_device_mock(
         {
@@ -158,7 +158,7 @@ async def device_light_1(hass, zigpy_device_mock, zha_device_joined):
 
 @pytest.fixture
 async def device_light_2(hass, zigpy_device_mock, zha_device_joined):
-    """Test zha light platform."""
+    """Test ZHA light platform."""
 
     zigpy_device = zigpy_device_mock(
         {
@@ -191,7 +191,7 @@ async def device_light_2(hass, zigpy_device_mock, zha_device_joined):
 
 @pytest.fixture
 async def device_light_3(hass, zigpy_device_mock, zha_device_joined):
-    """Test zha light platform."""
+    """Test ZHA light platform."""
 
     zigpy_device = zigpy_device_mock(
         {
@@ -252,7 +252,7 @@ async def eWeLink_light(hass, zigpy_device_mock, zha_device_joined):
 
 
 async def test_light_refresh(hass, zigpy_device_mock, zha_device_joined_restored):
-    """Test zha light platform refresh."""
+    """Test ZHA light platform refresh."""
 
     # create zigpy devices
     zigpy_device = zigpy_device_mock(LIGHT_ON_OFF)
@@ -312,7 +312,7 @@ async def test_light_refresh(hass, zigpy_device_mock, zha_device_joined_restored
 async def test_light(
     hass, zigpy_device_mock, zha_device_joined_restored, device, reporting
 ):
-    """Test zha light platform."""
+    """Test ZHA light platform."""
 
     # create zigpy devices
     zigpy_device = zigpy_device_mock(device)
@@ -427,7 +427,7 @@ async def test_light_initialization(
     config_override,
     expected_state,
 ):
-    """Test zha light initialization with cached attributes and color modes."""
+    """Test ZHA light initialization with cached attributes and color modes."""
 
     # create zigpy devices
     zigpy_device = zigpy_device_mock(LIGHT_COLOR)

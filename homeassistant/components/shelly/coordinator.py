@@ -267,7 +267,7 @@ class ShellyBlockCoordinator(DataUpdateCoordinator[None]):
         self.shutdown()
 
 
-class ShellyRestCoordinator(DataUpdateCoordinator):
+class ShellyRestCoordinator(DataUpdateCoordinator[None]):
     """Coordinator for a Shelly REST device."""
 
     def __init__(
@@ -579,7 +579,7 @@ class ShellyRpcCoordinator(DataUpdateCoordinator[None]):
         await self.shutdown()
 
 
-class ShellyRpcPollingCoordinator(DataUpdateCoordinator):
+class ShellyRpcPollingCoordinator(DataUpdateCoordinator[None]):
     """Polling coordinator for a Shelly RPC based device."""
 
     def __init__(

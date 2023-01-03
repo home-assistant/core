@@ -83,5 +83,18 @@
                 "description": "Escolha o m\u00e9todo de conex\u00e3o com o gateway"
             }
         }
+    },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Atualize todas as automa\u00e7\u00f5es ou scripts que usam esse servi\u00e7o para usar o servi\u00e7o `{alternate_service}` com um ID de entidade de destino de `{alternate_target}`.",
+                        "title": "O servi\u00e7o {deprecated_service} ser\u00e1 removido"
+                    }
+                }
+            },
+            "title": "O servi\u00e7o {deprecated_service} ser\u00e1 removido"
+        }
     }
 }

@@ -3,7 +3,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from hole.exceptions import HoleError
 
-from homeassistant.components.pi_hole.const import CONF_STATISTICS_ONLY
+from homeassistant.components.pi_hole.const import (
+    CONF_STATISTICS_ONLY,
+    DEFAULT_LOCATION,
+    DEFAULT_NAME,
+    DEFAULT_SSL,
+    DEFAULT_STATISTICS_ONLY,
+    DEFAULT_VERIFY_SSL,
+)
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -46,6 +53,15 @@ NAME = "Pi hole"
 API_KEY = "apikey"
 SSL = False
 VERIFY_SSL = True
+
+CONF_DATA_DEFAULTS = {
+    CONF_HOST: f"{HOST}:{PORT}",
+    CONF_LOCATION: DEFAULT_LOCATION,
+    CONF_NAME: DEFAULT_NAME,
+    CONF_STATISTICS_ONLY: DEFAULT_STATISTICS_ONLY,
+    CONF_SSL: DEFAULT_SSL,
+    CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
+}
 
 CONF_DATA = {
     CONF_HOST: f"{HOST}:{PORT}",

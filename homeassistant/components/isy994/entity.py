@@ -33,7 +33,7 @@ from .const import DOMAIN
 
 
 class ISYEntity(Entity):
-    """Representation of an ISY994 device."""
+    """Representation of an ISY device."""
 
     _name: str | None = None
     _attr_should_poll = False
@@ -56,12 +56,12 @@ class ISYEntity(Entity):
 
     @callback
     def async_on_update(self, event: NodeProperty) -> None:
-        """Handle the update event from the ISY994 Node."""
+        """Handle the update event from the ISY Node."""
         self.async_write_ha_state()
 
     @callback
     def async_on_control(self, event: NodeProperty) -> None:
-        """Handle a control event from the ISY994 Node."""
+        """Handle a control event from the ISY Node."""
         event_data = {
             "entity_id": self.entity_id,
             "control": event.control,
@@ -80,9 +80,6 @@ class ISYEntity(Entity):
     @property
     def device_info(self) -> DeviceInfo | None:
         """Return the device_info of the device."""
-        if hasattr(self._node, "protocol") and self._node.protocol == PROTO_GROUP:
-            # not a device
-            return None
         isy = self._node.isy
         uuid = isy.configuration["uuid"]
         node = self._node
@@ -90,9 +87,17 @@ class ISYEntity(Entity):
 
         basename = self._name or str(self._node.name)
 
-        if hasattr(self._node, "parent_node") and self._node.parent_node is not None:
+        if hasattr(node, "protocol") and node.protocol == PROTO_GROUP:
+            # If Group has only 1 Controller, link to that device, otherwise link to ISY Hub
+            if len(node.controllers) != 1:
+                return DeviceInfo(identifiers={(DOMAIN, uuid)})
+
+            node = isy.nodes.get_by_id(node.controllers[0])
+            basename = node.name
+
+        if hasattr(node, "parent_node") and node.parent_node is not None:
             # This is not the parent node, get the parent node.
-            node = self._node.parent_node
+            node = node.parent_node
             basename = node.name
 
         device_info = DeviceInfo(
@@ -105,7 +110,9 @@ class ISYEntity(Entity):
 
         if hasattr(node, "address"):
             assert isinstance(node.address, str)
-            device_info[ATTR_NAME] = f"{basename} ({node.address})"
+            device_info[
+                ATTR_NAME
+            ] = f"{basename} ({(node.address.rpartition(' ')[0] or node.address)})"
         if hasattr(node, "primary_node"):
             device_info[ATTR_IDENTIFIERS] = {(DOMAIN, f"{uuid}_{node.address}")}
         # ISYv5 Device Types
@@ -232,10 +239,10 @@ class ISYNodeEntity(ISYEntity):
 
 
 class ISYProgramEntity(ISYEntity):
-    """Representation of an ISY994 program base."""
+    """Representation of an ISY program base."""
 
     def __init__(self, name: str, status: Any | None, actions: Program = None) -> None:
-        """Initialize the ISY994 program-based entity."""
+        """Initialize the ISY program-based entity."""
         super().__init__(status)
         self._name = name
         self._actions = actions

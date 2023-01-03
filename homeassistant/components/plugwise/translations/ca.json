@@ -47,7 +47,7 @@
                     "auto": "Autom\u00e0tic",
                     "boost": "Incrementat",
                     "comfort": "Confort",
-                    "off": "OFF"
+                    "off": "Inactiu"
                 }
             },
             "regulation_mode": {
@@ -56,7 +56,7 @@
                     "bleeding_hot": "Molt calent",
                     "cooling": "Refredant",
                     "heating": "Escalfant",
-                    "off": "OFF"
+                    "off": "Inactiu"
                 }
             }
         }

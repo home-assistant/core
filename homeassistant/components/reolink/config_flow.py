@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
+from typing import Any
 
-from reolink_ip.exceptions import ApiError, CredentialsInvalidError
+from reolink_aio.exceptions import ApiError, CredentialsInvalidError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -18,6 +18,8 @@ from .host import ReolinkHost
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_OPTIONS = {CONF_PROTOCOL: DEFAULT_PROTOCOL}
+
 
 class ReolinkOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Reolink options."""
@@ -26,10 +28,12 @@ class ReolinkOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize ReolinkOptionsFlowHandler."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None) -> FlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the Reolink options."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(data=user_input)
 
         return self.async_show_form(
             step_id="init",
@@ -37,9 +41,7 @@ class ReolinkOptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Required(
                         CONF_PROTOCOL,
-                        default=self.config_entry.options.get(
-                            CONF_PROTOCOL, DEFAULT_PROTOCOL
-                        ),
+                        default=self.config_entry.options[CONF_PROTOCOL],
                     ): vol.In(["rtsp", "rtmp"]),
                 }
             ),
@@ -51,8 +53,6 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    host: ReolinkHost | None = None
-
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -61,14 +61,16 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Options callback for Reolink."""
         return ReolinkOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         errors = {}
         placeholders = {}
 
         if user_input is not None:
             try:
-                await self.async_obtain_host_settings(self.hass, user_input)
+                host = await async_obtain_host_settings(self.hass, user_input)
             except CannotConnect:
                 errors[CONF_HOST] = "cannot_connect"
             except CredentialsInvalidError:
@@ -81,19 +83,17 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 placeholders["error"] = str(err)
                 errors[CONF_HOST] = "unknown"
 
-            self.host = cast(ReolinkHost, self.host)
-
             if not errors:
-                user_input[CONF_PORT] = self.host.api.port
-                user_input[CONF_USE_HTTPS] = self.host.api.use_https
+                user_input[CONF_PORT] = host.api.port
+                user_input[CONF_USE_HTTPS] = host.api.use_https
 
-                await self.async_set_unique_id(
-                    self.host.unique_id, raise_on_progress=False
-                )
+                await self.async_set_unique_id(host.unique_id, raise_on_progress=False)
                 self._abort_if_unique_id_configured(updates=user_input)
 
                 return self.async_create_entry(
-                    title=str(self.host.api.nvr_name), data=user_input
+                    title=str(host.api.nvr_name),
+                    data=user_input,
+                    options=DEFAULT_OPTIONS,
                 )
 
         data_schema = vol.Schema(
@@ -118,19 +118,20 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders=placeholders,
         )
 
-    async def async_obtain_host_settings(
-        self, hass: core.HomeAssistant, user_input: dict
-    ):
-        """Initialize the Reolink host and get the host information."""
-        host = ReolinkHost(hass, user_input, {})
 
-        try:
-            if not await host.async_init():
-                raise CannotConnect
-        finally:
-            await host.stop()
+async def async_obtain_host_settings(
+    hass: core.HomeAssistant, user_input: dict
+) -> ReolinkHost:
+    """Initialize the Reolink host and get the host information."""
+    host = ReolinkHost(hass, user_input, DEFAULT_OPTIONS)
 
-        self.host = host
+    try:
+        if not await host.async_init():
+            raise CannotConnect
+    finally:
+        await host.stop()
+
+    return host
 
 
 class CannotConnect(exceptions.HomeAssistantError):
