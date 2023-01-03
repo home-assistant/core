@@ -411,7 +411,7 @@ class BaseLight(LogMixin, light.LightEntity):
         if self._zha_config_enable_light_transitioning_flag:
             self.async_transition_set_flag()
 
-        # is not none looks odd here but it will override built in bulb transition times if we pass 0 in here
+        # is not none looks odd here, but it will override built in bulb transition times if we pass 0 in here
         if transition is not None and supports_level:
             result = await self._level_channel.move_to_level_with_on_off(
                 level=0,
@@ -428,10 +428,15 @@ class BaseLight(LogMixin, light.LightEntity):
             return
         self._attr_state = False
 
-        if supports_level:
-            # store current brightness so that the next turn_on uses it.
-            self._off_with_transition = transition is not None
+        if supports_level and not self._off_with_transition:
+            # store current brightness so that the next turn_on uses it:
+            # when using "enhanced turn on"
             self._off_brightness = self._attr_brightness
+            if transition is not None:
+                # save for when calling turn_on without a brightness:
+                # current_level is set to 1 after transitioning to level 0, needed for correct state with light groups
+                self._attr_brightness = 1
+                self._off_with_transition = transition is not None
 
         self.async_write_ha_state()
 
@@ -785,18 +790,31 @@ class Light(BaseLight, ZhaEntity):
         if not self._attr_available:
             return
         self.debug("polling current state")
+
         if self._on_off_channel:
             state = await self._on_off_channel.get_attribute_value(
                 "on_off", from_cache=False
             )
+            # check if transition started whilst waiting for polled state
+            if self.is_transitioning:
+                return
+
             if state is not None:
                 self._attr_state = state
+                if state:  # reset "off with transition" flag if the light is on
+                    self._off_with_transition = False
+                    self._off_brightness = None
+
         if self._level_channel:
             level = await self._level_channel.get_attribute_value(
                 "current_level", from_cache=False
             )
+            # check if transition started whilst waiting for polled state
+            if self.is_transitioning:
+                return
             if level is not None:
                 self._attr_brightness = level
+
         if self._color_channel:
             attributes = [
                 "color_mode",
@@ -824,6 +842,11 @@ class Light(BaseLight, ZhaEntity):
             results = await self._color_channel.get_attributes(
                 attributes, from_cache=False, only_cache=False
             )
+
+            # although rare, a transition might have been started while we were waiting for the polled attributes,
+            # so abort if we are transitioning, as that state will not be accurate
+            if self.is_transitioning:
+                return
 
             if (color_mode := results.get("color_mode")) is not None:
                 if color_mode == Color.ColorMode.Color_temperature:
@@ -898,9 +921,7 @@ class Light(BaseLight, ZhaEntity):
         if self.entity_id in signal["entity_ids"] and self._attr_available:
             self.debug("member assuming group state with: %s", update_params)
 
-            # state is always set (light.turn_on/light.turn_off)
-            self._attr_state = update_params.get("state")
-
+            state = update_params["state"]
             brightness = update_params.get(light.ATTR_BRIGHTNESS)
             color_mode = update_params.get(light.ATTR_COLOR_MODE)
             color_temp = update_params.get(light.ATTR_COLOR_TEMP)
@@ -909,6 +930,30 @@ class Light(BaseLight, ZhaEntity):
             effect = update_params.get(light.ATTR_EFFECT)
 
             supported_modes = self._attr_supported_color_modes
+
+            # unset "off brightness" and "off with transition" if group turned on this light
+            if state and not self._attr_state:
+                self._off_with_transition = False
+                self._off_brightness = None
+
+            # set "off brightness" and "off with transition" if group turned off this light
+            elif (
+                not state  # group is turning the light off
+                and self._attr_state  # check the light was not already off (to not override _off_with_transition)
+                and brightness_supported(supported_modes)
+            ):
+                # use individual brightness, instead of possibly averaged brightness from group
+                self._off_brightness = self._attr_brightness
+                self._off_with_transition = update_params["off_with_transition"]
+
+            # Note: If individual lights have off_with_transition set, but not the group,
+            # and the group is then turned on without a level, individual lights might fall back to brightness level 1.
+            # Since all lights might need different brightness levels to be turned on, we can't use one group call.
+            # And making individual calls when turning on a ZHA group would cause a lot of traffic.
+            # In this case, turn_on should either just be called with a level or individual turn_on calls can be used.
+
+            # state is always set (light.turn_on/light.turn_off)
+            self._attr_state = state
 
             # before assuming a group state attribute, check if the attribute was actually set in that call
             if brightness is not None and brightness_supported(supported_modes):
@@ -1037,9 +1082,12 @@ class LightGroup(BaseLight, ZhaGroupEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
+        # "off with transition" and "off brightness" will get overridden when turning on the group,
+        # but they are needed for setting the assumed member state correctly, so save them here
+        off_brightness = self._off_brightness if self._off_with_transition else None
         await super().async_turn_on(**kwargs)
         if self._zha_config_group_members_assume_state:
-            self._send_member_assume_state_event(True, kwargs)
+            self._send_member_assume_state_event(True, kwargs, off_brightness)
         if self.is_transitioning:  # when transitioning, state is refreshed at the end
             return
         if self._debounced_member_refresh:
@@ -1063,6 +1111,12 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         on_states = [state for state in states if state.state == STATE_ON]
 
         self._attr_state = len(on_states) > 0
+
+        # reset "off with transition" flag if any member is on
+        if self._attr_state:
+            self._off_with_transition = False
+            self._off_brightness = None
+
         self._attr_available = any(state.state != STATE_UNAVAILABLE for state in states)
 
         self._attr_brightness = helpers.reduce_attribute(
@@ -1148,13 +1202,21 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             {"entity_ids": self._entity_ids},
         )
 
-    def _send_member_assume_state_event(self, state, service_kwargs) -> None:
+    def _send_member_assume_state_event(
+        self, state, service_kwargs, off_brightness=None
+    ) -> None:
         """Send an assume event to all members of the group."""
-        update_params = {"state": state}
+        update_params = {
+            "state": state,
+            "off_with_transition": self._off_with_transition,
+        }
 
         # check if the parameters were actually updated in the service call before updating members
-        if light.ATTR_BRIGHTNESS in service_kwargs:
+        if light.ATTR_BRIGHTNESS in service_kwargs:  # or off brightness
             update_params[light.ATTR_BRIGHTNESS] = self._attr_brightness
+        elif off_brightness is not None:
+            # if we turn on the group light with "off brightness", pass that to the members
+            update_params[light.ATTR_BRIGHTNESS] = off_brightness
 
         if light.ATTR_COLOR_TEMP in service_kwargs:
             update_params[light.ATTR_COLOR_MODE] = self._attr_color_mode
