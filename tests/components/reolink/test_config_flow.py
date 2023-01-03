@@ -3,7 +3,7 @@ import json
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from reolink_ip.exceptions import ApiError, CredentialsInvalidError
+from reolink_aio.exceptions import ApiError, CredentialsInvalidError
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.reolink import const
