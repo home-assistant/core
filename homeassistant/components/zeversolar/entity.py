@@ -12,7 +12,7 @@ class ZeversolarEntity(
     CoordinatorEntity[ZeversolarCoordinator],
 ):
     """Defines a base Zeversolar entity."""
-    
+
     _attr_has_entity_name = True
 
     def __init__(
