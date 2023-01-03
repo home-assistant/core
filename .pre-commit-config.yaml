@@ -1,39 +1,45 @@
 repos:
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.1.0
+    rev: v3.3.1
     hooks:
       - id: pyupgrade
         args: [--py39-plus]
+  - repo: https://github.com/PyCQA/autoflake
+    rev: v2.0.0
+    hooks:
+      - id: autoflake
+        args:
+          - --in-place
+          - --remove-all-unused-imports
   - repo: https://github.com/psf/black
-    rev: 22.10.0
+    rev: 22.12.0
     hooks:
       - id: black
         args:
-          - --safe
           - --quiet
         files: ^((homeassistant|pylint|script|tests)/.+)?[^/]+\.py$
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.1.0
+    rev: v2.2.2
     hooks:
       - id: codespell
         args:
-          - --ignore-words-list=hass,alot,bre,datas,dof,dur,ether,farenheit,hist,iff,iif,ines,ist,lightsensor,mut,nd,pres,referer,rime,ser,serie,sur,te,technik,ue,uint,visability,wan,wanna,withing,iam,incomfort,ba,haa,pullrequests
+          - --ignore-words-list=additionals,alle,alot,ba,bre,bund,datas,dof,dur,ether,farenheit,falsy,fo,haa,hass,hist,iam,iff,iif,incomfort,ines,ist,lightsensor,mut,nam,nd,pres,pullrequests,referer,resset,rime,ser,serie,sur,te,technik,ue,uint,unsecure,visability,wan,wanna,withing,zar
           - --skip="./.*,*.csv,*.json"
           - --quiet-level=2
         exclude_types: [csv, json]
         exclude: ^tests/fixtures/|homeassistant/generated/
   - repo: https://github.com/PyCQA/flake8
-    rev: 4.0.1
+    rev: 6.0.0
     hooks:
       - id: flake8
         additional_dependencies:
-          - pycodestyle==2.8.0
-          - pyflakes==2.4.0
+          - pycodestyle==2.10.0
+          - pyflakes==3.0.1
           - flake8-docstrings==1.6.0
           - pydocstyle==6.1.1
-          - flake8-comprehensions==3.10.0
-          - flake8-noqa==1.2.8
-          - mccabe==0.6.1
+          - flake8-comprehensions==3.10.1
+          - flake8-noqa==1.3.0
+          - mccabe==0.7.0
         files: ^(homeassistant|script|tests)/.+\.py$
   - repo: https://github.com/PyCQA/bandit
     rev: 1.7.4
@@ -45,7 +51,7 @@ repos:
           - --configfile=tests/bandit.yaml
         files: ^(homeassistant|script|tests)/.+\.py$
   - repo: https://github.com/PyCQA/isort
-    rev: 5.10.1
+    rev: 5.11.4
     hooks:
       - id: isort
   - repo: https://github.com/pre-commit/pre-commit-hooks

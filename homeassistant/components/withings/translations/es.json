@@ -24,10 +24,6 @@
                 "description": "Proporciona un nombre de perfil \u00fanico para estos datos. Por lo general, este es el nombre del perfil que seleccionaste en el paso anterior.",
                 "title": "Perfil de usuario."
             },
-            "reauth": {
-                "description": "El perfil \"{profile}\" debe volver a autenticarse para continuar recibiendo datos de Withings.",
-                "title": "Volver a autenticar la integraci\u00f3n"
-            },
             "reauth_confirm": {
                 "description": "El perfil \"{profile}\" debe volver a autenticarse para continuar recibiendo datos de Withings.",
                 "title": "Volver a autenticar la integraci\u00f3n"

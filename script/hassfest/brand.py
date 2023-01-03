@@ -55,7 +55,7 @@ def _validate_brand(
     ):
         config.add_error(
             "brand",
-            f"{brand.path.name}: Brand '{brand.brand['domain']}' "
+            f"{brand.path.name}: Brand '{brand.domain}' "
             f"is an integration but is missing in the brand's 'integrations' list'",
         )
 

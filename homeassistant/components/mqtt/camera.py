@@ -56,7 +56,7 @@ PLATFORM_SCHEMA_MODERN = vol.All(
     PLATFORM_SCHEMA_BASE.schema,
 )
 
-# Configuring MQTT Camera under the camera platform key is deprecated in HA Core 2022.6
+# Configuring MQTT Camera under the camera platform key was deprecated in HA Core 2022.6
 # Setup for the legacy YAML format was removed in HA Core 2022.12
 PLATFORM_SCHEMA = vol.All(
     warn_for_legacy_schema(camera.DOMAIN),

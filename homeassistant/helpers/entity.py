@@ -144,7 +144,7 @@ def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
 
 
 def get_unit_of_measurement(hass: HomeAssistant, entity_id: str) -> str | None:
-    """Get unit of measurement class of an entity.
+    """Get unit of measurement of an entity.
 
     First try the statemachine, then entity registry.
     """
@@ -223,6 +223,7 @@ class EntityDescription:
     icon: str | None = None
     has_entity_name: bool = False
     name: str | None = None
+    translation_key: str | None = None
     unit_of_measurement: str | None = None
 
 
@@ -290,6 +291,7 @@ class Entity(ABC):
     _attr_should_poll: bool = True
     _attr_state: StateType = STATE_UNKNOWN
     _attr_supported_features: int | None = None
+    _attr_translation_key: str | None
     _attr_unique_id: str | None = None
     _attr_unit_of_measurement: str | None
 
@@ -486,6 +488,15 @@ class Entity(ABC):
             return self.entity_description.entity_category
         return None
 
+    @property
+    def translation_key(self) -> str | None:
+        """Return the translation key to translate the entity's states."""
+        if hasattr(self, "_attr_translation_key"):
+            return self._attr_translation_key
+        if hasattr(self, "entity_description"):
+            return self.entity_description.translation_key
+        return None
+
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
     # are used to perform a very specific function. Overwriting these may
@@ -568,7 +579,10 @@ class Entity(ABC):
                 self._disabled_reported = True
                 assert self.platform is not None
                 _LOGGER.warning(
-                    "Entity %s is incorrectly being triggered for updates while it is disabled. This is a bug in the %s integration",
+                    (
+                        "Entity %s is incorrectly being triggered for updates while it"
+                        " is disabled. This is a bug in the %s integration"
+                    ),
                     self.entity_id,
                     self.platform.platform_name,
                 )
@@ -756,7 +770,8 @@ class Entity(ABC):
         """Start adding an entity to a platform."""
         if self._platform_state == EntityPlatformState.ADDED:
             raise HomeAssistantError(
-                f"Entity {self.entity_id} cannot be added a second time to an entity platform"
+                f"Entity {self.entity_id} cannot be added a second time to an entity"
+                " platform"
             )
 
         self.hass = hass

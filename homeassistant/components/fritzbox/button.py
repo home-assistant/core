@@ -31,15 +31,15 @@ class FritzBoxTemplate(FritzBoxEntity, ButtonEntity):
     """Interface between FritzhomeTemplate and hass."""
 
     @property
-    def entity(self) -> FritzhomeTemplate:
-        """Return the template entity."""
+    def data(self) -> FritzhomeTemplate:
+        """Return the template data entity."""
         return self.coordinator.data.templates[self.ain]
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         return DeviceInfo(
-            name=self.entity.name,
+            name=self.data.name,
             identifiers={(FRITZBOX_DOMAIN, self.ain)},
             configuration_url=self.coordinator.configuration_url,
             manufacturer="AVM",

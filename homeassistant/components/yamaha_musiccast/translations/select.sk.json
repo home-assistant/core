@@ -1,0 +1,52 @@
+{
+    "state": {
+        "yamaha_musiccast__dimmer": {
+            "auto": "Auto"
+        },
+        "yamaha_musiccast__zone_equalizer_mode": {
+            "auto": "Auto",
+            "bypass": "Bypass",
+            "manual": "Manu\u00e1lne"
+        },
+        "yamaha_musiccast__zone_link_audio_delay": {
+            "audio_sync": "Synchroniz\u00e1cia zvuku",
+            "audio_sync_off": "Synchroniz\u00e1cia zvuku je vypnut\u00e1",
+            "audio_sync_on": "Synchroniz\u00e1cia zvuku je zapnut\u00e1",
+            "balanced": "Vyv\u00e1\u017een\u00fd",
+            "lip_sync": "Synchroniz\u00e1cia pier"
+        },
+        "yamaha_musiccast__zone_link_audio_quality": {
+            "compressed": "Komprimovan\u00e9",
+            "uncompressed": "Nekomprimovan\u00e9"
+        },
+        "yamaha_musiccast__zone_link_control": {
+            "speed": "R\u00fdchlos\u0165",
+            "stability": "Stabilita",
+            "standard": "\u0160tandard"
+        },
+        "yamaha_musiccast__zone_sleep": {
+            "120 min": "120 min\u00fat",
+            "30 min": "30 min\u00fat",
+            "60 min": "60 min\u00fat",
+            "90 min": "90 min\u00fat",
+            "off": "Vypnut\u00e9"
+        },
+        "yamaha_musiccast__zone_surr_decoder_type": {
+            "auto": "Auto",
+            "dolby_pl": "Dolby ProLogic",
+            "dolby_pl2x_game": "Dolby ProLogic 2x Game",
+            "dolby_pl2x_movie": "Dolby ProLogic 2x Movie",
+            "dolby_pl2x_music": "Dolby ProLogic 2x Music",
+            "dolby_surround": "Dolby Surround",
+            "dts_neo6_cinema": "DTS Neo:6 Kino",
+            "dts_neo6_music": "DTS Neo:6 Hudba",
+            "dts_neural_x": "DTS Neural:X",
+            "toggle": "Prepn\u00fa\u0165"
+        },
+        "yamaha_musiccast__zone_tone_control_mode": {
+            "auto": "Auto",
+            "bypass": "Bypass",
+            "manual": "Ru\u010dne"
+        }
+    }
+}

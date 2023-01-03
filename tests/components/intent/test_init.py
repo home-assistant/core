@@ -46,7 +46,15 @@ async def test_http_handle_intent(hass, hass_client, hass_admin_user):
         "card": {
             "simple": {"content": "You chose a Belgian.", "title": "Beer ordered"}
         },
-        "speech": {"plain": {"extra_data": None, "speech": "I've ordered a Belgian!"}},
+        "speech": {
+            "plain": {
+                "extra_data": None,
+                "speech": "I've ordered a Belgian!",
+            }
+        },
+        "language": hass.config.language,
+        "response_type": "action_done",
+        "data": {"targets": [], "success": [], "failed": []},
     }
 
 

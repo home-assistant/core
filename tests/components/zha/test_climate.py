@@ -1,4 +1,4 @@
-"""Test zha climate."""
+"""Test ZHA climate."""
 from unittest.mock import patch
 
 import pytest
@@ -173,7 +173,7 @@ ZCL_ATTR_PLUG = {
 
 @pytest.fixture(autouse=True)
 def climate_platform_only():
-    """Only setup the climate and required base platforms to speed up tests."""
+    """Only set up the climate and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
@@ -486,7 +486,7 @@ async def test_climate_hvac_action_pi_demand(hass, device_climate):
     ),
 )
 async def test_hvac_mode(hass, device_climate, sys_mode, hvac_mode):
-    """Test HVAC modee."""
+    """Test HVAC mode."""
 
     thrm_cluster = device_climate.device.endpoints[1].thermostat
     entity_id = await find_entity_id(Platform.CLIMATE, device_climate, hass)

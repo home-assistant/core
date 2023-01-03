@@ -5,7 +5,9 @@
             "addon_install_failed": "Silicon Labs Multiprotocol add-on'i paigaldamine eba\u00f5nnestus.",
             "addon_set_config_failed": "Silicon Labs Multiprotocol konfiguratsiooni seadistamine eba\u00f5nnestus.",
             "addon_start_failed": "Silicon Labsi mitmeprotokolli lisandmooduli k\u00e4ivitamine nurjus.",
-            "not_hassio": "Riistvaravalikuid saab konfigureerida ainult HassOS-i paigaldustes."
+            "disabled_due_to_bug": "Riistvaravalikud on vea parandamise ajal ajutiselt keelatud. [Lisateave] ({url})",
+            "not_hassio": "Riistvaravalikuid saab konfigureerida ainult HassOS-i paigaldustes.",
+            "zha_migration_failed": "ZHA sidumise siirdamine nurjus."
         },
         "error": {
             "unknown": "Ootamatu t\u00f5rge"
@@ -22,7 +24,7 @@
                 "data": {
                     "enable_multi_pan": "Luba multiprotokolli tugi"
                 },
-                "description": "Kui multiprotokollide tugi on lubatud, saab Home Assistant Yellow'i IEEE 802.15.4 raadiot kasutada samaaegselt nii Zigbee kui ka Threadi (mida kasutab Matter) jaoks. M\u00e4rkus: See on eksperimentaalne funktsioon.",
+                "description": "Kui mitme protokolli tugi on lubatud, saab Home Assistant Yellowi IEEE 802.15.4 raadiot kasutada samaaegselt nii Zigbee kui ka Threadi jaoks (kasutab Matter). Kui ZHA Zigbee integratsioon juba kasutab raadiot, konfigureeritakse ZHA \u00fcmber mitmeprotokollilise p\u00fcsivara kasutamiseks. \n\n M\u00e4rkus. See on eksperimentaalne funktsioon.",
                 "title": "Multiprotokollide toe lubamine IEEE 802.15.4 raadiosides"
             },
             "install_addon": {

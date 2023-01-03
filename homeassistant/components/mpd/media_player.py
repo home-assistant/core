@@ -338,10 +338,10 @@ class MpdDevice(MediaPlayerEntity):
         return None
 
     @property
-    def supported_features(self) -> MediaPlayerEntityFeature | int:
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         if self._status is None:
-            return 0
+            return MediaPlayerEntityFeature(0)
 
         supported = SUPPORT_MPD
         if "volume" in self._status:

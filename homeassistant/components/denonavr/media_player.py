@@ -8,7 +8,7 @@ import logging
 from typing import Any, TypeVar
 
 from denonavr import DenonAVR
-from denonavr.const import POWER_ON
+from denonavr.const import POWER_ON, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING
 from denonavr.exceptions import (
     AvrCommandError,
     AvrForbiddenError,
@@ -76,6 +76,14 @@ SERVICE_UPDATE_AUDYSSEY = "update_audyssey"
 _DenonDeviceT = TypeVar("_DenonDeviceT", bound="DenonDevice")
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
+
+
+DENON_STATE_MAPPING = {
+    STATE_ON: MediaPlayerState.ON,
+    STATE_OFF: MediaPlayerState.OFF,
+    STATE_PLAYING: MediaPlayerState.PLAYING,
+    STATE_PAUSED: MediaPlayerState.PAUSED,
+}
 
 
 async def async_setup_entry(
@@ -151,8 +159,10 @@ def async_log_errors(
             available = False
             if self.available:
                 _LOGGER.warning(
-                    "Timeout connecting to Denon AVR receiver at host %s. "
-                    "Device is unavailable",
+                    (
+                        "Timeout connecting to Denon AVR receiver at host %s. "
+                        "Device is unavailable"
+                    ),
                     self._receiver.host,
                 )
                 self._attr_available = False
@@ -160,8 +170,10 @@ def async_log_errors(
             available = False
             if self.available:
                 _LOGGER.warning(
-                    "Network error connecting to Denon AVR receiver at host %s. "
-                    "Device is unavailable",
+                    (
+                        "Network error connecting to Denon AVR receiver at host %s. "
+                        "Device is unavailable"
+                    ),
                     self._receiver.host,
                 )
                 self._attr_available = False
@@ -169,9 +181,11 @@ def async_log_errors(
             available = False
             if self.available:
                 _LOGGER.warning(
-                    "Denon AVR receiver at host %s responded with HTTP 403 error. "
-                    "Device is unavailable. Please consider power cycling your "
-                    "receiver",
+                    (
+                        "Denon AVR receiver at host %s responded with HTTP 403 error. "
+                        "Device is unavailable. Please consider power cycling your "
+                        "receiver"
+                    ),
                     self._receiver.host,
                 )
                 self._attr_available = False
@@ -243,9 +257,9 @@ class DenonDevice(MediaPlayerEntity):
             await self._receiver.async_update_audyssey()
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
-        return self._receiver.state
+        return DENON_STATE_MAPPING.get(self._receiver.state)
 
     @property
     def source_list(self):

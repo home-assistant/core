@@ -114,7 +114,7 @@ PLATFORM_SCHEMA_MODERN = vol.All(
     validate_options,
 )
 
-# Configuring MQTT Sensors under the sensor platform key is deprecated in HA Core 2022.6
+# Configuring MQTT Sensors under the sensor platform key was deprecated in HA Core 2022.6
 PLATFORM_SCHEMA = vol.All(
     warn_for_legacy_schema(sensor.DOMAIN),
 )
@@ -198,7 +198,10 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 self.hass, self._value_is_expired, expiration_at
             )
             _LOGGER.debug(
-                "State recovered after reload for %s, remaining time before expiring %s",
+                (
+                    "State recovered after reload for %s, remaining time before"
+                    " expiring %s"
+                ),
                 self.entity_id,
                 expiration_at - time_now,
             )

@@ -83,7 +83,6 @@ DEFAULT_EFFECT = False
 DEFAULT_FLASH_TIME_LONG = 10
 DEFAULT_FLASH_TIME_SHORT = 2
 DEFAULT_NAME = "MQTT JSON Light"
-DEFAULT_OPTIMISTIC = False
 DEFAULT_RGB = False
 DEFAULT_XY = False
 DEFAULT_HS = False
@@ -135,7 +134,6 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
             vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_QOS, default=DEFAULT_QOS): vol.All(
                 vol.Coerce(int), vol.In([0, 1, 2])
             ),
@@ -158,7 +156,7 @@ _PLATFORM_SCHEMA_BASE = (
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 
-# Configuring MQTT Lights under the light platform key is deprecated in HA Core 2022.6
+# Configuring MQTT Lights under the light platform key was deprecated in HA Core 2022.6
 PLATFORM_SCHEMA_JSON = vol.All(
     cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
     valid_color_configuration,

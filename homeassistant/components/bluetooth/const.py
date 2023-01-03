@@ -31,6 +31,15 @@ START_TIMEOUT = 15
 #
 FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS: Final = 60 * 15
 
+# The maximum time between advertisements for a device to be considered
+# stale when the advertisement tracker can determine the interval for
+# connectable devices.
+#
+# BlueZ uses 180 seconds by default but we give it a bit more time
+# to account for the esp32's bluetooth stack being a bit slower
+# than BlueZ's.
+CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS: Final = 195
+
 
 # We must recover before we hit the 180s mark
 # where the device is removed from the stack

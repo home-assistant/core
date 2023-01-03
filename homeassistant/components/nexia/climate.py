@@ -31,7 +31,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
@@ -178,7 +178,9 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         self._attr_max_humidity = percent_conv(max_humidity)
         self._attr_min_temp = min_setpoint
         self._attr_max_temp = max_setpoint
-        self._attr_temperature_unit = TEMP_CELSIUS if unit == "C" else TEMP_FAHRENHEIT
+        self._attr_temperature_unit = (
+            UnitOfTemperature.CELSIUS if unit == "C" else UnitOfTemperature.FAHRENHEIT
+        )
         self._attr_target_temperature_step = 0.5 if unit == "C" else 1.0
 
     @property

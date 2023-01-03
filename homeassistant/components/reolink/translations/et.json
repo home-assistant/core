@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "api_error": "Ilmnes API t\u00f5rge: {error}",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "unknown": "Ootamatu t\u00f5rge: {error}"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Salas\u00f5na",
+                    "port": "Port",
+                    "use_https": "Luba HTTPS",
+                    "username": "Kasutajanimi"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "protocol": "Protokoll"
+                }
+            }
+        }
+    }
+}

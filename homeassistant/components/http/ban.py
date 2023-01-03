@@ -51,12 +51,11 @@ def setup_bans(hass: HomeAssistant, app: Application, login_threshold: int) -> N
     app.middlewares.append(ban_middleware)
     app[KEY_FAILED_LOGIN_ATTEMPTS] = defaultdict(int)
     app[KEY_LOGIN_THRESHOLD] = login_threshold
+    app[KEY_BAN_MANAGER] = IpBanManager(hass)
 
     async def ban_startup(app: Application) -> None:
         """Initialize bans when app starts up."""
-        ban_manager = IpBanManager(hass)
-        await ban_manager.async_load()
-        app[KEY_BAN_MANAGER] = ban_manager
+        await app[KEY_BAN_MANAGER].async_load()
 
     app.on_startup.append(ban_startup)
 
@@ -117,7 +116,10 @@ async def process_wrong_login(request: Request) -> None:
             gethostbyaddr, request.remote
         )
 
-    base_msg = f"Login attempt or request with invalid authentication from {remote_host} ({remote_addr})."
+    base_msg = (
+        "Login attempt or request with invalid authentication from"
+        f" {remote_host} ({remote_addr})."
+    )
 
     # The user-agent is unsanitized input so we only include it in the log
     user_agent = request.headers.get("user-agent")

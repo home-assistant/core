@@ -12,7 +12,7 @@ from homeassistant.components.number import (
     NumberEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MODEL, DEGREE, REVOLUTIONS_PER_MINUTE, TIME_MINUTES
+from homeassistant.const import CONF_MODEL, DEGREE, REVOLUTIONS_PER_MINUTE, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
@@ -39,6 +39,7 @@ from .const import (
     FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
     FEATURE_FLAGS_AIRPURIFIER_V1,
     FEATURE_FLAGS_AIRPURIFIER_V3,
+    FEATURE_FLAGS_AIRPURIFIER_ZA1,
     FEATURE_FLAGS_FAN,
     FEATURE_FLAGS_FAN_1C,
     FEATURE_FLAGS_FAN_P5,
@@ -73,6 +74,7 @@ from .const import (
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V1,
     MODEL_AIRPURIFIER_V3,
+    MODEL_AIRPURIFIER_ZA1,
     MODEL_FAN_1C,
     MODEL_FAN_P5,
     MODEL_FAN_P9,
@@ -191,7 +193,7 @@ NUMBER_TYPES = {
         key=ATTR_DELAY_OFF_COUNTDOWN,
         name="Delay off countdown",
         icon="mdi:fan-off",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         native_min_value=0,
         native_max_value=480,
         native_step=1,
@@ -249,6 +251,7 @@ MODEL_TO_FEATURES_MAP = {
     MODEL_AIRPURIFIER_4_LITE_RMB1: FEATURE_FLAGS_AIRPURIFIER_4_LITE,
     MODEL_AIRPURIFIER_4: FEATURE_FLAGS_AIRPURIFIER_4,
     MODEL_AIRPURIFIER_4_PRO: FEATURE_FLAGS_AIRPURIFIER_4,
+    MODEL_AIRPURIFIER_ZA1: FEATURE_FLAGS_AIRPURIFIER_ZA1,
     MODEL_FAN_1C: FEATURE_FLAGS_FAN_1C,
     MODEL_FAN_P10: FEATURE_FLAGS_FAN_P10_P11,
     MODEL_FAN_P11: FEATURE_FLAGS_FAN_P10_P11,

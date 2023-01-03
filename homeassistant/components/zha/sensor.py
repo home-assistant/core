@@ -5,6 +5,8 @@ import functools
 import numbers
 from typing import TYPE_CHECKING, Any, TypeVar
 
+from zigpy import types
+
 from homeassistant.components.climate import HVACAction
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -16,26 +18,21 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_KILO_WATT_HOUR,
-    FREQUENCY_HERTZ,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_VOLT_AMPERE,
-    POWER_WATT,
-    PRESSURE_HPA,
-    TEMP_CELSIUS,
-    TIME_HOURS,
-    TIME_MINUTES,
-    TIME_SECONDS,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
-    VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
-    VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
-    VOLUME_GALLONS,
-    VOLUME_LITERS,
     Platform,
+    UnitOfApparentPower,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfFrequency,
+    UnitOfMass,
+    UnitOfPower,
+    UnitOfPressure,
+    UnitOfTemperature,
+    UnitOfTime,
+    UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -126,7 +123,6 @@ class Sensor(ZhaEntity, SensorEntity):
     _decimals: int = 1
     _divisor: int = 1
     _multiplier: int | float = 1
-    _unit: str | None = None
 
     def __init__(
         self,
@@ -163,11 +159,6 @@ class Sensor(ZhaEntity, SensorEntity):
         self.async_accept_signal(
             self._channel, SIGNAL_ATTR_UPDATED, self.async_set_state
         )
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement of this entity."""
-        return self._unit
 
     @property
     def native_value(self) -> StateType:
@@ -218,7 +209,7 @@ class Battery(Sensor):
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_name: str = "Battery"
-    _unit = PERCENTAGE
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     @classmethod
     def create_entity(
@@ -270,7 +261,7 @@ class ElectricalMeasurement(Sensor):
     _attr_should_poll = True  # BaseZhaEntity defaults to False
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_name: str = "Active power"
-    _unit = POWER_WATT
+    _attr_native_unit_of_measurement: str = UnitOfPower.WATT
     _div_mul_prefix = "ac_power"
 
     @property
@@ -312,7 +303,7 @@ class ElectricalMeasurementApparentPower(
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.APPARENT_POWER
     _attr_should_poll = False  # Poll indirectly by ElectricalMeasurementSensor
     _attr_name: str = "Apparent power"
-    _unit = POWER_VOLT_AMPERE
+    _attr_native_unit_of_measurement = UnitOfApparentPower.VOLT_AMPERE
     _div_mul_prefix = "ac_power"
 
 
@@ -324,7 +315,7 @@ class ElectricalMeasurementRMSCurrent(ElectricalMeasurement, id_suffix="rms_curr
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.CURRENT
     _attr_should_poll = False  # Poll indirectly by ElectricalMeasurementSensor
     _attr_name: str = "RMS current"
-    _unit = ELECTRIC_CURRENT_AMPERE
+    _attr_native_unit_of_measurement = UnitOfElectricCurrent.AMPERE
     _div_mul_prefix = "ac_current"
 
 
@@ -333,10 +324,10 @@ class ElectricalMeasurementRMSVoltage(ElectricalMeasurement, id_suffix="rms_volt
     """RMS Voltage measurement."""
 
     SENSOR_ATTR = "rms_voltage"
-    _attr_device_class: SensorDeviceClass = SensorDeviceClass.CURRENT
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.VOLTAGE
     _attr_should_poll = False  # Poll indirectly by ElectricalMeasurementSensor
     _attr_name: str = "RMS voltage"
-    _unit = ELECTRIC_POTENTIAL_VOLT
+    _attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
     _div_mul_prefix = "ac_voltage"
 
 
@@ -348,7 +339,7 @@ class ElectricalMeasurementFrequency(ElectricalMeasurement, id_suffix="ac_freque
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.FREQUENCY
     _attr_should_poll = False  # Poll indirectly by ElectricalMeasurementSensor
     _attr_name: str = "AC frequency"
-    _unit = FREQUENCY_HERTZ
+    _attr_native_unit_of_measurement = UnitOfFrequency.HERTZ
     _div_mul_prefix = "ac_frequency"
 
 
@@ -360,7 +351,7 @@ class ElectricalMeasurementPowerFactor(ElectricalMeasurement, id_suffix="power_f
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER_FACTOR
     _attr_should_poll = False  # Poll indirectly by ElectricalMeasurementSensor
     _attr_name: str = "Power factor"
-    _unit = PERCENTAGE
+    _attr_native_unit_of_measurement = PERCENTAGE
 
 
 @MULTI_MATCH(
@@ -375,7 +366,7 @@ class Humidity(Sensor):
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_name: str = "Humidity"
     _divisor = 100
-    _unit = PERCENTAGE
+    _attr_native_unit_of_measurement = PERCENTAGE
 
 
 @MULTI_MATCH(channel_names=CHANNEL_SOIL_MOISTURE)
@@ -387,7 +378,7 @@ class SoilMoisture(Sensor):
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_name: str = "Soil moisture"
     _divisor = 100
-    _unit = PERCENTAGE
+    _attr_native_unit_of_measurement = PERCENTAGE
 
 
 @MULTI_MATCH(channel_names=CHANNEL_LEAF_WETNESS)
@@ -399,7 +390,7 @@ class LeafWetness(Sensor):
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_name: str = "Leaf wetness"
     _divisor = 100
-    _unit = PERCENTAGE
+    _attr_native_unit_of_measurement = PERCENTAGE
 
 
 @MULTI_MATCH(channel_names=CHANNEL_ILLUMINANCE)
@@ -410,11 +401,11 @@ class Illuminance(Sensor):
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.ILLUMINANCE
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_name: str = "Illuminance"
-    _unit = LIGHT_LUX
+    _attr_native_unit_of_measurement = LIGHT_LUX
 
-    def formatter(self, value: int) -> float:
+    def formatter(self, value: int) -> int:
         """Convert illumination data."""
-        return round(pow(10, ((value - 1) / 10000)), 1)
+        return round(pow(10, ((value - 1) / 10000)))
 
 
 @MULTI_MATCH(
@@ -430,19 +421,19 @@ class SmartEnergyMetering(Sensor):
     _attr_name: str = "Instantaneous demand"
 
     unit_of_measure_map = {
-        0x00: POWER_WATT,
-        0x01: VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
-        0x02: VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
-        0x03: f"100 {VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR}",
-        0x04: f"US {VOLUME_GALLONS}/{TIME_HOURS}",
-        0x05: f"IMP {VOLUME_GALLONS}/{TIME_HOURS}",
-        0x06: f"BTU/{TIME_HOURS}",
-        0x07: f"l/{TIME_HOURS}",
-        0x08: "kPa",  # gauge
-        0x09: "kPa",  # absolute
-        0x0A: f"1000 {VOLUME_GALLONS}/{TIME_HOURS}",
+        0x00: UnitOfPower.WATT,
+        0x01: UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        0x02: UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+        0x03: f"100 {UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR}",
+        0x04: f"US {UnitOfVolume.GALLONS}/{UnitOfTime.HOURS}",
+        0x05: f"IMP {UnitOfVolume.GALLONS}/{UnitOfTime.HOURS}",
+        0x06: UnitOfPower.BTU_PER_HOUR,
+        0x07: f"l/{UnitOfTime.HOURS}",
+        0x08: UnitOfPressure.KPA,  # gauge
+        0x09: UnitOfPressure.KPA,  # absolute
+        0x0A: f"1000 {UnitOfVolume.GALLONS}/{UnitOfTime.HOURS}",
         0x0B: "unitless",
-        0x0C: f"MJ/{TIME_SECONDS}",
+        0x0C: f"MJ/{UnitOfTime.SECONDS}",
     }
 
     def formatter(self, value: int) -> int | float:
@@ -478,17 +469,17 @@ class SmartEnergySummation(SmartEnergyMetering, id_suffix="summation_delivered")
     _attr_name: str = "Summation delivered"
 
     unit_of_measure_map = {
-        0x00: ENERGY_KILO_WATT_HOUR,
-        0x01: VOLUME_CUBIC_METERS,
-        0x02: VOLUME_CUBIC_FEET,
-        0x03: f"100 {VOLUME_CUBIC_FEET}",
-        0x04: f"US {VOLUME_GALLONS}",
-        0x05: f"IMP {VOLUME_GALLONS}",
+        0x00: UnitOfEnergy.KILO_WATT_HOUR,
+        0x01: UnitOfVolume.CUBIC_METERS,
+        0x02: UnitOfVolume.CUBIC_FEET,
+        0x03: f"100 {UnitOfVolume.CUBIC_FEET}",
+        0x04: f"US {UnitOfVolume.GALLONS}",
+        0x05: f"IMP {UnitOfVolume.GALLONS}",
         0x06: "BTU",
-        0x07: VOLUME_LITERS,
-        0x08: "kPa",  # gauge
-        0x09: "kPa",  # absolute
-        0x0A: f"1000 {VOLUME_CUBIC_FEET}",
+        0x07: UnitOfVolume.LITERS,
+        0x08: UnitOfPressure.KPA,  # gauge
+        0x09: UnitOfPressure.KPA,  # absolute
+        0x0A: f"1000 {UnitOfVolume.CUBIC_FEET}",
         0x0B: "unitless",
         0x0C: "MJ",
     }
@@ -528,7 +519,7 @@ class Pressure(Sensor):
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_name: str = "Pressure"
     _decimals = 0
-    _unit = PRESSURE_HPA
+    _attr_native_unit_of_measurement = UnitOfPressure.HPA
 
 
 @MULTI_MATCH(channel_names=CHANNEL_TEMPERATURE)
@@ -540,7 +531,7 @@ class Temperature(Sensor):
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_name: str = "Temperature"
     _divisor = 100
-    _unit = TEMP_CELSIUS
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
 
 @MULTI_MATCH(channel_names=CHANNEL_DEVICE_TEMPERATURE)
@@ -552,7 +543,7 @@ class DeviceTemperature(Sensor):
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_name: str = "Device temperature"
     _divisor = 100
-    _unit = TEMP_CELSIUS
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
 
@@ -566,7 +557,7 @@ class CarbonDioxideConcentration(Sensor):
     _attr_name: str = "Carbon dioxide concentration"
     _decimals = 0
     _multiplier = 1e6
-    _unit = CONCENTRATION_PARTS_PER_MILLION
+    _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
 
 
 @MULTI_MATCH(channel_names="carbon_monoxide_concentration")
@@ -579,7 +570,7 @@ class CarbonMonoxideConcentration(Sensor):
     _attr_name: str = "Carbon monoxide concentration"
     _decimals = 0
     _multiplier = 1e6
-    _unit = CONCENTRATION_PARTS_PER_MILLION
+    _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
 
 
 @MULTI_MATCH(generic_ids="channel_0x042e", stop_on_match_group="voc_level")
@@ -593,7 +584,7 @@ class VOCLevel(Sensor):
     _attr_name: str = "VOC level"
     _decimals = 0
     _multiplier = 1e6
-    _unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    _attr_native_unit_of_measurement = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 
 
 @MULTI_MATCH(
@@ -610,7 +601,7 @@ class PPBVOCLevel(Sensor):
     _attr_name: str = "VOC level"
     _decimals = 0
     _multiplier = 1
-    _unit = CONCENTRATION_PARTS_PER_BILLION
+    _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_BILLION
 
 
 @MULTI_MATCH(channel_names="pm25")
@@ -622,7 +613,7 @@ class PM25(Sensor):
     _attr_name: str = "Particulate matter"
     _decimals = 0
     _multiplier = 1
-    _unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    _attr_native_unit_of_measurement = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 
 
 @MULTI_MATCH(channel_names="formaldehyde_concentration")
@@ -634,7 +625,7 @@ class FormaldehydeConcentration(Sensor):
     _attr_name: str = "Formaldehyde concentration"
     _decimals = 0
     _multiplier = 1e6
-    _unit = CONCENTRATION_PARTS_PER_MILLION
+    _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
 
 
 @MULTI_MATCH(channel_names=CHANNEL_THERMOSTAT, stop_on_match_group=CHANNEL_THERMOSTAT)
@@ -814,7 +805,7 @@ class TimeLeft(Sensor, id_suffix="time_left"):
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.DURATION
     _attr_icon = "mdi:timer"
     _attr_name: str = "Time left"
-    _unit = TIME_MINUTES
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
 
 @MULTI_MATCH(channel_names="ikea_airpurifier")
@@ -825,7 +816,7 @@ class IkeaDeviceRunTime(Sensor, id_suffix="device_run_time"):
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.DURATION
     _attr_icon = "mdi:timer"
     _attr_name: str = "Device run time"
-    _unit = TIME_MINUTES
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
 
 @MULTI_MATCH(channel_names="ikea_airpurifier")
@@ -836,4 +827,54 @@ class IkeaFilterRunTime(Sensor, id_suffix="filter_run_time"):
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.DURATION
     _attr_icon = "mdi:timer"
     _attr_name: str = "Filter run time"
-    _unit = TIME_MINUTES
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
+
+
+class AqaraFeedingSource(types.enum8):
+    """Aqara pet feeder feeding source."""
+
+    Feeder = 0x01
+    HomeAssistant = 0x02
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederLastFeedingSource(Sensor, id_suffix="last_feeding_source"):
+    """Sensor that displays the last feeding source of pet feeder."""
+
+    SENSOR_ATTR = "last_feeding_source"
+    _attr_name: str = "Last feeding source"
+    _attr_icon = "mdi:devices"
+
+    def formatter(self, value: int) -> int | float | None:
+        """Numeric pass-through formatter."""
+        return AqaraFeedingSource(value).name
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederLastFeedingSize(Sensor, id_suffix="last_feeding_size"):
+    """Sensor that displays the last feeding size of the pet feeder."""
+
+    SENSOR_ATTR = "last_feeding_size"
+    _attr_name: str = "Last feeding size"
+    _attr_icon: str = "mdi:counter"
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederPortionsDispensed(Sensor, id_suffix="portions_dispensed"):
+    """Sensor that displays the number of portions dispensed by the pet feeder."""
+
+    SENSOR_ATTR = "portions_dispensed"
+    _attr_name: str = "Portions dispensed today"
+    _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
+    _attr_icon: str = "mdi:counter"
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederWeightDispensed(Sensor, id_suffix="weight_dispensed"):
+    """Sensor that displays the weight dispensed by the pet feeder."""
+
+    SENSOR_ATTR = "weight_dispensed"
+    _attr_name: str = "Weight dispensed today"
+    _attr_native_unit_of_measurement = UnitOfMass.GRAMS
+    _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
+    _attr_icon: str = "mdi:weight-gram"

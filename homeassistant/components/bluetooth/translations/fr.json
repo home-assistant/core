@@ -8,9 +8,6 @@
             "bluetooth_confirm": {
                 "description": "Voulez-vous configurer {name}\u00a0?"
             },
-            "enable_bluetooth": {
-                "description": "Voulez-vous configurer le Bluetooth\u00a0?"
-            },
             "multiple_adapters": {
                 "data": {
                     "adapter": "Adaptateur"
@@ -39,8 +36,7 @@
             "init": {
                 "data": {
                     "passive": "Recherche passive"
-                },
-                "description": "L'\u00e9coute passive n\u00e9cessite BlueZ version 5.63 ou ult\u00e9rieure avec les fonctions exp\u00e9rimentales activ\u00e9es."
+                }
             }
         }
     }

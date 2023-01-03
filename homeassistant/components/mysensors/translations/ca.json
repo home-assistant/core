@@ -34,7 +34,6 @@
             "invalid_serial": "Port s\u00e8rie inv\u00e0lid",
             "invalid_subscribe_topic": "Topic de subscripci\u00f3 inv\u00e0lid",
             "invalid_version": "Versi\u00f3 de MySensors inv\u00e0lida",
-            "mqtt_required": "La integraci\u00f3 MQTT no est\u00e0 configurada",
             "not_a_number": "Introdueix un n\u00famero",
             "port_out_of_range": "El n\u00famero de port ha d'estar entre 1 i 65535",
             "same_topic": "Els topics de publicaci\u00f3 i subscripci\u00f3 son els mateixos",
@@ -83,6 +82,19 @@
                 },
                 "description": "Tria el m\u00e8tode de connexi\u00f3 a la passarel\u00b7la"
             }
+        }
+    },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Actualitzeu totes les automatitzacions o scripts que usen aquest servei o, alternativament, empreu el servei `{alternative_service}` amb un ID d'entitat objectiu de `{alternate_target}`.",
+                        "title": "El servei {deprecated_service} s'eliminar\u00e0"
+                    }
+                }
+            },
+            "title": "El servei {deprecated_service} s'eliminar\u00e0"
         }
     }
 }

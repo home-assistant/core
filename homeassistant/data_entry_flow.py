@@ -4,11 +4,13 @@ from __future__ import annotations
 import abc
 import asyncio
 from collections.abc import Iterable, Mapping
+import copy
 from dataclasses import dataclass
 import logging
 from types import MappingProxyType
 from typing import Any, TypedDict
 
+from typing_extensions import Required
 import voluptuous as vol
 
 from .backports.enum import StrEnum
@@ -83,27 +85,27 @@ class AbortFlow(FlowError):
 class FlowResult(TypedDict, total=False):
     """Typed result dict."""
 
-    version: int
-    type: FlowResultType
-    flow_id: str
-    handler: str
-    title: str
-    data: Mapping[str, Any]
-    step_id: str
-    data_schema: vol.Schema | None
-    extra: str
-    required: bool
-    errors: dict[str, str] | None
-    description: str | None
-    description_placeholders: Mapping[str, str | None] | None
-    progress_action: str
-    url: str
-    reason: str
     context: dict[str, Any]
-    result: Any
+    data_schema: vol.Schema | None
+    data: Mapping[str, Any]
+    description_placeholders: Mapping[str, str | None] | None
+    description: str | None
+    errors: dict[str, str] | None
+    extra: str
+    flow_id: Required[str]
+    handler: Required[str]
     last_step: bool | None
-    options: Mapping[str, Any]
     menu_options: list[str] | dict[str, str]
+    options: Mapping[str, Any]
+    progress_action: str
+    reason: str
+    required: bool
+    result: Any
+    step_id: str
+    title: str
+    type: FlowResultType
+    url: str
+    version: int
 
 
 @callback
@@ -111,16 +113,19 @@ def _async_flow_handler_to_flow_result(
     flows: Iterable[FlowHandler], include_uninitialized: bool
 ) -> list[FlowResult]:
     """Convert a list of FlowHandler to a partial FlowResult that can be serialized."""
-    return [
-        FlowResult(
+    results = []
+    for flow in flows:
+        if not include_uninitialized and flow.cur_step is None:
+            continue
+        result = FlowResult(
             flow_id=flow.flow_id,
             handler=flow.handler,
             context=flow.context,
-            step_id=flow.cur_step["step_id"] if flow.cur_step else None,
         )
-        for flow in flows
-        if include_uninitialized or flow.cur_step is not None
-    ]
+        if flow.cur_step:
+            result["step_id"] = flow.cur_step["step_id"]
+        results.append(result)
+    return results
 
 
 class FlowManager(abc.ABC):
@@ -147,7 +152,7 @@ class FlowManager(abc.ABC):
     @abc.abstractmethod
     async def async_create_flow(
         self,
-        handler_key: Any,
+        handler_key: str,
         *,
         context: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
@@ -268,8 +273,10 @@ class FlowManager(abc.ABC):
         cur_step = flow.cur_step
         assert cur_step is not None
 
-        if cur_step.get("data_schema") is not None and user_input is not None:
-            user_input = cur_step["data_schema"](user_input)
+        if (
+            data_schema := cur_step.get("data_schema")
+        ) is not None and user_input is not None:
+            user_input = data_schema(user_input)
 
         # Handle a menu navigation choice
         if cur_step["type"] == FlowResultType.MENU and user_input:
@@ -302,7 +309,8 @@ class FlowManager(abc.ABC):
                 FlowResultType.SHOW_PROGRESS_DONE,
             ):
                 raise ValueError(
-                    "Show progress can only transition to show progress or show progress done."
+                    "Show progress can only transition to show progress or show"
+                    " progress done."
                 )
 
             # If the result has changed from last result, fire event to update
@@ -347,7 +355,7 @@ class FlowManager(abc.ABC):
 
     async def _async_handle_step(
         self,
-        flow: Any,
+        flow: FlowHandler,
         step_id: str,
         user_input: dict | BaseServiceInfo | None,
         step_done: asyncio.Future | None = None,
@@ -380,8 +388,10 @@ class FlowManager(abc.ABC):
         if not isinstance(result["type"], FlowResultType):
             result["type"] = FlowResultType(result["type"])  # type: ignore[unreachable]
             report(
-                "does not use FlowResultType enum for data entry flow result type. "
-                "This is deprecated and will stop working in Home Assistant 2022.9",
+                (
+                    "does not use FlowResultType enum for data entry flow result type. "
+                    "This is deprecated and will stop working in Home Assistant 2022.9"
+                ),
                 error_if_core=False,
             )
 
@@ -414,7 +424,7 @@ class FlowHandler:
     """Handle the configuration flow of a component."""
 
     # Set by flow manager
-    cur_step: dict[str, Any] | None = None
+    cur_step: FlowResult | None = None
 
     # While not purely typed, it makes typehinting more useful for us
     # and removes the need for constant None checks or asserts.
@@ -443,6 +453,34 @@ class FlowHandler:
         """If we should show advanced options."""
         return self.context.get("show_advanced_options", False)
 
+    def add_suggested_values_to_schema(
+        self, data_schema: vol.Schema, suggested_values: Mapping[str, Any]
+    ) -> vol.Schema:
+        """Make a copy of the schema, populated with suggested values.
+
+        For each schema marker matching items in `suggested_values`,
+        the `suggested_value` will be set. The existing `suggested_value` will
+        be left untouched if there is no matching item.
+        """
+        schema = {}
+        for key, val in data_schema.schema.items():
+            if isinstance(key, vol.Marker):
+                # Exclude advanced field
+                if (
+                    key.description
+                    and key.description.get("advanced")
+                    and not self.show_advanced_options
+                ):
+                    continue
+
+            new_key = key
+            if key in suggested_values and isinstance(key, vol.Marker):
+                # Copy the marker to not modify the flow schema
+                new_key = copy.copy(key)
+                new_key.description = {"suggested_value": suggested_values[key]}
+            schema[new_key] = val
+        return vol.Schema(schema)
+
     @callback
     def async_show_form(
         self,
@@ -469,23 +507,25 @@ class FlowHandler:
     def async_create_entry(
         self,
         *,
-        title: str,
+        title: str | None = None,
         data: Mapping[str, Any],
         description: str | None = None,
         description_placeholders: Mapping[str, str] | None = None,
     ) -> FlowResult:
         """Finish config flow and create a config entry."""
-        return FlowResult(
+        flow_result = FlowResult(
             version=self.VERSION,
             type=FlowResultType.CREATE_ENTRY,
             flow_id=self.flow_id,
             handler=self.handler,
-            title=title,
             data=data,
             description=description,
             description_placeholders=description_placeholders,
             context=self.context,
         )
+        if title is not None:
+            flow_result["title"] = title
+        return flow_result
 
     @callback
     def async_abort(

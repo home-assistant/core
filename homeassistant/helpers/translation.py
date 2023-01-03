@@ -118,7 +118,10 @@ def _merge_resources(
             domain_resources.update(new_value)
         else:
             _LOGGER.error(
-                "An integration providing translations for %s provided invalid data: %s",
+                (
+                    "An integration providing translations for %s provided invalid"
+                    " data: %s"
+                ),
                 domain,
                 new_value,
             )

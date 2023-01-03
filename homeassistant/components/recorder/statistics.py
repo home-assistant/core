@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 import contextlib
 import dataclasses
 from datetime import datetime, timedelta
@@ -15,9 +15,10 @@ import re
 from statistics import mean
 from typing import TYPE_CHECKING, Any, Literal
 
-from sqlalchemy import bindparam, func, lambda_stmt, select
+from sqlalchemy import bindparam, func, lambda_stmt, select, text
+from sqlalchemy.engine import Engine
 from sqlalchemy.engine.row import Row
-from sqlalchemy.exc import SQLAlchemyError, StatementError
+from sqlalchemy.exc import OperationalError, SQLAlchemyError, StatementError
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import literal_column, true
 from sqlalchemy.sql.lambdas import StatementLambdaElement
@@ -45,7 +46,13 @@ from homeassistant.util.unit_conversion import (
     VolumeConverter,
 )
 
-from .const import DOMAIN, MAX_ROWS_TO_PURGE, SupportedDialect
+from .const import (
+    DOMAIN,
+    EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
+    EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,
+    MAX_ROWS_TO_PURGE,
+    SupportedDialect,
+)
 from .db_schema import (
     Statistics,
     StatisticsBase,
@@ -139,6 +146,30 @@ def _get_unit_class(unit: str | None) -> str | None:
     if converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(unit):
         return converter.UNIT_CLASS
     return None
+
+
+def get_display_unit(
+    hass: HomeAssistant,
+    statistic_id: str,
+    statistic_unit: str | None,
+) -> str | None:
+    """Return the unit which the statistic will be displayed in."""
+
+    if statistic_unit is None:
+        return None
+
+    if (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None:
+        return statistic_unit
+
+    state_unit: str | None = statistic_unit
+    if state := hass.states.get(statistic_id):
+        state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
+    if state_unit == statistic_unit or state_unit not in converter.VALID_UNITS:
+        # Guard against invalid state unit in the DB
+        return statistic_unit
+
+    return state_unit
 
 
 def _get_statistic_to_display_unit_converter(
@@ -477,8 +508,10 @@ def delete_statistics_duplicates(hass: HomeAssistant, session: Session) -> None:
                 cls=JSONEncoder,
             )
         _LOGGER.warning(
-            "Deleted %s non identical duplicated %s rows, a backup of the deleted rows "
-            "has been saved to %s",
+            (
+                "Deleted %s non identical duplicated %s rows, a backup of the deleted"
+                " rows has been saved to %s"
+            ),
             len(non_identical_duplicates),
             Statistics.__tablename__,
             backup_path,
@@ -640,7 +673,7 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
 
 
 @retryable_database_job("statistics")
-def compile_statistics(instance: Recorder, start: datetime) -> bool:
+def compile_statistics(instance: Recorder, start: datetime, fire_events: bool) -> bool:
     """Compile 5-minute statistics for all integrations with a recorder platform.
 
     The actual calculation is delegated to the platforms.
@@ -695,6 +728,11 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
             _compile_hourly_statistics(session, start)
 
         session.add(StatisticsRuns(start=start))
+
+    if fire_events:
+        instance.hass.bus.fire(EVENT_RECORDER_5MIN_STATISTICS_GENERATED)
+        if start.minute == 55:
+            instance.hass.bus.fire(EVENT_RECORDER_HOURLY_STATISTICS_GENERATED)
 
     return True
 
@@ -839,12 +877,17 @@ def get_metadata(
         )
 
 
+def _clear_statistics_with_session(session: Session, statistic_ids: list[str]) -> None:
+    """Clear statistics for a list of statistic_ids."""
+    session.query(StatisticsMeta).filter(
+        StatisticsMeta.statistic_id.in_(statistic_ids)
+    ).delete(synchronize_session=False)
+
+
 def clear_statistics(instance: Recorder, statistic_ids: list[str]) -> None:
     """Clear statistics for a list of statistic_ids."""
     with session_scope(session=instance.get_session()) as session:
-        session.query(StatisticsMeta).filter(
-            StatisticsMeta.statistic_id.in_(statistic_ids)
-        ).delete(synchronize_session=False)
+        _clear_statistics_with_session(session, statistic_ids)
 
 
 def update_statistics_metadata(
@@ -891,6 +934,9 @@ def list_statistic_ids(
 
         result = {
             meta["statistic_id"]: {
+                "display_unit_of_measurement": get_display_unit(
+                    hass, meta["statistic_id"], meta["unit_of_measurement"]
+                ),
                 "has_mean": meta["has_mean"],
                 "has_sum": meta["has_sum"],
                 "name": meta["name"],
@@ -913,6 +959,7 @@ def list_statistic_ids(
             if key in result:
                 continue
             result[key] = {
+                "display_unit_of_measurement": meta["unit_of_measurement"],
                 "has_mean": meta["has_mean"],
                 "has_sum": meta["has_sum"],
                 "name": meta["name"],
@@ -925,6 +972,7 @@ def list_statistic_ids(
     return [
         {
             "statistic_id": _id,
+            "display_unit_of_measurement": info["display_unit_of_measurement"],
             "has_mean": info["has_mean"],
             "has_sum": info["has_sum"],
             "name": info.get("name"),
@@ -1462,13 +1510,6 @@ def statistic_during_period(
             main_start_time = start_time if head_end_time is None else head_end_time
             main_end_time = end_time if tail_start_time is None else tail_start_time
 
-        # Fetch metadata for the given statistic_id
-        metadata = get_metadata_with_session(session, statistic_ids=[statistic_id])
-        if not metadata:
-            return result
-
-        metadata_id = metadata[statistic_id][0]
-
         if not types.isdisjoint({"max", "mean", "min"}):
             result = _get_max_mean_min_statistic(
                 session,
@@ -1529,6 +1570,78 @@ def statistic_during_period(
     return {key: convert(value) for key, value in result.items()}
 
 
+def _statistics_during_period_with_session(
+    hass: HomeAssistant,
+    session: Session,
+    start_time: datetime,
+    end_time: datetime | None,
+    statistic_ids: list[str] | None,
+    period: Literal["5minute", "day", "hour", "week", "month"],
+    units: dict[str, str] | None,
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+) -> dict[str, list[dict[str, Any]]]:
+    """Return statistic data points during UTC period start_time - end_time.
+
+    If end_time is omitted, returns statistics newer than or equal to start_time.
+    If statistic_ids is omitted, returns statistics for all statistics ids.
+    """
+    metadata = None
+    # Fetch metadata for the given (or all) statistic_ids
+    metadata = get_metadata_with_session(session, statistic_ids=statistic_ids)
+    if not metadata:
+        return {}
+
+    metadata_ids = None
+    if statistic_ids is not None:
+        metadata_ids = [metadata_id for metadata_id, _ in metadata.values()]
+
+    table: type[Statistics | StatisticsShortTerm] = (
+        Statistics if period != "5minute" else StatisticsShortTerm
+    )
+    stmt = _statistics_during_period_stmt(
+        start_time, end_time, metadata_ids, table, types
+    )
+    stats = execute_stmt_lambda_element(session, stmt)
+
+    if not stats:
+        return {}
+    # Return statistics combined with metadata
+    if period not in ("day", "week", "month"):
+        return _sorted_statistics_to_dict(
+            hass,
+            session,
+            stats,
+            statistic_ids,
+            metadata,
+            True,
+            table,
+            start_time,
+            units,
+            types,
+        )
+
+    result = _sorted_statistics_to_dict(
+        hass,
+        session,
+        stats,
+        statistic_ids,
+        metadata,
+        True,
+        table,
+        start_time,
+        units,
+        types,
+    )
+
+    if period == "day":
+        return _reduce_statistics_per_day(result, types)
+
+    if period == "week":
+        return _reduce_statistics_per_week(result, types)
+
+    return _reduce_statistics_per_month(result, types)
+
+
 def statistics_during_period(
     hass: HomeAssistant,
     start_time: datetime,
@@ -1543,62 +1656,17 @@ def statistics_during_period(
     If end_time is omitted, returns statistics newer than or equal to start_time.
     If statistic_ids is omitted, returns statistics for all statistics ids.
     """
-    metadata = None
     with session_scope(hass=hass) as session:
-        # Fetch metadata for the given (or all) statistic_ids
-        metadata = get_metadata_with_session(session, statistic_ids=statistic_ids)
-        if not metadata:
-            return {}
-
-        metadata_ids = None
-        if statistic_ids is not None:
-            metadata_ids = [metadata_id for metadata_id, _ in metadata.values()]
-
-        table: type[Statistics | StatisticsShortTerm] = (
-            Statistics if period != "5minute" else StatisticsShortTerm
-        )
-        stmt = _statistics_during_period_stmt(
-            start_time, end_time, metadata_ids, table, types
-        )
-        stats = execute_stmt_lambda_element(session, stmt)
-
-        if not stats:
-            return {}
-        # Return statistics combined with metadata
-        if period not in ("day", "week", "month"):
-            return _sorted_statistics_to_dict(
-                hass,
-                session,
-                stats,
-                statistic_ids,
-                metadata,
-                True,
-                table,
-                start_time,
-                units,
-                types,
-            )
-
-        result = _sorted_statistics_to_dict(
+        return _statistics_during_period_with_session(
             hass,
             session,
-            stats,
-            statistic_ids,
-            metadata,
-            True,
-            table,
             start_time,
+            end_time,
+            statistic_ids,
+            period,
             units,
             types,
         )
-
-        if period == "day":
-            return _reduce_statistics_per_day(result, types)
-
-        if period == "week":
-            return _reduce_statistics_per_week(result, types)
-
-        return _reduce_statistics_per_month(result, types)
 
 
 def _get_last_statistics_stmt(
@@ -2004,7 +2072,10 @@ def _filter_unique_constraint_integrity_error(
 
         if ignore:
             _LOGGER.warning(
-                "Blocked attempt to insert duplicated statistic rows, please report at %s",
+                (
+                    "Blocked attempt to insert duplicated statistic rows, please report"
+                    " at %s"
+                ),
                 "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+recorder%22",
                 exc_info=err,
             )
@@ -2012,6 +2083,26 @@ def _filter_unique_constraint_integrity_error(
         return ignore
 
     return _filter_unique_constraint_integrity_error
+
+
+def _import_statistics_with_session(
+    session: Session,
+    metadata: StatisticMetaData,
+    statistics: Iterable[StatisticData],
+    table: type[Statistics | StatisticsShortTerm],
+) -> bool:
+    """Import statistics to the database."""
+    old_metadata_dict = get_metadata_with_session(
+        session, statistic_ids=[metadata["statistic_id"]]
+    )
+    metadata_id = _update_or_add_metadata(session, metadata, old_metadata_dict)
+    for stat in statistics:
+        if stat_id := _statistics_exists(session, table, metadata_id, stat["start"]):
+            _update_statistics(session, table, stat_id, stat)
+        else:
+            _insert_statistics(session, table, metadata_id, stat)
+
+    return True
 
 
 @retryable_database_job("statistics")
@@ -2027,19 +2118,7 @@ def import_statistics(
         session=instance.get_session(),
         exception_filter=_filter_unique_constraint_integrity_error(instance),
     ) as session:
-        old_metadata_dict = get_metadata_with_session(
-            session, statistic_ids=[metadata["statistic_id"]]
-        )
-        metadata_id = _update_or_add_metadata(session, metadata, old_metadata_dict)
-        for stat in statistics:
-            if stat_id := _statistics_exists(
-                session, table, metadata_id, stat["start"]
-            ):
-                _update_statistics(session, table, stat_id, stat)
-            else:
-                _insert_statistics(session, table, metadata_id, stat)
-
-    return True
+        return _import_statistics_with_session(session, metadata, statistics, table)
 
 
 @retryable_database_job("adjust_statistics")
@@ -2156,3 +2235,241 @@ def async_change_statistics_unit(
         new_unit_of_measurement=new_unit_of_measurement,
         old_unit_of_measurement=old_unit_of_measurement,
     )
+
+
+def _validate_db_schema_utf8(
+    instance: Recorder, session_maker: Callable[[], Session]
+) -> set[str]:
+    """Do some basic checks for common schema errors caused by manual migration."""
+    schema_errors: set[str] = set()
+
+    # Lack of full utf8 support is only an issue for MySQL / MariaDB
+    if instance.dialect_name != SupportedDialect.MYSQL:
+        return schema_errors
+
+    # This name can't be represented unless 4-byte UTF-8 unicode is supported
+    utf8_name = "𓆚𓃗"
+    statistic_id = f"{DOMAIN}.db_test"
+
+    metadata: StatisticMetaData = {
+        "has_mean": True,
+        "has_sum": True,
+        "name": utf8_name,
+        "source": DOMAIN,
+        "statistic_id": statistic_id,
+        "unit_of_measurement": None,
+    }
+
+    # Try inserting some metadata which needs utfmb4 support
+    try:
+        with session_scope(session=session_maker()) as session:
+            old_metadata_dict = get_metadata_with_session(
+                session, statistic_ids=[statistic_id]
+            )
+            try:
+                _update_or_add_metadata(session, metadata, old_metadata_dict)
+                _clear_statistics_with_session(session, statistic_ids=[statistic_id])
+            except OperationalError as err:
+                if err.orig and err.orig.args[0] == 1366:
+                    _LOGGER.debug(
+                        "Database table statistics_meta does not support 4-byte UTF-8"
+                    )
+                    schema_errors.add("statistics_meta.4-byte UTF-8")
+                    session.rollback()
+                else:
+                    raise
+    except Exception as exc:  # pylint: disable=broad-except
+        _LOGGER.exception("Error when validating DB schema: %s", exc)
+    return schema_errors
+
+
+def _validate_db_schema(
+    hass: HomeAssistant, instance: Recorder, session_maker: Callable[[], Session]
+) -> set[str]:
+    """Do some basic checks for common schema errors caused by manual migration."""
+    schema_errors: set[str] = set()
+
+    # Wrong precision is only an issue for MySQL / MariaDB / PostgreSQL
+    if instance.dialect_name not in (
+        SupportedDialect.MYSQL,
+        SupportedDialect.POSTGRESQL,
+    ):
+        return schema_errors
+
+    # This number can't be accurately represented as a 32-bit float
+    precise_number = 1.000000000000001
+    # This time can't be accurately represented unless datetimes have µs precision
+    precise_time = datetime(2020, 10, 6, microsecond=1, tzinfo=dt_util.UTC)
+
+    start_time = datetime(2020, 10, 6, tzinfo=dt_util.UTC)
+    statistic_id = f"{DOMAIN}.db_test"
+
+    metadata: StatisticMetaData = {
+        "has_mean": True,
+        "has_sum": True,
+        "name": None,
+        "source": DOMAIN,
+        "statistic_id": statistic_id,
+        "unit_of_measurement": None,
+    }
+    statistics: StatisticData = {
+        "last_reset": precise_time,
+        "max": precise_number,
+        "mean": precise_number,
+        "min": precise_number,
+        "start": precise_time,
+        "state": precise_number,
+        "sum": precise_number,
+    }
+
+    def check_columns(
+        schema_errors: set[str],
+        stored: Mapping,
+        expected: Mapping,
+        columns: tuple[str, ...],
+        table_name: str,
+        supports: str,
+    ) -> None:
+        for column in columns:
+            if stored[column] != expected[column]:
+                schema_errors.add(f"{table_name}.{supports}")
+                _LOGGER.debug(
+                    "Column %s in database table %s does not support %s (%s != %s)",
+                    column,
+                    table_name,
+                    supports,
+                    stored[column],
+                    expected[column],
+                )
+
+    # Insert / adjust a test statistics row in each of the tables
+    tables: tuple[type[Statistics | StatisticsShortTerm], ...] = (
+        Statistics,
+        StatisticsShortTerm,
+    )
+    try:
+        with session_scope(session=session_maker()) as session:
+            for table in tables:
+                _import_statistics_with_session(session, metadata, (statistics,), table)
+                stored_statistics = _statistics_during_period_with_session(
+                    hass,
+                    session,
+                    start_time,
+                    None,
+                    [statistic_id],
+                    "hour" if table == Statistics else "5minute",
+                    None,
+                    {"last_reset", "max", "mean", "min", "state", "sum"},
+                )
+                if not (stored_statistic := stored_statistics.get(statistic_id)):
+                    _LOGGER.warning(
+                        "Schema validation failed for table: %s", table.__tablename__
+                    )
+                    continue
+
+                check_columns(
+                    schema_errors,
+                    stored_statistic[0],
+                    statistics,
+                    ("max", "mean", "min", "state", "sum"),
+                    table.__tablename__,
+                    "double precision",
+                )
+                assert statistics["last_reset"]
+                check_columns(
+                    schema_errors,
+                    stored_statistic[0],
+                    {
+                        "last_reset": statistics["last_reset"],
+                        "start": statistics["start"],
+                    },
+                    ("start", "last_reset"),
+                    table.__tablename__,
+                    "µs precision",
+                )
+            _clear_statistics_with_session(session, statistic_ids=[statistic_id])
+    except Exception as exc:  # pylint: disable=broad-except
+        _LOGGER.exception("Error when validating DB schema: %s", exc)
+
+    return schema_errors
+
+
+def validate_db_schema(
+    hass: HomeAssistant, instance: Recorder, session_maker: Callable[[], Session]
+) -> set[str]:
+    """Do some basic checks for common schema errors caused by manual migration."""
+    schema_errors: set[str] = set()
+    schema_errors |= _validate_db_schema_utf8(instance, session_maker)
+    schema_errors |= _validate_db_schema(hass, instance, session_maker)
+    if schema_errors:
+        _LOGGER.debug(
+            "Detected statistics schema errors: %s", ", ".join(sorted(schema_errors))
+        )
+    return schema_errors
+
+
+def correct_db_schema(
+    instance: Recorder,
+    engine: Engine,
+    session_maker: Callable[[], Session],
+    schema_errors: set[str],
+) -> None:
+    """Correct issues detected by validate_db_schema."""
+    from .migration import _modify_columns  # pylint: disable=import-outside-toplevel
+
+    if "statistics_meta.4-byte UTF-8" in schema_errors:
+        # Attempt to convert the table to utf8mb4
+        _LOGGER.warning(
+            (
+                "Updating character set and collation of table %s to utf8mb4. "
+                "Note: this can take several minutes on large databases and slow "
+                "computers. Please be patient!"
+            ),
+            "statistics_meta",
+        )
+        with contextlib.suppress(SQLAlchemyError):
+            with session_scope(session=session_maker()) as session:
+                connection = session.connection()
+                connection.execute(
+                    # Using LOCK=EXCLUSIVE to prevent the database from corrupting
+                    # https://github.com/home-assistant/core/issues/56104
+                    text(
+                        "ALTER TABLE statistics_meta CONVERT TO CHARACTER SET utf8mb4"
+                        " COLLATE utf8mb4_unicode_ci, LOCK=EXCLUSIVE"
+                    )
+                )
+
+    tables: tuple[type[Statistics | StatisticsShortTerm], ...] = (
+        Statistics,
+        StatisticsShortTerm,
+    )
+    for table in tables:
+        if f"{table.__tablename__}.double precision" in schema_errors:
+            # Attempt to convert float columns to double precision
+            _modify_columns(
+                session_maker,
+                engine,
+                table.__tablename__,
+                [
+                    "mean DOUBLE PRECISION",
+                    "min DOUBLE PRECISION",
+                    "max DOUBLE PRECISION",
+                    "state DOUBLE PRECISION",
+                    "sum DOUBLE PRECISION",
+                ],
+            )
+        if f"{table.__tablename__}.µs precision" in schema_errors:
+            # Attempt to convert datetime columns to µs precision
+            if instance.dialect_name == SupportedDialect.MYSQL:
+                datetime_type = "DATETIME(6)"
+            else:
+                datetime_type = "TIMESTAMP(6) WITH TIME ZONE"
+            _modify_columns(
+                session_maker,
+                engine,
+                table.__tablename__,
+                [
+                    f"last_reset {datetime_type}",
+                    f"start {datetime_type}",
+                ],
+            )

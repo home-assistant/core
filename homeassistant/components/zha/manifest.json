@@ -4,15 +4,15 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zha",
   "requirements": [
-    "bellows==0.34.2",
+    "bellows==0.34.5",
     "pyserial==3.5",
     "pyserial-asyncio==0.6",
-    "zha-quirks==0.0.86",
-    "zigpy-deconz==0.19.0",
-    "zigpy==0.51.5",
+    "zha-quirks==0.0.90",
+    "zigpy-deconz==0.19.2",
+    "zigpy==0.52.3",
     "zigpy-xbee==0.16.2",
     "zigpy-zigate==0.10.3",
-    "zigpy-znp==0.9.1"
+    "zigpy-znp==0.9.2"
   ],
   "usb": [
     {
@@ -95,6 +95,10 @@
     {
       "type": "_zigstar_gw._tcp.local.",
       "name": "*zigstar*"
+    },
+    {
+      "type": "_slzb-06._tcp.local.",
+      "name": "slzb-06*"
     }
   ],
   "dependencies": ["file_upload"],

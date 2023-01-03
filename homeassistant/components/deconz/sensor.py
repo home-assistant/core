@@ -33,12 +33,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_VOLTAGE,
-    ENERGY_KILO_WATT_HOUR,
+    CONCENTRATION_PARTS_PER_BILLION,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_WATT,
-    PRESSURE_HPA,
-    TEMP_CELSIUS,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfPressure,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
@@ -121,8 +122,8 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
         instance_check=AirQuality,
         name_suffix="PPB",
         old_unique_id_suffix="ppb",
-        device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
     ),
     DeconzSensorDescription[Consumption](
         key="consumption",
@@ -132,7 +133,7 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
         instance_check=Consumption,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     ),
     DeconzSensorDescription[Daylight](
         key="daylight_status",
@@ -178,7 +179,7 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
         instance_check=Power,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
     ),
     DeconzSensorDescription[Pressure](
         key="pressure",
@@ -188,7 +189,7 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
         instance_check=Pressure,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
     ),
     DeconzSensorDescription[Temperature](
         key="temperature",
@@ -198,7 +199,7 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
         instance_check=Temperature,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     DeconzSensorDescription[Time](
         key="last_set",
@@ -229,7 +230,7 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
         old_unique_id_suffix="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
 )
 

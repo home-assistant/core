@@ -95,8 +95,6 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.is_on = False
         self.is_channel = False
         self.connected = False
-        # Assume that the TV is in Play mode
-        self.playing = True
         self.skipped_updates = 0
 
         super().__init__(
@@ -125,13 +123,18 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         """Connect and fetch data."""
         try:
             if not self.connected:
-                if self.use_psk:
-                    await self.client.connect(psk=self.pin)
-                else:
-                    await self.client.connect(
-                        pin=self.pin, clientid=self.client_id, nickname=self.nickname
-                    )
-                self.connected = True
+                try:
+                    if self.use_psk:
+                        await self.client.connect(psk=self.pin)
+                    else:
+                        await self.client.connect(
+                            pin=self.pin,
+                            clientid=self.client_id,
+                            nickname=self.nickname,
+                        )
+                    self.connected = True
+                except BraviaTVAuthError as err:
+                    raise ConfigEntryAuthFailed from err
 
             power_status = await self.client.get_power_status()
             self.is_on = power_status == "active"
@@ -151,8 +154,6 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 _LOGGER.debug("Update skipped, Bravia API service is reloading")
                 return
             raise UpdateFailed("Error communicating with device") from err
-        except BraviaTVAuthError as err:
-            raise ConfigEntryAuthFailed from err
         except (BraviaTVConnectionError, BraviaTVConnectionTimeout, BraviaTVTurnedOff):
             self.is_on = False
             self.connected = False
@@ -246,13 +247,11 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
     async def async_media_play(self) -> None:
         """Send play command to device."""
         await self.client.play()
-        self.playing = True
 
     @catch_braviatv_errors
     async def async_media_pause(self) -> None:
         """Send pause command to device."""
         await self.client.pause()
-        self.playing = False
 
     @catch_braviatv_errors
     async def async_media_stop(self) -> None:

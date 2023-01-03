@@ -3,19 +3,18 @@ from __future__ import annotations
 
 from homeassistant.const import (
     UNIT_NOT_RECOGNIZED_TEMPLATE,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
-    VOLUME_FLUID_OUNCE,
-    VOLUME_GALLONS,
-    VOLUME_LITERS,
-    VOLUME_MILLILITERS,
+    UnitOfDataRate,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
     UnitOfEnergy,
+    UnitOfInformation,
     UnitOfLength,
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfVolume,
     UnitOfVolumetricFlux,
 )
 from homeassistant.exceptions import HomeAssistantError
@@ -38,7 +37,8 @@ _DAYS_TO_SECS = 24 * _HRS_TO_SECS  # 1 day = 24 hours = 86400 seconds
 
 # Mass conversion constants
 _POUND_TO_G = 453.59237
-_OUNCE_TO_G = _POUND_TO_G / 16
+_OUNCE_TO_G = _POUND_TO_G / 16  # 16 ounces to a pound
+_STONE_TO_G = _POUND_TO_G * 14  # 14 pounds to a stone
 
 # Pressure conversion constants
 _STANDARD_GRAVITY = 9.80665
@@ -90,6 +90,28 @@ class BaseUnitConverter:
         return cls._UNIT_CONVERSION[from_unit] / cls._UNIT_CONVERSION[to_unit]
 
 
+class DataRateConverter(BaseUnitConverter):
+    """Utility to convert data rate values."""
+
+    UNIT_CLASS = "data_rate"
+    NORMALIZED_UNIT = UnitOfDataRate.BITS_PER_SECOND
+    # Units in terms of bits
+    _UNIT_CONVERSION: dict[str, float] = {
+        UnitOfDataRate.BITS_PER_SECOND: 1,
+        UnitOfDataRate.KILOBITS_PER_SECOND: 1 / 1e3,
+        UnitOfDataRate.MEGABITS_PER_SECOND: 1 / 1e6,
+        UnitOfDataRate.GIGABITS_PER_SECOND: 1 / 1e9,
+        UnitOfDataRate.BYTES_PER_SECOND: 1 / 8,
+        UnitOfDataRate.KILOBYTES_PER_SECOND: 1 / 8e3,
+        UnitOfDataRate.MEGABYTES_PER_SECOND: 1 / 8e6,
+        UnitOfDataRate.GIGABYTES_PER_SECOND: 1 / 8e9,
+        UnitOfDataRate.KIBIBYTES_PER_SECOND: 1 / 2**13,
+        UnitOfDataRate.MEBIBYTES_PER_SECOND: 1 / 2**23,
+        UnitOfDataRate.GIBIBYTES_PER_SECOND: 1 / 2**33,
+    }
+    VALID_UNITS = set(UnitOfDataRate)
+
+
 class DistanceConverter(BaseUnitConverter):
     """Utility to convert distance values."""
 
@@ -117,6 +139,33 @@ class DistanceConverter(BaseUnitConverter):
     }
 
 
+class ElectricCurrentConverter(BaseUnitConverter):
+    """Utility to convert electric current values."""
+
+    UNIT_CLASS = "electric_current"
+    NORMALIZED_UNIT = UnitOfElectricCurrent.AMPERE
+    _UNIT_CONVERSION: dict[str, float] = {
+        UnitOfElectricCurrent.AMPERE: 1,
+        UnitOfElectricCurrent.MILLIAMPERE: 1e3,
+    }
+    VALID_UNITS = set(UnitOfElectricCurrent)
+
+
+class ElectricPotentialConverter(BaseUnitConverter):
+    """Utility to convert electric potential values."""
+
+    UNIT_CLASS = "voltage"
+    NORMALIZED_UNIT = UnitOfElectricPotential.VOLT
+    _UNIT_CONVERSION: dict[str, float] = {
+        UnitOfElectricPotential.VOLT: 1,
+        UnitOfElectricPotential.MILLIVOLT: 1e3,
+    }
+    VALID_UNITS = {
+        UnitOfElectricPotential.VOLT,
+        UnitOfElectricPotential.MILLIVOLT,
+    }
+
+
 class EnergyConverter(BaseUnitConverter):
     """Utility to convert energy values."""
 
@@ -136,6 +185,38 @@ class EnergyConverter(BaseUnitConverter):
     }
 
 
+class InformationConverter(BaseUnitConverter):
+    """Utility to convert information values."""
+
+    UNIT_CLASS = "information"
+    NORMALIZED_UNIT = UnitOfInformation.BITS
+    # Units in terms of bits
+    _UNIT_CONVERSION: dict[str, float] = {
+        UnitOfInformation.BITS: 1,
+        UnitOfInformation.KILOBITS: 1 / 1e3,
+        UnitOfInformation.MEGABITS: 1 / 1e6,
+        UnitOfInformation.GIGABITS: 1 / 1e9,
+        UnitOfInformation.BYTES: 1 / 8,
+        UnitOfInformation.KILOBYTES: 1 / 8e3,
+        UnitOfInformation.MEGABYTES: 1 / 8e6,
+        UnitOfInformation.GIGABYTES: 1 / 8e9,
+        UnitOfInformation.TERABYTES: 1 / 8e12,
+        UnitOfInformation.PETABYTES: 1 / 8e15,
+        UnitOfInformation.EXABYTES: 1 / 8e18,
+        UnitOfInformation.ZETTABYTES: 1 / 8e21,
+        UnitOfInformation.YOTTABYTES: 1 / 8e24,
+        UnitOfInformation.KIBIBYTES: 1 / 2**13,
+        UnitOfInformation.MEBIBYTES: 1 / 2**23,
+        UnitOfInformation.GIBIBYTES: 1 / 2**33,
+        UnitOfInformation.TEBIBYTES: 1 / 2**43,
+        UnitOfInformation.PEBIBYTES: 1 / 2**53,
+        UnitOfInformation.EXBIBYTES: 1 / 2**63,
+        UnitOfInformation.ZEBIBYTES: 1 / 2**73,
+        UnitOfInformation.YOBIBYTES: 1 / 2**83,
+    }
+    VALID_UNITS = set(UnitOfInformation)
+
+
 class MassConverter(BaseUnitConverter):
     """Utility to convert mass values."""
 
@@ -148,6 +229,7 @@ class MassConverter(BaseUnitConverter):
         UnitOfMass.KILOGRAMS: 1 / 1000,
         UnitOfMass.OUNCES: 1 / _OUNCE_TO_G,
         UnitOfMass.POUNDS: 1 / _POUND_TO_G,
+        UnitOfMass.STONES: 1 / _STONE_TO_G,
     }
     VALID_UNITS = {
         UnitOfMass.GRAMS,
@@ -156,6 +238,7 @@ class MassConverter(BaseUnitConverter):
         UnitOfMass.MICROGRAMS,
         UnitOfMass.OUNCES,
         UnitOfMass.POUNDS,
+        UnitOfMass.STONES,
     }
 
 
@@ -332,21 +415,23 @@ class VolumeConverter(BaseUnitConverter):
     """Utility to convert volume values."""
 
     UNIT_CLASS = "volume"
-    NORMALIZED_UNIT = VOLUME_CUBIC_METERS
+    NORMALIZED_UNIT = UnitOfVolume.CUBIC_METERS
     # Units in terms of m³
     _UNIT_CONVERSION: dict[str, float] = {
-        VOLUME_LITERS: 1 / _L_TO_CUBIC_METER,
-        VOLUME_MILLILITERS: 1 / _ML_TO_CUBIC_METER,
-        VOLUME_GALLONS: 1 / _GALLON_TO_CUBIC_METER,
-        VOLUME_FLUID_OUNCE: 1 / _FLUID_OUNCE_TO_CUBIC_METER,
-        VOLUME_CUBIC_METERS: 1,
-        VOLUME_CUBIC_FEET: 1 / _CUBIC_FOOT_TO_CUBIC_METER,
+        UnitOfVolume.LITERS: 1 / _L_TO_CUBIC_METER,
+        UnitOfVolume.MILLILITERS: 1 / _ML_TO_CUBIC_METER,
+        UnitOfVolume.GALLONS: 1 / _GALLON_TO_CUBIC_METER,
+        UnitOfVolume.FLUID_OUNCES: 1 / _FLUID_OUNCE_TO_CUBIC_METER,
+        UnitOfVolume.CUBIC_METERS: 1,
+        UnitOfVolume.CUBIC_FEET: 1 / _CUBIC_FOOT_TO_CUBIC_METER,
+        UnitOfVolume.CENTUM_CUBIC_FEET: 1 / (100 * _CUBIC_FOOT_TO_CUBIC_METER),
     }
     VALID_UNITS = {
-        VOLUME_LITERS,
-        VOLUME_MILLILITERS,
-        VOLUME_GALLONS,
-        VOLUME_FLUID_OUNCE,
-        VOLUME_CUBIC_METERS,
-        VOLUME_CUBIC_FEET,
+        UnitOfVolume.LITERS,
+        UnitOfVolume.MILLILITERS,
+        UnitOfVolume.GALLONS,
+        UnitOfVolume.FLUID_OUNCES,
+        UnitOfVolume.CUBIC_METERS,
+        UnitOfVolume.CUBIC_FEET,
+        UnitOfVolume.CENTUM_CUBIC_FEET,
     }

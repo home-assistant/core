@@ -129,7 +129,7 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
         if self.info.primary_value.value is None:
             # guard missing value
             return None
-        return round((self.info.primary_value.value / 99) * 100)
+        return round((cast(int, self.info.primary_value.value) / 99) * 100)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""

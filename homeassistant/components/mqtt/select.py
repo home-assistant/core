@@ -48,7 +48,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_OPTIONS = "options"
 
 DEFAULT_NAME = "MQTT Select"
-DEFAULT_OPTIMISTIC = False
 
 MQTT_SELECT_ATTRIBUTES_BLOCKED = frozenset(
     {
@@ -61,13 +60,12 @@ PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Required(CONF_OPTIONS): cv.ensure_list,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-# Configuring MQTT Select under the select platform key is deprecated in HA Core 2022.6
+# Configuring MQTT Select under the select platform key was deprecated in HA Core 2022.6
 PLATFORM_SCHEMA = vol.All(
     warn_for_legacy_schema(select.DOMAIN),
 )

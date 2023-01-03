@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from xml.etree.ElementTree import ParseError
 
 from pyfritzhome import Fritzhome, FritzhomeDevice, LoginError
 from pyfritzhome.devicetypes.fritzhomeentitybase import FritzhomeEntityBase
@@ -13,7 +14,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -43,7 +44,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_CONNECTIONS: fritz,
     }
 
-    coordinator = FritzboxDataUpdateCoordinator(hass, entry)
+    try:
+        await hass.async_add_executor_job(fritz.update_templates)
+    except ParseError:
+        LOGGER.debug("Disable smarthome templates")
+        has_templates = False
+    else:
+        LOGGER.debug("Enable smarthome templates")
+        has_templates = True
+
+    coordinator = FritzboxDataUpdateCoordinator(hass, entry, has_templates)
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -52,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def _update_unique_id(entry: RegistryEntry) -> dict[str, str] | None:
         """Update unique ID of entity entry."""
         if (
-            entry.unit_of_measurement == TEMP_CELSIUS
+            entry.unit_of_measurement == UnitOfTemperature.CELSIUS
             and "_temperature" not in entry.unique_id
         ):
             new_unique_id = f"{entry.unique_id}_temperature"
@@ -111,16 +121,16 @@ class FritzBoxEntity(CoordinatorEntity[FritzboxDataUpdateCoordinator], ABC):
         self.ain = ain
         if entity_description is not None:
             self.entity_description = entity_description
-            self._attr_name = f"{self.entity.name} {entity_description.name}"
+            self._attr_name = f"{self.data.name} {entity_description.name}"
             self._attr_unique_id = f"{ain}_{entity_description.key}"
         else:
-            self._attr_name = self.entity.name
+            self._attr_name = self.data.name
             self._attr_unique_id = ain
 
     @property
     @abstractmethod
-    def entity(self) -> FritzhomeEntityBase:
-        """Return entity object from coordinator."""
+    def data(self) -> FritzhomeEntityBase:
+        """Return data object from coordinator."""
 
 
 class FritzBoxDeviceEntity(FritzBoxEntity):
@@ -129,21 +139,21 @@ class FritzBoxDeviceEntity(FritzBoxEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self.entity.present
+        return super().available and self.data.present
 
     @property
-    def entity(self) -> FritzhomeDevice:
-        """Return device object from coordinator."""
+    def data(self) -> FritzhomeDevice:
+        """Return device data object from coordinator."""
         return self.coordinator.data.devices[self.ain]
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         return DeviceInfo(
-            name=self.entity.name,
+            name=self.data.name,
             identifiers={(DOMAIN, self.ain)},
-            manufacturer=self.entity.manufacturer,
-            model=self.entity.productname,
-            sw_version=self.entity.fw_version,
+            manufacturer=self.data.manufacturer,
+            model=self.data.productname,
+            sw_version=self.data.fw_version,
             configuration_url=self.coordinator.configuration_url,
         )

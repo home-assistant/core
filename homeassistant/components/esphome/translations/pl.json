@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
             "already_in_progress": "Konfiguracja jest ju\u017c w toku",
+            "mdns_missing_mac": "Brak adresu MAC we w\u0142a\u015bciwo\u015bciach MDNS.",
             "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {
@@ -46,8 +47,8 @@
     },
     "issues": {
         "ble_firmware_outdated": {
-            "description": "Aby poprawi\u0107 niezawodno\u015b\u0107 i wydajno\u015b\u0107 Bluetooth, zdecydowanie zalecamy zaktualizowanie {name} do wersji ESPHome 2022.11.0 lub nowszej.",
-            "title": "Zaktualizuj {name} do wersji ESPHome 2022.11.0 lub nowszej"
+            "description": "Aby poprawi\u0107 niezawodno\u015b\u0107 i wydajno\u015b\u0107 Bluetooth, zdecydowanie zalecamy zaktualizowanie {name} do ESPHome {version} lub nowszej. Podczas aktualizacji urz\u0105dzenia do ESPHome {version} zaleca si\u0119 u\u017cycie kabla szeregowego zamiast aktualizacji bezprzewodowej, aby skorzysta\u0107 z nowego schematu partycji.",
+            "title": "Zaktualizuj {name} do wersji ESPHome {version} lub nowszej"
         }
     }
 }

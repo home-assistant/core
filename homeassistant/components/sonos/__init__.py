@@ -136,7 +136,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if deprecated_address := config.get(CONF_INTERFACE_ADDR):
         _LOGGER.warning(
-            "'%s' is deprecated, enable %s in the Network integration (https://www.home-assistant.io/integrations/network/)",
+            (
+                "'%s' is deprecated, enable %s in the Network integration"
+                " (https://www.home-assistant.io/integrations/network/)"
+            ),
             CONF_INTERFACE_ADDR,
             deprecated_address,
         )
@@ -365,7 +368,8 @@ class SonosDiscoveryManager:
         """Handle discovery via ssdp or zeroconf."""
         if self._manual_config_required:
             _LOGGER.warning(
-                "Automatic discovery is working, Sonos hosts in configuration.yaml are not needed"
+                "Automatic discovery is working, Sonos hosts in configuration.yaml are"
+                " not needed"
             )
             self._manual_config_required = False
         if model in DISCOVERY_IGNORED_MODELS:

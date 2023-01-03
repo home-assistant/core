@@ -76,7 +76,10 @@ from .const import (  # noqa: F401
     CONF_TLS_INSECURE,
     CONF_TLS_VERSION,
     CONF_TOPIC,
+    CONF_TRANSPORT,
     CONF_WILL_MESSAGE,
+    CONF_WS_HEADERS,
+    CONF_WS_PATH,
     DATA_MQTT,
     DEFAULT_ENCODING,
     DEFAULT_QOS,
@@ -134,6 +137,9 @@ CONFIG_ENTRY_CONFIG_KEYS = [
     CONF_PORT,
     CONF_PROTOCOL,
     CONF_TLS_INSECURE,
+    CONF_TRANSPORT,
+    CONF_WS_PATH,
+    CONF_WS_HEADERS,
     CONF_USERNAME,
     CONF_WILL_MESSAGE,
 ]
@@ -234,8 +240,10 @@ def _filter_entry_config(hass: HomeAssistant, entry: ConfigEntry) -> None:
     }
     if entry.data.keys() != filtered_data.keys():
         _LOGGER.warning(
-            "The following unsupported configuration options were removed from the "
-            "MQTT config entry: %s",
+            (
+                "The following unsupported configuration options were removed from the "
+                "MQTT config entry: %s"
+            ),
             entry.data.keys() - filtered_data.keys(),
         )
         hass.config_entries.async_update_entry(entry, data=filtered_data)
@@ -323,8 +331,10 @@ async def async_fetch_config(
             override[CONF_CLIENT_KEY] = "-----PRIVATE KEY-----"
         if override:
             _LOGGER.warning(
-                "Deprecated configuration settings found in configuration.yaml. "
-                "These settings from your configuration entry will override: %s",
+                (
+                    "Deprecated configuration settings found in configuration.yaml. "
+                    "These settings from your configuration entry will override: %s"
+                ),
                 override,
             )
         # Register a repair issue
@@ -369,10 +379,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_publish_service(call: ServiceCall) -> None:
         """Handle MQTT publish service calls."""
-        msg_topic = call.data.get(ATTR_TOPIC)
-        msg_topic_template = call.data.get(ATTR_TOPIC_TEMPLATE)
-        payload = call.data.get(ATTR_PAYLOAD)
-        payload_template = call.data.get(ATTR_PAYLOAD_TEMPLATE)
+        msg_topic: str | None = call.data.get(ATTR_TOPIC)
+        msg_topic_template: str | None = call.data.get(ATTR_TOPIC_TEMPLATE)
+        payload: PublishPayloadType = call.data.get(ATTR_PAYLOAD)
+        payload_template: str | None = call.data.get(ATTR_PAYLOAD_TEMPLATE)
         qos: int = call.data[ATTR_QOS]
         retain: bool = call.data[ATTR_RETAIN]
         if msg_topic_template is not None:
@@ -383,16 +393,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 msg_topic = valid_publish_topic(rendered_topic)
             except (jinja2.TemplateError, TemplateError) as exc:
                 _LOGGER.error(
-                    "Unable to publish: rendering topic template of %s "
-                    "failed because %s",
+                    (
+                        "Unable to publish: rendering topic template of %s "
+                        "failed because %s"
+                    ),
                     msg_topic_template,
                     exc,
                 )
                 return
             except vol.Invalid as err:
                 _LOGGER.error(
-                    "Unable to publish: topic template '%s' produced an "
-                    "invalid topic '%s' after rendering (%s)",
+                    (
+                        "Unable to publish: topic template '%s' produced an "
+                        "invalid topic '%s' after rendering (%s)"
+                    ),
                     msg_topic_template,
                     rendered_topic,
                     err,
@@ -406,8 +420,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 ).async_render()
             except (jinja2.TemplateError, TemplateError) as exc:
                 _LOGGER.error(
-                    "Unable to publish to %s: rendering payload template of "
-                    "%s failed because %s",
+                    (
+                        "Unable to publish to %s: rendering payload template of "
+                        "%s failed because %s"
+                    ),
                     msg_topic,
                     payload_template,
                     exc,
@@ -567,6 +583,7 @@ def websocket_mqtt_info(
     {
         vol.Required("type"): "mqtt/subscribe",
         vol.Required("topic"): valid_subscribe_topic,
+        vol.Optional("qos"): valid_qos_schema,
     }
 )
 @websocket_api.async_response
@@ -600,8 +617,9 @@ async def websocket_subscribe(
         )
 
     # Perform UTF-8 decoding directly in callback routine
+    qos: int = msg["qos"] if "qos" in msg else DEFAULT_QOS
     connection.subscriptions[msg["id"]] = await async_subscribe(
-        hass, msg["topic"], forward_messages, encoding=None
+        hass, msg["topic"], forward_messages, encoding=None, qos=qos
     )
 
     connection.send_message(websocket_api.result_message(msg["id"]))

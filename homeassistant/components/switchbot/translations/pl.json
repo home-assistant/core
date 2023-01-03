@@ -8,7 +8,9 @@
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "error": {
+            "encryption_key_invalid": "Identyfikator klucza lub klucz szyfruj\u0105cy jest nieprawid\u0142owy",
             "few": "Puste",
+            "key_id_invalid": "Identyfikator klucza lub klucz szyfruj\u0105cy jest nieprawid\u0142owy",
             "many": "Pustych",
             "one": "Pusty",
             "other": ""
@@ -18,6 +20,13 @@
             "confirm": {
                 "description": "Czy chcesz skonfigurowa\u0107 {name}?"
             },
+            "lock_key": {
+                "data": {
+                    "encryption_key": "Klucz szyfruj\u0105cy",
+                    "key_id": "Identyfikator klucza"
+                },
+                "description": "Urz\u0105dzenie {name} wymaga klucza szyfruj\u0105cego, szczeg\u00f3\u0142y jak go uzyska\u0107 znajdziesz w dokumentacji."
+            },
             "password": {
                 "data": {
                     "password": "Has\u0142o"
@@ -26,12 +35,8 @@
             },
             "user": {
                 "data": {
-                    "address": "Adres urz\u0105dzenia",
-                    "mac": "Adres MAC urz\u0105dzenia",
-                    "name": "Nazwa",
-                    "password": "Has\u0142o"
-                },
-                "title": "Konfiguracja urz\u0105dzenia Switchbot"
+                    "address": "Adres urz\u0105dzenia"
+                }
             }
         }
     },
@@ -39,10 +44,7 @@
         "step": {
             "init": {
                 "data": {
-                    "retry_count": "Liczba ponownych pr\u00f3b",
-                    "retry_timeout": "Limit czasu mi\u0119dzy kolejnymi pr\u00f3bami",
-                    "scan_timeout": "Jak d\u0142ugo skanowa\u0107 w poszukiwaniu danych reklamowych",
-                    "update_time": "Czas mi\u0119dzy aktualizacjami (sekundy)"
+                    "retry_count": "Liczba ponownych pr\u00f3b"
                 }
             }
         }

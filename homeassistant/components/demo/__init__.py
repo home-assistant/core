@@ -16,14 +16,12 @@ from homeassistant.components.recorder.statistics import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_MEGA_WATT_HOUR,
     EVENT_HOMEASSISTANT_START,
-    SOUND_PRESSURE_DB,
-    TEMP_CELSIUS,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
     Platform,
+    UnitOfEnergy,
+    UnitOfSoundPressure,
+    UnitOfTemperature,
+    UnitOfVolume,
 )
 import homeassistant.core as ha
 from homeassistant.core import Event, HomeAssistant
@@ -52,6 +50,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
+    Platform.TEXT,
     Platform.UPDATE,
     Platform.VACUUM,
     Platform.WATER_HEATER,
@@ -162,7 +161,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                         "min": 0,
                         "max": 10,
                         "name": "Allowed Noise",
-                        "unit_of_measurement": SOUND_PRESSURE_DB,
+                        "unit_of_measurement": UnitOfSoundPressure.DECIBEL,
                     }
                 }
             },
@@ -228,6 +227,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         learn_more_url="https://www.youtube.com/watch?v=b9rntRxLlbU",
         severity=IssueSeverity.CRITICAL,
         translation_key="bad_psu",
+    )
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "cold_tea",
+        is_fixable=True,
+        severity=IssueSeverity.WARNING,
+        translation_key="cold_tea",
     )
 
     return True
@@ -296,7 +304,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "source": DOMAIN,
         "name": "Outdoor temperature",
         "statistic_id": f"{DOMAIN}:temperature_outdoor",
-        "unit_of_measurement": TEMP_CELSIUS,
+        "unit_of_measurement": UnitOfTemperature.CELSIUS,
         "has_mean": True,
         "has_sum": False,
     }
@@ -309,7 +317,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "source": DOMAIN,
         "name": "Energy consumption 1",
         "statistic_id": f"{DOMAIN}:energy_consumption_kwh",
-        "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
+        "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
         "has_mean": False,
         "has_sum": True,
     }
@@ -321,7 +329,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "source": DOMAIN,
         "name": "Energy consumption 2",
         "statistic_id": f"{DOMAIN}:energy_consumption_mwh",
-        "unit_of_measurement": ENERGY_MEGA_WATT_HOUR,
+        "unit_of_measurement": UnitOfEnergy.MEGA_WATT_HOUR,
         "has_mean": False,
         "has_sum": True,
     }
@@ -335,7 +343,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "source": DOMAIN,
         "name": "Gas consumption 1",
         "statistic_id": f"{DOMAIN}:gas_consumption_m3",
-        "unit_of_measurement": VOLUME_CUBIC_METERS,
+        "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "has_mean": False,
         "has_sum": True,
     }
@@ -349,7 +357,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "source": DOMAIN,
         "name": "Gas consumption 2",
         "statistic_id": f"{DOMAIN}:gas_consumption_ft3",
-        "unit_of_measurement": VOLUME_CUBIC_FEET,
+        "unit_of_measurement": UnitOfVolume.CUBIC_FEET,
         "has_mean": False,
         "has_sum": True,
     }

@@ -11,12 +11,6 @@
             "invalid_auth": "Ogiltig autentisering"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "password": "L\u00f6senord"
-                },
-                "description": "Autentiseringstokens blev ogiltiga, logga in f\u00f6r att \u00e5terskapa dem."
-            },
             "user": {
                 "data": {
                     "password": "L\u00f6senord",

@@ -1,7 +1,35 @@
 """Test fixtures for the Home Assistant Hardware integration."""
-from unittest.mock import patch
+from collections.abc import Generator
+from typing import Any
+from unittest.mock import MagicMock, patch
 
 import pytest
+
+
+@pytest.fixture(autouse=True)
+def mock_zha_config_flow_setup() -> Generator[None, None, None]:
+    """Mock the radio connection and probing of the ZHA config flow."""
+
+    def mock_probe(config: dict[str, Any]) -> None:
+        # The radio probing will return the correct baudrate
+        return {**config, "baudrate": 115200}
+
+    mock_connect_app = MagicMock()
+    mock_connect_app.__aenter__.return_value.backups.backups = [MagicMock()]
+    mock_connect_app.__aenter__.return_value.backups.create_backup.return_value = (
+        MagicMock()
+    )
+
+    with patch(
+        "bellows.zigbee.application.ControllerApplication.probe", side_effect=mock_probe
+    ), patch(
+        "homeassistant.components.zha.radio_manager.ZhaRadioManager._connect_zigpy_app",
+        return_value=mock_connect_app,
+    ), patch(
+        "homeassistant.components.zha.async_setup_entry",
+        return_value=True,
+    ):
+        yield
 
 
 @pytest.fixture(name="addon_running")
@@ -39,6 +67,7 @@ def addon_store_info_fixture():
         "homeassistant.components.hassio.addon_manager.async_get_addon_store_info"
     ) as addon_store_info:
         addon_store_info.return_value = {
+            "available": True,
             "installed": None,
             "state": None,
             "version": "1.0.0",
@@ -53,6 +82,7 @@ def addon_info_fixture():
         "homeassistant.components.hassio.addon_manager.async_get_addon_info",
     ) as addon_info:
         addon_info.return_value = {
+            "available": True,
             "hostname": None,
             "options": {},
             "state": None,

@@ -14,6 +14,7 @@
                 "data": {
                     "password": "Wachtwoord"
                 },
+                "description": "Werk je wachtwoord bij voor {email}",
                 "title": "Integratie herauthenticeren"
             },
             "user": {

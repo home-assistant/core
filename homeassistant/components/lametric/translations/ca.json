@@ -44,9 +44,19 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "brightness_mode": {
+                "state": {
+                    "auto": "Autom\u00e0tic",
+                    "manual": "Manual"
+                }
+            }
+        }
+    },
     "issues": {
         "manual_migration": {
-            "description": "La integraci\u00f3 de LaMetric s'ha modernitzat: ara es configura a trav\u00e9s de la interf\u00edcie d'usuari (IU) i les comunicacions s\u00f3n locals. \n\nMalauradament, no hi ha cap possibilitat de migraci\u00f3 autom\u00e0tica i, per tant, cal que tornis a configurar el teu dispositiu LaMetric amb Home Assistant. Consulta la documentaci\u00f3 de la integraci\u00f3 LaMetric de Home Assistant per fer-ho. \n\nElimina l'antiga configuraci\u00f3 YAML de LaMetric del fitxer configuration.yaml i reinicia Home Assistant per solucionar aquest problema.",
+            "description": "La integraci\u00f3 LaMetric s'ha modernitzat: ara es configura a trav\u00e9s de la interf\u00edcie d'usuari (IU) i les comunicacions s\u00f3n locals. \n\nMalauradament, no hi ha cap possibilitat de migraci\u00f3 autom\u00e0tica i, per tant, cal que tornis a configurar el teu dispositiu LaMetric amb Home Assistant. Consulta la documentaci\u00f3 de la integraci\u00f3 LaMetric de Home Assistant per fer-ho. \n\nElimina l'antiga configuraci\u00f3 YAML de LaMetric del fitxer configuration.yaml i reinicia Home Assistant per solucionar aquest problema.",
             "title": "\u00c9s necess\u00e0ria una migraci\u00f3 manual per a LaMetric"
         }
     }

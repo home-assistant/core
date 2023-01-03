@@ -41,13 +41,36 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "license_plate": {
+                "state": {
+                    "none": "Puudub"
+                }
+            }
+        }
+    },
     "issues": {
+        "deprecate_smart_sensor": {
+            "description": "Nutikate tuvastuste jaoks m\u00f5eldud \u00fchtne andur \"Tuvastatud objekt\" on n\u00fc\u00fcd kasutuselt k\u00f5rvaldatud. See on asendatud individuaalsete nutika tuvastamise binaarsete anduritega iga nutika tuvastust\u00fc\u00fcbi jaoks.\n\nAllpool on tuvastatud automatiseerimised v\u00f5i skriptid, mis kasutavad \u00fchte v\u00f5i mitut aegunud olemit:\n{items}\n\u00dclaltoodud loend v\u00f5ib olla puudulik ja see ei sisalda armatuurlaudade sees olevaid mallikasutusi. Palun v\u00e4rskenda vastavalt k\u00f5iki malle, automaatikaid v\u00f5i skripte.",
+            "title": "Nutika tuvastamise andur on aegunud"
+        },
+        "deprecated_service_set_doorbell_message": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Teenus `unifiprotect.set_doorbell_message` on kaotanud oma kehtivuse, asendades selle uue, igale uksekella seadmele lisatud uksekella teksti olemiga. See eemaldatakse versioonis v2023.3.0. Palun ajakohasta, et kasutada teenust [`text.set_value` ({link}).",
+                        "title": "set_doorbell_message on aegunud"
+                    }
+                }
+            },
+            "title": "set_doorbell_message on aegunud"
+        },
         "ea_setup_failed": {
             "description": "Kasutad UniFi Protecti v {version} mis on varajase juurdep\u00e4\u00e4su versioon. Sidumise laadimisel ilmnes parandamatu viga. Sidumise kasutamise j\u00e4tkamiseks [alanda UniFi Protecti stabiilsele versioonile](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect). \n\n Viga: {error}",
             "title": "Varajase juurdep\u00e4\u00e4su versiooni h\u00e4\u00e4lestamise t\u00f5rge"
         },
         "ea_warning": {
-            "description": "Kasutad UniFi Protecti v{version}. Home Assistant ei toeta varajase juurdep\u00e4\u00e4su versioone ja see v\u00f5ib p\u00f5hjustada UniFi Protecti sidumise katkemist v\u00f5i ei t\u00f6\u00f6ta see ootusp\u00e4raselt.",
             "fix_flow": {
                 "step": {
                     "confirm": {
@@ -64,16 +87,12 @@
         }
     },
     "options": {
-        "error": {
-            "invalid_mac_list": "Peab olema komadega eraldatud MAC-aadresside loend"
-        },
         "step": {
             "init": {
                 "data": {
                     "all_updates": "Reaalajas m\u00f5\u00f5dikud (HOIATUS: suurendab oluliselt CPU kasutust)",
                     "allow_ea": "Protecti varajase juurdep\u00e4\u00e4su versioonide lubamine (HOIATUS: m\u00e4rgib sidumise mitte toetatuks)",
                     "disable_rtsp": "Keela RTSP voog",
-                    "ignored_devices": "Komaga eraldatud loend nende seadmete MAC-aadressidest mida eirata",
                     "max_media": "Meediumibrauserisse laaditavate s\u00fcndmuste maksimaalne arv (suurendab RAM-i kasutamist)",
                     "override_connection_host": "\u00dchenduse hosti alistamine"
                 },

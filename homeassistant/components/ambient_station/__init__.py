@@ -213,7 +213,9 @@ class AmbientWeatherEntity(Entity):
 
         public_device_id = get_public_device_id(mac_address)
         self._attr_device_info = DeviceInfo(
-            configuration_url=f"https://ambientweather.net/dashboard/{public_device_id}",
+            configuration_url=(
+                f"https://ambientweather.net/dashboard/{public_device_id}"
+            ),
             identifiers={(DOMAIN, mac_address)},
             manufacturer="Ambient Weather",
             name=station_name.capitalize(),

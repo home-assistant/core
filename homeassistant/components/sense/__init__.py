@@ -66,6 +66,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     access_token = entry_data.get("access_token", "")
     user_id = entry_data.get("user_id", "")
+    device_id = entry_data.get("device_id", "")
+    refresh_token = entry_data.get("refresh_token", "")
     monitor_id = entry_data.get("monitor_id", "")
 
     client_session = async_get_clientsession(hass)
@@ -76,7 +78,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     gateway.rate_limit = ACTIVE_UPDATE_RATE
 
     try:
-        gateway.load_auth(access_token, user_id, monitor_id)
+        gateway.load_auth(access_token, user_id, device_id, refresh_token)
+        gateway.set_monitor_id(monitor_id)
         await gateway.get_monitor_data()
     except (SenseAuthenticationException, SenseMFARequiredException) as err:
         _LOGGER.warning("Sense authentication expired")

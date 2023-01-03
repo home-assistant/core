@@ -37,6 +37,15 @@ DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     properties={zeroconf.ATTR_PROPERTIES_ID: "shelly1pm-12345"},
     type="mock_type",
 )
+DISCOVERY_INFO_WITH_MAC = zeroconf.ZeroconfServiceInfo(
+    host="1.1.1.1",
+    addresses=["1.1.1.1"],
+    hostname="mock_hostname",
+    name="shelly1pm-AABBCCDDEEFF",
+    port=None,
+    properties={zeroconf.ATTR_PROPERTIES_ID: "shelly1pm-AABBCCDDEEFF"},
+    type="mock_type",
+)
 MOCK_CONFIG = {
     "sys": {
         "device": {"name": "Test name"},
@@ -522,18 +531,26 @@ async def test_form_auth_errors_test_connection_gen2(hass, error):
     assert result3["errors"] == {"base": base_error}
 
 
-async def test_zeroconf(hass):
+@pytest.mark.parametrize(
+    "gen, get_info",
+    [
+        (1, {"mac": "test-mac", "type": "SHSW-1", "auth": False, "gen": 1}),
+        (2, {"mac": "test-mac", "model": "SHSW-1", "auth": False, "gen": 2}),
+    ],
+)
+async def test_zeroconf(hass, gen, get_info):
     """Test we get the form."""
 
-    with patch(
-        "aioshelly.common.get_info",
-        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
-    ), patch(
+    with patch("aioshelly.common.get_info", return_value=get_info), patch(
         "aioshelly.block_device.BlockDevice.create",
+        new=AsyncMock(return_value=Mock(model="SHSW-1", settings=MOCK_SETTINGS)),
+    ), patch(
+        "aioshelly.rpc_device.RpcDevice.create",
         new=AsyncMock(
             return_value=Mock(
-                model="SHSW-1",
-                settings=MOCK_SETTINGS,
+                shelly={"model": "SHSW-1", "gen": gen},
+                config=MOCK_CONFIG,
+                shutdown=AsyncMock(),
             )
         ),
     ):
@@ -569,7 +586,7 @@ async def test_zeroconf(hass):
         "host": "1.1.1.1",
         "model": "SHSW-1",
         "sleep_period": 0,
-        "gen": 1,
+        "gen": gen,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -1056,3 +1073,67 @@ async def test_options_flow_pre_ble_device(hass, mock_pre_ble_rpc_device):
     assert result["reason"] == "ble_unsupported"
 
     await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_zeroconf_already_configured_triggers_refresh_mac_in_name(
+    hass, mock_rpc_device, monkeypatch
+):
+    """Test zeroconf discovery triggers refresh when the mac is in the device name."""
+    entry = MockConfigEntry(
+        domain="shelly",
+        unique_id="AABBCCDDEEFF",
+        data={"host": "1.1.1.1", "gen": 2, "sleep_period": 0, "model": "SHSW-1"},
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(mock_rpc_device.initialize.mock_calls) == 1
+
+    with patch(
+        "aioshelly.common.get_info",
+        return_value={"mac": "", "type": "SHSW-1", "auth": False},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DISCOVERY_INFO_WITH_MAC,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    mock_rpc_device.mock_disconnected()
+    await hass.async_block_till_done()
+    assert len(mock_rpc_device.initialize.mock_calls) == 2
+
+
+async def test_zeroconf_already_configured_triggers_refresh(
+    hass, mock_rpc_device, monkeypatch
+):
+    """Test zeroconf discovery triggers refresh when the mac is obtained via get_info."""
+    entry = MockConfigEntry(
+        domain="shelly",
+        unique_id="AABBCCDDEEFF",
+        data={"host": "1.1.1.1", "gen": 2, "sleep_period": 0, "model": "SHSW-1"},
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(mock_rpc_device.initialize.mock_calls) == 1
+
+    with patch(
+        "aioshelly.common.get_info",
+        return_value={"mac": "AABBCCDDEEFF", "type": "SHSW-1", "auth": False},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DISCOVERY_INFO,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    mock_rpc_device.mock_disconnected()
+    await hass.async_block_till_done()
+    assert len(mock_rpc_device.initialize.mock_calls) == 2

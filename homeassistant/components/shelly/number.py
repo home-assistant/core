@@ -25,7 +25,6 @@ from .entity import (
     ShellySleepingBlockAttributeEntity,
     async_setup_entry_attribute_entities,
 )
-from .utils import get_device_entry_gen
 
 
 @dataclass
@@ -77,9 +76,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up numbers for device."""
-    if get_device_entry_gen(config_entry) == 2:
-        return
-
     if config_entry.data[CONF_SLEEP_PERIOD]:
         async_setup_entry_attribute_entities(
             hass,
@@ -121,7 +117,8 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, NumberEntity):
         except DeviceConnectionError as err:
             self.coordinator.last_update_success = False
             raise HomeAssistantError(
-                f"Setting state for entity {self.name} failed, state: {params}, error: {repr(err)}"
+                f"Setting state for entity {self.name} failed, state: {params}, error:"
+                f" {repr(err)}"
             ) from err
         except InvalidAuthError:
             self.coordinator.entry.async_start_reauth(self.hass)

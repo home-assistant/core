@@ -47,7 +47,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     ),
     SENSOR_MOISTURE: SensorEntityDescription(
         key=SENSOR_MOISTURE,
-        device_class=SENSOR_MOISTURE,
+        device_class=SensorDeviceClass.MOISTURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_LIGHT: SensorEntityDescription(

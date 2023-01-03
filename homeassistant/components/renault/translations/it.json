@@ -31,5 +31,38 @@
                 "title": "Imposta le credenziali Renault"
             }
         }
+    },
+    "entity": {
+        "select": {
+            "charge_mode": {
+                "state": {
+                    "always": "Immediata",
+                    "always_charging": "Immediata",
+                    "schedule_mode": "Pianificatore"
+                }
+            }
+        },
+        "sensor": {
+            "charge_state": {
+                "state": {
+                    "charge_ended": "Carica terminata",
+                    "charge_error": "Non \u00e8 in carica o non \u00e8 collegata",
+                    "charge_in_progress": "Ricaricando",
+                    "energy_flap_opened": "Sportello energetico aperto",
+                    "not_in_charge": "Non in carica",
+                    "unavailable": "Non disponibile",
+                    "waiting_for_a_planned_charge": "In attesa di addebito pianificato",
+                    "waiting_for_current_charge": "In attesa della carica corrente"
+                }
+            },
+            "plug_state": {
+                "state": {
+                    "plug_error": "Errore di spina",
+                    "plug_unknown": "Spina sconosciuta",
+                    "plugged": "Collegato",
+                    "unplugged": "Scollegato"
+                }
+            }
+        }
     }
 }

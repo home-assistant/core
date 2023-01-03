@@ -7,10 +7,43 @@
             "switchbot_unsupported_type": "Tipus de Switchbot no compatible.",
             "unknown": "Error inesperat"
         },
+        "error": {
+            "auth_failed": "Ha fallat l'autenticaci\u00f3",
+            "encryption_key_invalid": "L'ID de clau o la clau de xifrat no s\u00f3n v\u00e0lids",
+            "key_id_invalid": "L'ID de clau o la clau de xifrat no s\u00f3n v\u00e0lids"
+        },
         "flow_title": "{name} ({address})",
         "step": {
             "confirm": {
                 "description": "Vols configurar {name}?"
+            },
+            "lock_auth": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                },
+                "description": "Subministreu el nom d'usuari i la contrasenya d'acc\u00e9s a la vostra app SwitchBot. Aquesta informaci\u00f3 no es desar\u00e0 i nom\u00e9s s'utilitza per recuperar la clau de xifrat."
+            },
+            "lock_choose_method": {
+                "description": "Els panys SwitchBot es poden configurar a Home Assistant de dues maneres diferents. \n\nPots introduir l'identificador de clau i la clau de xifrat, o b\u00e9, Home Assistant ho pot importar des del teu compte de SwitchBot.",
+                "menu_options": {
+                    "lock_auth": "Compte de SwitchBot (recomanat)",
+                    "lock_key": "Introdueix la clau de xifrat del pany manualment"
+                }
+            },
+            "lock_chose_method": {
+                "description": "Escolliu el m\u00e8tode de configuraci\u00f3; podeu trobar els detalls a la documentaci\u00f3.",
+                "menu_options": {
+                    "lock_auth": "Usuari i Contrasenya de l'app SwitchBot",
+                    "lock_key": "Bloca la clau de xifrat"
+                }
+            },
+            "lock_key": {
+                "data": {
+                    "encryption_key": "Clau de xifrat",
+                    "key_id": "ID de clau"
+                },
+                "description": "El dispositiu {name} necessita una clau de xifrat, els detalls sobre com obtenir-la es poden trobar a la documentaci\u00f3."
             },
             "password": {
                 "data": {
@@ -20,12 +53,8 @@
             },
             "user": {
                 "data": {
-                    "address": "Adre\u00e7a del dispositiu",
-                    "mac": "Adre\u00e7a MAC del dispositiu",
-                    "name": "Nom",
-                    "password": "Contrasenya"
-                },
-                "title": "Configuraci\u00f3 de dispositiu Switchbot"
+                    "address": "Adre\u00e7a del dispositiu"
+                }
             }
         }
     },
@@ -33,10 +62,7 @@
         "step": {
             "init": {
                 "data": {
-                    "retry_count": "Nombre de reintents",
-                    "retry_timeout": "Temps d'espera entre reintents",
-                    "scan_timeout": "Quant de temps s'ha d'escanejar en busca de dades d'alerta",
-                    "update_time": "Temps entre actualitzacions (segons)"
+                    "retry_count": "Nombre de reintents"
                 }
             }
         }

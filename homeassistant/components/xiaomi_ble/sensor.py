@@ -21,12 +21,12 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     CONDUCTIVITY,
-    ELECTRIC_POTENTIAL_VOLT,
     LIGHT_LUX,
     PERCENTAGE,
-    PRESSURE_MBAR,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    TEMP_CELSIUS,
+    UnitOfElectricPotential,
+    UnitOfPressure,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -79,7 +79,7 @@ SENSOR_DESCRIPTIONS = {
     (DeviceClass.PRESSURE, Units.PRESSURE_MBAR): SensorEntityDescription(
         key=f"{DeviceClass.PRESSURE}_{Units.PRESSURE_MBAR}",
         device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement=PRESSURE_MBAR,
+        native_unit_of_measurement=UnitOfPressure.MBAR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (
@@ -96,13 +96,13 @@ SENSOR_DESCRIPTIONS = {
     (DeviceClass.TEMPERATURE, Units.TEMP_CELSIUS): SensorEntityDescription(
         key=f"{DeviceClass.TEMPERATURE}_{Units.TEMP_CELSIUS}",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (DeviceClass.VOLTAGE, Units.ELECTRIC_POTENTIAL_VOLT): SensorEntityDescription(
         key=f"{DeviceClass.VOLTAGE}_{Units.ELECTRIC_POTENTIAL_VOLT}",
         device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),

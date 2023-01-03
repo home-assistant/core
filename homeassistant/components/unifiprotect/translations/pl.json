@@ -41,13 +41,36 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "license_plate": {
+                "state": {
+                    "none": "brak"
+                }
+            }
+        }
+    },
     "issues": {
+        "deprecate_smart_sensor": {
+            "description": "Ujednolicony sensor \u201eWykryty obiekt\u201d do inteligentnego wykrywania jest teraz przestarza\u0142y. Zosta\u0142 on zast\u0105piony indywidualnymi sensorami binarnymi dla ka\u017cdego typu inteligentnej detekcji.\n\nPoni\u017cej znajduj\u0105 si\u0119 wykryte automatyzacje lub skrypty korzystaj\u0105ce z conajmniej jednej przestarza\u0142ej encji:\n{item}\nPowy\u017csza lista mo\u017ce by\u0107 niekompletna i nie zawiera \u017cadnych zastosowa\u0144 szablon\u00f3w z dashboard\u00f3w. Zaktualizuj odpowiednio wszystkie szablony, automatyzacje lub skrypty.",
+            "title": "Przestarza\u0142y inteligentny sensor wykrywania"
+        },
+        "deprecated_service_set_doorbell_message": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Us\u0142uga `unifiprotect.set_doorbell_message` jest przestarza\u0142a i zast\u0105piona now\u0105 encj\u0105 tekstow\u0105 dodawan\u0105 do ka\u017cdego urz\u0105dzenia typu doorbell. Us\u0142uga zostanie usuni\u0119ta w wersji 2023.3.0. Zaktualizuj, aby korzysta\u0107 z us\u0142ugi [`text.set_value`]({link}).",
+                        "title": "set_doorbell_message jest przestarza\u0142a"
+                    }
+                }
+            },
+            "title": "set_doorbell_message jest przestarza\u0142a"
+        },
         "ea_setup_failed": {
             "description": "U\u017cywasz wersji {version} UniFi Protect, kt\u00f3ra jest wersj\u0105 Early Access. Wyst\u0105pi\u0142 nienaprawialny b\u0142\u0105d podczas pr\u00f3by za\u0142adowania integracji. Aby kontynuowa\u0107 korzystanie z integracji, [zmie\u0144 wersj\u0119 na stabiln\u0105](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) UniFi Protect. \n\nB\u0142\u0105d: {error}",
             "title": "B\u0142\u0105d konfiguracji w wersji Early Access"
         },
         "ea_warning": {
-            "description": "U\u017cywasz UniFi Protect v{version}, kt\u00f3ra jest wersj\u0105 Early Access. Wersje Early Access nie s\u0105 obs\u0142ugiwane przez Home Assistanta i mog\u0105 spowodowa\u0107 uszkodzenie integracji UniFi Protect lub niedzia\u0142anie zgodnie z oczekiwaniami.",
             "fix_flow": {
                 "step": {
                     "confirm": {
@@ -64,16 +87,12 @@
         }
     },
     "options": {
-        "error": {
-            "invalid_mac_list": "Musi to by\u0107 lista adres\u00f3w MAC oddzielonych przecinkami"
-        },
         "step": {
             "init": {
                 "data": {
                     "all_updates": "Metryki w czasie rzeczywistym (UWAGA: Znacznie zwi\u0119ksza u\u017cycie CPU)",
                     "allow_ea": "Zezw\u00f3l na wersje UniFi Protect Early Access (OSTRZE\u017bENIE: Twoja integracja zostanie oznaczona jako nieobs\u0142ugiwana)",
                     "disable_rtsp": "Wy\u0142\u0105cz strumie\u0144 RTSP",
-                    "ignored_devices": "Oddzielona przecinkami lista adres\u00f3w MAC urz\u0105dze\u0144 do zignorowania",
                     "max_media": "Maksymalna liczba zdarze\u0144 do za\u0142adowania dla przegl\u0105darki medi\u00f3w (zwi\u0119ksza u\u017cycie pami\u0119ci RAM)",
                     "override_connection_host": "Zast\u0105p host po\u0142\u0105czenia"
                 },

@@ -4,13 +4,46 @@
             "already_configured_device": "Ger\u00e4t ist bereits konfiguriert",
             "cannot_connect": "Verbindung fehlgeschlagen",
             "no_unconfigured_devices": "Keine unkonfigurierten Ger\u00e4te gefunden.",
-            "switchbot_unsupported_type": "Nicht unterst\u00fctzter Switchbot-Typ.",
+            "switchbot_unsupported_type": "Nicht unterst\u00fctzter Switchbot Typ.",
             "unknown": "Unerwarteter Fehler"
+        },
+        "error": {
+            "auth_failed": "Authentifizierung fehlgeschlagen",
+            "encryption_key_invalid": "Schl\u00fcssel-ID oder Verschl\u00fcsselungsschl\u00fcssel ist ung\u00fcltig",
+            "key_id_invalid": "Schl\u00fcssel-ID oder Verschl\u00fcsselungsschl\u00fcssel ist ung\u00fcltig"
         },
         "flow_title": "{name} ({address})",
         "step": {
             "confirm": {
                 "description": "M\u00f6chtest du {name} einrichten?"
+            },
+            "lock_auth": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "description": "Bitte geben deinen Benutzernamen und dein Passwort f\u00fcr die SwitchBot-App ein. Diese Daten werden nicht gespeichert und nur zum Abrufen des Verschl\u00fcsselungsschl\u00fcssels deines Schlosses verwendet."
+            },
+            "lock_choose_method": {
+                "description": "Ein SwitchBot-Schloss kann im Home Assistant auf zwei verschiedene Arten eingerichtet werden.\n\nDu kannst die Schl\u00fcssel-ID und den Verschl\u00fcsselungscode selbst eingeben oder Home Assistant kann sie von deinem SwitchBot-Konto importieren.",
+                "menu_options": {
+                    "lock_auth": "SwitchBot-Konto (empfohlen)",
+                    "lock_key": "Verschl\u00fcsselungscode manuell eingeben"
+                }
+            },
+            "lock_chose_method": {
+                "description": "W\u00e4hle die Konfigurationsmethode, Einzelheiten findest du in der Dokumentation.",
+                "menu_options": {
+                    "lock_auth": "Login und Passwort der SwitchBot-App",
+                    "lock_key": "Verschl\u00fcsselungsschl\u00fcssel sperren"
+                }
+            },
+            "lock_key": {
+                "data": {
+                    "encryption_key": "Verschl\u00fcsselungsschl\u00fcssel",
+                    "key_id": "Schl\u00fcssel-ID"
+                },
+                "description": "Das Ger\u00e4t {name} ben\u00f6tigt einen Verschl\u00fcsselungsschl\u00fcssel. Einzelheiten dazu, wie du diesen erh\u00e4ltst, findest du in der Dokumentation."
             },
             "password": {
                 "data": {
@@ -20,12 +53,8 @@
             },
             "user": {
                 "data": {
-                    "address": "Ger\u00e4teadresse",
-                    "mac": "MAC-Adresse des Ger\u00e4ts",
-                    "name": "Name",
-                    "password": "Passwort"
-                },
-                "title": "Switchbot-Ger\u00e4t einrichten"
+                    "address": "Ger\u00e4teadresse"
+                }
             }
         }
     },
@@ -33,10 +62,7 @@
         "step": {
             "init": {
                 "data": {
-                    "retry_count": "Anzahl der Wiederholungen",
-                    "retry_timeout": "Zeit\u00fcberschreitung zwischen Wiederholungsversuchen",
-                    "scan_timeout": "Wie lange nach Anzeigendaten suchen",
-                    "update_time": "Zeit zwischen Aktualisierungen (Sekunden)"
+                    "retry_count": "Anzahl der Wiederholungen"
                 }
             }
         }

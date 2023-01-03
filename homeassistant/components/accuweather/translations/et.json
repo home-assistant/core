@@ -22,9 +22,20 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "pressure_tendency": {
+                "state": {
+                    "falling": "Langev",
+                    "rising": "T\u00f5usev",
+                    "steady": "\u00dchtlane"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
-            "user": {
+            "init": {
                 "data": {
                     "forecast": "Ilmateade"
                 },

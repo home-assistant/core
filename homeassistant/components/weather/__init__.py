@@ -11,24 +11,14 @@ from typing import Any, Final, TypedDict, final
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    LENGTH_INCHES,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
-    LENGTH_MILLIMETERS,
     PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
-    PRESSURE_HPA,
-    PRESSURE_INHG,
-    PRESSURE_MBAR,
-    PRESSURE_MMHG,
-    SPEED_FEET_PER_SECOND,
-    SPEED_KILOMETERS_PER_HOUR,
-    SPEED_KNOTS,
-    SPEED_METERS_PER_SECOND,
-    SPEED_MILES_PER_HOUR,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfLength,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -44,7 +34,7 @@ from homeassistant.util.unit_conversion import (
     SpeedConverter,
     TemperatureConverter,
 )
-from homeassistant.util.unit_system import METRIC_SYSTEM
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,29 +91,29 @@ SCAN_INTERVAL = timedelta(seconds=30)
 ROUNDING_PRECISION = 2
 
 VALID_UNITS_PRESSURE: set[str] = {
-    PRESSURE_HPA,
-    PRESSURE_MBAR,
-    PRESSURE_INHG,
-    PRESSURE_MMHG,
+    UnitOfPressure.HPA,
+    UnitOfPressure.MBAR,
+    UnitOfPressure.INHG,
+    UnitOfPressure.MMHG,
 }
 VALID_UNITS_TEMPERATURE: set[str] = {
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature.CELSIUS,
+    UnitOfTemperature.FAHRENHEIT,
 }
 VALID_UNITS_PRECIPITATION: set[str] = {
-    LENGTH_MILLIMETERS,
-    LENGTH_INCHES,
+    UnitOfPrecipitationDepth.MILLIMETERS,
+    UnitOfPrecipitationDepth.INCHES,
 }
 VALID_UNITS_VISIBILITY: set[str] = {
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
+    UnitOfLength.KILOMETERS,
+    UnitOfLength.MILES,
 }
 VALID_UNITS_WIND_SPEED: set[str] = {
-    SPEED_FEET_PER_SECOND,
-    SPEED_KILOMETERS_PER_HOUR,
-    SPEED_KNOTS,
-    SPEED_METERS_PER_SECOND,
-    SPEED_MILES_PER_HOUR,
+    UnitOfSpeed.FEET_PER_SECOND,
+    UnitOfSpeed.KILOMETERS_PER_HOUR,
+    UnitOfSpeed.KNOTS,
+    UnitOfSpeed.METERS_PER_SECOND,
+    UnitOfSpeed.MILES_PER_HOUR,
 }
 
 UNIT_CONVERSIONS: dict[str, Callable[[float, str, str], float]] = {
@@ -307,9 +297,11 @@ class WeatherEntity(Entity):
                         "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
                     )
                 _LOGGER.warning(
-                    "%s::%s is overriding deprecated methods on an instance of "
-                    "WeatherEntity, this is not valid and will be unsupported "
-                    "from Home Assistant 2023.1. Please %s",
+                    (
+                        "%s::%s is overriding deprecated methods on an instance of "
+                        "WeatherEntity, this is not valid and will be unsupported "
+                        "from Home Assistant 2023.1. Please %s"
+                    ),
                     cls.__module__,
                     cls.__name__,
                     report_issue,
@@ -420,9 +412,9 @@ class WeatherEntity(Entity):
 
         Should not be set by integrations.
         """
-        return (
-            PRESSURE_HPA if self.hass.config.units is METRIC_SYSTEM else PRESSURE_INHG
-        )
+        if self.hass.config.units is US_CUSTOMARY_SYSTEM:
+            return UnitOfPressure.INHG
+        return UnitOfPressure.HPA
 
     @final
     @property
@@ -484,11 +476,9 @@ class WeatherEntity(Entity):
 
         Should not be set by integrations.
         """
-        return (
-            SPEED_KILOMETERS_PER_HOUR
-            if self.hass.config.units is METRIC_SYSTEM
-            else SPEED_MILES_PER_HOUR
-        )
+        if self.hass.config.units is US_CUSTOMARY_SYSTEM:
+            return UnitOfSpeed.MILES_PER_HOUR
+        return UnitOfSpeed.KILOMETERS_PER_HOUR
 
     @final
     @property
@@ -623,7 +613,7 @@ class WeatherEntity(Entity):
             return self._attr_precision
         return (
             PRECISION_TENTHS
-            if self._temperature_unit == TEMP_CELSIUS
+            if self._temperature_unit == UnitOfTemperature.CELSIUS
             else PRECISION_WHOLE
         )
 

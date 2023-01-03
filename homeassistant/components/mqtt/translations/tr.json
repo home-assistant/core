@@ -24,7 +24,6 @@
                     "client_cert": "\u0130stemci sertifika dosyas\u0131n\u0131n yolu",
                     "client_id": "M\u00fc\u015fteri Kimli\u011fi (rastgele olu\u015fturulmu\u015f olana kadar bo\u015f b\u0131rak\u0131n)",
                     "client_key": "\u00d6zel anahtar dosyas\u0131n\u0131n yolu",
-                    "discovery": "Ke\u015ffetmeyi etkinle\u015ftir",
                     "keepalive": "Canl\u0131 tutma mesajlar\u0131 g\u00f6nderme aras\u0131ndaki s\u00fcre",
                     "password": "Parola",
                     "port": "Port",

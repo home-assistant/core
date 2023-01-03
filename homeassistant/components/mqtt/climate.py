@@ -31,6 +31,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_NAME,
+    CONF_OPTIMISTIC,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
     CONF_TEMPERATURE_UNIT,
@@ -47,7 +48,13 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import subscription
 from .config import DEFAULT_RETAIN, MQTT_BASE_SCHEMA
-from .const import CONF_ENCODING, CONF_QOS, CONF_RETAIN, PAYLOAD_NONE
+from .const import (
+    CONF_ENCODING,
+    CONF_QOS,
+    CONF_RETAIN,
+    DEFAULT_OPTIMISTIC,
+    PAYLOAD_NONE,
+)
 from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
@@ -242,6 +249,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_MODE_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_MODE_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_PAYLOAD_ON, default="ON"): cv.string,
         vol.Optional(CONF_PAYLOAD_OFF, default="OFF"): cv.string,
         vol.Optional(CONF_POWER_COMMAND_TOPIC): valid_publish_topic,
@@ -307,7 +315,7 @@ PLATFORM_SCHEMA_MODERN = vol.All(
     valid_preset_mode_configuration,
 )
 
-# Configuring MQTT Climate under the climate platform key is deprecated in HA Core 2022.6
+# Configuring MQTT Climate under the climate platform key was deprecated in HA Core 2022.6
 # Setup for the legacy YAML format was removed in HA Core 2022.12
 PLATFORM_SCHEMA = vol.All(
     warn_for_legacy_schema(climate.DOMAIN),
@@ -364,6 +372,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
     _command_templates: dict[str, Callable[[PublishPayloadType], PublishPayloadType]]
     _value_templates: dict[str, Callable[[ReceivePayloadType], ReceivePayloadType]]
     _feature_preset_mode: bool
+    _optimistic: bool
     _optimistic_preset_mode: bool
     _topic: dict[str, Any]
 
@@ -405,6 +414,8 @@ class MqttClimate(MqttEntity, ClimateEntity):
         self._attr_target_temperature_low = None
         self._attr_target_temperature_high = None
 
+        self._optimistic = config[CONF_OPTIMISTIC]
+
         if self._topic[CONF_TEMP_STATE_TOPIC] is None:
             self._attr_target_temperature = config[CONF_TEMP_INITIAL]
         if self._topic[CONF_TEMP_LOW_STATE_TOPIC] is None:
@@ -428,7 +439,9 @@ class MqttClimate(MqttEntity, ClimateEntity):
             self._attr_preset_mode = PRESET_NONE
         else:
             self._attr_preset_modes = []
-        self._optimistic_preset_mode = CONF_PRESET_MODE_STATE_TOPIC not in config
+        self._optimistic_preset_mode = (
+            self._optimistic or CONF_PRESET_MODE_STATE_TOPIC not in config
+        )
         self._attr_hvac_action = None
 
         self._attr_is_aux_heat = False
@@ -456,7 +469,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
                 config.get(key), entity=self
             ).async_render
 
-        support: ClimateEntityFeature | int = 0
+        support = ClimateEntityFeature(0)
         if (self._topic[CONF_TEMP_STATE_TOPIC] is not None) or (
             self._topic[CONF_TEMP_COMMAND_TOPIC] is not None
         ):
@@ -738,21 +751,26 @@ class MqttClimate(MqttEntity, ClimateEntity):
         cmnd_template: str,
         state_topic: str,
         attr: str,
-    ) -> None:
-        if temp is not None:
-            if self._topic[state_topic] is None:
-                # optimistic mode
-                setattr(self, attr, temp)
+    ) -> bool:
+        if temp is None:
+            return False
+        changed = False
+        if self._optimistic or self._topic[state_topic] is None:
+            # optimistic mode
+            changed = True
+            setattr(self, attr, temp)
 
-            payload = self._command_templates[cmnd_template](temp)
-            await self._publish(cmnd_topic, payload)
+        payload = self._command_templates[cmnd_template](temp)
+        await self._publish(cmnd_topic, payload)
+        return changed
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
+        operation_mode: HVACMode | None
         if (operation_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
             await self.async_set_hvac_mode(operation_mode)
 
-        await self._set_temperature(
+        changed = await self._set_temperature(
             kwargs.get(ATTR_TEMPERATURE),
             CONF_TEMP_COMMAND_TOPIC,
             CONF_TEMP_COMMAND_TEMPLATE,
@@ -760,7 +778,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
             "_attr_target_temperature",
         )
 
-        await self._set_temperature(
+        changed |= await self._set_temperature(
             kwargs.get(ATTR_TARGET_TEMP_LOW),
             CONF_TEMP_LOW_COMMAND_TOPIC,
             CONF_TEMP_LOW_COMMAND_TEMPLATE,
@@ -768,7 +786,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
             "_attr_target_temperature_low",
         )
 
-        await self._set_temperature(
+        changed |= await self._set_temperature(
             kwargs.get(ATTR_TARGET_TEMP_HIGH),
             CONF_TEMP_HIGH_COMMAND_TOPIC,
             CONF_TEMP_HIGH_COMMAND_TEMPLATE,
@@ -776,6 +794,8 @@ class MqttClimate(MqttEntity, ClimateEntity):
             "_attr_target_temperature_high",
         )
 
+        if not changed:
+            return
         self.async_write_ha_state()
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
@@ -783,7 +803,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
         payload = self._command_templates[CONF_SWING_MODE_COMMAND_TEMPLATE](swing_mode)
         await self._publish(CONF_SWING_MODE_COMMAND_TOPIC, payload)
 
-        if self._topic[CONF_SWING_MODE_STATE_TOPIC] is None:
+        if self._optimistic or self._topic[CONF_SWING_MODE_STATE_TOPIC] is None:
             self._attr_swing_mode = swing_mode
             self.async_write_ha_state()
 
@@ -792,7 +812,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
         payload = self._command_templates[CONF_FAN_MODE_COMMAND_TEMPLATE](fan_mode)
         await self._publish(CONF_FAN_MODE_COMMAND_TOPIC, payload)
 
-        if self._topic[CONF_FAN_MODE_STATE_TOPIC] is None:
+        if self._optimistic or self._topic[CONF_FAN_MODE_STATE_TOPIC] is None:
             self._attr_fan_mode = fan_mode
             self.async_write_ha_state()
 
@@ -808,7 +828,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
         payload = self._command_templates[CONF_MODE_COMMAND_TEMPLATE](hvac_mode)
         await self._publish(CONF_MODE_COMMAND_TOPIC, payload)
 
-        if self._topic[CONF_MODE_STATE_TOPIC] is None:
+        if self._optimistic or self._topic[CONF_MODE_STATE_TOPIC] is None:
             self._attr_hvac_mode = hvac_mode
             self.async_write_ha_state()
 
@@ -838,7 +858,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
             self._config[CONF_PAYLOAD_ON] if state else self._config[CONF_PAYLOAD_OFF],
         )
 
-        if self._topic[CONF_AUX_STATE_TOPIC] is None:
+        if self._optimistic or self._topic[CONF_AUX_STATE_TOPIC] is None:
             self._attr_is_aux_heat = state
             self.async_write_ha_state()
 

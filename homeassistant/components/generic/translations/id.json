@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "Tidak ada perangkat yang ditemukan di jaringan",
             "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
         },
         "error": {
@@ -10,28 +9,15 @@
             "malformed_url": "URL salah format",
             "no_still_image_or_stream_url": "Anda harus menentukan setidaknya gambar diam atau URL streaming",
             "relative_url": "URL relatif tidak diizinkan",
-            "stream_file_not_found": "File tidak ditemukan saat mencoba menyambung ke streaming (sudahkah ffmpeg diinstal?)",
-            "stream_http_not_found": "HTTP 404 Tidak ditemukan saat mencoba menyambung ke streaming",
             "stream_io_error": "Kesalahan Input/Output saat mencoba menyambung ke streaming. Apakah protokol transportasi RTSP salah?",
             "stream_no_route_to_host": "Tidak dapat menemukan host saat mencoba menyambung ke streaming",
-            "stream_no_video": "Streaming tidak memiliki video",
             "stream_not_permitted": "Operasi tidak diizinkan saat mencoba menyambung ke streaming. Apakah protokol transportasi RTSP salah?",
-            "stream_unauthorised": "Otorisasi gagal saat mencoba menyambung ke streaming",
             "template_error": "Kesalahan saat merender templat. Tinjau log untuk info lebih lanjut.",
             "timeout": "Tenggang waktu habis saat memuat URL",
             "unable_still_load": "Tidak dapat memuat gambar yang valid dari URL gambar diam (mis. host yang tidak valid, URL, atau kegagalan autentikasi). Tinjau log untuk info lebih lanjut.",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "step": {
-            "confirm": {
-                "description": "Ingin memulai penyiapan?"
-            },
-            "content_type": {
-                "data": {
-                    "content_type": "Jenis Konten"
-                },
-                "description": "Tentukan jenis konten untuk streaming."
-            },
             "user": {
                 "data": {
                     "authentication": "Autentikasi",
@@ -62,13 +48,9 @@
             "malformed_url": "URL salah format",
             "no_still_image_or_stream_url": "Anda harus menentukan setidaknya gambar diam atau URL streaming",
             "relative_url": "URL relatif tidak diizinkan",
-            "stream_file_not_found": "File tidak ditemukan saat mencoba menyambung ke streaming (sudahkah ffmpeg diinstal?)",
-            "stream_http_not_found": "HTTP 404 Tidak ditemukan saat mencoba menyambung ke streaming",
             "stream_io_error": "Kesalahan Input/Output saat mencoba menyambung ke streaming. Apakah protokol transportasi RTSP salah?",
             "stream_no_route_to_host": "Tidak dapat menemukan host saat mencoba menyambung ke streaming",
-            "stream_no_video": "Streaming tidak memiliki video",
             "stream_not_permitted": "Operasi tidak diizinkan saat mencoba menyambung ke streaming. Apakah protokol transportasi RTSP salah?",
-            "stream_unauthorised": "Otorisasi gagal saat mencoba menyambung ke streaming",
             "template_error": "Kesalahan saat merender templat. Tinjau log untuk info lebih lanjut.",
             "timeout": "Tenggang waktu habis saat memuat URL",
             "unable_still_load": "Tidak dapat memuat gambar yang valid dari URL gambar diam (mis. host yang tidak valid, URL, atau kegagalan autentikasi). Tinjau log untuk info lebih lanjut.",
@@ -81,12 +63,6 @@
                 },
                 "description": "![Pratinjau Gambar Diam Kamera]({preview_url})",
                 "title": "Pratinjau"
-            },
-            "content_type": {
-                "data": {
-                    "content_type": "Jenis Konten"
-                },
-                "description": "Tentukan jenis konten untuk streaming."
             },
             "init": {
                 "data": {

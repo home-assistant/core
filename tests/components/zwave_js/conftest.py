@@ -30,6 +30,7 @@ def mock_addon_info(addon_info_side_effect):
         side_effect=addon_info_side_effect,
     ) as addon_info:
         addon_info.return_value = {
+            "available": False,
             "hostname": None,
             "options": {},
             "state": None,
@@ -53,6 +54,7 @@ def mock_addon_store_info(addon_store_info_side_effect):
         side_effect=addon_store_info_side_effect,
     ) as addon_store_info:
         addon_store_info.return_value = {
+            "available": False,
             "installed": None,
             "state": None,
             "version": "1.0.0",
@@ -64,10 +66,12 @@ def mock_addon_store_info(addon_store_info_side_effect):
 def mock_addon_running(addon_store_info, addon_info):
     """Mock add-on already running."""
     addon_store_info.return_value = {
+        "available": True,
         "installed": "1.0.0",
         "state": "started",
         "version": "1.0.0",
     }
+    addon_info.return_value["available"] = True
     addon_info.return_value["state"] = "started"
     addon_info.return_value["version"] = "1.0.0"
     return addon_info
@@ -77,10 +81,12 @@ def mock_addon_running(addon_store_info, addon_info):
 def mock_addon_installed(addon_store_info, addon_info):
     """Mock add-on already installed but not running."""
     addon_store_info.return_value = {
+        "available": True,
         "installed": "1.0.0",
         "state": "stopped",
         "version": "1.0.0",
     }
+    addon_info.return_value["available"] = True
     addon_info.return_value["state"] = "stopped"
     addon_info.return_value["version"] = "1.0.0"
     return addon_info
@@ -89,6 +95,7 @@ def mock_addon_installed(addon_store_info, addon_info):
 @pytest.fixture(name="addon_not_installed")
 def mock_addon_not_installed(addon_store_info, addon_info):
     """Mock add-on not installed."""
+    addon_store_info.return_value["available"] = True
     return addon_info
 
 
@@ -126,10 +133,12 @@ def install_addon_side_effect_fixture(addon_store_info, addon_info):
     async def install_addon(hass, slug):
         """Mock install add-on."""
         addon_store_info.return_value = {
+            "available": True,
             "installed": "1.0.0",
             "state": "stopped",
             "version": "1.0.0",
         }
+        addon_info.return_value["available"] = True
         addon_info.return_value["state"] = "stopped"
         addon_info.return_value["version"] = "1.0.0"
 
@@ -162,10 +171,12 @@ def start_addon_side_effect_fixture(addon_store_info, addon_info):
     async def start_addon(hass, slug):
         """Mock start add-on."""
         addon_store_info.return_value = {
+            "available": True,
             "installed": "1.0.0",
             "state": "started",
             "version": "1.0.0",
         }
+        addon_info.return_value["available"] = True
         addon_info.return_value["state"] = "started"
 
     return start_addon
@@ -583,7 +594,9 @@ def lock_home_connect_620_state_fixture():
 
 
 @pytest.fixture(name="client")
-def mock_client_fixture(controller_state, version_state, log_config_state):
+def mock_client_fixture(
+    controller_state, controller_node_state, version_state, log_config_state
+):
     """Mock a client."""
 
     with patch(
@@ -608,19 +621,13 @@ def mock_client_fixture(controller_state, version_state, log_config_state):
         client.listen = AsyncMock(side_effect=listen)
         client.disconnect = AsyncMock(side_effect=disconnect)
         client.driver = Driver(client, controller_state, log_config_state)
+        node = Node(client, copy.deepcopy(controller_node_state))
+        client.driver.controller.nodes[node.node_id] = node
 
         client.version = VersionInfo.from_message(version_state)
         client.ws_server_url = "ws://test:3000/zjs"
 
         yield client
-
-
-@pytest.fixture(name="controller_node")
-def controller_node_fixture(client, controller_node_state):
-    """Mock a controller node."""
-    node = Node(client, copy.deepcopy(controller_node_state))
-    client.driver.controller.nodes[node.node_id] = node
-    return node
 
 
 @pytest.fixture(name="multisensor_6")

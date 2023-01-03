@@ -36,6 +36,7 @@ from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
+    CONF_PAYLOAD_RESET,
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
@@ -60,11 +61,9 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_MIN = "min"
 CONF_MAX = "max"
-CONF_PAYLOAD_RESET = "payload_reset"
 CONF_STEP = "step"
 
 DEFAULT_NAME = "MQTT Number"
-DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_RESET = "None"
 
 MQTT_NUMBER_ATTRIBUTES_BLOCKED = frozenset(
@@ -92,7 +91,6 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
         vol.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): vol.Coerce(float),
         vol.Optional(CONF_MODE, default=NumberMode.AUTO): vol.Coerce(NumberMode),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_PAYLOAD_RESET, default=DEFAULT_PAYLOAD_RESET): cv.string,
         vol.Optional(CONF_STEP, default=DEFAULT_STEP): vol.All(
             vol.Coerce(float), vol.Range(min=1e-3)
@@ -107,7 +105,7 @@ PLATFORM_SCHEMA_MODERN = vol.All(
     validate_config,
 )
 
-# Configuring MQTT Number under the number platform key is deprecated in HA Core 2022.6
+# Configuring MQTT Number under the number platform key was deprecated in HA Core 2022.6
 # Setup for the legacy YAML format was removed in HA Core 2022.12
 PLATFORM_SCHEMA = vol.All(
     warn_for_legacy_schema(number.DOMAIN),

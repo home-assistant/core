@@ -9,6 +9,7 @@ from typing import Any
 
 from aiohttp import CookieJar
 import aiounifi
+from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.messages import DATA_CLIENT_REMOVED, DATA_EVENT
 from aiounifi.models.event import EventKey
 from aiounifi.websocket import WebsocketSignal, WebsocketState
@@ -31,6 +32,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
@@ -62,6 +64,7 @@ from .const import (
     PLATFORMS,
     UNIFI_WIRELESS_CLIENTS,
 )
+from .entity import UnifiEntity, UnifiEntityDescription
 from .errors import AuthenticationRequired, CannotConnect
 
 RETRY_TIMER = 15
@@ -182,6 +185,44 @@ class UniFiController:
             if self.host == client.ip:
                 return client.mac
         return None
+
+    @callback
+    def register_platform_add_entities(
+        self,
+        unifi_platform_entity: type[UnifiEntity],
+        descriptions: tuple[UnifiEntityDescription, ...],
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Subscribe to UniFi API handlers and create entities."""
+
+        @callback
+        def async_load_entities(description: UnifiEntityDescription) -> None:
+            """Load and subscribe to UniFi endpoints."""
+            entities: list[UnifiEntity] = []
+            api_handler = description.api_handler_fn(self.api)
+
+            @callback
+            def async_create_entity(event: ItemEvent, obj_id: str) -> None:
+                """Create UniFi entity."""
+                if not description.allowed_fn(
+                    self, obj_id
+                ) or not description.supported_fn(self.api, obj_id):
+                    return
+
+                entity = unifi_platform_entity(obj_id, self, description)
+                if event == ItemEvent.ADDED:
+                    async_add_entities([entity])
+                    return
+                entities.append(entity)
+
+            for obj_id in api_handler:
+                async_create_entity(ItemEvent.CHANGED, obj_id)
+            async_add_entities(entities)
+
+            api_handler.subscribe(async_create_entity, ItemEvent.ADDED)
+
+        for description in descriptions:
+            async_load_entities(description)
 
     @callback
     def async_unifi_signalling_callback(self, signal, data):

@@ -45,7 +45,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     }
 ).extend(MQTT_AVAILABILITY_SCHEMA.schema)
 
-# Configuring MQTT Scenes under the scene platform key is deprecated in HA Core 2022.6
+# Configuring MQTT Scenes under the scene platform key was deprecated in HA Core 2022.6
 # Setup for the legacy YAML format was removed in HA Core 2022.12
 PLATFORM_SCHEMA = vol.All(
     warn_for_legacy_schema(scene.DOMAIN),

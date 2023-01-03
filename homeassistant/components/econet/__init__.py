@@ -13,7 +13,7 @@ from pyeconet.errors import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, TEMP_FAHRENHEIT, Platform
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
@@ -131,7 +131,7 @@ class EcoNetEntity(Entity):
 
     @property
     def available(self):
-        """Return if the the device is online or not."""
+        """Return if the device is online or not."""
         return self._econet.connected
 
     @property
@@ -156,4 +156,4 @@ class EcoNetEntity(Entity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return TEMP_FAHRENHEIT
+        return UnitOfTemperature.FAHRENHEIT

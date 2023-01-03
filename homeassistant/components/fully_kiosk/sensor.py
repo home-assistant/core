@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DATA_MEGABYTES, PERCENTAGE
+from homeassistant.const import PERCENTAGE, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -62,7 +62,8 @@ SENSORS: tuple[FullySensorEntityDescription, ...] = (
         key="internalStorageFreeSpace",
         name="Internal storage free space",
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
         state_fn=round_storage,
     ),
@@ -70,7 +71,8 @@ SENSORS: tuple[FullySensorEntityDescription, ...] = (
         key="internalStorageTotalSpace",
         name="Internal storage total space",
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
         state_fn=round_storage,
     ),
@@ -78,7 +80,8 @@ SENSORS: tuple[FullySensorEntityDescription, ...] = (
         key="ramFreeMemory",
         name="Free memory",
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
         state_fn=round_storage,
     ),
@@ -86,7 +89,8 @@ SENSORS: tuple[FullySensorEntityDescription, ...] = (
         key="ramTotalMemory",
         name="Total memory",
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
         state_fn=round_storage,
     ),

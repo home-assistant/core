@@ -10,11 +10,9 @@
             "invalid_setup": "Ajoutez votre Adam au lieu de votre Anna\u00a0; consultez la documentation de l'int\u00e9gration Plugwise de Home Assistant pour plus d'informations",
             "unknown": "Erreur inattendue"
         },
-        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Type de connexion",
                     "host": "Adresse IP",
                     "password": "ID Smile",
                     "port": "Port",
@@ -22,26 +20,20 @@
                 },
                 "description": "Veuillez saisir",
                 "title": "Se connecter \u00e0 Smile"
-            },
-            "user_gateway": {
-                "data": {
-                    "host": "Adresse IP",
-                    "password": "ID Smile",
-                    "port": "Port",
-                    "username": "Nom d'utilisateur Smile"
-                },
-                "description": "Veuillez saisir :",
-                "title": "Se connecter \u00e0 Smile"
             }
         }
     },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval": "Intervalle de mise \u00e0 jour (secondes)"
-                },
-                "description": "Ajuster les options Plugwise"
+    "entity": {
+        "climate": {
+            "plugwise": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "no_frost": "Hors-gel",
+                            "vacation": "Vacances"
+                        }
+                    }
+                }
             }
         }
     }
