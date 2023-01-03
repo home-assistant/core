@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from reolink_ip.exceptions import ApiError, CredentialsInvalidError
+from reolink_aio.exceptions import ApiError, CredentialsInvalidError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions

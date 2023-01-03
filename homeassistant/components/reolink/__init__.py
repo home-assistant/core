@@ -9,7 +9,7 @@ import logging
 
 from aiohttp import ClientConnectorError
 import async_timeout
-from reolink_ip.exceptions import ApiError, InvalidContentTypeError
+from reolink_aio.exceptions import ApiError, InvalidContentTypeError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
