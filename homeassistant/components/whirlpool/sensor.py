@@ -240,7 +240,7 @@ class WasherDryerTimeClass(SensorEntity):
         self.entity_description: SensorEntityDescription = description
         self._attr_unique_id = f"{said}-{description.key}"
         self._running = True
-        self._timestamp = utcnow()
+        self._timestamp: datetime | None = None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, said)},
             name=self._name,
@@ -261,7 +261,7 @@ class WasherDryerTimeClass(SensorEntity):
         return self._wd.get_online()
 
     @property
-    def native_value(self) -> datetime | str:
+    def native_value(self) -> datetime | None:
         """Calculate the time stamp for completion."""
         machine_state = self._wd.get_machine_state()
         if (
