@@ -5,6 +5,12 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+from yolink.const import (
+    ATTR_DEVICE_MANIPULATOR,
+    ATTR_DEVICE_MULTI_OUTLET,
+    ATTR_DEVICE_OUTLET,
+    ATTR_DEVICE_SWITCH,
+)
 from yolink.device import YoLinkDevice
 from yolink.outlet_request_builder import OutletRequestBuilder
 
@@ -17,14 +23,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    ATTR_COORDINATORS,
-    ATTR_DEVICE_MANIPULATOR,
-    ATTR_DEVICE_MULTI_OUTLET,
-    ATTR_DEVICE_OUTLET,
-    ATTR_DEVICE_SWITCH,
-    DOMAIN,
-)
+from .const import ATTR_COORDINATORS, DOMAIN
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 

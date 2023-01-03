@@ -5,6 +5,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+from yolink.client_request import ClientRequest
+from yolink.const import ATTR_DEVICE_SIREN
 from yolink.device import YoLinkDevice
 
 from homeassistant.components.siren import (
@@ -16,7 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_COORDINATORS, ATTR_DEVICE_SIREN, DOMAIN
+from .const import ATTR_COORDINATORS, DOMAIN
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
@@ -99,7 +101,7 @@ class YoLinkSirenEntity(YoLinkEntity, SirenEntity):
 
     async def call_state_change(self, state: bool) -> None:
         """Call setState api to change siren state."""
-        await self.call_device_api("setState", {"state": {"alarm": state}})
+        await self.call_device(ClientRequest("setState", {"state": {"alarm": state}}))
         self._attr_is_on = self.entity_description.value("alert" if state else "normal")
         self.async_write_ha_state()
 

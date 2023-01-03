@@ -5,6 +5,13 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+from yolink.const import (
+    ATTR_DEVICE_CO_SMOKE_SENSOR,
+    ATTR_DEVICE_DOOR_SENSOR,
+    ATTR_DEVICE_LEAK_SENSOR,
+    ATTR_DEVICE_MOTION_SENSOR,
+    ATTR_DEVICE_VIBRATION_SENSOR,
+)
 from yolink.device import YoLinkDevice
 
 from homeassistant.components.binary_sensor import (
@@ -16,15 +23,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    ATTR_COORDINATORS,
-    ATTR_DEVICE_CO_SMOKE_SENSOR,
-    ATTR_DEVICE_DOOR_SENSOR,
-    ATTR_DEVICE_LEAK_SENSOR,
-    ATTR_DEVICE_MOTION_SENSOR,
-    ATTR_DEVICE_VIBRATION_SENSOR,
-    DOMAIN,
-)
+from .const import ATTR_COORDINATORS, DOMAIN
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 

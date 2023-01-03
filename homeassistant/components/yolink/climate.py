@@ -3,6 +3,9 @@ from __future__ import annotations
 
 from typing import Any
 
+from yolink.client_request import ClientRequest
+from yolink.const import ATTR_DEVICE_THERMOSTAT
+
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -20,7 +23,7 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_COORDINATORS, ATTR_DEVICE_THERMOSTAT, DOMAIN
+from .const import ATTR_COORDINATORS, DOMAIN
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
@@ -107,12 +110,12 @@ class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
         """Set new target hvac mode."""
         if (hvac_mode_id := HA_MODEL_2_YOLINK.get(hvac_mode)) is None:
             raise ValueError(f"Received an invalid hvac mode: {hvac_mode}")
-        await self.call_device_api("setState", {"mode": hvac_mode_id})
+        await self.call_device(ClientRequest("setState", {"mode": hvac_mode_id}))
         await self.coordinator.async_refresh()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
-        await self.call_device_api("setState", {"fan": fan_mode})
+        await self.call_device(ClientRequest("setState", {"fan": fan_mode}))
         self._attr_fan_mode = fan_mode
         self.async_write_ha_state()
 
@@ -121,16 +124,20 @@ class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         if target_temp_low is not None:
-            await self.call_device_api("setState", {"lowTemp": target_temp_low})
+            await self.call_device(
+                ClientRequest("setState", {"lowTemp": target_temp_low})
+            )
             self._attr_target_temperature_low = target_temp_low
         if target_temp_high is not None:
-            await self.call_device_api("setState", {"highTemp": target_temp_high})
+            await self.call_device(
+                ClientRequest("setState", {"highTemp": target_temp_high})
+            )
             self._attr_target_temperature_high = target_temp_high
         await self.coordinator.async_refresh()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
         eco_params = "on" if preset_mode == PRESET_ECO else "off"
-        await self.call_device_api("setECO", {"mode": eco_params})
+        await self.call_device(ClientRequest("setECO", {"mode": eco_params}))
         self._attr_preset_mode = PRESET_ECO if eco_params == "on" else PRESET_NONE
         self.async_write_ha_state()

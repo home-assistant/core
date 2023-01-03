@@ -3,6 +3,9 @@ from __future__ import annotations
 
 from typing import Any
 
+from yolink.client_request import ClientRequest
+from yolink.const import ATTR_GARAGE_DOOR_CONTROLLER
+
 from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntity,
@@ -12,7 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_COORDINATORS, ATTR_GARAGE_DOOR_CONTROLLER, DOMAIN
+from .const import ATTR_COORDINATORS, DOMAIN
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
@@ -35,8 +38,6 @@ async def async_setup_entry(
 class YoLinkCoverEntity(YoLinkEntity, CoverEntity):
     """YoLink Cover Entity."""
 
-    _attr_has_entity_name = True
-
     def __init__(
         self,
         config_entry: ConfigEntry,
@@ -44,7 +45,8 @@ class YoLinkCoverEntity(YoLinkEntity, CoverEntity):
     ) -> None:
         """Init YoLink garage door entity."""
         super().__init__(config_entry, coordinator)
-        self._attr_unique_id = f"{coordinator.device.device_id}"
+        self._attr_unique_id = f"{coordinator.device.device_id}_door_state"
+        self._attr_name = f"{coordinator.device.device_name} (State)"
         self._attr_device_class = CoverDeviceClass.GARAGE
         self._attr_supported_features = (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
@@ -56,14 +58,16 @@ class YoLinkCoverEntity(YoLinkEntity, CoverEntity):
         self._attr_is_closed = state.get("state") == "closed"
         self.async_write_ha_state()
 
-    async def toggle_garage_state(self, state: str) -> None:
+    async def toggle_garage_state(self) -> None:
         """Toggle Garage door state."""
-        await self.call_device_api("toggle", {})
+        # garage door state will not be change by device call
+        # it's depends on paired device state, such as door sensor or contact sensor
+        await self.call_device(ClientRequest("toggle", {}))
 
     async def async_open_cover(self, **kwargs: Any) -> None:
-        """Open garage door."""
-        await self.toggle_garage_state("open")
+        """Toggle garage door."""
+        await self.toggle_garage_state()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
-        """Close garage door."""
-        await self.toggle_garage_state("close")
+        """Toggle garage door."""
+        await self.toggle_garage_state()
