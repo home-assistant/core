@@ -172,7 +172,7 @@ async def test_sensor_values(
             assert state is not None
             assert state.state == "Cycle Washing"
 
-            mock_instance.get_machine_state.return_value = MachineState.RunningMainCycle
+            mock_instance.get_machine_state.return_value = MachineState.Complete
             mock_instance.attr_value_to_bool.side_effect = None
             mock_instance.get_attribute.side_effect = side_effect_function_open_door
             state = await update_sensor_state(hass, entity_id, mock_instance)

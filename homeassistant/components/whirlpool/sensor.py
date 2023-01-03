@@ -9,13 +9,14 @@ import logging
 from whirlpool.washerdryer import MachineState, WasherDryer
 
 from homeassistant.components.sensor import (
+    RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -218,7 +219,7 @@ class WasherDryerClass(SensorEntity):
         return self.entity_description.value_fn(self._wd)
 
 
-class WasherDryerTimeClass(SensorEntity):
+class WasherDryerTimeClass(RestoreSensor):
     """A timestamp class for the whirlpool/maytag washer account."""
 
     _attr_should_poll = False
@@ -239,7 +240,7 @@ class WasherDryerTimeClass(SensorEntity):
 
         self.entity_description: SensorEntityDescription = description
         self._attr_unique_id = f"{said}-{description.key}"
-        self._running = True
+        self._running: bool | None = None
         self._timestamp: datetime | None = None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, said)},
@@ -249,7 +250,10 @@ class WasherDryerTimeClass(SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Connect washer/dryer to the cloud."""
-        self._wd.register_attr_callback(self.async_write_ha_state)
+        if restored_data := await self.async_get_last_sensor_data():
+            self._attr_native_value = restored_data.native_value
+        await super().async_added_to_hass()
+        self._wd.register_attr_callback(self.update_from_latest_data)
 
     async def async_will_remove_from_hass(self) -> None:
         """Close Whrilpool Appliance sockets before removing."""
@@ -260,21 +264,23 @@ class WasherDryerTimeClass(SensorEntity):
         """Return True if entity is available."""
         return self._wd.get_online()
 
-    @property
-    def native_value(self) -> datetime | None:
+    @callback
+    def update_from_latest_data(self) -> None:
         """Calculate the time stamp for completion."""
         machine_state = self._wd.get_machine_state()
+        now = utcnow()
         if (
             machine_state.value
             in {MachineState.Complete.value, MachineState.Standby.value}
             and self._running
         ):
             self._running = False
-            self._timestamp = utcnow()
+            self._attr_native_value = now
 
         if machine_state is MachineState.RunningMainCycle:
             self._running = True
-            self._timestamp = utcnow() + timedelta(
+            self._attr_native_value = now + timedelta(
                 seconds=int(self._wd.get_attribute("Cavity_TimeStatusEstTimeRemaining"))
             )
-        return self._timestamp
+
+        self._async_write_ha_state()
