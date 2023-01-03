@@ -49,9 +49,6 @@ async def async_setup_entry(
         for unit_id in coordinator.data
     )
 
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(RESET_FILTER, {}, "async_reset_filter")
-
 
 class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
     """Representation of a coolmaster climate device."""
