@@ -5,6 +5,7 @@ from typing import Optional
 
 from xiaomi_ble.parser import (
     BinarySensorDeviceClass as XiaomiBinarySensorDeviceClass,
+    ExtendedBinarySensorDeviceClass,
     SensorUpdate,
 )
 
@@ -52,23 +53,23 @@ BINARY_SENSOR_DESCRIPTIONS = {
         key=XiaomiBinarySensorDeviceClass.SMOKE,
         device_class=BinarySensorDeviceClass.SMOKE,
     ),
-    "device_forcibly_removed": BinarySensorEntityDescription(
-        key="device_forcibly_removed",
+    ExtendedBinarySensorDeviceClass.DEVICE_FORCIBLY_REMOVED: BinarySensorEntityDescription(
+        key=ExtendedBinarySensorDeviceClass.DEVICE_FORCIBLY_REMOVED,
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
-    "door_left_open": BinarySensorEntityDescription(
-        key="door_left_open",
+    ExtendedBinarySensorDeviceClass.DOOR_LEFT_OPEN: BinarySensorEntityDescription(
+        key=ExtendedBinarySensorDeviceClass.DOOR_LEFT_OPEN,
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
-    "door_stuck": BinarySensorEntityDescription(
-        key="door_stuck",
+    ExtendedBinarySensorDeviceClass.DOOR_STUCK: BinarySensorEntityDescription(
+        key=ExtendedBinarySensorDeviceClass.DOOR_STUCK,
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
-    "knock_on_the_door": BinarySensorEntityDescription(
-        key="knock_on_the_door",
+    ExtendedBinarySensorDeviceClass.KNOCK_ON_THE_DOOR: BinarySensorEntityDescription(
+        key=ExtendedBinarySensorDeviceClass.KNOCK_ON_THE_DOOR,
     ),
-    "pry_the_door": BinarySensorEntityDescription(
-        key="pry_the_door",
+    ExtendedBinarySensorDeviceClass.PRY_THE_DOOR: BinarySensorEntityDescription(
+        key=ExtendedBinarySensorDeviceClass.PRY_THE_DOOR,
         device_class=BinarySensorDeviceClass.TAMPER,
     ),
 }
@@ -85,7 +86,7 @@ def sensor_update_to_bluetooth_data_update(
         },
         entity_descriptions={
             device_key_to_bluetooth_entity_key(device_key): BINARY_SENSOR_DESCRIPTIONS[
-                device_key.key
+                description.device_class
             ]
             for device_key, description in sensor_update.binary_entity_descriptions.items()
             if description.device_class
