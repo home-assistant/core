@@ -886,13 +886,6 @@ class MqttClimate(MqttEntity, ClimateEntity):
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
 
-        if not self.supported_features & ClimateEntityFeature.TARGET_HUMIDITY:
-            _LOGGER.error(
-                "Attempted to set target humidity with no %s configured",
-                CONF_HUMIDITY_COMMAND_TOPIC,
-            )
-            return
-
         await self._set_climate_attribute(
             humidity,
             CONF_HUMIDITY_COMMAND_TOPIC,
