@@ -34,6 +34,9 @@ KEY_BAN_MANAGER: Final = "ha_banned_ips_manager"
 KEY_FAILED_LOGIN_ATTEMPTS: Final = "ha_failed_login_attempts"
 KEY_LOGIN_THRESHOLD: Final = "ha_login_threshold"
 
+EVENT_FAILED_LOGIN = "login_failed"
+EVENT_BAN_IP = "ban_ip"
+
 NOTIFICATION_ID_BAN: Final = "ip-ban"
 NOTIFICATION_ID_LOGIN: Final = "http-login"
 
@@ -107,7 +110,7 @@ async def process_wrong_login(request: Request) -> None:
     Increase failed login attempts counter for remote IP address.
     Add ip ban entry if failed login attempts exceeds threshold.
     """
-    hass = request.app["hass"]
+    hass: HomeAssistant = request.app["hass"]
 
     remote_addr = ip_address(request.remote)  # type: ignore[arg-type]
     remote_host = request.remote
@@ -131,6 +134,10 @@ async def process_wrong_login(request: Request) -> None:
 
     persistent_notification.async_create(
         hass, notification_msg, "Login attempt failed", NOTIFICATION_ID_LOGIN
+    )
+
+    hass.bus.async_fire(
+        EVENT_FAILED_LOGIN, {"ip": str(remote_addr), "host": remote_host}
     )
 
     # Check if ban middleware is loaded
@@ -161,6 +168,8 @@ async def process_wrong_login(request: Request) -> None:
             "Banning IP address",
             NOTIFICATION_ID_BAN,
         )
+
+        hass.bus.async_fire(EVENT_BAN_IP, {"ip": str(remote_addr), "host": remote_host})
 
 
 async def process_success_login(request: Request) -> None:
