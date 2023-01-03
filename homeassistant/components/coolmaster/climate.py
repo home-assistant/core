@@ -148,7 +148,7 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
         _LOGGER.debug("Setting swing mode of %s to %s", self.unique_id, swing_mode)
         try:
             self._unit = await self._unit.set_swing(swing_mode)
-        except Exception as error:
+        except ValueError as error:
             raise HomeAssistantError(error) from error
         self.async_write_ha_state()
 
