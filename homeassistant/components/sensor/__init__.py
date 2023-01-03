@@ -147,7 +147,6 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass | None]
     SensorDeviceClass.POWER: {None, SensorStateClass.MEASUREMENT},
     SensorDeviceClass.PRECIPITATION: {
         None,
-        SensorStateClass.MEASUREMENT,
         SensorStateClass.TOTAL,
         SensorStateClass.TOTAL_INCREASING,
     },
