@@ -4569,6 +4569,12 @@
         }
       }
     },
+    "ruuvi_gateway": {
+      "name": "Ruuvi Gateway",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "ruuvitag_ble": {
       "name": "RuuviTag BLE",
       "integration_type": "hub",
