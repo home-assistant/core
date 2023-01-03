@@ -105,7 +105,8 @@ def test_get_unit_ratio(
     converter: type[BaseUnitConverter], from_unit: str, to_unit: str
 ) -> None:
     """Test unit ratio."""
-    assert converter.get_unit_ratio(from_unit, to_unit)
+    assert (from_to := converter.get_unit_ratio(from_unit, to_unit))
+    assert from_to == 1 / converter.get_unit_ratio(to_unit, from_unit)
 
 
 @pytest.mark.parametrize(
