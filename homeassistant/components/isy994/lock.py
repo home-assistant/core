@@ -1,4 +1,4 @@
-"""Support for ISY994 locks."""
+"""Support for ISY locks."""
 from __future__ import annotations
 
 from typing import Any
@@ -20,7 +20,7 @@ VALUE_TO_STATE = {0: False, 100: True}
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the ISY994 lock platform."""
+    """Set up the ISY lock platform."""
     hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
     entities: list[ISYLockEntity | ISYLockProgramEntity] = []
     for node in hass_isy_data[ISY994_NODES][LOCK]:
@@ -34,7 +34,7 @@ async def async_setup_entry(
 
 
 class ISYLockEntity(ISYNodeEntity, LockEntity):
-    """Representation of an ISY994 lock device."""
+    """Representation of an ISY lock device."""
 
     @property
     def is_locked(self) -> bool | None:
@@ -44,12 +44,12 @@ class ISYLockEntity(ISYNodeEntity, LockEntity):
         return VALUE_TO_STATE.get(self._node.status)
 
     async def async_lock(self, **kwargs: Any) -> None:
-        """Send the lock command to the ISY994 device."""
+        """Send the lock command to the ISY device."""
         if not await self._node.secure_lock():
             _LOGGER.error("Unable to lock device")
 
     async def async_unlock(self, **kwargs: Any) -> None:
-        """Send the unlock command to the ISY994 device."""
+        """Send the unlock command to the ISY device."""
         if not await self._node.secure_unlock():
             _LOGGER.error("Unable to lock device")
 
