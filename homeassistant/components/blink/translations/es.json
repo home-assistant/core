@@ -14,7 +14,7 @@
                 "data": {
                     "2fa": "C\u00f3digo de dos factores"
                 },
-                "description": "Introduce el PIN enviado a tu correo electr\u00f3nico",
+                "description": "Introduce el PIN enviado por correo electr\u00f3nico o SMS",
                 "title": "Autenticaci\u00f3n de dos factores"
             },
             "user": {

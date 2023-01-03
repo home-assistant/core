@@ -16,7 +16,6 @@ from homeassistant.const import PERCENTAGE, UnitOfLength, UnitOfPressure
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM, UnitSystem
 
 from . import MazdaEntity
 from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
@@ -27,7 +26,7 @@ class MazdaSensorRequiredKeysMixin:
     """Mixin for required keys."""
 
     # Function to determine the value for this sensor, given the coordinator data and the configured unit system
-    value: Callable[[dict[str, Any], UnitSystem], StateType]
+    value: Callable[[dict[str, Any]], StateType]
 
 
 @dataclass
@@ -38,17 +37,6 @@ class MazdaSensorEntityDescription(
 
     # Function to determine whether the vehicle supports this sensor, given the coordinator data
     is_supported: Callable[[dict[str, Any]], bool] = lambda data: True
-
-    # Function to determine the unit of measurement for this sensor, given the configured unit system
-    # Falls back to description.native_unit_of_measurement if it is not provided
-    unit: Callable[[UnitSystem], str | None] | None = None
-
-
-def _get_distance_unit(unit_system: UnitSystem) -> str:
-    """Return the distance unit for the given unit system."""
-    if unit_system is US_CUSTOMARY_SYSTEM:
-        return UnitOfLength.MILES
-    return UnitOfLength.KILOMETERS
 
 
 def _fuel_remaining_percentage_supported(data):
@@ -101,55 +89,45 @@ def _ev_remaining_range_supported(data):
     )
 
 
-def _fuel_distance_remaining_value(data, unit_system):
+def _fuel_distance_remaining_value(data):
     """Get the fuel distance remaining value."""
-    return round(
-        unit_system.length(
-            data["status"]["fuelDistanceRemainingKm"], UnitOfLength.KILOMETERS
-        )
-    )
+    return round(data["status"]["fuelDistanceRemainingKm"])
 
 
-def _odometer_value(data, unit_system):
+def _odometer_value(data):
     """Get the odometer value."""
     # In order to match the behavior of the Mazda mobile app, we always round down
-    return int(
-        unit_system.length(data["status"]["odometerKm"], UnitOfLength.KILOMETERS)
-    )
+    return int(data["status"]["odometerKm"])
 
 
-def _front_left_tire_pressure_value(data, unit_system):
+def _front_left_tire_pressure_value(data):
     """Get the front left tire pressure value."""
     return round(data["status"]["tirePressure"]["frontLeftTirePressurePsi"])
 
 
-def _front_right_tire_pressure_value(data, unit_system):
+def _front_right_tire_pressure_value(data):
     """Get the front right tire pressure value."""
     return round(data["status"]["tirePressure"]["frontRightTirePressurePsi"])
 
 
-def _rear_left_tire_pressure_value(data, unit_system):
+def _rear_left_tire_pressure_value(data):
     """Get the rear left tire pressure value."""
     return round(data["status"]["tirePressure"]["rearLeftTirePressurePsi"])
 
 
-def _rear_right_tire_pressure_value(data, unit_system):
+def _rear_right_tire_pressure_value(data):
     """Get the rear right tire pressure value."""
     return round(data["status"]["tirePressure"]["rearRightTirePressurePsi"])
 
 
-def _ev_charge_level_value(data, unit_system):
+def _ev_charge_level_value(data):
     """Get the charge level value."""
     return round(data["evStatus"]["chargeInfo"]["batteryLevelPercentage"])
 
 
-def _ev_remaining_range_value(data, unit_system):
+def _ev_remaining_range_value(data):
     """Get the remaining range value."""
-    return round(
-        unit_system.length(
-            data["evStatus"]["chargeInfo"]["drivingRangeKm"], UnitOfLength.KILOMETERS
-        )
-    )
+    return round(data["evStatus"]["chargeInfo"]["drivingRangeKm"])
 
 
 SENSOR_ENTITIES = [
@@ -160,13 +138,14 @@ SENSOR_ENTITIES = [
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         is_supported=_fuel_remaining_percentage_supported,
-        value=lambda data, unit_system: data["status"]["fuelRemainingPercent"],
+        value=lambda data: data["status"]["fuelRemainingPercent"],
     ),
     MazdaSensorEntityDescription(
         key="fuel_distance_remaining",
         name="Fuel distance remaining",
         icon="mdi:gas-station",
-        unit=_get_distance_unit,
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
         is_supported=_fuel_distance_remaining_supported,
         value=_fuel_distance_remaining_value,
@@ -175,7 +154,8 @@ SENSOR_ENTITIES = [
         key="odometer",
         name="Odometer",
         icon="mdi:speedometer",
-        unit=_get_distance_unit,
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         is_supported=lambda data: data["status"]["odometerKm"] is not None,
         value=_odometer_value,
@@ -233,7 +213,8 @@ SENSOR_ENTITIES = [
         key="ev_remaining_range",
         name="Remaining range",
         icon="mdi:ev-station",
-        unit=_get_distance_unit,
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
         is_supported=_ev_remaining_range_supported,
         value=_ev_remaining_range_value,
@@ -275,13 +256,6 @@ class MazdaSensorEntity(MazdaEntity, SensorEntity):
         self._attr_unique_id = f"{self.vin}_{description.key}"
 
     @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement for the sensor, according to the configured unit system."""
-        if unit_fn := self.entity_description.unit:
-            return unit_fn(self.hass.config.units)
-        return self.entity_description.native_unit_of_measurement
-
-    @property
-    def native_value(self):
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.entity_description.value(self.data, self.hass.config.units)
+        return self.entity_description.value(self.data)

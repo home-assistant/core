@@ -419,7 +419,10 @@ class Thermostat(HomeAccessory):
                 for hc_fallback in hc_fallback_order:
                     if hc_fallback in self.hc_homekit_to_hass:
                         _LOGGER.debug(
-                            "Siri requested target mode: %s and the device does not support, falling back to %s",
+                            (
+                                "Siri requested target mode: %s and the device does not"
+                                " support, falling back to %s"
+                            ),
                             target_hc,
                             hc_fallback,
                         )
@@ -428,7 +431,8 @@ class Thermostat(HomeAccessory):
 
             params[ATTR_HVAC_MODE] = self.hc_homekit_to_hass[target_hc]
             events.append(
-                f"{CHAR_TARGET_HEATING_COOLING} to {char_values[CHAR_TARGET_HEATING_COOLING]}"
+                f"{CHAR_TARGET_HEATING_COOLING} to"
+                f" {char_values[CHAR_TARGET_HEATING_COOLING]}"
             )
             # Many integrations do not actually implement `hvac_mode` for the
             # `SERVICE_SET_TEMPERATURE_THERMOSTAT` service so we made a call to
@@ -447,7 +451,8 @@ class Thermostat(HomeAccessory):
                 service = SERVICE_SET_TEMPERATURE_THERMOSTAT
                 temperature = self._temperature_to_states(hc_target_temp)
                 events.append(
-                    f"{CHAR_TARGET_TEMPERATURE} to {char_values[CHAR_TARGET_TEMPERATURE]}°C"
+                    f"{CHAR_TARGET_TEMPERATURE} to"
+                    f" {char_values[CHAR_TARGET_TEMPERATURE]}°C"
                 )
                 params[ATTR_TEMPERATURE] = temperature
             elif features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
@@ -478,7 +483,8 @@ class Thermostat(HomeAccessory):
             min_temp, max_temp = self.get_temperature_range()
             if CHAR_COOLING_THRESHOLD_TEMPERATURE in char_values:
                 events.append(
-                    f"{CHAR_COOLING_THRESHOLD_TEMPERATURE} to {char_values[CHAR_COOLING_THRESHOLD_TEMPERATURE]}°C"
+                    f"{CHAR_COOLING_THRESHOLD_TEMPERATURE} to"
+                    f" {char_values[CHAR_COOLING_THRESHOLD_TEMPERATURE]}°C"
                 )
                 high = char_values[CHAR_COOLING_THRESHOLD_TEMPERATURE]
                 # If the device doesn't support TARGET_TEMPATURE
@@ -487,7 +493,8 @@ class Thermostat(HomeAccessory):
                     low = high - HEAT_COOL_DEADBAND
             if CHAR_HEATING_THRESHOLD_TEMPERATURE in char_values:
                 events.append(
-                    f"{CHAR_HEATING_THRESHOLD_TEMPERATURE} to {char_values[CHAR_HEATING_THRESHOLD_TEMPERATURE]}°C"
+                    f"{CHAR_HEATING_THRESHOLD_TEMPERATURE} to"
+                    f" {char_values[CHAR_HEATING_THRESHOLD_TEMPERATURE]}°C"
                 )
                 low = char_values[CHAR_HEATING_THRESHOLD_TEMPERATURE]
                 # If the device doesn't support TARGET_TEMPATURE
@@ -598,7 +605,10 @@ class Thermostat(HomeAccessory):
                 self.char_target_heat_cool.set_value(homekit_hvac_mode)
             else:
                 _LOGGER.error(
-                    "Cannot map hvac target mode: %s to homekit as only %s modes are supported",
+                    (
+                        "Cannot map hvac target mode: %s to homekit as only %s modes"
+                        " are supported"
+                    ),
                     hvac_mode,
                     self.hc_homekit_to_hass,
                 )

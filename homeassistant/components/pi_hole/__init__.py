@@ -5,9 +5,8 @@ import logging
 
 from hole import Hole
 from hole.exceptions import HoleError
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -18,11 +17,9 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -33,53 +30,13 @@ from .const import (
     CONF_STATISTICS_ONLY,
     DATA_KEY_API,
     DATA_KEY_COORDINATOR,
-    DEFAULT_LOCATION,
-    DEFAULT_NAME,
-    DEFAULT_SSL,
-    DEFAULT_VERIFY_SSL,
     DOMAIN,
     MIN_TIME_BETWEEN_UPDATES,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-PI_HOLE_SCHEMA = vol.Schema(
-    vol.All(
-        {
-            vol.Required(CONF_HOST): cv.string,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_API_KEY): cv.string,
-            vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-            vol.Optional(CONF_LOCATION, default=DEFAULT_LOCATION): cv.string,
-            vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-        },
-    )
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [PI_HOLE_SCHEMA]))},
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Pi-hole integration."""
-
-    hass.data[DOMAIN] = {}
-
-    # import
-    if DOMAIN in config:
-        for conf in config[DOMAIN]:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
-                )
-            )
-
-    return True
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -99,21 +56,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _LOGGER.debug("Setting up %s integration with host %s", DOMAIN, host)
 
-    try:
-        session = async_get_clientsession(hass, verify_tls)
-        api = Hole(
-            host,
-            session,
-            location=location,
-            tls=use_tls,
-            api_token=api_key,
-        )
-        await api.get_data()
-        await api.get_versions()
-
-    except HoleError as ex:
-        _LOGGER.warning("Failed to connect: %s", ex)
-        raise ConfigEntryNotReady from ex
+    session = async_get_clientsession(hass, verify_tls)
+    api = Hole(
+        host,
+        session,
+        location=location,
+        tls=use_tls,
+        api_token=api_key,
+    )
 
     async def async_update_data() -> None:
         """Fetch data from API endpoint."""
@@ -130,10 +80,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_method=async_update_data,
         update_interval=MIN_TIME_BETWEEN_UPDATES,
     )
+
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_KEY_API: api,
         DATA_KEY_COORDINATOR: coordinator,
     }
+
+    await coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, _async_platforms(entry))
 

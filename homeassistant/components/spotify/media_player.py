@@ -378,7 +378,8 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
 
         if not self._scope_ok:
             _LOGGER.debug(
-                "Spotify scopes are not set correctly, this can impact features such as media browsing"
+                "Spotify scopes are not set correctly, this can impact features such as"
+                " media browsing"
             )
             raise NotImplementedError
 

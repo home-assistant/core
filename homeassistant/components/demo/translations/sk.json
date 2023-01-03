@@ -1,5 +1,28 @@
 {
     "entity": {
+        "climate": {
+            "ubercool": {
+                "state_attributes": {
+                    "fan_mode": {
+                        "state": {
+                            "auto_high": "Automatick\u00e1 vysok\u00e1",
+                            "auto_low": "Automatick\u00e1 n\u00edzka",
+                            "on_high": "Na vysokej \u00farovni",
+                            "on_low": "Na n\u00edzkej \u00farovni"
+                        }
+                    },
+                    "swing_mode": {
+                        "state": {
+                            "1": "1",
+                            "2": "2",
+                            "3": "3",
+                            "auto": "Auto",
+                            "off": "Vypnut\u00e9"
+                        }
+                    }
+                }
+            }
+        },
         "select": {
             "speed": {
                 "state": {
@@ -16,6 +39,15 @@
                     "comfort": "Komfort",
                     "eco": "Eco",
                     "sleep": "Sp\u00e1nok"
+                }
+            }
+        },
+        "vacuum": {
+            "model_s": {
+                "state_attributes": {
+                    "cleaned_area": {
+                        "name": "Oblas\u0165 vy\u010disten\u00e1"
+                    }
                 }
             }
         }

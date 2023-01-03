@@ -60,7 +60,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from exception
     except BadCredentials as exception:
         _LOGGER.error(
-            "Error authenticating with Control4 account API, incorrect username or password: %s",
+            (
+                "Error authenticating with Control4 account API, incorrect username or"
+                " password: %s"
+            ),
             exception,
         )
         return False

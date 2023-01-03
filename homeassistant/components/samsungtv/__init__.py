@@ -282,8 +282,10 @@ async def _async_create_bridge_with_updated_data(
 
     if model_requires_encryption(model) and method != METHOD_ENCRYPTED_WEBSOCKET:
         LOGGER.info(
-            "Detected model %s for %s. Some televisions from H and J series use "
-            "an encrypted protocol but you are using %s which may not be supported",
+            (
+                "Detected model %s for %s. Some televisions from H and J series use "
+                "an encrypted protocol but you are using %s which may not be supported"
+            ),
             model,
             host,
             method,
