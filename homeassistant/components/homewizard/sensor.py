@@ -218,6 +218,46 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
+        key="voltage_sag_l1_count",
+        name="Voltage sags detected L1",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="voltage_sag_l2_count",
+        name="Voltage sags detected L2",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="voltage_sag_l3_count",
+        name="Voltage sags detected L3",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="voltage_swell_l1_count",
+        name="Voltage swells detected L1",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="voltage_swell_l2_count",
+        name="Voltage swells detected L2",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="voltage_swell_l3_count",
+        name="Voltage swells detected L3",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="any_power_fail_count",
+        name="Power failures detected",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="long_power_fail_count",
+        name="Long power failures detected",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
         key="total_gas_m3",
         name="Total gas",
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
