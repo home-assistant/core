@@ -15,6 +15,11 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
+def mock_bluetooth(enable_bluetooth):
+    """Auto mock bluetooth."""
+
+
+@pytest.fixture(autouse=True)
 def esphome_mock_async_zeroconf(mock_async_zeroconf):
     """Auto mock zeroconf."""
 
