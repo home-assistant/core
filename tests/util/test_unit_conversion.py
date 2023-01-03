@@ -35,22 +35,19 @@ from homeassistant.util.unit_conversion import (
 )
 
 INVALID_SYMBOL = "bob"
-_CONVERTERS: list[type[BaseUnitConverter]] = [
-    obj
+_CONVERTERS: dict[type[BaseUnitConverter], list[str]] = {
+    obj: sorted(obj.VALID_UNITS)
     for _, obj in inspect.getmembers(unit_conversion)
     if inspect.isclass(obj)
     and issubclass(obj, BaseUnitConverter)
     and obj != BaseUnitConverter
-]
+}
 
 
-def _get_valid_unit(converter: type[BaseUnitConverter]) -> str:
+def _get_sample_valid_unit(converter: type[BaseUnitConverter]) -> str:
     """Get a valid unit from the converter, different from the normalized unit."""
     return next(
-        filter(
-            lambda v: v != converter.NORMALIZED_UNIT,
-            sorted(converter.VALID_UNITS),
-        )
+        unit for unit in _CONVERTERS[converter] if unit != converter.NORMALIZED_UNIT
     )
 
 
@@ -59,7 +56,7 @@ def _get_valid_unit(converter: type[BaseUnitConverter]) -> str:
     [
         (converter, valid_unit)
         for converter in _CONVERTERS
-        for valid_unit in sorted(converter.VALID_UNITS)
+        for valid_unit in _CONVERTERS[converter]
     ],
 )
 def test_convert_same_unit(converter: type[BaseUnitConverter], valid_unit: str) -> None:
@@ -69,7 +66,7 @@ def test_convert_same_unit(converter: type[BaseUnitConverter], valid_unit: str) 
 
 @pytest.mark.parametrize(
     "converter,valid_unit",
-    [(converter, _get_valid_unit(converter)) for converter in _CONVERTERS],
+    [(converter, _get_sample_valid_unit(converter)) for converter in _CONVERTERS],
 )
 def test_convert_invalid_unit(
     converter: type[BaseUnitConverter], valid_unit: str
@@ -85,7 +82,7 @@ def test_convert_invalid_unit(
 @pytest.mark.parametrize(
     "converter,from_unit,to_unit",
     [
-        (converter, converter.NORMALIZED_UNIT, _get_valid_unit(converter))
+        (converter, converter.NORMALIZED_UNIT, _get_sample_valid_unit(converter))
         for converter in _CONVERTERS
     ],
 )
@@ -100,7 +97,7 @@ def test_convert_nonnumeric_value(
 @pytest.mark.parametrize(
     "converter,from_unit,to_unit",
     [
-        (converter, converter.NORMALIZED_UNIT, _get_valid_unit(converter))
+        (converter, converter.NORMALIZED_UNIT, _get_sample_valid_unit(converter))
         for converter in _CONVERTERS
     ],
 )
