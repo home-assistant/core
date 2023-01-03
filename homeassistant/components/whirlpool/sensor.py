@@ -71,40 +71,20 @@ ICON_W = "mdi:washing-machine"
 _LOGGER = logging.getLogger(__name__)
 
 
-def washer_state(washer: WasherDryerClass) -> str | None:
+def washer_state(washer: WasherDryer) -> str | None:
     """Determine correct states for a washer."""
 
-    if washer.washdry.get_attribute("Cavity_OpStatusDoorOpen") == "1":
+    if washer.get_attribute("Cavity_OpStatusDoorOpen") == "1":
         return "Door open"
 
-    machine_state = washer.washdry.get_machine_state()
+    machine_state = washer.get_machine_state()
 
     if machine_state == MachineState.RunningMainCycle:
         for func, cycle_name in CYCLE_FUNC:
-            if func(washer.washdry):
+            if func(washer):
                 return cycle_name
 
     return MACHINE_STATE.get(machine_state, STATE_UNKNOWN)
-
-
-def completion_time(washer: WasherDryerClass) -> datetime | None:
-    """Calculate the time stamp for completion."""
-    machine_state = washer.washdry.get_machine_state()
-    if (
-        machine_state.value in {MachineState.Complete.value, MachineState.Standby.value}
-        and washer.running
-    ):
-        washer.running = False
-        washer.timestamp = utcnow()
-
-    if machine_state is MachineState.RunningMainCycle:
-        washer.running = True
-        washer.timestamp = utcnow() + timedelta(
-            seconds=int(
-                washer.washdry.get_attribute("Cavity_TimeStatusEstTimeRemaining")
-            )
-        )
-    return washer.timestamp
 
 
 @dataclass
@@ -130,21 +110,24 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
         value_fn=washer_state,
     ),
     WhirlpoolSensorEntityDescription(
-        key="timeremaining",
-        name="End Time",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        icon=ICON_W,
-        has_entity_name=True,
-        value_fn=completion_time,
-    ),
-    WhirlpoolSensorEntityDescription(
         key="DispenseLevel",
         name="Detergent Level",
         icon=ICON_W,
         has_entity_name=True,
         value_fn=lambda WasherDryer: TANK_FILL[
-            WasherDryer.washdry.get_attribute("WashCavity_OpStatusBulkDispense1Level")
+            WasherDryer.get_attribute("WashCavity_OpStatusBulkDispense1Level")
         ],
+    ),
+)
+
+SENSOR_TIMER: tuple[WhirlpoolSensorEntityDescription, ...] = (
+    WhirlpoolSensorEntityDescription(
+        key="timeremaining",
+        name="End Time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        icon=ICON_W,
+        has_entity_name=True,
+        value_fn=washer_state,  # not used for class
     ),
 )
 
@@ -164,6 +147,7 @@ async def async_setup_entry(
             appliance["SAID"],
         )
         await _wd.connect()
+
         entities.extend(
             [
                 WasherDryerClass(
@@ -175,11 +159,67 @@ async def async_setup_entry(
                 for description in SENSORS
             ]
         )
-
+        entities.extend(
+            [
+                WasherDryerTimeClass(
+                    appliance["SAID"],
+                    appliance["NAME"],
+                    description,
+                    _wd,
+                )
+                for description in SENSOR_TIMER
+            ]
+        )
     async_add_entities(entities)
 
 
 class WasherDryerClass(SensorEntity):
+    """A class for the whirlpool/maytag washer account."""
+
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        said: str,
+        name: str,
+        description: WhirlpoolSensorEntityDescription,
+        washdry: WasherDryer,
+    ) -> None:
+        """Initialize the washer sensor."""
+        self._name = name.capitalize()
+        self._wd: WasherDryer = washdry
+
+        if self._name == "Dryer":
+            self._attr_icon = ICON_D
+
+        self.entity_description: WhirlpoolSensorEntityDescription = description
+        self._attr_unique_id = f"{said}-{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, said)},
+            name=self._name,
+            manufacturer="Whirlpool",
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Connect washer/dryer to the cloud."""
+        self._wd.register_attr_callback(self.async_write_ha_state)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Close Whrilpool Appliance sockets before removing."""
+        await self._wd.disconnect()
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._wd.get_online()
+
+    @property
+    def native_value(self) -> StateType | str:
+        """Return native value of sensor."""
+        return self.entity_description.value_fn(self._wd)
+
+
+class WasherDryerTimeClass(SensorEntity):
     """A class for the whirlpool/maytag washer account."""
 
     _attr_should_poll = False
@@ -222,31 +262,20 @@ class WasherDryerClass(SensorEntity):
         return self._wd.get_online()
 
     @property
-    def native_value(self) -> StateType | str:
-        """Return native value of sensor."""
-        return self.entity_description.value_fn(self)
+    def native_value(self) -> datetime | str:
+        """Calculate the time stamp for completion."""
+        machine_state = self._wd.get_machine_state()
+        if (
+            machine_state.value
+            in {MachineState.Complete.value, MachineState.Standby.value}
+            and self._running
+        ):
+            self._running = False
+            self._timestamp = utcnow()
 
-    @property
-    def washdry(self) -> WasherDryer:
-        """Return the washer/dryer."""
-        return self._wd
-
-    @property
-    def running(self) -> bool:
-        """Return the washer/dryer."""
-        return self._running
-
-    @running.setter
-    def running(self, value: bool) -> None:
-        """Set the running state."""
-        self._running = value
-
-    @property
-    def timestamp(self) -> datetime:
-        """Return the washer/dryer last timestamp."""
+        if machine_state is MachineState.RunningMainCycle:
+            self._running = True
+            self._timestamp = utcnow() + timedelta(
+                seconds=int(self._wd.get_attribute("Cavity_TimeStatusEstTimeRemaining"))
+            )
         return self._timestamp
-
-    @timestamp.setter
-    def timestamp(self, value) -> None:
-        """Set the Timestamp value."""
-        self._timestamp = value
