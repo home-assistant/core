@@ -23,7 +23,7 @@ fnvhash==0.1.0
 hass-nabucasa==0.61.0
 home-assistant-bluetooth==1.9.1
 home-assistant-frontend==20230102.0
-httpx==0.23.1
+httpx==0.23.2
 ifaddr==0.1.7
 janus==1.0.0
 jinja2==3.1.2
@@ -90,7 +90,7 @@ regex==2021.8.28
 # requirements so we can directly link HA versions to these library versions.
 anyio==3.6.2
 h11==0.14.0
-httpcore==0.16.2
+httpcore==0.16.3
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
