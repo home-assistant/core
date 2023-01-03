@@ -691,13 +691,6 @@ class MqttClimate(MqttEntity, ClimateEntity):
         def handle_target_humidity_received(msg: ReceiveMessage) -> None:
             """Handle target humidity coming via MQTT."""
 
-            if not self.supported_features & ClimateEntityFeature.TARGET_HUMIDITY:
-                _LOGGER.error(
-                    "Attempted to set target humidity with no %s configured",
-                    CONF_HUMIDITY_COMMAND_TOPIC,
-                )
-                return
-
             handle_climate_attribute_received(
                 msg, CONF_HUMIDITY_STATE_TEMPLATE, "_attr_target_humidity"
             )
