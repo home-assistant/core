@@ -1,12 +1,17 @@
 """Provide common SFR Box fixtures."""
+from collections.abc import Generator
+import json
+from unittest.mock import patch
+
 import pytest
+from sfrbox_api.models import DslInfo, SystemInfo
 
 from homeassistant.components.sfr_box.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture(name="config_entry")
@@ -22,3 +27,25 @@ def get_config_entry(hass: HomeAssistant) -> ConfigEntry:
     )
     config_entry.add_to_hass(hass)
     return config_entry
+
+
+@pytest.fixture()
+def system_get_info() -> Generator[SystemInfo, None, None]:
+    """Fixture for SFRBox.system_get_info."""
+    system_info = SystemInfo(**json.loads(load_fixture("system_getInfo.json", DOMAIN)))
+    with patch(
+        "homeassistant.components.sfr_box.coordinator.SFRBox.system_get_info",
+        return_value=system_info,
+    ):
+        yield system_info
+
+
+@pytest.fixture()
+def dsl_get_info() -> Generator[DslInfo, None, None]:
+    """Fixture for SFRBox.dsl_get_info."""
+    dsl_info = DslInfo(**json.loads(load_fixture("dsl_getInfo.json", DOMAIN)))
+    with patch(
+        "homeassistant.components.sfr_box.coordinator.SFRBox.dsl_get_info",
+        return_value=dsl_info,
+    ):
+        yield dsl_info
