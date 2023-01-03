@@ -349,6 +349,7 @@ FLOWS = {
         "rpi_power",
         "rtsp_to_webrtc",
         "ruckus_unleashed",
+        "ruuvi_gateway",
         "ruuvitag_ble",
         "sabnzbd",
         "samsungtv",

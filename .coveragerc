@@ -1078,6 +1078,9 @@ omit =
     homeassistant/components/rova/sensor.py
     homeassistant/components/rpi_camera/*
     homeassistant/components/rtorrent/sensor.py
+    homeassistant/components/ruuvi_gateway/__init__.py
+    homeassistant/components/ruuvi_gateway/bluetooth.py
+    homeassistant/components/ruuvi_gateway/coordinator.py
     homeassistant/components/russound_rio/media_player.py
     homeassistant/components/russound_rnet/media_player.py
     homeassistant/components/sabnzbd/__init__.py
