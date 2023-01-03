@@ -32,6 +32,7 @@ def addon_not_installed_fixture(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> AsyncMock:
     """Mock add-on not installed."""
+    addon_store_info.return_value["available"] = True
     return addon_info
 
 
@@ -41,10 +42,12 @@ def mock_addon_installed(
 ) -> AsyncMock:
     """Mock add-on already installed but not running."""
     addon_store_info.return_value = {
+        "available": True,
         "installed": "1.0.0",
         "state": "stopped",
         "version": "1.0.0",
     }
+    addon_info.return_value["available"] = True
     addon_info.return_value["hostname"] = "core-test-addon"
     addon_info.return_value["state"] = "stopped"
     addon_info.return_value["version"] = "1.0.0"
@@ -67,6 +70,7 @@ def addon_store_info_fixture() -> Generator[AsyncMock, None, None]:
         "homeassistant.components.hassio.addon_manager.async_get_addon_store_info"
     ) as addon_store_info:
         addon_store_info.return_value = {
+            "available": False,
             "installed": None,
             "state": None,
             "version": "1.0.0",
@@ -81,6 +85,7 @@ def addon_info_fixture() -> Generator[AsyncMock, None, None]:
         "homeassistant.components.hassio.addon_manager.async_get_addon_info",
     ) as addon_info:
         addon_info.return_value = {
+            "available": False,
             "hostname": None,
             "options": {},
             "state": None,
@@ -180,6 +185,26 @@ async def test_not_installed_raises_exception(
     assert str(err.value) == "Test add-on is not installed"
 
 
+async def test_not_available_raises_exception(
+    addon_manager: AddonManager,
+    addon_store_info: AsyncMock,
+    addon_info: AsyncMock,
+) -> None:
+    """Test addon not available raises exception."""
+    addon_store_info.return_value["available"] = False
+    addon_info.return_value["available"] = False
+
+    with pytest.raises(AddonError) as err:
+        await addon_manager.async_install_addon()
+
+    assert str(err.value) == "Test add-on is not available anymore"
+
+    with pytest.raises(AddonError) as err:
+        await addon_manager.async_update_addon()
+
+    assert str(err.value) == "Test add-on is not available anymore"
+
+
 async def test_get_addon_discovery_info(
     addon_manager: AddonManager, get_addon_discovery_info: AsyncMock
 ) -> None:
@@ -222,6 +247,7 @@ async def test_get_addon_info_not_installed(
 ) -> None:
     """Test get addon info when addon is not installed.."""
     assert await addon_manager.async_get_addon_info() == AddonInfo(
+        available=True,
         hostname=None,
         options={},
         state=AddonState.NOT_INSTALLED,
@@ -243,6 +269,7 @@ async def test_get_addon_info(
     """Test get addon info when addon is installed."""
     addon_installed.return_value["state"] = addon_info_state
     assert await addon_manager.async_get_addon_info() == AddonInfo(
+        available=True,
         hostname="core-test-addon",
         options={},
         state=addon_state,
@@ -308,18 +335,29 @@ async def test_set_addon_options_error(
 
 
 async def test_install_addon(
-    addon_manager: AddonManager, install_addon: AsyncMock
+    addon_manager: AddonManager,
+    install_addon: AsyncMock,
+    addon_store_info: AsyncMock,
+    addon_info: AsyncMock,
 ) -> None:
     """Test install addon."""
+    addon_store_info.return_value["available"] = True
+    addon_info.return_value["available"] = True
+
     await addon_manager.async_install_addon()
 
     assert install_addon.call_count == 1
 
 
 async def test_install_addon_error(
-    addon_manager: AddonManager, install_addon: AsyncMock
+    addon_manager: AddonManager,
+    install_addon: AsyncMock,
+    addon_store_info: AsyncMock,
+    addon_info: AsyncMock,
 ) -> None:
     """Test install addon raises error."""
+    addon_store_info.return_value["available"] = True
+    addon_info.return_value["available"] = True
     install_addon.side_effect = HassioAPIError("Boom")
 
     with pytest.raises(AddonError) as err:
@@ -341,6 +379,7 @@ async def test_schedule_install_addon(
     assert addon_manager.task_in_progress() is True
 
     assert await addon_manager.async_get_addon_info() == AddonInfo(
+        available=True,
         hostname="core-test-addon",
         options={},
         state=AddonState.INSTALLING,
@@ -676,6 +715,7 @@ async def test_schedule_update_addon(
     assert addon_manager.task_in_progress() is True
 
     assert await addon_manager.async_get_addon_info() == AddonInfo(
+        available=True,
         hostname="core-test-addon",
         options={},
         state=AddonState.UPDATING,
