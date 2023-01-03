@@ -30,11 +30,10 @@ from homeassistant.auth import (
     providers as auth_providers,
 )
 from homeassistant.auth.permissions import system_policies
-from homeassistant.components import device_automation, recorder
+from homeassistant.components import device_automation
 from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
-from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.config import async_process_component_config
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
@@ -372,6 +371,10 @@ def async_mock_intent(hass, intent_typ):
 @ha.callback
 def async_fire_mqtt_message(hass, topic, payload, qos=0, retain=False):
     """Fire the MQTT message."""
+    # Local import to avoid processing MQTT modules when running a testcase
+    # which does not use MQTT.
+    from homeassistant.components.mqtt.models import ReceiveMessage
+
     if isinstance(payload, str):
         payload = payload.encode("utf-8")
     msg = ReceiveMessage(topic, payload, qos, retain)
@@ -966,11 +969,15 @@ def assert_setup_component(count, domain=None):
     ), f"setup_component failed, expected {count} got {res_len}: {res}"
 
 
-SetupRecorderInstanceT = Callable[..., Awaitable[recorder.Recorder]]
+SetupRecorderInstanceT = Callable[..., Awaitable[Any]]
 
 
 def init_recorder_component(hass, add_config=None, db_url="sqlite://"):
     """Initialize the recorder."""
+    # Local import to avoid processing recorder and SQLite modules when running a
+    # testcase which does not use the recorder.
+    from homeassistant.components import recorder
+
     config = dict(add_config) if add_config else {}
     if recorder.CONF_DB_URL not in config:
         config[recorder.CONF_DB_URL] = db_url
