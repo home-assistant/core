@@ -39,7 +39,6 @@ async def test_colortouch(hass):
         "preset_mode": "temperature",
         "fan_state": 0,
         "hvac_mode": 0,
-        "schedule_part": 255,
         "friendly_name": "COLORTOUCH",
         "supported_features": EXPECTED_BASE_SUPPORTED_FEATURES
         | ClimateEntityFeature.TARGET_HUMIDITY,
@@ -72,7 +71,6 @@ async def test_t2000(hass):
         "preset_mode": "temperature",
         "fan_state": 0,
         "hvac_mode": 0,
-        "schedule_part": 1,
         "friendly_name": "T2000",
         "supported_features": EXPECTED_BASE_SUPPORTED_FEATURES,
     }

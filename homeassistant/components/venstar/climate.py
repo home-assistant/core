@@ -40,7 +40,6 @@ from .const import (
     _LOGGER,
     ATTR_FAN_STATE,
     ATTR_HVAC_STATE,
-    ATTR_SCHED_PART,
     CONF_HUMIDIFIER,
     DEFAULT_SSL,
     DOMAIN,
@@ -193,7 +192,6 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
         return {
             ATTR_FAN_STATE: self._client.fanstate,
             ATTR_HVAC_STATE: self._client.state,
-            ATTR_SCHED_PART: self._client.get_info("schedulepart"),
         }
 
     @property
