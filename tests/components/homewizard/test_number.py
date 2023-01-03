@@ -152,10 +152,7 @@ async def test_brightness_level_set_catches_requesterror(
     api = get_mock_device()
     api.state = AsyncMock(return_value=State.from_dict({"brightness": 255}))
 
-    def state_set(brightness):
-        api.state = AsyncMock(return_value=State.from_dict({"brightness": brightness}))
-
-    api.state_set = AsyncMock(side_effect=state_set)
+    api.state_set = AsyncMock(side_effect=RequestError())
 
     with patch(
         "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
@@ -167,8 +164,6 @@ async def test_brightness_level_set_catches_requesterror(
 
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-
-        api.state_set.side_effect = RequestError()
 
         # Set level halfway
         with raises(HomeAssistantError):
@@ -191,10 +186,7 @@ async def test_brightness_level_set_catches_disablederror(
     api = get_mock_device()
     api.state = AsyncMock(return_value=State.from_dict({"brightness": 255}))
 
-    def state_set(brightness):
-        api.state = AsyncMock(return_value=State.from_dict({"brightness": brightness}))
-
-    api.state_set = AsyncMock(side_effect=state_set)
+    api.state_set = AsyncMock(side_effect=DisabledError())
 
     with patch(
         "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
@@ -206,8 +198,6 @@ async def test_brightness_level_set_catches_disablederror(
 
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-
-        api.state_set.side_effect = DisabledError()
 
         # Set level halfway
         with raises(HomeAssistantError):
@@ -245,8 +235,6 @@ async def test_brightness_level_set_catches_invalid_value(
 
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-
-        api.state_set.side_effect = DisabledError()
 
         with raises(ValueError):
             await hass.services.async_call(
