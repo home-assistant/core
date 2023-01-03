@@ -19,6 +19,21 @@ async def test_get_thread_state(
     assert await thread.async_get_thread_state(hass) == thread.ThreadState.DISABLED
 
 
+async def test_set_thread_state(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_running
+):
+    """Test async_set_thread_state."""
+
+    aioclient_mock.post(f"{BASE_URL}/node/state", text="0")
+
+    await thread.async_set_thread_state(hass, thread.ThreadState.ROUTER)
+    assert 3 == thread.ThreadState.ROUTER.value
+    assert aioclient_mock.call_count == 1
+    assert aioclient_mock.mock_calls[-1][0] == "POST"
+    assert aioclient_mock.mock_calls[-1][1].path == "/node/state"
+    assert aioclient_mock.mock_calls[-1][2] == "3"
+
+
 async def test_get_active_dataset(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_running
 ):

@@ -65,6 +65,20 @@ async def async_get_thread_state(hass: HomeAssistant) -> ThreadState:
     return state
 
 
+async def async_set_thread_state(hass: HomeAssistant, state: ThreadState) -> None:
+    """Set current Thread state."""
+
+    response = await async_get_clientsession(hass).post(
+        f"{await _async_get_thread_rest_service_url(hass)}/node/state",
+        data=str(state.value),
+        timeout=aiohttp.ClientTimeout(total=10),
+    )
+
+    response.raise_for_status()
+    if response.status != HTTPStatus.OK:
+        raise HomeAssistantError
+
+
 async def async_get_active_dataset(hass: HomeAssistant) -> OperationalDataSet:
     """Get current active operational dataset.
 
