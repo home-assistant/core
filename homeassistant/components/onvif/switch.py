@@ -80,7 +80,7 @@ class ONVIFAuxSwitch(ONVIFBaseEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn off switch."""
-        self._attr_is_on = True
+        self._attr_is_on = False
         await self.device.async_run_aux_command(self._profile, self._off_cmd)
 
 
