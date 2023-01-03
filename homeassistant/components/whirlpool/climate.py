@@ -71,9 +71,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     whirlpool_data: WhirlpoolData = hass.data[DOMAIN][config_entry.entry_id]
-    if not (aircons := whirlpool_data.appliances_manager.aircons):
-        _LOGGER.debug("No aircons found")
-        return
 
     aircons = [
         AirConEntity(
@@ -83,7 +80,7 @@ async def async_setup_entry(
             whirlpool_data.backend_selector,
             whirlpool_data.auth,
         )
-        for ac_data in aircons
+        for ac_data in whirlpool_data.appliances_manager.aircons
     ]
     async_add_entities(aircons, True)
 
