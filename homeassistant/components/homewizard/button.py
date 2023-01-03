@@ -60,4 +60,4 @@ class HomeWizardIdentifyButton(
         try:
             await self.coordinator.api.identify()
         except RequestError as ex:
-            raise HomeAssistantError(str(ex)) from ex
+            raise HomeAssistantError from ex

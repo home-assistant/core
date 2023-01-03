@@ -80,7 +80,7 @@ class HWEnergyMainSwitchEntity(HWEnergySwitchEntity):
         try:
             await self.coordinator.api.state_set(power_on=power_on)
         except RequestError as ex:
-            raise HomeAssistantError(str(ex)) from ex
+            raise HomeAssistantError from ex
 
         await self.coordinator.async_refresh()
 
@@ -130,7 +130,7 @@ class HWEnergySwitchLockEntity(HWEnergySwitchEntity):
         try:
             await self.coordinator.api.state_set(switch_lock=switch_lock)
         except RequestError as ex:
-            raise HomeAssistantError(str(ex)) from ex
+            raise HomeAssistantError from ex
 
         await self.coordinator.async_refresh()
 
@@ -176,7 +176,7 @@ class HWEnergyEnableCloudEntity(HWEnergySwitchEntity):
         try:
             await self.coordinator.api.system_set(cloud_enabled=cloud_enabled)
         except RequestError as ex:
-            raise HomeAssistantError(str(ex)) from ex
+            raise HomeAssistantError from ex
 
         await self.coordinator.async_refresh()
 
