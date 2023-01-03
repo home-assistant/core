@@ -79,15 +79,11 @@ def washer_state(washer: WasherDryerClass) -> str | None:
         return "Door open"
 
     machine_state = washer.washdry.get_machine_state()
-    machine_cycle = None
 
-    for func, cycle_name in CYCLE_FUNC:
-        if func(washer.washdry):
-            machine_cycle = cycle_name
-            break
-
-    if machine_state == MachineState.RunningMainCycle and machine_cycle:
-        return machine_cycle
+    if machine_state == MachineState.RunningMainCycle:
+        for func, cycle_name in CYCLE_FUNC:
+            if func(washer.washdry):
+                return cycle_name
 
     return MACHINE_STATE.get(machine_state, STATE_UNKNOWN)
 
@@ -130,7 +126,6 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
     WhirlpoolSensorEntityDescription(
         key="state",
         name="State",
-        entity_registry_enabled_default=True,
         icon=ICON_W,
         has_entity_name=True,
         value_fn=washer_state,
@@ -141,7 +136,6 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="s",
-        entity_registry_enabled_default=True,
         icon=ICON_W,
         has_entity_name=True,
         value_fn=completion_time,
@@ -150,7 +144,6 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
         key="DispenseLevel",
         name="Detergent Level",
         state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=True,
         icon=ICON_W,
         has_entity_name=True,
         value_fn=lambda WasherDryer: TANK_FILL[

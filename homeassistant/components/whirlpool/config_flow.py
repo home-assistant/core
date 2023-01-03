@@ -46,7 +46,7 @@ async def validate_input(
     auth = Auth(backend_selector, data[CONF_USERNAME], data[CONF_PASSWORD])
     try:
         await auth.do_auth()
-    except (asyncio.TimeoutError, aiohttp.ClientConnectionError) as exc:
+    except (asyncio.TimeoutError, aiohttp.ClientError) as exc:
         raise CannotConnect from exc
 
     if not auth.is_access_token_valid():
