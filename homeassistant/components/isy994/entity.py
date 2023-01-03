@@ -33,7 +33,7 @@ from .const import DOMAIN
 
 
 class ISYEntity(Entity):
-    """Representation of an ISY994 device."""
+    """Representation of an ISY device."""
 
     _name: str | None = None
     _attr_should_poll = False
@@ -56,12 +56,12 @@ class ISYEntity(Entity):
 
     @callback
     def async_on_update(self, event: NodeProperty) -> None:
-        """Handle the update event from the ISY994 Node."""
+        """Handle the update event from the ISY Node."""
         self.async_write_ha_state()
 
     @callback
     def async_on_control(self, event: NodeProperty) -> None:
-        """Handle a control event from the ISY994 Node."""
+        """Handle a control event from the ISY Node."""
         event_data = {
             "entity_id": self.entity_id,
             "control": event.control,
@@ -239,10 +239,10 @@ class ISYNodeEntity(ISYEntity):
 
 
 class ISYProgramEntity(ISYEntity):
-    """Representation of an ISY994 program base."""
+    """Representation of an ISY program base."""
 
     def __init__(self, name: str, status: Any | None, actions: Program = None) -> None:
-        """Initialize the ISY994 program-based entity."""
+        """Initialize the ISY program-based entity."""
         super().__init__(status)
         self._name = name
         self._actions = actions
