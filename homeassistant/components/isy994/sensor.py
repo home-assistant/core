@@ -1,4 +1,4 @@
-"""Support for ISY994 sensors."""
+"""Support for ISY sensors."""
 from __future__ import annotations
 
 from typing import Any, cast
@@ -81,7 +81,7 @@ ISY_CONTROL_TO_ENTITY_CATEGORY = {
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the ISY994 sensor platform."""
+    """Set up the ISY sensor platform."""
     hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
     entities: list[ISYSensorEntity | ISYSensorVariableEntity] = []
 
@@ -112,7 +112,7 @@ async def async_setup_entry(
 
 
 class ISYSensorEntity(ISYNodeEntity, SensorEntity):
-    """Representation of an ISY994 sensor device."""
+    """Representation of an ISY sensor device."""
 
     @property
     def target(self) -> Node | NodeProperty | None:
@@ -126,7 +126,7 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
 
     @property
     def raw_unit_of_measurement(self) -> dict | str | None:
-        """Get the raw unit of measurement for the ISY994 sensor device."""
+        """Get the raw unit of measurement for the ISY sensor device."""
         if self.target is None:
             return None
 
@@ -148,7 +148,7 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
 
     @property
     def native_value(self) -> float | int | str | None:
-        """Get the state of the ISY994 sensor device."""
+        """Get the state of the ISY sensor device."""
         if self.target is None:
             return None
 
@@ -199,10 +199,10 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
 
 
 class ISYAuxSensorEntity(ISYSensorEntity):
-    """Representation of an ISY994 aux sensor device."""
+    """Representation of an ISY aux sensor device."""
 
     def __init__(self, node: Node, control: str, enabled_default: bool) -> None:
-        """Initialize the ISY994 aux sensor."""
+        """Initialize the ISY aux sensor."""
         super().__init__(node)
         self._control = control
         self._attr_entity_registry_enabled_default = enabled_default
@@ -239,10 +239,10 @@ class ISYAuxSensorEntity(ISYSensorEntity):
 
 
 class ISYSensorVariableEntity(ISYEntity, SensorEntity):
-    """Representation of an ISY994 variable as a sensor device."""
+    """Representation of an ISY variable as a sensor device."""
 
     def __init__(self, vname: str, vobj: object) -> None:
-        """Initialize the ISY994 binary sensor program."""
+        """Initialize the ISY binary sensor program."""
         super().__init__(vobj)
         self._name = vname
 

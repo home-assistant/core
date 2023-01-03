@@ -1,4 +1,4 @@
-"""Support for Insteon Thermostats via ISY994 Platform."""
+"""Support for Insteon Thermostats via ISY Platform."""
 from __future__ import annotations
 
 from typing import Any
@@ -56,7 +56,7 @@ from .helpers import convert_isy_value_to_hass, migrate_old_unique_ids
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the ISY994 thermostat platform."""
+    """Set up the ISY thermostat platform."""
     entities = []
 
     hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
@@ -68,7 +68,7 @@ async def async_setup_entry(
 
 
 class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
-    """Representation of an ISY994 thermostat entity."""
+    """Representation of an ISY thermostat entity."""
 
     _attr_hvac_modes = ISY_HVAC_MODES
     _attr_precision = PRECISION_TENTHS

@@ -300,7 +300,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
 
         _LOGGER.debug(
             (
-                "Cleaning up ISY994 Entities and devices: Config Entries: %s, Current"
+                "Cleaning up ISY Entities and devices: Config Entries: %s, Current"
                 " Entries: %s, Extra Entries Removed: %s"
             ),
             len(config_ids),
@@ -309,7 +309,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         )
 
     async def async_reload_config_entries(service: ServiceCall) -> None:
-        """Trigger a reload of all ISY994 config entries."""
+        """Trigger a reload of all ISY config entries."""
         for config_entry_id in hass.data[DOMAIN]:
             hass.async_create_task(hass.config_entries.async_reload(config_entry_id))
 

@@ -1,4 +1,4 @@
-"""Support for ISY994 fans."""
+"""Support for ISY fans."""
 from __future__ import annotations
 
 import math
@@ -26,7 +26,7 @@ SPEED_RANGE = (1, 255)  # off is not included
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the ISY994 fan platform."""
+    """Set up the ISY fan platform."""
     hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
     entities: list[ISYFanEntity | ISYFanProgramEntity] = []
 
@@ -41,7 +41,7 @@ async def async_setup_entry(
 
 
 class ISYFanEntity(ISYNodeEntity, FanEntity):
-    """Representation of an ISY994 fan device."""
+    """Representation of an ISY fan device."""
 
     _attr_supported_features = FanEntityFeature.SET_SPEED
 
@@ -67,7 +67,7 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
         return bool(self._node.status != 0)
 
     async def async_set_percentage(self, percentage: int) -> None:
-        """Set node to speed percentage for the ISY994 fan device."""
+        """Set node to speed percentage for the ISY fan device."""
         if percentage == 0:
             await self._node.turn_off()
             return
@@ -82,16 +82,16 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
         preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
-        """Send the turn on command to the ISY994 fan device."""
+        """Send the turn on command to the ISY fan device."""
         await self.async_set_percentage(percentage or 67)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Send the turn off command to the ISY994 fan device."""
+        """Send the turn off command to the ISY fan device."""
         await self._node.turn_off()
 
 
 class ISYFanProgramEntity(ISYProgramEntity, FanEntity):
-    """Representation of an ISY994 fan program."""
+    """Representation of an ISY fan program."""
 
     @property
     def percentage(self) -> int | None:
@@ -111,7 +111,7 @@ class ISYFanProgramEntity(ISYProgramEntity, FanEntity):
         return bool(self._node.status != 0)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Send the turn on command to ISY994 fan program."""
+        """Send the turn on command to ISY fan program."""
         if not await self._actions.run_then():
             _LOGGER.error("Unable to turn off the fan")
 
@@ -121,6 +121,6 @@ class ISYFanProgramEntity(ISYProgramEntity, FanEntity):
         preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
-        """Send the turn off command to ISY994 fan program."""
+        """Send the turn off command to ISY fan program."""
         if not await self._actions.run_else():
             _LOGGER.error("Unable to turn on the fan")
