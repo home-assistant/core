@@ -24,7 +24,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import DOMAIN
 
-PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BUTTON, Platform.SWITCH]
+PLATFORMS: list[Platform] = [Platform.BUTTON]
 
 SCAN_INTERNVAL = timedelta(seconds=30)
 

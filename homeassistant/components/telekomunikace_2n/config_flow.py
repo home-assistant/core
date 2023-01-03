@@ -72,8 +72,6 @@ class Py2NDeviceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             result = await validate_input(self.hass, user_input[CONF_HOST], user_input)
         except InvalidHost:
             errors[CONF_HOST] = "invalid_host"
-        except ValueError:
-            errors["base"] = "invalid_auth"
         except DeviceConnectionError:
             errors["base"] = "cannot_connect"
         except DeviceUnsupportedError:
