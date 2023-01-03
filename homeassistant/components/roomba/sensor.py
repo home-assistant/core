@@ -66,7 +66,7 @@ class CleaningTime(IRobotEntity, SensorEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self._name} total cleaning time"
+        return f"{self._name} cleaning time total"
 
     @property
     def unique_id(self):
@@ -164,12 +164,12 @@ class CancelledMissions(IRobotEntity, SensorEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self._name} missions cancelled"
+        return f"{self._name} missions canceled"
 
     @property
     def unique_id(self):
         """Return the ID of this sensor."""
-        return f"cancelled_missions_{self._blid}"
+        return f"canceled_missions_{self._blid}"
 
     @property
     def native_unit_of_measurement(self):
