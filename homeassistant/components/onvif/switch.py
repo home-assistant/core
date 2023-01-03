@@ -1,6 +1,8 @@
 """ONVIF switches for controlling cameras."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -37,14 +39,14 @@ async def async_setup_entry(
 class ONVIFImagingSettingSwitch(ONVIFBaseEntity, SwitchEntity):
     """An ONVIF switch controlled via ImagingSettings."""
 
-    _on_settings = {}
-    _off_settings = {}
+    _on_settings: dict[str, Any] = {}
+    _off_settings: dict[str, Any] = {}
 
     def __init__(self, uid: str, profile: Profile, device: ONVIFDevice) -> None:
         """Initialize the switch."""
         self._profile = profile
         super().__init__(device)
-        unique_root = "_".join([self.device_info["name"], profile.name])
+        unique_root = "_".join([str(self.device_info["name"]), profile.name])
         self._attr_unique_id = unique_root + uid
 
     async def async_turn_on(self, **kwargs) -> None:
@@ -68,7 +70,7 @@ class ONVIFAuxSwitch(ONVIFBaseEntity, SwitchEntity):
         """Initialize the switch."""
         self._profile = profile
         super().__init__(device)
-        unique_root = "_".join([self.device_info["name"], profile.name])
+        unique_root = "_".join([str(self.device_info["name"]), profile.name])
         self._attr_unique_id = unique_root + uid
 
     async def async_turn_on(self, **kwargs) -> None:
