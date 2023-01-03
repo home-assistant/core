@@ -203,7 +203,7 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], TemplateSensor):
         value_template: Template | None,
     ) -> None:
         """Initialize a web scrape sensor."""
-        CoordinatorEntity.__init__(self, coordinator)
+        super(CoordinatorEntity, self).__init__(coordinator)
         TemplateSensor.__init__(
             self,
             hass,

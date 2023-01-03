@@ -55,8 +55,8 @@ async def async_setup_entry(
         """Add binary sensor from Axis device."""
         event: AxisEvent = device.api.event[event_id]
 
-        if event.CLASS not in (CLASS_OUTPUT, CLASS_PTZ) and not (
-            event.CLASS == CLASS_LIGHT and event.TYPE == "Light"
+        if event.group not in (CLASS_OUTPUT, CLASS_PTZ) and not (
+            event.group == CLASS_LIGHT and event.type == "Light"
         ):
             async_add_entities([AxisBinarySensor(event, device)])
 
@@ -75,7 +75,8 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
         super().__init__(event, device)
         self.cancel_scheduled_update = None
 
-        self._attr_device_class = DEVICE_CLASS.get(self.event.CLASS)
+        self._attr_device_class = DEVICE_CLASS.get(self.event.group)
+        self._attr_is_on = event.is_tripped
 
     @callback
     def update_callback(self, no_delay=False):
@@ -83,6 +84,7 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
 
         Parameter no_delay is True when device_event_reachable is sent.
         """
+        self._attr_is_on = self.event.is_tripped
 
         @callback
         def scheduled_update(now):
@@ -105,21 +107,16 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
         )
 
     @property
-    def is_on(self) -> bool:
-        """Return true if event is active."""
-        return self.event.is_tripped
-
-    @property
     def name(self) -> str | None:
         """Return the name of the event."""
         if (
-            self.event.CLASS == CLASS_INPUT
+            self.event.group == CLASS_INPUT
             and self.event.id in self.device.api.vapix.ports
             and self.device.api.vapix.ports[self.event.id].name
         ):
             return self.device.api.vapix.ports[self.event.id].name
 
-        if self.event.CLASS == CLASS_MOTION:
+        if self.event.group == CLASS_MOTION:
 
             for event_class, event_data in (
                 (FenceGuard, self.device.api.vapix.fence_guard),
@@ -133,6 +130,6 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
                     and event_data
                     and self.event.id in event_data
                 ):
-                    return f"{self.event.TYPE} {event_data[self.event.id].name}"
+                    return f"{self.event.type} {event_data[self.event.id].name}"
 
         return self._attr_name
