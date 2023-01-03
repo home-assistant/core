@@ -219,7 +219,7 @@ class WasherDryerClass(SensorEntity):
 
 
 class WasherDryerTimeClass(SensorEntity):
-    """A class for the whirlpool/maytag washer account."""
+    """A timestamp class for the whirlpool/maytag washer account."""
 
     _attr_should_poll = False
 
