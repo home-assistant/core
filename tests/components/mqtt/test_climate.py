@@ -735,6 +735,23 @@ async def test_receive_mqtt_humidity(hass, mqtt_mock_entry_with_yaml_config):
     assert state.attributes.get("current_humidity") == 35
 
 
+async def test_handle_target_humidity_received(hass, mqtt_mock_entry_with_yaml_config):
+    """Test setting the target humidity via MQTT."""
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
+    config["climate"]["target_humidity_state_topic"] = "humidity-state"
+    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("humidity") is None
+
+    async_fire_mqtt_message(hass, "humidity-state", "65")
+
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("humidity") == 65
+
+
 async def test_handle_action_received(hass, mqtt_mock_entry_with_yaml_config):
     """Test getting the action received via MQTT."""
     config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
@@ -1733,6 +1750,62 @@ async def test_publishing_with_custom_encoding(
         parameters,
         payload,
         template,
+    )
+
+
+@pytest.mark.parametrize(
+    "config,valid",
+    [
+        (
+            {
+                "name": "test_valid_humidity_min_max",
+                "min_humidity": 20,
+                "max_humidity": 80,
+            },
+            True,
+        ),
+        (
+            {
+                "name": "test_invalid_humidity_min_max_1",
+                "min_humidity": 0,
+                "max_humidity": 101,
+            },
+            False,
+        ),
+        (
+            {
+                "name": "test_invalid_humidity_min_max_2",
+                "max_humidity": 20,
+                "min_humidity": 40,
+            },
+            False,
+        ),
+        (
+            {
+                "name": "test_valid_humidity_state",
+                "target_humidity_state_topic": "humidity-state",
+                "target_humidity_command_topic": "humidity-command",
+            },
+            True,
+        ),
+        (
+            {
+                "name": "test_invalid_humidity_state",
+                "target_humidity_state_topic": "humidity-state",
+            },
+            False,
+        ),
+    ],
+)
+async def test_humidity_configuration_validity(hass, config, valid):
+    """Test the validity of humidity configurations."""
+    assert (
+        await async_setup_component(
+            hass,
+            mqtt.DOMAIN,
+            {mqtt.DOMAIN: {climate.DOMAIN: config}},
+        )
+        is valid
     )
 
 
