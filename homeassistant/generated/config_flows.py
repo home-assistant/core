@@ -112,6 +112,7 @@ FLOWS = {
         "elmax",
         "emonitor",
         "emulated_roku",
+        "energyzero",
         "enocean",
         "enphase_envoy",
         "environment_canada",
