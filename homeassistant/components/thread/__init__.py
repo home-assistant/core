@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from http import HTTPStatus
+from json import JSONDecodeError
 
 import aiohttp
 import voluptuous as vol
@@ -53,6 +54,14 @@ async def _async_get_thread_rest_service_url(hass) -> str:
     return f"http://{addon_info.hostname}:{REST_API_PORT}"
 
 
+def _raise_for_status(response: aiohttp.ClientResponse) -> None:
+    """Raise if status >= 400."""
+    try:
+        response.raise_for_status()
+    except aiohttp.ClientResponseError as exc:
+        raise HomeAssistantError from exc
+
+
 async def async_get_thread_state(hass: HomeAssistant) -> ThreadState:
     """Get current Thread state."""
 
@@ -61,7 +70,7 @@ async def async_get_thread_state(hass: HomeAssistant) -> ThreadState:
         timeout=aiohttp.ClientTimeout(total=10),
     )
 
-    response.raise_for_status()
+    _raise_for_status(response)
     if response.status != HTTPStatus.OK:
         raise HomeAssistantError
 
@@ -82,7 +91,7 @@ async def async_set_thread_state(hass: HomeAssistant, state: ThreadState) -> Non
         timeout=aiohttp.ClientTimeout(total=10),
     )
 
-    response.raise_for_status()
+    _raise_for_status(response)
     if response.status != HTTPStatus.OK:
         raise HomeAssistantError
 
@@ -99,7 +108,7 @@ async def async_get_active_dataset(hass: HomeAssistant) -> OperationalDataSet | 
         timeout=aiohttp.ClientTimeout(total=10),
     )
 
-    response.raise_for_status()
+    _raise_for_status(response)
     if response.status == HTTPStatus.NO_CONTENT:
         return None
 
@@ -108,7 +117,7 @@ async def async_get_active_dataset(hass: HomeAssistant) -> OperationalDataSet | 
 
     try:
         return OperationalDataSet.from_json(await response.json())
-    except vol.Error as exc:
+    except (JSONDecodeError, vol.Error) as exc:
         raise HomeAssistantError from exc
 
 
@@ -125,7 +134,7 @@ async def async_get_active_dataset_tlvs(hass: HomeAssistant) -> bytes | None:
         timeout=aiohttp.ClientTimeout(total=10),
     )
 
-    response.raise_for_status()
+    _raise_for_status(response)
     if response.status == HTTPStatus.NO_CONTENT:
         return None
 
@@ -135,7 +144,7 @@ async def async_get_active_dataset_tlvs(hass: HomeAssistant) -> bytes | None:
     try:
         tmp = await response.read()
         return bytes.fromhex(tmp.decode("ASCII"))
-    except vol.Error as exc:
+    except ValueError as exc:
         raise HomeAssistantError from exc
 
 
@@ -157,7 +166,7 @@ async def async_create_active_dataset(
 
     if response.status == HTTPStatus.CONFLICT:
         raise ThreadNetworkActiveError
-    response.raise_for_status()
+    _raise_for_status(response)
     if response.status != HTTPStatus.ACCEPTED:
         raise HomeAssistantError
 
@@ -182,7 +191,7 @@ async def async_set_active_dataset(
         raise NoDatasetError
     if response.status == HTTPStatus.CONFLICT:
         raise ThreadNetworkActiveError
-    response.raise_for_status()
+    _raise_for_status(response)
     if response.status != HTTPStatus.ACCEPTED:
         raise HomeAssistantError
 
@@ -206,6 +215,6 @@ async def async_set_active_dataset_tlvs(hass: HomeAssistant, dataset: bytes) -> 
         raise NoDatasetError
     if response.status == HTTPStatus.CONFLICT:
         raise ThreadNetworkActiveError
-    response.raise_for_status()
+    _raise_for_status(response)
     if response.status != HTTPStatus.ACCEPTED:
         raise HomeAssistantError

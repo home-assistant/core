@@ -2,8 +2,11 @@
 
 from http import HTTPStatus
 
+import pytest
+
 from homeassistant.components import thread
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -97,7 +100,8 @@ async def test_get_active_dataset(
         mock_response["SecurityPolicy"]["TobleLink"],
     )
 
-    assert await thread.async_get_active_dataset(hass) == thread.OperationalDataSet(
+    active_dataset = await thread.async_get_active_dataset(hass)
+    assert active_dataset == thread.OperationalDataSet(
         active_timestamp,
         mock_response["ChannelMask"],
         mock_response["Channel"],
@@ -111,6 +115,16 @@ async def test_get_active_dataset(
         mock_response["PSKc"],
         security_policy,
     )
+    assert active_dataset.as_json() == mock_response
+
+
+async def test_get_active_dataset_empty(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_running
+):
+    """Test async_get_active_dataset."""
+
+    aioclient_mock.get(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.NO_CONTENT)
+    assert await thread.async_get_active_dataset(hass) is None
 
 
 async def test_get_active_dataset_tlvs(
@@ -129,6 +143,15 @@ async def test_get_active_dataset_tlvs(
     assert await thread.async_get_active_dataset_tlvs(hass) == bytes.fromhex(
         mock_response
     )
+
+
+async def test_get_active_dataset_tlvs_empty(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_running
+):
+    """Test async_get_active_dataset_tlvs."""
+
+    aioclient_mock.get(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.NO_CONTENT)
+    assert await thread.async_get_active_dataset_tlvs(hass) is None
 
 
 async def test_create_active_dataset(
@@ -164,6 +187,17 @@ async def test_create_active_dataset(
     }
 
 
+async def test_create_active_dataset_thread_active(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_running
+):
+    """Test async_create_active_dataset."""
+
+    aioclient_mock.post(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.CONFLICT)
+
+    with pytest.raises(thread.ThreadNetworkActiveError):
+        await thread.async_create_active_dataset(hass, thread.OperationalDataSet())
+
+
 async def test_set_active_dataset(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_running
 ):
@@ -197,6 +231,28 @@ async def test_set_active_dataset(
     }
 
 
+async def test_set_active_dataset_no_dataset(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_running
+):
+    """Test async_set_active_dataset."""
+
+    aioclient_mock.put(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.NOT_FOUND)
+
+    with pytest.raises(thread.NoDatasetError):
+        await thread.async_set_active_dataset(hass, thread.OperationalDataSet())
+
+
+async def test_set_active_dataset_thread_active(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_running
+):
+    """Test async_set_active_dataset."""
+
+    aioclient_mock.put(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.CONFLICT)
+
+    with pytest.raises(thread.ThreadNetworkActiveError):
+        await thread.async_set_active_dataset(hass, thread.OperationalDataSet())
+
+
 async def test_set_active_dataset_tlvs(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_running
 ):
@@ -216,3 +272,154 @@ async def test_set_active_dataset_tlvs(
     assert aioclient_mock.mock_calls[-1][1].path == "/node/dataset/active"
     assert aioclient_mock.mock_calls[-1][2] == dataset.hex()
     assert aioclient_mock.mock_calls[-1][3] == {"Content-Type": "text/plain"}
+
+
+async def test_set_active_dataset_tlvs_no_dataset(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_running
+):
+    """Test async_set_active_dataset_tlvs."""
+
+    aioclient_mock.put(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.NOT_FOUND)
+
+    with pytest.raises(thread.NoDatasetError):
+        await thread.async_set_active_dataset_tlvs(hass, b"")
+
+
+async def test_set_active_dataset_tlvs_thread_active(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_running
+):
+    """Test async_set_active_dataset_tlvs."""
+
+    aioclient_mock.put(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.CONFLICT)
+
+    with pytest.raises(thread.ThreadNetworkActiveError):
+        await thread.async_set_active_dataset_tlvs(hass, b"")
+
+
+async def test_get_thread_state_no_addon(hass: HomeAssistant):
+    """Test async_get_thread_state when it's not possible to get the addon state."""
+
+    with pytest.raises(HomeAssistantError):
+        await thread.async_get_thread_state(hass)
+
+
+async def test_get_thread_state_addon_not_installed(
+    hass: HomeAssistant, addon_store_info, addon_info
+):
+    """Test async_get_thread_state when the multi-PAN addon is not installed."""
+
+    with pytest.raises(HomeAssistantError):
+        await thread.async_get_thread_state(hass)
+
+
+async def test_get_thread_state_404(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_running
+):
+    """Test async_get_thread_state with error."""
+
+    aioclient_mock.get(f"{BASE_URL}/node/state", status=HTTPStatus.NOT_FOUND)
+    with pytest.raises(HomeAssistantError):
+        await thread.async_get_thread_state(hass)
+
+
+async def test_get_thread_state_204(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_running
+):
+    """Test async_get_thread_state with error."""
+
+    aioclient_mock.get(f"{BASE_URL}/node/state", status=HTTPStatus.NO_CONTENT)
+    with pytest.raises(HomeAssistantError):
+        await thread.async_get_thread_state(hass)
+
+
+async def test_get_thread_state_invalid(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_running
+):
+    """Test async_get_thread_state with error."""
+
+    aioclient_mock.get(f"{BASE_URL}/node/state", text="unexpected")
+    with pytest.raises(HomeAssistantError):
+        await thread.async_get_thread_state(hass)
+
+
+async def test_set_thread_state_204(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_running
+):
+    """Test async_set_thread_state with error."""
+
+    aioclient_mock.post(f"{BASE_URL}/node/state", status=HTTPStatus.NO_CONTENT)
+    with pytest.raises(HomeAssistantError):
+        await thread.async_set_thread_state(hass, thread.ThreadState.ROUTER)
+
+
+async def test_get_active_dataset_201(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_running
+):
+    """Test async_get_active_dataset with error."""
+
+    aioclient_mock.get(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.CREATED)
+    with pytest.raises(HomeAssistantError):
+        assert await thread.async_get_active_dataset(hass) is None
+
+
+async def test_get_active_dataset_invalid(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_running
+):
+    """Test async_get_active_dataset with error."""
+
+    aioclient_mock.get(f"{BASE_URL}/node/dataset/active", text="unexpected")
+    with pytest.raises(HomeAssistantError):
+        assert await thread.async_get_active_dataset(hass) is None
+
+
+async def test_get_active_dataset_tlvs_201(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_running
+):
+    """Test async_get_active_dataset_tlvs with error."""
+
+    aioclient_mock.get(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.CREATED)
+    with pytest.raises(HomeAssistantError):
+        assert await thread.async_get_active_dataset_tlvs(hass) is None
+
+
+async def test_get_active_dataset_tlvs_invalid(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_running
+):
+    """Test async_get_active_dataset_tlvs with error."""
+
+    aioclient_mock.get(f"{BASE_URL}/node/dataset/active", text="unexpected")
+    with pytest.raises(HomeAssistantError):
+        assert await thread.async_get_active_dataset_tlvs(hass) is None
+
+
+async def test_create_active_dataset_thread_active_200(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_running
+):
+    """Test async_create_active_dataset with error."""
+
+    aioclient_mock.post(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.OK)
+
+    with pytest.raises(HomeAssistantError):
+        await thread.async_create_active_dataset(hass, thread.OperationalDataSet())
+
+
+async def test_set_active_dataset_thread_active_200(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_running
+):
+    """Test async_set_active_dataset with error."""
+
+    aioclient_mock.put(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.OK)
+
+    with pytest.raises(HomeAssistantError):
+        await thread.async_set_active_dataset(hass, thread.OperationalDataSet())
+
+
+async def test_set_active_dataset_tlvs_thread_active_200(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_running
+):
+    """Test async_set_active_dataset with error."""
+
+    aioclient_mock.put(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.OK)
+
+    with pytest.raises(HomeAssistantError):
+        await thread.async_set_active_dataset_tlvs(hass, b"")
