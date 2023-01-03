@@ -16,7 +16,7 @@ from aiounifi.models.client import Client
 from aiounifi.models.device import Device
 from aiounifi.models.event import Event, EventKey
 
-from homeassistant.components.device_tracker import DOMAIN, ScannerEntity, SourceType
+from homeassistant.components.device_tracker import ScannerEntity, SourceType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -216,7 +216,6 @@ async def async_setup_entry(
     controller.register_platform_add_entities(
         UnifiScannerEntity, ENTITY_DESCRIPTIONS, async_add_entities
     )
-    controller.entities[DOMAIN] = {CLIENT_TRACKER: set(), DEVICE_TRACKER: set()}
 
 
 class UnifiScannerEntity(UnifiEntity[HandlerT, DataT], ScannerEntity):
@@ -302,7 +301,6 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, DataT], ScannerEntity):
             return
 
         if is_connected := description.is_connected_fn(self.controller, self._obj_id):
-
             self._is_connected = is_connected
             self.controller.async_heartbeat(
                 self.unique_id,
