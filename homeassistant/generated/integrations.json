@@ -6288,6 +6288,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "zeversolar": {
+      "name": "Zeversolar",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "zha": {
       "name": "Zigbee Home Automation",
       "integration_type": "hub",
