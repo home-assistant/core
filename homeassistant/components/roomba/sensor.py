@@ -86,12 +86,7 @@ class CleaningTime(IRobotEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        hours = self._run_stats.get("hr")
-        # minutes = self._cleaning_time.get("min")
-
-        # minutes_total = minutes + (hours * 60)
-
-        return hours
+        return self._run_stats.get("hr")
 
 
 class TotalMissions(IRobotEntity, SensorEntity):
