@@ -39,6 +39,7 @@ def addon_info_fixture():
         "homeassistant.components.hassio.addon_manager.async_get_addon_info",
     ) as addon_info:
         addon_info.return_value = {
+            "available": True,
             "hostname": None,
             "options": {},
             "state": None,
