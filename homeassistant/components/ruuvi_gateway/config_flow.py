@@ -43,7 +43,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     host=user_input[CONF_HOST],
                     bearer_token=user_input[CONF_TOKEN],
                 )
-            await self.async_set_unique_id(resp.gw_mac, raise_on_progress=False)
+            await self.async_set_unique_id(format_mac(resp.gw_mac), raise_on_progress=False)
             self._abort_if_unique_id_configured(
                 updates={CONF_HOST: user_input[CONF_HOST]}
             )
@@ -80,5 +80,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Prepare configuration for a DHCP discovered Ruuvi Gateway."""
+        await self.async_set_unique_id(format_mac(discovery_info.macaddress))
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
         self.config_schema = get_config_schema_with_default_host(host=discovery_info.ip)
         return await self.async_step_user()
