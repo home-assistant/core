@@ -9,3 +9,4 @@ BASE_DATA = {
     "token": "toktok",
 }
 GATEWAY_MAC = "AA:BB:CC:DD:EE:FF"
+GATEWAY_MAC_LOWER = GATEWAY_MAC.lower()

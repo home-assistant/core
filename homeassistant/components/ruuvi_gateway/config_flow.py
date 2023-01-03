@@ -11,6 +11,7 @@ from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.httpx_client import get_async_client
 
 from . import DOMAIN
@@ -43,7 +44,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     host=user_input[CONF_HOST],
                     bearer_token=user_input[CONF_TOKEN],
                 )
-            await self.async_set_unique_id(format_mac(resp.gw_mac), raise_on_progress=False)
+            await self.async_set_unique_id(
+                format_mac(resp.gw_mac), raise_on_progress=False
+            )
             self._abort_if_unique_id_configured(
                 updates={CONF_HOST: user_input[CONF_HOST]}
             )

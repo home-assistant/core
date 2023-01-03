@@ -8,9 +8,14 @@ from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.ruuvi_gateway.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResult, FlowResultType
 
-from .consts import BASE_DATA, EXPECTED_TITLE, GATEWAY_MAC, GET_GATEWAY_HISTORY_DATA
+from .consts import (
+    BASE_DATA,
+    EXPECTED_TITLE,
+    GATEWAY_MAC_LOWER,
+    GET_GATEWAY_HISTORY_DATA,
+)
 from .utils import patch_gateway_ok, patch_setup_entry_ok
 
 DHCP_IP = "1.2.3.4"
@@ -48,18 +53,8 @@ async def test_ok_setup(hass: HomeAssistant, init_data, init_context, entry) -> 
     assert init_result["step_id"] == config_entries.SOURCE_USER
     assert init_result["errors"] is None
 
-    with patch_gateway_ok(), patch_setup_entry_ok() as mock_setup_entry:
-        config_result = await hass.config_entries.flow.async_configure(
-            init_result["flow_id"],
-            entry,
-        )
-        await hass.async_block_till_done()
-
-    assert config_result["type"] == FlowResultType.CREATE_ENTRY
-    assert config_result["title"] == EXPECTED_TITLE
-    assert config_result["data"] == entry
-    assert config_result["context"]["unique_id"] == GATEWAY_MAC
-    assert len(mock_setup_entry.mock_calls) == 1
+    # Check that setup is okay
+    await assert_finalize_setup(hass, entry, init_result)
 
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
@@ -77,6 +72,9 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     assert config_result["type"] == FlowResultType.FORM
     assert config_result["errors"] == {"base": "invalid_auth"}
 
+    # Check that we still can finalize setup
+    await assert_finalize_setup(hass, BASE_DATA, init_result)
+
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
@@ -93,6 +91,9 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert config_result["type"] == FlowResultType.FORM
     assert config_result["errors"] == {"base": "cannot_connect"}
 
+    # Check that we still can finalize setup
+    await assert_finalize_setup(hass, BASE_DATA, init_result)
+
 
 async def test_form_unexpected(hass: HomeAssistant) -> None:
     """Test we handle unexpected errors."""
@@ -108,3 +109,25 @@ async def test_form_unexpected(hass: HomeAssistant) -> None:
 
     assert config_result["type"] == FlowResultType.FORM
     assert config_result["errors"] == {"base": "unknown"}
+
+    # Check that we still can finalize setup
+    await assert_finalize_setup(hass, BASE_DATA, init_result)
+
+
+async def assert_finalize_setup(
+    hass: HomeAssistant,
+    entry: dict,
+    init_result: FlowResult,
+) -> None:
+    """Help multiple tests check that we can finalize setup."""
+    with patch_gateway_ok(), patch_setup_entry_ok() as mock_setup_entry:
+        config_result = await hass.config_entries.flow.async_configure(
+            init_result["flow_id"],
+            entry,
+        )
+        await hass.async_block_till_done()
+    assert config_result["type"] == FlowResultType.CREATE_ENTRY
+    assert config_result["title"] == EXPECTED_TITLE
+    assert config_result["data"] == entry
+    assert config_result["context"]["unique_id"] == GATEWAY_MAC_LOWER
+    assert len(mock_setup_entry.mock_calls) == 1
