@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import SIGNAL_STRENGTH_DECIBELS, UnitOfDataRate
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -38,55 +39,62 @@ SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription, ...] = (
     SFRBoxSensorEntityDescription(
         key="linemode",
         name="Line mode",
-        has_entity_name=True,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=lambda x: x.linemode,
     ),
     SFRBoxSensorEntityDescription(
         key="counter",
         name="Counter",
-        has_entity_name=True,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=lambda x: x.counter,
     ),
     SFRBoxSensorEntityDescription(
         key="crc",
         name="CRC",
-        has_entity_name=True,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=lambda x: x.crc,
     ),
     SFRBoxSensorEntityDescription(
         key="noise_down",
         name="Noise down",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         state_class=SensorStateClass.MEASUREMENT,
-        has_entity_name=True,
         value_fn=lambda x: x.noise_down,
     ),
     SFRBoxSensorEntityDescription(
         key="noise_up",
         name="Noise up",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         state_class=SensorStateClass.MEASUREMENT,
-        has_entity_name=True,
         value_fn=lambda x: x.noise_up,
     ),
     SFRBoxSensorEntityDescription(
         key="attenuation_down",
         name="Attenuation down",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         state_class=SensorStateClass.MEASUREMENT,
-        has_entity_name=True,
         value_fn=lambda x: x.attenuation_down,
     ),
     SFRBoxSensorEntityDescription(
         key="attenuation_up",
         name="Attenuation up",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         state_class=SensorStateClass.MEASUREMENT,
-        has_entity_name=True,
         value_fn=lambda x: x.attenuation_up,
     ),
     SFRBoxSensorEntityDescription(
@@ -95,7 +103,6 @@ SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
-        has_entity_name=True,
         value_fn=lambda x: x.rate_down,
     ),
     SFRBoxSensorEntityDescription(
@@ -104,13 +111,14 @@ SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
-        has_entity_name=True,
         value_fn=lambda x: x.rate_up,
     ),
     SFRBoxSensorEntityDescription(
         key="line_status",
         name="Line status",
         device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         options=[
             "No Defect",
             "Of Frame",
@@ -119,13 +127,14 @@ SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription, ...] = (
             "Loss Of Signal Quality",
             "Unknown",
         ],
-        has_entity_name=True,
         value_fn=lambda x: x.line_status,
     ),
     SFRBoxSensorEntityDescription(
         key="training",
         name="Training",
         device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         options=[
             "Idle",
             "G.994 Training",
@@ -138,7 +147,6 @@ SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription, ...] = (
             "Showtime",
             "Unknown",
         ],
-        has_entity_name=True,
         value_fn=lambda x: x.training,
     ),
 )
@@ -163,6 +171,7 @@ class SFRBoxSensor(CoordinatorEntity[DslDataUpdateCoordinator], SensorEntity):
     """SFR Box sensor."""
 
     entity_description: SFRBoxSensorEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
