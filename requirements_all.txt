@@ -2259,7 +2259,7 @@ samsungtvws[async,encrypted]==2.5.0
 satel_integra==0.3.7
 
 # homeassistant.components.dhcp
-scapy==2.4.5
+scapy==2.5.0
 
 # homeassistant.components.screenlogic
 screenlogicpy==0.5.4
