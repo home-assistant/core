@@ -257,6 +257,9 @@ aiorecollect==1.0.8
 # homeassistant.components.ridwell
 aioridwell==2022.11.0
 
+# homeassistant.components.ruuvi_gateway
+aioruuvigateway==0.0.2
+
 # homeassistant.components.senseme
 aiosenseme==0.6.1
 
