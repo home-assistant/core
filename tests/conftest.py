@@ -34,7 +34,6 @@ from homeassistant import core as ha, loader, runner, util
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant, legacy_api_password
-from homeassistant.components import mqtt, recorder
 from homeassistant.components.network.models import Adapter, IPv4ConfiguredAddress
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
@@ -737,6 +736,10 @@ async def mqtt_mock(
 @asynccontextmanager
 async def _mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config_entry_data):
     """Fixture to mock a delayed setup of the MQTT config entry."""
+    # Local import to avoid processing MQTT modules when running a testcase
+    # which does not use MQTT.
+    from homeassistant.components import mqtt
+
     if mqtt_config_entry_data is None:
         mqtt_config_entry_data = {
             mqtt.CONF_BROKER: "mock-broker",
@@ -956,6 +959,10 @@ def hass_recorder(
     hass_storage,
 ):
     """Home Assistant fixture with in-memory recorder."""
+    # Local import to avoid processing recorder and SQLite modules when running a
+    # testcase which does not use the recorder.
+    from homeassistant.components import recorder
+
     original_tz = dt_util.DEFAULT_TIME_ZONE
 
     hass = get_test_home_assistant()
@@ -997,6 +1004,10 @@ def hass_recorder(
 
 async def _async_init_recorder_component(hass, add_config=None, db_url=None):
     """Initialize the recorder asynchronously."""
+    # Local import to avoid processing recorder and SQLite modules when running a
+    # testcase which does not use the recorder.
+    from homeassistant.components import recorder
+
     config = dict(add_config) if add_config else {}
     if recorder.CONF_DB_URL not in config:
         config[recorder.CONF_DB_URL] = db_url
@@ -1026,6 +1037,10 @@ async def async_setup_recorder_instance(
 ) -> AsyncGenerator[SetupRecorderInstanceT, None]:
     """Yield callable to setup recorder instance."""
     assert not hass_fixture_setup
+
+    # Local import to avoid processing recorder and SQLite modules when running a
+    # testcase which does not use the recorder.
+    from homeassistant.components import recorder
 
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
