@@ -4,8 +4,8 @@ from __future__ import annotations
 from contextlib import suppress
 from typing import cast
 
-from abodepy.devices.binary_sensor import AbodeBinarySensor as ABBinarySensor
-import abodepy.helpers.constants as CONST
+from jaraco.abode.devices.sensor import BinarySensor as ABBinarySensor
+from jaraco.abode.helpers import constants as CONST
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,

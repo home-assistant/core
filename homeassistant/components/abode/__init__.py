@@ -3,10 +3,14 @@ from __future__ import annotations
 
 from functools import partial
 
-from abodepy import Abode, AbodeAutomation as AbodeAuto
-from abodepy.devices import AbodeDevice as AbodeDev
-from abodepy.exceptions import AbodeAuthenticationException, AbodeException
-import abodepy.helpers.timeline as TIMELINE
+from jaraco.abode.automation import Automation as AbodeAuto
+from jaraco.abode.client import Client as Abode
+from jaraco.abode.devices.base import Device as AbodeDev
+from jaraco.abode.exceptions import (
+    AuthenticationException as AbodeAuthenticationException,
+    Exception as AbodeException,
+)
+from jaraco.abode.helpers import timeline as TIMELINE
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 

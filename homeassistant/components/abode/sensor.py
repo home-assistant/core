@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from typing import cast
 
-from abodepy.devices.sensor import CONST, AbodeSensor as AbodeSense
+from jaraco.abode.devices.sensor import Sensor as AbodeSense
+from jaraco.abode.helpers import constants as CONST
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,

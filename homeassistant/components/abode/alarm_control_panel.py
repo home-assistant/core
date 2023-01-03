@@ -1,7 +1,7 @@
 """Support for Abode Security System alarm control panels."""
 from __future__ import annotations
 
-from abodepy.devices.alarm import AbodeAlarm as AbodeAl
+from jaraco.abode.devices.alarm import Alarm as AbodeAl
 
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature

@@ -1,8 +1,8 @@
 """Support for Abode Security System covers."""
 from typing import Any
 
-from abodepy.devices.cover import AbodeCover as AbodeCV
-import abodepy.helpers.constants as CONST
+from jaraco.abode.devices.cover import Cover as AbodeCV
+from jaraco.abode.helpers import constants as CONST
 
 from homeassistant.components.cover import CoverEntity
 from homeassistant.config_entries import ConfigEntry
