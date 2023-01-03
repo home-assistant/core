@@ -7,8 +7,8 @@ import logging
 from typing import Any
 
 import aiohttp
-from reolink_ip.api import Host
-from reolink_ip.exceptions import (
+from reolink_aio.api import Host
+from reolink_aio.exceptions import (
     ApiError,
     CredentialsInvalidError,
     InvalidContentTypeError,
