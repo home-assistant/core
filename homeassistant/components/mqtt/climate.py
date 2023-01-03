@@ -617,14 +617,14 @@ class MqttClimate(MqttEntity, ClimateEntity):
         def handle_climate_attribute_received(
             msg: ReceiveMessage, template_name: str, attr: str
         ) -> None:
-            """Handle temperature coming via MQTT."""
+            """Handle climate attributes coming via MQTT."""
             payload = render_template(msg, template_name)
 
             try:
                 setattr(self, attr, float(payload))
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
             except ValueError:
-                _LOGGER.error("Could not parse temperature from %s", payload)
+                _LOGGER.error("Could not parse %s from %s", template_name, payload)
 
         @callback
         @log_messages(self.hass, self.entity_id)

@@ -1012,7 +1012,8 @@ async def test_get_target_temperature_low_high_with_templates(
     async_fire_mqtt_message(hass, "temperature-state", '"-INVALID-"')
     state = hass.states.get(ENTITY_CLIMATE)
     # make sure, the invalid value gets logged...
-    assert "Could not parse temperature from" in caplog.text
+    assert "Could not parse temperature_low_state_template from" in caplog.text
+    assert "Could not parse temperature_high_state_template from" in caplog.text
     # ... but the actual value stays unchanged.
     assert state.attributes.get("target_temp_low") == 1031
     assert state.attributes.get("target_temp_high") == 1032
@@ -1071,7 +1072,7 @@ async def test_get_with_templates(hass, mqtt_mock_entry_with_yaml_config, caplog
     async_fire_mqtt_message(hass, "temperature-state", '"-INVALID-"')
     state = hass.states.get(ENTITY_CLIMATE)
     # make sure, the invalid value gets logged...
-    assert "Could not parse temperature from -INVALID-" in caplog.text
+    assert "Could not parse temperature_state_template from -INVALID-" in caplog.text
     # ... but the actual value stays unchanged.
     assert state.attributes.get("temperature") == 1031
 
@@ -1085,7 +1086,9 @@ async def test_get_with_templates(hass, mqtt_mock_entry_with_yaml_config, caplog
     async_fire_mqtt_message(hass, "humidity-state", '"-INVALID-"')
     state = hass.states.get(ENTITY_CLIMATE)
     # make sure, the invalid value gets logged...
-    assert "Could not parse temperature from -INVALID-" in caplog.text
+    assert (
+        "Could not parse target_humidity_state_template from -INVALID-" in caplog.text
+    )
     # ... but the actual value stays unchanged.
     assert state.attributes.get("humidity") == 82
 
