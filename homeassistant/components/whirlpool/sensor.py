@@ -120,14 +120,13 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
     ),
 )
 
-SENSOR_TIMER: tuple[WhirlpoolSensorEntityDescription, ...] = (
-    WhirlpoolSensorEntityDescription(
+SENSOR_TIMER: tuple[SensorEntityDescription] = (
+    SensorEntityDescription(
         key="timeremaining",
         name="End Time",
         device_class=SensorDeviceClass.TIMESTAMP,
         icon=ICON_W,
         has_entity_name=True,
-        value_fn=washer_state,  # not used for class
     ),
 )
 
@@ -228,7 +227,7 @@ class WasherDryerTimeClass(SensorEntity):
         self,
         said: str,
         name: str,
-        description: WhirlpoolSensorEntityDescription,
+        description: SensorEntityDescription,
         washdry: WasherDryer,
     ) -> None:
         """Initialize the washer sensor."""
@@ -238,7 +237,7 @@ class WasherDryerTimeClass(SensorEntity):
         if self._name == "Dryer":
             self._attr_icon = ICON_D
 
-        self.entity_description: WhirlpoolSensorEntityDescription = description
+        self.entity_description: SensorEntityDescription = description
         self._attr_unique_id = f"{said}-{description.key}"
         self._running = True
         self._timestamp = utcnow()
