@@ -1,4 +1,4 @@
-"""Support the ISY-994 controllers."""
+"""Support the Universal Devices ISY/IoX controllers."""
 from __future__ import annotations
 
 import asyncio
@@ -159,7 +159,7 @@ async def async_setup_entry(
         port = host.port or 443
         session = aiohttp_client.async_get_clientsession(hass)
     else:
-        _LOGGER.error("The isy994 host value in configuration is invalid")
+        _LOGGER.error("The ISY/IoX host value in configuration is invalid")
         return False
 
     # Connect to ISY controller.
@@ -310,7 +310,7 @@ async def async_remove_config_entry_device(
     config_entry: config_entries.ConfigEntry,
     device_entry: dr.DeviceEntry,
 ) -> bool:
-    """Remove isy994 config entry from a device."""
+    """Remove ISY config entry from a device."""
     return not device_entry.identifiers.intersection(
         (DOMAIN, unique_id)
         for unique_id in unique_ids_for_config_entry_id(hass, config_entry.entry_id)
