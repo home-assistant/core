@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from datetime import date, datetime, timedelta
 from enum import Enum
-from typing import Any, cast
+from typing import Any, NoReturn, cast
 
 from pyunifiprotect.data import (
     Camera,
@@ -107,7 +107,7 @@ def _get_month_start_end(start: datetime) -> tuple[datetime, datetime]:
 
 
 @callback
-def _bad_identifier(identifier: str, err: Exception | None = None) -> BrowseMediaSource:
+def _bad_identifier(identifier: str, err: Exception | None = None) -> NoReturn:
     msg = f"Unexpected identifier: {identifier}"
     if err is None:
         raise BrowseError(msg)
