@@ -2311,7 +2311,7 @@ sisyphus-control==3.1.2
 slackclient==2.5.0
 
 # homeassistant.components.xmpp
-slixmpp==1.8.2
+slixmpp==1.8.3
 
 # homeassistant.components.smart_meter_texas
 smart-meter-texas==0.4.7
