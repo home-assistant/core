@@ -1527,7 +1527,7 @@ pycocotools==2.0.1
 pycomfoconnect==0.5.1
 
 # homeassistant.components.coolmaster
-pycoolmasternet-async==0.1.2
+pycoolmasternet-async==0.1.5
 
 # homeassistant.components.microsoft
 pycsspeechtts==1.0.8
