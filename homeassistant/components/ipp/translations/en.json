@@ -31,5 +31,16 @@
                 "title": "Discovered printer"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "printer": {
+                "state": {
+                    "printing": "Printing",
+                    "idle": "Idle",
+                    "stopped": "Stopped"
+                }
+            }
+        }
     }
 }
