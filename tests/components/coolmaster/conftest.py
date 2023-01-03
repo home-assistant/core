@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.climate import HVACMode
 from homeassistant.components.coolmaster.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -16,27 +17,28 @@ DEFAULT_INFO: dict[str, str] = {
     "version": "1",
 }
 
-DEFUALT_UNIT_DATA: dict[str, Any] = {
-    "is_on": False,
-    "thermostat": 20,
-    "temperature": 25,
-    "fan_speed": "low",
-    "mode": "cool",
-    "error_code": None,
-    "clean_filter": False,
-    "swing": None,
-    "temperature_unit": "celsius",
-}
-
 TEST_UNITS: dict[dict[str, Any]] = {
-    "L1.100": {**DEFUALT_UNIT_DATA},
+    "L1.100": {
+        "is_on": False,
+        "thermostat": 20,
+        "temperature": 25,
+        "temperature_unit": "celsius",
+        "fan_speed": "low",
+        "mode": "cool",
+        "error_code": None,
+        "clean_filter": False,
+        "swing": None,
+    },
     "L1.101": {
-        **DEFUALT_UNIT_DATA,
-        **{
-            "is_on": True,
-            "clean_filter": True,
-            "error_code": "Err1",
-        },
+        "is_on": True,
+        "thermostat": 68,
+        "temperature": 50,
+        "temperature_unit": "imperial",
+        "fan_speed": "high",
+        "mode": "heat",
+        "error_code": "Err1",
+        "clean_filter": True,
+        "swing": "horizontal",
     },
 }
 
@@ -51,17 +53,50 @@ class CoolMasterNetUnitMock:
         for key, value in attributes.items():
             setattr(self, key, value)
 
-    async def reset_filter(self):
+    async def set_fan_speed(self, value: str) -> CoolMasterNetUnitMock:
+        """Set the fan speed."""
+        self._attributes["fan_speed"] = value
+        return CoolMasterNetUnitMock(self.unit_id, self._attributes)
+
+    async def set_mode(self, value: str) -> CoolMasterNetUnitMock:
+        """Set the mode."""
+        self._attributes["mode"] = value
+        return CoolMasterNetUnitMock(self.unit_id, self._attributes)
+
+    async def set_thermostat(self, value: int | float) -> CoolMasterNetUnitMock:
+        """Set the target temperature."""
+        self._attributes["thermostat"] = value
+        return CoolMasterNetUnitMock(self.unit_id, self._attributes)
+
+    async def set_swing(self, value: str | None) -> CoolMasterNetUnitMock:
+        """Set the swing mode."""
+        if value == "":
+            raise ValueError()
+        self._attributes["swing"] = value
+        return CoolMasterNetUnitMock(self.unit_id, self._attributes)
+
+    async def turn_on(self) -> CoolMasterNetUnitMock:
+        """Turn a unit on."""
+        self._attributes["is_on"] = True
+        return CoolMasterNetUnitMock(self.unit_id, self._attributes)
+
+    async def turn_off(self) -> CoolMasterNetUnitMock:
+        """Turn a unit off."""
+        self._attributes["is_on"] = False
+        return CoolMasterNetUnitMock(self.unit_id, self._attributes)
+
+    async def reset_filter(self) -> CoolMasterNetUnitMock:
         """Report that the air filter was cleaned and reset the timer."""
         self._attributes["clean_filter"] = False
+        return CoolMasterNetUnitMock(self.unit_id, self._attributes)
 
 
 class CoolMasterNetMock:
     """Mock for CoolMasterNet."""
 
-    def __init__(self, *_args: Any) -> None:
+    def __init__(self, *_args: Any, **kwargs: Any) -> None:
         """Initialize the CoolMasterNetMock."""
-        self._data = copy.deepcopy(TEST_UNITS)
+        self._units = copy.deepcopy(TEST_UNITS)
 
     async def info(self) -> dict[str, Any]:
         """Return info about the bridge device."""
@@ -70,8 +105,8 @@ class CoolMasterNetMock:
     async def status(self) -> dict[str, CoolMasterNetUnitMock]:
         """Return the units."""
         return {
-            key: CoolMasterNetUnitMock(key, attributes)
-            for key, attributes in self._data.items()
+            unit_id: CoolMasterNetUnitMock(unit_id, attributes)
+            for unit_id, attributes in self._units.items()
         }
 
 
@@ -83,6 +118,7 @@ async def load_int(hass: HomeAssistant) -> MockConfigEntry:
         data={
             "host": "1.2.3.4",
             "port": 1234,
+            "supported_modes": [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT],
         },
     )
 

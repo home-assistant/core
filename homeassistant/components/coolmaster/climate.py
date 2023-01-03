@@ -1,6 +1,10 @@
 """CoolMasterNet platform to control of CoolMasterNet Climate Devices."""
+from __future__ import annotations
+
 import logging
 from typing import Any
+
+from pycoolmasternet_async import SWING_MODES
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -10,6 +14,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_SUPPORTED_MODES, DATA_COORDINATOR, DATA_INFO, DOMAIN
@@ -48,10 +53,6 @@ async def async_setup_entry(
 class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
     """Representation of a coolmaster climate device."""
 
-    _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
-    )
-
     def __init__(self, coordinator, unit_id, info, supported_modes):
         """Initialize the climate device."""
         super().__init__(coordinator, unit_id, info)
@@ -66,6 +67,16 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
     def name(self):
         """Return the name of the climate device."""
         return self.unique_id
+
+    @property
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return the list of supported features."""
+        supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+        )
+        if self.swing_mode:
+            supported_features |= ClimateEntityFeature.SWING_MODE
+        return supported_features
 
     @property
     def temperature_unit(self) -> str:
@@ -109,6 +120,16 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
         """Return the list of available fan modes."""
         return FAN_MODES
 
+    @property
+    def swing_mode(self) -> str | None:
+        """Return the swing mode setting."""
+        return self._unit.swing
+
+    @property
+    def swing_modes(self) -> list[str] | None:
+        """Return swing modes if supported."""
+        return SWING_MODES if self.swing_mode is not None else None
+
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
@@ -120,6 +141,15 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
         """Set new fan mode."""
         _LOGGER.debug("Setting fan mode of %s to %s", self.unique_id, fan_mode)
         self._unit = await self._unit.set_fan_speed(fan_mode)
+        self.async_write_ha_state()
+
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
+        """Set new swing mode."""
+        _LOGGER.debug("Setting swing mode of %s to %s", self.unique_id, swing_mode)
+        try:
+            self._unit = await self._unit.set_swing(swing_mode)
+        except ValueError as error:
+            raise HomeAssistantError(error) from error
         self.async_write_ha_state()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
