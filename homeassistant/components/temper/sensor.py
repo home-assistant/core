@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_OFFSET,
     DEVICE_DEFAULT_NAME,
+    PERCENTAGE,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -55,7 +56,9 @@ def setup_platform(
     for idx, dev in enumerate(temper_devices):
         if idx != 0:
             name = f"{prefix}_{idx!s}"
-        TEMPER_SENSORS.append(TemperSensor(dev, name, scaling))
+        TEMPER_SENSORS.append(TemperatureSensor(dev, name, scaling))
+        if dev.lookup_humidity_offset(0) is not None:
+            TEMPER_SENSORS.append(HumiditySensor(dev, f"{name} humidity"))
     add_entities(TEMPER_SENSORS)
 
 
@@ -70,7 +73,7 @@ def reset_devices():
         sensor.set_temper_device(device)
 
 
-class TemperSensor(SensorEntity):
+class TemperatureSensor(SensorEntity):
     """Representation of a Temper temperature sensor."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
@@ -102,3 +105,29 @@ class TemperSensor(SensorEntity):
                 "have changed. Attempting to reset device"
             )
             reset_devices()
+
+class HumiditySensor(SensorEntity):
+    """Representation of a Temper humidity sensor."""
+
+    _attr_device_class = SensorDeviceClass.HUMIDITY
+    _attr_native_unit_of_measurement = PERCENTAGE
+
+    def __init__(self, temper_device, name):
+        """Initialize the sensor."""
+        self.set_temper_device(temper_device)
+
+        self._attr_name = name
+
+    def set_temper_device(self, temper_device):
+        """Assign the underlying device for this sensor."""
+        self.temper_device = temper_device
+
+    def update(self) -> None:
+        """Retrieve latest state."""
+        try:
+            sensor_value = self.temper_device.get_humidity()[0]['humidity_pc']
+            self._attr_native_value = round(sensor_value, 1)
+        except:
+            _LOGGER.warning(
+                "A humidity sensor was detected, but no humidity was returned."
+            )
