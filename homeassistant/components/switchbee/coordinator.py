@@ -6,7 +6,8 @@ from collections.abc import Mapping
 from datetime import timedelta
 import logging
 
-from switchbee.api import CentralUnitAPI, SwitchBeeError
+from switchbee.api.central_unit import SwitchBeeError
+from switchbee.api.polling import CentralUnitPolling
 from switchbee.device import DeviceType, SwitchBeeBaseDevice
 
 from homeassistant.core import HomeAssistant
@@ -24,10 +25,10 @@ class SwitchBeeCoordinator(DataUpdateCoordinator[Mapping[int, SwitchBeeBaseDevic
     def __init__(
         self,
         hass: HomeAssistant,
-        swb_api: CentralUnitAPI,
+        swb_api: CentralUnitPolling,
     ) -> None:
         """Initialize."""
-        self.api: CentralUnitAPI = swb_api
+        self.api: CentralUnitPolling = swb_api
         self._reconnect_counts: int = 0
         self.mac_formatted: str | None = (
             None if self.api.mac is None else format_mac(self.api.mac)

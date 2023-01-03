@@ -136,7 +136,7 @@ class HostInfo(TypedDict):
     status: bool
 
 
-class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
+class FritzBoxTools(update_coordinator.DataUpdateCoordinator[None]):
     """FritzBoxTools class."""
 
     def __init__(
@@ -328,7 +328,10 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
             ).get("NewDisallow")
         except FRITZ_EXCEPTIONS as ex:
             _LOGGER.debug(
-                "could not get WAN access rule for client device with IP '%s', error: %s",
+                (
+                    "could not get WAN access rule for client device with IP '%s',"
+                    " error: %s"
+                ),
                 ip_address,
                 ex,
             )
@@ -574,21 +577,24 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         try:
             if service_call.service == SERVICE_REBOOT:
                 _LOGGER.warning(
-                    'Service "fritz.reboot" is deprecated, please use the corresponding button entity instead'
+                    'Service "fritz.reboot" is deprecated, please use the corresponding'
+                    " button entity instead"
                 )
                 await self.async_trigger_reboot()
                 return
 
             if service_call.service == SERVICE_RECONNECT:
                 _LOGGER.warning(
-                    'Service "fritz.reconnect" is deprecated, please use the corresponding button entity instead'
+                    'Service "fritz.reconnect" is deprecated, please use the'
+                    " corresponding button entity instead"
                 )
                 await self.async_trigger_reconnect()
                 return
 
             if service_call.service == SERVICE_CLEANUP:
                 _LOGGER.warning(
-                    'Service "fritz.cleanup" is deprecated, please use the corresponding button entity instead'
+                    'Service "fritz.cleanup" is deprecated, please use the'
+                    " corresponding button entity instead"
                 )
                 await self.async_trigger_cleanup(config_entry)
                 return
@@ -634,7 +640,10 @@ class AvmWrapper(FritzBoxTools):
             return result
         except FritzSecurityError:
             _LOGGER.error(
-                "Authorization Error: Please check the provided credentials and verify that you can log into the web interface",
+                (
+                    "Authorization Error: Please check the provided credentials and"
+                    " verify that you can log into the web interface"
+                ),
                 exc_info=True,
             )
         except FRITZ_EXCEPTIONS:
@@ -646,7 +655,10 @@ class AvmWrapper(FritzBoxTools):
             )
         except FritzConnectionException:
             _LOGGER.error(
-                "Connection Error: Please check the device is properly configured for remote login",
+                (
+                    "Connection Error: Please check the device is properly configured"
+                    " for remote login"
+                ),
                 exc_info=True,
             )
         return {}

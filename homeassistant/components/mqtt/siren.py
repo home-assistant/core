@@ -67,7 +67,6 @@ from .util import get_mqtt_data
 DEFAULT_NAME = "MQTT Siren"
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_PAYLOAD_OFF = "OFF"
-DEFAULT_OPTIMISTIC = False
 
 ENTITY_ID_FORMAT = siren.DOMAIN + ".{}"
 
@@ -86,7 +85,6 @@ PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_COMMAND_OFF_TEMPLATE): cv.template,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
         vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
         vol.Optional(CONF_STATE_OFF): cv.string,
@@ -249,13 +247,19 @@ class MqttSiren(MqttEntity, SirenEntity):
                 try:
                     json_payload = json_loads(payload)
                     _LOGGER.debug(
-                        "JSON payload detected after processing payload '%s' on topic %s",
+                        (
+                            "JSON payload detected after processing payload '%s' on"
+                            " topic %s"
+                        ),
                         json_payload,
                         msg.topic,
                     )
                 except JSON_DECODE_EXCEPTIONS:
                     _LOGGER.warning(
-                        "No valid (JSON) payload detected after processing payload '%s' on topic %s",
+                        (
+                            "No valid (JSON) payload detected after processing payload"
+                            " '%s' on topic %s"
+                        ),
                         json_payload,
                         msg.topic,
                     )

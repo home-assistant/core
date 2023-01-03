@@ -767,7 +767,7 @@ class Group(Entity):
                 self._see_state(state)
 
     def _see_state(self, new_state: State) -> None:
-        """Keep track of the the state."""
+        """Keep track of the state."""
         entity_id = new_state.entity_id
         domain = new_state.domain
         state = new_state.state

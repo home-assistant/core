@@ -4,19 +4,15 @@ from __future__ import annotations
 import logging
 
 from apcaccess.status import ALL_UNITS
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    CONF_RESOURCES,
     PERCENTAGE,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
@@ -27,11 +23,8 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, APCUPSdData
 
@@ -47,6 +40,9 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="ambtemp",
         name="UPS Ambient Temperature",
         icon="mdi:thermometer",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "apc": SensorEntityDescription(
         key="apc",
@@ -80,12 +76,15 @@ SENSORS: dict[str, SensorEntityDescription] = {
         name="UPS Battery Voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "bcharge": SensorEntityDescription(
         key="bcharge",
         name="UPS Battery",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:battery",
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "cable": SensorEntityDescription(
         key="cable",
@@ -97,6 +96,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="cumonbatt",
         name="UPS Total Time on Battery",
         icon="mdi:timer-outline",
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     "date": SensorEntityDescription(
         key="date",
@@ -163,13 +163,16 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="humidity",
         name="UPS Ambient Humidity",
         native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
         icon="mdi:water-percent",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "itemp": SensorEntityDescription(
         key="itemp",
         name="UPS Internal Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "laststest": SensorEntityDescription(
         key="laststest",
@@ -192,18 +195,21 @@ SENSORS: dict[str, SensorEntityDescription] = {
         name="UPS Line Frequency",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "linev": SensorEntityDescription(
         key="linev",
         name="UPS Input Voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "loadpct": SensorEntityDescription(
         key="loadpct",
         name="UPS Load",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:gauge",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "loadapnt": SensorEntityDescription(
         key="loadapnt",
@@ -296,18 +302,21 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="numxfers",
         name="UPS Transfer Count",
         icon="mdi:counter",
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     "outcurnt": SensorEntityDescription(
         key="outcurnt",
         name="UPS Output Current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "outputv": SensorEntityDescription(
         key="outputv",
         name="UPS Output Voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "reg1": SensorEntityDescription(
         key="reg1",
@@ -370,16 +379,19 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="stesti",
         name="UPS Self Test Interval",
         icon="mdi:information-outline",
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     "timeleft": SensorEntityDescription(
         key="timeleft",
         name="UPS Time Left",
         icon="mdi:clock-alert",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "tonbatt": SensorEntityDescription(
         key="tonbatt",
         name="UPS Time on Battery",
         icon="mdi:timer-outline",
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     "upsmode": SensorEntityDescription(
         key="upsmode",
@@ -429,75 +441,6 @@ INFERRED_UNITS = {
     " Percent Load Capacity": PERCENTAGE,
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_RESOURCES, default=[]): vol.All(
-            cv.ensure_list, [vol.In([desc.key for desc in SENSORS.values()])]
-        )
-    }
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Import the configurations from YAML to config flows."""
-    # We only import configs from YAML if it hasn't been imported. If there is a config
-    # entry marked with SOURCE_IMPORT, it means the YAML config has been imported.
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.source == SOURCE_IMPORT:
-            return
-
-    # This is the second step of YAML config imports, first see the comments in
-    # async_setup() of __init__.py to get an idea of how we import the YAML configs.
-    # Here we retrieve the partial YAML configs from the special entry id.
-    conf = hass.data[DOMAIN].get(SOURCE_IMPORT)
-    if conf is None:
-        return
-
-    _LOGGER.warning(
-        "Configuration of apcupsd in YAML is deprecated and will be "
-        "removed in Home Assistant 2022.12; Your existing configuration "
-        "has been imported into the UI automatically and can be safely removed "
-        "from your configuration.yaml file"
-    )
-
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2022.12.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-    )
-
-    # Remove the artificial entry since it's no longer needed.
-    hass.data[DOMAIN].pop(SOURCE_IMPORT)
-
-    # Our config flow supports CONF_RESOURCES and will properly import it to disable
-    # entities not listed in CONF_RESOURCES by default. Note that this designed to
-    # support YAML config import only (i.e., not shown in UI during setup).
-    conf[CONF_RESOURCES] = config[CONF_RESOURCES]
-
-    _LOGGER.debug(
-        "YAML configurations loaded with host %s, port %s and resources %s",
-        conf[CONF_HOST],
-        conf[CONF_PORT],
-        conf[CONF_RESOURCES],
-    )
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
-        )
-    )
-
-    return
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -511,33 +454,18 @@ async def async_setup_entry(
     # lower cases throughout this integration.
     available_resources: set[str] = {k.lower() for k, _ in data_service.status.items()}
 
-    # We use user-specified resources from imported YAML config (if available) to
-    # determine whether to enable the entity by default. Here, we first collect the
-    # specified resources
-    specified_resources = None
-    if (resources := config_entry.data.get(CONF_RESOURCES)) is not None:
-        assert isinstance(resources, list)
-        specified_resources = set(resources)
-
     entities = []
     for resource in available_resources:
         if resource not in SENSORS:
             _LOGGER.warning("Invalid resource from APCUPSd: %s", resource.upper())
             continue
 
-        # To avoid breaking changes, we disable sensors not specified in resources.
-        description = SENSORS[resource]
-        enabled_by_default = description.entity_registry_enabled_default
-        if specified_resources is not None:
-            enabled_by_default = resource in specified_resources
-
-        entity = APCUPSdSensor(data_service, description, enabled_by_default)
-        entities.append(entity)
+        entities.append(APCUPSdSensor(data_service, SENSORS[resource]))
 
     async_add_entities(entities, update_before_add=True)
 
 
-def infer_unit(value):
+def infer_unit(value: str) -> tuple[str, str | None]:
     """If the value ends with any of the units from ALL_UNITS.
 
     Split the unit off the end of the value and return the value, unit tuple
@@ -557,7 +485,6 @@ class APCUPSdSensor(SensorEntity):
         self,
         data_service: APCUPSdData,
         description: SensorEntityDescription,
-        enabled_by_default: bool,
     ) -> None:
         """Initialize the sensor."""
         # Set up unique id and device info if serial number is available.
@@ -572,7 +499,6 @@ class APCUPSdSensor(SensorEntity):
             )
 
         self.entity_description = description
-        self._attr_entity_registry_enabled_default = enabled_by_default
         self._data_service = data_service
 
     def update(self) -> None:

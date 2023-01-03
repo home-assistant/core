@@ -26,6 +26,19 @@
         }
     },
     "entity": {
+        "climate": {
+            "plugwise": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "asleep": "\u041d\u043e\u0447\u044c",
+                            "away": "\u041d\u0435 \u0434\u043e\u043c\u0430",
+                            "home": "\u0414\u043e\u043c\u0430"
+                        }
+                    }
+                }
+            }
+        },
         "select": {
             "dhw_mode": {
                 "state": {

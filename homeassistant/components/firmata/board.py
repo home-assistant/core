@@ -92,8 +92,7 @@ class FirmataBoard:
                 )
             except RuntimeError as err:
                 _LOGGER.error(
-                    "Error setting sampling interval for PyMata \
-board %s: %s",
+                    "Error setting sampling interval for PyMata board %s: %s",
                     self.name,
                     err,
                 )

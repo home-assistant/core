@@ -43,7 +43,7 @@
             "gw_mqtt": {
                 "data": {
                     "persistence_file": "perzisztencia f\u00e1jl (hagyja \u00fcresen az automatikus gener\u00e1l\u00e1shoz)",
-                    "retain": "mqtt megtart\u00e1sa",
+                    "retain": "mqtt tart\u00e1s (retain)",
                     "topic_in_prefix": "el\u0151tag a beviteli t\u00e9m\u00e1khoz (topic_in_prefix)",
                     "topic_out_prefix": "el\u0151tag a kimeneti t\u00e9m\u00e1khoz (topic_out_prefix)",
                     "version": "MySensors verzi\u00f3"

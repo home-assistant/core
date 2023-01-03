@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "api_error": "API-feil oppstod: {error}",
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil: {error}"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "password": "Passord",
+                    "port": "Port",
+                    "use_https": "Aktiver HTTPS",
+                    "username": "Brukernavn"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "protocol": "Protokoll"
+                }
+            }
+        }
+    }
+}

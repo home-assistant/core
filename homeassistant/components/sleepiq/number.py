@@ -47,7 +47,10 @@ async def _async_set_actuator_position(
 
 def _get_actuator_name(bed: SleepIQBed, actuator: SleepIQActuator) -> str:
     if actuator.side:
-        return f"SleepNumber {bed.name} {actuator.side_full} {actuator.actuator_full} {ENTITY_TYPES[ACTUATOR]}"
+        return (
+            "SleepNumber"
+            f" {bed.name} {actuator.side_full} {actuator.actuator_full} {ENTITY_TYPES[ACTUATOR]}"
+        )
 
     return f"SleepNumber {bed.name} {actuator.actuator_full} {ENTITY_TYPES[ACTUATOR]}"
 

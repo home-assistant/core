@@ -5,6 +5,7 @@ from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Generic, Literal, TypedDict, TypeVar, cast
 from uuid import UUID
 
+from typing_extensions import Required
 import voluptuous as vol
 
 from homeassistant.backports.enum import StrEnum
@@ -211,7 +212,7 @@ class AreaSelector(Selector[AreaSelectorConfig]):
 class AttributeSelectorConfig(TypedDict, total=False):
     """Class to represent an attribute selector config."""
 
-    entity_id: str
+    entity_id: Required[str]
     hide_attributes: list[str]
 
 
@@ -728,7 +729,7 @@ class SelectSelectorMode(StrEnum):
 class SelectSelectorConfig(TypedDict, total=False):
     """Class to represent a select selector config."""
 
-    options: Sequence[SelectOptionDict] | Sequence[str]  # required
+    options: Required[Sequence[SelectOptionDict] | Sequence[str]]
     multiple: bool
     custom_value: bool
     mode: SelectSelectorMode
@@ -788,7 +789,7 @@ class TargetSelectorConfig(TypedDict, total=False):
 class StateSelectorConfig(TypedDict, total=False):
     """Class to represent an state selector config."""
 
-    entity_id: str
+    entity_id: Required[str]
 
 
 @SELECTORS.register("state")

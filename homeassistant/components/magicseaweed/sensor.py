@@ -168,12 +168,18 @@ class MagicSeaweedSensor(SensorEntity):
         elif sensor_type == "max_breaking_swell":
             self._attr_native_value = forecast.swell_maxBreakingHeight
         elif sensor_type == "swell_forecast":
-            summary = f"{forecast.swell_minBreakingHeight} - {forecast.swell_maxBreakingHeight}"
+            summary = (
+                f"{forecast.swell_minBreakingHeight} -"
+                f" {forecast.swell_maxBreakingHeight}"
+            )
             self._attr_native_value = summary
             if self.hour is None:
                 for hour, data in self.data.hourly.items():
                     occurs = hour
-                    hr_summary = f"{data.swell_minBreakingHeight} - {data.swell_maxBreakingHeight} {data.swell_unit}"
+                    hr_summary = (
+                        f"{data.swell_minBreakingHeight} -"
+                        f" {data.swell_maxBreakingHeight} {data.swell_unit}"
+                    )
                     self._attr_extra_state_attributes[occurs] = hr_summary
 
         if sensor_type != "swell_forecast":

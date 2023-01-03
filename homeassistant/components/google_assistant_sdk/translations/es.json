@@ -29,5 +29,14 @@
                 "title": "Volver a autenticar la integraci\u00f3n"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "language_code": "C\u00f3digo de idioma"
+                }
+            }
+        }
     }
 }

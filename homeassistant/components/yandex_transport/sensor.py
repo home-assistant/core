@@ -96,7 +96,10 @@ class DiscoverYandexTransport(SensorEntity):
             data = yandex_reply["data"]
         except KeyError as key_error:
             _LOGGER.warning(
-                "Exception KeyError was captured, missing key is %s. Yandex returned: %s",
+                (
+                    "Exception KeyError was captured, missing key is %s. Yandex"
+                    " returned: %s"
+                ),
                 key_error,
                 yandex_reply,
             )

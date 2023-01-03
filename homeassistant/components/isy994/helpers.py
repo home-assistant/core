@@ -1,4 +1,4 @@
-"""Sorting helpers for ISY994 device classifications."""
+"""Sorting helpers for ISY device classifications."""
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -327,7 +327,7 @@ def _categorize_nodes(
 
 
 def _categorize_programs(hass_isy_data: dict, programs: Programs) -> None:
-    """Categorize the ISY994 programs."""
+    """Categorize the ISY programs."""
     for platform in PROGRAM_PLATFORMS:
         folder = programs.get_by_name(f"{DEFAULT_PROGRAM_STRING}{platform}")
         if not folder:
@@ -352,7 +352,10 @@ def _categorize_programs(hass_isy_data: dict, programs: Programs) -> None:
                 actions = entity_folder.get_by_name(KEY_ACTIONS)
                 if not actions or actions.protocol != PROTO_PROGRAM:
                     _LOGGER.warning(
-                        "Program %s entity '%s' not loaded, invalid/missing actions program",
+                        (
+                            "Program %s entity '%s' not loaded, invalid/missing actions"
+                            " program"
+                        ),
                         platform,
                         entity_folder.name,
                     )
@@ -365,7 +368,7 @@ def _categorize_programs(hass_isy_data: dict, programs: Programs) -> None:
 def _categorize_variables(
     hass_isy_data: dict, variables: Variables, identifier: str
 ) -> None:
-    """Gather the ISY994 Variables to be added as sensors."""
+    """Gather the ISY Variables to be added as sensors."""
     try:
         var_to_add = [
             (vtype, vname, vid)
