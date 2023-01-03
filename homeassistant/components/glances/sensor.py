@@ -16,9 +16,9 @@ from homeassistant.const import (
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
     STATE_UNAVAILABLE,
-    TEMP_CELSIUS,
     Platform,
     UnitOfInformation,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
@@ -171,7 +171,7 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         key="temperature_core",
         type="sensors",
         name_suffix="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -179,7 +179,7 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         key="temperature_hdd",
         type="sensors",
         name_suffix="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),

@@ -112,8 +112,10 @@
                     "authentication": "Wybierz metod\u0119 uwierzytelniania",
                     "headers": "Nag\u0142\u00f3wki",
                     "method": "Metoda",
+                    "password": "Has\u0142o",
                     "resource": "Zas\u00f3b",
-                    "timeout": "Limit czasu"
+                    "timeout": "Limit czasu",
+                    "username": "Nazwa u\u017cytkownika"
                 },
                 "data_description": {
                     "authentication": "Typ uwierzytelniania HTTP. Podstawowy lub digest.",

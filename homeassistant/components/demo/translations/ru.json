@@ -1,5 +1,20 @@
 {
     "entity": {
+        "climate": {
+            "ubercool": {
+                "state_attributes": {
+                    "swing_mode": {
+                        "state": {
+                            "1": "1",
+                            "2": "2",
+                            "3": "3",
+                            "auto": "\u0410\u0432\u0442\u043e\u043c\u0430\u0442\u0438\u0447\u0435\u0441\u043a\u0438",
+                            "off": "\u0412\u044b\u043a\u043b\u044e\u0447\u0435\u043d\u043e"
+                        }
+                    }
+                }
+            }
+        },
         "select": {
             "speed": {
                 "state": {
@@ -16,6 +31,15 @@
                     "comfort": "\u041a\u043e\u043c\u0444\u043e\u0440\u0442",
                     "eco": "\u042d\u043a\u043e",
                     "sleep": "\u0421\u043e\u043d"
+                }
+            }
+        },
+        "vacuum": {
+            "model_s": {
+                "state_attributes": {
+                    "cleaned_area": {
+                        "name": "\u041e\u0447\u0438\u0449\u0435\u043d\u043d\u0430\u044f \u043f\u043b\u043e\u0449\u0430\u0434\u044c"
+                    }
                 }
             }
         }

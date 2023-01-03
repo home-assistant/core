@@ -59,7 +59,15 @@ class MatterEntity(Entity):
         self._unsubscribes: list[Callable] = []
         # for fast lookups we create a mapping to the attribute paths
         self._attributes_map: dict[type, str] = {}
-        self._attr_unique_id = f"{matter_client.server_info.compressed_fabric_id}-{node.unique_id}-{device_type_instance.endpoint}-{device_type_instance.device_type.device_type}"
+        server_info = matter_client.server_info
+        # The server info is set when the client connects to the server.
+        assert server_info is not None
+        self._attr_unique_id = (
+            f"{server_info.compressed_fabric_id}-"
+            f"{node.unique_id}-"
+            f"{device_type_instance.endpoint}-"
+            f"{device_type_instance.device_type.device_type}"
+        )
 
     @property
     def device_info(self) -> DeviceInfo | None:

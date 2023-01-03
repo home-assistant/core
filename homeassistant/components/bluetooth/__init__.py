@@ -7,12 +7,15 @@ import platform
 from typing import TYPE_CHECKING
 
 from awesomeversion import AwesomeVersion
+from bleak_retry_connector import BleakSlotManager
 from bluetooth_adapters import (
     ADAPTER_ADDRESS,
+    ADAPTER_CONNECTION_SLOTS,
     ADAPTER_HW_VERSION,
     ADAPTER_MANUFACTURER,
     ADAPTER_SW_VERSION,
     DEFAULT_ADDRESS,
+    DEFAULT_CONNECTION_SLOTS,
     AdapterDetails,
     adapter_human_name,
     adapter_model,
@@ -165,8 +168,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     bluetooth_adapters = get_adapters()
     bluetooth_storage = BluetoothStorage(hass)
     await bluetooth_storage.async_setup()
+    slot_manager = BleakSlotManager()
+    await slot_manager.async_setup()
     manager = BluetoothManager(
-        hass, integration_matcher, bluetooth_adapters, bluetooth_storage
+        hass, integration_matcher, bluetooth_adapters, bluetooth_storage, slot_manager
     )
     await manager.async_setup()
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, manager.async_stop)
@@ -270,7 +275,7 @@ async def async_discover_adapters(
 
 
 async def async_update_device(
-    hass: HomeAssistant, entry: ConfigEntry, adapter: str
+    hass: HomeAssistant, entry: ConfigEntry, adapter: str, details: AdapterDetails
 ) -> None:
     """Update device registry entry.
 
@@ -279,11 +284,7 @@ async def async_update_device(
     update the device with the new location so they can
     figure out where the adapter is.
     """
-    manager: BluetoothManager = hass.data[DATA_MANAGER]
-    adapters = await manager.async_get_bluetooth_adapters()
-    details = adapters[adapter]
-    registry = dr.async_get(manager.hass)
-    registry.async_get_or_create(
+    dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id,
         name=adapter_human_name(adapter, details[ADAPTER_ADDRESS]),
         connections={(dr.CONNECTION_BLUETOOTH, details[ADAPTER_ADDRESS])},
@@ -307,6 +308,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     passive = entry.options.get(CONF_PASSIVE)
     mode = BluetoothScanningMode.PASSIVE if passive else BluetoothScanningMode.ACTIVE
     new_info_callback = async_get_advertisement_callback(hass)
+    manager: BluetoothManager = hass.data[DATA_MANAGER]
     scanner = HaScanner(hass, mode, adapter, address, new_info_callback)
     try:
         scanner.async_setup()
@@ -318,8 +320,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await scanner.async_start()
     except ScannerStartError as err:
         raise ConfigEntryNotReady from err
-    entry.async_on_unload(async_register_scanner(hass, scanner, True))
-    await async_update_device(hass, entry, adapter)
+    adapters = await manager.async_get_bluetooth_adapters()
+    details = adapters[adapter]
+    slots: int = details.get(ADAPTER_CONNECTION_SLOTS) or DEFAULT_CONNECTION_SLOTS
+    entry.async_on_unload(async_register_scanner(hass, scanner, True, slots))
+    await async_update_device(hass, entry, adapter, details)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = scanner
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
     return True

@@ -1,8 +1,7 @@
 """Test the Nibe Heat Pump config flow."""
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 from nibe.coil import Coil
-from nibe.connection import Connection
 from nibe.exceptions import (
     AddressInUseException,
     CoilNotFoundException,
@@ -32,28 +31,6 @@ MOCK_FLOW_MODBUS_USERDATA = {
     "modbus_url": "tcp://127.0.0.1",
     "modbus_unit": 0,
 }
-
-
-@fixture(autouse=True, name="mock_connection_constructor")
-async def fixture_mock_connection_constructor():
-    """Make sure we have a dummy connection."""
-    mock_constructor = Mock()
-    with patch(
-        "homeassistant.components.nibe_heatpump.config_flow.NibeGW",
-        new=mock_constructor,
-    ), patch(
-        "homeassistant.components.nibe_heatpump.config_flow.Modbus",
-        new=mock_constructor,
-    ):
-        yield mock_constructor
-
-
-@fixture(name="mock_connection")
-def fixture_mock_connection(mock_connection_constructor: Mock):
-    """Make sure we have a dummy connection."""
-    mock_connection = AsyncMock(spec=Connection)
-    mock_connection_constructor.return_value = mock_connection
-    return mock_connection
 
 
 @fixture(autouse=True, name="mock_setup_entry")

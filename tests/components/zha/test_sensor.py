@@ -1,4 +1,4 @@
-"""Test zha sensor."""
+"""Test ZHA sensor."""
 import math
 from unittest.mock import patch
 
@@ -53,7 +53,7 @@ ENTITY_ID_PREFIX = "sensor.fakemanufacturer_fakemodel_{}"
 
 @pytest.fixture(autouse=True)
 def sensor_platform_only():
-    """Only setup the sensor and required base platforms to speed up tests."""
+    """Only set up the sensor and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
@@ -129,7 +129,7 @@ async def async_test_pressure(hass, cluster, entity_id):
 async def async_test_illuminance(hass, cluster, entity_id):
     """Test illuminance sensor."""
     await send_attributes_report(hass, cluster, {1: 1, 0: 10, 2: 20})
-    assert_state(hass, entity_id, "1.0", LIGHT_LUX)
+    assert_state(hass, entity_id, "1", LIGHT_LUX)
 
 
 async def async_test_metering(hass, cluster, entity_id):
@@ -414,7 +414,7 @@ async def test_sensor(
     read_plug,
     unsupported_attrs,
 ):
-    """Test zha sensor platform."""
+    """Test ZHA sensor platform."""
 
     zigpy_device = zigpy_device_mock(
         {
@@ -533,7 +533,7 @@ async def test_temp_uom(
     zigpy_device_mock,
     zha_device_restored,
 ):
-    """Test zha temperature sensor unit of measurement."""
+    """Test ZHA temperature sensor unit of measurement."""
 
     entity_id = "sensor.fake1026_fakemodel1026_004f3202_temperature"
     if restore:
@@ -717,7 +717,7 @@ async def test_unsupported_attributes_sensor(
     entity_ids,
     missing_entity_ids,
 ):
-    """Test zha sensor platform."""
+    """Test ZHA sensor platform."""
 
     entity_ids = {ENTITY_ID_PREFIX.format(e) for e in entity_ids}
     missing_entity_ids = {ENTITY_ID_PREFIX.format(e) for e in missing_entity_ids}
@@ -832,7 +832,7 @@ async def test_se_summation_uom(
     expected_state,
     expected_uom,
 ):
-    """Test zha smart energy summation."""
+    """Test ZHA smart energy summation."""
 
     entity_id = ENTITY_ID_PREFIX.format("summation_delivered")
     zigpy_device = zigpy_device_mock(
@@ -886,7 +886,7 @@ async def test_elec_measurement_sensor_type(
     expected_type,
     zha_device_joined,
 ):
-    """Test zha electrical measurement sensor type."""
+    """Test ZHA electrical measurement sensor type."""
 
     entity_id = ENTITY_ID_PREFIX.format("active_power")
     zigpy_dev = elec_measurement_zigpy_dev
@@ -935,7 +935,7 @@ async def test_elec_measurement_skip_unsupported_attribute(
     elec_measurement_zha_dev,
     supported_attributes,
 ):
-    """Test zha electrical measurement skipping update of unsupported attributes."""
+    """Test ZHA electrical measurement skipping update of unsupported attributes."""
 
     entity_id = ENTITY_ID_PREFIX.format("active_power")
     zha_dev = elec_measurement_zha_dev
