@@ -23,7 +23,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VenstarDataUpdateCoordinator, VenstarEntity
-from .const import ATTR_SCHED_PART, DOMAIN
+from .const import DOMAIN
 
 RUNTIME_HEAT1 = "heat1"
 RUNTIME_HEAT2 = "heat2"
@@ -108,14 +108,15 @@ async def async_setup_entry(
                     )
                 )
 
-    if info := coordinator.client.get_info():
-        for description in INFO_ENTITIES:
-            if description.key in info:
-                entities.append(
-                    VenstarSensor(
-                        coordinator, config_entry, description, description.key
-                    )
-                )
+    for description in INFO_ENTITIES:
+        try:
+            # just checking if the key exists
+            _ = coordinator.client.get_info(description.key)
+        except KeyError:
+            continue
+        entities.append(
+            VenstarSensor(coordinator, config_entry, description, description.key)
+        )
 
     if entities:
         async_add_entities(entities)
@@ -231,9 +232,8 @@ RUNTIME_ENTITY = VenstarSensorEntityDescription(
 
 INFO_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
     VenstarSensorEntityDescription(
-        key=ATTR_SCHED_PART,
+        key="schedulepart",
         device_class=SensorDeviceClass.ENUM,
-        state_class=SensorStateClass.MEASUREMENT,
         options=list(SCHEDULE_PARTS.values()),
         uom_fn=lambda _: None,
         value_fn=lambda coordinator, sensor_name: SCHEDULE_PARTS[
