@@ -1,12 +1,22 @@
 """Test the Thread integration."""
 
+from http import HTTPStatus
 
 from homeassistant.components import thread
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 BASE_URL = "http://core-silabs-multiprotocol:8081"
+
+
+async def test_setup(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_running
+):
+    """Test we can setup the Thread integration."""
+
+    assert await async_setup_component(hass, thread.DOMAIN, {})
 
 
 async def test_get_thread_state(
@@ -126,7 +136,7 @@ async def test_create_active_dataset(
 ):
     """Test async_create_active_dataset."""
 
-    aioclient_mock.post(f"{BASE_URL}/node/dataset/active")
+    aioclient_mock.post(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.ACCEPTED)
 
     await thread.async_create_active_dataset(hass, thread.OperationalDataSet())
     assert aioclient_mock.call_count == 1
@@ -159,7 +169,7 @@ async def test_set_active_dataset(
 ):
     """Test async_set_active_dataset."""
 
-    aioclient_mock.put(f"{BASE_URL}/node/dataset/active")
+    aioclient_mock.put(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.ACCEPTED)
 
     await thread.async_set_active_dataset(hass, thread.OperationalDataSet())
     assert aioclient_mock.call_count == 1
@@ -198,7 +208,7 @@ async def test_set_active_dataset_tlvs(
         "25A40410F5DD18371BFD29E1A601EF6FFAD94C030C0402A0F7F8"
     )
 
-    aioclient_mock.put(f"{BASE_URL}/node/dataset/active")
+    aioclient_mock.put(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.ACCEPTED)
 
     await thread.async_set_active_dataset_tlvs(hass, dataset)
     assert aioclient_mock.call_count == 1

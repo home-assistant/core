@@ -31,12 +31,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 REST_API_PORT = 8081
 
 
+class ThreadNetworkActiveError(HomeAssistantError):
+    """Raised on attempts to modify the active dataset when thread network is active."""
+
+
+class NoDatasetError(HomeAssistantError):
+    """Raised on attempts to update a dataset which does not exist."""
+
+
 async def _async_get_thread_rest_service_url(hass) -> str:
     """Return Thread REST API URL."""
     addon_manager: AddonManager = get_addon_manager(hass)
     try:
         addon_info: AddonInfo = await addon_manager.async_get_addon_info()
-    except AddonError as err:
+    except (KeyError, AddonError) as err:
         raise HomeAssistantError from err
 
     if not addon_info.hostname:
@@ -79,9 +87,10 @@ async def async_set_thread_state(hass: HomeAssistant, state: ThreadState) -> Non
         raise HomeAssistantError
 
 
-async def async_get_active_dataset(hass: HomeAssistant) -> OperationalDataSet:
+async def async_get_active_dataset(hass: HomeAssistant) -> OperationalDataSet | None:
     """Get current active operational dataset.
 
+    Returns None if there is no active operational dataset.
     Raises if the http status is 400 or higher or if the response is invalid.
     """
 
@@ -91,6 +100,9 @@ async def async_get_active_dataset(hass: HomeAssistant) -> OperationalDataSet:
     )
 
     response.raise_for_status()
+    if response.status == HTTPStatus.NO_CONTENT:
+        return None
+
     if response.status != HTTPStatus.OK:
         raise HomeAssistantError
 
@@ -100,9 +112,10 @@ async def async_get_active_dataset(hass: HomeAssistant) -> OperationalDataSet:
         raise HomeAssistantError from exc
 
 
-async def async_get_active_dataset_tlvs(hass: HomeAssistant) -> bytes:
-    """Get current active operational dataset in TLVS format.
+async def async_get_active_dataset_tlvs(hass: HomeAssistant) -> bytes | None:
+    """Get current active operational dataset in TLVS format, or None.
 
+    Returns None if there is no active operational dataset.
     Raises if the http status is 400 or higher or if the response is invalid.
     """
 
@@ -113,6 +126,9 @@ async def async_get_active_dataset_tlvs(hass: HomeAssistant) -> bytes:
     )
 
     response.raise_for_status()
+    if response.status == HTTPStatus.NO_CONTENT:
+        return None
+
     if response.status != HTTPStatus.OK:
         raise HomeAssistantError
 
@@ -139,8 +155,10 @@ async def async_create_active_dataset(
         timeout=aiohttp.ClientTimeout(total=10),
     )
 
+    if response.status == HTTPStatus.CONFLICT:
+        raise ThreadNetworkActiveError
     response.raise_for_status()
-    if response.status != HTTPStatus.OK:
+    if response.status != HTTPStatus.ACCEPTED:
         raise HomeAssistantError
 
 
@@ -160,8 +178,12 @@ async def async_set_active_dataset(
         timeout=aiohttp.ClientTimeout(total=10),
     )
 
+    if response.status == HTTPStatus.NOT_FOUND:
+        raise NoDatasetError
+    if response.status == HTTPStatus.CONFLICT:
+        raise ThreadNetworkActiveError
     response.raise_for_status()
-    if response.status != HTTPStatus.OK:
+    if response.status != HTTPStatus.ACCEPTED:
         raise HomeAssistantError
 
 
@@ -180,6 +202,10 @@ async def async_set_active_dataset_tlvs(hass: HomeAssistant, dataset: bytes) -> 
         timeout=aiohttp.ClientTimeout(total=10),
     )
 
+    if response.status == HTTPStatus.NOT_FOUND:
+        raise NoDatasetError
+    if response.status == HTTPStatus.CONFLICT:
+        raise ThreadNetworkActiveError
     response.raise_for_status()
-    if response.status != HTTPStatus.OK:
+    if response.status != HTTPStatus.ACCEPTED:
         raise HomeAssistantError
