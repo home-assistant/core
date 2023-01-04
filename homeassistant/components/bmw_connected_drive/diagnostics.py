@@ -30,7 +30,6 @@ TO_REDACT_DATA = [
     "heading",
     "vin",
     "licensePlate",
-    "name",
     "city",
     "street",
     "streetNumber",
