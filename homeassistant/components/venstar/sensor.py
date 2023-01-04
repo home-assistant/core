@@ -57,11 +57,11 @@ RUNTIME_ATTRIBUTES = {
 }
 
 SCHEDULE_PARTS: dict[int, str] = {
-    0: "Morning",
-    1: "Day",
-    2: "Evening",
-    3: "Night",
-    255: "Inactive",
+    0: "morning",
+    1: "day",
+    2: "evening",
+    3: "night",
+    255: "inactive",
 }
 
 
@@ -111,7 +111,7 @@ async def async_setup_entry(
     for description in INFO_ENTITIES:
         try:
             # just checking if the key exists
-            _ = coordinator.client.get_info(description.key)
+            coordinator.client.get_info(description.key)
         except KeyError:
             continue
         entities.append(
@@ -235,6 +235,7 @@ INFO_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         key="schedulepart",
         device_class=SensorDeviceClass.ENUM,
         options=list(SCHEDULE_PARTS.values()),
+        translation_key="schedule_part",
         uom_fn=lambda _: None,
         value_fn=lambda coordinator, sensor_name: SCHEDULE_PARTS[
             coordinator.client.get_info(sensor_name)
