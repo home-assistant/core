@@ -11,8 +11,8 @@ from typing import Any, cast
 
 import voluptuous as vol
 
+from homeassistant.components import recorder
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.sensor import (
     DEVICE_CLASS_STATE_CLASSES,
     PLATFORM_SCHEMA,
@@ -511,7 +511,7 @@ class StatisticsSensor(SensorEntity):
         else:
             start_date = datetime.fromtimestamp(0, tz=dt_util.UTC)
             _LOGGER.debug("%s: retrieving all records", self.entity_id)
-        return history.state_changes_during_period(
+        return recorder.history.state_changes_during_period(
             self.hass,
             start_date,
             entity_id=lower_entity_id,
@@ -530,7 +530,7 @@ class StatisticsSensor(SensorEntity):
         If MaxAge is provided then query will restrict to entries younger then
         current datetime - MaxAge.
         """
-        if states := await get_instance(self.hass).async_add_executor_job(
+        if states := await recorder.get_instance(self.hass).async_add_executor_job(
             self._fetch_states_from_database
         ):
             for state in reversed(states):

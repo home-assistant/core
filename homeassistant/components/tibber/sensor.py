@@ -11,13 +11,7 @@ from typing import Any, cast
 import aiohttp
 import tibber
 
-from homeassistant.components.recorder import get_instance
-from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
-from homeassistant.components.recorder.statistics import (
-    async_add_external_statistics,
-    get_last_statistics,
-    statistics_during_period,
-)
+from homeassistant.components import recorder
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -607,8 +601,15 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
                     f"{home.home_id.replace('-', '')}"
                 )
 
-                last_stats = await get_instance(self.hass).async_add_executor_job(
-                    get_last_statistics, self.hass, 1, statistic_id, True, set()
+                last_stats = await recorder.get_instance(
+                    self.hass
+                ).async_add_executor_job(
+                    recorder.statistics.get_last_statistics,
+                    self.hass,
+                    1,
+                    statistic_id,
+                    True,
+                    set(),
                 )
 
                 if not last_stats:
@@ -634,8 +635,10 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
                     if from_time is None:
                         continue
                     start = from_time - timedelta(hours=1)
-                    stat = await get_instance(self.hass).async_add_executor_job(
-                        statistics_during_period,
+                    stat = await recorder.get_instance(
+                        self.hass
+                    ).async_add_executor_job(
+                        recorder.statistics.statistics_during_period,
                         self.hass,
                         start,
                         None,
@@ -670,14 +673,14 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
                     _sum += data[sensor_type]
 
                     statistics.append(
-                        StatisticData(
+                        recorder.models.StatisticData(
                             start=from_time,
                             state=data[sensor_type],
                             sum=_sum,
                         )
                     )
 
-                metadata = StatisticMetaData(
+                metadata = recorder.models.StatisticMetaData(
                     has_mean=False,
                     has_sum=True,
                     name=f"{home.name} {sensor_type}",
@@ -685,4 +688,6 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
                     statistic_id=statistic_id,
                     unit_of_measurement=unit,
                 )
-                async_add_external_statistics(self.hass, metadata, statistics)
+                recorder.statistics.async_add_external_statistics(
+                    self.hass, metadata, statistics
+                )

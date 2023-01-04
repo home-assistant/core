@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import datetime
 
-from homeassistant.components.recorder import get_instance, history
+from homeassistant.components import recorder
 from homeassistant.core import Event, HomeAssistant, State
 from homeassistant.helpers.template import Template
 import homeassistant.util.dt as dt_util
@@ -141,7 +141,7 @@ class HistoryStats:
         current_period_end_timestamp: float,
     ) -> None:
         """Update history data for the current period from the database."""
-        instance = get_instance(self.hass)
+        instance = recorder.get_instance(self.hass)
         states = await instance.async_add_executor_job(
             self._state_changes_during_period,
             current_period_start_timestamp,
@@ -158,7 +158,7 @@ class HistoryStats:
         """Return state changes during a period."""
         start = dt_util.utc_from_timestamp(start_ts)
         end = dt_util.utc_from_timestamp(end_ts)
-        return history.state_changes_during_period(
+        return recorder.history.state_changes_during_period(
             self.hass,
             start,
             end,

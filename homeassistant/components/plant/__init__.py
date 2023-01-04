@@ -6,7 +6,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.recorder import get_instance, history
+from homeassistant.components import recorder
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONDUCTIVITY,
@@ -273,7 +273,7 @@ class Plant(Entity):
         """After being added to hass, load from history."""
         if "recorder" in self.hass.config.components:
             # only use the database if it's configured
-            await get_instance(self.hass).async_add_executor_job(
+            await recorder.get_instance(self.hass).async_add_executor_job(
                 self._load_history_from_db
             )
             self.async_write_ha_state()
@@ -302,7 +302,7 @@ class Plant(Entity):
             return
         _LOGGER.debug("Initializing values for %s from the database", self._name)
         lower_entity_id = entity_id.lower()
-        history_list = history.state_changes_during_period(
+        history_list = recorder.history.state_changes_during_period(
             self.hass,
             start_date,
             entity_id=lower_entity_id,

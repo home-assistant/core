@@ -1,7 +1,7 @@
 """Test the Netatmo diagnostics."""
 from unittest.mock import patch
 
-from homeassistant.components.recorder import Recorder
+from homeassistant.components import recorder
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -12,7 +12,7 @@ from tests.typing import ClientSessionGenerator
 
 
 async def test_entry_diagnostics(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     config_entry,

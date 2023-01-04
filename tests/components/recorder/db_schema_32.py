@@ -36,7 +36,7 @@ from sqlalchemy.orm import aliased, declarative_base, relationship
 from sqlalchemy.orm.session import Session
 from typing_extensions import Self
 
-from homeassistant.components.recorder.const import SupportedDialect
+from homeassistant.components import recorder
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_RESTORED,
@@ -314,7 +314,7 @@ class EventData(Base):  # type: ignore[misc,valid-type]
 
     @staticmethod
     def shared_data_bytes_from_event(
-        event: Event, dialect: SupportedDialect | None
+        event: Event, dialect: recorder.const.SupportedDialect | None
     ) -> bytes:
         """Create shared_data from an event."""
         return json_bytes(event.data)
@@ -506,7 +506,7 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
         event: Event,
         entity_registry: er.EntityRegistry,
         exclude_attrs_by_domain: dict[str, set[str]],
-        dialect: SupportedDialect | None,
+        dialect: recorder.const.SupportedDialect | None,
     ) -> bytes:
         """Create shared_attrs from a state_changed event."""
         state: State | None = event.data.get("new_state")

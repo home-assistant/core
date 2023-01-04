@@ -5,13 +5,12 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from homeassistant.components.recorder.const import DB_WORKER_PREFIX
-from homeassistant.components.recorder.pool import RecorderPool
+from homeassistant.components import recorder
 
 
 async def test_recorder_pool_called_from_event_loop() -> None:
     """Test we raise an exception when calling from the event loop."""
-    engine = create_engine("sqlite://", poolclass=RecorderPool)
+    engine = create_engine("sqlite://", poolclass=recorder.pool.RecorderPool)
     with pytest.raises(RuntimeError):
         sessionmaker(bind=engine)().connection()
 
@@ -19,7 +18,7 @@ async def test_recorder_pool_called_from_event_loop() -> None:
 def test_recorder_pool(caplog: pytest.LogCaptureFixture) -> None:
     """Test RecorderPool gives the same connection in the creating thread."""
 
-    engine = create_engine("sqlite://", poolclass=RecorderPool)
+    engine = create_engine("sqlite://", poolclass=recorder.pool.RecorderPool)
     get_session = sessionmaker(bind=engine)
     shutdown = False
     connections = []
@@ -44,7 +43,9 @@ def test_recorder_pool(caplog: pytest.LogCaptureFixture) -> None:
     assert connections[0] != connections[1]
 
     caplog.clear()
-    new_thread = threading.Thread(target=_get_connection_twice, name=DB_WORKER_PREFIX)
+    new_thread = threading.Thread(
+        target=_get_connection_twice, name=recorder.const.DB_WORKER_PREFIX
+    )
     new_thread.start()
     new_thread.join()
     assert "accesses the database without the database executor" not in caplog.text
@@ -59,7 +60,9 @@ def test_recorder_pool(caplog: pytest.LogCaptureFixture) -> None:
 
     shutdown = True
     caplog.clear()
-    new_thread = threading.Thread(target=_get_connection_twice, name=DB_WORKER_PREFIX)
+    new_thread = threading.Thread(
+        target=_get_connection_twice, name=recorder.const.DB_WORKER_PREFIX
+    )
     new_thread.start()
     new_thread.join()
     assert "accesses the database without the database executor" not in caplog.text

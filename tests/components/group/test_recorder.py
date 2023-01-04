@@ -5,10 +5,8 @@ from datetime import timedelta
 
 import pytest
 
-from homeassistant.components import group
+from homeassistant.components import group, recorder
 from homeassistant.components.group import ATTR_AUTO, ATTR_ENTITY_ID, ATTR_ORDER
-from homeassistant.components.recorder import Recorder
-from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_ON
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.setup import async_setup_component
@@ -23,7 +21,9 @@ async def setup_homeassistant():
     """Override the fixture in group.conftest."""
 
 
-async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+async def test_exclude_attributes(
+    recorder_mock: recorder.Recorder, hass: HomeAssistant
+) -> None:
     """Test number registered attributes to be excluded."""
     now = dt_util.utcnow()
     hass.states.async_set("light.bowl", STATE_ON)
@@ -46,7 +46,11 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
     await async_wait_recording_done(hass)
 
     states = await hass.async_add_executor_job(
-        get_significant_states, hass, now, None, hass.states.async_entity_ids()
+        recorder.history.get_significant_states,
+        hass,
+        now,
+        None,
+        hass.states.async_entity_ids(),
     )
     assert len(states) > 1
     for entity_states in states.values():

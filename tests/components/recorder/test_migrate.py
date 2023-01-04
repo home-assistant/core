@@ -21,13 +21,6 @@ from sqlalchemy.pool import StaticPool
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import persistent_notification as pn, recorder
-from homeassistant.components.recorder import db_schema, migration
-from homeassistant.components.recorder.db_schema import (
-    SCHEMA_VERSION,
-    RecorderRuns,
-    States,
-)
-from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import recorder as recorder_helper
 import homeassistant.util.dt as dt_util
@@ -40,11 +33,13 @@ ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 
 
 def _get_native_states(hass, entity_id):
-    with session_scope(hass=hass, read_only=True) as session:
+    with recorder.util.session_scope(hass=hass, read_only=True) as session:
         instance = recorder.get_instance(hass)
         metadata_id = instance.states_meta_manager.get(entity_id, session, True)
         states = []
-        for dbstate in session.query(States).filter(States.metadata_id == metadata_id):
+        for dbstate in session.query(recorder.db_schema.States).filter(
+            recorder.db_schema.States.metadata_id == metadata_id
+        ):
             dbstate.entity_id = entity_id
             states.append(dbstate.to_native())
         return states
@@ -59,7 +54,7 @@ async def test_schema_update_calls(recorder_db_url: str, hass: HomeAssistant) ->
         new=create_engine_test,
     ), patch(
         "homeassistant.components.recorder.migration._apply_update",
-        wraps=migration._apply_update,
+        wraps=recorder.migration._apply_update,
     ) as update:
         recorder_helper.async_initialize_recorder(hass)
         await async_setup_component(
@@ -74,7 +69,7 @@ async def test_schema_update_calls(recorder_db_url: str, hass: HomeAssistant) ->
     update.assert_has_calls(
         [
             call(instance, hass, engine, session_maker, version + 1, 0)
-            for version in range(0, db_schema.SCHEMA_VERSION)
+            for version in range(0, recorder.db_schema.SCHEMA_VERSION)
         ]
     )
 
@@ -104,7 +99,9 @@ async def test_migration_in_progress(recorder_db_url: str, hass: HomeAssistant) 
         await async_wait_recording_done(hass)
 
     assert recorder.util.async_migration_in_progress(hass) is False
-    assert recorder.get_instance(hass).schema_version == SCHEMA_VERSION
+    assert (
+        recorder.get_instance(hass).schema_version == recorder.db_schema.SCHEMA_VERSION
+    )
 
 
 async def test_database_migration_failed(
@@ -332,7 +329,7 @@ async def test_schema_migrate(
         return engine
 
     def _mock_setup_run(self):
-        self.run_info = RecorderRuns(
+        self.run_info = recorder.db_schema.RecorderRuns(
             start=self.recorder_runs_manager.recording_start, created=dt_util.utcnow()
         )
 
@@ -348,10 +345,10 @@ async def test_schema_migrate(
 
         # Check and report the outcome of the migration; if migration fails
         # the recorder will silently create a new database.
-        with session_scope(hass=hass, read_only=True) as session:
+        with recorder.util.session_scope(hass=hass, read_only=True) as session:
             res = (
-                session.query(db_schema.SchemaChanges)
-                .order_by(db_schema.SchemaChanges.change_id.desc())
+                session.query(recorder.db_schema.SchemaChanges)
+                .order_by(recorder.db_schema.SchemaChanges.change_id.desc())
                 .first()
             )
             migration_version = res.schema_version
@@ -415,7 +412,7 @@ async def test_schema_migrate(
         await hass.async_block_till_done()
         await hass.async_add_executor_job(migration_done.wait)
         await async_wait_recording_done(hass)
-        assert migration_version == db_schema.SCHEMA_VERSION
+        assert migration_version == recorder.db_schema.SCHEMA_VERSION
         assert setup_run.called
         assert recorder.util.async_migration_in_progress(hass) is not True
         assert apply_update_mock.called
@@ -424,7 +421,7 @@ async def test_schema_migrate(
 def test_invalid_update(hass: HomeAssistant) -> None:
     """Test that an invalid new version raises an exception."""
     with pytest.raises(ValueError):
-        migration._apply_update(Mock(), hass, Mock(), Mock(), -1, 0)
+        recorder.migration._apply_update(Mock(), hass, Mock(), Mock(), -1, 0)
 
 
 @pytest.mark.parametrize(
@@ -445,7 +442,7 @@ def test_modify_column(engine_type, substr) -> None:
     instance.get_session = Mock(return_value=session)
     engine = Mock()
     engine.dialect.name = engine_type
-    migration._modify_columns(
+    recorder.migration._modify_columns(
         instance.get_session, engine, "events", ["event_type VARCHAR(64)"]
     )
     if substr:
@@ -461,10 +458,10 @@ def test_forgiving_add_column(recorder_db_url: str) -> None:
         session.execute(text("CREATE TABLE hello (id int)"))
         instance = Mock()
         instance.get_session = Mock(return_value=session)
-        migration._add_columns(
+        recorder.migration._add_columns(
             instance.get_session, "hello", ["context_id CHARACTER(36)"]
         )
-        migration._add_columns(
+        recorder.migration._add_columns(
             instance.get_session, "hello", ["context_id CHARACTER(36)"]
         )
     engine.dispose()
@@ -473,11 +470,11 @@ def test_forgiving_add_column(recorder_db_url: str) -> None:
 def test_forgiving_add_index(recorder_db_url: str) -> None:
     """Test that add index will continue if index exists."""
     engine = create_engine(recorder_db_url, poolclass=StaticPool)
-    db_schema.Base.metadata.create_all(engine)
+    recorder.db_schema.Base.metadata.create_all(engine)
     with Session(engine) as session:
         instance = Mock()
         instance.get_session = Mock(return_value=session)
-        migration._create_index(
+        recorder.migration._create_index(
             instance.get_session, "states", "ix_states_context_id_bin"
         )
     engine.dispose()
@@ -488,14 +485,14 @@ def test_forgiving_drop_index(
 ) -> None:
     """Test that drop index will continue if index drop fails."""
     engine = create_engine(recorder_db_url, poolclass=StaticPool)
-    db_schema.Base.metadata.create_all(engine)
+    recorder.db_schema.Base.metadata.create_all(engine)
     with Session(engine) as session:
         instance = Mock()
         instance.get_session = Mock(return_value=session)
-        migration._drop_index(
+        recorder.migration._drop_index(
             instance.get_session, "states", "ix_states_context_id_bin"
         )
-        migration._drop_index(
+        recorder.migration._drop_index(
             instance.get_session, "states", "ix_states_context_id_bin"
         )
 
@@ -505,7 +502,7 @@ def test_forgiving_drop_index(
         ), patch.object(
             session, "connection", side_effect=SQLAlchemyError("connection failure")
         ):
-            migration._drop_index(
+            recorder.migration._drop_index(
                 instance.get_session, "states", "ix_states_context_id_bin"
             )
         assert "Failed to drop index" in caplog.text
@@ -517,7 +514,7 @@ def test_forgiving_drop_index(
         ), patch.object(
             session, "connection", side_effect=SQLAlchemyError("connection failure")
         ):
-            migration._drop_index(
+            recorder.migration._drop_index(
                 instance.get_session, "states", "ix_states_context_id_bin", quiet=True
             )
         assert "Failed to drop index" not in caplog.text
@@ -548,7 +545,7 @@ def test_forgiving_add_index_with_other_db_types(
     with patch(
         "homeassistant.components.recorder.migration.Table", return_value=mocked_table
     ):
-        migration._create_index(Mock(), "states", "ix_states_context_id")
+        recorder.migration._create_index(Mock(), "states", "ix_states_context_id")
 
     assert "already exists on states" in caplog.text
     assert "continuing" in caplog.text
@@ -565,12 +562,14 @@ def test_raise_if_exception_missing_str() -> None:
         "[42S11] [FreeTDS][SQL Server]The operation failed because an index or statistics with name 'ix_states_old_state_id' already exists on table 'states'. (1913) (SQLExecDirectW)"
     )
 
-    migration.raise_if_exception_missing_str(
+    recorder.migration.raise_if_exception_missing_str(
         programming_exc, ["already exists", "duplicate"]
     )
 
     with pytest.raises(ProgrammingError):
-        migration.raise_if_exception_missing_str(programming_exc, ["not present"])
+        recorder.migration.raise_if_exception_missing_str(
+            programming_exc, ["not present"]
+        )
 
 
 def test_raise_if_exception_missing_empty_cause_str() -> None:
@@ -579,9 +578,11 @@ def test_raise_if_exception_missing_empty_cause_str() -> None:
     programming_exc.__cause__ = MockPyODBCProgrammingError()
 
     with pytest.raises(ProgrammingError):
-        migration.raise_if_exception_missing_str(
+        recorder.migration.raise_if_exception_missing_str(
             programming_exc, ["already exists", "duplicate"]
         )
 
     with pytest.raises(ProgrammingError):
-        migration.raise_if_exception_missing_str(programming_exc, ["not present"])
+        recorder.migration.raise_if_exception_missing_str(
+            programming_exc, ["not present"]
+        )

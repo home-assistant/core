@@ -13,7 +13,6 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.components import recorder, websocket_api
-from homeassistant.components.recorder.statistics import StatisticsRow
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.integration_platform import (
@@ -278,7 +277,8 @@ async def ws_get_fossil_energy_consumption(
     )
 
     def _combine_sum_statistics(
-        stats: dict[str, list[StatisticsRow]], statistic_ids: list[str]
+        stats: dict[str, list[recorder.statistics.StatisticsRow]],
+        statistic_ids: list[str],
     ) -> dict[float, float]:
         """Combine multiple statistics, returns a dict indexed by start time."""
         result: defaultdict[float, float] = defaultdict(float)

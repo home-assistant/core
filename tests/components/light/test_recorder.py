@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import light
+from homeassistant.components import light, recorder
 from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_MAX_COLOR_TEMP_KELVIN,
@@ -15,8 +15,6 @@ from homeassistant.components.light import (
     ATTR_MIN_MIREDS,
     ATTR_SUPPORTED_COLOR_MODES,
 )
-from homeassistant.components.recorder import Recorder
-from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.const import ATTR_FRIENDLY_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -36,7 +34,9 @@ async def light_only() -> None:
         yield
 
 
-async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+async def test_exclude_attributes(
+    recorder_mock: recorder.Recorder, hass: HomeAssistant
+) -> None:
     """Test light registered attributes to be excluded."""
     now = dt_util.utcnow()
     assert await async_setup_component(hass, "homeassistant", {})
@@ -49,7 +49,11 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
     await async_wait_recording_done(hass)
 
     states = await hass.async_add_executor_job(
-        get_significant_states, hass, now, None, hass.states.async_entity_ids()
+        recorder.history.get_significant_states,
+        hass,
+        now,
+        None,
+        hass.states.async_entity_ids(),
     )
     assert len(states) >= 1
     for entity_states in states.values():

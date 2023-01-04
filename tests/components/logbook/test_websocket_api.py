@@ -11,8 +11,6 @@ from homeassistant import core
 from homeassistant.components import logbook, recorder
 from homeassistant.components.automation import ATTR_SOURCE, EVENT_AUTOMATION_TRIGGERED
 from homeassistant.components.logbook import websocket_api
-from homeassistant.components.recorder import Recorder
-from homeassistant.components.recorder.util import get_instance
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import (
@@ -176,7 +174,9 @@ async def _async_mock_devices_with_logbook_platform(
 
 
 async def test_get_events(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test logbook get_events."""
     now = dt_util.utcnow()
@@ -296,7 +296,9 @@ async def test_get_events(
 
 
 async def test_get_events_entities_filtered_away(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test logbook get_events all entities filtered away."""
     now = dt_util.utcnow()
@@ -360,7 +362,9 @@ async def test_get_events_entities_filtered_away(
 
 
 async def test_get_events_future_start_time(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test get_events with a future start time."""
     await async_setup_component(hass, "logbook", {})
@@ -385,7 +389,9 @@ async def test_get_events_future_start_time(
 
 
 async def test_get_events_bad_start_time(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test get_events bad start time."""
     await async_setup_component(hass, "logbook", {})
@@ -405,7 +411,9 @@ async def test_get_events_bad_start_time(
 
 
 async def test_get_events_bad_end_time(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test get_events bad end time."""
     now = dt_util.utcnow()
@@ -427,7 +435,9 @@ async def test_get_events_bad_end_time(
 
 
 async def test_get_events_invalid_filters(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test get_events invalid filters."""
     await async_setup_component(hass, "logbook", {})
@@ -457,7 +467,7 @@ async def test_get_events_invalid_filters(
 
 
 async def test_get_events_with_device_ids(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
@@ -573,7 +583,9 @@ async def test_get_events_with_device_ids(
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
 async def test_subscribe_unsubscribe_logbook_stream_excluded_entities(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test subscribe/unsubscribe logbook stream with excluded entities."""
     now = dt_util.utcnow()
@@ -636,7 +648,7 @@ async def test_subscribe_unsubscribe_logbook_stream_excluded_entities(
     assert msg["event"]["end_time"] > msg["event"]["start_time"]
     assert msg["event"]["partial"] is True
 
-    await get_instance(hass).async_block_till_done()
+    await recorder.get_instance(hass).async_block_till_done()
     await hass.async_block_till_done()
 
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
@@ -667,7 +679,7 @@ async def test_subscribe_unsubscribe_logbook_stream_excluded_entities(
     await hass.async_block_till_done()
 
     hass.states.async_set("light.zulu", "on", {"effect": "help", "color": "blue"})
-    await get_instance(hass).async_block_till_done()
+    await recorder.get_instance(hass).async_block_till_done()
     await hass.async_block_till_done()
 
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
@@ -760,7 +772,9 @@ async def test_subscribe_unsubscribe_logbook_stream_excluded_entities(
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
 async def test_subscribe_unsubscribe_logbook_stream_included_entities(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test subscribe/unsubscribe logbook stream with included entities."""
     test_entities = (
@@ -970,7 +984,9 @@ async def test_subscribe_unsubscribe_logbook_stream_included_entities(
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
 async def test_logbook_stream_excluded_entities_inherits_filters_from_recorder(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test subscribe/unsubscribe logbook stream inherits filters from recorder."""
     now = dt_util.utcnow()
@@ -1163,7 +1179,9 @@ async def test_logbook_stream_excluded_entities_inherits_filters_from_recorder(
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
 async def test_subscribe_unsubscribe_logbook_stream(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test subscribe/unsubscribe logbook stream."""
     now = dt_util.utcnow()
@@ -1468,7 +1486,9 @@ async def test_subscribe_unsubscribe_logbook_stream(
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
 async def test_subscribe_unsubscribe_logbook_stream_entities(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test subscribe/unsubscribe logbook stream with specific entities."""
     now = dt_util.utcnow()
@@ -1517,7 +1537,7 @@ async def test_subscribe_unsubscribe_logbook_stream_entities(
         }
     ]
 
-    await get_instance(hass).async_block_till_done()
+    await recorder.get_instance(hass).async_block_till_done()
     await hass.async_block_till_done()
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
@@ -1531,7 +1551,7 @@ async def test_subscribe_unsubscribe_logbook_stream_entities(
     hass.states.async_set("light.alpha", STATE_OFF)
     hass.states.async_set("light.small", STATE_OFF, {"effect": "help", "color": "blue"})
 
-    await get_instance(hass).async_block_till_done()
+    await recorder.get_instance(hass).async_block_till_done()
     await hass.async_block_till_done()
 
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
@@ -1548,7 +1568,7 @@ async def test_subscribe_unsubscribe_logbook_stream_entities(
 
     hass.states.async_remove("light.alpha")
     hass.states.async_remove("light.small")
-    await get_instance(hass).async_block_till_done()
+    await recorder.get_instance(hass).async_block_till_done()
     await hass.async_block_till_done()
 
     await websocket_client.send_json(
@@ -1568,7 +1588,9 @@ async def test_subscribe_unsubscribe_logbook_stream_entities(
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
 async def test_subscribe_unsubscribe_logbook_stream_entities_with_end_time(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test subscribe/unsubscribe logbook stream with specific entities and an end_time."""
     now = dt_util.utcnow()
@@ -1616,7 +1638,7 @@ async def test_subscribe_unsubscribe_logbook_stream_entities_with_end_time(
         }
     ]
 
-    await get_instance(hass).async_block_till_done()
+    await recorder.get_instance(hass).async_block_till_done()
     await hass.async_block_till_done()
 
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
@@ -1672,7 +1694,9 @@ async def test_subscribe_unsubscribe_logbook_stream_entities_with_end_time(
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
 async def test_subscribe_unsubscribe_logbook_stream_entities_past_only(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test subscribe/unsubscribe logbook stream with specific entities in the past."""
     now = dt_util.utcnow()
@@ -1742,7 +1766,9 @@ async def test_subscribe_unsubscribe_logbook_stream_entities_past_only(
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
 async def test_subscribe_unsubscribe_logbook_stream_big_query(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test subscribe/unsubscribe logbook stream and ask for a large time frame.
 
@@ -1844,7 +1870,7 @@ async def test_subscribe_unsubscribe_logbook_stream_big_query(
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
 async def test_subscribe_unsubscribe_logbook_stream_device(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
@@ -1952,7 +1978,9 @@ async def test_subscribe_unsubscribe_logbook_stream_device(
 
 
 async def test_event_stream_bad_start_time(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test event_stream bad start time."""
     await async_setup_component(hass, "logbook", {})
@@ -1973,7 +2001,7 @@ async def test_event_stream_bad_start_time(
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
 async def test_logbook_stream_match_multiple_entities(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     entity_registry: er.EntityRegistry,
@@ -2083,7 +2111,7 @@ async def test_logbook_stream_match_multiple_entities(
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
 async def test_logbook_stream_match_multiple_entities_one_with_broken_logbook_platform(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     entity_registry: er.EntityRegistry,
@@ -2189,7 +2217,9 @@ async def test_logbook_stream_match_multiple_entities_one_with_broken_logbook_pl
 
 
 async def test_event_stream_bad_end_time(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test event_stream bad end time."""
     await async_setup_component(hass, "logbook", {})
@@ -2318,7 +2348,9 @@ async def test_live_stream_with_one_second_commit_interval(
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
 async def test_subscribe_disconnected(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test subscribe/unsubscribe logbook stream gets disconnected."""
     now = dt_util.utcnow()
@@ -2377,7 +2409,9 @@ async def test_subscribe_disconnected(
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
 async def test_stream_consumer_stop_processing(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test we unsubscribe if the stream consumer fails or is canceled."""
     now = dt_util.utcnow()
@@ -2438,7 +2472,7 @@ async def test_stream_consumer_stop_processing(
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
 async def test_recorder_is_far_behind(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
@@ -2525,7 +2559,9 @@ async def test_recorder_is_far_behind(
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
 async def test_subscribe_all_entities_are_continuous(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test subscribe/unsubscribe logbook stream with entities that are always filtered."""
     now = dt_util.utcnow()
@@ -2585,7 +2621,9 @@ async def test_subscribe_all_entities_are_continuous(
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
 async def test_subscribe_all_entities_have_uom_multiple(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test logbook stream with specific request for multiple entities that are always filtered."""
     now = dt_util.utcnow()
@@ -2644,7 +2682,9 @@ async def test_subscribe_all_entities_have_uom_multiple(
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
 async def test_subscribe_entities_some_have_uom_multiple(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test logbook stream with uom filtered entities and non-filtered entities."""
     now = dt_util.utcnow()
@@ -2689,7 +2729,7 @@ async def test_subscribe_entities_some_have_uom_multiple(
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
-    await get_instance(hass).async_block_till_done()
+    await recorder.get_instance(hass).async_block_till_done()
     await hass.async_block_till_done()
 
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
@@ -2701,7 +2741,7 @@ async def test_subscribe_entities_some_have_uom_multiple(
     ]
     assert msg["event"]["partial"] is True
 
-    await get_instance(hass).async_block_till_done()
+    await recorder.get_instance(hass).async_block_till_done()
     await hass.async_block_till_done()
 
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
@@ -2711,10 +2751,10 @@ async def test_subscribe_entities_some_have_uom_multiple(
     assert msg["event"]["events"] == []
 
     _cycle_entities()
-    await get_instance(hass).async_block_till_done()
+    await recorder.get_instance(hass).async_block_till_done()
     await hass.async_block_till_done()
     _cycle_entities()
-    await get_instance(hass).async_block_till_done()
+    await recorder.get_instance(hass).async_block_till_done()
     await hass.async_block_till_done()
 
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
@@ -2751,7 +2791,9 @@ async def test_subscribe_entities_some_have_uom_multiple(
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
 async def test_logbook_stream_ignores_forced_updates(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test logbook live stream ignores forced updates."""
     now = dt_util.utcnow()
@@ -2867,7 +2909,7 @@ async def test_logbook_stream_ignores_forced_updates(
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
 async def test_subscribe_all_entities_are_continuous_with_device(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,

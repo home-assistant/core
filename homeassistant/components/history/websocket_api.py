@@ -10,8 +10,7 @@ from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.components import websocket_api
-from homeassistant.components.recorder import get_instance, history
+from homeassistant.components import recorder, websocket_api
 from homeassistant.components.websocket_api import messages
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.const import (
@@ -75,7 +74,7 @@ def _ws_get_significant_states(
     return JSON_DUMP(
         messages.result_message(
             msg_id,
-            history.get_significant_states(
+            recorder.history.get_significant_states(
                 hass,
                 start_time,
                 end_time,
@@ -153,7 +152,7 @@ async def ws_get_history_during_period(
     minimal_response = msg["minimal_response"]
 
     connection.send_message(
-        await get_instance(hass).async_add_executor_job(
+        await recorder.get_instance(hass).async_add_executor_job(
             _ws_get_significant_states,
             hass,
             msg["id"],
@@ -222,7 +221,7 @@ def _generate_historical_response(
     """Generate a historical response."""
     states = cast(
         MutableMapping[str, list[dict[str, Any]]],
-        history.get_significant_states(
+        recorder.history.get_significant_states(
             hass,
             start_time,
             end_time,
@@ -275,7 +274,7 @@ async def _async_send_historical_states(
     send_empty: bool,
 ) -> dt | None:
     """Fetch history significant_states and send them to the client."""
-    instance = get_instance(hass)
+    instance = recorder.get_instance(hass)
     last_time_ts, last_time_dt, payload = await instance.async_add_executor_job(
         _generate_historical_response,
         hass,
@@ -297,7 +296,7 @@ async def _async_send_historical_states(
 def _history_compressed_state(state: State, no_attributes: bool) -> dict[str, Any]:
     """Convert a state to a compressed state."""
     comp_state: dict[str, Any] = {COMPRESSED_STATE_STATE: state.state}
-    if not no_attributes or state.domain in history.NEED_ATTRIBUTE_DOMAINS:
+    if not no_attributes or state.domain in recorder.history.NEED_ATTRIBUTE_DOMAINS:
         comp_state[COMPRESSED_STATE_ATTRIBUTES] = state.attributes
     comp_state[COMPRESSED_STATE_LAST_UPDATED] = dt_util.utc_to_timestamp(
         state.last_updated
@@ -384,7 +383,7 @@ def _async_subscribe_events(
         if (
             (significant_changes_only or minimal_response)
             and new_state.state == old_state.state
-            and new_state.domain not in history.SIGNIFICANT_DOMAINS
+            and new_state.domain not in recorder.history.SIGNIFICANT_DOMAINS
         ):
             return
         target(event)
@@ -550,7 +549,7 @@ async def ws_stream(
     )
 
     live_stream.wait_sync_task = asyncio.create_task(
-        get_instance(hass).async_block_till_done()
+        recorder.get_instance(hass).async_block_till_done()
     )
     await live_stream.wait_sync_task
 

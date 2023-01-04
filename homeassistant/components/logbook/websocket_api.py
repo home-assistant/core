@@ -10,8 +10,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components import websocket_api
-from homeassistant.components.recorder import get_instance
+from homeassistant.components import recorder, websocket_api
 from homeassistant.components.websocket_api import messages
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
@@ -167,7 +166,7 @@ async def _async_get_ws_stream_events(
     partial: bool,
 ) -> tuple[str, dt | None]:
     """Async wrapper around _ws_formatted_get_events."""
-    return await get_instance(hass).async_add_executor_job(
+    return await recorder.get_instance(hass).async_add_executor_job(
         _ws_stream_get_events,
         msg_id,
         start_time,
@@ -405,7 +404,7 @@ async def ws_event_stream(
     )
 
     live_stream.wait_sync_task = asyncio.create_task(
-        get_instance(hass).async_block_till_done()
+        recorder.get_instance(hass).async_block_till_done()
     )
     await live_stream.wait_sync_task
 
@@ -504,7 +503,7 @@ async def ws_get_events(
     )
 
     connection.send_message(
-        await get_instance(hass).async_add_executor_job(
+        await recorder.get_instance(hass).async_add_executor_job(
             _ws_formatted_get_events,
             msg["id"],
             start_time,

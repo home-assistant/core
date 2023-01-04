@@ -4,9 +4,8 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
+from homeassistant.components import recorder
 from homeassistant.components.energy import data, is_configured
-from homeassistant.components.recorder import Recorder
-from homeassistant.components.recorder.statistics import async_add_external_statistics
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -311,7 +310,9 @@ async def test_get_solar_forecast(
 
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
 async def test_fossil_energy_consumption_no_co2(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test fossil_energy_consumption when co2 data is missing."""
     now = dt_util.utcnow()
@@ -397,10 +398,10 @@ async def test_fossil_energy_consumption_no_co2(
         "unit_of_measurement": "kWh",
     }
 
-    async_add_external_statistics(
+    recorder.statistics.async_add_external_statistics(
         hass, external_energy_metadata_1, external_energy_statistics_1
     )
-    async_add_external_statistics(
+    recorder.statistics.async_add_external_statistics(
         hass, external_energy_metadata_2, external_energy_statistics_2
     )
     await async_wait_recording_done(hass)
@@ -474,7 +475,9 @@ async def test_fossil_energy_consumption_no_co2(
 
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
 async def test_fossil_energy_consumption_hole(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test fossil_energy_consumption when some data points lack sum."""
     now = dt_util.utcnow()
@@ -560,10 +563,10 @@ async def test_fossil_energy_consumption_hole(
         "unit_of_measurement": "kWh",
     }
 
-    async_add_external_statistics(
+    recorder.statistics.async_add_external_statistics(
         hass, external_energy_metadata_1, external_energy_statistics_1
     )
-    async_add_external_statistics(
+    recorder.statistics.async_add_external_statistics(
         hass, external_energy_metadata_2, external_energy_statistics_2
     )
     await async_wait_recording_done(hass)
@@ -637,7 +640,9 @@ async def test_fossil_energy_consumption_hole(
 
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
 async def test_fossil_energy_consumption_no_data(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test fossil_energy_consumption when there is no data."""
     now = dt_util.utcnow()
@@ -721,10 +726,10 @@ async def test_fossil_energy_consumption_no_data(
         "unit_of_measurement": "kWh",
     }
 
-    async_add_external_statistics(
+    recorder.statistics.async_add_external_statistics(
         hass, external_energy_metadata_1, external_energy_statistics_1
     )
-    async_add_external_statistics(
+    recorder.statistics.async_add_external_statistics(
         hass, external_energy_metadata_2, external_energy_statistics_2
     )
     await async_wait_recording_done(hass)
@@ -787,7 +792,9 @@ async def test_fossil_energy_consumption_no_data(
 
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
 async def test_fossil_energy_consumption(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test fossil_energy_consumption with co2 sensor data."""
     now = dt_util.utcnow()
@@ -903,13 +910,15 @@ async def test_fossil_energy_consumption(
         "unit_of_measurement": "%",
     }
 
-    async_add_external_statistics(
+    recorder.statistics.async_add_external_statistics(
         hass, external_energy_metadata_1, external_energy_statistics_1
     )
-    async_add_external_statistics(
+    recorder.statistics.async_add_external_statistics(
         hass, external_energy_metadata_2, external_energy_statistics_2
     )
-    async_add_external_statistics(hass, external_co2_metadata, external_co2_statistics)
+    recorder.statistics.async_add_external_statistics(
+        hass, external_co2_metadata, external_co2_statistics
+    )
     await async_wait_recording_done(hass)
 
     client = await hass_ws_client()

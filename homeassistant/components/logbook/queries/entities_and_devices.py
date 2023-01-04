@@ -8,13 +8,7 @@ from sqlalchemy.sql.elements import ColumnElement
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import CTE, CompoundSelect, Select
 
-from homeassistant.components.recorder.db_schema import (
-    EventData,
-    Events,
-    EventTypes,
-    States,
-    StatesMeta,
-)
+from homeassistant.components import recorder
 
 from .common import (
     apply_events_context_hints,
@@ -47,11 +41,12 @@ def _select_entities_device_id_context_ids_sub_query(
                 json_quoted_entity_ids, json_quoted_device_ids
             )
         ),
-        apply_entities_hints(select(States.context_id_bin))
+        apply_entities_hints(select(recorder.db_schema.States.context_id_bin))
         .filter(
-            (States.last_updated_ts > start_day) & (States.last_updated_ts < end_day)
+            (recorder.db_schema.States.last_updated_ts > start_day)
+            & (recorder.db_schema.States.last_updated_ts < end_day)
         )
-        .where(States.metadata_id.in_(states_metadata_ids)),
+        .where(recorder.db_schema.States.metadata_id.in_(states_metadata_ids)),
     ).subquery()
     return select(union.c.context_id_bin).group_by(union.c.context_id_bin)
 
@@ -84,18 +79,34 @@ def _apply_entities_devices_context_union(
             select_events_context_only()
             .select_from(devices_entities_cte)
             .outerjoin(
-                Events, devices_entities_cte.c.context_id_bin == Events.context_id_bin
+                recorder.db_schema.Events,
+                devices_entities_cte.c.context_id_bin
+                == recorder.db_schema.Events.context_id_bin,
             )
-            .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
-            .outerjoin(EventData, (Events.data_id == EventData.data_id)),
+            .outerjoin(
+                recorder.db_schema.EventTypes,
+                recorder.db_schema.Events.event_type_id
+                == recorder.db_schema.EventTypes.event_type_id,
+            )
+            .outerjoin(
+                recorder.db_schema.EventData,
+                recorder.db_schema.Events.data_id
+                == recorder.db_schema.EventData.data_id,
+            ),
         ),
         apply_states_context_hints(
             select_states_context_only()
             .select_from(devices_entities_cte)
             .outerjoin(
-                States, devices_entities_cte.c.context_id_bin == States.context_id_bin
+                recorder.db_schema.States,
+                devices_entities_cte.c.context_id_bin
+                == recorder.db_schema.States.context_id_bin,
             )
-            .outerjoin(StatesMeta, (States.metadata_id == StatesMeta.metadata_id))
+            .outerjoin(
+                recorder.db_schema.StatesMeta,
+                recorder.db_schema.States.metadata_id
+                == recorder.db_schema.StatesMeta.metadata_id,
+            )
         ),
     )
 
@@ -122,7 +133,7 @@ def entities_devices_stmt(
             states_metadata_ids,
             json_quoted_entity_ids,
             json_quoted_device_ids,
-        ).order_by(Events.time_fired_ts)
+        ).order_by(recorder.db_schema.Events.time_fired_ts)
     )
     return stmt
 

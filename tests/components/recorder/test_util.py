@@ -14,22 +14,6 @@ from sqlalchemy.sql.elements import TextClause
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import util
-from homeassistant.components.recorder.const import DOMAIN, SQLITE_URL_PREFIX
-from homeassistant.components.recorder.db_schema import RecorderRuns
-from homeassistant.components.recorder.history.modern import (
-    _get_single_entity_start_time_stmt,
-)
-from homeassistant.components.recorder.models import (
-    UnsupportedDialect,
-    process_timestamp,
-)
-from homeassistant.components.recorder.util import (
-    end_incomplete_runs,
-    is_second_sunday,
-    resolve_period,
-    session_scope,
-)
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.issue_registry import async_get as async_get_issue_registry
@@ -45,8 +29,8 @@ def test_session_scope_not_setup(hass_recorder: Callable[..., HomeAssistant]) ->
     """Try to create a session scope when not setup."""
     hass = hass_recorder()
     with patch.object(
-        util.get_instance(hass), "get_session", return_value=None
-    ), pytest.raises(RuntimeError), util.session_scope(hass=hass):
+        recorder.get_instance(hass), "get_session", return_value=None
+    ), pytest.raises(RuntimeError), recorder.util.session_scope(hass=hass):
         pass
 
 
@@ -66,7 +50,7 @@ def test_recorder_bad_execute(hass_recorder: Callable[..., HomeAssistant]) -> No
     with pytest.raises(SQLAlchemyError), patch(
         "homeassistant.components.recorder.core.time.sleep"
     ) as e_mock:
-        util.execute((mck1,), to_native=True)
+        recorder.util.execute((mck1,), to_native=True)
 
     assert e_mock.call_count == 2
 
@@ -78,23 +62,23 @@ def test_validate_or_move_away_sqlite_database(
     test_dir = tmp_path.joinpath("test_validate_or_move_away_sqlite_database")
     test_dir.mkdir()
     test_db_file = f"{test_dir}/broken.db"
-    dburl = f"{SQLITE_URL_PREFIX}{test_db_file}"
+    dburl = f"{recorder.const.SQLITE_URL_PREFIX}{test_db_file}"
 
-    assert util.validate_sqlite_database(test_db_file) is False
+    assert recorder.util.validate_sqlite_database(test_db_file) is False
     assert os.path.exists(test_db_file) is True
-    assert util.validate_or_move_away_sqlite_database(dburl) is False
+    assert recorder.util.validate_or_move_away_sqlite_database(dburl) is False
 
     corrupt_db_file(test_db_file)
 
-    assert util.validate_sqlite_database(dburl) is False
+    assert recorder.util.validate_sqlite_database(dburl) is False
 
-    assert util.validate_or_move_away_sqlite_database(dburl) is False
+    assert recorder.util.validate_or_move_away_sqlite_database(dburl) is False
 
     assert "corrupt or malformed" in caplog.text
 
-    assert util.validate_sqlite_database(dburl) is False
+    assert recorder.util.validate_sqlite_database(dburl) is False
 
-    assert util.validate_or_move_away_sqlite_database(dburl) is True
+    assert recorder.util.validate_or_move_away_sqlite_database(dburl) is True
 
 
 async def test_last_run_was_recently_clean(
@@ -108,7 +92,7 @@ async def test_last_run_was_recently_clean(
     hass = await async_test_home_assistant(None)
 
     return_values = []
-    real_last_run_was_recently_clean = util.last_run_was_recently_clean
+    real_last_run_was_recently_clean = recorder.util.last_run_was_recently_clean
 
     def _last_run_was_recently_clean(cursor):
         return_values.append(real_last_run_was_recently_clean(cursor))
@@ -186,7 +170,9 @@ def test_setup_connection_for_dialect_mysql(mysql_version) -> None:
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    util.setup_connection_for_dialect(instance_mock, "mysql", dbapi_connection, True)
+    recorder.util.setup_connection_for_dialect(
+        instance_mock, "mysql", dbapi_connection, True
+    )
 
     assert len(execute_args) == 3
     assert execute_args[0] == "SET session wait_timeout=28800"
@@ -220,7 +206,7 @@ def test_setup_connection_for_dialect_sqlite(sqlite_version) -> None:
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
     assert (
-        util.setup_connection_for_dialect(
+        recorder.util.setup_connection_for_dialect(
             instance_mock, "sqlite", dbapi_connection, True
         )
         is not None
@@ -235,7 +221,7 @@ def test_setup_connection_for_dialect_sqlite(sqlite_version) -> None:
 
     execute_args = []
     assert (
-        util.setup_connection_for_dialect(
+        recorder.util.setup_connection_for_dialect(
             instance_mock, "sqlite", dbapi_connection, False
         )
         is None
@@ -275,7 +261,7 @@ def test_setup_connection_for_dialect_sqlite_zero_commit_interval(
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
     assert (
-        util.setup_connection_for_dialect(
+        recorder.util.setup_connection_for_dialect(
             instance_mock, "sqlite", dbapi_connection, True
         )
         is not None
@@ -290,7 +276,7 @@ def test_setup_connection_for_dialect_sqlite_zero_commit_interval(
 
     execute_args = []
     assert (
-        util.setup_connection_for_dialect(
+        recorder.util.setup_connection_for_dialect(
             instance_mock, "sqlite", dbapi_connection, False
         )
         is None
@@ -342,8 +328,8 @@ def test_fail_outdated_mysql(
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    with pytest.raises(UnsupportedDialect):
-        util.setup_connection_for_dialect(
+    with pytest.raises(recorder.models.UnsupportedDialect):
+        recorder.util.setup_connection_for_dialect(
             instance_mock, "mysql", dbapi_connection, True
         )
 
@@ -378,7 +364,9 @@ def test_supported_mysql(caplog: pytest.LogCaptureFixture, mysql_version) -> Non
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    util.setup_connection_for_dialect(instance_mock, "mysql", dbapi_connection, True)
+    recorder.util.setup_connection_for_dialect(
+        instance_mock, "mysql", dbapi_connection, True
+    )
 
     assert "minimum supported version" not in caplog.text
 
@@ -423,8 +411,8 @@ def test_fail_outdated_pgsql(
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    with pytest.raises(UnsupportedDialect):
-        util.setup_connection_for_dialect(
+    with pytest.raises(recorder.models.UnsupportedDialect):
+        recorder.util.setup_connection_for_dialect(
             instance_mock, "postgresql", dbapi_connection, True
         )
 
@@ -456,7 +444,7 @@ def test_supported_pgsql(caplog: pytest.LogCaptureFixture, pgsql_version) -> Non
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    database_engine = util.setup_connection_for_dialect(
+    database_engine = recorder.util.setup_connection_for_dialect(
         instance_mock, "postgresql", dbapi_connection, True
     )
 
@@ -505,8 +493,8 @@ def test_fail_outdated_sqlite(
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    with pytest.raises(UnsupportedDialect):
-        util.setup_connection_for_dialect(
+    with pytest.raises(recorder.models.UnsupportedDialect):
+        recorder.util.setup_connection_for_dialect(
             instance_mock, "sqlite", dbapi_connection, True
         )
 
@@ -541,7 +529,7 @@ def test_supported_sqlite(caplog: pytest.LogCaptureFixture, sqlite_version) -> N
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    database_engine = util.setup_connection_for_dialect(
+    database_engine = recorder.util.setup_connection_for_dialect(
         instance_mock, "sqlite", dbapi_connection, True
     )
 
@@ -565,8 +553,8 @@ def test_warn_unsupported_dialect(
     instance_mock = MagicMock()
     dbapi_connection = MagicMock()
 
-    with pytest.raises(UnsupportedDialect):
-        util.setup_connection_for_dialect(
+    with pytest.raises(recorder.models.UnsupportedDialect):
+        recorder.util.setup_connection_for_dialect(
             instance_mock, dialect, dbapi_connection, True
         )
 
@@ -622,7 +610,7 @@ async def test_issue_for_mariadb_with_MDEV_25020(
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
     database_engine = await hass.async_add_executor_job(
-        util.setup_connection_for_dialect,
+        recorder.util.setup_connection_for_dialect,
         instance_mock,
         "mysql",
         dbapi_connection,
@@ -631,7 +619,9 @@ async def test_issue_for_mariadb_with_MDEV_25020(
     await hass.async_block_till_done()
 
     registry = async_get_issue_registry(hass)
-    issue = registry.async_get_issue(DOMAIN, "maria_db_range_index_regression")
+    issue = registry.async_get_issue(
+        recorder.const.DOMAIN, "maria_db_range_index_regression"
+    )
     assert issue is not None
     assert issue.translation_placeholders == {"min_version": min_version}
 
@@ -677,7 +667,7 @@ async def test_no_issue_for_mariadb_with_MDEV_25020(
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
     database_engine = await hass.async_add_executor_job(
-        util.setup_connection_for_dialect,
+        recorder.util.setup_connection_for_dialect,
         instance_mock,
         "mysql",
         dbapi_connection,
@@ -686,7 +676,9 @@ async def test_no_issue_for_mariadb_with_MDEV_25020(
     await hass.async_block_till_done()
 
     registry = async_get_issue_registry(hass)
-    issue = registry.async_get_issue(DOMAIN, "maria_db_range_index_regression")
+    issue = registry.async_get_issue(
+        recorder.const.DOMAIN, "maria_db_range_index_regression"
+    )
     assert issue is None
 
     assert database_engine is not None
@@ -703,14 +695,14 @@ def test_basic_sanity_check(
 
     hass = hass_recorder()
 
-    cursor = util.get_instance(hass).engine.raw_connection().cursor()
+    cursor = recorder.get_instance(hass).engine.raw_connection().cursor()
 
-    assert util.basic_sanity_check(cursor) is True
+    assert recorder.util.basic_sanity_check(cursor) is True
 
     cursor.execute("DROP TABLE states;")
 
     with pytest.raises(sqlite3.DatabaseError):
-        util.basic_sanity_check(cursor)
+        recorder.util.basic_sanity_check(cursor)
 
 
 def test_combined_checks(
@@ -724,12 +716,12 @@ def test_combined_checks(
         return
 
     hass = hass_recorder()
-    instance = util.get_instance(hass)
+    instance = recorder.get_instance(hass)
     instance.db_retry_wait = 0
 
     cursor = instance.engine.raw_connection().cursor()
 
-    assert util.run_checks_on_open_db("fake_db_path", cursor) is None
+    assert recorder.util.run_checks_on_open_db("fake_db_path", cursor) is None
     assert "could not validate that the sqlite3 database" in caplog.text
 
     caplog.clear()
@@ -740,14 +732,14 @@ def test_combined_checks(
         "homeassistant.components.recorder.util.basic_sanity_check", return_value=False
     ):
         caplog.clear()
-        assert util.run_checks_on_open_db("fake_db_path", cursor) is None
+        assert recorder.util.run_checks_on_open_db("fake_db_path", cursor) is None
         assert "could not validate that the sqlite3 database" in caplog.text
 
     # We are patching recorder.util here in order
     # to avoid creating the full database on disk
     with patch("homeassistant.components.recorder.util.last_run_was_recently_clean"):
         caplog.clear()
-        assert util.run_checks_on_open_db("fake_db_path", cursor) is None
+        assert recorder.util.run_checks_on_open_db("fake_db_path", cursor) is None
         assert "restarted cleanly and passed the basic sanity check" in caplog.text
 
     caplog.clear()
@@ -755,24 +747,24 @@ def test_combined_checks(
         "homeassistant.components.recorder.util.last_run_was_recently_clean",
         side_effect=sqlite3.DatabaseError,
     ), pytest.raises(sqlite3.DatabaseError):
-        util.run_checks_on_open_db("fake_db_path", cursor)
+        recorder.util.run_checks_on_open_db("fake_db_path", cursor)
 
     caplog.clear()
     with patch(
         "homeassistant.components.recorder.util.last_run_was_recently_clean",
         side_effect=sqlite3.DatabaseError,
     ), pytest.raises(sqlite3.DatabaseError):
-        util.run_checks_on_open_db("fake_db_path", cursor)
+        recorder.util.run_checks_on_open_db("fake_db_path", cursor)
 
     cursor.execute("DROP TABLE events;")
 
     caplog.clear()
     with pytest.raises(sqlite3.DatabaseError):
-        util.run_checks_on_open_db("fake_db_path", cursor)
+        recorder.util.run_checks_on_open_db("fake_db_path", cursor)
 
     caplog.clear()
     with pytest.raises(sqlite3.DatabaseError):
-        util.run_checks_on_open_db("fake_db_path", cursor)
+        recorder.util.run_checks_on_open_db("fake_db_path", cursor)
 
 
 def test_end_incomplete_runs(
@@ -781,22 +773,22 @@ def test_end_incomplete_runs(
     """Ensure we can end incomplete runs."""
     hass = hass_recorder()
 
-    with session_scope(hass=hass) as session:
+    with recorder.util.session_scope(hass=hass) as session:
         run_info = run_information_with_session(session)
-        assert isinstance(run_info, RecorderRuns)
+        assert isinstance(run_info, recorder.db_schema.RecorderRuns)
         assert run_info.closed_incorrect is False
 
         now = dt_util.utcnow()
-        end_incomplete_runs(session, now)
+        recorder.util.end_incomplete_runs(session, now)
         run_info = run_information_with_session(session)
         assert run_info.closed_incorrect is True
-        assert process_timestamp(run_info.end) == now
+        assert recorder.models.process_timestamp(run_info.end) == now
         session.flush()
 
         later = dt_util.utcnow()
-        end_incomplete_runs(session, later)
+        recorder.util.end_incomplete_runs(session, later)
         run_info = run_information_with_session(session)
-        assert process_timestamp(run_info.end) == now
+        assert recorder.models.process_timestamp(run_info.end) == now
 
     assert "Ended unfinished session" in caplog.text
 
@@ -810,8 +802,8 @@ def test_periodic_db_cleanups(
         return
 
     hass = hass_recorder()
-    with patch.object(util.get_instance(hass).engine, "connect") as connect_mock:
-        util.periodic_db_cleanups(util.get_instance(hass))
+    with patch.object(recorder.get_instance(hass).engine, "connect") as connect_mock:
+        recorder.util.periodic_db_cleanups(recorder.get_instance(hass))
 
     text_obj = connect_mock.return_value.__enter__.return_value.execute.mock_calls[0][
         1
@@ -841,7 +833,7 @@ async def test_write_lock_db(
         with instance.engine.connect() as connection:
             connection.execute(text("DROP TABLE events;"))
 
-    with util.write_lock_db_sqlite(instance), pytest.raises(OperationalError):
+    with recorder.util.write_lock_db_sqlite(instance), pytest.raises(OperationalError):
         # Database should be locked now, try writing SQL command
         # This needs to be called in another thread since
         # the lock method is BEGIN IMMEDIATE and since we have
@@ -854,13 +846,43 @@ async def test_write_lock_db(
 
 def test_is_second_sunday() -> None:
     """Test we can find the second sunday of the month."""
-    assert is_second_sunday(datetime(2022, 1, 9, 0, 0, 0, tzinfo=dt_util.UTC)) is True
-    assert is_second_sunday(datetime(2022, 2, 13, 0, 0, 0, tzinfo=dt_util.UTC)) is True
-    assert is_second_sunday(datetime(2022, 3, 13, 0, 0, 0, tzinfo=dt_util.UTC)) is True
-    assert is_second_sunday(datetime(2022, 4, 10, 0, 0, 0, tzinfo=dt_util.UTC)) is True
-    assert is_second_sunday(datetime(2022, 5, 8, 0, 0, 0, tzinfo=dt_util.UTC)) is True
+    assert (
+        recorder.util.is_second_sunday(
+            datetime(2022, 1, 9, 0, 0, 0, tzinfo=dt_util.UTC)
+        )
+        is True
+    )
+    assert (
+        recorder.util.is_second_sunday(
+            datetime(2022, 2, 13, 0, 0, 0, tzinfo=dt_util.UTC)
+        )
+        is True
+    )
+    assert (
+        recorder.util.is_second_sunday(
+            datetime(2022, 3, 13, 0, 0, 0, tzinfo=dt_util.UTC)
+        )
+        is True
+    )
+    assert (
+        recorder.util.is_second_sunday(
+            datetime(2022, 4, 10, 0, 0, 0, tzinfo=dt_util.UTC)
+        )
+        is True
+    )
+    assert (
+        recorder.util.is_second_sunday(
+            datetime(2022, 5, 8, 0, 0, 0, tzinfo=dt_util.UTC)
+        )
+        is True
+    )
 
-    assert is_second_sunday(datetime(2022, 1, 10, 0, 0, 0, tzinfo=dt_util.UTC)) is False
+    assert (
+        recorder.util.is_second_sunday(
+            datetime(2022, 1, 10, 0, 0, 0, tzinfo=dt_util.UTC)
+        )
+        is False
+    )
 
 
 def test_build_mysqldb_conv() -> None:
@@ -871,7 +893,7 @@ def test_build_mysqldb_conv() -> None:
         "sys.modules",
         **{"MySQLdb.constants": mock_constants, "MySQLdb.converters": mock_converters},
     ):
-        conv = util.build_mysqldb_conv()
+        conv = recorder.util.build_mysqldb_conv()
 
     assert conv["original"] == "preserved"
     assert conv["DATETIME"]("INVALID") is None
@@ -906,22 +928,24 @@ def test_execute_stmt_lambda_element(
                 return ["mock_row"]
             raise SQLAlchemyError
 
-    with session_scope(hass=hass) as session:
+    with recorder.util.session_scope(hass=hass) as session:
         # No time window, we always get a list
         metadata_id = instance.states_meta_manager.get("sensor.on", session, True)
         start_time_ts = dt_util.utcnow().timestamp()
         stmt = lambda_stmt(
-            lambda: _get_single_entity_start_time_stmt(
+            lambda: recorder.history.modern._get_single_entity_start_time_stmt(
                 start_time_ts, metadata_id, False, False
             )
         )
-        rows = util.execute_stmt_lambda_element(session, stmt)
+        rows = recorder.util.execute_stmt_lambda_element(session, stmt)
         assert isinstance(rows, list)
         assert rows[0].state == new_state.state
         assert rows[0].metadata_id == metadata_id
 
         # Time window >= 2 days, we get a ChunkedIteratorResult
-        rows = util.execute_stmt_lambda_element(session, stmt, now, one_week_from_now)
+        rows = recorder.util.execute_stmt_lambda_element(
+            session, stmt, now, one_week_from_now
+        )
         assert isinstance(rows, ChunkedIteratorResult)
         row = next(rows)
         assert row.state == new_state.state
@@ -929,7 +953,7 @@ def test_execute_stmt_lambda_element(
 
         # Time window >= 2 days, we should not get a ChunkedIteratorResult
         # because orm_rows=False
-        rows = util.execute_stmt_lambda_element(
+        rows = recorder.util.execute_stmt_lambda_element(
             session, stmt, now, one_week_from_now, orm_rows=False
         )
         assert not isinstance(rows, ChunkedIteratorResult)
@@ -938,13 +962,15 @@ def test_execute_stmt_lambda_element(
         assert row.metadata_id == metadata_id
 
         # Time window < 2 days, we get a list
-        rows = util.execute_stmt_lambda_element(session, stmt, now, tomorrow)
+        rows = recorder.util.execute_stmt_lambda_element(session, stmt, now, tomorrow)
         assert isinstance(rows, list)
         assert rows[0].state == new_state.state
         assert rows[0].metadata_id == metadata_id
 
         with patch.object(session, "execute", MockExecutor):
-            rows = util.execute_stmt_lambda_element(session, stmt, now, tomorrow)
+            rows = recorder.util.execute_stmt_lambda_element(
+                session, stmt, now, tomorrow
+            )
             assert rows == ["mock_row"]
 
 
@@ -954,68 +980,86 @@ async def test_resolve_period(hass: HomeAssistant) -> None:
 
     now = dt_util.utcnow()
 
-    start_t, end_t = resolve_period({"calendar": {"period": "hour"}})
+    start_t, end_t = recorder.util.resolve_period({"calendar": {"period": "hour"}})
     assert start_t.isoformat() == "2022-10-21T07:00:00+00:00"
     assert end_t.isoformat() == "2022-10-21T08:00:00+00:00"
 
-    start_t, end_t = resolve_period({"calendar": {"period": "hour"}})
+    start_t, end_t = recorder.util.resolve_period({"calendar": {"period": "hour"}})
     assert start_t.isoformat() == "2022-10-21T07:00:00+00:00"
     assert end_t.isoformat() == "2022-10-21T08:00:00+00:00"
 
-    start_t, end_t = resolve_period({"calendar": {"period": "hour", "offset": -1}})
+    start_t, end_t = recorder.util.resolve_period(
+        {"calendar": {"period": "hour", "offset": -1}}
+    )
     assert start_t.isoformat() == "2022-10-21T06:00:00+00:00"
     assert end_t.isoformat() == "2022-10-21T07:00:00+00:00"
 
-    start_t, end_t = resolve_period({"calendar": {"period": "day"}})
+    start_t, end_t = recorder.util.resolve_period({"calendar": {"period": "day"}})
     assert start_t.isoformat() == "2022-10-21T07:00:00+00:00"
     assert end_t.isoformat() == "2022-10-22T07:00:00+00:00"
 
-    start_t, end_t = resolve_period({"calendar": {"period": "day", "offset": -1}})
+    start_t, end_t = recorder.util.resolve_period(
+        {"calendar": {"period": "day", "offset": -1}}
+    )
     assert start_t.isoformat() == "2022-10-20T07:00:00+00:00"
     assert end_t.isoformat() == "2022-10-21T07:00:00+00:00"
 
-    start_t, end_t = resolve_period({"calendar": {"period": "week"}})
+    start_t, end_t = recorder.util.resolve_period({"calendar": {"period": "week"}})
     assert start_t.isoformat() == "2022-10-17T07:00:00+00:00"
     assert end_t.isoformat() == "2022-10-24T07:00:00+00:00"
 
-    start_t, end_t = resolve_period({"calendar": {"period": "week", "offset": -1}})
+    start_t, end_t = recorder.util.resolve_period(
+        {"calendar": {"period": "week", "offset": -1}}
+    )
     assert start_t.isoformat() == "2022-10-10T07:00:00+00:00"
     assert end_t.isoformat() == "2022-10-17T07:00:00+00:00"
 
-    start_t, end_t = resolve_period({"calendar": {"period": "month"}})
+    start_t, end_t = recorder.util.resolve_period({"calendar": {"period": "month"}})
     assert start_t.isoformat() == "2022-10-01T07:00:00+00:00"
     assert end_t.isoformat() == "2022-11-01T07:00:00+00:00"
 
-    start_t, end_t = resolve_period({"calendar": {"period": "month", "offset": -1}})
+    start_t, end_t = recorder.util.resolve_period(
+        {"calendar": {"period": "month", "offset": -1}}
+    )
     assert start_t.isoformat() == "2022-09-01T07:00:00+00:00"
     assert end_t.isoformat() == "2022-10-01T07:00:00+00:00"
 
-    start_t, end_t = resolve_period({"calendar": {"period": "year"}})
+    start_t, end_t = recorder.util.resolve_period({"calendar": {"period": "year"}})
     assert start_t.isoformat() == "2022-01-01T08:00:00+00:00"
     assert end_t.isoformat() == "2023-01-01T08:00:00+00:00"
 
-    start_t, end_t = resolve_period({"calendar": {"period": "year", "offset": -1}})
+    start_t, end_t = recorder.util.resolve_period(
+        {"calendar": {"period": "year", "offset": -1}}
+    )
     assert start_t.isoformat() == "2021-01-01T08:00:00+00:00"
     assert end_t.isoformat() == "2022-01-01T08:00:00+00:00"
 
     # Fixed period
-    assert resolve_period({}) == (None, None)
+    assert recorder.util.resolve_period({}) == (None, None)
 
-    assert resolve_period({"fixed_period": {"end_time": now}}) == (None, now)
+    assert recorder.util.resolve_period({"fixed_period": {"end_time": now}}) == (
+        None,
+        now,
+    )
 
-    assert resolve_period({"fixed_period": {"start_time": now}}) == (now, None)
+    assert recorder.util.resolve_period({"fixed_period": {"start_time": now}}) == (
+        now,
+        None,
+    )
 
-    assert resolve_period({"fixed_period": {"end_time": now, "start_time": now}}) == (
+    assert recorder.util.resolve_period(
+        {"fixed_period": {"end_time": now, "start_time": now}}
+    ) == (
         now,
         now,
     )
 
     # Rolling window
-    assert resolve_period(
+    assert recorder.util.resolve_period(
         {"rolling_window": {"duration": timedelta(hours=1, minutes=25)}}
     ) == (now - timedelta(hours=1, minutes=25), now)
 
-    assert resolve_period(
+    assert recorder.util.resolve_period(
         {
             "rolling_window": {
                 "duration": timedelta(hours=1),

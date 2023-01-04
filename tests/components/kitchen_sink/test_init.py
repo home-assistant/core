@@ -5,13 +5,8 @@ from unittest.mock import ANY
 
 import pytest
 
+from homeassistant.components import recorder
 from homeassistant.components.kitchen_sink import DOMAIN
-from homeassistant.components.recorder import Recorder, get_instance
-from homeassistant.components.recorder.statistics import (
-    async_add_external_statistics,
-    get_last_statistics,
-    list_statistic_ids,
-)
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -29,7 +24,7 @@ def mock_history(hass):
 
 
 async def test_demo_statistics(
-    recorder_mock: Recorder, mock_history, hass: HomeAssistant
+    recorder_mock: recorder.Recorder, mock_history, hass: HomeAssistant
 ) -> None:
     """Test that the kitchen sink component makes some statistics available."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -37,8 +32,8 @@ async def test_demo_statistics(
     await hass.async_start()
     await async_wait_recording_done(hass)
 
-    statistic_ids = await get_instance(hass).async_add_executor_job(
-        list_statistic_ids, hass
+    statistic_ids = await recorder.get_instance(hass).async_add_executor_job(
+        recorder.statistics.list_statistic_ids, hass
     )
     assert {
         "display_unit_of_measurement": "°C",
@@ -63,7 +58,7 @@ async def test_demo_statistics(
 
 
 async def test_demo_statistics_growth(
-    recorder_mock: Recorder, mock_history, hass: HomeAssistant
+    recorder_mock: recorder.Recorder, mock_history, hass: HomeAssistant
 ) -> None:
     """Test that the kitchen sink sum statistics adds to the previous state."""
     hass.config.units = US_CUSTOMARY_SYSTEM
@@ -87,7 +82,7 @@ async def test_demo_statistics_growth(
             "sum": 2**20,
         }
     ]
-    async_add_external_statistics(hass, metadata, statistics)
+    recorder.statistics.async_add_external_statistics(hass, metadata, statistics)
     await async_wait_recording_done(hass)
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -95,8 +90,8 @@ async def test_demo_statistics_growth(
     await hass.async_start()
     await async_wait_recording_done(hass)
 
-    statistics = await get_instance(hass).async_add_executor_job(
-        get_last_statistics, hass, 1, statistic_id, False, {"sum"}
+    statistics = await recorder.get_instance(hass).async_add_executor_job(
+        recorder.statistics.get_last_statistics, hass, 1, statistic_id, False, {"sum"}
     )
     assert statistics[statistic_id][0]["sum"] > 2**20
     assert statistics[statistic_id][0]["sum"] <= (2**20 + 24)

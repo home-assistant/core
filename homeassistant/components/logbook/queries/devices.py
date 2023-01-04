@@ -9,14 +9,7 @@ from sqlalchemy.sql.elements import BooleanClauseList
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import CTE, CompoundSelect, Select
 
-from homeassistant.components.recorder.db_schema import (
-    DEVICE_ID_IN_EVENT,
-    EventData,
-    Events,
-    EventTypes,
-    States,
-    StatesMeta,
-)
+from homeassistant.components import recorder
 
 from .common import (
     apply_events_context_hints,
@@ -61,15 +54,35 @@ def _apply_devices_context_union(
         apply_events_context_hints(
             select_events_context_only()
             .select_from(devices_cte)
-            .outerjoin(Events, devices_cte.c.context_id_bin == Events.context_id_bin)
-            .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
-            .outerjoin(EventData, (Events.data_id == EventData.data_id)),
+            .outerjoin(
+                recorder.db_schema.Events,
+                devices_cte.c.context_id_bin
+                == recorder.db_schema.Events.context_id_bin,
+            )
+            .outerjoin(
+                recorder.db_schema.EventTypes,
+                recorder.db_schema.Events.event_type_id
+                == recorder.db_schema.EventTypes.event_type_id,
+            )
+            .outerjoin(
+                recorder.db_schema.EventData,
+                recorder.db_schema.Events.data_id
+                == recorder.db_schema.EventData.data_id,
+            ),
         ),
         apply_states_context_hints(
             select_states_context_only()
             .select_from(devices_cte)
-            .outerjoin(States, devices_cte.c.context_id_bin == States.context_id_bin)
-            .outerjoin(StatesMeta, (States.metadata_id == StatesMeta.metadata_id))
+            .outerjoin(
+                recorder.db_schema.States,
+                devices_cte.c.context_id_bin
+                == recorder.db_schema.States.context_id_bin,
+            )
+            .outerjoin(
+                recorder.db_schema.StatesMeta,
+                recorder.db_schema.States.metadata_id
+                == recorder.db_schema.StatesMeta.metadata_id,
+            )
         ),
     )
 
@@ -90,7 +103,7 @@ def devices_stmt(
             end_day,
             event_type_ids,
             json_quotable_device_ids,
-        ).order_by(Events.time_fired_ts)
+        ).order_by(recorder.db_schema.Events.time_fired_ts)
     )
     return stmt
 
@@ -99,6 +112,6 @@ def apply_event_device_id_matchers(
     json_quotable_device_ids: Iterable[str],
 ) -> BooleanClauseList:
     """Create matchers for the device_ids in the event_data."""
-    return DEVICE_ID_IN_EVENT.is_not(None) & sqlalchemy.cast(
-        DEVICE_ID_IN_EVENT, sqlalchemy.Text()
+    return recorder.db_schema.DEVICE_ID_IN_EVENT.is_not(None) & sqlalchemy.cast(
+        recorder.db_schema.DEVICE_ID_IN_EVENT, sqlalchemy.Text()
     ).in_(json_quotable_device_ids)

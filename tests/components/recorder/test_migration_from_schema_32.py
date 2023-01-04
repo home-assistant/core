@@ -11,22 +11,6 @@ from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import Session
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import core, migration, statistics
-from homeassistant.components.recorder.db_schema import (
-    Events,
-    EventTypes,
-    States,
-    StatesMeta,
-)
-from homeassistant.components.recorder.queries import select_event_type_ids
-from homeassistant.components.recorder.tasks import (
-    EntityIDMigrationTask,
-    EntityIDPostMigrationTask,
-    EventsContextIDMigrationTask,
-    EventTypeIDMigrationTask,
-    StatesContextIDMigrationTask,
-)
-from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 from homeassistant.util.ulid import bytes_to_ulid, ulid_at_time, ulid_to_bytes
@@ -51,7 +35,9 @@ def _create_engine_test(*args, **kwargs):
     old_db_schema.Base.metadata.create_all(engine)
     with Session(engine) as session:
         session.add(
-            recorder.db_schema.StatisticsRuns(start=statistics.get_start_time())
+            recorder.db_schema.StatisticsRuns(
+                start=recorder.statistics.get_start_time()
+            )
         )
         session.add(
             recorder.db_schema.SchemaChanges(
@@ -70,18 +56,20 @@ def db_schema_32():
 
     with patch.object(recorder, "db_schema", old_db_schema), patch.object(
         recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-    ), patch.object(core, "StatesMeta", old_db_schema.StatesMeta), patch.object(
-        core, "EventTypes", old_db_schema.EventTypes
     ), patch.object(
-        core, "EventData", old_db_schema.EventData
+        recorder.core, "StatesMeta", old_db_schema.StatesMeta
     ), patch.object(
-        core, "States", old_db_schema.States
+        recorder.core, "EventTypes", old_db_schema.EventTypes
     ), patch.object(
-        core, "Events", old_db_schema.Events
+        recorder.core, "EventData", old_db_schema.EventData
     ), patch.object(
-        core, "StateAttributes", old_db_schema.StateAttributes
+        recorder.core, "States", old_db_schema.States
     ), patch.object(
-        core, "EntityIDMigrationTask", core.RecorderTask
+        recorder.core, "Events", old_db_schema.Events
+    ), patch.object(
+        recorder.core, "StateAttributes", old_db_schema.StateAttributes
+    ), patch.object(
+        recorder.core, "EntityIDMigrationTask", recorder.core.RecorderTask
     ), patch(
         CREATE_ENGINE_TARGET, new=_create_engine_test
     ):
@@ -108,10 +96,10 @@ async def test_migrate_events_context_ids(
     uuid_bin = test_uuid.bytes
 
     def _insert_events():
-        with session_scope(hass=hass) as session:
+        with recorder.util.session_scope(hass=hass) as session:
             session.add_all(
                 (
-                    Events(
+                    recorder.db_schema.Events(
                         event_type="old_uuid_context_id_event",
                         event_data=None,
                         origin_idx=0,
@@ -124,7 +112,7 @@ async def test_migrate_events_context_ids(
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
-                    Events(
+                    recorder.db_schema.Events(
                         event_type="empty_context_id_event",
                         event_data=None,
                         origin_idx=0,
@@ -137,7 +125,7 @@ async def test_migrate_events_context_ids(
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
-                    Events(
+                    recorder.db_schema.Events(
                         event_type="ulid_context_id_event",
                         event_data=None,
                         origin_idx=0,
@@ -150,7 +138,7 @@ async def test_migrate_events_context_ids(
                         context_parent_id="01ARZ3NDEKTSV4RRFFQ69G5FA2",
                         context_parent_id_bin=None,
                     ),
-                    Events(
+                    recorder.db_schema.Events(
                         event_type="invalid_context_id_event",
                         event_data=None,
                         origin_idx=0,
@@ -163,7 +151,7 @@ async def test_migrate_events_context_ids(
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
-                    Events(
+                    recorder.db_schema.Events(
                         event_type="garbage_context_id_event",
                         event_data=None,
                         origin_idx=0,
@@ -176,7 +164,7 @@ async def test_migrate_events_context_ids(
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
-                    Events(
+                    recorder.db_schema.Events(
                         event_type="event_with_garbage_context_id_no_time_fired_ts",
                         event_data=None,
                         origin_idx=0,
@@ -199,18 +187,18 @@ async def test_migrate_events_context_ids(
     expected_ulid_fallback_start = ulid_to_bytes(ulid_at_time(now.timestamp()))[0:6]
     with freeze_time(now):
         # This is a threadsafe way to add a task to the recorder
-        instance.queue_task(EventsContextIDMigrationTask())
+        instance.queue_task(recorder.tasks.EventsContextIDMigrationTask())
         await async_recorder_block_till_done(hass)
 
     def _object_as_dict(obj):
         return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
 
     def _fetch_migrated_events():
-        with session_scope(hass=hass) as session:
+        with recorder.util.session_scope(hass=hass) as session:
             events = (
-                session.query(Events)
+                session.query(recorder.db_schema.Events)
                 .filter(
-                    Events.event_type.in_(
+                    recorder.db_schema.Events.event_type.in_(
                         [
                             "old_uuid_context_id_event",
                             "empty_context_id_event",
@@ -311,10 +299,10 @@ async def test_migrate_states_context_ids(
     uuid_bin = test_uuid.bytes
 
     def _insert_states():
-        with session_scope(hass=hass) as session:
+        with recorder.util.session_scope(hass=hass) as session:
             session.add_all(
                 (
-                    States(
+                    recorder.db_schema.States(
                         entity_id="state.old_uuid_context_id",
                         last_updated_ts=1477721632.452529,
                         context_id=uuid_hex,
@@ -324,7 +312,7 @@ async def test_migrate_states_context_ids(
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
-                    States(
+                    recorder.db_schema.States(
                         entity_id="state.empty_context_id",
                         last_updated_ts=1477721632.552529,
                         context_id=None,
@@ -334,7 +322,7 @@ async def test_migrate_states_context_ids(
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
-                    States(
+                    recorder.db_schema.States(
                         entity_id="state.ulid_context_id",
                         last_updated_ts=1477721632.552529,
                         context_id="01ARZ3NDEKTSV4RRFFQ69G5FAV",
@@ -344,7 +332,7 @@ async def test_migrate_states_context_ids(
                         context_parent_id="01ARZ3NDEKTSV4RRFFQ69G5FA2",
                         context_parent_id_bin=None,
                     ),
-                    States(
+                    recorder.db_schema.States(
                         entity_id="state.invalid_context_id",
                         last_updated_ts=1477721632.552529,
                         context_id="invalid",
@@ -354,7 +342,7 @@ async def test_migrate_states_context_ids(
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
-                    States(
+                    recorder.db_schema.States(
                         entity_id="state.garbage_context_id",
                         last_updated_ts=1477721632.552529,
                         context_id="adapt_lgt:b'5Cf*':interval:b'0R'",
@@ -364,7 +352,7 @@ async def test_migrate_states_context_ids(
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
-                    States(
+                    recorder.db_schema.States(
                         entity_id="state.human_readable_uuid_context_id",
                         last_updated_ts=1477721632.552529,
                         context_id="0ae29799-ee4e-4f45-8116-f582d7d3ee65",
@@ -380,18 +368,18 @@ async def test_migrate_states_context_ids(
     await instance.async_add_executor_job(_insert_states)
 
     await async_wait_recording_done(hass)
-    instance.queue_task(StatesContextIDMigrationTask())
+    instance.queue_task(recorder.tasks.StatesContextIDMigrationTask())
     await async_recorder_block_till_done(hass)
 
     def _object_as_dict(obj):
         return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
 
     def _fetch_migrated_states():
-        with session_scope(hass=hass) as session:
+        with recorder.util.session_scope(hass=hass) as session:
             events = (
-                session.query(States)
+                session.query(recorder.db_schema.States)
                 .filter(
-                    States.entity_id.in_(
+                    recorder.db_schema.States.entity_id.in_(
                         [
                             "state.old_uuid_context_id",
                             "state.empty_context_id",
@@ -492,20 +480,20 @@ async def test_migrate_event_type_ids(
     await async_wait_recording_done(hass)
 
     def _insert_events():
-        with session_scope(hass=hass) as session:
+        with recorder.util.session_scope(hass=hass) as session:
             session.add_all(
                 (
-                    Events(
+                    recorder.db_schema.Events(
                         event_type="event_type_one",
                         origin_idx=0,
                         time_fired_ts=1677721632.452529,
                     ),
-                    Events(
+                    recorder.db_schema.Events(
                         event_type="event_type_one",
                         origin_idx=0,
                         time_fired_ts=1677721632.552529,
                     ),
-                    Events(
+                    recorder.db_schema.Events(
                         event_type="event_type_two",
                         origin_idx=0,
                         time_fired_ts=1677721632.552529,
@@ -517,16 +505,20 @@ async def test_migrate_event_type_ids(
 
     await async_wait_recording_done(hass)
     # This is a threadsafe way to add a task to the recorder
-    instance.queue_task(EventTypeIDMigrationTask())
+    instance.queue_task(recorder.tasks.EventTypeIDMigrationTask())
     await async_recorder_block_till_done(hass)
 
     def _fetch_migrated_events():
-        with session_scope(hass=hass, read_only=True) as session:
+        with recorder.util.session_scope(hass=hass, read_only=True) as session:
             events = (
-                session.query(Events.event_id, Events.time_fired, EventTypes.event_type)
+                session.query(
+                    recorder.db_schema.Events.event_id,
+                    recorder.db_schema.Events.time_fired,
+                    recorder.db_schema.EventTypes.event_type,
+                )
                 .filter(
-                    Events.event_type_id.in_(
-                        select_event_type_ids(
+                    recorder.db_schema.Events.event_type_id.in_(
+                        recorder.queries.select_event_type_ids(
                             (
                                 "event_type_one",
                                 "event_type_two",
@@ -534,7 +526,11 @@ async def test_migrate_event_type_ids(
                         )
                     )
                 )
-                .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
+                .outerjoin(
+                    recorder.db_schema.EventTypes,
+                    recorder.db_schema.Events.event_type_id
+                    == recorder.db_schema.EventTypes.event_type_id,
+                )
                 .all()
             )
             assert len(events) == 3
@@ -554,7 +550,7 @@ async def test_migrate_event_type_ids(
     assert len(events_by_type["event_type_two"]) == 1
 
     def _get_many():
-        with session_scope(hass=hass, read_only=True) as session:
+        with recorder.util.session_scope(hass=hass, read_only=True) as session:
             return instance.event_type_manager.get_many(
                 ("event_type_one", "event_type_two"), session
             )
@@ -573,20 +569,20 @@ async def test_migrate_entity_ids(
     await async_wait_recording_done(hass)
 
     def _insert_states():
-        with session_scope(hass=hass) as session:
+        with recorder.util.session_scope(hass=hass) as session:
             session.add_all(
                 (
-                    States(
+                    recorder.db_schema.States(
                         entity_id="sensor.one",
                         state="one_1",
                         last_updated_ts=1.452529,
                     ),
-                    States(
+                    recorder.db_schema.States(
                         entity_id="sensor.two",
                         state="two_2",
                         last_updated_ts=2.252529,
                     ),
-                    States(
+                    recorder.db_schema.States(
                         entity_id="sensor.two",
                         state="two_1",
                         last_updated_ts=3.152529,
@@ -598,19 +594,23 @@ async def test_migrate_entity_ids(
 
     await async_wait_recording_done(hass)
     # This is a threadsafe way to add a task to the recorder
-    instance.queue_task(EntityIDMigrationTask())
+    instance.queue_task(recorder.tasks.EntityIDMigrationTask())
     await async_recorder_block_till_done(hass)
 
     def _fetch_migrated_states():
-        with session_scope(hass=hass, read_only=True) as session:
+        with recorder.util.session_scope(hass=hass, read_only=True) as session:
             states = (
                 session.query(
-                    States.state,
-                    States.metadata_id,
-                    States.last_updated_ts,
-                    StatesMeta.entity_id,
+                    recorder.db_schema.States.state,
+                    recorder.db_schema.States.metadata_id,
+                    recorder.db_schema.States.last_updated_ts,
+                    recorder.db_schema.StatesMeta.entity_id,
                 )
-                .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+                .outerjoin(
+                    recorder.db_schema.StatesMeta,
+                    recorder.db_schema.States.metadata_id
+                    == recorder.db_schema.StatesMeta.metadata_id,
+                )
                 .all()
             )
             assert len(states) == 3
@@ -639,20 +639,20 @@ async def test_post_migrate_entity_ids(
     await async_wait_recording_done(hass)
 
     def _insert_events():
-        with session_scope(hass=hass) as session:
+        with recorder.util.session_scope(hass=hass) as session:
             session.add_all(
                 (
-                    States(
+                    recorder.db_schema.States(
                         entity_id="sensor.one",
                         state="one_1",
                         last_updated_ts=1.452529,
                     ),
-                    States(
+                    recorder.db_schema.States(
                         entity_id="sensor.two",
                         state="two_2",
                         last_updated_ts=2.252529,
                     ),
-                    States(
+                    recorder.db_schema.States(
                         entity_id="sensor.two",
                         state="two_1",
                         last_updated_ts=3.152529,
@@ -664,14 +664,14 @@ async def test_post_migrate_entity_ids(
 
     await async_wait_recording_done(hass)
     # This is a threadsafe way to add a task to the recorder
-    instance.queue_task(EntityIDPostMigrationTask())
+    instance.queue_task(recorder.tasks.EntityIDPostMigrationTask())
     await async_recorder_block_till_done(hass)
 
     def _fetch_migrated_states():
-        with session_scope(hass=hass, read_only=True) as session:
+        with recorder.util.session_scope(hass=hass, read_only=True) as session:
             states = session.query(
-                States.state,
-                States.entity_id,
+                recorder.db_schema.States.state,
+                recorder.db_schema.States.entity_id,
             ).all()
             assert len(states) == 3
             return {state.state: state.entity_id for state in states}
@@ -691,16 +691,16 @@ async def test_migrate_null_entity_ids(
     await async_wait_recording_done(hass)
 
     def _insert_states():
-        with session_scope(hass=hass) as session:
+        with recorder.util.session_scope(hass=hass) as session:
             session.add(
-                States(
+                recorder.db_schema.States(
                     entity_id="sensor.one",
                     state="one_1",
                     last_updated_ts=1.452529,
                 ),
             )
             session.add_all(
-                States(
+                recorder.db_schema.States(
                     entity_id=None,
                     state="empty",
                     last_updated_ts=time + 1.452529,
@@ -708,7 +708,7 @@ async def test_migrate_null_entity_ids(
                 for time in range(1000)
             )
             session.add(
-                States(
+                recorder.db_schema.States(
                     entity_id="sensor.one",
                     state="one_1",
                     last_updated_ts=2.452529,
@@ -719,20 +719,24 @@ async def test_migrate_null_entity_ids(
 
     await async_wait_recording_done(hass)
     # This is a threadsafe way to add a task to the recorder
-    instance.queue_task(EntityIDMigrationTask())
+    instance.queue_task(recorder.tasks.EntityIDMigrationTask())
     await async_recorder_block_till_done(hass)
     await async_recorder_block_till_done(hass)
 
     def _fetch_migrated_states():
-        with session_scope(hass=hass, read_only=True) as session:
+        with recorder.util.session_scope(hass=hass, read_only=True) as session:
             states = (
                 session.query(
-                    States.state,
-                    States.metadata_id,
-                    States.last_updated_ts,
-                    StatesMeta.entity_id,
+                    recorder.db_schema.States.state,
+                    recorder.db_schema.States.metadata_id,
+                    recorder.db_schema.States.last_updated_ts,
+                    recorder.db_schema.StatesMeta.entity_id,
                 )
-                .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+                .outerjoin(
+                    recorder.db_schema.StatesMeta,
+                    recorder.db_schema.States.metadata_id
+                    == recorder.db_schema.StatesMeta.metadata_id,
+                )
                 .all()
             )
             assert len(states) == 1002
@@ -748,7 +752,7 @@ async def test_migrate_null_entity_ids(
             return result
 
     states_by_entity_id = await instance.async_add_executor_job(_fetch_migrated_states)
-    assert len(states_by_entity_id[migration._EMPTY_ENTITY_ID]) == 1000
+    assert len(states_by_entity_id[recorder.migration._EMPTY_ENTITY_ID]) == 1000
     assert len(states_by_entity_id["sensor.one"]) == 2
 
 
@@ -761,16 +765,16 @@ async def test_migrate_null_event_type_ids(
     await async_wait_recording_done(hass)
 
     def _insert_events():
-        with session_scope(hass=hass) as session:
+        with recorder.util.session_scope(hass=hass) as session:
             session.add(
-                Events(
+                recorder.db_schema.Events(
                     event_type="event_type_one",
                     origin_idx=0,
                     time_fired_ts=1.452529,
                 ),
             )
             session.add_all(
-                Events(
+                recorder.db_schema.Events(
                     event_type=None,
                     origin_idx=0,
                     time_fired_ts=time + 1.452529,
@@ -778,7 +782,7 @@ async def test_migrate_null_event_type_ids(
                 for time in range(1000)
             )
             session.add(
-                Events(
+                recorder.db_schema.Events(
                     event_type="event_type_one",
                     origin_idx=0,
                     time_fired_ts=2.452529,
@@ -790,25 +794,33 @@ async def test_migrate_null_event_type_ids(
     await async_wait_recording_done(hass)
     # This is a threadsafe way to add a task to the recorder
 
-    instance.queue_task(EventTypeIDMigrationTask())
+    instance.queue_task(recorder.tasks.EventTypeIDMigrationTask())
     await async_recorder_block_till_done(hass)
     await async_recorder_block_till_done(hass)
 
     def _fetch_migrated_events():
-        with session_scope(hass=hass, read_only=True) as session:
+        with recorder.util.session_scope(hass=hass, read_only=True) as session:
             events = (
-                session.query(Events.event_id, Events.time_fired, EventTypes.event_type)
+                session.query(
+                    recorder.db_schema.Events.event_id,
+                    recorder.db_schema.Events.time_fired,
+                    recorder.db_schema.EventTypes.event_type,
+                )
                 .filter(
-                    Events.event_type_id.in_(
-                        select_event_type_ids(
+                    recorder.db_schema.Events.event_type_id.in_(
+                        recorder.queries.select_event_type_ids(
                             (
                                 "event_type_one",
-                                migration._EMPTY_EVENT_TYPE,
+                                recorder.migration._EMPTY_EVENT_TYPE,
                             )
                         )
                     )
                 )
-                .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
+                .outerjoin(
+                    recorder.db_schema.EventTypes,
+                    recorder.db_schema.Events.event_type_id
+                    == recorder.db_schema.EventTypes.event_type_id,
+                )
                 .all()
             )
             assert len(events) == 1002
@@ -825,4 +837,4 @@ async def test_migrate_null_event_type_ids(
 
     events_by_type = await instance.async_add_executor_job(_fetch_migrated_events)
     assert len(events_by_type["event_type_one"]) == 2
-    assert len(events_by_type[migration._EMPTY_EVENT_TYPE]) == 1000
+    assert len(events_by_type[recorder.migration._EMPTY_EVENT_TYPE]) == 1000

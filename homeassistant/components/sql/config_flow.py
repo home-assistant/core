@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session, scoped_session, sessionmaker
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.recorder import CONF_DB_URL, get_instance
+from homeassistant.components import recorder
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     SensorDeviceClass,
@@ -37,7 +37,7 @@ NONE_SENTINEL = "none"
 OPTIONS_SCHEMA: vol.Schema = vol.Schema(
     {
         vol.Optional(
-            CONF_DB_URL,
+            recorder.CONF_DB_URL,
         ): selector.TextSelector(),
         vol.Required(
             CONF_COLUMN_NAME,
@@ -151,7 +151,7 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         description_placeholders = {}
 
         if user_input is not None:
-            db_url = user_input.get(CONF_DB_URL)
+            db_url = user_input.get(recorder.CONF_DB_URL)
             query = user_input[CONF_QUERY]
             column = user_input[CONF_COLUMN_NAME]
             db_url_for_validation = None
@@ -183,8 +183,8 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 options[CONF_DEVICE_CLASS] = device_class
             if (state_class := user_input[CONF_STATE_CLASS]) != NONE_SENTINEL:
                 options[CONF_STATE_CLASS] = state_class
-            if db_url_for_validation != get_instance(self.hass).db_url:
-                options[CONF_DB_URL] = db_url_for_validation
+            if db_url_for_validation != recorder.get_instance(self.hass).db_url:
+                options[recorder.CONF_DB_URL] = db_url_for_validation
 
             if not errors:
                 return self.async_create_entry(
@@ -212,7 +212,7 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
         description_placeholders = {}
 
         if user_input is not None:
-            db_url = user_input.get(CONF_DB_URL)
+            db_url = user_input.get(recorder.CONF_DB_URL)
             query = user_input[CONF_QUERY]
             column = user_input[CONF_COLUMN_NAME]
             name = self.options.get(CONF_NAME, self.config_entry.title)
@@ -231,7 +231,7 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
             except ValueError:
                 errors["query"] = "query_invalid"
             else:
-                recorder_db = get_instance(self.hass).db_url
+                recorder_db = recorder.get_instance(self.hass).db_url
                 _LOGGER.debug(
                     "db_url: %s, resolved db_url: %s, recorder: %s",
                     db_url,
@@ -252,8 +252,8 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                     options[CONF_DEVICE_CLASS] = device_class
                 if (state_class := user_input[CONF_STATE_CLASS]) != NONE_SENTINEL:
                     options[CONF_STATE_CLASS] = state_class
-                if db_url_for_validation != get_instance(self.hass).db_url:
-                    options[CONF_DB_URL] = db_url_for_validation
+                if db_url_for_validation != recorder.get_instance(self.hass).db_url:
+                    options[recorder.CONF_DB_URL] = db_url_for_validation
 
                 return self.async_create_entry(
                     data=options,

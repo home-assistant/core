@@ -12,14 +12,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import statistics
-from homeassistant.components.recorder.auto_repairs.statistics.duplicates import (
-    delete_statistics_duplicates,
-    delete_statistics_meta_duplicates,
-)
-from homeassistant.components.recorder.const import SQLITE_URL_PREFIX
-from homeassistant.components.recorder.statistics import async_add_external_statistics
-from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import setup_component
@@ -39,8 +31,10 @@ def test_delete_duplicates_no_duplicates(
     hass = hass_recorder()
     wait_recording_done(hass)
     instance = recorder.get_instance(hass)
-    with session_scope(hass=hass) as session:
-        delete_statistics_duplicates(instance, hass, session)
+    with recorder.util.session_scope(hass=hass) as session:
+        recorder.auto_repairs.statistics.duplicates.delete_statistics_duplicates(
+            instance, hass, session
+        )
     assert "duplicated statistics rows" not in caplog.text
     assert "Found non identical" not in caplog.text
     assert "Found duplicated" not in caplog.text
@@ -82,23 +76,25 @@ def test_duplicate_statistics_handle_integrity_error(
     ]
 
     with patch.object(
-        statistics, "_statistics_exists", return_value=False
+        recorder.statistics, "_statistics_exists", return_value=False
     ), patch.object(
-        statistics, "_insert_statistics", wraps=statistics._insert_statistics
+        recorder.statistics,
+        "_insert_statistics",
+        wraps=recorder.statistics._insert_statistics,
     ) as insert_statistics_mock:
-        async_add_external_statistics(
+        recorder.statistics.async_add_external_statistics(
             hass, external_energy_metadata_1, external_energy_statistics_1
         )
-        async_add_external_statistics(
+        recorder.statistics.async_add_external_statistics(
             hass, external_energy_metadata_1, external_energy_statistics_1
         )
-        async_add_external_statistics(
+        recorder.statistics.async_add_external_statistics(
             hass, external_energy_metadata_1, external_energy_statistics_2
         )
         wait_recording_done(hass)
         assert insert_statistics_mock.call_count == 3
 
-    with session_scope(hass=hass) as session:
+    with recorder.util.session_scope(hass=hass) as session:
         tmp = session.query(recorder.db_schema.Statistics).all()
         assert len(tmp) == 2
 
@@ -117,7 +113,9 @@ def _create_engine_28(*args, **kwargs):
     old_db_schema.Base.metadata.create_all(engine)
     with Session(engine) as session:
         session.add(
-            recorder.db_schema.StatisticsRuns(start=statistics.get_start_time())
+            recorder.db_schema.StatisticsRuns(
+                start=recorder.statistics.get_start_time()
+            )
         )
         session.add(
             recorder.db_schema.SchemaChanges(
@@ -135,7 +133,7 @@ def test_delete_metadata_duplicates(
     test_dir = tmp_path.joinpath("sqlite")
     test_dir.mkdir()
     test_db_file = test_dir.joinpath("test_run_info.db")
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+    dburl = f"{recorder.const.SQLITE_URL_PREFIX}//{test_db_file}"
 
     module = "tests.components.recorder.db_schema_28"
     importlib.import_module(module)
@@ -178,7 +176,7 @@ def test_delete_metadata_duplicates(
         wait_recording_done(hass)
         wait_recording_done(hass)
 
-        with session_scope(hass=hass) as session:
+        with recorder.util.session_scope(hass=hass) as session:
             session.add(
                 recorder.db_schema.StatisticsMeta.from_meta(external_energy_metadata_1)
             )
@@ -189,7 +187,7 @@ def test_delete_metadata_duplicates(
                 recorder.db_schema.StatisticsMeta.from_meta(external_co2_metadata)
             )
 
-        with session_scope(hass=hass) as session:
+        with recorder.util.session_scope(hass=hass) as session:
             tmp = session.query(recorder.db_schema.StatisticsMeta).all()
             assert len(tmp) == 3
             assert tmp[0].id == 1
@@ -211,7 +209,7 @@ def test_delete_metadata_duplicates(
     wait_recording_done(hass)
 
     assert "Deleted 1 duplicated statistics_meta rows" in caplog.text
-    with session_scope(hass=hass) as session:
+    with recorder.util.session_scope(hass=hass) as session:
         tmp = session.query(recorder.db_schema.StatisticsMeta).all()
         assert len(tmp) == 2
         assert tmp[0].id == 2
@@ -230,7 +228,7 @@ def test_delete_metadata_duplicates_many(
     test_dir = tmp_path.joinpath("sqlite")
     test_dir.mkdir()
     test_db_file = test_dir.joinpath("test_run_info.db")
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+    dburl = f"{recorder.const.SQLITE_URL_PREFIX}//{test_db_file}"
 
     module = "tests.components.recorder.db_schema_28"
     importlib.import_module(module)
@@ -273,7 +271,7 @@ def test_delete_metadata_duplicates_many(
         wait_recording_done(hass)
         wait_recording_done(hass)
 
-        with session_scope(hass=hass) as session:
+        with recorder.util.session_scope(hass=hass) as session:
             session.add(
                 recorder.db_schema.StatisticsMeta.from_meta(external_energy_metadata_1)
             )
@@ -308,7 +306,7 @@ def test_delete_metadata_duplicates_many(
     wait_recording_done(hass)
 
     assert "Deleted 1102 duplicated statistics_meta rows" in caplog.text
-    with session_scope(hass=hass) as session:
+    with recorder.util.session_scope(hass=hass) as session:
         tmp = session.query(recorder.db_schema.StatisticsMeta).all()
         assert len(tmp) == 3
         assert tmp[0].id == 1101
@@ -328,7 +326,9 @@ def test_delete_metadata_duplicates_no_duplicates(
     """Test removal of duplicated statistics."""
     hass = hass_recorder()
     wait_recording_done(hass)
-    with session_scope(hass=hass) as session:
+    with recorder.util.session_scope(hass=hass) as session:
         instance = recorder.get_instance(hass)
-        delete_statistics_meta_duplicates(instance, session)
+        recorder.auto_repairs.statistics.duplicates.delete_statistics_meta_duplicates(
+            instance, session
+        )
     assert "duplicated statistics_meta rows" not in caplog.text

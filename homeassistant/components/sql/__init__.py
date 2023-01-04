@@ -5,7 +5,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.recorder import CONF_DB_URL, get_instance
+from homeassistant.components import recorder
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA,
@@ -46,7 +46,7 @@ QUERY_SCHEMA = vol.Schema(
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_DB_URL): cv.string,
+        vol.Optional(recorder.CONF_DB_URL): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
     }
@@ -65,7 +65,9 @@ def remove_configured_db_url_if_not_needed(
     hass.config_entries.async_update_entry(
         entry,
         options={
-            key: value for key, value in entry.options.items() if key != CONF_DB_URL
+            key: value
+            for key, value in entry.options.items()
+            if key != recorder.CONF_DB_URL
         },
     )
 
@@ -92,10 +94,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SQL from a config entry."""
     _LOGGER.debug(
         "Comparing %s and %s",
-        redact_credentials(entry.options.get(CONF_DB_URL)),
-        redact_credentials(get_instance(hass).db_url),
+        redact_credentials(entry.options.get(recorder.CONF_DB_URL)),
+        redact_credentials(recorder.get_instance(hass).db_url),
     )
-    if entry.options.get(CONF_DB_URL) == get_instance(hass).db_url:
+    if entry.options.get(recorder.CONF_DB_URL) == recorder.get_instance(hass).db_url:
         remove_configured_db_url_if_not_needed(hass, entry)
 
     entry.async_on_unload(entry.add_update_listener(async_update_listener))

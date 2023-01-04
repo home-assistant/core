@@ -4,14 +4,7 @@ import json
 from sqlalchemy import select
 from sqlalchemy.engine.row import Row
 
-from homeassistant.components.recorder import Recorder, get_instance
-from homeassistant.components.recorder.db_schema import EventData, Events, StatesMeta
-from homeassistant.components.recorder.filters import (
-    Filters,
-    extract_include_exclude_filter_conf,
-    sqlalchemy_filter_from_include_exclude_conf,
-)
-from homeassistant.components.recorder.util import session_scope
+from homeassistant.components import recorder
 from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entityfilter import (
@@ -27,7 +20,9 @@ from .common import async_wait_recording_done
 
 
 async def _async_get_states_and_events_with_filter(
-    hass: HomeAssistant, sqlalchemy_filter: Filters, entity_ids: set[str]
+    hass: HomeAssistant,
+    sqlalchemy_filter: recorder.filters.Filters,
+    entity_ids: set[str],
 ) -> tuple[list[Row], list[Row]]:
     """Get states from the database based on a filter."""
     for entity_id in entity_ids:
@@ -37,30 +32,34 @@ async def _async_get_states_and_events_with_filter(
     await async_wait_recording_done(hass)
 
     def _get_states_with_session():
-        with session_scope(hass=hass) as session:
+        with recorder.util.session_scope(hass=hass) as session:
             return session.execute(
-                select(StatesMeta.entity_id).filter(
+                select(recorder.db_schema.StatesMeta.entity_id).filter(
                     sqlalchemy_filter.states_metadata_entity_filter()
                 )
             ).all()
 
     filtered_states_entity_ids = {
         row[0]
-        for row in await get_instance(hass).async_add_executor_job(
+        for row in await recorder.get_instance(hass).async_add_executor_job(
             _get_states_with_session
         )
     }
 
     def _get_events_with_session():
-        with session_scope(hass=hass) as session:
+        with recorder.util.session_scope(hass=hass) as session:
             return session.execute(
-                select(EventData.shared_data)
-                .outerjoin(Events, EventData.data_id == Events.data_id)
+                select(recorder.db_schema.EventData.shared_data)
+                .outerjoin(
+                    recorder.db_schema.Events,
+                    recorder.db_schema.EventData.data_id
+                    == recorder.db_schema.Events.data_id,
+                )
                 .filter(sqlalchemy_filter.events_entity_filter())
             ).all()
 
     filtered_events_entity_ids = set()
-    for row in await get_instance(hass).async_add_executor_job(
+    for row in await recorder.get_instance(hass).async_add_executor_job(
         _get_events_with_session
     ):
         event_data = json.loads(row[0])
@@ -72,7 +71,7 @@ async def _async_get_states_and_events_with_filter(
 
 
 async def test_included_and_excluded_simple_case_no_domains(
-    recorder_mock: Recorder, hass: HomeAssistant
+    recorder_mock: recorder.Recorder, hass: HomeAssistant
 ) -> None:
     """Test filters with included and excluded without domains."""
     filter_accept = {"sensor.kitchen4", "switch.kitchen"}
@@ -94,9 +93,11 @@ async def test_included_and_excluded_simple_case_no_domains(
         },
     }
 
-    extracted_filter = extract_include_exclude_filter_conf(conf)
+    extracted_filter = recorder.filters.extract_include_exclude_filter_conf(conf)
     entity_filter = convert_include_exclude_filter(extracted_filter)
-    sqlalchemy_filter = sqlalchemy_filter_from_include_exclude_conf(extracted_filter)
+    sqlalchemy_filter = recorder.filters.sqlalchemy_filter_from_include_exclude_conf(
+        extracted_filter
+    )
     assert sqlalchemy_filter is not None
 
     for entity_id in filter_accept:
@@ -130,7 +131,7 @@ async def test_included_and_excluded_simple_case_no_domains(
 
 
 async def test_included_and_excluded_simple_case_no_globs(
-    recorder_mock: Recorder, hass: HomeAssistant
+    recorder_mock: recorder.Recorder, hass: HomeAssistant
 ) -> None:
     """Test filters with included and excluded without globs."""
     filter_accept = {"switch.bla", "sensor.blu", "sensor.keep"}
@@ -146,9 +147,11 @@ async def test_included_and_excluded_simple_case_no_globs(
         },
     }
 
-    extracted_filter = extract_include_exclude_filter_conf(conf)
+    extracted_filter = recorder.filters.extract_include_exclude_filter_conf(conf)
     entity_filter = convert_include_exclude_filter(extracted_filter)
-    sqlalchemy_filter = sqlalchemy_filter_from_include_exclude_conf(extracted_filter)
+    sqlalchemy_filter = recorder.filters.sqlalchemy_filter_from_include_exclude_conf(
+        extracted_filter
+    )
     assert sqlalchemy_filter is not None
 
     for entity_id in filter_accept:
@@ -172,7 +175,7 @@ async def test_included_and_excluded_simple_case_no_globs(
 
 
 async def test_included_and_excluded_simple_case_without_underscores(
-    recorder_mock: Recorder, hass: HomeAssistant
+    recorder_mock: recorder.Recorder, hass: HomeAssistant
 ) -> None:
     """Test filters with included and excluded without underscores."""
     filter_accept = {"light.any", "sensor.kitchen4", "switch.kitchen"}
@@ -190,9 +193,11 @@ async def test_included_and_excluded_simple_case_without_underscores(
         },
     }
 
-    extracted_filter = extract_include_exclude_filter_conf(conf)
+    extracted_filter = recorder.filters.extract_include_exclude_filter_conf(conf)
     entity_filter = convert_include_exclude_filter(extracted_filter)
-    sqlalchemy_filter = sqlalchemy_filter_from_include_exclude_conf(extracted_filter)
+    sqlalchemy_filter = recorder.filters.sqlalchemy_filter_from_include_exclude_conf(
+        extracted_filter
+    )
     assert sqlalchemy_filter is not None
 
     for entity_id in filter_accept:
@@ -226,7 +231,7 @@ async def test_included_and_excluded_simple_case_without_underscores(
 
 
 async def test_included_and_excluded_simple_case_with_underscores(
-    recorder_mock: Recorder, hass: HomeAssistant
+    recorder_mock: recorder.Recorder, hass: HomeAssistant
 ) -> None:
     """Test filters with included and excluded with underscores."""
     filter_accept = {"light.any", "sensor.kitchen_4", "switch.kitchen"}
@@ -244,9 +249,11 @@ async def test_included_and_excluded_simple_case_with_underscores(
         },
     }
 
-    extracted_filter = extract_include_exclude_filter_conf(conf)
+    extracted_filter = recorder.filters.extract_include_exclude_filter_conf(conf)
     entity_filter = convert_include_exclude_filter(extracted_filter)
-    sqlalchemy_filter = sqlalchemy_filter_from_include_exclude_conf(extracted_filter)
+    sqlalchemy_filter = recorder.filters.sqlalchemy_filter_from_include_exclude_conf(
+        extracted_filter
+    )
     assert sqlalchemy_filter is not None
 
     for entity_id in filter_accept:
@@ -280,7 +287,7 @@ async def test_included_and_excluded_simple_case_with_underscores(
 
 
 async def test_included_and_excluded_complex_case(
-    recorder_mock: Recorder, hass: HomeAssistant
+    recorder_mock: recorder.Recorder, hass: HomeAssistant
 ) -> None:
     """Test filters with included and excluded with a complex filter."""
     filter_accept = {"light.any", "sensor.kitchen_4", "switch.kitchen"}
@@ -313,9 +320,11 @@ async def test_included_and_excluded_complex_case(
         },
     }
 
-    extracted_filter = extract_include_exclude_filter_conf(conf)
+    extracted_filter = recorder.filters.extract_include_exclude_filter_conf(conf)
     entity_filter = convert_include_exclude_filter(extracted_filter)
-    sqlalchemy_filter = sqlalchemy_filter_from_include_exclude_conf(extracted_filter)
+    sqlalchemy_filter = recorder.filters.sqlalchemy_filter_from_include_exclude_conf(
+        extracted_filter
+    )
     assert sqlalchemy_filter is not None
 
     for entity_id in filter_accept:
@@ -339,7 +348,7 @@ async def test_included_and_excluded_complex_case(
 
 
 async def test_included_entities_and_excluded_domain(
-    recorder_mock: Recorder, hass: HomeAssistant
+    recorder_mock: recorder.Recorder, hass: HomeAssistant
 ) -> None:
     """Test filters with included entities and excluded domain."""
     filter_accept = {
@@ -361,9 +370,11 @@ async def test_included_entities_and_excluded_domain(
         },
     }
 
-    extracted_filter = extract_include_exclude_filter_conf(conf)
+    extracted_filter = recorder.filters.extract_include_exclude_filter_conf(conf)
     entity_filter = convert_include_exclude_filter(extracted_filter)
-    sqlalchemy_filter = sqlalchemy_filter_from_include_exclude_conf(extracted_filter)
+    sqlalchemy_filter = recorder.filters.sqlalchemy_filter_from_include_exclude_conf(
+        extracted_filter
+    )
     assert sqlalchemy_filter is not None
 
     for entity_id in filter_accept:
@@ -387,7 +398,7 @@ async def test_included_entities_and_excluded_domain(
 
 
 async def test_same_domain_included_excluded(
-    recorder_mock: Recorder, hass: HomeAssistant
+    recorder_mock: recorder.Recorder, hass: HomeAssistant
 ) -> None:
     """Test filters with the same domain included and excluded."""
     filter_accept = {
@@ -409,9 +420,11 @@ async def test_same_domain_included_excluded(
         },
     }
 
-    extracted_filter = extract_include_exclude_filter_conf(conf)
+    extracted_filter = recorder.filters.extract_include_exclude_filter_conf(conf)
     entity_filter = convert_include_exclude_filter(extracted_filter)
-    sqlalchemy_filter = sqlalchemy_filter_from_include_exclude_conf(extracted_filter)
+    sqlalchemy_filter = recorder.filters.sqlalchemy_filter_from_include_exclude_conf(
+        extracted_filter
+    )
     assert sqlalchemy_filter is not None
 
     for entity_id in filter_accept:
@@ -435,7 +448,7 @@ async def test_same_domain_included_excluded(
 
 
 async def test_same_entity_included_excluded(
-    recorder_mock: Recorder, hass: HomeAssistant
+    recorder_mock: recorder.Recorder, hass: HomeAssistant
 ) -> None:
     """Test filters with the same entity included and excluded."""
     filter_accept = {
@@ -457,9 +470,11 @@ async def test_same_entity_included_excluded(
         },
     }
 
-    extracted_filter = extract_include_exclude_filter_conf(conf)
+    extracted_filter = recorder.filters.extract_include_exclude_filter_conf(conf)
     entity_filter = convert_include_exclude_filter(extracted_filter)
-    sqlalchemy_filter = sqlalchemy_filter_from_include_exclude_conf(extracted_filter)
+    sqlalchemy_filter = recorder.filters.sqlalchemy_filter_from_include_exclude_conf(
+        extracted_filter
+    )
     assert sqlalchemy_filter is not None
 
     for entity_id in filter_accept:
@@ -483,7 +498,7 @@ async def test_same_entity_included_excluded(
 
 
 async def test_same_entity_included_excluded_include_domain_wins(
-    recorder_mock: Recorder, hass: HomeAssistant
+    recorder_mock: recorder.Recorder, hass: HomeAssistant
 ) -> None:
     """Test filters with domain and entities and the include domain wins."""
     filter_accept = {
@@ -507,9 +522,11 @@ async def test_same_entity_included_excluded_include_domain_wins(
         },
     }
 
-    extracted_filter = extract_include_exclude_filter_conf(conf)
+    extracted_filter = recorder.filters.extract_include_exclude_filter_conf(conf)
     entity_filter = convert_include_exclude_filter(extracted_filter)
-    sqlalchemy_filter = sqlalchemy_filter_from_include_exclude_conf(extracted_filter)
+    sqlalchemy_filter = recorder.filters.sqlalchemy_filter_from_include_exclude_conf(
+        extracted_filter
+    )
     assert sqlalchemy_filter is not None
 
     for entity_id in filter_accept:
@@ -533,7 +550,7 @@ async def test_same_entity_included_excluded_include_domain_wins(
 
 
 async def test_specificly_included_entity_always_wins(
-    recorder_mock: Recorder, hass: HomeAssistant
+    recorder_mock: recorder.Recorder, hass: HomeAssistant
 ) -> None:
     """Test specificlly included entity always wins."""
     filter_accept = {
@@ -557,9 +574,11 @@ async def test_specificly_included_entity_always_wins(
         },
     }
 
-    extracted_filter = extract_include_exclude_filter_conf(conf)
+    extracted_filter = recorder.filters.extract_include_exclude_filter_conf(conf)
     entity_filter = convert_include_exclude_filter(extracted_filter)
-    sqlalchemy_filter = sqlalchemy_filter_from_include_exclude_conf(extracted_filter)
+    sqlalchemy_filter = recorder.filters.sqlalchemy_filter_from_include_exclude_conf(
+        extracted_filter
+    )
     assert sqlalchemy_filter is not None
 
     for entity_id in filter_accept:
@@ -583,7 +602,7 @@ async def test_specificly_included_entity_always_wins(
 
 
 async def test_specificly_included_entity_always_wins_over_glob(
-    recorder_mock: Recorder, hass: HomeAssistant
+    recorder_mock: recorder.Recorder, hass: HomeAssistant
 ) -> None:
     """Test specificlly included entity always wins over a glob."""
     filter_accept = {
@@ -636,9 +655,11 @@ async def test_specificly_included_entity_always_wins_over_glob(
             ],
         },
     }
-    extracted_filter = extract_include_exclude_filter_conf(conf)
+    extracted_filter = recorder.filters.extract_include_exclude_filter_conf(conf)
     entity_filter = convert_include_exclude_filter(extracted_filter)
-    sqlalchemy_filter = sqlalchemy_filter_from_include_exclude_conf(extracted_filter)
+    sqlalchemy_filter = recorder.filters.sqlalchemy_filter_from_include_exclude_conf(
+        extracted_filter
+    )
     assert sqlalchemy_filter is not None
 
     for entity_id in filter_accept:

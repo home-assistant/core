@@ -3,8 +3,7 @@ from unittest.mock import ANY, Mock, patch
 
 import pytest
 
-from homeassistant.components.recorder import Recorder, get_instance
-from homeassistant.components.recorder.const import SupportedDialect
+from homeassistant.components import recorder
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -15,7 +14,7 @@ from tests.typing import RecorderInstanceGenerator
 
 
 async def test_recorder_system_health(
-    recorder_mock: Recorder, hass: HomeAssistant, recorder_db_url: str
+    recorder_mock: recorder.Recorder, hass: HomeAssistant, recorder_db_url: str
 ) -> None:
     """Test recorder system health."""
     if recorder_db_url.startswith(("mysql://", "postgresql://")):
@@ -25,21 +24,22 @@ async def test_recorder_system_health(
     assert await async_setup_component(hass, "system_health", {})
     await async_wait_recording_done(hass)
     info = await get_system_health_info(hass, "recorder")
-    instance = get_instance(hass)
+    instance = recorder.get_instance(hass)
     assert info == {
         "current_recorder_run": instance.recorder_runs_manager.current.start,
         "oldest_recorder_run": instance.recorder_runs_manager.first.start,
         "estimated_db_size": ANY,
-        "database_engine": SupportedDialect.SQLITE.value,
+        "database_engine": recorder.const.SupportedDialect.SQLITE.value,
         "database_version": ANY,
     }
 
 
 @pytest.mark.parametrize(
-    "dialect_name", [SupportedDialect.MYSQL, SupportedDialect.POSTGRESQL]
+    "dialect_name",
+    [recorder.const.SupportedDialect.MYSQL, recorder.const.SupportedDialect.POSTGRESQL],
 )
 async def test_recorder_system_health_alternate_dbms(
-    recorder_mock: Recorder, hass: HomeAssistant, dialect_name
+    recorder_mock: recorder.Recorder, hass: HomeAssistant, dialect_name
 ) -> None:
     """Test recorder system health."""
     assert await async_setup_component(hass, "system_health", {})
@@ -51,7 +51,7 @@ async def test_recorder_system_health_alternate_dbms(
         return_value=Mock(scalar=Mock(return_value=("1048576"))),
     ):
         info = await get_system_health_info(hass, "recorder")
-    instance = get_instance(hass)
+    instance = recorder.get_instance(hass)
     assert info == {
         "current_recorder_run": instance.recorder_runs_manager.current.start,
         "oldest_recorder_run": instance.recorder_runs_manager.first.start,
@@ -62,16 +62,17 @@ async def test_recorder_system_health_alternate_dbms(
 
 
 @pytest.mark.parametrize(
-    "dialect_name", [SupportedDialect.MYSQL, SupportedDialect.POSTGRESQL]
+    "dialect_name",
+    [recorder.const.SupportedDialect.MYSQL, recorder.const.SupportedDialect.POSTGRESQL],
 )
 async def test_recorder_system_health_db_url_missing_host(
-    recorder_mock: Recorder, hass: HomeAssistant, dialect_name
+    recorder_mock: recorder.Recorder, hass: HomeAssistant, dialect_name
 ) -> None:
     """Test recorder system health with a db_url without a hostname."""
     assert await async_setup_component(hass, "system_health", {})
     await async_wait_recording_done(hass)
 
-    instance = get_instance(hass)
+    instance = recorder.get_instance(hass)
     with patch(
         "homeassistant.components.recorder.core.Recorder.dialect_name", dialect_name
     ), patch.object(
@@ -113,6 +114,6 @@ async def test_recorder_system_health_crashed_recorder_runs_table(
         "current_recorder_run": instance.recorder_runs_manager.current.start,
         "oldest_recorder_run": instance.recorder_runs_manager.current.start,
         "estimated_db_size": ANY,
-        "database_engine": SupportedDialect.SQLITE.value,
+        "database_engine": recorder.const.SupportedDialect.SQLITE.value,
         "database_version": ANY,
     }

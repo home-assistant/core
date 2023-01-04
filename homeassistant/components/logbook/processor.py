@@ -11,19 +11,7 @@ from typing import Any
 from sqlalchemy.engine import Result
 from sqlalchemy.engine.row import Row
 
-from homeassistant.components.recorder import get_instance
-from homeassistant.components.recorder.filters import Filters
-from homeassistant.components.recorder.models import (
-    bytes_to_uuid_hex_or_none,
-    extract_event_type_ids,
-    extract_metadata_ids,
-    process_datetime_to_timestamp,
-    process_timestamp_to_utc_isoformat,
-)
-from homeassistant.components.recorder.util import (
-    execute_stmt_lambda_element,
-    session_scope,
-)
+from homeassistant.components import recorder
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_DOMAIN,
@@ -107,7 +95,7 @@ class EventProcessor:
         self.device_ids = device_ids
         self.context_id = context_id
         logbook_config: LogbookConfig = hass.data[DOMAIN]
-        self.filters: Filters | None = logbook_config.sqlalchemy_filter
+        self.filters: recorder.filters.Filters | None = logbook_config.sqlalchemy_filter
         format_time = (
             _row_time_fired_timestamp if timestamp else _row_time_fired_isoformat
         )
@@ -141,17 +129,17 @@ class EventProcessor:
         end_day: dt,
     ) -> list[dict[str, Any]]:
         """Get events for a period of time."""
-        with session_scope(hass=self.hass, read_only=True) as session:
+        with recorder.util.session_scope(hass=self.hass, read_only=True) as session:
             metadata_ids: list[int] | None = None
-            instance = get_instance(self.hass)
+            instance = recorder.get_instance(self.hass)
             if self.entity_ids:
-                metadata_ids = extract_metadata_ids(
+                metadata_ids = recorder.models.extract_metadata_ids(
                     instance.states_meta_manager.get_many(
                         self.entity_ids, session, False
                     )
                 )
             event_type_ids = tuple(
-                extract_event_type_ids(
+                recorder.models.extract_event_type_ids(
                     instance.event_type_manager.get_many(self.event_types, session)
                 )
             )
@@ -166,7 +154,7 @@ class EventProcessor:
                 self.context_id,
             )
             return self.humanify(
-                execute_stmt_lambda_element(session, stmt, orm_rows=False)
+                recorder.util.execute_stmt_lambda_element(session, stmt, orm_rows=False)
             )
 
     def humanify(
@@ -301,7 +289,9 @@ class ContextAugmenter:
     ) -> None:
         """Augment data from the row and cache."""
         if context_user_id_bin := row.context_user_id_bin:
-            data[CONTEXT_USER_ID] = bytes_to_uuid_hex_or_none(context_user_id_bin)
+            data[CONTEXT_USER_ID] = recorder.models.bytes_to_uuid_hex_or_none(
+                context_user_id_bin
+            )
 
         if not (context_row := self._get_context_row(context_id_bin, row)):
             return
@@ -379,14 +369,16 @@ def _rows_match(row: Row | EventAsRow, other_row: Row | EventAsRow) -> bool:
 
 def _row_time_fired_isoformat(row: Row | EventAsRow) -> str:
     """Convert the row timed_fired to isoformat."""
-    return process_timestamp_to_utc_isoformat(
+    return recorder.models.process_timestamp_to_utc_isoformat(
         dt_util.utc_from_timestamp(row.time_fired_ts) or dt_util.utcnow()
     )
 
 
 def _row_time_fired_timestamp(row: Row | EventAsRow) -> float:
     """Convert the row timed_fired to timestamp."""
-    return row.time_fired_ts or process_datetime_to_timestamp(dt_util.utcnow())
+    return row.time_fired_ts or recorder.models.process_datetime_to_timestamp(
+        dt_util.utcnow()
+    )
 
 
 class EntityNameCache:

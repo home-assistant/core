@@ -4,7 +4,6 @@ from __future__ import annotations
 import pytest
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant
 
 from tests.typing import RecorderInstanceGenerator
@@ -17,7 +16,7 @@ async def test_passing_mutually_exclusive_options_to_get_many(
     instance = await async_setup_recorder_instance(
         hass, {recorder.CONF_COMMIT_INTERVAL: 0}
     )
-    with session_scope(session=instance.get_session()) as session:
+    with recorder.util.session_scope(session=instance.get_session()) as session:
         with pytest.raises(ValueError):
             instance.statistics_meta_manager.get_many(
                 session,
@@ -44,7 +43,9 @@ async def test_unsafe_calls_to_statistics_meta_manager(
     instance = await async_setup_recorder_instance(
         hass, {recorder.CONF_COMMIT_INTERVAL: 0}
     )
-    with session_scope(session=instance.get_session()) as session, pytest.raises(
+    with recorder.util.session_scope(
+        session=instance.get_session()
+    ) as session, pytest.raises(
         RuntimeError, match="Detected unsafe call not in recorder thread"
     ):
         instance.statistics_meta_manager.delete(

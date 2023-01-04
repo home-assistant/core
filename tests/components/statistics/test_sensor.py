@@ -10,7 +10,7 @@ from unittest.mock import patch
 from freezegun import freeze_time
 
 from homeassistant import config as hass_config
-from homeassistant.components.recorder import Recorder
+from homeassistant.components import recorder
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
@@ -1246,7 +1246,7 @@ async def test_invalid_state_characteristic(hass: HomeAssistant) -> None:
 
 
 async def test_initialize_from_database(
-    recorder_mock: Recorder, hass: HomeAssistant
+    recorder_mock: recorder.Recorder, hass: HomeAssistant
 ) -> None:
     """Test initializing the statistics from the recorder database."""
     # enable and pre-fill the recorder
@@ -1287,7 +1287,7 @@ async def test_initialize_from_database(
 
 
 async def test_initialize_from_database_with_maxage(
-    recorder_mock: Recorder, hass: HomeAssistant
+    recorder_mock: recorder.Recorder, hass: HomeAssistant
 ) -> None:
     """Test initializing the statistics from the database."""
     now = dt_util.utcnow()
@@ -1345,7 +1345,7 @@ async def test_initialize_from_database_with_maxage(
     ) + timedelta(hours=1)
 
 
-async def test_reload(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+async def test_reload(recorder_mock: recorder.Recorder, hass: HomeAssistant) -> None:
     """Verify we can reload statistics sensors."""
 
     await async_setup_component(

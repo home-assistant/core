@@ -17,7 +17,6 @@ from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
 from homeassistant.components.logbook.models import LazyEventPartialState
 from homeassistant.components.logbook.processor import EventProcessor
 from homeassistant.components.logbook.queries.common import PSEUDO_EVENT_STATE_CHANGED
-from homeassistant.components.recorder import Recorder
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import (
@@ -126,7 +125,7 @@ async def test_service_call_create_logbook_entry(hass_) -> None:
 
 
 async def test_service_call_create_logbook_entry_invalid_entity_id(
-    recorder_mock: Recorder, hass: HomeAssistant
+    recorder_mock: recorder.Recorder, hass: HomeAssistant
 ) -> None:
     """Test if service call create log book entry with an invalid entity id."""
     await async_setup_component(hass, "logbook", {})
@@ -360,7 +359,9 @@ def create_state_changed_event_from_old_new(
 
 
 async def test_logbook_view(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test the logbook view."""
     await async_setup_component(hass, "logbook", {})
@@ -371,7 +372,9 @@ async def test_logbook_view(
 
 
 async def test_logbook_view_invalid_start_date_time(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test the logbook view with an invalid date time."""
     await async_setup_component(hass, "logbook", {})
@@ -382,7 +385,9 @@ async def test_logbook_view_invalid_start_date_time(
 
 
 async def test_logbook_view_invalid_end_date_time(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test the logbook view."""
     await async_setup_component(hass, "logbook", {})
@@ -395,7 +400,7 @@ async def test_logbook_view_invalid_end_date_time(
 
 
 async def test_logbook_view_period_entity(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     set_utc,
@@ -481,7 +486,9 @@ async def test_logbook_view_period_entity(
 
 
 async def test_logbook_describe_event(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test teaching logbook about a new event."""
 
@@ -528,7 +535,9 @@ async def test_logbook_describe_event(
 
 
 async def test_exclude_described_event(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test exclusions of events that are described by another integration."""
     name = "My Automation Rule"
@@ -602,7 +611,9 @@ async def test_exclude_described_event(
 
 
 async def test_logbook_view_end_time_entity(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test the logbook view with end_time and entity."""
     await async_setup_component(hass, "logbook", {})
@@ -662,7 +673,9 @@ async def test_logbook_view_end_time_entity(
 
 
 async def test_logbook_entity_filter_with_automations(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test the logbook view with end_time and entity with automations and scripts."""
     await asyncio.gather(
@@ -748,7 +761,9 @@ async def test_logbook_entity_filter_with_automations(
 
 
 async def test_logbook_entity_no_longer_in_state_machine(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test the logbook view with an entity that hass been removed from the state machine."""
     await async_setup_component(hass, "logbook", {})
@@ -787,7 +802,7 @@ async def test_logbook_entity_no_longer_in_state_machine(
 
 
 async def test_filter_continuous_sensor_values(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     set_utc,
@@ -831,7 +846,7 @@ async def test_filter_continuous_sensor_values(
 
 
 async def test_exclude_new_entities(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     set_utc,
@@ -873,7 +888,7 @@ async def test_exclude_new_entities(
 
 
 async def test_exclude_removed_entities(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     set_utc,
@@ -922,7 +937,7 @@ async def test_exclude_removed_entities(
 
 
 async def test_exclude_attribute_changes(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     set_utc,
@@ -967,7 +982,9 @@ async def test_exclude_attribute_changes(
 
 
 async def test_logbook_entity_context_id(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test the logbook view with end_time and entity with automations and scripts."""
     await asyncio.gather(
@@ -1120,7 +1137,9 @@ async def test_logbook_entity_context_id(
 
 
 async def test_logbook_context_id_automation_script_started_manually(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test the logbook populates context_ids for scripts and automations started manually."""
     await asyncio.gather(
@@ -1212,7 +1231,9 @@ async def test_logbook_context_id_automation_script_started_manually(
 
 
 async def test_logbook_entity_context_parent_id(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test the logbook view links events via context parent_id."""
     await asyncio.gather(
@@ -1394,7 +1415,9 @@ async def test_logbook_entity_context_parent_id(
 
 
 async def test_logbook_context_from_template(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test the logbook view with end_time and entity with automations and scripts."""
     await asyncio.gather(
@@ -1484,7 +1507,9 @@ async def test_logbook_context_from_template(
 
 
 async def test_logbook_(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test the logbook view with a single entity and ."""
     await async_setup_component(hass, "logbook", {})
@@ -1555,7 +1580,9 @@ async def test_logbook_(
 
 
 async def test_logbook_many_entities_multiple_calls(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test the logbook view with a many entities called multiple times."""
     await async_setup_component(hass, "logbook", {})
@@ -1627,7 +1654,9 @@ async def test_logbook_many_entities_multiple_calls(
 
 
 async def test_custom_log_entry_discoverable_via_(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test if a custom log entry is later discoverable via ."""
     await async_setup_component(hass, "logbook", {})
@@ -1664,7 +1693,9 @@ async def test_custom_log_entry_discoverable_via_(
 
 
 async def test_logbook_multiple_entities(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test the logbook view with a multiple entities."""
     await async_setup_component(hass, "logbook", {})
@@ -1790,7 +1821,9 @@ async def test_logbook_multiple_entities(
 
 
 async def test_logbook_invalid_entity(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test the logbook view with requesting an invalid entity."""
     await async_setup_component(hass, "logbook", {})
@@ -1810,7 +1843,9 @@ async def test_logbook_invalid_entity(
 
 
 async def test_icon_and_state(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test to ensure state and custom icons are returned."""
     await asyncio.gather(
@@ -1855,7 +1890,9 @@ async def test_icon_and_state(
 
 
 async def test_fire_logbook_entries(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test many logbook entry calls."""
     await async_setup_component(hass, "logbook", {})
@@ -1893,7 +1930,9 @@ async def test_fire_logbook_entries(
 
 
 async def test_exclude_events_domain(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test if events are filtered if domain is excluded in config."""
     entity_id = "switch.bla"
@@ -1929,7 +1968,9 @@ async def test_exclude_events_domain(
 
 
 async def test_exclude_events_domain_glob(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test if events are filtered if domain or glob is excluded in config."""
     entity_id = "switch.bla"
@@ -1974,7 +2015,9 @@ async def test_exclude_events_domain_glob(
 
 
 async def test_include_events_entity(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test if events are filtered if entity is included in config."""
     entity_id = "sensor.bla"
@@ -2016,7 +2059,9 @@ async def test_include_events_entity(
 
 
 async def test_exclude_events_entity(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test if events are filtered if entity is excluded in config."""
     entity_id = "sensor.bla"
@@ -2052,7 +2097,9 @@ async def test_exclude_events_entity(
 
 
 async def test_include_events_domain(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test if events are filtered if domain is included in config."""
     assert await async_setup_component(hass, "alexa", {})
@@ -2096,7 +2143,9 @@ async def test_include_events_domain(
 
 
 async def test_include_events_domain_glob(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test if events are filtered if domain or glob is included in config."""
     assert await async_setup_component(hass, "alexa", {})
@@ -2155,7 +2204,9 @@ async def test_include_events_domain_glob(
 
 
 async def test_include_exclude_events_no_globs(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test if events are filtered if include and exclude is configured."""
     entity_id = "switch.bla"
@@ -2213,7 +2264,9 @@ async def test_include_exclude_events_no_globs(
 
 
 async def test_include_exclude_events_with_glob_filters(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test if events are filtered if include and exclude is configured."""
     entity_id = "switch.bla"
@@ -2279,7 +2332,9 @@ async def test_include_exclude_events_with_glob_filters(
 
 
 async def test_empty_config(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test we can handle an empty entity filter."""
     entity_id = "sensor.blu"
@@ -2313,7 +2368,9 @@ async def test_empty_config(
 
 
 async def test_context_filter(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test we can filter by context."""
     assert await async_setup_component(hass, "logbook", {})
@@ -2390,7 +2447,9 @@ def _assert_entry(
 
 
 async def test_get_events(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test logbook get_events."""
     now = dt_util.utcnow()
@@ -2510,7 +2569,9 @@ async def test_get_events(
 
 
 async def test_get_events_future_start_time(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test get_events with a future start time."""
     await async_setup_component(hass, "logbook", {})
@@ -2535,7 +2596,9 @@ async def test_get_events_future_start_time(
 
 
 async def test_get_events_bad_start_time(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test get_events bad start time."""
     await async_setup_component(hass, "logbook", {})
@@ -2555,7 +2618,9 @@ async def test_get_events_bad_start_time(
 
 
 async def test_get_events_bad_end_time(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test get_events bad end time."""
     now = dt_util.utcnow()
@@ -2577,7 +2642,9 @@ async def test_get_events_bad_end_time(
 
 
 async def test_get_events_invalid_filters(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test get_events invalid filters."""
     await async_setup_component(hass, "logbook", {})
@@ -2607,7 +2674,7 @@ async def test_get_events_invalid_filters(
 
 
 async def test_get_events_with_device_ids(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
@@ -2748,7 +2815,9 @@ async def test_get_events_with_device_ids(
 
 
 async def test_logbook_select_entities_context_id(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test the logbook view with end_time and entity with automations and scripts."""
     await asyncio.gather(
@@ -2883,7 +2952,9 @@ async def test_logbook_select_entities_context_id(
 
 
 async def test_get_events_with_context_state(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test logbook get_events with a context state."""
     now = dt_util.utcnow()
@@ -2948,7 +3019,7 @@ async def test_get_events_with_context_state(
 
 
 async def test_logbook_with_empty_config(
-    recorder_mock: Recorder, hass: HomeAssistant
+    recorder_mock: recorder.Recorder, hass: HomeAssistant
 ) -> None:
     """Test we handle a empty configuration."""
     assert await async_setup_component(
@@ -2963,7 +3034,7 @@ async def test_logbook_with_empty_config(
 
 
 async def test_logbook_with_non_iterable_entity_filter(
-    recorder_mock: Recorder, hass: HomeAssistant
+    recorder_mock: recorder.Recorder, hass: HomeAssistant
 ) -> None:
     """Test we handle a non-iterable entity filter."""
     assert await async_setup_component(

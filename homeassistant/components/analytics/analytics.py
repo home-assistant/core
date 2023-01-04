@@ -10,16 +10,12 @@ import uuid
 import aiohttp
 import async_timeout
 
-from homeassistant.components import hassio
+from homeassistant.components import hassio, recorder
 from homeassistant.components.api import ATTR_INSTALLATION_TYPE
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.energy import (
     DOMAIN as ENERGY_DOMAIN,
     is_configured as energy_is_configured,
-)
-from homeassistant.components.recorder import (
-    DOMAIN as RECORDER_DOMAIN,
-    get_instance as get_recorder_instance,
 )
 import homeassistant.config as conf_util
 from homeassistant.config_entries import (
@@ -289,8 +285,8 @@ class Analytics:
                     ATTR_CONFIGURED: await energy_is_configured(self.hass)
                 }
 
-            if RECORDER_DOMAIN in enabled_domains:
-                instance = get_recorder_instance(self.hass)
+            if recorder.DOMAIN in enabled_domains:
+                instance = recorder.get_instance(self.hass)
                 engine = instance.database_engine
                 if engine and engine.version is not None:
                     payload[ATTR_RECORDER] = {

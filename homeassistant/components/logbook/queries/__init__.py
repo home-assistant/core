@@ -6,8 +6,7 @@ from datetime import datetime as dt
 
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 
-from homeassistant.components.recorder.filters import Filters
-from homeassistant.components.recorder.models import ulid_to_bytes_or_none
+from homeassistant.components import recorder
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util import dt as dt_util
 
@@ -24,7 +23,7 @@ def statement_for_request(
     entity_ids: list[str] | None = None,
     states_metadata_ids: Collection[int] | None = None,
     device_ids: list[str] | None = None,
-    filters: Filters | None = None,
+    filters: recorder.filters.Filters | None = None,
     context_id: str | None = None,
 ) -> StatementLambdaElement:
     """Generate the logbook statement for a logbook request."""
@@ -33,7 +32,7 @@ def statement_for_request(
     # No entities: logbook sends everything for the timeframe
     # limited by the context_id and the yaml configured filter
     if not entity_ids and not device_ids:
-        context_id_bin = ulid_to_bytes_or_none(context_id)
+        context_id_bin = recorder.models.ulid_to_bytes_or_none(context_id)
         return all_stmt(
             start_day,
             end_day,

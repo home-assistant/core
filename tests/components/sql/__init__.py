@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.recorder import CONF_DB_URL
+from homeassistant.components import recorder
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     SensorDeviceClass,
@@ -74,7 +74,7 @@ ENTRY_CONFIG_NO_RESULTS = {
 
 YAML_CONFIG = {
     "sql": {
-        CONF_DB_URL: "sqlite://",
+        recorder.CONF_DB_URL: "sqlite://",
         CONF_NAME: "Get Value",
         CONF_QUERY: "SELECT 5 as value",
         CONF_COLUMN_NAME: "value",
@@ -123,7 +123,7 @@ YAML_CONFIG_WITH_VIEW_THAT_CONTAINS_ENTITY_ID = {
 
 YAML_CONFIG_BINARY = {
     "sql": {
-        CONF_DB_URL: "sqlite://",
+        recorder.CONF_DB_URL: "sqlite://",
         CONF_NAME: "Get Binary Value",
         CONF_QUERY: "SELECT cast(x'd34324324230392032' as blob) as value, cast(x'd343aa' as blob) as test_attr",
         CONF_COLUMN_NAME: "value",

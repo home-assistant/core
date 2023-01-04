@@ -8,10 +8,8 @@ from typing import cast
 from aiohttp import web
 import voluptuous as vol
 
-from homeassistant.components import frontend
+from homeassistant.components import frontend, recorder
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.recorder import get_instance, history
-from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import HomeAssistant, valid_entity_id
 import homeassistant.helpers.config_validation as cv
@@ -116,7 +114,7 @@ class HistoryPeriodView(HomeAssistantView):
 
         return cast(
             web.Response,
-            await get_instance(hass).async_add_executor_job(
+            await recorder.get_instance(hass).async_add_executor_job(
                 self._sorted_significant_states_json,
                 hass,
                 start_time,
@@ -141,10 +139,10 @@ class HistoryPeriodView(HomeAssistantView):
         no_attributes: bool,
     ) -> web.Response:
         """Fetch significant stats from the database as json."""
-        with session_scope(hass=hass, read_only=True) as session:
+        with recorder.util.session_scope(hass=hass, read_only=True) as session:
             return self.json(
                 list(
-                    history.get_significant_states_with_session(
+                    recorder.history.get_significant_states_with_session(
                         hass,
                         session,
                         start_time,

@@ -13,11 +13,7 @@ from sqlalchemy.orm import Session, scoped_session, sessionmaker
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.util import LRUCache
 
-from homeassistant.components.recorder import (
-    CONF_DB_URL,
-    SupportedDialect,
-    get_instance,
-)
+from homeassistant.components import recorder
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     SensorDeviceClass,
@@ -67,7 +63,7 @@ async def async_setup_platform(
     value_template: Template | None = conf.get(CONF_VALUE_TEMPLATE)
     column_name: str = conf[CONF_COLUMN_NAME]
     unique_id: str | None = conf.get(CONF_UNIQUE_ID)
-    db_url: str = resolve_db_url(hass, conf.get(CONF_DB_URL))
+    db_url: str = resolve_db_url(hass, conf.get(recorder.CONF_DB_URL))
     device_class: SensorDeviceClass | None = conf.get(CONF_DEVICE_CLASS)
     state_class: SensorStateClass | None = conf.get(CONF_STATE_CLASS)
 
@@ -95,7 +91,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the SQL sensor from config entry."""
 
-    db_url: str = resolve_db_url(hass, entry.options.get(CONF_DB_URL))
+    db_url: str = resolve_db_url(hass, entry.options.get(recorder.CONF_DB_URL))
     name: str = entry.options[CONF_NAME]
     query_str: str = entry.options[CONF_QUERY]
     unit: str | None = entry.options.get(CONF_UNIT_OF_MEASUREMENT)
@@ -175,12 +171,12 @@ async def async_setup_sensor(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the SQL sensor."""
-    instance = get_instance(hass)
+    instance = recorder.get_instance(hass)
     sessmaker: scoped_session | None
     sql_data = _async_get_or_init_domain_data(hass)
     uses_recorder_db = db_url == instance.db_url
     use_database_executor = False
-    if uses_recorder_db and instance.dialect_name == SupportedDialect.SQLITE:
+    if uses_recorder_db and instance.dialect_name == recorder.SupportedDialect.SQLITE:
         use_database_executor = True
         assert instance.engine is not None
         sessmaker = scoped_session(sessionmaker(bind=instance.engine, future=True))
@@ -339,7 +335,7 @@ class SQLSensor(SensorEntity):
     async def async_update(self) -> None:
         """Retrieve sensor data from the query using the right executor."""
         if self._use_database_executor:
-            await get_instance(self.hass).async_add_executor_job(self._update)
+            await recorder.get_instance(self.hass).async_add_executor_job(self._update)
         else:
             await self.hass.async_add_executor_job(self._update)
 

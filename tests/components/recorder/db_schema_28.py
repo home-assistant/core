@@ -33,7 +33,7 @@ from sqlalchemy.engine.row import Row
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.orm.session import Session
 
-from homeassistant.components.recorder.const import ALL_DOMAIN_EXCLUDE_ATTRS, JSON_DUMP
+from homeassistant.components import recorder
 from homeassistant.const import (
     MAX_LENGTH_EVENT_CONTEXT_ID,
     MAX_LENGTH_EVENT_EVENT_TYPE,
@@ -222,7 +222,7 @@ class EventData(Base):  # type: ignore[misc,valid-type]
     @staticmethod
     def from_event(event: Event) -> EventData:
         """Create object from an event."""
-        shared_data = JSON_DUMP(event.data)
+        shared_data = recorder.const.JSON_DUMP(event.data)
         return EventData(
             shared_data=shared_data, hash=EventData.hash_shared_data(shared_data)
         )
@@ -230,7 +230,7 @@ class EventData(Base):  # type: ignore[misc,valid-type]
     @staticmethod
     def shared_data_from_event(event: Event) -> str:
         """Create shared_attrs from an event."""
-        return JSON_DUMP(event.data)
+        return recorder.const.JSON_DUMP(event.data)
 
     @staticmethod
     def hash_shared_data(shared_data: str) -> int:
@@ -396,7 +396,9 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
         state: State | None = event.data.get("new_state")
         # None state means the state was removed from the state machine
         dbstate = StateAttributes(
-            shared_attrs="{}" if state is None else JSON_DUMP(state.attributes)
+            shared_attrs="{}"
+            if state is None
+            else recorder.const.JSON_DUMP(state.attributes)
         )
         dbstate.hash = StateAttributes.hash_shared_attrs(dbstate.shared_attrs)
         return dbstate
@@ -412,9 +414,10 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
             return "{}"
         domain = split_entity_id(state.entity_id)[0]
         exclude_attrs = (
-            exclude_attrs_by_domain.get(domain, set()) | ALL_DOMAIN_EXCLUDE_ATTRS
+            exclude_attrs_by_domain.get(domain, set())
+            | recorder.const.ALL_DOMAIN_EXCLUDE_ATTRS
         )
-        return JSON_DUMP(
+        return recorder.const.JSON_DUMP(
             {k: v for k, v in state.attributes.items() if k not in exclude_attrs}
         )
 

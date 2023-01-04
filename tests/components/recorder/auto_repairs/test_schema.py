@@ -6,16 +6,7 @@ from unittest.mock import patch
 import pytest
 from sqlalchemy import text
 
-from homeassistant.components.recorder.auto_repairs.schema import (
-    correct_db_schema_precision,
-    correct_db_schema_utf8,
-    validate_db_schema_precision,
-    validate_table_schema_has_correct_collation,
-    validate_table_schema_supports_utf8,
-)
-from homeassistant.components.recorder.db_schema import States
-from homeassistant.components.recorder.migration import _modify_columns
-from homeassistant.components.recorder.util import get_instance, session_scope
+from homeassistant.components import recorder
 from homeassistant.core import HomeAssistant
 
 from ..common import async_wait_recording_done
@@ -57,9 +48,12 @@ async def test_validate_db_schema_fix_utf8_issue_good_schema(
         return
     await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
-    instance = get_instance(hass)
+    instance = recorder.get_instance(hass)
     schema_errors = await instance.async_add_executor_job(
-        validate_table_schema_supports_utf8, instance, States, (States.state,)
+        recorder.auto_repairs.schema.validate_table_schema_supports_utf8,
+        instance,
+        recorder.db_schema.States,
+        (recorder.db_schema.States.state,),
     )
     assert schema_errors == set()
 
@@ -76,11 +70,11 @@ async def test_validate_db_schema_fix_utf8_issue_with_broken_schema(
         return
     await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
-    instance = get_instance(hass)
+    instance = recorder.get_instance(hass)
     session_maker = instance.get_session
 
     def _break_states_schema():
-        with session_scope(session=session_maker()) as session:
+        with recorder.util.session_scope(session=session_maker()) as session:
             session.execute(
                 text(
                     "ALTER TABLE states MODIFY state VARCHAR(255) "
@@ -91,18 +85,27 @@ async def test_validate_db_schema_fix_utf8_issue_with_broken_schema(
 
     await instance.async_add_executor_job(_break_states_schema)
     schema_errors = await instance.async_add_executor_job(
-        validate_table_schema_supports_utf8, instance, States, (States.state,)
+        recorder.auto_repairs.schema.validate_table_schema_supports_utf8,
+        instance,
+        recorder.db_schema.States,
+        (recorder.db_schema.States.state,),
     )
     assert schema_errors == {"states.4-byte UTF-8"}
 
     # Now repair the schema
     await instance.async_add_executor_job(
-        correct_db_schema_utf8, instance, States, schema_errors
+        recorder.auto_repairs.schema.correct_db_schema_utf8,
+        instance,
+        recorder.db_schema.States,
+        schema_errors,
     )
 
     # Now validate the schema again
     schema_errors = await instance.async_add_executor_job(
-        validate_table_schema_supports_utf8, instance, States, ("state",)
+        recorder.auto_repairs.schema.validate_table_schema_supports_utf8,
+        instance,
+        recorder.db_schema.States,
+        ("state",),
     )
     assert schema_errors == set()
 
@@ -119,11 +122,11 @@ async def test_validate_db_schema_fix_incorrect_collation(
         return
     await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
-    instance = get_instance(hass)
+    instance = recorder.get_instance(hass)
     session_maker = instance.get_session
 
     def _break_states_schema():
-        with session_scope(session=session_maker()) as session:
+        with recorder.util.session_scope(session=session_maker()) as session:
             session.execute(
                 text(
                     "ALTER TABLE states CHARACTER SET utf8mb3 COLLATE utf8_general_ci, "
@@ -133,18 +136,25 @@ async def test_validate_db_schema_fix_incorrect_collation(
 
     await instance.async_add_executor_job(_break_states_schema)
     schema_errors = await instance.async_add_executor_job(
-        validate_table_schema_has_correct_collation, instance, States
+        recorder.auto_repairs.schema.validate_table_schema_has_correct_collation,
+        instance,
+        recorder.db_schema.States,
     )
     assert schema_errors == {"states.utf8mb4_unicode_ci"}
 
     # Now repair the schema
     await instance.async_add_executor_job(
-        correct_db_schema_utf8, instance, States, schema_errors
+        recorder.auto_repairs.schema.correct_db_schema_utf8,
+        instance,
+        recorder.db_schema.States,
+        schema_errors,
     )
 
     # Now validate the schema again
     schema_errors = await instance.async_add_executor_job(
-        validate_table_schema_has_correct_collation, instance, States
+        recorder.auto_repairs.schema.validate_table_schema_has_correct_collation,
+        instance,
+        recorder.db_schema.States,
     )
     assert schema_errors == set()
 
@@ -161,11 +171,11 @@ async def test_validate_db_schema_precision_correct_collation(
         return
     await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
-    instance = get_instance(hass)
+    instance = recorder.get_instance(hass)
     schema_errors = await instance.async_add_executor_job(
-        validate_table_schema_has_correct_collation,
+        recorder.auto_repairs.schema.validate_table_schema_has_correct_collation,
         instance,
-        States,
+        recorder.db_schema.States,
     )
     assert schema_errors == set()
 
@@ -182,11 +192,11 @@ async def test_validate_db_schema_fix_utf8_issue_with_broken_schema_unrepairable
         return
     await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
-    instance = get_instance(hass)
+    instance = recorder.get_instance(hass)
     session_maker = instance.get_session
 
     def _break_states_schema():
-        with session_scope(session=session_maker()) as session:
+        with recorder.util.session_scope(session=session_maker()) as session:
             session.execute(
                 text(
                     "ALTER TABLE states MODIFY state VARCHAR(255) "
@@ -194,7 +204,7 @@ async def test_validate_db_schema_fix_utf8_issue_with_broken_schema_unrepairable
                     "LOCK=EXCLUSIVE;"
                 )
             )
-            _modify_columns(
+            recorder.migration._modify_columns(
                 session_maker,
                 instance.engine,
                 "states",
@@ -205,7 +215,10 @@ async def test_validate_db_schema_fix_utf8_issue_with_broken_schema_unrepairable
 
     await instance.async_add_executor_job(_break_states_schema)
     schema_errors = await instance.async_add_executor_job(
-        validate_table_schema_supports_utf8, instance, States, ("state",)
+        recorder.auto_repairs.schema.validate_table_schema_supports_utf8,
+        instance,
+        recorder.db_schema.States,
+        ("state",),
     )
     assert schema_errors == set()
     assert "Error when validating DB schema" in caplog.text
@@ -223,11 +236,11 @@ async def test_validate_db_schema_precision_good_schema(
         return
     await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
-    instance = get_instance(hass)
+    instance = recorder.get_instance(hass)
     schema_errors = await instance.async_add_executor_job(
-        validate_db_schema_precision,
+        recorder.auto_repairs.schema.validate_db_schema_precision,
         instance,
-        States,
+        recorder.db_schema.States,
     )
     assert schema_errors == set()
 
@@ -244,11 +257,11 @@ async def test_validate_db_schema_precision_with_broken_schema(
         return
     await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
-    instance = get_instance(hass)
+    instance = recorder.get_instance(hass)
     session_maker = instance.get_session
 
     def _break_states_schema():
-        _modify_columns(
+        recorder.migration._modify_columns(
             session_maker,
             instance.engine,
             "states",
@@ -260,22 +273,25 @@ async def test_validate_db_schema_precision_with_broken_schema(
 
     await instance.async_add_executor_job(_break_states_schema)
     schema_errors = await instance.async_add_executor_job(
-        validate_db_schema_precision,
+        recorder.auto_repairs.schema.validate_db_schema_precision,
         instance,
-        States,
+        recorder.db_schema.States,
     )
     assert schema_errors == {"states.double precision"}
 
     # Now repair the schema
     await instance.async_add_executor_job(
-        correct_db_schema_precision, instance, States, schema_errors
+        recorder.auto_repairs.schema.correct_db_schema_precision,
+        instance,
+        recorder.db_schema.States,
+        schema_errors,
     )
 
     # Now validate the schema again
     schema_errors = await instance.async_add_executor_job(
-        validate_db_schema_precision,
+        recorder.auto_repairs.schema.validate_db_schema_precision,
         instance,
-        States,
+        recorder.db_schema.States,
     )
     assert schema_errors == set()
 
@@ -292,11 +308,11 @@ async def test_validate_db_schema_precision_with_unrepairable_broken_schema(
         return
     await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
-    instance = get_instance(hass)
+    instance = recorder.get_instance(hass)
     session_maker = instance.get_session
 
     def _break_states_schema():
-        _modify_columns(
+        recorder.migration._modify_columns(
             session_maker,
             instance.engine,
             "states",
@@ -309,9 +325,9 @@ async def test_validate_db_schema_precision_with_unrepairable_broken_schema(
 
     await instance.async_add_executor_job(_break_states_schema)
     schema_errors = await instance.async_add_executor_job(
-        validate_db_schema_precision,
+        recorder.auto_repairs.schema.validate_db_schema_precision,
         instance,
-        States,
+        recorder.db_schema.States,
     )
     assert "Error when validating DB schema" in caplog.text
     assert schema_errors == set()

@@ -2,11 +2,7 @@
 
 import pytest
 
-from homeassistant.components.recorder.filters import (
-    Filters,
-    extract_include_exclude_filter_conf,
-    merge_include_exclude_filters,
-)
+from homeassistant.components import recorder
 from homeassistant.helpers.entityfilter import (
     CONF_DOMAINS,
     CONF_ENTITIES,
@@ -48,7 +44,9 @@ SIMPLE_INCLUDE_EXCLUDE_FILTER = {**SIMPLE_INCLUDE_FILTER, **SIMPLE_EXCLUDE_FILTE
 
 def test_extract_include_exclude_filter_conf() -> None:
     """Test we can extract a filter from configuration without altering it."""
-    include_filter = extract_include_exclude_filter_conf(SIMPLE_INCLUDE_FILTER)
+    include_filter = recorder.filters.extract_include_exclude_filter_conf(
+        SIMPLE_INCLUDE_FILTER
+    )
     assert include_filter == {
         CONF_EXCLUDE: {
             CONF_DOMAINS: set(),
@@ -62,7 +60,9 @@ def test_extract_include_exclude_filter_conf() -> None:
         },
     }
 
-    exclude_filter = extract_include_exclude_filter_conf(SIMPLE_EXCLUDE_FILTER)
+    exclude_filter = recorder.filters.extract_include_exclude_filter_conf(
+        SIMPLE_EXCLUDE_FILTER
+    )
     assert exclude_filter == {
         CONF_INCLUDE: {
             CONF_DOMAINS: set(),
@@ -76,7 +76,7 @@ def test_extract_include_exclude_filter_conf() -> None:
         },
     }
 
-    include_exclude_filter = extract_include_exclude_filter_conf(
+    include_exclude_filter = recorder.filters.extract_include_exclude_filter_conf(
         SIMPLE_INCLUDE_EXCLUDE_FILTER
     )
     assert include_exclude_filter == {
@@ -97,7 +97,9 @@ def test_extract_include_exclude_filter_conf() -> None:
     assert SIMPLE_INCLUDE_EXCLUDE_FILTER[CONF_EXCLUDE][CONF_ENTITIES] != {
         "cover.altered"
     }
-    empty_include_filter = extract_include_exclude_filter_conf(EMPTY_INCLUDE_FILTER)
+    empty_include_filter = recorder.filters.extract_include_exclude_filter_conf(
+        EMPTY_INCLUDE_FILTER
+    )
     assert empty_include_filter == {
         CONF_EXCLUDE: {
             CONF_DOMAINS: set(),
@@ -114,13 +116,13 @@ def test_extract_include_exclude_filter_conf() -> None:
 
 def test_merge_include_exclude_filters() -> None:
     """Test we can merge two filters together."""
-    include_exclude_filter_base = extract_include_exclude_filter_conf(
+    include_exclude_filter_base = recorder.filters.extract_include_exclude_filter_conf(
         SIMPLE_INCLUDE_EXCLUDE_FILTER
     )
-    include_filter_add = extract_include_exclude_filter_conf(
+    include_filter_add = recorder.filters.extract_include_exclude_filter_conf(
         SIMPLE_INCLUDE_FILTER_DIFFERENT_ENTITIES
     )
-    merged_filter = merge_include_exclude_filters(
+    merged_filter = recorder.filters.merge_include_exclude_filters(
         include_exclude_filter_base, include_filter_add
     )
     assert merged_filter == {
@@ -139,7 +141,7 @@ def test_merge_include_exclude_filters() -> None:
 
 async def test_an_empty_filter_raises() -> None:
     """Test empty filter raises when not guarding with has_config."""
-    filters = Filters()
+    filters = recorder.filters.Filters()
     assert not filters.has_config
     with pytest.raises(
         RuntimeError,

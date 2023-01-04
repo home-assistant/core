@@ -19,15 +19,6 @@ from sqlalchemy.orm.session import Session
 
 from homeassistant import core as ha
 from homeassistant.components import recorder
-from homeassistant.components.recorder import Recorder, core, get_instance, statistics
-from homeassistant.components.recorder.db_schema import (
-    Events,
-    EventTypes,
-    RecorderRuns,
-    States,
-    StatesMeta,
-)
-from homeassistant.components.recorder.tasks import RecorderTask, StatisticsTask
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import Event, HomeAssistant, State
 import homeassistant.util.dt as dt_util
@@ -39,23 +30,23 @@ CREATE_ENGINE_TARGET = "homeassistant.components.recorder.core.create_engine"
 
 
 @dataclass
-class BlockRecorderTask(RecorderTask):
+class BlockRecorderTask(recorder.tasks.RecorderTask):
     """A task to block the recorder for testing only."""
 
     event: asyncio.Event
     seconds: float
 
-    def run(self, instance: Recorder) -> None:
+    def run(self, instance: recorder.Recorder) -> None:
         """Block the recorders event loop."""
         instance.hass.loop.call_soon_threadsafe(self.event.set)
         time.sleep(self.seconds)
 
 
 @dataclass
-class ForceReturnConnectionToPool(RecorderTask):
+class ForceReturnConnectionToPool(recorder.tasks.RecorderTask):
     """Force return connection to pool."""
 
-    def run(self, instance: Recorder) -> None:
+    def run(self, instance: recorder.Recorder) -> None:
         """Handle the task."""
         instance.event_session.commit()
 
@@ -68,15 +59,15 @@ async def async_block_recorder(hass: HomeAssistant, seconds: float) -> None:
     Does not wait for the block to finish.
     """
     event = asyncio.Event()
-    get_instance(hass).queue_task(BlockRecorderTask(event, seconds))
+    recorder.get_instance(hass).queue_task(BlockRecorderTask(event, seconds))
     await event.wait()
 
 
 def do_adhoc_statistics(hass: HomeAssistant, **kwargs: Any) -> None:
     """Trigger an adhoc statistics run."""
     if not (start := kwargs.get("start")):
-        start = statistics.get_start_time()
-    get_instance(hass).queue_task(StatisticsTask(start, False))
+        start = recorder.statistics.get_start_time()
+    recorder.get_instance(hass).queue_task(recorder.tasks.StatisticsTask(start, False))
 
 
 def wait_recording_done(hass: HomeAssistant) -> None:
@@ -146,9 +137,9 @@ def create_engine_test(*args, **kwargs):
 
 def run_information_with_session(
     session: Session, point_in_time: datetime | None = None
-) -> RecorderRuns | None:
+) -> recorder.db_schema.RecorderRuns | None:
     """Return information about current run from the database."""
-    recorder_runs = RecorderRuns
+    recorder_runs = recorder.db_schema.RecorderRuns
 
     query = session.query(recorder_runs)
     if point_in_time:
@@ -158,7 +149,7 @@ def run_information_with_session(
 
     if (res := query.first()) is not None:
         session.expunge(res)
-        return cast(RecorderRuns, res)
+        return cast(recorder.db_schema.RecorderRuns, res)
     return res
 
 
@@ -177,7 +168,7 @@ def statistics_during_period(
         statistic_ids = set(statistic_ids)
     if types is None:
         types = {"last_reset", "max", "mean", "min", "state", "sum"}
-    return statistics.statistics_during_period(
+    return recorder.statistics.statistics_during_period(
         hass, start_time, end_time, statistic_ids, period, units, types
     )
 
@@ -312,13 +303,15 @@ def record_states(hass):
     return zero, four, states
 
 
-def convert_pending_states_to_meta(instance: Recorder, session: Session) -> None:
+def convert_pending_states_to_meta(
+    instance: recorder.Recorder, session: Session
+) -> None:
     """Convert pending states to use states_metadata."""
     entity_ids: set[str] = set()
-    states: set[States] = set()
-    states_meta_objects: dict[str, StatesMeta] = {}
+    states: set[recorder.db_schema.States] = set()
+    states_meta_objects: dict[str, recorder.db_schema.StatesMeta] = {}
     for object in session:
-        if isinstance(object, States):
+        if isinstance(object, recorder.db_schema.States):
             entity_ids.add(object.entity_id)
             states.add(object)
 
@@ -335,17 +328,21 @@ def convert_pending_states_to_meta(instance: Recorder, session: Session) -> None
             state.metadata_id = metadata_id
             continue
         if entity_id not in states_meta_objects:
-            states_meta_objects[entity_id] = StatesMeta(entity_id=entity_id)
+            states_meta_objects[entity_id] = recorder.db_schema.StatesMeta(
+                entity_id=entity_id
+            )
         state.states_meta_rel = states_meta_objects[entity_id]
 
 
-def convert_pending_events_to_event_types(instance: Recorder, session: Session) -> None:
+def convert_pending_events_to_event_types(
+    instance: recorder.Recorder, session: Session
+) -> None:
     """Convert pending events to use event_type_ids."""
     event_types: set[str] = set()
-    events: set[Events] = set()
-    event_types_objects: dict[str, EventTypes] = {}
+    events: set[recorder.db_schema.Events] = set()
+    event_types_objects: dict[str, recorder.db_schema.EventTypes] = {}
     for object in session:
-        if isinstance(object, Events):
+        if isinstance(object, recorder.db_schema.Events):
             event_types.add(object.event_type)
             events.add(object)
 
@@ -363,7 +360,9 @@ def convert_pending_events_to_event_types(instance: Recorder, session: Session) 
             event.event_type_id = event_type_id
             continue
         if event_type not in event_types_objects:
-            event_types_objects[event_type] = EventTypes(event_type=event_type)
+            event_types_objects[event_type] = recorder.db_schema.EventTypes(
+                event_type=event_type
+            )
             manually_added_event_types.append(event_type)
         event.event_type_rel = event_types_objects[event_type]
 
@@ -385,7 +384,9 @@ def create_engine_test_for_schema_version_postfix(
     old_db_schema.Base.metadata.create_all(engine)
     with Session(engine) as session:
         session.add(
-            recorder.db_schema.StatisticsRuns(start=statistics.get_start_time())
+            recorder.db_schema.StatisticsRuns(
+                start=recorder.statistics.get_start_time()
+            )
         )
         session.add(
             recorder.db_schema.SchemaChanges(
@@ -410,18 +411,20 @@ def old_db_schema(schema_version_postfix: str) -> Iterator[None]:
 
     with patch.object(recorder, "db_schema", old_db_schema), patch.object(
         recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-    ), patch.object(core, "StatesMeta", old_db_schema.StatesMeta), patch.object(
-        core, "EventTypes", old_db_schema.EventTypes
     ), patch.object(
-        core, "EventData", old_db_schema.EventData
+        recorder.core, "StatesMeta", old_db_schema.StatesMeta
     ), patch.object(
-        core, "States", old_db_schema.States
+        recorder.core, "EventTypes", old_db_schema.EventTypes
     ), patch.object(
-        core, "Events", old_db_schema.Events
+        recorder.core, "EventData", old_db_schema.EventData
     ), patch.object(
-        core, "StateAttributes", old_db_schema.StateAttributes
+        recorder.core, "States", old_db_schema.States
     ), patch.object(
-        core, "EntityIDMigrationTask", core.RecorderTask
+        recorder.core, "Events", old_db_schema.Events
+    ), patch.object(
+        recorder.core, "StateAttributes", old_db_schema.StateAttributes
+    ), patch.object(
+        recorder.core, "EntityIDMigrationTask", recorder.core.RecorderTask
     ), patch(
         CREATE_ENGINE_TARGET,
         new=partial(

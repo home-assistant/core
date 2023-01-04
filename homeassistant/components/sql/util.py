@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.recorder import get_instance
+from homeassistant.components import recorder
 from homeassistant.core import HomeAssistant
 
 from .const import DB_URL_RE
@@ -23,4 +23,4 @@ def resolve_db_url(hass: HomeAssistant, db_url: str | None) -> str:
     _LOGGER.debug("db_url: %s", redact_credentials(db_url))
     if db_url and not db_url.isspace():
         return db_url
-    return get_instance(hass).db_url
+    return recorder.get_instance(hass).db_url

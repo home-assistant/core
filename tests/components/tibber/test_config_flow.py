@@ -7,7 +7,7 @@ import pytest
 from tibber import FatalHttpException, InvalidLogin, RetryableHttpException
 
 from homeassistant import config_entries
-from homeassistant.components.recorder import Recorder
+from homeassistant.components import recorder
 from homeassistant.components.tibber.config_flow import (
     ERR_CLIENT,
     ERR_TIMEOUT,
@@ -26,7 +26,9 @@ def tibber_setup_fixture():
         yield
 
 
-async def test_show_config_form(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+async def test_show_config_form(
+    recorder_mock: recorder.Recorder, hass: HomeAssistant
+) -> None:
     """Test show configuration form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -36,7 +38,9 @@ async def test_show_config_form(recorder_mock: Recorder, hass: HomeAssistant) ->
     assert result["step_id"] == "user"
 
 
-async def test_create_entry(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+async def test_create_entry(
+    recorder_mock: recorder.Recorder, hass: HomeAssistant
+) -> None:
     """Test create entry from user input."""
     test_data = {
         CONF_ACCESS_TOKEN: "valid",
@@ -71,7 +75,7 @@ async def test_create_entry(recorder_mock: Recorder, hass: HomeAssistant) -> Non
     ],
 )
 async def test_create_entry_exceptions(
-    recorder_mock: Recorder, hass: HomeAssistant, exception, expected_error
+    recorder_mock: recorder.Recorder, hass: HomeAssistant, exception, expected_error
 ) -> None:
     """Test create entry from user input."""
     test_data = {
@@ -96,7 +100,7 @@ async def test_create_entry_exceptions(
 
 
 async def test_flow_entry_already_exists(
-    recorder_mock: Recorder, hass: HomeAssistant, config_entry
+    recorder_mock: recorder.Recorder, hass: HomeAssistant, config_entry
 ) -> None:
     """Test user input for config_entry that already exists."""
     test_data = {

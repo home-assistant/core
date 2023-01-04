@@ -3,16 +3,15 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import Recorder
-from homeassistant.components.recorder.db_schema import RecorderRuns
-from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from tests.typing import RecorderInstanceGenerator
 
 
-async def test_run_history(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+async def test_run_history(
+    recorder_mock: recorder.Recorder, hass: HomeAssistant
+) -> None:
     """Test the run history gives the correct run."""
     instance = recorder.get_instance(hass)
     now = dt_util.utcnow()
@@ -21,14 +20,22 @@ async def test_run_history(recorder_mock: Recorder, hass: HomeAssistant) -> None
     one_day_ago = now - timedelta(days=1)
 
     with instance.get_session() as session:
-        session.add(RecorderRuns(start=three_days_ago, created=three_days_ago))
-        session.add(RecorderRuns(start=two_days_ago, created=two_days_ago))
-        session.add(RecorderRuns(start=one_day_ago, created=one_day_ago))
+        session.add(
+            recorder.db_schema.RecorderRuns(
+                start=three_days_ago, created=three_days_ago
+            )
+        )
+        session.add(
+            recorder.db_schema.RecorderRuns(start=two_days_ago, created=two_days_ago)
+        )
+        session.add(
+            recorder.db_schema.RecorderRuns(start=one_day_ago, created=one_day_ago)
+        )
         session.commit()
         instance.recorder_runs_manager.load_from_db(session)
 
     assert (
-        process_timestamp(
+        recorder.models.process_timestamp(
             instance.recorder_runs_manager.get(
                 three_days_ago + timedelta(microseconds=1)
             ).start
@@ -36,7 +43,7 @@ async def test_run_history(recorder_mock: Recorder, hass: HomeAssistant) -> None
         == three_days_ago
     )
     assert (
-        process_timestamp(
+        recorder.models.process_timestamp(
             instance.recorder_runs_manager.get(
                 two_days_ago + timedelta(microseconds=1)
             ).start
@@ -44,7 +51,7 @@ async def test_run_history(recorder_mock: Recorder, hass: HomeAssistant) -> None
         == two_days_ago
     )
     assert (
-        process_timestamp(
+        recorder.models.process_timestamp(
             instance.recorder_runs_manager.get(
                 one_day_ago + timedelta(microseconds=1)
             ).start
@@ -52,7 +59,7 @@ async def test_run_history(recorder_mock: Recorder, hass: HomeAssistant) -> None
         == one_day_ago
     )
     assert (
-        process_timestamp(instance.recorder_runs_manager.get(now).start)
+        recorder.models.process_timestamp(instance.recorder_runs_manager.get(now).start)
         == instance.recorder_runs_manager.recording_start
     )
 

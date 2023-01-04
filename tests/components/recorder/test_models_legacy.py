@@ -4,7 +4,7 @@ from unittest.mock import PropertyMock
 
 import pytest
 
-from homeassistant.components.recorder.models.legacy import LegacyLazyState
+from homeassistant.components import recorder
 from homeassistant.util import dt as dt_util
 
 
@@ -17,7 +17,9 @@ async def test_legacy_lazy_state_prefers_shared_attrs_over_attrs(
         shared_attrs='{"shared":true}',
         attributes='{"shared":false}',
     )
-    assert LegacyLazyState(row, {}, None).attributes == {"shared": True}
+    assert recorder.models.legacy.LegacyLazyState(row, {}, None).attributes == {
+        "shared": True
+    }
 
 
 async def test_legacy_lazy_state_handles_different_last_updated_and_last_changed(
@@ -32,7 +34,7 @@ async def test_legacy_lazy_state_handles_different_last_updated_and_last_changed
         last_updated_ts=now.timestamp(),
         last_changed_ts=(now - timedelta(seconds=60)).timestamp(),
     )
-    lstate = LegacyLazyState(row, {}, None)
+    lstate = recorder.models.legacy.LegacyLazyState(row, {}, None)
     assert lstate.as_dict() == {
         "attributes": {"shared": True},
         "entity_id": "sensor.valid",
@@ -63,7 +65,7 @@ async def test_legacy_lazy_state_handles_same_last_updated_and_last_changed(
         last_updated_ts=now.timestamp(),
         last_changed_ts=now.timestamp(),
     )
-    lstate = LegacyLazyState(row, {}, None)
+    lstate = recorder.models.legacy.LegacyLazyState(row, {}, None)
     assert lstate.as_dict() == {
         "attributes": {"shared": True},
         "entity_id": "sensor.valid",

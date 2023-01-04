@@ -5,9 +5,8 @@ from unittest.mock import AsyncMock, patch
 from opower import CannotConnect, InvalidAuth
 import pytest
 
-from homeassistant import config_entries
+from homeassistant import config_entries, recorder
 from homeassistant.components.opower.const import DOMAIN
-from homeassistant.components.recorder import Recorder
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -35,7 +34,7 @@ def mock_unload_entry() -> Generator[AsyncMock, None, None]:
 
 
 async def test_form(
-    recorder_mock: Recorder, hass: HomeAssistant, mock_setup_entry: AsyncMock
+    recorder_mock: recorder.Recorder, hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -76,7 +75,7 @@ async def test_form(
     ],
 )
 async def test_form_exceptions(
-    recorder_mock: Recorder, hass: HomeAssistant, api_exception, expected_error
+    recorder_mock: recorder.Recorder, hass: HomeAssistant, api_exception, expected_error
 ) -> None:
     """Test we handle exceptions."""
     result = await hass.config_entries.flow.async_init(
@@ -102,7 +101,7 @@ async def test_form_exceptions(
 
 
 async def test_form_already_configured(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -129,7 +128,7 @@ async def test_form_already_configured(
 
 
 async def test_form_not_already_configured(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -166,7 +165,7 @@ async def test_form_not_already_configured(
 
 
 async def test_form_valid_reauth(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_unload_entry: AsyncMock,

@@ -9,29 +9,6 @@ import pytest
 from sqlalchemy import select
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import Recorder, history, statistics
-from homeassistant.components.recorder.db_schema import StatisticsShortTerm
-from homeassistant.components.recorder.models import (
-    datetime_to_timestamp_or_none,
-    process_timestamp,
-)
-from homeassistant.components.recorder.statistics import (
-    STATISTIC_UNIT_TO_UNIT_CONVERTER,
-    _generate_max_mean_min_statistic_in_sub_period_stmt,
-    _generate_statistics_at_time_stmt,
-    _generate_statistics_during_period_stmt,
-    async_add_external_statistics,
-    async_import_statistics,
-    get_last_short_term_statistics,
-    get_last_statistics,
-    get_latest_short_term_statistics,
-    get_metadata,
-    list_statistic_ids,
-)
-from homeassistant.components.recorder.table_managers.statistics_meta import (
-    _generate_get_metadata_stmt,
-)
-from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.sensor import UNIT_CONVERTERS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -56,9 +33,11 @@ ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 def test_converters_align_with_sensor() -> None:
     """Ensure STATISTIC_UNIT_TO_UNIT_CONVERTER is aligned with UNIT_CONVERTERS."""
     for converter in UNIT_CONVERTERS.values():
-        assert converter in STATISTIC_UNIT_TO_UNIT_CONVERTER.values()
+        assert (
+            converter in recorder.statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER.values()
+        )
 
-    for converter in STATISTIC_UNIT_TO_UNIT_CONVERTER.values():
+    for converter in recorder.statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER.values():
         assert converter in UNIT_CONVERTERS.values()
 
 
@@ -68,11 +47,11 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
     instance = recorder.get_instance(hass)
     setup_component(hass, "sensor", {})
     zero, four, states = record_states(hass)
-    hist = history.get_significant_states(hass, zero, four, list(states))
+    hist = recorder.history.get_significant_states(hass, zero, four, list(states))
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     # Should not fail if there is nothing there yet
-    stats = get_latest_short_term_statistics(
+    stats = recorder.statistics.get_latest_short_term_statistics(
         hass, {"sensor.test1"}, {"last_reset", "max", "mean", "min", "state", "sum"}
     )
     assert stats == {}
@@ -80,7 +59,7 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
         stats = statistics_during_period(hass, zero, period="5minute", **kwargs)
         assert stats == {}
-    stats = get_last_short_term_statistics(
+    stats = recorder.statistics.get_last_short_term_statistics(
         hass,
         0,
         "sensor.test1",
@@ -93,22 +72,28 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
     do_adhoc_statistics(hass, start=four)
     wait_recording_done(hass)
 
-    metadata = get_metadata(hass, statistic_ids={"sensor.test1", "sensor.test2"})
+    metadata = recorder.statistics.get_metadata(
+        hass, statistic_ids={"sensor.test1", "sensor.test2"}
+    )
     assert metadata["sensor.test1"][1]["has_mean"] is True
     assert metadata["sensor.test1"][1]["has_sum"] is False
     assert metadata["sensor.test2"][1]["has_mean"] is True
     assert metadata["sensor.test2"][1]["has_sum"] is False
     expected_1 = {
-        "start": process_timestamp(zero).timestamp(),
-        "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
+        "start": recorder.models.process_timestamp(zero).timestamp(),
+        "end": recorder.models.process_timestamp(
+            zero + timedelta(minutes=5)
+        ).timestamp(),
         "mean": pytest.approx(14.915254237288135),
         "min": pytest.approx(10.0),
         "max": pytest.approx(20.0),
         "last_reset": None,
     }
     expected_2 = {
-        "start": process_timestamp(four).timestamp(),
-        "end": process_timestamp(four + timedelta(minutes=5)).timestamp(),
+        "start": recorder.models.process_timestamp(four).timestamp(),
+        "end": recorder.models.process_timestamp(
+            four + timedelta(minutes=5)
+        ).timestamp(),
         "mean": pytest.approx(20.0),
         "min": pytest.approx(20.0),
         "max": pytest.approx(20.0),
@@ -155,7 +140,7 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
     assert stats == {}
 
     # Test get_last_short_term_statistics and get_latest_short_term_statistics
-    stats = get_last_short_term_statistics(
+    stats = recorder.statistics.get_last_short_term_statistics(
         hass,
         0,
         "sensor.test1",
@@ -164,7 +149,7 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
     )
     assert stats == {}
 
-    stats = get_last_short_term_statistics(
+    stats = recorder.statistics.get_last_short_term_statistics(
         hass,
         1,
         "sensor.test1",
@@ -173,14 +158,14 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
     )
     assert stats == {"sensor.test1": [expected_2]}
 
-    stats = get_latest_short_term_statistics(
+    stats = recorder.statistics.get_latest_short_term_statistics(
         hass, {"sensor.test1"}, {"last_reset", "max", "mean", "min", "state", "sum"}
     )
     assert stats == {"sensor.test1": [expected_2]}
 
-    metadata = get_metadata(hass, statistic_ids={"sensor.test1"})
+    metadata = recorder.statistics.get_metadata(hass, statistic_ids={"sensor.test1"})
 
-    stats = get_latest_short_term_statistics(
+    stats = recorder.statistics.get_latest_short_term_statistics(
         hass,
         {"sensor.test1"},
         {"last_reset", "max", "mean", "min", "state", "sum"},
@@ -188,7 +173,7 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
     )
     assert stats == {"sensor.test1": [expected_2]}
 
-    stats = get_last_short_term_statistics(
+    stats = recorder.statistics.get_last_short_term_statistics(
         hass,
         2,
         "sensor.test1",
@@ -197,7 +182,7 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
     )
     assert stats == {"sensor.test1": expected_stats1[::-1]}
 
-    stats = get_last_short_term_statistics(
+    stats = recorder.statistics.get_last_short_term_statistics(
         hass,
         3,
         "sensor.test1",
@@ -206,7 +191,7 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
     )
     assert stats == {"sensor.test1": expected_stats1[::-1]}
 
-    stats = get_last_short_term_statistics(
+    stats = recorder.statistics.get_last_short_term_statistics(
         hass,
         1,
         "sensor.test3",
@@ -215,9 +200,9 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
     )
     assert stats == {}
 
-    instance.get_session().query(StatisticsShortTerm).delete()
+    instance.get_session().query(recorder.db_schema.StatisticsShortTerm).delete()
     # Should not fail there is nothing in the table
-    stats = get_latest_short_term_statistics(
+    stats = recorder.statistics.get_latest_short_term_statistics(
         hass, {"sensor.test1"}, {"last_reset", "max", "mean", "min", "state", "sum"}
     )
     assert stats == {}
@@ -241,13 +226,13 @@ def mock_sensor_statistics():
         }
 
     def get_fake_stats(_hass, start, _end):
-        return statistics.PlatformCompiledStatistics(
+        return recorder.statistics.PlatformCompiledStatistics(
             [
                 sensor_stats("sensor.test1", start),
                 sensor_stats("sensor.test2", start),
                 sensor_stats("sensor.test3", start),
             ],
-            get_metadata(
+            recorder.statistics.get_metadata(
                 _hass, statistic_ids={"sensor.test1", "sensor.test2", "sensor.test3"}
             ),
         )
@@ -263,7 +248,7 @@ def mock_sensor_statistics():
 def mock_from_stats():
     """Mock out Statistics.from_stats."""
     counter = 0
-    real_from_stats = StatisticsShortTerm.from_stats
+    real_from_stats = recorder.db_schema.StatisticsShortTerm.from_stats
 
     def from_stats(metadata_id, stats):
         nonlocal counter
@@ -293,8 +278,10 @@ def test_compile_periodic_statistics_exception(
     do_adhoc_statistics(hass, start=now + timedelta(minutes=5))
     wait_recording_done(hass)
     expected_1 = {
-        "start": process_timestamp(now).timestamp(),
-        "end": process_timestamp(now + timedelta(minutes=5)).timestamp(),
+        "start": recorder.models.process_timestamp(now).timestamp(),
+        "end": recorder.models.process_timestamp(
+            now + timedelta(minutes=5)
+        ).timestamp(),
         "mean": None,
         "min": None,
         "max": None,
@@ -303,8 +290,12 @@ def test_compile_periodic_statistics_exception(
         "sum": None,
     }
     expected_2 = {
-        "start": process_timestamp(now + timedelta(minutes=5)).timestamp(),
-        "end": process_timestamp(now + timedelta(minutes=10)).timestamp(),
+        "start": recorder.models.process_timestamp(
+            now + timedelta(minutes=5)
+        ).timestamp(),
+        "end": recorder.models.process_timestamp(
+            now + timedelta(minutes=10)
+        ).timestamp(),
         "mean": None,
         "min": None,
         "max": None,
@@ -345,13 +336,13 @@ def test_rename_entity(hass_recorder: Callable[..., HomeAssistant]) -> None:
     hass.block_till_done()
 
     zero, four, states = record_states(hass)
-    hist = history.get_significant_states(hass, zero, four, list(states))
+    hist = recorder.history.get_significant_states(hass, zero, four, list(states))
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
         stats = statistics_during_period(hass, zero, period="5minute", **kwargs)
         assert stats == {}
-    stats = get_last_short_term_statistics(
+    stats = recorder.statistics.get_last_short_term_statistics(
         hass,
         0,
         "sensor.test1",
@@ -363,8 +354,10 @@ def test_rename_entity(hass_recorder: Callable[..., HomeAssistant]) -> None:
     do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
     expected_1 = {
-        "start": process_timestamp(zero).timestamp(),
-        "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
+        "start": recorder.models.process_timestamp(zero).timestamp(),
+        "end": recorder.models.process_timestamp(
+            zero + timedelta(minutes=5)
+        ).timestamp(),
         "mean": pytest.approx(14.915254237288135),
         "min": pytest.approx(10.0),
         "max": pytest.approx(20.0),
@@ -398,7 +391,7 @@ def test_statistics_during_period_set_back_compat(
     setup_component(hass, "sensor", {})
     # This should not throw an exception when passed a list instead of a set
     assert (
-        statistics.statistics_during_period(
+        recorder.statistics.statistics_during_period(
             hass,
             dt_util.utcnow(),
             None,
@@ -434,13 +427,13 @@ def test_rename_entity_collision(
     hass.block_till_done()
 
     zero, four, states = record_states(hass)
-    hist = history.get_significant_states(hass, zero, four, list(states))
+    hist = recorder.history.get_significant_states(hass, zero, four, list(states))
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
         stats = statistics_during_period(hass, zero, period="5minute", **kwargs)
         assert stats == {}
-    stats = get_last_short_term_statistics(
+    stats = recorder.statistics.get_last_short_term_statistics(
         hass,
         0,
         "sensor.test1",
@@ -452,8 +445,10 @@ def test_rename_entity_collision(
     do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
     expected_1 = {
-        "start": process_timestamp(zero).timestamp(),
-        "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
+        "start": recorder.models.process_timestamp(zero).timestamp(),
+        "end": recorder.models.process_timestamp(
+            zero + timedelta(minutes=5)
+        ).timestamp(),
         "mean": pytest.approx(14.915254237288135),
         "min": pytest.approx(10.0),
         "max": pytest.approx(20.0),
@@ -477,7 +472,7 @@ def test_rename_entity_collision(
         "unit_of_measurement": "kWh",
     }
 
-    with session_scope(hass=hass) as session:
+    with recorder.util.session_scope(hass=hass) as session:
         session.add(recorder.db_schema.StatisticsMeta.from_meta(metadata_1))
 
     # Rename entity sensor.test1 to sensor.test99
@@ -501,7 +496,7 @@ def test_statistics_duplicated(
     hass = hass_recorder()
     setup_component(hass, "sensor", {})
     zero, four, states = record_states(hass)
-    hist = history.get_significant_states(hass, zero, four, list(states))
+    hist = recorder.history.get_significant_states(hass, zero, four, list(states))
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     wait_recording_done(hass)
@@ -510,7 +505,7 @@ def test_statistics_duplicated(
 
     with patch(
         "homeassistant.components.sensor.recorder.compile_statistics",
-        return_value=statistics.PlatformCompiledStatistics([], {}),
+        return_value=recorder.statistics.PlatformCompiledStatistics([], {}),
     ) as compile_statistics:
         do_adhoc_statistics(hass, start=zero)
         wait_recording_done(hass)
@@ -533,12 +528,20 @@ def test_statistics_duplicated(
 @pytest.mark.parametrize(
     ("source", "statistic_id", "import_fn"),
     (
-        ("test", "test:total_energy_import", async_add_external_statistics),
-        ("recorder", "sensor.total_energy_import", async_import_statistics),
+        (
+            "test",
+            "test:total_energy_import",
+            recorder.statistics.async_add_external_statistics,
+        ),
+        (
+            "recorder",
+            "sensor.total_energy_import",
+            recorder.statistics.async_import_statistics,
+        ),
     ),
 )
 async def test_import_statistics(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
@@ -589,22 +592,30 @@ async def test_import_statistics(
     assert stats == {
         statistic_id: [
             {
-                "start": process_timestamp(period1).timestamp(),
-                "end": process_timestamp(period1 + timedelta(hours=1)).timestamp(),
-                "last_reset": datetime_to_timestamp_or_none(last_reset_utc),
+                "start": recorder.models.process_timestamp(period1).timestamp(),
+                "end": recorder.models.process_timestamp(
+                    period1 + timedelta(hours=1)
+                ).timestamp(),
+                "last_reset": recorder.models.datetime_to_timestamp_or_none(
+                    last_reset_utc
+                ),
                 "state": pytest.approx(0.0),
                 "sum": pytest.approx(2.0),
             },
             {
-                "start": process_timestamp(period2).timestamp(),
-                "end": process_timestamp(period2 + timedelta(hours=1)).timestamp(),
-                "last_reset": datetime_to_timestamp_or_none(last_reset_utc),
+                "start": recorder.models.process_timestamp(period2).timestamp(),
+                "end": recorder.models.process_timestamp(
+                    period2 + timedelta(hours=1)
+                ).timestamp(),
+                "last_reset": recorder.models.datetime_to_timestamp_or_none(
+                    last_reset_utc
+                ),
                 "state": pytest.approx(1.0),
                 "sum": pytest.approx(3.0),
             },
         ]
     }
-    statistic_ids = list_statistic_ids(hass)
+    statistic_ids = recorder.statistics.list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "display_unit_of_measurement": "kWh",
@@ -617,7 +628,7 @@ async def test_import_statistics(
             "unit_class": "energy",
         }
     ]
-    metadata = get_metadata(hass, statistic_ids={statistic_id})
+    metadata = recorder.statistics.get_metadata(hass, statistic_ids={statistic_id})
     assert metadata == {
         statistic_id: (
             1,
@@ -631,7 +642,7 @@ async def test_import_statistics(
             },
         )
     }
-    last_stats = get_last_statistics(
+    last_stats = recorder.statistics.get_last_statistics(
         hass,
         1,
         statistic_id,
@@ -641,9 +652,13 @@ async def test_import_statistics(
     assert last_stats == {
         statistic_id: [
             {
-                "start": process_timestamp(period2).timestamp(),
-                "end": process_timestamp(period2 + timedelta(hours=1)).timestamp(),
-                "last_reset": datetime_to_timestamp_or_none(last_reset_utc),
+                "start": recorder.models.process_timestamp(period2).timestamp(),
+                "end": recorder.models.process_timestamp(
+                    period2 + timedelta(hours=1)
+                ).timestamp(),
+                "last_reset": recorder.models.datetime_to_timestamp_or_none(
+                    last_reset_utc
+                ),
                 "state": pytest.approx(1.0),
                 "sum": pytest.approx(3.0),
             },
@@ -665,16 +680,22 @@ async def test_import_statistics(
     assert stats == {
         statistic_id: [
             {
-                "start": process_timestamp(period1).timestamp(),
-                "end": process_timestamp(period1 + timedelta(hours=1)).timestamp(),
+                "start": recorder.models.process_timestamp(period1).timestamp(),
+                "end": recorder.models.process_timestamp(
+                    period1 + timedelta(hours=1)
+                ).timestamp(),
                 "last_reset": None,
                 "state": pytest.approx(5.0),
                 "sum": pytest.approx(6.0),
             },
             {
-                "start": process_timestamp(period2).timestamp(),
-                "end": process_timestamp(period2 + timedelta(hours=1)).timestamp(),
-                "last_reset": datetime_to_timestamp_or_none(last_reset_utc),
+                "start": recorder.models.process_timestamp(period2).timestamp(),
+                "end": recorder.models.process_timestamp(
+                    period2 + timedelta(hours=1)
+                ).timestamp(),
+                "last_reset": recorder.models.datetime_to_timestamp_or_none(
+                    last_reset_utc
+                ),
                 "state": pytest.approx(1.0),
                 "sum": pytest.approx(3.0),
             },
@@ -694,7 +715,7 @@ async def test_import_statistics(
     external_metadata["name"] = "Total imported energy renamed"
     import_fn(hass, external_metadata, (external_statistics,))
     await async_wait_recording_done(hass)
-    statistic_ids = list_statistic_ids(hass)
+    statistic_ids = recorder.statistics.list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "display_unit_of_measurement": "kWh",
@@ -707,7 +728,7 @@ async def test_import_statistics(
             "unit_class": "energy",
         }
     ]
-    metadata = get_metadata(hass, statistic_ids={statistic_id})
+    metadata = recorder.statistics.get_metadata(hass, statistic_ids={statistic_id})
     assert metadata == {
         statistic_id: (
             1,
@@ -727,16 +748,24 @@ async def test_import_statistics(
     assert stats == {
         statistic_id: [
             {
-                "start": process_timestamp(period1).timestamp(),
-                "end": process_timestamp(period1 + timedelta(hours=1)).timestamp(),
-                "last_reset": datetime_to_timestamp_or_none(last_reset_utc),
+                "start": recorder.models.process_timestamp(period1).timestamp(),
+                "end": recorder.models.process_timestamp(
+                    period1 + timedelta(hours=1)
+                ).timestamp(),
+                "last_reset": recorder.models.datetime_to_timestamp_or_none(
+                    last_reset_utc
+                ),
                 "state": pytest.approx(4.0),
                 "sum": pytest.approx(5.0),
             },
             {
-                "start": process_timestamp(period2).timestamp(),
-                "end": process_timestamp(period2 + timedelta(hours=1)).timestamp(),
-                "last_reset": datetime_to_timestamp_or_none(last_reset_utc),
+                "start": recorder.models.process_timestamp(period2).timestamp(),
+                "end": recorder.models.process_timestamp(
+                    period2 + timedelta(hours=1)
+                ).timestamp(),
+                "last_reset": recorder.models.datetime_to_timestamp_or_none(
+                    last_reset_utc
+                ),
                 "state": pytest.approx(1.0),
                 "sum": pytest.approx(3.0),
             },
@@ -764,16 +793,24 @@ async def test_import_statistics(
     assert stats == {
         statistic_id: [
             {
-                "start": process_timestamp(period1).timestamp(),
-                "end": process_timestamp(period1 + timedelta(hours=1)).timestamp(),
-                "last_reset": datetime_to_timestamp_or_none(last_reset_utc),
+                "start": recorder.models.process_timestamp(period1).timestamp(),
+                "end": recorder.models.process_timestamp(
+                    period1 + timedelta(hours=1)
+                ).timestamp(),
+                "last_reset": recorder.models.datetime_to_timestamp_or_none(
+                    last_reset_utc
+                ),
                 "state": pytest.approx(4.0),
                 "sum": pytest.approx(5.0),
             },
             {
-                "start": process_timestamp(period2).timestamp(),
-                "end": process_timestamp(period2 + timedelta(hours=1)).timestamp(),
-                "last_reset": datetime_to_timestamp_or_none(last_reset_utc),
+                "start": recorder.models.process_timestamp(period2).timestamp(),
+                "end": recorder.models.process_timestamp(
+                    period2 + timedelta(hours=1)
+                ).timestamp(),
+                "last_reset": recorder.models.datetime_to_timestamp_or_none(
+                    last_reset_utc
+                ),
                 "state": pytest.approx(1.0),
                 "sum": pytest.approx(1000 * 1000 + 3.0),
             },
@@ -817,21 +854,35 @@ def test_external_statistics_errors(
     }
     external_statistics = {**_external_statistics}
     with pytest.raises(HomeAssistantError):
-        async_add_external_statistics(hass, external_metadata, (external_statistics,))
+        recorder.statistics.async_add_external_statistics(
+            hass, external_metadata, (external_statistics,)
+        )
     wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
-    assert list_statistic_ids(hass) == []
-    assert get_metadata(hass, statistic_ids={"sensor.total_energy_import"}) == {}
+    assert recorder.statistics.list_statistic_ids(hass) == []
+    assert (
+        recorder.statistics.get_metadata(
+            hass, statistic_ids={"sensor.total_energy_import"}
+        )
+        == {}
+    )
 
     # Attempt to insert statistics for the wrong domain
     external_metadata = {**_external_metadata, "source": "other"}
     external_statistics = {**_external_statistics}
     with pytest.raises(HomeAssistantError):
-        async_add_external_statistics(hass, external_metadata, (external_statistics,))
+        recorder.statistics.async_add_external_statistics(
+            hass, external_metadata, (external_statistics,)
+        )
     wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
-    assert list_statistic_ids(hass) == []
-    assert get_metadata(hass, statistic_ids={"test:total_energy_import"}) == {}
+    assert recorder.statistics.list_statistic_ids(hass) == []
+    assert (
+        recorder.statistics.get_metadata(
+            hass, statistic_ids={"test:total_energy_import"}
+        )
+        == {}
+    )
 
     # Attempt to insert statistics for a naive starting time
     external_metadata = {**_external_metadata}
@@ -840,21 +891,35 @@ def test_external_statistics_errors(
         "start": period1.replace(tzinfo=None),
     }
     with pytest.raises(HomeAssistantError):
-        async_add_external_statistics(hass, external_metadata, (external_statistics,))
+        recorder.statistics.async_add_external_statistics(
+            hass, external_metadata, (external_statistics,)
+        )
     wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
-    assert list_statistic_ids(hass) == []
-    assert get_metadata(hass, statistic_ids={"test:total_energy_import"}) == {}
+    assert recorder.statistics.list_statistic_ids(hass) == []
+    assert (
+        recorder.statistics.get_metadata(
+            hass, statistic_ids={"test:total_energy_import"}
+        )
+        == {}
+    )
 
     # Attempt to insert statistics for an invalid starting time
     external_metadata = {**_external_metadata}
     external_statistics = {**_external_statistics, "start": period1.replace(minute=1)}
     with pytest.raises(HomeAssistantError):
-        async_add_external_statistics(hass, external_metadata, (external_statistics,))
+        recorder.statistics.async_add_external_statistics(
+            hass, external_metadata, (external_statistics,)
+        )
     wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
-    assert list_statistic_ids(hass) == []
-    assert get_metadata(hass, statistic_ids={"test:total_energy_import"}) == {}
+    assert recorder.statistics.list_statistic_ids(hass) == []
+    assert (
+        recorder.statistics.get_metadata(
+            hass, statistic_ids={"test:total_energy_import"}
+        )
+        == {}
+    )
 
     # Attempt to insert statistics with a naive last_reset
     external_metadata = {**_external_metadata}
@@ -863,11 +928,18 @@ def test_external_statistics_errors(
         "last_reset": last_reset.replace(tzinfo=None),
     }
     with pytest.raises(HomeAssistantError):
-        async_add_external_statistics(hass, external_metadata, (external_statistics,))
+        recorder.statistics.async_add_external_statistics(
+            hass, external_metadata, (external_statistics,)
+        )
     wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
-    assert list_statistic_ids(hass) == []
-    assert get_metadata(hass, statistic_ids={"test:total_energy_import"}) == {}
+    assert recorder.statistics.list_statistic_ids(hass) == []
+    assert (
+        recorder.statistics.get_metadata(
+            hass, statistic_ids={"test:total_energy_import"}
+        )
+        == {}
+    )
 
 
 def test_import_statistics_errors(
@@ -906,21 +978,35 @@ def test_import_statistics_errors(
     }
     external_statistics = {**_external_statistics}
     with pytest.raises(HomeAssistantError):
-        async_import_statistics(hass, external_metadata, (external_statistics,))
+        recorder.statistics.async_import_statistics(
+            hass, external_metadata, (external_statistics,)
+        )
     wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
-    assert list_statistic_ids(hass) == []
-    assert get_metadata(hass, statistic_ids={"test:total_energy_import"}) == {}
+    assert recorder.statistics.list_statistic_ids(hass) == []
+    assert (
+        recorder.statistics.get_metadata(
+            hass, statistic_ids={"test:total_energy_import"}
+        )
+        == {}
+    )
 
     # Attempt to insert statistics for the wrong domain
     external_metadata = {**_external_metadata, "source": "sensor"}
     external_statistics = {**_external_statistics}
     with pytest.raises(HomeAssistantError):
-        async_import_statistics(hass, external_metadata, (external_statistics,))
+        recorder.statistics.async_import_statistics(
+            hass, external_metadata, (external_statistics,)
+        )
     wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
-    assert list_statistic_ids(hass) == []
-    assert get_metadata(hass, statistic_ids={"sensor.total_energy_import"}) == {}
+    assert recorder.statistics.list_statistic_ids(hass) == []
+    assert (
+        recorder.statistics.get_metadata(
+            hass, statistic_ids={"sensor.total_energy_import"}
+        )
+        == {}
+    )
 
     # Attempt to insert statistics for a naive starting time
     external_metadata = {**_external_metadata}
@@ -929,21 +1015,35 @@ def test_import_statistics_errors(
         "start": period1.replace(tzinfo=None),
     }
     with pytest.raises(HomeAssistantError):
-        async_import_statistics(hass, external_metadata, (external_statistics,))
+        recorder.statistics.async_import_statistics(
+            hass, external_metadata, (external_statistics,)
+        )
     wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
-    assert list_statistic_ids(hass) == []
-    assert get_metadata(hass, statistic_ids={"sensor.total_energy_import"}) == {}
+    assert recorder.statistics.list_statistic_ids(hass) == []
+    assert (
+        recorder.statistics.get_metadata(
+            hass, statistic_ids={"sensor.total_energy_import"}
+        )
+        == {}
+    )
 
     # Attempt to insert statistics for an invalid starting time
     external_metadata = {**_external_metadata}
     external_statistics = {**_external_statistics, "start": period1.replace(minute=1)}
     with pytest.raises(HomeAssistantError):
-        async_import_statistics(hass, external_metadata, (external_statistics,))
+        recorder.statistics.async_import_statistics(
+            hass, external_metadata, (external_statistics,)
+        )
     wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
-    assert list_statistic_ids(hass) == []
-    assert get_metadata(hass, statistic_ids={"sensor.total_energy_import"}) == {}
+    assert recorder.statistics.list_statistic_ids(hass) == []
+    assert (
+        recorder.statistics.get_metadata(
+            hass, statistic_ids={"sensor.total_energy_import"}
+        )
+        == {}
+    )
 
     # Attempt to insert statistics with a naive last_reset
     external_metadata = {**_external_metadata}
@@ -952,11 +1052,18 @@ def test_import_statistics_errors(
         "last_reset": last_reset.replace(tzinfo=None),
     }
     with pytest.raises(HomeAssistantError):
-        async_import_statistics(hass, external_metadata, (external_statistics,))
+        recorder.statistics.async_import_statistics(
+            hass, external_metadata, (external_statistics,)
+        )
     wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
-    assert list_statistic_ids(hass) == []
-    assert get_metadata(hass, statistic_ids={"sensor.total_energy_import"}) == {}
+    assert recorder.statistics.list_statistic_ids(hass) == []
+    assert (
+        recorder.statistics.get_metadata(
+            hass, statistic_ids={"sensor.total_energy_import"}
+        )
+        == {}
+    )
 
 
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
@@ -1029,7 +1136,9 @@ def test_daily_statistics_sum(
         "unit_of_measurement": "kWh",
     }
 
-    async_add_external_statistics(hass, external_metadata, external_statistics)
+    recorder.statistics.async_add_external_statistics(
+        hass, external_metadata, external_statistics
+    )
     wait_recording_done(hass)
     stats = statistics_during_period(
         hass, zero, period="day", statistic_ids={"test:total_energy_import"}
@@ -1202,7 +1311,9 @@ def test_weekly_statistics_mean(
         "unit_of_measurement": "kWh",
     }
 
-    async_add_external_statistics(hass, external_metadata, external_statistics)
+    recorder.statistics.async_add_external_statistics(
+        hass, external_metadata, external_statistics
+    )
     wait_recording_done(hass)
     # Get all data
     stats = statistics_during_period(
@@ -1350,7 +1461,9 @@ def test_weekly_statistics_sum(
         "unit_of_measurement": "kWh",
     }
 
-    async_add_external_statistics(hass, external_metadata, external_statistics)
+    recorder.statistics.async_add_external_statistics(
+        hass, external_metadata, external_statistics
+    )
     wait_recording_done(hass)
     stats = statistics_during_period(
         hass, zero, period="week", statistic_ids={"test:total_energy_import"}
@@ -1533,7 +1646,9 @@ def test_monthly_statistics_sum(
         "unit_of_measurement": "kWh",
     }
 
-    async_add_external_statistics(hass, external_metadata, external_statistics)
+    recorder.statistics.async_add_external_statistics(
+        hass, external_metadata, external_statistics
+    )
     wait_recording_done(hass)
     stats = statistics_during_period(
         hass, zero, period="month", statistic_ids={"test:total_energy_import"}
@@ -1704,20 +1819,28 @@ def test_monthly_statistics_sum(
 
 def test_cache_key_for_generate_statistics_during_period_stmt() -> None:
     """Test cache key for _generate_statistics_during_period_stmt."""
-    stmt = _generate_statistics_during_period_stmt(
-        dt_util.utcnow(), dt_util.utcnow(), [0], StatisticsShortTerm, set()
-    )
-    cache_key_1 = stmt._generate_cache_key()
-    stmt2 = _generate_statistics_during_period_stmt(
-        dt_util.utcnow(), dt_util.utcnow(), [0], StatisticsShortTerm, set()
-    )
-    cache_key_2 = stmt2._generate_cache_key()
-    assert cache_key_1 == cache_key_2
-    stmt3 = _generate_statistics_during_period_stmt(
+    stmt = recorder.statistics._generate_statistics_during_period_stmt(
         dt_util.utcnow(),
         dt_util.utcnow(),
         [0],
-        StatisticsShortTerm,
+        recorder.db_schema.StatisticsShortTerm,
+        set(),
+    )
+    cache_key_1 = stmt._generate_cache_key()
+    stmt2 = recorder.statistics._generate_statistics_during_period_stmt(
+        dt_util.utcnow(),
+        dt_util.utcnow(),
+        [0],
+        recorder.db_schema.StatisticsShortTerm,
+        set(),
+    )
+    cache_key_2 = stmt2._generate_cache_key()
+    assert cache_key_1 == cache_key_2
+    stmt3 = recorder.statistics._generate_statistics_during_period_stmt(
+        dt_util.utcnow(),
+        dt_util.utcnow(),
+        [0],
+        recorder.db_schema.StatisticsShortTerm,
         {"sum", "mean"},
     )
     cache_key_3 = stmt3._generate_cache_key()
@@ -1726,10 +1849,16 @@ def test_cache_key_for_generate_statistics_during_period_stmt() -> None:
 
 def test_cache_key_for_generate_get_metadata_stmt() -> None:
     """Test cache key for _generate_get_metadata_stmt."""
-    stmt_mean = _generate_get_metadata_stmt([0], "mean")
-    stmt_mean2 = _generate_get_metadata_stmt([1], "mean")
-    stmt_sum = _generate_get_metadata_stmt([0], "sum")
-    stmt_none = _generate_get_metadata_stmt()
+    stmt_mean = recorder.table_managers.statistics_meta._generate_get_metadata_stmt(
+        [0], "mean"
+    )
+    stmt_mean2 = recorder.table_managers.statistics_meta._generate_get_metadata_stmt(
+        [1], "mean"
+    )
+    stmt_sum = recorder.table_managers.statistics_meta._generate_get_metadata_stmt(
+        [0], "sum"
+    )
+    stmt_none = recorder.table_managers.statistics_meta._generate_get_metadata_stmt()
     assert stmt_mean._generate_cache_key() == stmt_mean2._generate_cache_key()
     assert stmt_mean._generate_cache_key() != stmt_sum._generate_cache_key()
     assert stmt_mean._generate_cache_key() != stmt_none._generate_cache_key()
@@ -1737,35 +1866,38 @@ def test_cache_key_for_generate_get_metadata_stmt() -> None:
 
 def test_cache_key_for_generate_max_mean_min_statistic_in_sub_period_stmt() -> None:
     """Test cache key for _generate_max_mean_min_statistic_in_sub_period_stmt."""
-    columns = select(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start_ts)
-    stmt = _generate_max_mean_min_statistic_in_sub_period_stmt(
+    columns = select(
+        recorder.db_schema.StatisticsShortTerm.metadata_id,
+        recorder.db_schema.StatisticsShortTerm.start_ts,
+    )
+    stmt = recorder.statistics._generate_max_mean_min_statistic_in_sub_period_stmt(
         columns,
         dt_util.utcnow(),
         dt_util.utcnow(),
-        StatisticsShortTerm,
+        recorder.db_schema.StatisticsShortTerm,
         [0],
     )
     cache_key_1 = stmt._generate_cache_key()
-    stmt2 = _generate_max_mean_min_statistic_in_sub_period_stmt(
+    stmt2 = recorder.statistics._generate_max_mean_min_statistic_in_sub_period_stmt(
         columns,
         dt_util.utcnow(),
         dt_util.utcnow(),
-        StatisticsShortTerm,
+        recorder.db_schema.StatisticsShortTerm,
         [0],
     )
     cache_key_2 = stmt2._generate_cache_key()
     assert cache_key_1 == cache_key_2
     columns2 = select(
-        StatisticsShortTerm.metadata_id,
-        StatisticsShortTerm.start_ts,
-        StatisticsShortTerm.sum,
-        StatisticsShortTerm.mean,
+        recorder.db_schema.StatisticsShortTerm.metadata_id,
+        recorder.db_schema.StatisticsShortTerm.start_ts,
+        recorder.db_schema.StatisticsShortTerm.sum,
+        recorder.db_schema.StatisticsShortTerm.mean,
     )
-    stmt3 = _generate_max_mean_min_statistic_in_sub_period_stmt(
+    stmt3 = recorder.statistics._generate_max_mean_min_statistic_in_sub_period_stmt(
         columns2,
         dt_util.utcnow(),
         dt_util.utcnow(),
-        StatisticsShortTerm,
+        recorder.db_schema.StatisticsShortTerm,
         [0],
     )
     cache_key_3 = stmt3._generate_cache_key()
@@ -1774,13 +1906,17 @@ def test_cache_key_for_generate_max_mean_min_statistic_in_sub_period_stmt() -> N
 
 def test_cache_key_for_generate_statistics_at_time_stmt() -> None:
     """Test cache key for _generate_statistics_at_time_stmt."""
-    stmt = _generate_statistics_at_time_stmt(StatisticsShortTerm, {0}, 0.0, set())
+    stmt = recorder.statistics._generate_statistics_at_time_stmt(
+        recorder.db_schema.StatisticsShortTerm, {0}, 0.0, set()
+    )
     cache_key_1 = stmt._generate_cache_key()
-    stmt2 = _generate_statistics_at_time_stmt(StatisticsShortTerm, {0}, 0.0, set())
+    stmt2 = recorder.statistics._generate_statistics_at_time_stmt(
+        recorder.db_schema.StatisticsShortTerm, {0}, 0.0, set()
+    )
     cache_key_2 = stmt2._generate_cache_key()
     assert cache_key_1 == cache_key_2
-    stmt3 = _generate_statistics_at_time_stmt(
-        StatisticsShortTerm, {0}, 0.0, {"sum", "mean"}
+    stmt3 = recorder.statistics._generate_statistics_at_time_stmt(
+        recorder.db_schema.StatisticsShortTerm, {0}, 0.0, {"sum", "mean"}
     )
     cache_key_3 = stmt3._generate_cache_key()
     assert cache_key_1 != cache_key_3
@@ -1842,7 +1978,9 @@ def test_change(
         "unit_of_measurement": "kWh",
     }
 
-    async_import_statistics(hass, external_metadata, external_statistics)
+    recorder.statistics.async_import_statistics(
+        hass, external_metadata, external_statistics
+    )
     wait_recording_done(hass)
     # Get change from far in the past
     stats = statistics_during_period(
@@ -2184,7 +2322,9 @@ def test_change_with_none(
         "unit_of_measurement": "kWh",
     }
 
-    async_add_external_statistics(hass, external_metadata, external_statistics)
+    recorder.statistics.async_add_external_statistics(
+        hass, external_metadata, external_statistics
+    )
     wait_recording_done(hass)
     # Get change from far in the past
     stats = statistics_during_period(

@@ -15,8 +15,6 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import SQLITE_URL_PREFIX
-from homeassistant.components.recorder.util import session_scope
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
@@ -41,7 +39,7 @@ def test_delete_duplicates(caplog: pytest.LogCaptureFixture, tmp_path: Path) -> 
     test_dir = tmp_path.joinpath("sqlite")
     test_dir.mkdir()
     test_db_file = test_dir.joinpath("test_run_info.db")
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+    dburl = f"{recorder.SQLITE_URL_PREFIX}//{test_db_file}"
 
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
@@ -178,7 +176,7 @@ def test_delete_duplicates(caplog: pytest.LogCaptureFixture, tmp_path: Path) -> 
         wait_recording_done(hass)
         wait_recording_done(hass)
 
-        with session_scope(hass=hass) as session:
+        with recorder.util.session_scope(hass=hass) as session:
             session.add(
                 recorder.db_schema.StatisticsMeta.from_meta(external_energy_metadata_1)
             )
@@ -188,7 +186,7 @@ def test_delete_duplicates(caplog: pytest.LogCaptureFixture, tmp_path: Path) -> 
             session.add(
                 recorder.db_schema.StatisticsMeta.from_meta(external_co2_metadata)
             )
-        with session_scope(hass=hass) as session:
+        with recorder.util.session_scope(hass=hass) as session:
             for stat in external_energy_statistics_1:
                 session.add(recorder.db_schema.Statistics.from_stats(1, stat))
             for stat in external_energy_statistics_2:
@@ -221,7 +219,7 @@ def test_delete_duplicates_many(
     test_dir = tmp_path.joinpath("sqlite")
     test_dir.mkdir()
     test_db_file = test_dir.joinpath("test_run_info.db")
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+    dburl = f"{recorder.SQLITE_URL_PREFIX}//{test_db_file}"
 
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
@@ -358,7 +356,7 @@ def test_delete_duplicates_many(
         wait_recording_done(hass)
         wait_recording_done(hass)
 
-        with session_scope(hass=hass) as session:
+        with recorder.util.session_scope(hass=hass) as session:
             session.add(
                 recorder.db_schema.StatisticsMeta.from_meta(external_energy_metadata_1)
             )
@@ -368,7 +366,7 @@ def test_delete_duplicates_many(
             session.add(
                 recorder.db_schema.StatisticsMeta.from_meta(external_co2_metadata)
             )
-        with session_scope(hass=hass) as session:
+        with recorder.util.session_scope(hass=hass) as session:
             for stat in external_energy_statistics_1:
                 session.add(recorder.db_schema.Statistics.from_stats(1, stat))
             for _ in range(3000):
@@ -408,7 +406,7 @@ def test_delete_duplicates_non_identical(
     test_dir = tmp_path.joinpath("sqlite")
     test_dir.mkdir()
     test_db_file = test_dir.joinpath("test_run_info.db")
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+    dburl = f"{recorder.SQLITE_URL_PREFIX}//{test_db_file}"
 
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
@@ -515,14 +513,14 @@ def test_delete_duplicates_non_identical(
         wait_recording_done(hass)
         wait_recording_done(hass)
 
-        with session_scope(hass=hass) as session:
+        with recorder.util.session_scope(hass=hass) as session:
             session.add(
                 recorder.db_schema.StatisticsMeta.from_meta(external_energy_metadata_1)
             )
             session.add(
                 recorder.db_schema.StatisticsMeta.from_meta(external_energy_metadata_2)
             )
-        with session_scope(hass=hass) as session:
+        with recorder.util.session_scope(hass=hass) as session:
             for stat in external_energy_statistics_1:
                 session.add(recorder.db_schema.Statistics.from_stats(1, stat))
             for stat in external_energy_statistics_2:
@@ -589,7 +587,7 @@ def test_delete_duplicates_short_term(
     test_dir = tmp_path.joinpath("sqlite")
     test_dir.mkdir()
     test_db_file = test_dir.joinpath("test_run_info.db")
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+    dburl = f"{recorder.SQLITE_URL_PREFIX}//{test_db_file}"
 
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
@@ -627,11 +625,11 @@ def test_delete_duplicates_short_term(
         wait_recording_done(hass)
         wait_recording_done(hass)
 
-        with session_scope(hass=hass) as session:
+        with recorder.util.session_scope(hass=hass) as session:
             session.add(
                 recorder.db_schema.StatisticsMeta.from_meta(external_energy_metadata_1)
             )
-        with session_scope(hass=hass) as session:
+        with recorder.util.session_scope(hass=hass) as session:
             session.add(
                 recorder.db_schema.StatisticsShortTerm.from_stats(1, statistic_row)
             )

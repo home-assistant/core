@@ -11,18 +11,7 @@ from typing import Any
 
 from sqlalchemy.orm.session import Session
 
-from homeassistant.components.recorder import (
-    DOMAIN as RECORDER_DOMAIN,
-    get_instance,
-    history,
-    statistics,
-    util as recorder_util,
-)
-from homeassistant.components.recorder.models import (
-    StatisticData,
-    StatisticMetaData,
-    StatisticResult,
-)
+from homeassistant.components import recorder
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     REVOLUTIONS_PER_MINUTE,
@@ -75,7 +64,7 @@ LINK_DEV_STATISTICS = "https://my.home-assistant.io/redirect/developer_statistic
 def _get_sensor_states(hass: HomeAssistant) -> list[State]:
     """Get the current state of all sensors for which to compile statistics."""
     all_sensors = hass.states.all(DOMAIN)
-    instance = get_instance(hass)
+    instance = recorder.get_instance(hass)
     return [
         state
         for state in all_sensors
@@ -175,7 +164,7 @@ def _entity_history_to_float_and_state(
 
 def _normalize_states(
     hass: HomeAssistant,
-    old_metadatas: dict[str, tuple[int, StatisticMetaData]],
+    old_metadatas: dict[str, tuple[int, recorder.model.StatisticMetaData]],
     fstates: list[tuple[float, State]],
     entity_id: str,
 ) -> tuple[str | None, list[tuple[float, State]]]:
@@ -192,7 +181,7 @@ def _normalize_states(
         # We have seen this sensor before, use the unit from metadata
         statistics_unit = old_metadata["unit_of_measurement"]
 
-    if statistics_unit not in statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER:
+    if statistics_unit not in recorder.statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER:
         # The unit used by this sensor doesn't support unit conversion
 
         all_units = _get_units(fstates)
@@ -222,7 +211,7 @@ def _normalize_states(
         state_unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         return state_unit, fstates
 
-    converter = statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER[statistics_unit]
+    converter = recorder.statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER[statistics_unit]
     valid_fstates: list[tuple[float, State]] = []
     convert: Callable[[float], float]
     last_unit: str | None | object = object()
@@ -388,7 +377,7 @@ def _timestamp_to_isoformat_or_none(timestamp: float | None) -> str | None:
 
 def compile_statistics(
     hass: HomeAssistant, start: datetime.datetime, end: datetime.datetime
-) -> statistics.PlatformCompiledStatistics:
+) -> recorder.statistics.PlatformCompiledStatistics:
     """Compile statistics for all entities during start-end.
 
     Note: This will query the database and must not be run in the event loop
@@ -401,7 +390,7 @@ def compile_statistics(
     # If we ever need to write to the database from this function we
     # will need to refactor the recorder statistics to use a single
     # session.
-    with recorder_util.session_scope(hass=hass, read_only=True) as session:
+    with recorder.util.session_scope(hass=hass, read_only=True) as session:
         compiled = _compile_statistics(hass, session, start, end)
     return compiled
 
@@ -411,9 +400,9 @@ def _compile_statistics(  # noqa: C901
     session: Session,
     start: datetime.datetime,
     end: datetime.datetime,
-) -> statistics.PlatformCompiledStatistics:
+) -> recorder.statistics.PlatformCompiledStatistics:
     """Compile statistics for all entities during start-end."""
-    result: list[StatisticResult] = []
+    result: list[recorder.model.StatisticResult] = []
 
     sensor_states = _get_sensor_states(hass)
     wanted_statistics = _wanted_statistics(sensor_states)
@@ -423,7 +412,7 @@ def _compile_statistics(  # noqa: C901
     ]
     history_list: MutableMapping[str, list[State]] = {}
     if entities_full_history:
-        history_list = history.get_full_significant_states_with_session(
+        history_list = recorder.history.get_full_significant_states_with_session(
             hass,
             session,
             start - datetime.timedelta.resolution,
@@ -437,7 +426,7 @@ def _compile_statistics(  # noqa: C901
         if "sum" not in wanted_statistics[i.entity_id]
     ]
     if entities_significant_history:
-        _history_list = history.get_full_significant_states_with_session(
+        _history_list = recorder.history.get_full_significant_states_with_session(
             hass,
             session,
             start - datetime.timedelta.resolution,
@@ -461,8 +450,10 @@ def _compile_statistics(  # noqa: C901
     # since it will result in cache misses for statistic_ids
     # that are not in the metadata table and we are not working
     # with them anyway.
-    old_metadatas = statistics.get_metadata_with_session(
-        get_instance(hass), session, statistic_ids=set(entities_with_float_states)
+    old_metadatas = recorder.statistics.get_metadata_with_session(
+        recorder.get_instance(hass),
+        session,
+        statistic_ids=set(entities_with_float_states),
     )
     to_process: list[tuple[str, str | None, str, list[tuple[float, State]]]] = []
     to_query: set[str] = set()
@@ -483,7 +474,7 @@ def _compile_statistics(  # noqa: C901
         if "sum" in wanted_statistics[entity_id]:
             to_query.add(entity_id)
 
-    last_stats = statistics.get_latest_short_term_statistics(
+    last_stats = recorder.statistics.get_latest_short_term_statistics(
         hass, to_query, {"last_reset", "state", "sum"}, metadata=old_metadatas
     )
     for (  # pylint: disable=too-many-nested-blocks
@@ -518,17 +509,17 @@ def _compile_statistics(  # noqa: C901
                 continue
 
         # Set meta data
-        meta: StatisticMetaData = {
+        meta: recorder.model.StatisticMetaData = {
             "has_mean": "mean" in wanted_statistics[entity_id],
             "has_sum": "sum" in wanted_statistics[entity_id],
             "name": None,
-            "source": RECORDER_DOMAIN,
+            "source": recorder.DOMAIN,
             "statistic_id": entity_id,
             "unit_of_measurement": statistics_unit,
         }
 
         # Make calculations
-        stat: StatisticData = {"start": start}
+        stat: recorder.model.StatisticData = {"start": start}
         if "max" in wanted_statistics[entity_id]:
             stat["max"] = max(
                 *itertools.islice(
@@ -650,7 +641,7 @@ def _compile_statistics(  # noqa: C901
 
         result.append({"meta": meta, "stat": stat})
 
-    return statistics.PlatformCompiledStatistics(result, old_metadatas)
+    return recorder.statistics.PlatformCompiledStatistics(result, old_metadatas)
 
 
 def list_statistic_ids(
@@ -661,7 +652,7 @@ def list_statistic_ids(
     """Return all or filtered statistic_ids and meta data."""
     entities = _get_sensor_states(hass)
 
-    result: dict[str, StatisticMetaData] = {}
+    result: dict[str, recorder.models.StatisticMetaData] = {}
 
     for state in entities:
         state_class = state.attributes[ATTR_STATE_CLASS]
@@ -685,7 +676,7 @@ def list_statistic_ids(
             "has_mean": "mean" in provided_statistics,
             "has_sum": "sum" in provided_statistics,
             "name": None,
-            "source": RECORDER_DOMAIN,
+            "source": recorder.DOMAIN,
             "statistic_id": state.entity_id,
             "unit_of_measurement": state_unit,
         }
@@ -696,15 +687,15 @@ def list_statistic_ids(
 
 def validate_statistics(
     hass: HomeAssistant,
-) -> dict[str, list[statistics.ValidationIssue]]:
+) -> dict[str, list[recorder.statistics.ValidationIssue]]:
     """Validate statistics."""
     validation_result = defaultdict(list)
 
     sensor_states = hass.states.all(DOMAIN)
-    metadatas = statistics.get_metadata(hass, statistic_source=RECORDER_DOMAIN)
+    metadatas = recorder.statistics.get_metadata(hass, statistic_source=recorder.DOMAIN)
     sensor_entity_ids = {i.entity_id for i in sensor_states}
     sensor_statistic_ids = set(metadatas)
-    instance = get_instance(hass)
+    instance = recorder.get_instance(hass)
 
     for state in sensor_states:
         entity_id = state.entity_id
@@ -717,7 +708,7 @@ def validate_statistics(
             if not instance.entity_filter(state.entity_id):
                 # Sensor was previously recorded, but no longer is
                 validation_result[entity_id].append(
-                    statistics.ValidationIssue(
+                    recorder.statistics.ValidationIssue(
                         "entity_no_longer_recorded",
                         {"statistic_id": entity_id},
                     )
@@ -726,19 +717,21 @@ def validate_statistics(
             if state_class is None:
                 # Sensor no longer has a valid state class
                 validation_result[entity_id].append(
-                    statistics.ValidationIssue(
+                    recorder.statistics.ValidationIssue(
                         "unsupported_state_class",
                         {"statistic_id": entity_id, "state_class": state_class},
                     )
                 )
 
             metadata_unit = metadata[1]["unit_of_measurement"]
-            converter = statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER.get(metadata_unit)
+            converter = recorder.statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER.get(
+                metadata_unit
+            )
             if not converter:
                 if not _equivalent_units({state_unit, metadata_unit}):
                     # The unit has changed, and it's not possible to convert
                     validation_result[entity_id].append(
-                        statistics.ValidationIssue(
+                        recorder.statistics.ValidationIssue(
                             "units_changed",
                             {
                                 "statistic_id": entity_id,
@@ -753,7 +746,7 @@ def validate_statistics(
                 valid_units = (unit or "<None>" for unit in converter.VALID_UNITS)
                 valid_units_str = ", ".join(sorted(valid_units))
                 validation_result[entity_id].append(
-                    statistics.ValidationIssue(
+                    recorder.statistics.ValidationIssue(
                         "units_changed",
                         {
                             "statistic_id": entity_id,
@@ -767,7 +760,7 @@ def validate_statistics(
             if not instance.entity_filter(state.entity_id):
                 # Sensor is not recorded
                 validation_result[entity_id].append(
-                    statistics.ValidationIssue(
+                    recorder.statistics.ValidationIssue(
                         "entity_not_recorded",
                         {"statistic_id": entity_id},
                     )
@@ -778,7 +771,7 @@ def validate_statistics(
             continue
         # There is no sensor matching the statistics_id
         validation_result[statistic_id].append(
-            statistics.ValidationIssue(
+            recorder.statistics.ValidationIssue(
                 "no_state",
                 {
                     "statistic_id": statistic_id,

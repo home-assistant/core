@@ -9,9 +9,8 @@ from typing import Any, cast
 from aiohttp import web
 import voluptuous as vol
 
+from homeassistant.components import recorder
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.recorder import get_instance
-from homeassistant.components.recorder.filters import Filters
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import InvalidEntityFormatError
 from homeassistant.helpers import config_validation as cv
@@ -26,7 +25,7 @@ from .processor import EventProcessor
 def async_setup(
     hass: HomeAssistant,
     conf: ConfigType,
-    filters: Filters | None,
+    filters: recorder.Filters | None,
     entities_filter: Callable[[str], bool] | None,
 ) -> None:
     """Set up the logbook rest API."""
@@ -43,12 +42,12 @@ class LogbookView(HomeAssistantView):
     def __init__(
         self,
         config: dict[str, Any],
-        filters: Filters | None,
+        filters: recorder.Filters | None,
         entities_filter: Callable[[str], bool] | None,
     ) -> None:
         """Initialize the logbook view."""
         self.config = config
-        self.filters = filters
+        self.filters = recorder.filters
         self.entities_filter = entities_filter
 
     async def get(
@@ -116,5 +115,6 @@ class LogbookView(HomeAssistantView):
             )
 
         return cast(
-            web.Response, await get_instance(hass).async_add_executor_job(json_events)
+            web.Response,
+            await recorder.get_instance(hass).async_add_executor_job(json_events),
         )

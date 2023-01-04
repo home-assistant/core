@@ -5,12 +5,7 @@ from sqlalchemy import lambda_stmt
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import Select
 
-from homeassistant.components.recorder.db_schema import (
-    LAST_UPDATED_INDEX_TS,
-    Events,
-    States,
-)
-from homeassistant.components.recorder.filters import Filters
+from homeassistant.components import recorder
 
 from .common import apply_states_filters, select_events_without_states, select_states
 
@@ -19,7 +14,7 @@ def all_stmt(
     start_day: float,
     end_day: float,
     event_type_ids: tuple[int, ...],
-    filters: Filters | None,
+    filters: recorder.filters.Filters | None,
     context_id_bin: bytes | None = None,
 ) -> StatementLambdaElement:
     """Generate a logbook query for all entities."""
@@ -27,7 +22,9 @@ def all_stmt(
         lambda: select_events_without_states(start_day, end_day, event_type_ids)
     )
     if context_id_bin is not None:
-        stmt += lambda s: s.where(Events.context_id_bin == context_id_bin).union_all(
+        stmt += lambda s: s.where(
+            recorder.db_schema.Events.context_id_bin == context_id_bin
+        ).union_all(
             _states_query_for_context_id(
                 start_day,
                 end_day,
@@ -47,7 +44,7 @@ def all_stmt(
     else:
         stmt += lambda s: s.union_all(_states_query_for_all(start_day, end_day))
 
-    stmt += lambda s: s.order_by(Events.time_fired_ts)
+    stmt += lambda s: s.order_by(recorder.db_schema.Events.time_fired_ts)
     return stmt
 
 
@@ -58,9 +55,13 @@ def _states_query_for_all(start_day: float, end_day: float) -> Select:
 def _apply_all_hints(sel: Select) -> Select:
     """Force mysql to use the right index on large selects."""
     return sel.with_hint(
-        States, f"FORCE INDEX ({LAST_UPDATED_INDEX_TS})", dialect_name="mysql"
+        recorder.db_schema.States,
+        f"FORCE INDEX ({recorder.db_schema.LAST_UPDATED_INDEX_TS})",
+        dialect_name="mysql",
     ).with_hint(
-        States, f"FORCE INDEX ({LAST_UPDATED_INDEX_TS})", dialect_name="mariadb"
+        recorder.db_schema.States,
+        f"FORCE INDEX ({recorder.db_schema.LAST_UPDATED_INDEX_TS})",
+        dialect_name="mariadb",
     )
 
 
@@ -68,5 +69,5 @@ def _states_query_for_context_id(
     start_day: float, end_day: float, context_id_bin: bytes
 ) -> Select:
     return apply_states_filters(select_states(), start_day, end_day).where(
-        States.context_id_bin == context_id_bin
+        recorder.db_schema.States.context_id_bin == context_id_bin
     )

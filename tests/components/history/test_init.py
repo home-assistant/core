@@ -8,10 +8,7 @@ from unittest.mock import sentinel
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.components import history
-from homeassistant.components.recorder import Recorder
-from homeassistant.components.recorder.history import get_significant_states
-from homeassistant.components.recorder.models import process_timestamp
+from homeassistant.components import history, recorder
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
@@ -53,7 +50,9 @@ def test_get_significant_states(hass_history) -> None:
     """
     hass = hass_history
     zero, four, states = record_states(hass)
-    hist = get_significant_states(hass, zero, four, entity_ids=list(states))
+    hist = recorder.history.get_significant_states(
+        hass, zero, four, entity_ids=list(states)
+    )
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
@@ -69,7 +68,7 @@ def test_get_significant_states_minimal_response(hass_history) -> None:
     """
     hass = hass_history
     zero, four, states = record_states(hass)
-    hist = get_significant_states(
+    hist = recorder.history.get_significant_states(
         hass, zero, four, minimal_response=True, entity_ids=list(states)
     )
     entites_with_reducable_states = [
@@ -88,7 +87,7 @@ def test_get_significant_states_minimal_response(hass_history) -> None:
         for state_idx in range(1, len(entity_states)):
             input_state = entity_states[state_idx]
             orig_last_changed = orig_last_changed = json.dumps(
-                process_timestamp(input_state.last_changed),
+                recorder.models.process_timestamp(input_state.last_changed),
                 cls=JSONEncoder,
             ).replace('"', "")
             orig_state = input_state.state
@@ -143,7 +142,7 @@ def test_get_significant_states_with_initial(hass_history) -> None:
                 state.last_updated = one_and_half
                 state.last_changed = one_and_half
 
-    hist = get_significant_states(
+    hist = recorder.history.get_significant_states(
         hass, one_and_half, four, include_start_time_state=True, entity_ids=list(states)
     )
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
@@ -171,7 +170,7 @@ def test_get_significant_states_without_initial(hass_history) -> None:
         )
     del states["media_player.test2"]
 
-    hist = get_significant_states(
+    hist = recorder.history.get_significant_states(
         hass,
         one_and_half,
         four,
@@ -191,7 +190,9 @@ def test_get_significant_states_entity_id(hass_history) -> None:
     del states["thermostat.test2"]
     del states["script.can_cancel_this_one"]
 
-    hist = get_significant_states(hass, zero, four, ["media_player.test"])
+    hist = recorder.history.get_significant_states(
+        hass, zero, four, ["media_player.test"]
+    )
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
@@ -204,7 +205,7 @@ def test_get_significant_states_multiple_entity_ids(hass_history) -> None:
     del states["thermostat.test2"]
     del states["script.can_cancel_this_one"]
 
-    hist = get_significant_states(
+    hist = recorder.history.get_significant_states(
         hass,
         zero,
         four,
@@ -222,10 +223,10 @@ def test_get_significant_states_are_ordered(hass_history) -> None:
     hass = hass_history
     zero, four, _states = record_states(hass)
     entity_ids = ["media_player.test", "media_player.test2"]
-    hist = get_significant_states(hass, zero, four, entity_ids)
+    hist = recorder.history.get_significant_states(hass, zero, four, entity_ids)
     assert list(hist.keys()) == entity_ids
     entity_ids = ["media_player.test2", "media_player.test"]
-    hist = get_significant_states(hass, zero, four, entity_ids)
+    hist = recorder.history.get_significant_states(hass, zero, four, entity_ids)
     assert list(hist.keys()) == entity_ids
 
 
@@ -261,7 +262,7 @@ def test_get_significant_states_only(hass_history) -> None:
         # everything is different
         states.append(set_state("412", attributes={"attribute": 54.23}))
 
-    hist = get_significant_states(
+    hist = recorder.history.get_significant_states(
         hass,
         start,
         significant_changes_only=True,
@@ -279,7 +280,7 @@ def test_get_significant_states_only(hass_history) -> None:
         state.last_updated == states[2].last_updated for state in hist[entity_id]
     )
 
-    hist = get_significant_states(
+    hist = recorder.history.get_significant_states(
         hass,
         start,
         significant_changes_only=False,
@@ -294,7 +295,7 @@ def test_get_significant_states_only(hass_history) -> None:
 
 def check_significant_states(hass, zero, four, states, config):
     """Check if significant states are retrieved."""
-    hist = get_significant_states(hass, zero, four)
+    hist = recorder.history.get_significant_states(hass, zero, four)
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
@@ -375,7 +376,9 @@ def record_states(hass):
 
 
 async def test_fetch_period_api(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test the fetch period view for history."""
     await async_setup_component(hass, "history", {})
@@ -387,7 +390,7 @@ async def test_fetch_period_api(
 
 
 async def test_fetch_period_api_with_use_include_order(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
@@ -406,7 +409,9 @@ async def test_fetch_period_api_with_use_include_order(
 
 
 async def test_fetch_period_api_with_minimal_response(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test the fetch period view for history with minimal_response."""
     now = dt_util.utcnow()
@@ -442,13 +447,15 @@ async def test_fetch_period_api_with_minimal_response(
     assert "entity_id" not in state_list[2]
     assert state_list[2]["state"] == "23"
     assert state_list[2]["last_changed"] == json.dumps(
-        process_timestamp(last_changed),
+        recorder.models.process_timestamp(last_changed),
         cls=JSONEncoder,
     ).replace('"', "")
 
 
 async def test_fetch_period_api_with_no_timestamp(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test the fetch period view for history with no timestamp."""
     await async_setup_component(hass, "history", {})
@@ -458,7 +465,7 @@ async def test_fetch_period_api_with_no_timestamp(
 
 
 async def test_fetch_period_api_with_include_order(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
@@ -486,7 +493,9 @@ async def test_fetch_period_api_with_include_order(
 
 
 async def test_entity_ids_limit_via_api(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test limiting history to entity_ids."""
     await async_setup_component(
@@ -512,7 +521,9 @@ async def test_entity_ids_limit_via_api(
 
 
 async def test_entity_ids_limit_via_api_with_skip_initial_state(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test limiting history to entity_ids with skip_initial_state."""
     await async_setup_component(
@@ -546,7 +557,9 @@ async def test_entity_ids_limit_via_api_with_skip_initial_state(
 
 
 async def test_fetch_period_api_before_history_started(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test the fetch period view for history for the far past."""
     await async_setup_component(
@@ -567,7 +580,9 @@ async def test_fetch_period_api_before_history_started(
 
 
 async def test_fetch_period_api_far_future(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test the fetch period view for history for the far future."""
     await async_setup_component(
@@ -588,7 +603,9 @@ async def test_fetch_period_api_far_future(
 
 
 async def test_fetch_period_api_with_invalid_datetime(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test the fetch period view for history with an invalid date time."""
     await async_setup_component(
@@ -607,7 +624,9 @@ async def test_fetch_period_api_with_invalid_datetime(
 
 
 async def test_fetch_period_api_invalid_end_time(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test the fetch period view for history with an invalid end time."""
     await async_setup_component(
@@ -629,7 +648,9 @@ async def test_fetch_period_api_invalid_end_time(
 
 
 async def test_entity_ids_limit_via_api_with_end_time(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test limiting history to entity_ids with end_time."""
     await async_setup_component(
@@ -675,7 +696,9 @@ async def test_entity_ids_limit_via_api_with_end_time(
 
 
 async def test_fetch_period_api_with_no_entity_ids(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test the fetch period view for history with minimal_response."""
     await async_setup_component(hass, "history", {})
@@ -732,7 +755,7 @@ async def test_history_with_invalid_entity_ids(
     status_code,
     response_contains1,
     response_contains2,
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
 ) -> None:

@@ -26,7 +26,7 @@ from sqlalchemy.engine.row import Row
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.orm.session import Session
 
-from homeassistant.components.recorder.const import ALL_DOMAIN_EXCLUDE_ATTRS, JSON_DUMP
+from homeassistant.components import recorder
 from homeassistant.const import (
     MAX_LENGTH_EVENT_CONTEXT_ID,
     MAX_LENGTH_EVENT_EVENT_TYPE,
@@ -118,7 +118,9 @@ class Events(Base):  # type: ignore[misc,valid-type]
         """Create an event database object from a native event."""
         return Events(
             event_type=event.event_type,
-            event_data=JSON_DUMP(event.data) if event_data is UNDEFINED else event_data,
+            event_data=recorder.const.JSON_DUMP(event.data)
+            if event_data is UNDEFINED
+            else event_data,
             origin=str(event.origin.value),
             time_fired=event.time_fired,
             context_id=event.context.id,
@@ -252,7 +254,9 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
         state: State | None = event.data.get("new_state")
         # None state means the state was removed from the state machine
         dbstate = StateAttributes(
-            shared_attrs="{}" if state is None else JSON_DUMP(state.attributes)
+            shared_attrs="{}"
+            if state is None
+            else recorder.const.JSON_DUMP(state.attributes)
         )
         dbstate.hash = StateAttributes.hash_shared_attrs(dbstate.shared_attrs)
         return dbstate
@@ -268,9 +272,10 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
             return "{}"
         domain = split_entity_id(state.entity_id)[0]
         exclude_attrs = (
-            exclude_attrs_by_domain.get(domain, set()) | ALL_DOMAIN_EXCLUDE_ATTRS
+            exclude_attrs_by_domain.get(domain, set())
+            | recorder.const.ALL_DOMAIN_EXCLUDE_ATTRS
         )
-        return JSON_DUMP(
+        return recorder.const.JSON_DUMP(
             {k: v for k, v in state.attributes.items() if k not in exclude_attrs}
         )
 

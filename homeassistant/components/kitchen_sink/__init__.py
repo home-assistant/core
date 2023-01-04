@@ -8,13 +8,7 @@ from __future__ import annotations
 import datetime
 from random import random
 
-from homeassistant.components.recorder import DOMAIN as RECORDER_DOMAIN, get_instance
-from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
-from homeassistant.components.recorder.statistics import (
-    async_add_external_statistics,
-    async_import_statistics,
-    get_last_statistics,
-)
+from homeassistant.components import recorder
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import Platform, UnitOfEnergy, UnitOfTemperature, UnitOfVolume
 from homeassistant.core import HomeAssistant
@@ -114,8 +108,8 @@ def _create_issues(hass):
 
 def _generate_mean_statistics(
     start: datetime.datetime, end: datetime.datetime, init_value: float, max_diff: float
-) -> list[StatisticData]:
-    statistics: list[StatisticData] = []
+) -> list[recorder.models.StatisticData]:
+    statistics: list[recorder.models.StatisticData] = []
     mean = init_value
     now = start
     while now < end:
@@ -135,18 +129,18 @@ def _generate_mean_statistics(
 
 async def _insert_sum_statistics(
     hass: HomeAssistant,
-    metadata: StatisticMetaData,
+    metadata: recorder.models.StatisticMetaData,
     start: datetime.datetime,
     end: datetime.datetime,
     max_diff: float,
 ) -> None:
-    statistics: list[StatisticData] = []
+    statistics: list[recorder.models.StatisticData] = []
     now = start
     sum_ = 0.0
     statistic_id = metadata["statistic_id"]
 
-    last_stats = await get_instance(hass).async_add_executor_job(
-        get_last_statistics, hass, 1, statistic_id, False, {"sum"}
+    last_stats = await recorder.get_instance(hass).async_add_executor_job(
+        recorder.statistics.get_last_statistics, hass, 1, statistic_id, False, {"sum"}
     )
     if statistic_id in last_stats:
         sum_ = last_stats[statistic_id][0]["sum"] or 0
@@ -160,7 +154,7 @@ async def _insert_sum_statistics(
         )
         now = now + datetime.timedelta(hours=1)
 
-    async_add_external_statistics(hass, metadata, statistics)
+    recorder.statistics.async_add_external_statistics(hass, metadata, statistics)
 
 
 async def _insert_statistics(hass: HomeAssistant) -> None:
@@ -171,7 +165,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
     today_midnight = yesterday_midnight + datetime.timedelta(days=1)
 
     # Fake yesterday's temperatures
-    metadata: StatisticMetaData = {
+    metadata: recorder.models.StatisticMetaData = {
         "source": DOMAIN,
         "name": "Outdoor temperature",
         "statistic_id": f"{DOMAIN}:temperature_outdoor",
@@ -180,7 +174,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "has_sum": False,
     }
     statistics = _generate_mean_statistics(yesterday_midnight, today_midnight, 15, 1)
-    async_add_external_statistics(hass, metadata, statistics)
+    recorder.statistics.async_add_external_statistics(hass, metadata, statistics)
 
     # Add external energy consumption in kWh, ~ 12 kWh / day
     # This should be possible to pick for the energy dashboard
@@ -237,7 +231,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
     # Add some statistics which will raise an issue
     # Used to raise an issue where the unit has changed to a non volume unit
     metadata = {
-        "source": RECORDER_DOMAIN,
+        "source": recorder.DOMAIN,
         "name": None,
         "statistic_id": "sensor.statistics_issue_1",
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
@@ -245,11 +239,11 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "has_sum": False,
     }
     statistics = _generate_mean_statistics(yesterday_midnight, today_midnight, 15, 1)
-    async_import_statistics(hass, metadata, statistics)
+    recorder.statistics.async_import_statistics(hass, metadata, statistics)
 
     # Used to raise an issue where the unit has changed to a different unit
     metadata = {
-        "source": RECORDER_DOMAIN,
+        "source": recorder.DOMAIN,
         "name": None,
         "statistic_id": "sensor.statistics_issue_2",
         "unit_of_measurement": "cats",
@@ -257,11 +251,11 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "has_sum": False,
     }
     statistics = _generate_mean_statistics(yesterday_midnight, today_midnight, 15, 1)
-    async_import_statistics(hass, metadata, statistics)
+    recorder.statistics.async_import_statistics(hass, metadata, statistics)
 
     # Used to raise an issue where state class is not compatible with statistics
     metadata = {
-        "source": RECORDER_DOMAIN,
+        "source": recorder.DOMAIN,
         "name": None,
         "statistic_id": "sensor.statistics_issue_3",
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
@@ -269,11 +263,11 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "has_sum": False,
     }
     statistics = _generate_mean_statistics(yesterday_midnight, today_midnight, 15, 1)
-    async_import_statistics(hass, metadata, statistics)
+    recorder.statistics.async_import_statistics(hass, metadata, statistics)
 
     # Used to raise an issue where the sensor is not in the state machine
     metadata = {
-        "source": RECORDER_DOMAIN,
+        "source": recorder.DOMAIN,
         "name": None,
         "statistic_id": "sensor.statistics_issue_4",
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
@@ -281,4 +275,4 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "has_sum": False,
     }
     statistics = _generate_mean_statistics(yesterday_midnight, today_midnight, 15, 1)
-    async_import_statistics(hass, metadata, statistics)
+    recorder.statistics.async_import_statistics(hass, metadata, statistics)

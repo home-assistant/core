@@ -6,13 +6,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components import frontend
-from homeassistant.components.recorder import DOMAIN as RECORDER_DOMAIN
-from homeassistant.components.recorder.filters import (
-    extract_include_exclude_filter_conf,
-    merge_include_exclude_filters,
-    sqlalchemy_filter_from_include_exclude_conf,
-)
+from homeassistant.components import frontend, recorder
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
@@ -118,15 +112,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, "logbook", "logbook", "hass:format-list-bulleted-type"
     )
 
-    recorder_conf = config.get(RECORDER_DOMAIN, {})
+    recorder_conf = config.get(recorder.DOMAIN, {})
     logbook_conf = config.get(DOMAIN, {})
-    recorder_filter = extract_include_exclude_filter_conf(recorder_conf)
-    logbook_filter = extract_include_exclude_filter_conf(logbook_conf)
-    merged_filter = merge_include_exclude_filters(recorder_filter, logbook_filter)
+    recorder_filter = recorder.filters.extract_include_exclude_filter_conf(
+        recorder_conf
+    )
+    logbook_filter = recorder.filters.extract_include_exclude_filter_conf(logbook_conf)
+    merged_filter = recorder.filters.merge_include_exclude_filters(
+        recorder_filter, logbook_filter
+    )
 
     possible_merged_entities_filter = convert_include_exclude_filter(merged_filter)
     if not possible_merged_entities_filter.empty_filter:
-        filters = sqlalchemy_filter_from_include_exclude_conf(merged_filter)
+        filters = recorder.filters.sqlalchemy_filter_from_include_exclude_conf(
+            merged_filter
+        )
         entities_filter = possible_merged_entities_filter.get_filter()
     else:
         filters = None

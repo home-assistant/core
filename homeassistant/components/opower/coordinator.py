@@ -14,13 +14,7 @@ from opower import (
     Opower,
 )
 
-from homeassistant.components.recorder import get_instance
-from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
-from homeassistant.components.recorder.statistics import (
-    async_add_external_statistics,
-    get_last_statistics,
-    statistics_during_period,
-)
+from homeassistant.components import recorder
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, UnitOfEnergy, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -90,8 +84,13 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 consumption_statistic_id,
             )
 
-            last_stat = await get_instance(self.hass).async_add_executor_job(
-                get_last_statistics, self.hass, 1, consumption_statistic_id, True, set()
+            last_stat = await recorder.get_instance(self.hass).async_add_executor_job(
+                recorder.statistics.get_last_statistics,
+                self.hass,
+                1,
+                consumption_statistic_id,
+                True,
+                set(),
             )
             if not last_stat:
                 _LOGGER.debug("Updating statistic for the first time")
@@ -106,8 +105,8 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 if not cost_reads:
                     _LOGGER.debug("No recent usage/cost data. Skipping update")
                     continue
-                stats = await get_instance(self.hass).async_add_executor_job(
-                    statistics_during_period,
+                stats = await recorder.get_instance(self.hass).async_add_executor_job(
+                    recorder.statistics.statistics_during_period,
                     self.hass,
                     cost_reads[0].start_time,
                     None,
@@ -131,12 +130,12 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 consumption_sum += cost_read.consumption
 
                 cost_statistics.append(
-                    StatisticData(
+                    recorder.models.StatisticData(
                         start=start, state=cost_read.provided_cost, sum=cost_sum
                     )
                 )
                 consumption_statistics.append(
-                    StatisticData(
+                    recorder.models.StatisticData(
                         start=start, state=cost_read.consumption, sum=consumption_sum
                     )
                 )
@@ -149,7 +148,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                     account.utility_account_id,
                 )
             )
-            cost_metadata = StatisticMetaData(
+            cost_metadata = recorder.models.StatisticMetaData(
                 has_mean=False,
                 has_sum=True,
                 name=f"{name_prefix} cost",
@@ -157,7 +156,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 statistic_id=cost_statistic_id,
                 unit_of_measurement=None,
             )
-            consumption_metadata = StatisticMetaData(
+            consumption_metadata = recorder.models.StatisticMetaData(
                 has_mean=False,
                 has_sum=True,
                 name=f"{name_prefix} consumption",
@@ -168,8 +167,10 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 else UnitOfVolume.CENTUM_CUBIC_FEET,
             )
 
-            async_add_external_statistics(self.hass, cost_metadata, cost_statistics)
-            async_add_external_statistics(
+            recorder.statistics.async_add_external_statistics(
+                self.hass, cost_metadata, cost_statistics
+            )
+            recorder.statistics.async_add_external_statistics(
                 self.hass, consumption_metadata, consumption_statistics
             )
 

@@ -6,6 +6,7 @@ from unittest.mock import ANY, AsyncMock, Mock, PropertyMock, patch
 import aiohttp
 import pytest
 
+from homeassistant.components import recorder
 from homeassistant.components.analytics.analytics import Analytics
 from homeassistant.components.analytics.const import (
     ANALYTICS_ENDPOINT_URL,
@@ -15,7 +16,6 @@ from homeassistant.components.analytics.const import (
     ATTR_STATISTICS,
     ATTR_USAGE,
 )
-from homeassistant.components.recorder import Recorder
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DOMAIN
 from homeassistant.core import HomeAssistant
@@ -627,7 +627,7 @@ async def test_send_with_no_energy(
 
 
 async def test_send_with_no_energy_config(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_hass_config: None,
@@ -654,7 +654,7 @@ async def test_send_with_no_energy_config(
 
 
 async def test_send_with_energy_config(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_hass_config: None,
@@ -702,7 +702,7 @@ async def test_send_usage_with_certificate(
 
 
 async def test_send_with_recorder(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:

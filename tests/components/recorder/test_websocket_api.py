@@ -10,15 +10,6 @@ from freezegun import freeze_time
 import pytest
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import Recorder
-from homeassistant.components.recorder.db_schema import Statistics, StatisticsShortTerm
-from homeassistant.components.recorder.statistics import (
-    async_add_external_statistics,
-    get_last_statistics,
-    get_metadata,
-    list_statistic_ids,
-)
-from homeassistant.components.recorder.websocket_api import UNIT_SCHEMA
 from homeassistant.components.sensor import UNIT_CONVERTERS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import recorder as recorder_helper
@@ -132,14 +123,16 @@ VOLUME_SENSOR_M3_ATTRIBUTES_TOTAL = {
 def test_converters_align_with_sensor() -> None:
     """Ensure UNIT_SCHEMA is aligned with sensor UNIT_CONVERTERS."""
     for converter in UNIT_CONVERTERS.values():
-        assert converter.UNIT_CLASS in UNIT_SCHEMA.schema
+        assert converter.UNIT_CLASS in recorder.websocket_api.UNIT_SCHEMA.schema
 
-    for unit_class in UNIT_SCHEMA.schema:
+    for unit_class in recorder.websocket_api.UNIT_SCHEMA.schema:
         assert any(c for c in UNIT_CONVERTERS.values() if unit_class == c.UNIT_CLASS)
 
 
 async def test_statistics_during_period(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test statistics_during_period."""
     now = dt_util.utcnow()
@@ -220,7 +213,7 @@ async def test_statistics_during_period(
 )
 @pytest.mark.parametrize("offset", (0, 1, 2))
 async def test_statistic_during_period(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     offset,
@@ -296,12 +289,12 @@ async def test_statistic_during_period(
     recorder.get_instance(hass).async_import_statistics(
         imported_metadata,
         imported_stats,
-        Statistics,
+        recorder.db_schema.Statistics,
     )
     recorder.get_instance(hass).async_import_statistics(
         imported_metadata,
         imported_stats_5min,
-        StatisticsShortTerm,
+        recorder.db_schema.StatisticsShortTerm,
     )
     await async_wait_recording_done(hass)
 
@@ -636,7 +629,9 @@ async def test_statistic_during_period(
     datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.timezone.utc)
 )
 async def test_statistic_during_period_hole(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test statistic_during_period when there are holes in the data."""
     id = 1
@@ -677,7 +672,7 @@ async def test_statistic_during_period_hole(
     recorder.get_instance(hass).async_import_statistics(
         imported_metadata,
         imported_stats,
-        Statistics,
+        recorder.db_schema.Statistics,
     )
     await async_wait_recording_done(hass)
 
@@ -856,7 +851,7 @@ async def test_statistic_during_period_hole(
     ),
 )
 async def test_statistic_during_period_calendar(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     calendar_period,
@@ -910,7 +905,7 @@ async def test_statistic_during_period_calendar(
     ],
 )
 async def test_statistics_during_period_unit_conversion(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     attributes,
@@ -997,7 +992,7 @@ async def test_statistics_during_period_unit_conversion(
     ],
 )
 async def test_sum_statistics_during_period_unit_conversion(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     attributes,
@@ -1084,7 +1079,7 @@ async def test_sum_statistics_during_period_unit_conversion(
     ],
 )
 async def test_statistics_during_period_invalid_unit_conversion(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     custom_units,
@@ -1128,7 +1123,9 @@ async def test_statistics_during_period_invalid_unit_conversion(
 
 
 async def test_statistics_during_period_in_the_past(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test statistics_during_period in the past."""
     hass.config.set_time_zone("UTC")
@@ -1245,7 +1242,9 @@ async def test_statistics_during_period_in_the_past(
 
 
 async def test_statistics_during_period_bad_start_time(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test statistics_during_period."""
     client = await hass_ws_client()
@@ -1264,7 +1263,9 @@ async def test_statistics_during_period_bad_start_time(
 
 
 async def test_statistics_during_period_bad_end_time(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test statistics_during_period."""
     now = dt_util.utcnow()
@@ -1286,7 +1287,9 @@ async def test_statistics_during_period_bad_end_time(
 
 
 async def test_statistics_during_period_no_statistic_ids(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test statistics_during_period without passing statistic_ids."""
     now = dt_util.utcnow()
@@ -1307,7 +1310,9 @@ async def test_statistics_during_period_no_statistic_ids(
 
 
 async def test_statistics_during_period_empty_statistic_ids(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test statistics_during_period with passing an empty list of statistic_ids."""
     now = dt_util.utcnow()
@@ -1386,7 +1391,7 @@ async def test_statistics_during_period_empty_statistic_ids(
     ],
 )
 async def test_list_statistic_ids(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     units,
@@ -1550,7 +1555,7 @@ async def test_list_statistic_ids(
     ],
 )
 async def test_list_statistic_ids_unit_change(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     attributes,
@@ -1616,7 +1621,9 @@ async def test_list_statistic_ids_unit_change(
 
 
 async def test_validate_statistics(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test validate_statistics can be called."""
     id = 1
@@ -1640,7 +1647,9 @@ async def test_validate_statistics(
 
 
 async def test_clear_statistics(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test removing statistics."""
     now = dt_util.utcnow()
@@ -1763,7 +1772,7 @@ async def test_clear_statistics(
     [("dogs", None, "dogs"), (None, "unitless", None), ("W", "power", "kW")],
 )
 async def test_update_statistics_metadata(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     new_unit,
@@ -1859,7 +1868,9 @@ async def test_update_statistics_metadata(
 
 
 async def test_change_statistics_unit(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test change unit of recorded statistics."""
     now = dt_util.utcnow()
@@ -2005,7 +2016,7 @@ async def test_change_statistics_unit(
 
 
 async def test_change_statistics_unit_errors(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
@@ -2124,7 +2135,9 @@ async def test_change_statistics_unit_errors(
 
 
 async def test_recorder_info(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test getting recorder status."""
     client = await hass_ws_client()
@@ -2264,7 +2277,7 @@ async def test_backup_start_no_recorder(
 
 
 async def test_backup_start_timeout(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     hass_supervisor_access_token: str,
@@ -2291,7 +2304,7 @@ async def test_backup_start_timeout(
 
 
 async def test_backup_end(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     hass_supervisor_access_token: str,
@@ -2312,7 +2325,7 @@ async def test_backup_end(
 
 
 async def test_backup_end_without_start(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     hass_supervisor_access_token: str,
@@ -2354,7 +2367,7 @@ async def test_backup_end_without_start(
     ],
 )
 async def test_get_statistics_metadata(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     units,
@@ -2416,7 +2429,7 @@ async def test_get_statistics_metadata(
         "unit_of_measurement": unit,
     }
 
-    async_add_external_statistics(
+    recorder.statistics.async_add_external_statistics(
         hass, external_energy_metadata_1, external_energy_statistics_1
     )
     await async_wait_recording_done(hass)
@@ -2508,7 +2521,7 @@ async def test_get_statistics_metadata(
     ),
 )
 async def test_import_statistics(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
@@ -2581,7 +2594,7 @@ async def test_import_statistics(
             },
         ]
     }
-    statistic_ids = list_statistic_ids(hass)  # TODO
+    statistic_ids = recorder.statistics.list_statistic_ids(hass)  # TODO
     assert statistic_ids == [
         {
             "display_unit_of_measurement": "kWh",
@@ -2594,7 +2607,7 @@ async def test_import_statistics(
             "unit_class": "energy",
         }
     ]
-    metadata = get_metadata(hass, statistic_ids={statistic_id})
+    metadata = recorder.statistics.get_metadata(hass, statistic_ids={statistic_id})
     assert metadata == {
         statistic_id: (
             1,
@@ -2608,7 +2621,7 @@ async def test_import_statistics(
             },
         )
     }
-    last_stats = get_last_statistics(
+    last_stats = recorder.statistics.get_last_statistics(
         hass,
         1,
         statistic_id,
@@ -2725,7 +2738,7 @@ async def test_import_statistics(
     ),
 )
 async def test_adjust_sum_statistics_energy(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
@@ -2802,7 +2815,7 @@ async def test_adjust_sum_statistics_energy(
             },
         ]
     }
-    statistic_ids = list_statistic_ids(hass)  # TODO
+    statistic_ids = recorder.statistics.list_statistic_ids(hass)  # TODO
     assert statistic_ids == [
         {
             "display_unit_of_measurement": "kWh",
@@ -2815,7 +2828,7 @@ async def test_adjust_sum_statistics_energy(
             "unit_class": "energy",
         }
     ]
-    metadata = get_metadata(hass, statistic_ids={statistic_id})
+    metadata = recorder.statistics.get_metadata(hass, statistic_ids={statistic_id})
     assert metadata == {
         statistic_id: (
             1,
@@ -2921,7 +2934,7 @@ async def test_adjust_sum_statistics_energy(
     ),
 )
 async def test_adjust_sum_statistics_gas(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
@@ -2998,7 +3011,7 @@ async def test_adjust_sum_statistics_gas(
             },
         ]
     }
-    statistic_ids = list_statistic_ids(hass)  # TODO
+    statistic_ids = recorder.statistics.list_statistic_ids(hass)  # TODO
     assert statistic_ids == [
         {
             "display_unit_of_measurement": "m³",
@@ -3011,7 +3024,7 @@ async def test_adjust_sum_statistics_gas(
             "unit_class": "volume",
         }
     ]
-    metadata = get_metadata(hass, statistic_ids={statistic_id})
+    metadata = recorder.statistics.get_metadata(hass, statistic_ids={statistic_id})
     assert metadata == {
         statistic_id: (
             1,
@@ -3128,7 +3141,7 @@ async def test_adjust_sum_statistics_gas(
     ),
 )
 async def test_adjust_sum_statistics_errors(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
@@ -3212,7 +3225,7 @@ async def test_adjust_sum_statistics_errors(
         ]
     }
     previous_stats = stats
-    statistic_ids = list_statistic_ids(hass)
+    statistic_ids = recorder.statistics.list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "display_unit_of_measurement": state_unit,
@@ -3225,7 +3238,7 @@ async def test_adjust_sum_statistics_errors(
             "unit_class": unit_class,
         }
     ]
-    metadata = get_metadata(hass, statistic_ids={statistic_id})
+    metadata = recorder.statistics.get_metadata(hass, statistic_ids={statistic_id})
     assert metadata == {
         statistic_id: (
             1,

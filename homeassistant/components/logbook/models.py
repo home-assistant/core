@@ -7,13 +7,7 @@ from typing import Any, cast
 
 from sqlalchemy.engine.row import Row
 
-from homeassistant.components.recorder.filters import Filters
-from homeassistant.components.recorder.models import (
-    bytes_to_ulid_or_none,
-    bytes_to_uuid_hex_or_none,
-    ulid_to_bytes_or_none,
-    uuid_hex_to_bytes_or_none,
-)
+from homeassistant.components import recorder
 from homeassistant.const import ATTR_ICON, EVENT_STATE_CHANGED
 from homeassistant.core import Context, Event, State, callback
 import homeassistant.util.dt as dt_util
@@ -28,7 +22,7 @@ class LogbookConfig:
     external_events: dict[
         str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
     ]
-    sqlalchemy_filter: Filters | None = None
+    sqlalchemy_filter: recorder.filters.Filters | None = None
     entity_filter: Callable[[str], bool] | None = None
 
 
@@ -83,17 +77,17 @@ class LazyEventPartialState:
     @property
     def context_id(self) -> str | None:
         """Return the context id."""
-        return bytes_to_ulid_or_none(self.context_id_bin)
+        return recorder.models.bytes_to_ulid_or_none(self.context_id_bin)
 
     @property
     def context_user_id(self) -> str | None:
         """Return the context user id."""
-        return bytes_to_uuid_hex_or_none(self.context_user_id_bin)
+        return recorder.models.bytes_to_uuid_hex_or_none(self.context_user_id_bin)
 
     @property
     def context_parent_id(self) -> str | None:
         """Return the context parent id."""
-        return bytes_to_ulid_or_none(self.context_parent_id_bin)
+        return recorder.models.bytes_to_ulid_or_none(self.context_parent_id_bin)
 
 
 @dataclass(slots=True, frozen=True)
@@ -125,8 +119,12 @@ def async_event_to_row(event: Event) -> EventAsRow:
             context=event.context,
             event_type=event.event_type,
             context_id_bin=ulid_to_bytes(context.id),
-            context_user_id_bin=uuid_hex_to_bytes_or_none(context.user_id),
-            context_parent_id_bin=ulid_to_bytes_or_none(context.parent_id),
+            context_user_id_bin=recorder.models.uuid_hex_to_bytes_or_none(
+                context.user_id
+            ),
+            context_parent_id_bin=recorder.models.ulid_to_bytes_or_none(
+                context.parent_id
+            ),
             time_fired_ts=dt_util.utc_to_timestamp(event.time_fired),
             row_id=hash(event),
         )
@@ -141,8 +139,8 @@ def async_event_to_row(event: Event) -> EventAsRow:
         entity_id=new_state.entity_id,
         state=new_state.state,
         context_id_bin=ulid_to_bytes(context.id),
-        context_user_id_bin=uuid_hex_to_bytes_or_none(context.user_id),
-        context_parent_id_bin=ulid_to_bytes_or_none(context.parent_id),
+        context_user_id_bin=recorder.models.uuid_hex_to_bytes_or_none(context.user_id),
+        context_parent_id_bin=recorder.models.ulid_to_bytes_or_none(context.parent_id),
         time_fired_ts=dt_util.utc_to_timestamp(new_state.last_updated),
         row_id=hash(event),
         icon=new_state.attributes.get(ATTR_ICON),

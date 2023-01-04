@@ -15,52 +15,6 @@ import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import (
-    CONF_AUTO_PURGE,
-    CONF_AUTO_REPACK,
-    CONF_COMMIT_INTERVAL,
-    CONF_DB_MAX_RETRIES,
-    CONF_DB_RETRY_WAIT,
-    CONF_DB_URL,
-    CONFIG_SCHEMA,
-    DOMAIN,
-    SQLITE_URL_PREFIX,
-    Recorder,
-    get_instance,
-    migration,
-    pool,
-    statistics,
-)
-from homeassistant.components.recorder.const import (
-    EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
-    EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,
-    KEEPALIVE_TIME,
-    SupportedDialect,
-)
-from homeassistant.components.recorder.db_schema import (
-    SCHEMA_VERSION,
-    EventData,
-    Events,
-    EventTypes,
-    RecorderRuns,
-    StateAttributes,
-    States,
-    StatesMeta,
-    StatisticsRuns,
-)
-from homeassistant.components.recorder.models import process_timestamp
-from homeassistant.components.recorder.queries import select_event_type_ids
-from homeassistant.components.recorder.services import (
-    SERVICE_DISABLE,
-    SERVICE_ENABLE,
-    SERVICE_PURGE,
-    SERVICE_PURGE_ENTITIES,
-)
-from homeassistant.components.recorder.table_managers import (
-    state_attributes as state_attributes_table_manager,
-    states_meta as states_meta_table_manager,
-)
-from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import (
     EVENT_COMPONENT_LOADED,
     EVENT_HOMEASSISTANT_CLOSE,
@@ -100,15 +54,15 @@ from tests.typing import RecorderInstanceGenerator
 @pytest.fixture
 def small_cache_size() -> None:
     """Patch the default cache size to 8."""
-    with patch.object(state_attributes_table_manager, "CACHE_SIZE", 8), patch.object(
-        states_meta_table_manager, "CACHE_SIZE", 8
-    ):
+    with patch.object(
+        recorder.table_managers.state_attributes, "CACHE_SIZE", 8
+    ), patch.object(recorder.table_managers.states_meta, "CACHE_SIZE", 8):
         yield
 
 
 def _default_recorder(hass):
     """Return a recorder with reasonable defaults."""
-    return Recorder(
+    return recorder.Recorder(
         hass,
         auto_purge=True,
         auto_repack=True,
@@ -117,7 +71,7 @@ def _default_recorder(hass):
         uri="sqlite://",
         db_max_retries=10,
         db_retry_wait=3,
-        entity_filter=CONFIG_SCHEMA({DOMAIN: {}}),
+        entity_filter=recorder.CONFIG_SCHEMA({recorder.DOMAIN: {}}),
         exclude_event_types=set(),
         exclude_attributes_by_domain={},
     )
@@ -143,7 +97,7 @@ async def test_shutdown_before_startup_finishes(
     recorder_helper.async_initialize_recorder(hass)
     hass.create_task(async_setup_recorder_instance(hass, config))
     await recorder_helper.async_wait_recorder(hass)
-    instance = get_instance(hass)
+    instance = recorder.get_instance(hass)
 
     session = await hass.async_add_executor_job(instance.get_session)
 
@@ -174,7 +128,7 @@ async def test_canceled_before_startup_finishes(
     hass.create_task(async_setup_recorder_instance(hass))
     await recorder_helper.async_wait_recorder(hass)
 
-    instance = get_instance(hass)
+    instance = recorder.get_instance(hass)
     instance._hass_started.cancel()
     with patch.object(instance, "engine"):
         await hass.async_block_till_done()
@@ -189,21 +143,21 @@ async def test_canceled_before_startup_finishes(
 
 
 async def test_shutdown_closes_connections(
-    recorder_mock: Recorder, hass: HomeAssistant
+    recorder_mock: recorder.Recorder, hass: HomeAssistant
 ) -> None:
     """Test shutdown closes connections."""
 
     hass.state = CoreState.not_running
 
-    instance = get_instance(hass)
+    instance = recorder.get_instance(hass)
     await instance.async_db_ready
     await hass.async_block_till_done()
     pool = instance.engine.pool
     pool.shutdown = Mock()
 
     def _ensure_connected():
-        with session_scope(hass=hass, read_only=True) as session:
-            list(session.query(States))
+        with recorder.util.session_scope(hass=hass, read_only=True) as session:
+            list(session.query(recorder.db_schema.States))
 
     await instance.async_add_executor_job(_ensure_connected)
 
@@ -236,13 +190,15 @@ async def test_state_gets_saved_when_set_before_start_event(
 
     await async_wait_recording_done(hass)
 
-    with session_scope(hass=hass, read_only=True) as session:
-        db_states = list(session.query(States))
+    with recorder.util.session_scope(hass=hass, read_only=True) as session:
+        db_states = list(session.query(recorder.db_schema.States))
         assert len(db_states) == 1
         assert db_states[0].event_id is None
 
 
-async def test_saving_state(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+async def test_saving_state(
+    recorder_mock: recorder.Recorder, hass: HomeAssistant
+) -> None:
     """Test saving and restoring a state."""
     entity_id = "test.recorder"
     state = "restoring_from_db"
@@ -252,14 +208,24 @@ async def test_saving_state(recorder_mock: Recorder, hass: HomeAssistant) -> Non
 
     await async_wait_recording_done(hass)
 
-    with session_scope(hass=hass, read_only=True) as session:
+    with recorder.util.session_scope(hass=hass, read_only=True) as session:
         db_states = []
         for db_state, db_state_attributes, states_meta in (
-            session.query(States, StateAttributes, StatesMeta)
-            .outerjoin(
-                StateAttributes, States.attributes_id == StateAttributes.attributes_id
+            session.query(
+                recorder.db_schema.States,
+                recorder.db_schema.StateAttributes,
+                recorder.db_schema.StatesMeta,
             )
-            .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+            .outerjoin(
+                recorder.db_schema.StateAttributes,
+                recorder.db_schema.States.attributes_id
+                == recorder.db_schema.StateAttributes.attributes_id,
+            )
+            .outerjoin(
+                recorder.db_schema.StatesMeta,
+                recorder.db_schema.States.metadata_id
+                == recorder.db_schema.StatesMeta.metadata_id,
+            )
         ):
             db_state.entity_id = states_meta.entity_id
             db_states.append(db_state)
@@ -274,13 +240,25 @@ async def test_saving_state(recorder_mock: Recorder, hass: HomeAssistant) -> Non
 @pytest.mark.parametrize(
     ("dialect_name", "expected_attributes"),
     (
-        (SupportedDialect.MYSQL, {"test_attr": 5, "test_attr_10": "silly\0stuff"}),
-        (SupportedDialect.POSTGRESQL, {"test_attr": 5, "test_attr_10": "silly"}),
-        (SupportedDialect.SQLITE, {"test_attr": 5, "test_attr_10": "silly\0stuff"}),
+        (
+            recorder.const.SupportedDialect.MYSQL,
+            {"test_attr": 5, "test_attr_10": "silly\0stuff"},
+        ),
+        (
+            recorder.const.SupportedDialect.POSTGRESQL,
+            {"test_attr": 5, "test_attr_10": "silly"},
+        ),
+        (
+            recorder.const.SupportedDialect.SQLITE,
+            {"test_attr": 5, "test_attr_10": "silly\0stuff"},
+        ),
     ),
 )
 async def test_saving_state_with_nul(
-    recorder_mock: Recorder, hass: HomeAssistant, dialect_name, expected_attributes
+    recorder_mock: recorder.Recorder,
+    hass: HomeAssistant,
+    dialect_name,
+    expected_attributes,
 ) -> None:
     """Test saving and restoring a state with nul in attributes."""
     entity_id = "test.recorder"
@@ -293,14 +271,24 @@ async def test_saving_state_with_nul(
         hass.states.async_set(entity_id, state, attributes)
         await async_wait_recording_done(hass)
 
-    with session_scope(hass=hass, read_only=True) as session:
+    with recorder.util.session_scope(hass=hass, read_only=True) as session:
         db_states = []
         for db_state, db_state_attributes, states_meta in (
-            session.query(States, StateAttributes, StatesMeta)
-            .outerjoin(
-                StateAttributes, States.attributes_id == StateAttributes.attributes_id
+            session.query(
+                recorder.db_schema.States,
+                recorder.db_schema.StateAttributes,
+                recorder.db_schema.StatesMeta,
             )
-            .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+            .outerjoin(
+                recorder.db_schema.StateAttributes,
+                recorder.db_schema.States.attributes_id
+                == recorder.db_schema.StateAttributes.attributes_id,
+            )
+            .outerjoin(
+                recorder.db_schema.StatesMeta,
+                recorder.db_schema.States.metadata_id
+                == recorder.db_schema.StatesMeta.metadata_id,
+            )
         ):
             db_state.entity_id = states_meta.entity_id
             db_states.append(db_state)
@@ -336,14 +324,14 @@ async def test_saving_many_states(
 
     assert expire_all.called
 
-    with session_scope(hass=hass, read_only=True) as session:
-        db_states = list(session.query(States))
+    with recorder.util.session_scope(hass=hass, read_only=True) as session:
+        db_states = list(session.query(recorder.db_schema.States))
         assert len(db_states) == 6
         assert db_states[0].event_id is None
 
 
 async def test_saving_state_with_intermixed_time_changes(
-    recorder_mock: Recorder, hass: HomeAssistant
+    recorder_mock: recorder.Recorder, hass: HomeAssistant
 ) -> None:
     """Test saving states with intermixed time changes."""
     entity_id = "test.recorder"
@@ -351,17 +339,17 @@ async def test_saving_state_with_intermixed_time_changes(
     attributes = {"test_attr": 5, "test_attr_10": "nice"}
     attributes2 = {"test_attr": 10, "test_attr_10": "mean"}
 
-    for _ in range(KEEPALIVE_TIME + 1):
+    for _ in range(recorder.const.KEEPALIVE_TIME + 1):
         async_fire_time_changed(hass, dt_util.utcnow())
     hass.states.async_set(entity_id, state, attributes)
-    for _ in range(KEEPALIVE_TIME + 1):
+    for _ in range(recorder.const.KEEPALIVE_TIME + 1):
         async_fire_time_changed(hass, dt_util.utcnow())
     hass.states.async_set(entity_id, state, attributes2)
 
     await async_wait_recording_done(hass)
 
-    with session_scope(hass=hass, read_only=True) as session:
-        db_states = list(session.query(States))
+    with recorder.util.session_scope(hass=hass, read_only=True) as session:
+        db_states = list(session.query(recorder.db_schema.States))
         assert len(db_states) == 2
         assert db_states[0].event_id is None
 
@@ -379,14 +367,14 @@ def test_saving_state_with_exception(
     attributes = {"test_attr": 5, "test_attr_10": "nice"}
 
     def _throw_if_state_in_session(*args, **kwargs):
-        for obj in get_instance(hass).event_session:
-            if isinstance(obj, States):
+        for obj in recorder.get_instance(hass).event_session:
+            if isinstance(obj, recorder.db_schema.States):
                 raise OperationalError(
                     "insert the state", "fake params", "forced to fail"
                 )
 
     with patch("time.sleep"), patch.object(
-        get_instance(hass).event_session,
+        recorder.get_instance(hass).event_session,
         "flush",
         side_effect=_throw_if_state_in_session,
     ):
@@ -400,8 +388,8 @@ def test_saving_state_with_exception(
     hass.states.set(entity_id, state, attributes)
     wait_recording_done(hass)
 
-    with session_scope(hass=hass, read_only=True) as session:
-        db_states = list(session.query(States))
+    with recorder.util.session_scope(hass=hass, read_only=True) as session:
+        db_states = list(session.query(recorder.db_schema.States))
         assert len(db_states) >= 1
 
     assert "Error executing query" not in caplog.text
@@ -421,14 +409,14 @@ def test_saving_state_with_sqlalchemy_exception(
     attributes = {"test_attr": 5, "test_attr_10": "nice"}
 
     def _throw_if_state_in_session(*args, **kwargs):
-        for obj in get_instance(hass).event_session:
-            if isinstance(obj, States):
+        for obj in recorder.get_instance(hass).event_session:
+            if isinstance(obj, recorder.db_schema.States):
                 raise SQLAlchemyError(
                     "insert the state", "fake params", "forced to fail"
                 )
 
     with patch("time.sleep"), patch.object(
-        get_instance(hass).event_session,
+        recorder.get_instance(hass).event_session,
         "flush",
         side_effect=_throw_if_state_in_session,
     ):
@@ -441,8 +429,8 @@ def test_saving_state_with_sqlalchemy_exception(
     hass.states.set(entity_id, state, attributes)
     wait_recording_done(hass)
 
-    with session_scope(hass=hass, read_only=True) as session:
-        db_states = list(session.query(States))
+    with recorder.util.session_scope(hass=hass, read_only=True) as session:
+        db_states = list(session.query(recorder.db_schema.States))
         assert len(db_states) >= 1
 
     assert "Error executing query" not in caplog.text
@@ -506,19 +494,35 @@ def test_saving_event(hass_recorder: Callable[..., HomeAssistant]) -> None:
     assert len(events) == 1
     event: Event = events[0]
 
-    get_instance(hass).block_till_done()
+    recorder.get_instance(hass).block_till_done()
     events: list[Event] = []
 
-    with session_scope(hass=hass, read_only=True) as session:
+    with recorder.util.session_scope(hass=hass, read_only=True) as session:
         for select_event, event_data, event_types in (
-            session.query(Events, EventData, EventTypes)
-            .filter(Events.event_type_id.in_(select_event_type_ids((event_type,))))
-            .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
-            .outerjoin(EventData, Events.data_id == EventData.data_id)
+            session.query(
+                recorder.db_schema.Events,
+                recorder.db_schema.EventData,
+                recorder.db_schema.EventTypes,
+            )
+            .filter(
+                recorder.db_schema.Events.event_type_id.in_(
+                    recorder.queries.select_event_type_ids((event_type,))
+                )
+            )
+            .outerjoin(
+                recorder.db_schema.EventTypes,
+                recorder.db_schema.Events.event_type_id
+                == recorder.db_schema.EventTypes.event_type_id,
+            )
+            .outerjoin(
+                recorder.db_schema.EventData,
+                recorder.db_schema.Events.data_id
+                == recorder.db_schema.EventData.data_id,
+            )
         ):
-            select_event = cast(Events, select_event)
-            event_data = cast(EventData, event_data)
-            event_types = cast(EventTypes, event_types)
+            select_event = cast(recorder.db_schema.Events, select_event)
+            event_data = cast(recorder.db_schema.EventData, event_data)
+            event_types = cast(recorder.db_schema.EventTypes, event_types)
 
             native_event = select_event.to_native()
             native_event.data = event_data.to_native()
@@ -542,7 +546,7 @@ def test_saving_state_with_commit_interval_zero(
 ) -> None:
     """Test saving a state with a commit interval of zero."""
     hass = hass_recorder({"commit_interval": 0})
-    get_instance(hass).commit_interval == 0
+    recorder.get_instance(hass).commit_interval == 0
 
     entity_id = "test.recorder"
     state = "restoring_from_db"
@@ -552,8 +556,8 @@ def test_saving_state_with_commit_interval_zero(
 
     wait_recording_done(hass)
 
-    with session_scope(hass=hass, read_only=True) as session:
-        db_states = list(session.query(States))
+    with recorder.util.session_scope(hass=hass, read_only=True) as session:
+        db_states = list(session.query(recorder.db_schema.States))
         assert len(db_states) == 1
         assert db_states[0].event_id is None
 
@@ -565,20 +569,30 @@ def _add_entities(hass, entity_ids):
         hass.states.set(entity_id, f"state{idx}", attributes)
     wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with recorder.util.session_scope(hass=hass) as session:
         states = []
         for db_state, db_state_attributes, states_meta in (
-            session.query(States, StateAttributes, StatesMeta)
-            .outerjoin(
-                StateAttributes, States.attributes_id == StateAttributes.attributes_id
+            session.query(
+                recorder.db_schema.States,
+                recorder.db_schema.StateAttributes,
+                recorder.db_schema.StatesMeta,
             )
-            .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+            .outerjoin(
+                recorder.db_schema.StateAttributes,
+                recorder.db_schema.States.attributes_id
+                == recorder.db_schema.StateAttributes.attributes_id,
+            )
+            .outerjoin(
+                recorder.db_schema.StatesMeta,
+                recorder.db_schema.States.metadata_id
+                == recorder.db_schema.StatesMeta.metadata_id,
+            )
         ):
             db_state.entity_id = states_meta.entity_id
             native_state = db_state.to_native()
             native_state.attributes = db_state_attributes.to_native()
             states.append(native_state)
-        convert_pending_states_to_meta(get_instance(hass), session)
+        convert_pending_states_to_meta(recorder.get_instance(hass), session)
         return states
 
 
@@ -591,7 +605,9 @@ def _state_with_context(hass, entity_id):
 def test_setup_without_migration(hass_recorder: Callable[..., HomeAssistant]) -> None:
     """Verify the schema version without a migration."""
     hass = hass_recorder()
-    assert recorder.get_instance(hass).schema_version == SCHEMA_VERSION
+    assert (
+        recorder.get_instance(hass).schema_version == recorder.db_schema.SCHEMA_VERSION
+    )
 
 
 # pylint: disable=invalid-name
@@ -663,19 +679,29 @@ async def test_saving_event_exclude_event_type(
     await async_wait_recording_done(hass)
 
     def _get_events(hass: HomeAssistant, event_types: list[str]) -> list[Event]:
-        with session_scope(hass=hass, read_only=True) as session:
+        with recorder.util.session_scope(hass=hass, read_only=True) as session:
             events = []
             for event, event_data, event_types in (
-                session.query(Events, EventData, EventTypes)
-                .outerjoin(
-                    EventTypes, (Events.event_type_id == EventTypes.event_type_id)
+                session.query(
+                    recorder.db_schema.Events,
+                    recorder.db_schema.EventData,
+                    recorder.db_schema.EventTypes,
                 )
-                .outerjoin(EventData, Events.data_id == EventData.data_id)
-                .where(EventTypes.event_type.in_(event_types))
+                .outerjoin(
+                    recorder.db_schema.EventTypes,
+                    recorder.db_schema.Events.event_type_id
+                    == recorder.db_schema.EventTypes.event_type_id,
+                )
+                .outerjoin(
+                    recorder.db_schema.EventData,
+                    recorder.db_schema.Events.data_id
+                    == recorder.db_schema.EventData.data_id,
+                )
+                .where(recorder.db_schema.EventTypes.event_type.in_(event_types))
             ):
-                event = cast(Events, event)
-                event_data = cast(EventData, event_data)
-                event_types = cast(EventTypes, event_types)
+                event = cast(recorder.db_schema.Events, event)
+                event_data = cast(recorder.db_schema.EventData, event_data)
+                event_types = cast(recorder.db_schema.EventTypes, event_types)
 
                 native_event = event.to_native()
                 if event_data:
@@ -793,11 +819,17 @@ def test_saving_state_and_removing_entity(
 
     wait_recording_done(hass)
 
-    with session_scope(hass=hass, read_only=True) as session:
+    with recorder.util.session_scope(hass=hass, read_only=True) as session:
         states = list(
-            session.query(StatesMeta.entity_id, States.state)
-            .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
-            .order_by(States.last_updated_ts)
+            session.query(
+                recorder.db_schema.StatesMeta.entity_id, recorder.db_schema.States.state
+            )
+            .outerjoin(
+                recorder.db_schema.StatesMeta,
+                recorder.db_schema.States.metadata_id
+                == recorder.db_schema.StatesMeta.metadata_id,
+            )
+            .order_by(recorder.db_schema.States.last_updated_ts)
         )
         assert len(states) == 3
         assert states[0].entity_id == entity_id
@@ -820,13 +852,23 @@ def test_saving_state_with_oversized_attributes(
     wait_recording_done(hass)
     states = []
 
-    with session_scope(hass=hass, read_only=True) as session:
+    with recorder.util.session_scope(hass=hass, read_only=True) as session:
         for db_state, db_state_attributes, states_meta in (
-            session.query(States, StateAttributes, StatesMeta)
-            .outerjoin(
-                StateAttributes, States.attributes_id == StateAttributes.attributes_id
+            session.query(
+                recorder.db_schema.States,
+                recorder.db_schema.StateAttributes,
+                recorder.db_schema.StatesMeta,
             )
-            .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+            .outerjoin(
+                recorder.db_schema.StateAttributes,
+                recorder.db_schema.States.attributes_id
+                == recorder.db_schema.StateAttributes.attributes_id,
+            )
+            .outerjoin(
+                recorder.db_schema.StatesMeta,
+                recorder.db_schema.States.metadata_id
+                == recorder.db_schema.StatesMeta.metadata_id,
+            )
         ):
             db_state.entity_id = states_meta.entity_id
             native_state = db_state.to_native()
@@ -854,12 +896,28 @@ def test_saving_event_with_oversized_data(
     wait_recording_done(hass)
     events = {}
 
-    with session_scope(hass=hass, read_only=True) as session:
+    with recorder.util.session_scope(hass=hass, read_only=True) as session:
         for _, data, event_type in (
-            session.query(Events.event_id, EventData.shared_data, EventTypes.event_type)
-            .outerjoin(EventData, Events.data_id == EventData.data_id)
-            .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
-            .where(EventTypes.event_type.in_(["test_event", "test_event_too_big"]))
+            session.query(
+                recorder.db_schema.Events.event_id,
+                recorder.db_schema.EventData.shared_data,
+                recorder.db_schema.EventTypes.event_type,
+            )
+            .outerjoin(
+                recorder.db_schema.EventData,
+                recorder.db_schema.Events.data_id
+                == recorder.db_schema.EventData.data_id,
+            )
+            .outerjoin(
+                recorder.db_schema.EventTypes,
+                recorder.db_schema.Events.event_type_id
+                == recorder.db_schema.EventTypes.event_type_id,
+            )
+            .where(
+                recorder.db_schema.EventTypes.event_type.in_(
+                    ["test_event", "test_event_too_big"]
+                )
+            )
         ):
             events[event_type] = data
 
@@ -880,12 +938,24 @@ def test_saving_event_invalid_context_ulid(
     wait_recording_done(hass)
     events = {}
 
-    with session_scope(hass=hass, read_only=True) as session:
+    with recorder.util.session_scope(hass=hass, read_only=True) as session:
         for _, data, event_type in (
-            session.query(Events.event_id, EventData.shared_data, EventTypes.event_type)
-            .outerjoin(EventData, Events.data_id == EventData.data_id)
-            .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
-            .where(EventTypes.event_type.in_(["test_event"]))
+            session.query(
+                recorder.db_schema.Events.event_id,
+                recorder.db_schema.EventData.shared_data,
+                recorder.db_schema.EventTypes.event_type,
+            )
+            .outerjoin(
+                recorder.db_schema.EventData,
+                recorder.db_schema.Events.data_id
+                == recorder.db_schema.EventData.data_id,
+            )
+            .outerjoin(
+                recorder.db_schema.EventTypes,
+                recorder.db_schema.Events.event_type_id
+                == recorder.db_schema.EventTypes.event_type_id,
+            )
+            .where(recorder.db_schema.EventTypes.event_type.in_(["test_event"]))
         ):
             events[event_type] = data
 
@@ -898,7 +968,7 @@ def test_saving_event_invalid_context_ulid(
 def test_recorder_setup_failure(hass: HomeAssistant) -> None:
     """Test some exceptions."""
     recorder_helper.async_initialize_recorder(hass)
-    with patch.object(Recorder, "_setup_connection") as setup, patch(
+    with patch.object(recorder.Recorder, "_setup_connection") as setup, patch(
         "homeassistant.components.recorder.core.time.sleep"
     ):
         setup.side_effect = ImportError("driver not found")
@@ -930,7 +1000,7 @@ def test_recorder_validate_schema_failure(hass: HomeAssistant) -> None:
 def test_recorder_setup_failure_without_event_listener(hass: HomeAssistant) -> None:
     """Test recorder setup failure when the event listener is not setup."""
     recorder_helper.async_initialize_recorder(hass)
-    with patch.object(Recorder, "_setup_connection") as setup, patch(
+    with patch.object(recorder.Recorder, "_setup_connection") as setup, patch(
         "homeassistant.components.recorder.core.time.sleep"
     ):
         setup.side_effect = ImportError("driver not found")
@@ -965,7 +1035,7 @@ def run_tasks_at_time(hass, test_time):
     """Advance the clock and wait for any callbacks to finish."""
     fire_time_changed(hass, test_time)
     hass.block_till_done()
-    get_instance(hass).block_till_done()
+    recorder.get_instance(hass).block_till_done()
 
 
 @pytest.mark.parametrize("enable_nightly_purge", [True])
@@ -1071,7 +1141,7 @@ def test_auto_purge_auto_repack_disabled_on_second_sunday(
     hass_recorder: Callable[..., HomeAssistant]
 ) -> None:
     """Test periodic purge scheduling does not auto repack on the 2nd sunday if disabled."""
-    hass = hass_recorder({CONF_AUTO_REPACK: False})
+    hass = hass_recorder({recorder.CONF_AUTO_REPACK: False})
 
     original_tz = dt_util.DEFAULT_TIME_ZONE
 
@@ -1150,7 +1220,7 @@ def test_auto_purge_no_auto_repack_on_not_second_sunday(
 @pytest.mark.parametrize("enable_nightly_purge", [True])
 def test_auto_purge_disabled(hass_recorder: Callable[..., HomeAssistant]) -> None:
     """Test periodic db cleanup still run when auto purge is disabled."""
-    hass = hass_recorder({CONF_AUTO_PURGE: False})
+    hass = hass_recorder({recorder.CONF_AUTO_PURGE: False})
 
     original_tz = dt_util.DEFAULT_TIME_ZONE
 
@@ -1218,13 +1288,15 @@ def test_auto_statistics(hass_recorder: Callable[..., HomeAssistant], freezer) -
     hass.block_till_done()
 
     hass.bus.listen(
-        EVENT_RECORDER_5MIN_STATISTICS_GENERATED, async_5min_stats_updated_listener
+        recorder.const.EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
+        async_5min_stats_updated_listener,
     )
     hass.bus.listen(
-        EVENT_RECORDER_HOURLY_STATISTICS_GENERATED, async_hourly_stats_updated_listener
+        recorder.const.EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,
+        async_hourly_stats_updated_listener,
     )
 
-    real_compile_statistics = statistics.compile_statistics
+    real_compile_statistics = recorder.statistics.compile_statistics
     with patch(
         "homeassistant.components.recorder.statistics.compile_statistics",
         side_effect=real_compile_statistics,
@@ -1283,11 +1355,11 @@ def test_statistics_runs_initiated(hass_recorder: Callable[..., HomeAssistant]) 
 
         wait_recording_done(hass)
 
-        with session_scope(hass=hass, read_only=True) as session:
-            statistics_runs = list(session.query(StatisticsRuns))
+        with recorder.util.session_scope(hass=hass, read_only=True) as session:
+            statistics_runs = list(session.query(recorder.db_schema.StatisticsRuns))
             assert len(statistics_runs) == 1
-            last_run = process_timestamp(statistics_runs[0].start)
-            assert process_timestamp(last_run) == now.replace(
+            last_run = recorder.models.process_timestamp(statistics_runs[0].start)
+            assert recorder.models.process_timestamp(last_run) == now.replace(
                 minute=now.minute - now.minute % 5, second=0, microsecond=0
             ) - timedelta(minutes=5)
 
@@ -1301,19 +1373,21 @@ def test_compile_missing_statistics(
     test_dir = tmp_path.joinpath("sqlite")
     test_dir.mkdir()
     test_db_file = test_dir.joinpath("test_run_info.db")
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+    dburl = f"{recorder.SQLITE_URL_PREFIX}//{test_db_file}"
 
     hass = get_test_home_assistant()
     recorder_helper.async_initialize_recorder(hass)
-    setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+    setup_component(
+        hass, recorder.DOMAIN, {recorder.DOMAIN: {recorder.CONF_DB_URL: dburl}}
+    )
     hass.start()
     wait_recording_done(hass)
     wait_recording_done(hass)
 
-    with session_scope(hass=hass, read_only=True) as session:
-        statistics_runs = list(session.query(StatisticsRuns))
+    with recorder.util.session_scope(hass=hass, read_only=True) as session:
+        statistics_runs = list(session.query(recorder.db_schema.StatisticsRuns))
         assert len(statistics_runs) == 1
-        last_run = process_timestamp(statistics_runs[0].start)
+        last_run = recorder.models.process_timestamp(statistics_runs[0].start)
         assert last_run == now - timedelta(minutes=5)
 
     wait_recording_done(hass)
@@ -1336,22 +1410,26 @@ def test_compile_missing_statistics(
     freezer.tick(timedelta(hours=1))
     hass = get_test_home_assistant()
     hass.bus.listen(
-        EVENT_RECORDER_5MIN_STATISTICS_GENERATED, async_5min_stats_updated_listener
+        recorder.const.EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
+        async_5min_stats_updated_listener,
     )
     hass.bus.listen(
-        EVENT_RECORDER_HOURLY_STATISTICS_GENERATED, async_hourly_stats_updated_listener
+        recorder.const.EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,
+        async_hourly_stats_updated_listener,
     )
 
     recorder_helper.async_initialize_recorder(hass)
-    setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+    setup_component(
+        hass, recorder.DOMAIN, {recorder.DOMAIN: {recorder.CONF_DB_URL: dburl}}
+    )
     hass.start()
     wait_recording_done(hass)
     wait_recording_done(hass)
 
-    with session_scope(hass=hass, read_only=True) as session:
-        statistics_runs = list(session.query(StatisticsRuns))
+    with recorder.util.session_scope(hass=hass, read_only=True) as session:
+        statistics_runs = list(session.query(recorder.db_schema.StatisticsRuns))
         assert len(statistics_runs) == 13  # 12 5-minute runs
-        last_run = process_timestamp(statistics_runs[1].start)
+        last_run = recorder.models.process_timestamp(statistics_runs[1].start)
         assert last_run == now
 
     assert len(stats_5min) == 1
@@ -1373,11 +1451,18 @@ def test_saving_sets_old_state(hass_recorder: Callable[..., HomeAssistant]) -> N
     hass.states.set("test.two", "s4", {})
     wait_recording_done(hass)
 
-    with session_scope(hass=hass, read_only=True) as session:
+    with recorder.util.session_scope(hass=hass, read_only=True) as session:
         states = list(
             session.query(
-                StatesMeta.entity_id, States.state_id, States.old_state_id, States.state
-            ).outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+                recorder.db_schema.StatesMeta.entity_id,
+                recorder.db_schema.States.state_id,
+                recorder.db_schema.States.old_state_id,
+                recorder.db_schema.States.state,
+            ).outerjoin(
+                recorder.db_schema.StatesMeta,
+                recorder.db_schema.States.metadata_id
+                == recorder.db_schema.StatesMeta.metadata_id,
+            )
         )
         assert len(states) == 4
         states_by_state = {state.state: state for state in states}
@@ -1407,11 +1492,18 @@ def test_saving_state_with_serializable_data(
     hass.states.set("test.two", "s3", {})
     wait_recording_done(hass)
 
-    with session_scope(hass=hass, read_only=True) as session:
+    with recorder.util.session_scope(hass=hass, read_only=True) as session:
         states = list(
             session.query(
-                StatesMeta.entity_id, States.state_id, States.old_state_id, States.state
-            ).outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+                recorder.db_schema.StatesMeta.entity_id,
+                recorder.db_schema.States.state_id,
+                recorder.db_schema.States.old_state_id,
+                recorder.db_schema.States.state,
+            ).outerjoin(
+                recorder.db_schema.StatesMeta,
+                recorder.db_schema.States.metadata_id
+                == recorder.db_schema.StatesMeta.metadata_id,
+            )
         )
         assert len(states) == 2
         states_by_state = {state.state: state for state in states}
@@ -1427,10 +1519,12 @@ def test_has_services(hass_recorder: Callable[..., HomeAssistant]) -> None:
     """Test the services exist."""
     hass = hass_recorder()
 
-    assert hass.services.has_service(DOMAIN, SERVICE_DISABLE)
-    assert hass.services.has_service(DOMAIN, SERVICE_ENABLE)
-    assert hass.services.has_service(DOMAIN, SERVICE_PURGE)
-    assert hass.services.has_service(DOMAIN, SERVICE_PURGE_ENTITIES)
+    assert hass.services.has_service(recorder.DOMAIN, recorder.services.SERVICE_DISABLE)
+    assert hass.services.has_service(recorder.DOMAIN, recorder.services.SERVICE_ENABLE)
+    assert hass.services.has_service(recorder.DOMAIN, recorder.services.SERVICE_PURGE)
+    assert hass.services.has_service(
+        recorder.DOMAIN, recorder.services.SERVICE_PURGE_ENTITIES
+    )
 
 
 def test_service_disable_events_not_recording(
@@ -1440,8 +1534,8 @@ def test_service_disable_events_not_recording(
     hass = hass_recorder()
 
     hass.services.call(
-        DOMAIN,
-        SERVICE_DISABLE,
+        recorder.DOMAIN,
+        recorder.services.SERVICE_DISABLE,
         {},
         blocking=True,
     )
@@ -1465,17 +1559,25 @@ def test_service_disable_events_not_recording(
     assert len(events) == 1
     event = events[0]
 
-    with session_scope(hass=hass, read_only=True) as session:
+    with recorder.util.session_scope(hass=hass, read_only=True) as session:
         db_events = list(
-            session.query(Events)
-            .filter(Events.event_type_id.in_(select_event_type_ids((event_type,))))
-            .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
+            session.query(recorder.db_schema.Events)
+            .filter(
+                recorder.db_schema.Events.event_type_id.in_(
+                    recorder.queries.select_event_type_ids((event_type,))
+                )
+            )
+            .outerjoin(
+                recorder.db_schema.EventTypes,
+                recorder.db_schema.Events.event_type_id
+                == recorder.db_schema.EventTypes.event_type_id,
+            )
         )
         assert len(db_events) == 0
 
     hass.services.call(
-        DOMAIN,
-        SERVICE_ENABLE,
+        recorder.DOMAIN,
+        recorder.services.SERVICE_ENABLE,
         {},
         blocking=True,
     )
@@ -1489,16 +1591,32 @@ def test_service_disable_events_not_recording(
     assert events[0].data != events[1].data
 
     db_events = []
-    with session_scope(hass=hass, read_only=True) as session:
+    with recorder.util.session_scope(hass=hass, read_only=True) as session:
         for select_event, event_data, event_types in (
-            session.query(Events, EventData, EventTypes)
-            .filter(Events.event_type_id.in_(select_event_type_ids((event_type,))))
-            .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
-            .outerjoin(EventData, Events.data_id == EventData.data_id)
+            session.query(
+                recorder.db_schema.Events,
+                recorder.db_schema.EventData,
+                recorder.db_schema.EventTypes,
+            )
+            .filter(
+                recorder.db_schema.Events.event_type_id.in_(
+                    recorder.queries.select_event_type_ids((event_type,))
+                )
+            )
+            .outerjoin(
+                recorder.db_schema.EventTypes,
+                recorder.db_schema.Events.event_type_id
+                == recorder.db_schema.EventTypes.event_type_id,
+            )
+            .outerjoin(
+                recorder.db_schema.EventData,
+                recorder.db_schema.Events.data_id
+                == recorder.db_schema.EventData.data_id,
+            )
         ):
-            select_event = cast(Events, select_event)
-            event_data = cast(EventData, event_data)
-            event_types = cast(EventTypes, event_types)
+            select_event = cast(recorder.db_schema.Events, select_event)
+            event_data = cast(recorder.db_schema.EventData, event_data)
+            event_types = cast(recorder.db_schema.EventTypes, event_types)
 
             native_event = select_event.to_native()
             native_event.data = event_data.to_native()
@@ -1524,8 +1642,8 @@ def test_service_disable_states_not_recording(
     hass = hass_recorder()
 
     hass.services.call(
-        DOMAIN,
-        SERVICE_DISABLE,
+        recorder.DOMAIN,
+        recorder.services.SERVICE_DISABLE,
         {},
         blocking=True,
     )
@@ -1533,12 +1651,12 @@ def test_service_disable_states_not_recording(
     hass.states.set("test.one", "on", {})
     wait_recording_done(hass)
 
-    with session_scope(hass=hass, read_only=True) as session:
-        assert len(list(session.query(States))) == 0
+    with recorder.util.session_scope(hass=hass, read_only=True) as session:
+        assert len(list(session.query(recorder.db_schema.States))) == 0
 
     hass.services.call(
-        DOMAIN,
-        SERVICE_ENABLE,
+        recorder.DOMAIN,
+        recorder.services.SERVICE_ENABLE,
         {},
         blocking=True,
     )
@@ -1546,8 +1664,8 @@ def test_service_disable_states_not_recording(
     hass.states.set("test.two", "off", {})
     wait_recording_done(hass)
 
-    with session_scope(hass=hass, read_only=True) as session:
-        db_states = list(session.query(States))
+    with recorder.util.session_scope(hass=hass, read_only=True) as session:
+        db_states = list(session.query(recorder.db_schema.States))
         assert len(db_states) == 1
         assert db_states[0].event_id is None
         db_states[0].entity_id = "test.two"
@@ -1562,23 +1680,25 @@ def test_service_disable_run_information_recorded(tmp_path: Path) -> None:
     test_dir = tmp_path.joinpath("sqlite")
     test_dir.mkdir()
     test_db_file = test_dir.joinpath("test_run_info.db")
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+    dburl = f"{recorder.SQLITE_URL_PREFIX}//{test_db_file}"
 
     hass = get_test_home_assistant()
     recorder_helper.async_initialize_recorder(hass)
-    setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+    setup_component(
+        hass, recorder.DOMAIN, {recorder.DOMAIN: {recorder.CONF_DB_URL: dburl}}
+    )
     hass.start()
     wait_recording_done(hass)
 
-    with session_scope(hass=hass, read_only=True) as session:
-        db_run_info = list(session.query(RecorderRuns))
+    with recorder.util.session_scope(hass=hass, read_only=True) as session:
+        db_run_info = list(session.query(recorder.db_schema.RecorderRuns))
         assert len(db_run_info) == 1
         assert db_run_info[0].start is not None
         assert db_run_info[0].end is None
 
     hass.services.call(
-        DOMAIN,
-        SERVICE_DISABLE,
+        recorder.DOMAIN,
+        recorder.services.SERVICE_DISABLE,
         {},
         blocking=True,
     )
@@ -1588,12 +1708,14 @@ def test_service_disable_run_information_recorded(tmp_path: Path) -> None:
 
     hass = get_test_home_assistant()
     recorder_helper.async_initialize_recorder(hass)
-    setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+    setup_component(
+        hass, recorder.DOMAIN, {recorder.DOMAIN: {recorder.CONF_DB_URL: dburl}}
+    )
     hass.start()
     wait_recording_done(hass)
 
-    with session_scope(hass=hass, read_only=True) as session:
-        db_run_info = list(session.query(RecorderRuns))
+    with recorder.util.session_scope(hass=hass, read_only=True) as session:
+        db_run_info = list(session.query(recorder.db_schema.RecorderRuns))
         assert len(db_run_info) == 2
         assert db_run_info[0].start is not None
         assert db_run_info[0].end is not None
@@ -1618,16 +1740,25 @@ async def test_database_corruption_while_running(
         return test_dir.joinpath("test.db")
 
     test_db_file = await hass.async_add_executor_job(_create_tmpdir_for_test_db)
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+    dburl = f"{recorder.SQLITE_URL_PREFIX}//{test_db_file}"
 
     recorder_helper.async_initialize_recorder(hass)
     assert await async_setup_component(
-        hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl, CONF_COMMIT_INTERVAL: 0}}
+        hass,
+        recorder.DOMAIN,
+        {
+            recorder.DOMAIN: {
+                recorder.CONF_DB_URL: dburl,
+                recorder.CONF_COMMIT_INTERVAL: 0,
+            }
+        },
     )
     await hass.async_block_till_done()
     caplog.clear()
 
-    original_start_time = get_instance(hass).recorder_runs_manager.recording_start
+    original_start_time = recorder.get_instance(
+        hass
+    ).recorder_runs_manager.recording_start
 
     hass.states.async_set("test.lost", "on", {})
 
@@ -1636,7 +1767,7 @@ async def test_database_corruption_while_running(
 
     await async_wait_recording_done(hass)
     with patch.object(
-        get_instance(hass).event_session,
+        recorder.get_instance(hass).event_session,
         "close",
         side_effect=OperationalError("statement", {}, []),
     ):
@@ -1645,7 +1776,7 @@ async def test_database_corruption_while_running(
         await async_wait_recording_done(hass)
 
         with patch.object(
-            get_instance(hass).event_session,
+            recorder.get_instance(hass).event_session,
             "commit",
             side_effect=[sqlite3_exception, None],
         ):
@@ -1664,8 +1795,8 @@ async def test_database_corruption_while_running(
     await async_wait_recording_done(hass)
 
     def _get_last_state():
-        with session_scope(hass=hass, read_only=True) as session:
-            db_states = list(session.query(States))
+        with recorder.util.session_scope(hass=hass, read_only=True) as session:
+            db_states = list(session.query(recorder.db_schema.States))
             assert len(db_states) == 1
             db_states[0].entity_id = "test.two"
             assert db_states[0].event_id is None
@@ -1675,7 +1806,7 @@ async def test_database_corruption_while_running(
     assert state.entity_id == "test.two"
     assert state.state == "on"
 
-    new_start_time = get_instance(hass).recorder_runs_manager.recording_start
+    new_start_time = recorder.get_instance(hass).recorder_runs_manager.recording_start
     assert original_start_time < new_start_time
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
@@ -1702,10 +1833,12 @@ def test_entity_id_filter(hass_recorder: Callable[..., HomeAssistant]) -> None:
         hass.bus.fire("hello", data)
         wait_recording_done(hass)
 
-        with session_scope(hass=hass, read_only=True) as session:
+        with recorder.util.session_scope(hass=hass, read_only=True) as session:
             db_events = list(
-                session.query(Events).filter(
-                    Events.event_type_id.in_(select_event_type_ids(event_types))
+                session.query(recorder.db_schema.Events).filter(
+                    recorder.db_schema.Events.event_type_id.in_(
+                        recorder.queries.select_event_type_ids(event_types)
+                    )
                 )
             )
             assert len(db_events) == idx + 1, data
@@ -1717,10 +1850,12 @@ def test_entity_id_filter(hass_recorder: Callable[..., HomeAssistant]) -> None:
         hass.bus.fire("hello", data)
         wait_recording_done(hass)
 
-        with session_scope(hass=hass, read_only=True) as session:
+        with recorder.util.session_scope(hass=hass, read_only=True) as session:
             db_events = list(
-                session.query(Events).filter(
-                    Events.event_type_id.in_(select_event_type_ids(event_types))
+                session.query(recorder.db_schema.Events).filter(
+                    recorder.db_schema.Events.event_type_id.in_(
+                        recorder.queries.select_event_type_ids(event_types)
+                    )
                 )
             )
             # Keep referring idx + 1, as no new events are being added
@@ -1751,14 +1886,16 @@ async def test_database_lock_and_unlock(
     event_types = (event_type,)
 
     def _get_db_events():
-        with session_scope(hass=hass, read_only=True) as session:
+        with recorder.util.session_scope(hass=hass, read_only=True) as session:
             return list(
-                session.query(Events).filter(
-                    Events.event_type_id.in_(select_event_type_ids(event_types))
+                session.query(recorder.db_schema.Events).filter(
+                    recorder.db_schema.Events.event_type_id.in_(
+                        recorder.queries.select_event_type_ids(event_types)
+                    )
                 )
             )
 
-    instance = get_instance(hass)
+    instance = recorder.get_instance(hass)
 
     assert await instance.lock_database()
 
@@ -1803,10 +1940,12 @@ async def test_database_lock_and_overflow(
     }
 
     def _get_db_events():
-        with session_scope(hass=hass, read_only=True) as session:
+        with recorder.util.session_scope(hass=hass, read_only=True) as session:
             return list(
-                session.query(Events).filter(
-                    Events.event_type_id.in_(select_event_type_ids(event_types))
+                session.query(recorder.db_schema.Events).filter(
+                    recorder.db_schema.Events.event_type_id.in_(
+                        recorder.queries.select_event_type_ids(event_types)
+                    )
                 )
             )
 
@@ -1818,7 +1957,7 @@ async def test_database_lock_and_overflow(
         event_type = "EVENT_TEST"
         event_types = (event_type,)
 
-        instance = get_instance(hass)
+        instance = recorder.get_instance(hass)
 
         await instance.lock_database()
 
@@ -1857,10 +1996,12 @@ async def test_database_lock_and_overflow_checks_available_memory(
     }
 
     def _get_db_events():
-        with session_scope(hass=hass, read_only=True) as session:
+        with recorder.util.session_scope(hass=hass, read_only=True) as session:
             return list(
-                session.query(Events).filter(
-                    Events.event_type_id.in_(select_event_type_ids(event_types))
+                session.query(recorder.db_schema.Events).filter(
+                    recorder.db_schema.Events.event_type_id.in_(
+                        recorder.queries.select_event_type_ids(event_types)
+                    )
                 )
             )
 
@@ -1877,7 +2018,7 @@ async def test_database_lock_and_overflow_checks_available_memory(
         "_available_memory",
         return_value=recorder.core.ESTIMATED_QUEUE_ITEM_SIZE * 4,
     ):
-        instance = get_instance(hass)
+        instance = recorder.get_instance(hass)
 
         await instance.lock_database()
 
@@ -1915,7 +2056,7 @@ async def test_database_lock_and_overflow_checks_available_memory(
 
 
 async def test_database_lock_timeout(
-    recorder_mock: Recorder, hass: HomeAssistant, recorder_db_url: str
+    recorder_mock: recorder.Recorder, hass: HomeAssistant, recorder_db_url: str
 ) -> None:
     """Test locking database timeout when recorder stopped."""
     if recorder_db_url.startswith(("mysql://", "postgresql://")):
@@ -1924,12 +2065,12 @@ async def test_database_lock_timeout(
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
 
-    instance = get_instance(hass)
+    instance = recorder.get_instance(hass)
 
     class BlockQueue(recorder.tasks.RecorderTask):
         event: threading.Event = threading.Event()
 
-        def run(self, instance: Recorder) -> None:
+        def run(self, instance: recorder.Recorder) -> None:
             self.event.wait()
 
     block_task = BlockQueue()
@@ -1944,12 +2085,12 @@ async def test_database_lock_timeout(
 
 
 async def test_database_lock_without_instance(
-    recorder_mock: Recorder, hass: HomeAssistant
+    recorder_mock: recorder.Recorder, hass: HomeAssistant
 ) -> None:
     """Test database lock doesn't fail if instance is not initialized."""
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
 
-    instance = get_instance(hass)
+    instance = recorder.get_instance(hass)
     with patch.object(instance, "engine"):
         try:
             assert await instance.lock_database()
@@ -1981,7 +2122,7 @@ async def test_database_connection_keep_alive(
         await instance.async_recorder_ready.wait()
 
     async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=recorder.core.KEEPALIVE_TIME)
+        hass, dt_util.utcnow() + timedelta(seconds=recorder.const.KEEPALIVE_TIME)
     )
     await async_wait_recording_done(hass)
     assert "Sending keepalive" in caplog.text
@@ -2003,7 +2144,7 @@ async def test_database_connection_keep_alive_disabled_on_sqlite(
     await instance.async_recorder_ready.wait()
 
     async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=recorder.core.KEEPALIVE_TIME)
+        hass, dt_util.utcnow() + timedelta(seconds=recorder.const.KEEPALIVE_TIME)
     )
     await async_wait_recording_done(hass)
     assert "Sending keepalive" not in caplog.text
@@ -2022,13 +2163,25 @@ def test_deduplication_event_data_inside_commit_interval(
         hass.bus.fire("this_event", {"de": "dupe"})
     wait_recording_done(hass)
 
-    with session_scope(hass=hass, read_only=True) as session:
+    with recorder.util.session_scope(hass=hass, read_only=True) as session:
         event_types = ("this_event",)
         events = list(
-            session.query(Events)
-            .filter(Events.event_type_id.in_(select_event_type_ids(event_types)))
-            .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
-            .outerjoin(EventData, (Events.data_id == EventData.data_id))
+            session.query(recorder.db_schema.Events)
+            .filter(
+                recorder.db_schema.Events.event_type_id.in_(
+                    recorder.queries.select_event_type_ids(event_types)
+                )
+            )
+            .outerjoin(
+                recorder.db_schema.EventTypes,
+                recorder.db_schema.Events.event_type_id
+                == recorder.db_schema.EventTypes.event_type_id,
+            )
+            .outerjoin(
+                recorder.db_schema.EventData,
+                recorder.db_schema.Events.data_id
+                == recorder.db_schema.EventData.data_id,
+            )
         )
         assert len(events) == 20
         first_data_id = events[0].data_id
@@ -2060,10 +2213,12 @@ def test_deduplication_state_attributes_inside_commit_interval(
         hass.states.set(entity_id, "off", attributes)
     wait_recording_done(hass)
 
-    with session_scope(hass=hass, read_only=True) as session:
+    with recorder.util.session_scope(hass=hass, read_only=True) as session:
         states = list(
-            session.query(States).outerjoin(
-                StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
+            session.query(recorder.db_schema.States).outerjoin(
+                recorder.db_schema.StateAttributes,
+                recorder.db_schema.States.attributes_id
+                == recorder.db_schema.StateAttributes.attributes_id,
             )
         )
         assert len(states) == 22
@@ -2086,8 +2241,8 @@ async def test_async_block_till_done(
     hass.states.async_set(entity_id, "off", attributes)
 
     def _fetch_states():
-        with session_scope(hass=hass, read_only=True) as session:
-            return list(session.query(States))
+        with recorder.util.session_scope(hass=hass, read_only=True) as session:
+            return list(session.query(recorder.db_schema.States))
 
     await async_block_recorder(hass, 0.1)
     await instance.async_block_till_done()
@@ -2123,7 +2278,9 @@ async def test_disable_echo(
     ) as create_engine_mock, patch(
         "homeassistant.components.recorder.core.sqlalchemy_event", mock_event
     ):
-        await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: db_url}})
+        await async_setup_component(
+            hass, recorder.DOMAIN, {recorder.DOMAIN: {recorder.CONF_DB_URL: db_url}}
+        )
         create_engine_mock.assert_called_once()
         assert create_engine_mock.mock_calls[0][2].get("echo") == echo
 
@@ -2181,7 +2338,9 @@ async def test_mysql_missing_utf8mb4(
     ) as create_engine_mock, patch(
         "homeassistant.components.recorder.core.sqlalchemy_event", mock_event
     ):
-        await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: config_url}})
+        await async_setup_component(
+            hass, recorder.DOMAIN, {recorder.DOMAIN: {recorder.CONF_DB_URL: config_url}}
+        )
         create_engine_mock.assert_called_once()
 
         connect_args = create_engine_mock.mock_calls[0][2].get("connect_args", {})
@@ -2231,7 +2390,7 @@ async def test_connect_args_priority(hass: HomeAssistant, config_url) -> None:
             ...
 
         def get_dialect_pool_class(self, *args):
-            return pool.RecorderPool
+            return recorder.pool.RecorderPool
 
         def initialize(*args):
             ...
@@ -2254,12 +2413,12 @@ async def test_connect_args_priority(hass: HomeAssistant, config_url) -> None:
     ):
         await async_setup_component(
             hass,
-            DOMAIN,
+            recorder.DOMAIN,
             {
-                DOMAIN: {
-                    CONF_DB_URL: config_url,
-                    CONF_DB_MAX_RETRIES: 1,
-                    CONF_DB_RETRY_WAIT: 0,
+                recorder.DOMAIN: {
+                    recorder.CONF_DB_URL: config_url,
+                    recorder.CONF_DB_MAX_RETRIES: 1,
+                    recorder.CONF_DB_RETRY_WAIT: 0,
                 }
             },
         )
@@ -2268,7 +2427,7 @@ async def test_connect_args_priority(hass: HomeAssistant, config_url) -> None:
 
 @pytest.mark.parametrize("core_state", [CoreState.starting, CoreState.running])
 async def test_excluding_attributes_by_integration(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     core_state: CoreState,
@@ -2294,14 +2453,24 @@ async def test_excluding_attributes_by_integration(
 
     await async_wait_recording_done(hass)
 
-    with session_scope(hass=hass, read_only=True) as session:
+    with recorder.util.session_scope(hass=hass, read_only=True) as session:
         db_states = []
         for db_state, db_state_attributes, states_meta in (
-            session.query(States, StateAttributes, StatesMeta)
-            .outerjoin(
-                StateAttributes, States.attributes_id == StateAttributes.attributes_id
+            session.query(
+                recorder.db_schema.States,
+                recorder.db_schema.StateAttributes,
+                recorder.db_schema.StatesMeta,
             )
-            .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+            .outerjoin(
+                recorder.db_schema.StateAttributes,
+                recorder.db_schema.States.attributes_id
+                == recorder.db_schema.StateAttributes.attributes_id,
+            )
+            .outerjoin(
+                recorder.db_schema.StatesMeta,
+                recorder.db_schema.States.metadata_id
+                == recorder.db_schema.StatesMeta.metadata_id,
+            )
         ):
             db_state.entity_id = states_meta.entity_id
             db_states.append(db_state)
@@ -2316,7 +2485,7 @@ async def test_excluding_attributes_by_integration(
 
 
 async def test_lru_increases_with_many_entities(
-    small_cache_size: None, recorder_mock: Recorder, hass: HomeAssistant
+    small_cache_size: None, recorder_mock: recorder.Recorder, hass: HomeAssistant
 ) -> None:
     """Test that the recorder's internal LRU cache increases with many entities."""
     mock_entity_count = 16
@@ -2337,9 +2506,9 @@ async def test_clean_shutdown_when_recorder_thread_raises_during_initialize_data
     hass: HomeAssistant,
 ) -> None:
     """Test we still shutdown cleanly when the recorder thread raises during initialize_database."""
-    with patch.object(migration, "initialize_database", side_effect=Exception), patch(
-        "homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True
-    ):
+    with patch.object(
+        recorder.migration, "initialize_database", side_effect=Exception
+    ), patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True):
         if recorder.DOMAIN not in hass.data:
             recorder_helper.async_initialize_recorder(hass)
         assert not await async_setup_component(
@@ -2347,9 +2516,9 @@ async def test_clean_shutdown_when_recorder_thread_raises_during_initialize_data
             recorder.DOMAIN,
             {
                 recorder.DOMAIN: {
-                    CONF_DB_URL: "sqlite://",
-                    CONF_DB_RETRY_WAIT: 0,
-                    CONF_DB_MAX_RETRIES: 1,
+                    recorder.CONF_DB_URL: "sqlite://",
+                    recorder.CONF_DB_RETRY_WAIT: 0,
+                    recorder.CONF_DB_MAX_RETRIES: 1,
                 }
             },
         )
@@ -2364,9 +2533,9 @@ async def test_clean_shutdown_when_recorder_thread_raises_during_validate_db_sch
     hass: HomeAssistant,
 ) -> None:
     """Test we still shutdown cleanly when the recorder thread raises during validate_db_schema."""
-    with patch.object(migration, "validate_db_schema", side_effect=Exception), patch(
-        "homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True
-    ):
+    with patch.object(
+        recorder.migration, "validate_db_schema", side_effect=Exception
+    ), patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True):
         if recorder.DOMAIN not in hass.data:
             recorder_helper.async_initialize_recorder(hass)
         assert not await async_setup_component(
@@ -2374,9 +2543,9 @@ async def test_clean_shutdown_when_recorder_thread_raises_during_validate_db_sch
             recorder.DOMAIN,
             {
                 recorder.DOMAIN: {
-                    CONF_DB_URL: "sqlite://",
-                    CONF_DB_RETRY_WAIT: 0,
-                    CONF_DB_MAX_RETRIES: 1,
+                    recorder.CONF_DB_URL: "sqlite://",
+                    recorder.CONF_DB_RETRY_WAIT: 0,
+                    recorder.CONF_DB_MAX_RETRIES: 1,
                 }
             },
         )
@@ -2390,13 +2559,13 @@ async def test_clean_shutdown_when_recorder_thread_raises_during_validate_db_sch
 async def test_clean_shutdown_when_schema_migration_fails(hass: HomeAssistant) -> None:
     """Test we still shutdown cleanly when schema migration fails."""
     with patch.object(
-        migration,
+        recorder.migration,
         "validate_db_schema",
         return_value=MagicMock(valid=False, current_version=1),
     ), patch(
         "homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True
     ), patch.object(
-        migration,
+        recorder.migration,
         "migrate_schema",
         side_effect=Exception,
     ):
@@ -2407,9 +2576,9 @@ async def test_clean_shutdown_when_schema_migration_fails(hass: HomeAssistant) -
             recorder.DOMAIN,
             {
                 recorder.DOMAIN: {
-                    CONF_DB_URL: "sqlite://",
-                    CONF_DB_RETRY_WAIT: 0,
-                    CONF_DB_MAX_RETRIES: 1,
+                    recorder.CONF_DB_URL: "sqlite://",
+                    recorder.CONF_DB_RETRY_WAIT: 0,
+                    recorder.CONF_DB_MAX_RETRIES: 1,
                 }
             },
         )
@@ -2434,20 +2603,24 @@ async def test_events_are_recorded_until_final_write(
 
     def get_events() -> list[Event]:
         events: list[Event] = []
-        with session_scope(hass=hass, read_only=True) as session:
+        with recorder.util.session_scope(hass=hass, read_only=True) as session:
             for select_event, event_types in (
-                session.query(Events, EventTypes)
+                session.query(recorder.db_schema.Events, recorder.db_schema.EventTypes)
                 .filter(
-                    Events.event_type_id.in_(
-                        select_event_type_ids(("fake_event", "after_final_write"))
+                    recorder.db_schema.Events.event_type_id.in_(
+                        recorder.queries.select_event_type_ids(
+                            ("fake_event", "after_final_write")
+                        )
                     )
                 )
                 .outerjoin(
-                    EventTypes, (Events.event_type_id == EventTypes.event_type_id)
+                    recorder.db_schema.EventTypes,
+                    recorder.db_schema.Events.event_type_id
+                    == recorder.db_schema.EventTypes.event_type_id,
                 )
             ):
-                select_event = cast(Events, select_event)
-                event_types = cast(EventTypes, event_types)
+                select_event = cast(recorder.db_schema.Events, select_event)
+                event_types = cast(recorder.db_schema.EventTypes, event_types)
 
                 native_event = select_event.to_native()
                 native_event.event_type = event_types.event_type

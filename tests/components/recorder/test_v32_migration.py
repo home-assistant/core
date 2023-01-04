@@ -12,9 +12,6 @@ from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import Session
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import SQLITE_URL_PREFIX, core, statistics
-from homeassistant.components.recorder.queries import select_event_type_ids
-from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import EVENT_STATE_CHANGED, Event, EventOrigin, State
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import async_setup_component
@@ -41,7 +38,9 @@ def _create_engine_test(*args, **kwargs):
     old_db_schema.Base.metadata.create_all(engine)
     with Session(engine) as session:
         session.add(
-            recorder.db_schema.StatisticsRuns(start=statistics.get_start_time())
+            recorder.db_schema.StatisticsRuns(
+                start=recorder.statistics.get_start_time()
+            )
         )
         session.add(
             recorder.db_schema.SchemaChanges(
@@ -57,7 +56,7 @@ async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmp_path: Path) -
     test_dir = tmp_path.joinpath("sqlite")
     test_dir.mkdir()
     test_db_file = test_dir.joinpath("test_run_info.db")
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+    dburl = f"{recorder.SQLITE_URL_PREFIX}//{test_db_file}"
 
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
@@ -92,19 +91,21 @@ async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmp_path: Path) -
     number_of_migrations = 5
 
     def _get_states_index_names():
-        with session_scope(hass=hass) as session:
+        with recorder.util.session_scope(hass=hass) as session:
             return inspect(session.connection()).get_indexes("states")
 
     with patch.object(recorder, "db_schema", old_db_schema), patch.object(
         recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-    ), patch.object(core, "StatesMeta", old_db_schema.StatesMeta), patch.object(
-        core, "EventTypes", old_db_schema.EventTypes
     ), patch.object(
-        core, "EventData", old_db_schema.EventData
+        recorder.core, "StatesMeta", old_db_schema.StatesMeta
     ), patch.object(
-        core, "States", old_db_schema.States
+        recorder.core, "EventTypes", old_db_schema.EventTypes
     ), patch.object(
-        core, "Events", old_db_schema.Events
+        recorder.core, "EventData", old_db_schema.EventData
+    ), patch.object(
+        recorder.core, "States", old_db_schema.States
+    ), patch.object(
+        recorder.core, "Events", old_db_schema.Events
     ), patch(
         CREATE_ENGINE_TARGET, new=_create_engine_test
     ), patch(
@@ -130,7 +131,7 @@ async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmp_path: Path) -
         await async_wait_recording_done(hass)
 
         def _add_data():
-            with session_scope(hass=hass) as session:
+            with recorder.util.session_scope(hass=hass) as session:
                 session.add(old_db_schema.Events.from_event(custom_event))
                 session.add(old_db_schema.States.from_event(state_changed_event))
 
@@ -166,11 +167,11 @@ async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmp_path: Path) -
         await async_wait_recording_done(hass)
 
     def _get_test_data_from_db():
-        with session_scope(hass=hass) as session:
+        with recorder.util.session_scope(hass=hass) as session:
             events_result = list(
                 session.query(recorder.db_schema.Events).filter(
                     recorder.db_schema.Events.event_type_id.in_(
-                        select_event_type_ids(("custom_event",))
+                        recorder.queries.select_event_type_ids(("custom_event",))
                     )
                 )
             )
@@ -197,7 +198,7 @@ async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmp_path: Path) -
     assert states_result[0].last_updated_ts == now_timestamp
 
     def _get_events_index_names():
-        with session_scope(hass=hass) as session:
+        with recorder.util.session_scope(hass=hass) as session:
             return inspect(session.connection()).get_indexes("events")
 
     events_indexes = await recorder.get_instance(hass).async_add_executor_job(
@@ -231,7 +232,7 @@ async def test_migrate_can_resume_entity_id_post_migration(
     test_dir = tmp_path.joinpath("sqlite")
     test_dir.mkdir()
     test_db_file = test_dir.joinpath("test_run_info.db")
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+    dburl = f"{recorder.SQLITE_URL_PREFIX}//{test_db_file}"
 
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
@@ -263,19 +264,21 @@ async def test_migrate_can_resume_entity_id_post_migration(
     number_of_migrations = 5
 
     def _get_states_index_names():
-        with session_scope(hass=hass) as session:
+        with recorder.util.session_scope(hass=hass) as session:
             return inspect(session.connection()).get_indexes("states")
 
     with patch.object(recorder, "db_schema", old_db_schema), patch.object(
         recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-    ), patch.object(core, "StatesMeta", old_db_schema.StatesMeta), patch.object(
-        core, "EventTypes", old_db_schema.EventTypes
     ), patch.object(
-        core, "EventData", old_db_schema.EventData
+        recorder.core, "StatesMeta", old_db_schema.StatesMeta
     ), patch.object(
-        core, "States", old_db_schema.States
+        recorder.core, "EventTypes", old_db_schema.EventTypes
     ), patch.object(
-        core, "Events", old_db_schema.Events
+        recorder.core, "EventData", old_db_schema.EventData
+    ), patch.object(
+        recorder.core, "States", old_db_schema.States
+    ), patch.object(
+        recorder.core, "Events", old_db_schema.Events
     ), patch(
         CREATE_ENGINE_TARGET, new=_create_engine_test
     ), patch(
@@ -301,7 +304,7 @@ async def test_migrate_can_resume_entity_id_post_migration(
         await async_wait_recording_done(hass)
 
         def _add_data():
-            with session_scope(hass=hass) as session:
+            with recorder.util.session_scope(hass=hass) as session:
                 session.add(old_db_schema.Events.from_event(custom_event))
                 session.add(old_db_schema.States.from_event(state_changed_event))
 

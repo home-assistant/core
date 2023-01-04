@@ -6,8 +6,7 @@ from unittest.mock import Mock
 
 from pyunifiprotect.data import Camera, Event, EventType
 
-from homeassistant.components.recorder import Recorder
-from homeassistant.components.recorder.history import get_significant_states
+from homeassistant.components import recorder
 from homeassistant.components.unifiprotect.binary_sensor import EVENT_SENSORS
 from homeassistant.components.unifiprotect.const import (
     ATTR_EVENT_ID,
@@ -23,7 +22,7 @@ from tests.components.recorder.common import async_wait_recording_done
 
 
 async def test_exclude_attributes(
-    recorder_mock: Recorder,
+    recorder_mock: recorder.Recorder,
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     doorbell: Camera,
@@ -70,7 +69,11 @@ async def test_exclude_attributes(
     await async_wait_recording_done(hass)
 
     states = await hass.async_add_executor_job(
-        get_significant_states, hass, now, None, hass.states.async_entity_ids()
+        recorder.history.get_significant_states,
+        hass,
+        now,
+        None,
+        hass.states.async_entity_ids(),
     )
     assert len(states) >= 1
     for entity_states in states.values():
