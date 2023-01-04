@@ -9,8 +9,8 @@ import logging
 from ultraheat_api.response import HeatMeterResponse
 
 from homeassistant.components.sensor import (
-    SensorEntity,
     SensorDeviceClass,
+    SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
