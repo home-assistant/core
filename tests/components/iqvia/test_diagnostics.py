@@ -7,7 +7,10 @@ from tests.typing import ClientSessionGenerator
 
 
 async def test_entry_diagnostics(
-    hass: HomeAssistant, config_entry, hass_client: ClientSessionGenerator, setup_iqvia
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry,
+    setup_config_entry,
 ) -> None:
     """Test config entry diagnostics."""
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
