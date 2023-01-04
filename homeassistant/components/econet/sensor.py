@@ -107,6 +107,8 @@ class EcoNetSensor(EcoNetEntity, SensorEntity):
         """Initialize."""
         super().__init__(econet_device)
         self.entity_description = description
+        self._attr_name = f"{self._econet.device_name}_{self.entity_description.name}"
+        self._attr_unique_id = f"{self._econet.device_id}_{self._econet.device_name}_{self.entity_description.name}"
 
     @property
     def native_value(self):
@@ -118,13 +120,3 @@ class EcoNetSensor(EcoNetEntity, SensorEntity):
         if isinstance(value, float):
             value = round(value, 2)
         return value
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return f"{self._econet.device_name}_{self.entity_description.name}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of the entity."""
-        return f"{self._econet.device_id}_{self._econet.device_name}_{self.entity_description.name}"
