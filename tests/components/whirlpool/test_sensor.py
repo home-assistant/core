@@ -40,10 +40,9 @@ def side_effect_function_open_door(*args, **kwargs):
         return "3"
 
 
-async def test_combined_sensor_values(
+async def test_dryer_sensor_values(
     hass: HomeAssistant,
     mock_sensor_api_instances: MagicMock,
-    mock_sensor1_api: MagicMock,
     mock_sensor2_api: MagicMock,
 ):
     """Test the sensor value callbacks."""
@@ -57,24 +56,43 @@ async def test_combined_sensor_values(
         mock_instance: MagicMock
         mock_instance_idx: int
 
-    for sensor_test_instance in (
-        SensorTestInstance("sensor.washer_state", mock_sensor1_api, 0),
-        SensorTestInstance("sensor.dryer_state", mock_sensor2_api, 1),
-    ):
-        entity_id = sensor_test_instance.entity_id
-        mock_instance = sensor_test_instance.mock_instance
-        registry = entity_registry.async_get(hass)
-        entry = registry.async_get(entity_id)
-        assert entry
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert state.state == "Standby"
+    sensor_test_instance = SensorTestInstance("sensor.dryer_state", mock_sensor2_api, 1)
 
-        state = await update_sensor_state(hass, entity_id, mock_instance)
-        assert state is not None
-        state_id = f"{entity_id.split('_')[0]}_end_time"
-        state = hass.states.get(state_id)
-        assert state is not None
+    entity_id = sensor_test_instance.entity_id
+    mock_instance = sensor_test_instance.mock_instance
+    registry = entity_registry.async_get(hass)
+    entry = registry.async_get(entity_id)
+    assert entry
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "Standby"
+
+    state = await update_sensor_state(hass, entity_id, mock_instance)
+    assert state is not None
+    state_id = f"{entity_id.split('_')[0]}_end_time"
+    state = hass.states.get(state_id)
+    assert state is not None
+
+    mock_instance.get_machine_state.return_value = MachineState.RunningMainCycle
+    mock_instance.get_cycle_status_filling.return_value = False
+    mock_instance.attr_value_to_bool.side_effect = [
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+    ]
+
+    state = await update_sensor_state(hass, entity_id, mock_instance)
+    assert state is not None
+    assert state.state == "Running Maincycle"
+
+    mock_instance.get_machine_state.return_value = MachineState.Complete
+
+    state = await update_sensor_state(hass, entity_id, mock_instance)
+    assert state is not None
+    assert state.state == "Complete"
 
 
 async def test_washer_sensor_values(
@@ -96,6 +114,7 @@ async def test_washer_sensor_values(
     sensor_test_instance = SensorTestInstance(
         "sensor.washer_state", mock_sensor1_api, 0
     )
+
     entity_id = sensor_test_instance.entity_id
     mock_instance = sensor_test_instance.mock_instance
     registry = entity_registry.async_get(hass)
