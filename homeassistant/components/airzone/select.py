@@ -86,7 +86,7 @@ async def async_setup_entry(
     """Add Airzone sensors from a config_entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities: list[AirzoneSelect] = []
+    entities: list[AirzoneBaseSelect] = []
 
     for system_zone_id, zone_data in coordinator.data[AZD_ZONES].items():
         for description in ZONE_SELECT_TYPES:
@@ -108,7 +108,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AirzoneSelect(AirzoneEntity, SelectEntity):
+class AirzoneBaseSelect(AirzoneEntity, SelectEntity):
     """Define an Airzone select."""
 
     entity_description: AirzoneSelectDescription
@@ -130,7 +130,7 @@ class AirzoneSelect(AirzoneEntity, SelectEntity):
         self._attr_current_option = self._get_current_option()
 
 
-class AirzoneZoneSelect(AirzoneZoneEntity, AirzoneSelect):
+class AirzoneZoneSelect(AirzoneZoneEntity, AirzoneBaseSelect):
     """Define an Airzone Zone select."""
 
     def __init__(
