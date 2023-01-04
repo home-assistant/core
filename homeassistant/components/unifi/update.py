@@ -32,9 +32,6 @@ from .entity import (
 if TYPE_CHECKING:
     from .controller import UniFiController
 
-DataT = TypeVar("DataT", bound=Device)
-HandlerT = TypeVar("HandlerT", bound=Devices)
-
 LOGGER = logging.getLogger(__name__)
 
 _DataT = TypeVar("_DataT", bound=Device)
