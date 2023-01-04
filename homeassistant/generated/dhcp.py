@@ -241,6 +241,11 @@ DHCP: list[dict[str, str | bool]] = [
     },
     {
         "domain": "isy994",
+        "hostname": "eisy*",
+        "macaddress": "0021B9*",
+    },
+    {
+        "domain": "isy994",
         "hostname": "polisy*",
         "macaddress": "000DB9*",
     },
