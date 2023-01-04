@@ -36,7 +36,7 @@ _STATISTIC_MEASURES = [
 
 
 async def basic_group_options_schema(
-    domain: str | list, handler: SchemaCommonFlowHandler
+    domain: str | list[str], handler: SchemaCommonFlowHandler
 ) -> vol.Schema:
     """Generate options schema."""
     return vol.Schema(
@@ -50,7 +50,7 @@ async def basic_group_options_schema(
     )
 
 
-def basic_group_config_schema(domain: str | list) -> vol.Schema:
+def basic_group_config_schema(domain: str | list[str]) -> vol.Schema:
     """Generate config schema."""
     return vol.Schema(
         {

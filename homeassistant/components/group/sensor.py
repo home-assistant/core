@@ -1,10 +1,10 @@
 """This platform allows several sensors to be grouped into one sensor to provide numeric combinations."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime
 import logging
 import statistics
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -36,8 +36,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util.dt import UTC, now
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from . import GroupEntity
 
@@ -74,12 +73,10 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_ENTITIES): cv.entities_domain(
             [DOMAIN, NUMBER_DOMAIN, INPUT_NUMBER_DOMAIN]
         ),
+        vol.Required(CONF_TYPE): vol.All(cv.string, vol.In(SENSOR_TYPES.values())),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_ALL, default=False): cv.boolean,
-        vol.Optional(CONF_TYPE, default=SENSOR_TYPES[ATTR_MAX_VALUE]): vol.All(
-            cv.string, vol.In(SENSOR_TYPES.values())
-        ),
         vol.Optional(CONF_ROUND_DIGITS, default=2): vol.Coerce(int),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): str,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
@@ -141,82 +138,65 @@ async def async_setup_entry(
     )
 
 
-def calc_min(sensor_values: list[tuple[str, Any]]) -> tuple[str | None, float | None]:
+def calc_min(sensor_values: list[tuple[str, float]]) -> tuple[str, float]:
     """Calculate min value."""
     val: float | None = None
     entity_id: str | None = None
     for sensor_id, sensor_value in sensor_values:
-        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE] and (
-            val is None or val > sensor_value
-        ):
+        if val is None or val > sensor_value:
             entity_id, val = sensor_id, sensor_value
+    if TYPE_CHECKING:
+        assert entity_id and val
     return entity_id, val
 
 
-def calc_max(sensor_values: list[tuple[str, Any]]) -> tuple[str | None, float | None]:
+def calc_max(sensor_values: list[tuple[str, float]]) -> tuple[str, float]:
     """Calculate max value."""
     val: float | None = None
     entity_id: str | None = None
     for sensor_id, sensor_value in sensor_values:
-        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE] and (
-            val is None or val < sensor_value
-        ):
+        if val is None or val < sensor_value:
             entity_id, val = sensor_id, sensor_value
+    if TYPE_CHECKING:
+        assert entity_id and val
     return entity_id, val
 
 
-def calc_mean(sensor_values: list[tuple[str, Any]], round_digits: int) -> float | None:
+def calc_mean(
+    sensor_values: list[tuple[str, float]], round_digits: int
+) -> float | None:
     """Calculate mean value."""
-    result = [
-        sensor_value
-        for _, sensor_value in sensor_values
-        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]
-    ]
+    result = [sensor_value for _, sensor_value in sensor_values]
 
-    if not result:
-        return None
     value: float = round(statistics.mean(result), round_digits)
     return value
 
 
 def calc_median(
-    sensor_values: list[tuple[str, Any]], round_digits: int
+    sensor_values: list[tuple[str, float]], round_digits: int
 ) -> float | None:
     """Calculate median value."""
-    result = [
-        sensor_value
-        for _, sensor_value in sensor_values
-        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]
-    ]
+    result = [sensor_value for _, sensor_value in sensor_values]
 
-    if not result:
-        return None
     value: float = round(statistics.median(result), round_digits)
     return value
 
 
-def calc_range(sensor_values: list[tuple[str, Any]], round_digits: int) -> float | None:
+def calc_range(
+    sensor_values: list[tuple[str, float]], round_digits: int
+) -> float | None:
     """Calculate range value."""
-    result = [
-        sensor_value
-        for _, sensor_value in sensor_values
-        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]
-    ]
+    result = [sensor_value for _, sensor_value in sensor_values]
 
-    if not result:
-        return None
     value: float = round(max(result) - min(result), round_digits)
     return value
 
 
-def calc_sum(sensor_values: list[tuple[str, Any]], round_digits: int) -> float:
+def calc_sum(sensor_values: list[tuple[str, float]], round_digits: int) -> float:
     """Calculate a sum of values."""
-    result = 0
+    result = 0.0
     for _, sensor_value in sensor_values:
-        try:
-            result += sensor_value
-        except TypeError:
-            continue
+        result += sensor_value
 
     value: float = round(result, round_digits)
     return value
@@ -268,6 +248,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         self.min_entity_id: str | None = None
         self.max_entity_id: str | None = None
         self.last_entity_id: str | None = None
+        self._state_incorrect: set[str] = set()
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -289,35 +270,40 @@ class SensorGroup(GroupEntity, SensorEntity):
     @callback
     def async_update_group_state(self) -> None:
         """Query all members and determine the sensor group state."""
-        states = []
-        test_states = []
-        last_updated = now(UTC) - timedelta(days=1)
-        sensor_values: list[tuple[str, Any]] = []
+        states: list[StateType] = []
+        valid_states: list[bool] = []
+        last_updated: datetime | None = None
+        sensor_values: list[tuple[str, float]] = []
         for entity_id in self._entity_ids:
             if (state := self.hass.states.get(entity_id)) is not None:
                 states.append(state.state)
                 try:
                     sensor_values.append((entity_id, float(state.state)))
+                    if entity_id in self._state_incorrect:
+                        self._state_incorrect.remove(entity_id)
                 except ValueError:
-                    test_states.append(False)
-                    _LOGGER.warning(
-                        "Unable to use state. Only numerical states are supported, entity %s with value %s excluded from calculation",
-                        entity_id,
-                        state.state,
-                    )
+                    valid_states.append(False)
+                    if entity_id not in self._state_incorrect:
+                        self._state_incorrect.add(entity_id)
+                        _LOGGER.warning(
+                            "Unable to use state. Only numerical states are supported, entity %s with value %s excluded from calculation",
+                            entity_id,
+                            state.state,
+                        )
                     continue
-                test_states.append(True)
-                if state.last_updated > last_updated:
+                valid_states.append(True)
+                if last_updated is None or state.last_updated > last_updated:
+                    last_updated = state.last_updated
                     self.last = float(state.state)
                     self.last_entity_id = entity_id
 
-        # Set group as unavailable if all members are unavailable or missing
+        # Set group as unavailable if all members does not have numeric values
         self._attr_available = any(state != STATE_UNAVAILABLE for state in states)
 
         valid_state = self.mode(
             state not in (STATE_UNKNOWN, STATE_UNAVAILABLE) for state in states
         )
-        valid_state_numeric = self.mode(numeric_state for numeric_state in test_states)
+        valid_state_numeric = self.mode(numeric_state for numeric_state in valid_states)
 
         if not valid_state or not valid_state_numeric:
             # Set as unknown if any / all member is unknown or unavailable
@@ -378,28 +364,39 @@ class SensorGroup(GroupEntity, SensorEntity):
 
     def _calculate_entity_properties(self) -> None:
         """Calculate device_class, state_class and unit of measurement."""
-        calc_device_class = []
-        calc_state_class = []
-        calc_unit_of_measurement = []
+        device_classes = state_classes = unit_of_measurements = []
+
+        if (
+            not self._attr_device_class
+            and not self._attr_state_class
+            and not self._attr_unit_of_measurement
+        ):
+            return
 
         for entity_id in self._entity_ids:
-            if (state := self.hass.states.get(entity_id)) is not None:
-                calc_device_class.append(state.attributes.get("device_class"))
-                calc_state_class.append(state.attributes.get("state_class"))
-                calc_unit_of_measurement.append(
-                    state.attributes.get("unit_of_measurement")
-                )
-
-        if not calc_device_class:
-            return
+            state = self.hass.states.get(entity_id)
+            device_classes.append(
+                state.attributes.get("device_class") if state else None
+            )
+            state_classes.append(state.attributes.get("state_class") if state else None)
+            unit_of_measurements.append(
+                state.attributes.get("unit_of_measurement") if state else None
+            )
 
         self.calc_device_class = None
         self.calc_state_class = None
         self.calc_unit_of_measurement = None
+
         # Calculate properties and save if all same
-        if all(x == calc_device_class[0] for x in calc_device_class):
-            self.calc_device_class = calc_device_class[0]
-        if all(x == calc_state_class[0] for x in calc_state_class):
-            self.calc_state_class = calc_state_class[0]
-        if all(x == calc_unit_of_measurement[0] for x in calc_unit_of_measurement):
-            self.calc_unit_of_measurement = calc_unit_of_measurement[0]
+        if not self._attr_device_class and all(
+            x == device_classes[0] for x in device_classes
+        ):
+            self.calc_device_class = device_classes[0]
+        if not self._attr_state_class and all(
+            x == state_classes[0] for x in state_classes
+        ):
+            self.calc_state_class = state_classes[0]
+        if not self._attr_unit_of_measurement and all(
+            x == unit_of_measurements[0] for x in unit_of_measurements
+        ):
+            self.calc_unit_of_measurement = unit_of_measurements[0]
