@@ -33,6 +33,7 @@ ATTR_LAST_LOST_TIMESTAMP = "last_lost_timestamp"
 ATTR_RING_STATE = "ring_state"
 ATTR_TILE_NAME = "tile_name"
 ATTR_VOIP_STATE = "voip_state"
+ATTR_LAST_TIMESTAMP = "last_timestamp"
 
 DEFAULT_ICON = "mdi:view-grid"
 
@@ -144,6 +145,7 @@ class TileDeviceTracker(CoordinatorEntity, TrackerEntity):
                 ATTR_LAST_LOST_TIMESTAMP: self._tile.lost_timestamp,
                 ATTR_RING_STATE: self._tile.ring_state,
                 ATTR_VOIP_STATE: self._tile.voip_state,
+                ATTR_LAST_TIMESTAMP: self._tile.last_timestamp,
             }
         )
 
