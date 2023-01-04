@@ -1,9 +1,9 @@
 """2N Telekomunikace button platform."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 from py2n import Py2NDevice
 
@@ -17,15 +17,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import Py2NDeviceCoordinator, Py2NDeviceEntity
 from .const import DOMAIN
+from .coordinator import Py2NDeviceCoordinator
+from .entity import Py2NDeviceEntity
 
 
 @dataclass
 class Py2NDeviceButtonRequiredKeysMixin:
     """Class for 2N Telekomunikace entity required keys."""
 
-    press_action: Callable[[Py2NDevice], Any]
+    press_action: Callable[[Py2NDevice], Coroutine[Any, Any, None]]
 
 
 @dataclass
@@ -41,13 +42,16 @@ BUTTON_TYPES: tuple[Py2NDeviceButtonEntityDescription, ...] = (
         name="Restart",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
-        press_action=lambda device: device.restart(),
+        press_action=lambda device: cast(Coroutine[Any, Any, None], device.restart()),
     ),
     Py2NDeviceButtonEntityDescription(
         key="audio_test",
-        name="Audio Test",
+        name="Audio test",
+        icon="mdi:speaker",
         entity_category=EntityCategory.DIAGNOSTIC,
-        press_action=lambda device: device.audio_test(),
+        press_action=lambda device: cast(
+            Coroutine[Any, Any, None], device.audio_test()
+        ),
     ),
 )
 
@@ -60,10 +64,10 @@ async def async_setup_entry(
     """Set up buttons."""
     coordinator: Py2NDeviceCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    buttons = []
-    for description in BUTTON_TYPES:
-        buttons.append(Py2NDeviceButton(coordinator, description, coordinator.device))
-    async_add_entities(buttons, False)
+    async_add_entities(
+        Py2NDeviceButton(coordinator, description, coordinator.device)
+        for description in BUTTON_TYPES
+    )
 
 
 class Py2NDeviceButton(Py2NDeviceEntity, ButtonEntity):
@@ -71,17 +75,6 @@ class Py2NDeviceButton(Py2NDeviceEntity, ButtonEntity):
 
     entity_description: Py2NDeviceButtonEntityDescription
 
-    def __init__(
-        self,
-        coordinator: Py2NDeviceCoordinator,
-        description: Py2NDeviceButtonEntityDescription,
-        device: Py2NDevice,
-    ) -> None:
-        """Initialize."""
-        super().__init__(coordinator, description, device)
-
     async def async_press(self) -> None:
         """Handle button press."""
-        await self.safe_request(
-            lambda: self.entity_description.press_action(self.device)
-        )
+        await self.entity_description.press_action(self.device)

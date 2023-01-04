@@ -24,6 +24,11 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+RESULT_INVALID_HOST = "invalid_host"
+RESULT_CANNOT_CONNECT = "cannot_connect"
+RESULT_UNSUPPORTED = "unsupported"
+RESULT_UNKNOWN = "unknown"
+
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
@@ -38,19 +43,35 @@ async def validate_input(
 ) -> dict[str, Any]:
     """Validate the user input."""
 
-    if not is_host_valid(host):
-        raise InvalidHost
+    result: dict[str, Any] = {}
+    errors: dict[str, str] = {}
+    try:
+        if not is_host_valid(host):
+            raise InvalidHost
 
-    device = await Py2NDevice.create(
-        async_get_clientsession(hass),
-        Py2NConnectionData(
-            host,
-            data.get(CONF_USERNAME),
-            data.get(CONF_PASSWORD),
-        ),
-    )
+        device = await Py2NDevice.create(
+            async_get_clientsession(hass),
+            Py2NConnectionData(
+                host,
+                data.get(CONF_USERNAME),
+                data.get(CONF_PASSWORD),
+            ),
+        )
+        result["device"] = device
+    except InvalidHost:
+        errors[CONF_HOST] = RESULT_INVALID_HOST
+    except DeviceConnectionError:
+        errors["base"] = RESULT_CANNOT_CONNECT
+    except DeviceUnsupportedError:
+        errors["base"] = RESULT_UNSUPPORTED
+    except DeviceApiError as err:
+        errors["base"] = err.error.name.lower()
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Unexpected exception")
+        errors["base"] = RESULT_UNKNOWN
 
-    return {"title": device.data.name}
+    result["errors"] = errors
+    return result
 
 
 class Py2NDeviceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -67,22 +88,15 @@ class Py2NDeviceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
 
-        errors = {}
-        try:
-            result = await validate_input(self.hass, user_input[CONF_HOST], user_input)
-        except InvalidHost:
-            errors[CONF_HOST] = "invalid_host"
-        except DeviceConnectionError:
-            errors["base"] = "cannot_connect"
-        except DeviceUnsupportedError:
-            errors["base"] = "unsupported"
-        except DeviceApiError as err:
-            errors["base"] = err.error.name.lower()
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            return self.async_create_entry(title=result["title"], data=user_input)
+        result = await validate_input(self.hass, user_input[CONF_HOST], user_input)
+        errors = result["errors"]
+
+        if not errors:
+            await self.async_set_unique_id(result["device"].data.mac)
+            self._abort_if_unique_id_configured()
+            return self.async_create_entry(
+                title=result["device"].data.name, data=user_input
+            )
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
@@ -97,29 +111,17 @@ class Py2NDeviceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Dialog that informs the user that reauth is required."""
-        errors: dict[str, str] = {}
         if self.entry is None:
             return self.async_abort(reason="reauth_unsuccessful")
 
         host = self.entry.data[CONF_HOST]
 
+        errors: dict[str, str] = {}
         if user_input is not None:
-            try:
-                await validate_input(self.hass, host, user_input)
-            except InvalidHost:
-                errors[CONF_HOST] = "invalid_host"
-            except ValueError:
-                errors["base"] = "invalid_auth"
-            except DeviceConnectionError:
-                errors["base"] = "cannot_connect"
-            except DeviceUnsupportedError:
-                errors["base"] = "unsupported"
-            except DeviceApiError as err:
-                errors["base"] = err.error.name.lower()
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            result = await validate_input(self.hass, host, user_input)
+            errors = result["errors"]
+
+            if not errors:
                 self.hass.config_entries.async_update_entry(
                     self.entry, data={**self.entry.data, **user_input}
                 )
