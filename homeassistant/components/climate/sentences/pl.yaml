@@ -3,8 +3,8 @@ intents:
   HassClimateSetTemperature:
     data:
       - sentences:
-          - "(Ustaw|Zmie\u0144) [<temp>] na <temperature>"
-          - "(Ustaw|Zmie\u0144) [<temp>] <area> na <temperature>"
+          - (Ustaw|Zmień) [<temp>] na <temperature>
+          - (Ustaw|Zmień) [<temp>] <area> na <temperature>
   HassClimateGetTemperature:
     data:
       - sentences:

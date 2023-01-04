@@ -3,19 +3,19 @@ intents:
   HassClimateSetTemperature:
     data:
       - sentences:
-          - "<temp> [\u06A9\u0648] <temperature> [<set>]"
-          - "<temperature> [<temp>] [\u06A9\u0648] [<set>]"
-          - "<temperature> <set> [<temp>] [\u06A9\u0648]"
-          - "<area> [<temp>] [\u06A9\u0648] <temperature> [<set>]"
-          - "<temperature> <area> [<temp>] [\u06A9\u0648] [<set>]"
-          - "<temperature> <set> <area> [<temp>] [\u06A9\u0648]"
+          - <temp> [کو] <temperature> [<set>]
+          - <temperature> [<temp>] [کو] [<set>]
+          - <temperature> <set> [<temp>] [کو]
+          - <area> [<temp>] [کو] <temperature> [<set>]
+          - <temperature> <area> [<temp>] [کو] [<set>]
+          - <temperature> <set> <area> [<temp>] [کو]
   HassClimateGetTemperature:
     data:
       - sentences:
-          - "\u06A9\u06CC\u0627 \u06C1\u06D2 <temp>"
-          - "<temp> \u06A9\u06CC\u0627 \u06C1\u06D2"
-          - "<temp> \u06A9\u06CC\u0627 \u06C1\u06D2 <area>"
-          - "\u06A9\u06CC\u0627 \u06C1\u06D2 <temp> <area>"
+          - کیا ہے <temp>
+          - <temp> کیا ہے
+          - <temp> کیا ہے <area>
+          - کیا ہے <temp> <area>
 responses:
   intents:
     HassClimateGetTemperature:

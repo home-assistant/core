@@ -3,21 +3,16 @@ intents:
   HassClimateSetTemperature:
     data:
       - sentences:
-          - "<\u0437\u043C\u0456\u043D\u0438> \u0442\u0435\u043C\u043F\u0435\u0440\u0430\
-            \u0442\u0443\u0440\u0443 [<area>] [\u043D\u0430] <temperature>"
-          - "<\u0437\u043C\u0456\u043D\u0438> \u0442\u0435\u043C\u043F\u0435\u0440\u0430\
-            \u0442\u0443\u0440\u0443 [\u043D\u0430] <temperature> [<area>]"
+          - <зміни> температуру [<area>] [на] <temperature>
+          - <зміни> температуру [на] <temperature> [<area>]
   HassClimateGetTemperature:
     data:
       - sentences:
-          - "\u042F\u043A\u0430 \u0442\u0435\u043C\u043F\u0435\u0440\u0430\u0442\u0443\
-            \u0440\u0430 [<area>]"
-          - "\u042F\u043A (\u0445\u043E\u043B\u043E\u0434\u043D\u043E | \u0442\u0435\u043F\
-            \u043B\u043E | \u0436\u0430\u0440\u043A\u043E) [<area>]"
-          - "C\u043A\u0456\u043B\u044C\u043A\u0438 \u0433\u0440\u0430\u0434\u0443\u0441\
-            \u0456\u0432 [<area>]"
+          - Яка температура [<area>]
+          - Як (холодно | тепло | жарко) [<area>]
+          - Cкільки градусів [<area>]
 responses:
   intents:
     HassClimateGetTemperature:
       success:
-        - "{{ state.state }} \u0433\u0440\u0430\u0434\u0443\u0441\u0456\u0432"
+        - "{{ state.state }} градусів"

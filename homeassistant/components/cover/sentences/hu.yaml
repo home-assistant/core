@@ -3,21 +3,21 @@ intents:
   HassCloseCover:
     data:
       - sentences:
-          - "red\u0151ny <name> le"
-          - "red\u0151ny <area> le"
-          - "<name> red\u0151ny le"
-          - "<area> red\u0151ny le"
-          - "red\u0151ny <area> <name> le"
-          - "<area> <name> red\u0151ny le"
+          - redőny <name> le
+          - redőny <area> le
+          - <name> redőny le
+          - <area> redőny le
+          - redőny <area> <name> le
+          - <area> <name> redőny le
         slots:
           device_class: shutter
       - sentences:
-          - "\xE1rny\xE9kol\xF3[k] <name> z\xE1r"
-          - "\xE1rny\xE9kol\xF3[k] <area> z\xE1r"
-          - "<name> \xE1rny\xE9kol\xF3[k] z\xE1r"
-          - "<area> \xE1rny\xE9kol\xF3[k] z\xE1r"
-          - "\xE1rny\xE9kol\xF3[k] <area> <name> z\xE1r"
-          - "<area> <name> \xE1rny\xE9kol\xF3[k] z\xE1r"
+          - árnyékoló[k] <name> zár
+          - árnyékoló[k] <area> zár
+          - <name> árnyékoló[k] zár
+          - <area> árnyékoló[k] zár
+          - árnyékoló[k] <area> <name> zár
+          - <area> <name> árnyékoló[k] zár
         slots:
           device_class:
             - blind
@@ -26,21 +26,21 @@ intents:
   HassOpenCover:
     data:
       - sentences:
-          - "red\u0151ny <name> fel"
-          - "red\u0151ny <area> fel"
-          - "<name> red\u0151ny fel"
-          - "<area> red\u0151ny fel"
-          - "red\u0151ny <area> <name> fel"
-          - "<area> <name> red\u0151ny fel"
+          - redőny <name> fel
+          - redőny <area> fel
+          - <name> redőny fel
+          - <area> redőny fel
+          - redőny <area> <name> fel
+          - <area> <name> redőny fel
         slots:
           device_class: shutter
       - sentences:
-          - "\xE1rny\xE9kol\xF3[k] <name> nyit"
-          - "\xE1rny\xE9kol\xF3[k] <area> nyit"
-          - "<name> \xE1rny\xE9kol\xF3[k] nyit"
-          - "<area> \xE1rny\xE9kol\xF3[k] nyit"
-          - "\xE1rny\xE9kol\xF3[k] <area> <name> nyit"
-          - "<area> <name> \xE1rny\xE9kol\xF3[k] nyit"
+          - árnyékoló[k] <name> nyit
+          - árnyékoló[k] <area> nyit
+          - <name> árnyékoló[k] nyit
+          - <area> árnyékoló[k] nyit
+          - árnyékoló[k] <area> <name> nyit
+          - <area> <name> árnyékoló[k] nyit
         slots:
           device_class:
             - blind

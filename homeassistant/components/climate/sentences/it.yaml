@@ -12,11 +12,11 @@ intents:
     data:
       - sentences:
           - <what_is> <temp>
-          - "[(<what_is> | che)] <temp> [c'\xE8]"
+          - "[(<what_is> | che)] <temp> [c'è]"
           - <what_is> <temp> [(<in> | <of>)] <area>
-          - "quanto (caldo | freddo) [(\xE8 | c'\xE8 | fa)] [(<in>|<the>) <area>]"
-          - "quanto [(\xE8 | c'\xE8 | fa)] (caldo | freddo) [(<in>|<the>) <area>]"
-          - "[(<what_is> | che)] <temp> [c'\xE8] [<in>] <area>"
+          - quanto (caldo | freddo) [(è | c'è | fa)] [(<in>|<the>) <area>]
+          - quanto [(è | c'è | fa)] (caldo | freddo) [(<in>|<the>) <area>]
+          - "[(<what_is> | che)] <temp> [c'è] [<in>] <area>"
 responses:
   intents:
     HassClimateGetTemperature:

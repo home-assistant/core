@@ -11,15 +11,15 @@ intents:
           - (desligue | desliga) [(o | a)] <nome>
           - (desligue | desliga) [(o | a)] <nome> <na_zona>
       - sentences:
-          - (desliga | desligue | apaga | apague) [(todas | todos)] [(o | os | a | as)]
-            (luz | luzes | candeeiro | candeeiros) <na_zona>
+          - (desliga | desligue | apaga | apague) [(todas | todos)] [(o | os | a |
+            as)] (luz | luzes | candeeiro | candeeiros) <na_zona>
         slots:
           domain: light
   HassTurnOn:
     data:
       - sentences:
-          - (liga | ligue | acende | acenda) [(todas | todos)] [(o | os | a | as)] (luz
-            | luzes | candeeiro | candeeiros) <na_zona>
+          - (liga | ligue | acende | acenda) [(todas | todos)] [(o | os | a | as)]
+            (luz | luzes | candeeiro | candeeiros) <na_zona>
         slots:
           domain: light
       - sentences:
@@ -32,13 +32,11 @@ intents:
           - (ligue | liga) [(o | a)] <nome> <na_zona>
 responses:
   errors:
-    no_intent: "Desculpe, n\xE3o percebi o pedido."
-    no_area: "N\xE3o existe nenhuma \xE1rea com o nome {{ area }}."
-    no_domain: "{{ area }} n\xE3o cont\xE9m {{ domain }}."
-    no_device_class: "{{ area }} n\xE3o cont\xE9m {{ device_class }}."
-    no_entity:
-      "N\xE3o existe nenhum dispositivo ou entidade com o nome {{ entity\
-      \ }}."
+    no_intent: Desculpe, não percebi o pedido.
+    no_area: Não existe nenhuma área com o nome {{ area }}.
+    no_domain: "{{ area }} não contém {{ domain }}."
+    no_device_class: "{{ area }} não contém {{ device_class }}."
+    no_entity: Não existe nenhum dispositivo ou entidade com o nome {{ entity }}.
     handle_error: Ocurreu um erro inesperado ao processar o pedido.
 lists:
   color:
@@ -88,7 +86,7 @@ lists:
       - celsius
       - in: c
         out: celsius
-      - "cent\xEDgrados"
+      - centígrados
       - in: c
         out: celsius
       - fahrenheit
@@ -98,8 +96,8 @@ expansion_rules:
   nome: "[(o | a)] {name}"
   zona: "[(o | a)] {area}"
   na_zona: (no | na | do | da) {area}
-  qual: "(qual | qual \xE9)"
-  brilho: "{brightness:brightness_pct} [porcento]"
+  qual: (qual | qual é)
+  brilho: "{brightness} [porcento]"
   temperatura: "{temperature} [graus] [{temperature_unit}]"
 skip_words:
   - por favor

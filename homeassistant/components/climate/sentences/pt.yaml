@@ -3,15 +3,15 @@ intents:
   HassClimateSetTemperature:
     data:
       - sentences:
-          - "(p\xF5e | ponha) <zona> a <temperatura>"
-          - "(p\xF5e | ponha) a temperatura a <temperatura>"
-          - "(p\xF5e | ponha) a temperatura <na_zona> a <temperatura>"
+          - (põe | ponha) <zona> a <temperatura>
+          - (põe | ponha) a temperatura a <temperatura>
+          - (põe | ponha) a temperatura <na_zona> a <temperatura>
   HassClimateGetTemperature:
     data:
       - sentences:
           - <qual> a temperatura
           - <qual> a temperatura <na_zona>
-          - "a que temperatura est\xE1 <zona>"
+          - a que temperatura está <zona>
 responses:
   intents:
     HassClimateGetTemperature:

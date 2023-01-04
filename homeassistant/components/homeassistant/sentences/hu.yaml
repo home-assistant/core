@@ -3,32 +3,30 @@ intents:
   HassTurnOff:
     data:
       - sentences:
-          - "<turn_off> a (ventil\xE1tort | ventil\xE1torokat | szell\u0151ztet\xE9st)\
-            \ <area>"
-          - "(ventil\xE1tort | szell\u0151ztet\xE9st) ki <area>"
+          - <turn_off> a (ventilátort | ventilátorokat | szellőztetést) <area>
+          - (ventilátort | szellőztetést) ki <area>
         slots:
           domain: fan
           name: all
       - sentences:
           - <name> <turn_off>
       - sentences:
-          - "<turn_off> a (l\xE1mp\xE1t | l\xE1mp\xE1kat) <area>"
-          - "<turn_off> <area> a (l\xE1mp\xE1t | l\xE1mp\xE1kat)"
+          - <turn_off> a (lámpát | lámpákat) <area>
+          - <turn_off> <area> a (lámpát | lámpákat)
         slots:
           domain: light
           name: all
   HassTurnOn:
     data:
       - sentences:
-          - "<turn_on> a (l\xE1mp\xE1t | l\xE1mp\xE1kat) <area>"
-          - "<turn_on> <area> a (l\xE1mp\xE1t | l\xE1mp\xE1kat)"
+          - <turn_on> a (lámpát | lámpákat) <area>
+          - <turn_on> <area> a (lámpát | lámpákat)
         slots:
           domain: light
           name: all
       - sentences:
-          - "<turn_on> a (ventil\xE1tort | ventil\xE1torokat | szell\u0151ztet\xE9st)\
-            \ <area>"
-          - "(ventil\xE1tort | szell\u0151ztet\xE9st) be <area> "
+          - <turn_on> a (ventilátort | ventilátorokat | szellőztetést) <area>
+          - "(ventilátort | szellőztetést) be <area> "
         slots:
           domain: fan
           name: all
@@ -36,16 +34,16 @@ intents:
           - <name> <turn_on>
 responses:
   errors:
-    no_intent: "Eln\xE9z\xE9st, ezt nem \xE9rtem"
-    no_area: "{{ area }} ter\xFClet nem tal\xE1lhat\xF3"
-    no_domain: "{{ area }} nem tal\xE1lhat\xF3 {{ domain }}(ban | ben)"
-    no_device_class: "{{ area }} (ban | ben) nem tal\xE1lhat\xF3 {{ device_class }}"
-    no_entity: "{{ entity }} nem tal\xE1lhat\xF3"
-    handle_error: "V\xE1ratlan hiba t\xF6rt\xE9nt."
+    no_intent: Elnézést, ezt nem értem
+    no_area: "{{ area }} terület nem található"
+    no_domain: "{{ area }} nem található {{ domain }}(ban | ben)"
+    no_device_class: "{{ area }} (ban | ben) nem található {{ device_class }}"
+    no_entity: "{{ entity }} nem található"
+    handle_error: Váratlan hiba történt.
 lists:
   color:
     values:
-      - in: "feh\xE9r"
+      - in: fehér
         out: white
       - in: fekete
         out: black
@@ -53,11 +51,11 @@ lists:
         out: red
       - in: narancs
         out: orange
-      - in: "s\xE1rga"
+      - in: sárga
         out: yellow
-      - in: "z\xF6ld"
+      - in: zöld
         out: green
-      - in: "k\xE9k"
+      - in: kék
         out: blue
       - in: lila
         out: purple
@@ -77,20 +75,16 @@ lists:
     values:
       - in: c | celziusz | celsziusz
         out: celsius
-      - in: "f | f\xE1renhejt | f\xE1renh\xE1jt"
+      - in: f | fárenhejt | fárenhájt
         out: fahrenheit
 expansion_rules:
   area: "[(a | az)] {area} [ban | ben]"
   name: "[(a | az)] {name}"
   what_is: (mi | mennyi)
-  brightness: "{brightness:brightness_pct}"
-  turn_on:
-    "[kapcsol | kapcsold | kapcsolj | nyisd] (be | fel | f\xF6l) [kapcsol][\xE1\
-    s]"
-  turn_off:
-    "[kapcsol | kapcsold | kapcsolj | z\xE1rd | oltsd] (ki | le | el) [kapcsol][\xE1\
-    s]"
-  temp: "(h\u0151fok | h\u0151m\xE9rs\xE9klet)"
+  brightness: "{brightness}"
+  turn_on: "[kapcsol | kapcsold | kapcsolj | nyisd] (be | fel | föl) [kapcsol][ás]"
+  turn_off: "[kapcsol | kapcsold | kapcsolj | zárd | oltsd] (ki | le | el) [kapcsol][ás]"
+  temp: (hőfok | hőmérséklet)
   temperature: "{temperature}"
-  set: "(\xE1ll\xEDtsd | k\xE9rem | k\xE9rek | szeretn\xE9k)"
+  set: (állítsd | kérem | kérek | szeretnék)
 skip_words: []

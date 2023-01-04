@@ -4,13 +4,13 @@ intents:
     data:
       - sentences:
           - (posa | puja) [la] <temp> a <graus> [<area>]
-          - "(posa | puja) [la] calefacci\xF3 a <graus> [<area>]"
+          - (posa | puja) [la] calefacció a <graus> [<area>]
   HassClimateGetTemperature:
     data:
       - sentences:
           - quina <temp> fa
-          - "quina \xE9s la <temp>"
-          - "quina \xE9s la <temp> <area>"
+          - quina és la <temp>
+          - quina és la <temp> <area>
           - quanta calor fa <area>
 responses:
   intents:

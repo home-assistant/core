@@ -36,8 +36,8 @@ responses:
     no_area: Non esiste nessuna area chiamata {{ area }}
     no_domain: "{{ area }} non contiene {{ domain }}"
     no_device_class: "{{ area }} non contiene {{ device_class }}"
-    no_entity: "Non esiste nessun dispositivo o entit\xE0 chiamato {{ entity }}"
-    handle_error: "Si \xE8 verificato un errore inatteso durante l'elaborazione"
+    no_entity: Non esiste nessun dispositivo o entità chiamato {{ entity }}
+    handle_error: Si è verificato un errore inatteso durante l'elaborazione
 lists:
   color:
     values:
@@ -84,10 +84,8 @@ expansion_rules:
   to: (a | al | allo | alla | agli | alle)
   name: "{name}"
   area: "{area}"
-  what_is:
-    "(qual'\xE8 | quale \xE8 | quanto \xE8 | quant'\xE8 | come \xE8 | com'\xE8\
-    )"
-  brightness: "{brightness:brightness_pct} [percento]"
+  what_is: (qual'è | quale è | quanto è | quant'è | come è | com'è)
+  brightness: "{brightness} [percento]"
   turn_on: (accendi | accendere | attiva | attivare)
   turn_off: (spegni | spegnere | disattiva | disattivare)
   open: (apri | aprire | alza | alzare)

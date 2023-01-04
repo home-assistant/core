@@ -9,10 +9,10 @@ intents:
   HassClimateGetTemperature:
     data:
       - sentences:
-          - "cu\xE1l es [la] <temp>"
-          - "qu\xE9 <temp> hace"
-          - "cu\xE1l es [la] <temp> <area>"
-          - "qu\xE9 <temp> hace en <area>"
+          - cuál es [la] <temp>
+          - qué <temp> hace
+          - cuál es [la] <temp> <area>
+          - qué <temp> hace en <area>
 responses:
   intents:
     HassClimateGetTemperature:

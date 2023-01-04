@@ -3,17 +3,13 @@ intents:
   HassLightSet:
     data:
       - sentences:
-          - "<set> [\u044F\u0440\u043A\u043E\u0441\u0442\u044C | \u044F\u0440\u043A\u043E\
-            \u0441\u0442\u044C \u0441\u0432\u0435\u0442\u0430] <name> [\u043D\u0430 |\
-            \ \u0434\u043E] <brightness>"
+          - <set> [яркость | яркость света] <name> [на | до] <brightness>
       - sentences:
-          - "<set> \u044F\u0440\u043A\u043E\u0441\u0442\u044C [\u0441\u0432\u0435\u0442\
-            \u0430] <area> [\u043D\u0430 | \u0434\u043E] <brightness>"
-          - "<set> [\u043D\u0430 | \u0434\u043E] <brightness> \u044F\u0440\u043A\u043E\
-            \u0441\u0442\u044C <area>"
+          - <set> яркость [света] <area> [на | до] <brightness>
+          - <set> [на | до] <brightness> яркость <area>
         slots:
           name: all
       - sentences:
-          - "<set> [\u0446\u0432\u0435\u0442] <name> [\u043D\u0430] {color}"
-          - "<set> {color} [\u0446\u0432\u0435\u0442] [\u0443 | \u0434\u043B\u044F] <name>"
-          - "<set> <name> {color} [\u0446\u0432\u0435\u0442[\u0430]]"
+          - <set> [цвет] <name> [на] {color}
+          - <set> {color} [цвет] [у | для] <name>
+          - <set> <name> {color} [цвет[а]]

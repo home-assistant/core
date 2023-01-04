@@ -11,25 +11,29 @@ intents:
           - <machen> (<abdeckung> | <garage>) <area> runter
           - <schliessen> [<area>] (<alle_abdeckungen> | <alle_tore> | <alle_garagen>)
           - <schliessen> (<alle_abdeckungen> | <alle_tore> | <alle_garagen>) [<area>]
-          - <machen> [<area>] (<alle_abdeckungen> | <alle_tore> | <alle_garagen>) zu
-          - <machen> (<alle_abdeckungen> | <alle_tore> | <alle_garagen>) [<area>] zu
+          - <machen> [<area>] (<alle_abdeckungen> | <alle_tore> | <alle_garagen>)
+            zu
+          - <machen> (<alle_abdeckungen> | <alle_tore> | <alle_garagen>) [<area>]
+            zu
           - <machen> [<area>] (<alle_abdeckungen> | <alle_garagen>) runter
           - <machen> (<alle_abdeckungen> | <alle_garagen>) [<area>] runter
   HassOpenCover:
     data:
       - sentences:
-          - "\xF6ffne <area> (<abdeckung> | <tor> | <alle_tore> | <garage> | <alle_garagen>)"
-          - "\xF6ffne (<abdeckung> | <tor> | <alle_tore> | <garage> | <alle_garagen>)\
-            \ <area>"
+          - öffne <area> (<abdeckung> | <tor> | <alle_tore> | <garage> | <alle_garagen>)
+          - öffne (<abdeckung> | <tor> | <alle_tore> | <garage> | <alle_garagen>)
+            <area>
           - <machen> <area> (<abdeckung> | <tor> | <alle_tore> | <garage> | <alle_garagen>)
             auf
-          - <machen> (<abdeckung> | <tor> | <alle_tore> | <garage> | <alle_garagen>) <area>
-            auf
+          - <machen> (<abdeckung> | <tor> | <alle_tore> | <garage> | <alle_garagen>)
+            <area> auf
           - <machen> <area> (<abdeckung> | <garage> | <alle_garagen>) (rauf | hoch)
           - <machen> (<abdeckung> | <garage> | <alle_garagen>) <area> (rauf | hoch)
-          - "\xF6ffne [<area>] (<alle_abdeckungen> | <alle_tore> | <alle_garagen>)"
-          - "\xF6ffne (<alle_abdeckungen> | <alle_tore> | <alle_garagen>) [<area>]"
-          - <machen> [<area>] (<alle_abdeckungen> | <alle_tore> | <alle_garagen>) auf
-          - <machen> (<alle_abdeckungen> | <alle_tore> | <alle_garagen>) [<area>] auf
+          - öffne [<area>] (<alle_abdeckungen> | <alle_tore> | <alle_garagen>)
+          - öffne (<alle_abdeckungen> | <alle_tore> | <alle_garagen>) [<area>]
+          - <machen> [<area>] (<alle_abdeckungen> | <alle_tore> | <alle_garagen>)
+            auf
+          - <machen> (<alle_abdeckungen> | <alle_tore> | <alle_garagen>) [<area>]
+            auf
           - <machen> [<area>] (<alle_abdeckungen> | <alle_garagen>) (rauf | hoch)
           - <machen> (<alle_abdeckungen> | <alle_garagen>) [<area>] (rauf | hoch)

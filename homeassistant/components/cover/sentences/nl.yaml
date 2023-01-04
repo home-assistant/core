@@ -11,12 +11,14 @@ intents:
         slots:
           device_class: garage_door
       - sentences:
-          - sluit [de | het] (gordijn | gordijnen | luxaflex | rolluik | rolluiken | screen
-            |screens) in <area>
+          - sluit [de | het] (gordijn | gordijnen | luxaflex | rolluik | rolluiken
+            | screen |screens) in <area>
           - (doe | mogen) [de] (gordijnen | rolluiken | screens) dicht in <area>
           - (doe | mogen) [de] (gordijnen | rolluiken | screens) in <area> dicht
-          - (doe | mag) [de | het] (gordijn | luxaflex | rolluik | screen) dicht in <area>
-          - (doe | mag) [de | het] (gordijn | luxaflex | rolluik | screen) in <area> dicht
+          - (doe | mag) [de | het] (gordijn | luxaflex | rolluik | screen) dicht in
+            <area>
+          - (doe | mag) [de | het] (gordijn | luxaflex | rolluik | screen) in <area>
+            dicht
         slots:
           device_class:
             - blind
@@ -33,12 +35,14 @@ intents:
         slots:
           device_class: garage_door
       - sentences:
-          - open [de | het](gordijn | gordijnen | luxaflex | rolluik | rolluiken | screen
-            | screens) in <area>
+          - open [de | het](gordijn | gordijnen | luxaflex | rolluik | rolluiken |
+            screen | screens) in <area>
           - (doe | mogen) [de] (gordijnen | rolluiken | screens) open in <area>
           - (doe | mogen) [de] (gordijnen | rolluiken | screens) in <area> open
-          - (doe | mag) [de | het] (gordijn | luxaflex | rolluik | screen) open in <area>
-          - (doe | mag) [de | het] (gordijn | luxaflex | rolluik | screen) in <area> open
+          - (doe | mag) [de | het] (gordijn | luxaflex | rolluik | screen) open in
+            <area>
+          - (doe | mag) [de | het] (gordijn | luxaflex | rolluik | screen) in <area>
+            open
         slots:
           device_class:
             - blind

@@ -78,7 +78,7 @@ expansion_rules:
   name: "[the] {name}"
   area: "[the] {area}"
   what_is: (what's | whats | what is)
-  brightness: "{brightness:brightness_pct} [percent]"
+  brightness: "{brightness} [percent]"
   turn: (turn | switch)
   temp: (temp | temperature)
   temperature: "{temperature} [degrees] [{temperature_unit}]"

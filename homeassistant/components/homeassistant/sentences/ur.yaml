@@ -3,138 +3,103 @@ intents:
   HassTurnOff:
     data:
       - sentences:
-          - "<area> [<all>] (\u067E\u0646\u06A9\u06BE\u06D2 | \u067E\u0646\u06A9\u06BE\
-            \u0627) [\u06A9\u0648] (\u0628\u0646\u062F | off) [<set>]"
-          - "[<all>] (\u067E\u0646\u06A9\u06BE\u06D2 | \u067E\u0646\u06A9\u06BE\u0627\
-            ) <area> (\u0628\u0646\u062F | off) [<set>]"
-          - "[<all>] <area> (\u067E\u0646\u06A9\u06BE\u06D2 | \u067E\u0646\u06A9\u06BE\
-            \u0627) [\u06A9\u0648] (\u0628\u0646\u062F | off) [<set>]"
+          - <area> [<all>] (پنکھے | پنکھا) [کو] (بند | off) [<set>]
+          - "[<all>] (پنکھے | پنکھا) <area> (بند | off) [<set>]"
+          - "[<all>] <area> (پنکھے | پنکھا) [کو] (بند | off) [<set>]"
         slots:
           domain: fan
           name: all
       - sentences:
-          - "<name> (\u0628\u0646\u062F | off) <set>"
-          - "(\u0628\u0646\u062F | off) <set> <name> "
+          - <name> (بند | off) <set>
+          - "(بند | off) <set> <name> "
       - sentences:
-          - "<area> [<all>] (\u0644\u0627\u06CC\u0679 | \u0644\u0627\u06CC\u0679\u06CC\
-            \u06BA | light[s]) [\u06A9\u0648] ((\u0628\u0646\u062F | off) [<set>] | \u0628\
-            \u062C\u06BE\u0627\u062F\u0648)"
-          - "[<all>] (\u0644\u0627\u06CC\u0679 | \u0644\u0627\u06CC\u0679\u06CC\u06BA\
-            \ | light[s]) <area> ((\u0628\u0646\u062F | off) [<set>] | \u0628\u062C\u06BE\
-            \u0627\u062F\u0648)"
-          - "[<all>] <area> (\u0644\u0627\u06CC\u0679 | \u0644\u0627\u06CC\u0679\u06CC\
-            \u06BA | light[s]) [\u06A9\u0648] ((\u0628\u0646\u062F | off) [<set>] | \u0628\
-            \u062C\u06BE\u0627\u062F\u0648)"
+          - <area> [<all>] (لایٹ | لایٹیں | light[s]) [کو] ((بند | off) [<set>] |
+            بجھادو)
+          - "[<all>] (لایٹ | لایٹیں | light[s]) <area> ((بند | off) [<set>] | بجھادو)"
+          - "[<all>] <area> (لایٹ | لایٹیں | light[s]) [کو] ((بند | off) [<set>] |
+            بجھادو)"
         slots:
           domain: light
   HassTurnOn:
     data:
       - sentences:
-          - "<area> [<all>] (\u0644\u0627\u06CC\u0679 | \u0644\u0627\u06CC\u0679\u06CC\
-            \u06BA | light[s]) [\u06A9\u0648] (\u06A9\u06BE\u0648\u0644\u062F\u0648 |\
-            \ \u06A9\u06BE\u0648\u0644\u0648 | on [<set>])"
-          - "[<all>] (\u0644\u0627\u06CC\u0679 | \u0644\u0627\u06CC\u0679\u06CC\u06BA\
-            \ | light[s]) <area> (\u06A9\u06BE\u0648\u0644\u062F\u0648 | \u06A9\u06BE\u0648\
-            \u0644\u0648 | on [<set>])"
-          - "[<all>] <area> (\u0644\u0627\u06CC\u0679 | \u0644\u0627\u06CC\u0679\u06CC\
-            \u06BA | light[s]) [\u06A9\u0648] (\u06A9\u06BE\u0648\u0644\u062F\u0648 |\
-            \ \u06A9\u06BE\u0648\u0644\u0648 | on [<set>])"
+          - <area> [<all>] (لایٹ | لایٹیں | light[s]) [کو] (کھولدو | کھولو | on [<set>])
+          - "[<all>] (لایٹ | لایٹیں | light[s]) <area> (کھولدو | کھولو | on [<set>])"
+          - "[<all>] <area> (لایٹ | لایٹیں | light[s]) [کو] (کھولدو | کھولو | on [<set>])"
         slots:
           domain: light
       - sentences:
-          - "<area> [<all>] (\u067E\u0646\u06A9\u06BE\u06D2 | \u067E\u0646\u06A9\u06BE\
-            \u0627) [\u06A9\u0648] (\u06A9\u06BE\u0648\u0644\u062F\u0648 | \u06A9\u06BE\
-            \u0648\u0644\u0648 | on [<set>])"
-          - "[<all>] (\u067E\u0646\u06A9\u06BE\u06D2 | \u067E\u0646\u06A9\u06BE\u0627\
-            ) <area> (\u06A9\u06BE\u0648\u0644\u062F\u0648 | \u06A9\u06BE\u0648\u0644\u0648\
-            \ | on [<set>])"
-          - "[<all>] <area> (\u067E\u0646\u06A9\u06BE\u06D2 | \u067E\u0646\u06A9\u06BE\
-            \u0627) [\u06A9\u0648] (\u06A9\u06BE\u0648\u0644\u062F\u0648 | \u06A9\u06BE\
-            \u0648\u0644\u0648 | on [<set>])"
+          - <area> [<all>] (پنکھے | پنکھا) [کو] (کھولدو | کھولو | on [<set>])
+          - "[<all>] (پنکھے | پنکھا) <area> (کھولدو | کھولو | on [<set>])"
+          - "[<all>] <area> (پنکھے | پنکھا) [کو] (کھولدو | کھولو | on [<set>])"
         slots:
           domain: fan
           name: all
       - sentences:
-          - "<name> (\u06A9\u06BE\u0648\u0644\u062F\u0648 | \u06A9\u06BE\u0648\u0644\u0648\
-            \ | on [<set>])"
-          - "(\u06A9\u06BE\u0648\u0644\u062F\u0648 | \u06A9\u06BE\u0648\u0644\u0648 |\
-            \ [<set>]) <name>"
+          - <name> (کھولدو | کھولو | on [<set>])
+          - (کھولدو | کھولو | [<set>]) <name>
 responses:
   errors:
-    no_intent:
-      "\u0645\u062C\u06BE\u06D2 \u0633\u0645\u062C\u06BE \u0645\u06CC\u06BA\
-      \ \u0646\u06C1\u06CC\u06BA \u0622\u06CC\u0627"
-    no_area:
-      "\u06A9\u0633\u06CC \u062C\u06AF\u06C1 \u06A9\u0627 \u0646\u0627\u0645\
-      \  {{ area }} \u0646\u06C1\u06CC\u06BA \u06BE\u06D2"
-    no_domain:
-      "{{ area }} \u0645\u06CC\u06BA {{ domain }} \u0646\u06C1\u06CC\u06BA\
-      \ \u06C1\u06D2"
-    no_device_class:
-      "{{ area }} \u0645\u06CC\u06BA {{ device_class }} \u0646\u06C1\
-      \u06CC\u06BA \u06C1\u06D2"
-    no_entity:
-      "\u06A9\u0648\u0626\u06CC \u0688\u0648\u0627\u0626\u0633 \u06A9\u0627\
-      \ \u0646\u0627\u0645 {{ entity }} \u0646\u06C1\u06CC\u06BA \u06BE\u06D2 "
-    handle_error:
-      "\u0622\u067E \u06A9\u06D2 \u062C\u0648\u0627\u0628 \u06A9\u0648\
-      \ \u0633\u0646\u0628\u06BE\u0627\u0644\u062A\u06D2 \u0648\u0642\u062A \u06A9\
-      \u0686\u06BE \u0639\u062C\u06CC\u0628 \u0645\u0633\u0626\u0644\u06C1 \u0622\u06AF\
-      \u06CC\u0627"
+    no_intent: مجھے سمجھ میں نہیں آیا
+    no_area: کسی جگہ کا نام  {{ area }} نہیں ھے
+    no_domain: "{{ area }} میں {{ domain }} نہیں ہے"
+    no_device_class: "{{ area }} میں {{ device_class }} نہیں ہے"
+    no_entity: "کوئی ڈوائس کا نام {{ entity }} نہیں ھے "
+    handle_error: آپ کے جواب کو سنبھالتے وقت کچھ عجیب مسئلہ آگیا
 lists:
   color:
     values:
-      - in: "\u0633\u0641\u06CC\u062F"
+      - in: سفید
         out: white
       - in: white
         out: white
-      - in: "\u0633\u06CC\u0627\u06C1"
+      - in: سیاہ
         out: black
-      - in: "\u06A9\u0627\u0644\u0627"
+      - in: کالا
         out: black
       - in: black
         out: black
-      - in: "\u0633\u0631\u062E"
+      - in: سرخ
         out: red
-      - in: "\u0644\u0627\u0644"
+      - in: لال
         out: red
       - in: red
         out: red
-      - in: "\u0627\u0648\u0631\u0646\u062C"
+      - in: اورنج
         out: orange
-      - in: "\u0646\u0627\u0631\u0646\u062C\u06CC"
+      - in: نارنجی
         out: orange
       - in: orange
         out: orange
-      - in: "\u067E\u06CC\u0644\u0627"
+      - in: پیلا
         out: yellow
       - in: yellow
         out: yellow
-      - in: "\u0633\u0628\u0632"
+      - in: سبز
         out: green
-      - in: "\u06C1\u0631\u0627"
+      - in: ہرا
         out: green
       - in: green
         out: green
-      - in: "\u0646\u06CC\u0644\u0627"
+      - in: نیلا
         out: blue
       - in: blue
         out: blue
-      - in: "\u062C\u0627\u0645\u0646\u06CC"
+      - in: جامنی
         out: purple
       - in: purple
         out: purple
-      - in: "\u067E\u0646\u06A9"
+      - in: پنک
         out: pink
-      - in: "\u06AF\u0644\u0627\u0628\u06CC"
+      - in: گلابی
         out: pink
       - in: pink
         out: pink
-      - in: "\u0628\u0631\u0627\u0624\u0646"
+      - in: براؤن
         out: brown
       - in: brown
         out: brown
-      - in: "\u0622\u0633\u0645\u0627\u0646\u06CC"
+      - in: آسمانی
         out: sky blue
       - in: sky blue
         out: sky blue
@@ -154,26 +119,16 @@ lists:
       - in: c
         out: celsius
 expansion_rules:
-  name: "{name} [\u06A9\u0648] [\u06A9\u06D2] [\u06A9\u0627]"
-  area: "{area} [\u06A9\u0627] [\u06A9\u06D2] [\u06A9\u0648] [\u0645\u06CC\u06BA]"
-  temp:
-    "(temperature | \u062F\u0631\u062C\u06C1 \u062D\u0631\u0627\u0631\u062A |\
-    \ \u0679\u06CC\u0645\u067E\u0631\u06CC\u0686\u0631)"
-  temperature:
-    "{temperature} [\u0688\u06AF\u0631\u06CC] [degree] [\u062F\u0631\u062C\
-    \u06C1 \u062D\u0631\u0627\u0631\u062A] [{temperature_unit}]"
-  brightness:
-    "{brightness:brightness_pct} [percent | \u067E\u0631\u0633\u0646\u0679\
-    ]"
+  name: "{name} [کو] [کے] [کا]"
+  area: "{area} [کا] [کے] [کو] [میں]"
+  temp: (temperature | درجہ حرارت | ٹیمپریچر)
+  temperature: "{temperature} [ڈگری] [degree] [درجہ حرارت] [{temperature_unit}]"
+  brightness: "{brightness} [percent | پرسنٹ]"
   set:
-    "[\u0645\u06CC\u06BA] [\u067E\u0631] (\u06A9\u0631 \u062F\u06CC\u06BA | \u0633\
-    \u06CC\u0679 \u06A9\u0631\u062F\u0648 | \u06A9\u0631\u062F\u0648 | \u0631\u06A9\
-    \u06BE\u0644\u0648 | \u062F\u0627\u0644\u062F\u0648 | \u062F\u0627\u0644\u0648\
-    \ | \u0633\u06CC\u0679 \u06A9\u0631\u0648 | \u06A9\u0631\u0648 | \u06A9\u0631)"
-  all:
-    "(\u062A\u0645\u0627\u0645 | \u0633\u0628 | \u0633\u0627\u0631\u06CC | \u0633\
-    \u0627\u0631\u06D2)"
+    "[میں] [پر] (کر دیں | سیٹ کردو | کردو | رکھلو | دالدو | دالو | سیٹ کرو | کرو
+    | کر)"
+  all: (تمام | سب | ساری | سارے)
 skip_words:
-  - "\u06CC\u0627\u0631"
-  - "\u0632\u0631\u0627"
+  - یار
+  - زرا
   - please

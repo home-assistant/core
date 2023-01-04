@@ -3,18 +3,18 @@ intents:
   HassClimateSetTemperature:
     data:
       - sentences:
-          - "h\u0151m\xE9rs\xE9klet <temperature> fokra"
-          - "<set> a h\u0151m\xE9rs\xE9kletet <temperature> fokra"
-          - "<set> a h\u0151m\xE9rs\xE9kletet <area> <temperature> fokra"
+          - hőmérséklet <temperature> fokra
+          - <set> a hőmérsékletet <temperature> fokra
+          - <set> a hőmérsékletet <area> <temperature> fokra
           - <temperature> fokot <area>
           - <set> <temperature> fokot <area>
   HassClimateGetTemperature:
     data:
       - sentences:
-          - "<what_is> a h\u0151m\xE9rs\xE9klet"
-          - "<what_is> a h\u0151m\xE9rs\xE9klet <area>"
-          - "h\xE1ny fok van"
-          - "h\xE1ny fok van <area>"
+          - <what_is> a hőmérséklet
+          - <what_is> a hőmérséklet <area>
+          - hány fok van
+          - hány fok van <area>
 responses:
   intents:
     HassClimateGetTemperature:

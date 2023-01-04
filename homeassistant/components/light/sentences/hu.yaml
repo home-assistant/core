@@ -3,24 +3,20 @@ intents:
   HassLightSet:
     data:
       - sentences:
-          - "[a | az] <name> (f\xE9nyer\u0151t | f\xE9nyerej\xE9t) <brightness> (re |\
-            \ ra | sz\xE1zal\xE9kra)"
-          - "[a | az] <name> (f\xE9nyer\u0151t | f\xE9nyerej\xE9t) (\xE1ll\xEDtsd | k\xE9\
-            rem) <brightness> (re | ra | sz\xE1zal\xE9kra)"
-          - "(\xE1ll\xEDtsd | k\xE9rem) [a | az] <name> (f\xE9nyer\u0151t | f\xE9nyerej\xE9\
-            t) <brightness> (re | ra | sz\xE1zal\xE9kra)"
+          - "[a | az] <name> (fényerőt | fényerejét) <brightness> (re | ra | százalékra)"
+          - "[a | az] <name> (fényerőt | fényerejét) (állítsd | kérem) <brightness>
+            (re | ra | százalékra)"
+          - (állítsd | kérem) [a | az] <name> (fényerőt | fényerejét) <brightness>
+            (re | ra | százalékra)
       - sentences:
-          - "[a | az] <area> (f\xE9nyer\u0151t | f\xE9nyerej\xE9t) <brightness> (re |\
-            \ ra | sz\xE1zal\xE9kra)"
-          - "[a | az] <area> (f\xE9nyer\u0151t | f\xE9nyerej\xE9t) (\xE1ll\xEDtsd | k\xE9\
-            rem) <brightness> (re | ra | sz\xE1zal\xE9kra)"
-          - "(\xE1ll\xEDtsd | k\xE9rem) [a | az] <area> (f\xE9nyer\u0151t | f\xE9nyerej\xE9\
-            t) <brightness> (re | ra | sz\xE1zal\xE9kra)"
+          - "[a | az] <area> (fényerőt | fényerejét) <brightness> (re | ra | százalékra)"
+          - "[a | az] <area> (fényerőt | fényerejét) (állítsd | kérem) <brightness>
+            (re | ra | százalékra)"
+          - (állítsd | kérem) [a | az] <area> (fényerőt | fényerejét) <brightness>
+            (re | ra | százalékra)
         slots:
           name: all
       - sentences:
-          - "[a | az] <name> (sz\xEDnt | sz\xEDn\xE9t) {color} (re | ra)"
-          - "[a | az] <name> (sz\xEDnt | sz\xEDn\xE9t) (\xE1ll\xEDtsd | k\xE9rem) {color}\
-            \ (re | ra)"
-          - "(\xE1ll\xEDtsd | k\xE9rem) [a | az] <name> (sz\xEDnt | sz\xEDn\xE9t) {color}\
-            \ (re | ra)"
+          - "[a | az] <name> (színt | színét) {color} (re | ra)"
+          - "[a | az] <name> (színt | színét) (állítsd | kérem) {color} (re | ra)"
+          - (állítsd | kérem) [a | az] <name> (színt | színét) {color} (re | ra)

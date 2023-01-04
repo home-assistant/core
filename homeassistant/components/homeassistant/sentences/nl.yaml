@@ -88,7 +88,7 @@ expansion_rules:
   doe: (zet | mag | mogen | doe | verander | maak | schakel)
   naar: (naar | op)
   helderheid: (helderheid | felheid | intensiteit)
-  brightness: "{brightness:brightness_pct} [procent]"
+  brightness: "{brightness} [procent]"
   temperature: "{temperature} [graden] [{temperature_unit}]"
 skip_words:
   - alstublieft

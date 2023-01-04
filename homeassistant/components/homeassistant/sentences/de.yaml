@@ -75,7 +75,7 @@ responses:
 lists:
   color:
     values:
-      - in: "wei\xDF"
+      - in: weiß
         out: white
       - in: schwarz
         out: black
@@ -85,7 +85,7 @@ lists:
         out: orange
       - in: gelb
         out: yellow
-      - in: "gr\xFCn"
+      - in: grün
         out: green
       - in: blau
         out: blue
@@ -116,20 +116,20 @@ expansion_rules:
   area: (in (der | dem) | im) {area}
   an_ein: (an | ein)
   ab_aus: (ab | aus)
-  schliessen: "(schlie\xDF | schlie\xDFe)"
+  schliessen: (schließ | schließe)
   machen: (mach | mache)
-  setzen: "(setze | stelle | \xE4ndere)"
+  setzen: (setze | stelle | ändere)
   abdeckung:
-    "(das Rollo | die Rollos | die Abdeckung | die Abdeckungen | den Rollladen\
-    \ | die Rolll\xE4den | die (Jalousie | Jalousien))"
-  alle_abdeckungen: "alle (Rollos | Abdeckungen | Rolll\xE4den | Jalousien)"
+    (das Rollo | die Rollos | die Abdeckung | die Abdeckungen | den Rollladen
+    | die Rollläden | die (Jalousie | Jalousien))
+  alle_abdeckungen: alle (Rollos | Abdeckungen | Rollläden | Jalousien)
   garage: (die Garage | die Garagen | das Garagentor | die Garagentore)
   alle_garagen: (alle Garagen | alle Garagentore)
   tor: (das Tor | die Tore)
   alle_tore: alle (Tore | Garagentore)
-  luefter: "(den Ventilator | die Ventilatoren | (den | die) L\xFCfter)"
-  alle_luefter: "alle (Ventilatoren | L\xFCfter)"
-  brightness: "{brightness:brightness_pct} [Prozent]"
+  luefter: (den Ventilator | die Ventilatoren | (den | die) Lüfter)
+  alle_luefter: alle (Ventilatoren | Lüfter)
+  brightness: "{brightness} [Prozent]"
   temperature: "{temperature} [Grad] [{temperature_unit}]"
 skip_words:
   - bitte

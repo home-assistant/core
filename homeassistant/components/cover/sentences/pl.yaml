@@ -6,14 +6,14 @@ intents:
           - Zamknij <name>
           - Zamknij <name> <area>
       - sentences:
-          - "Zamknij drzwi (gara\u017Cowe | od gara\u017Cu)"
-          - "Drzwi (gara\u017Cowe | od gara\u017Cu) zamknij"
+          - Zamknij drzwi (garażowe | od garażu)
+          - Drzwi (garażowe | od garażu) zamknij
         slots:
           device_class: garage_door
       - sentences:
-          - "Rolety <area> (zamknij | zas\u0142o\u0144)"
-          - "(Zamknij | Zas\u0142o\u0144) [wszystkie] rolety <area>"
-          - "(Zamknij | Zas\u0142o\u0144) <area> [wszystkie] rolety"
+          - Rolety <area> (zamknij | zasłoń)
+          - (Zamknij | Zasłoń) [wszystkie] rolety <area>
+          - (Zamknij | Zasłoń) <area> [wszystkie] rolety
         slots:
           device_class:
             - blind
@@ -22,17 +22,17 @@ intents:
   HassOpenCover:
     data:
       - sentences:
-          - "Otw\xF3rz <name>"
-          - "Otw\xF3rz <name> <area>"
+          - Otwórz <name>
+          - Otwórz <name> <area>
       - sentences:
-          - "Otw\xF3rz drzwi (gara\u017Cowe | od gara\u017Cu)"
-          - "Drzwi (gara\u017Cowe | od gara\u017Cu) otw\xF3rz"
+          - Otwórz drzwi (garażowe | od garażu)
+          - Drzwi (garażowe | od garażu) otwórz
         slots:
           device_class: garage_door
       - sentences:
-          - "Rolety <area> (otw\xF3rz | rozs\u0142o\u0144)"
-          - "(Otw\xF3rz | Rozs\u0142o\u0144) rolety <area>"
-          - "(Otw\xF3rz | Rozs\u0142o\u0144) <area> [wszystkie] rolety"
+          - Rolety <area> (otwórz | rozsłoń)
+          - (Otwórz | Rozsłoń) rolety <area>
+          - (Otwórz | Rozsłoń) <area> [wszystkie] rolety
         slots:
           device_class:
             - blind

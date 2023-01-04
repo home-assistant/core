@@ -7,15 +7,15 @@ intents:
   HassTurnOn:
     data:
       - sentences:
-          - "t\xE6nd {name}(en | et)"
+          - tænd {name}(en | et)
 responses:
   errors:
-    no_intent: "Undskyld, jeg kunne ikke forst\xE5 det"
-    no_area: "Omr\xE5det med navnet {{ area }} findes ikke"
-    no_domain: "{{ domain }} findes ikke i omr\xE5det {{ area }}"
-    no_device_class: "{{ device_class }} findes ikke i omr\xE5det {{ area }}"
+    no_intent: Undskyld, det forstod jeg ikke
+    no_area: Området med navnet {{ area }} findes ikke
+    no_domain: "{{ domain }} findes ikke i området {{ area }}"
+    no_device_class: "{{ device_class }} findes ikke i området {{ area }}"
     no_entity: "{{ entity }} findes ikke"
-    handle_error: Noget gik galt med at forarbejde hensigten
+    handle_error: Der opstod en uventet fejl under håndtering af hensigten
 lists: {}
 expansion_rules: {}
 skip_words: []
