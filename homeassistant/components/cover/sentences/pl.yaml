@@ -1,0 +1,40 @@
+language: pl
+intents:
+  HassCloseCover:
+    data:
+      - sentences:
+          - Zamknij <name>
+          - Zamknij <name> <area>
+      - sentences:
+          - "Zamknij drzwi (gara\u017Cowe | od gara\u017Cu)"
+          - "Drzwi (gara\u017Cowe | od gara\u017Cu) zamknij"
+        slots:
+          device_class: garage_door
+      - sentences:
+          - "Rolety <area> (zamknij | zas\u0142o\u0144)"
+          - "(Zamknij | Zas\u0142o\u0144) [wszystkie] rolety <area>"
+          - "(Zamknij | Zas\u0142o\u0144) <area> [wszystkie] rolety"
+        slots:
+          device_class:
+            - blind
+            - curtain
+            - shutter
+  HassOpenCover:
+    data:
+      - sentences:
+          - "Otw\xF3rz <name>"
+          - "Otw\xF3rz <name> <area>"
+      - sentences:
+          - "Otw\xF3rz drzwi (gara\u017Cowe | od gara\u017Cu)"
+          - "Drzwi (gara\u017Cowe | od gara\u017Cu) otw\xF3rz"
+        slots:
+          device_class: garage_door
+      - sentences:
+          - "Rolety <area> (otw\xF3rz | rozs\u0142o\u0144)"
+          - "(Otw\xF3rz | Rozs\u0142o\u0144) rolety <area>"
+          - "(Otw\xF3rz | Rozs\u0142o\u0144) <area> [wszystkie] rolety"
+        slots:
+          device_class:
+            - blind
+            - curtain
+            - shutter

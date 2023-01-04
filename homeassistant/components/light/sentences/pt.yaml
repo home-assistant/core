@@ -1,0 +1,30 @@
+language: pt
+intents:
+  HassLightSet:
+    data:
+      - sentences:
+          - "(p\xF5e | ponha) o brilho (do | da) <nome> a <brilho>"
+          - "(p\xF5e | ponha) <nome> a <brilho>"
+          - "(p\xF5e | ponha) o brilho (do | da) <nome> <na_zona> a <brilho>"
+          - "(p\xF5e | ponha) <nome> <na_zona> a <brilho>"
+      - sentences:
+          - "(p\xF5e | ponha) o brilho <na_zona> a <brilho>"
+          - "(p\xF5e | ponha) <zona> a <brilho>"
+          - "(p\xF5e | ponha) [todas] as luzes a <brilho>"
+          - "(p\xF5e | ponha) [todas] as luzes <na_zona> a <brilho>"
+          - "(p\xF5e | ponha) [o brilho (de todas as | das) | as] luzes a <brilho>"
+          - "(p\xF5e | ponha) [o brilho (de todas as | das) | as] luzes <na_zona> a <brilho>"
+        slots:
+          name: all
+      - sentences:
+          - "(p\xF5e | ponha) [a cor [(do | da)]] <nome> a {color}"
+          - "(p\xF5e | ponha) <nome> {color}"
+          - "(p\xF5e | ponha) [a cor [(do | da)]] <nome> <na_zona> a {color}"
+          - "(p\xF5e | ponha) <nome> <na_zona> {color}"
+      - sentences:
+          - "(p\xF5e | ponha) a cor <na_zona> a {color}"
+          - "(p\xF5e | ponha) <zona> [a] {color}"
+          - "(p\xF5e | ponha) [a cor (de todas as | das) | as] luzes a {color}"
+          - "(p\xF5e | ponha) [a cor (de todas as | das) | as] luzes <na_zona> a {color}"
+        slots:
+          name: all

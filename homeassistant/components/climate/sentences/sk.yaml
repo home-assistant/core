@@ -1,0 +1,10 @@
+language: sk
+intents:
+  HassClimateGetTemperature:
+    data:
+      - sentences:
+          - <what_is> <temp> (v | na) <area>
+          - "<how_many> stup\u0148ov (v | na) <area>"
+          - "<how_many> stup\u0148ov"
+          - <what_is> <temp>
+          - "ko\u013Eko stup\u0148ov je (v | na) <area>"

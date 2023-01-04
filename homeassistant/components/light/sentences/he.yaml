@@ -1,0 +1,20 @@
+language: he
+intents:
+  HassLightSet:
+    data:
+      - sentences:
+          - "\u05E7\u05D1\u05E2 [\u05D0\u05EA] [\u05D4]\u05D1\u05D4\u05D9\u05E8\u05D5\u05EA\
+            \ \u05D4<name> \u05DC<brightness> [\u05D0\u05D7\u05D5\u05D6]"
+          - "\u05E9\u05E0\u05D4 [\u05D0\u05EA] [\u05D4]\u05D1\u05D4\u05D9\u05E8\u05D5\u05EA\
+            \ \u05D4<name> \u05DC<brightness> [\u05D0\u05D7\u05D5\u05D6]"
+          - "\u05D4\u05D2\u05D3\u05E8 [\u05D0\u05EA] [\u05D4]\u05D1\u05D4\u05D9\u05E8\u05D5\
+            \u05EA \u05D4<name> \u05DC<brightness> [\u05D0\u05D7\u05D5\u05D6]"
+      - sentences:
+          - "\u05E7\u05D1\u05E2 [\u05D0\u05EA] [\u05D4]\u05D1\u05D4\u05D9\u05E8\u05D5\u05EA\
+            \ \u05D4<name> \u05DC<brightness>[\u05D0\u05D7\u05D5\u05D6] \u05D1 <area>"
+          - "\u05E9\u05E0\u05D4 [\u05D0\u05EA] [\u05D4]\u05D1\u05D4\u05D9\u05E8\u05D5\u05EA\
+            \ \u05D4<name> \u05DC<brightness>[\u05D0\u05D7\u05D5\u05D6] \u05D1 <area>"
+          - "\u05D4\u05D2\u05D3\u05E8 [\u05D0\u05EA] [\u05D4]\u05D1\u05D4\u05D9\u05E8\u05D5\
+            \u05EA \u05D4<name> \u05DC<brightness>[\u05D0\u05D7\u05D5\u05D6] \u05D1 <area>"
+        slots:
+          name: all

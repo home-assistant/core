@@ -1,0 +1,20 @@
+language: es
+intents:
+  HassClimateSetTemperature:
+    data:
+      - sentences:
+          - pon <temp> a <temperature>
+          - pon <temp> <area> a <temperature>
+          - pon <area> <temp> a <temperature>
+  HassClimateGetTemperature:
+    data:
+      - sentences:
+          - "cu\xE1l es [la] <temp>"
+          - "qu\xE9 <temp> hace"
+          - "cu\xE1l es [la] <temp> <area>"
+          - "qu\xE9 <temp> hace en <area>"
+responses:
+  intents:
+    HassClimateGetTemperature:
+      success:
+        - "{{ state.state }} grados"

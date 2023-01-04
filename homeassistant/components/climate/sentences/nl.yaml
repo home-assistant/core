@@ -1,0 +1,18 @@
+language: nl
+intents:
+  HassClimateSetTemperature:
+    data:
+      - sentences:
+          - <doe> [de] temperatuur <naar> <temperature> [graden]
+          - <doe> [de] temperatuur <naar> <temperature> [graden] in <area>
+          - <doe> [de] <area> temperatuur <naar> <temperature> [graden]
+  HassClimateGetTemperature:
+    data:
+      - sentences:
+          - hoe warm is het
+          - hoe warm is [het in] <area>
+responses:
+  intents:
+    HassClimateGetTemperature:
+      success:
+        - "{{ state.state }} graden"

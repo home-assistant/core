@@ -1,0 +1,25 @@
+language: it
+intents:
+  HassLightSet:
+    data:
+      - sentences:
+          - "[(imposta | cambia)] [la] [luminosit\xE0] [<of>] <name> [(a | al)] [valore]\
+            \ <brightness>"
+          - "[(imposta | cambia)] <name> [la] luminosit\xE0 [(a | al)] [valore] <brightness>"
+          - "[(imposta | cambia)] [(a | al)] [valore] <brightness> [la] luminosit\xE0\
+            \ [<of>] <name>"
+      - sentences:
+          - "[(imposta | cambia)] [la] luminosit\xE0 [(<of> | <the> | <in>)] <area> [(a\
+            \ | al)] [valore] <brightness>"
+          - "[(imposta | cambia)] [<in>] <area> [la] luminosit\xE0 [(a | al)] [valore]\
+            \ <brightness>"
+          - "[(imposta | cambia)] [(a | al)] [valore] <brightness> [la] luminosit\xE0\
+            \ [(<of> | <the> | <in>)] <area>"
+        slots:
+          name: all
+      - sentences:
+          - (imposta | cambia) [<the>] <name> [(a | al | su)] [colore] {color}
+          - (imposta | cambia) [(il)] [colore] [<of>] <name> [(a | al | su)] {color}
+          - (imposta | cambia) [il] [colore] {color} [<to>] <name>
+          - (imposta | cambia) [(a | al | su)] [colore] {color} [<the>] <name>
+          - (imposta | cambia) [(a | al | su)] {color} [<the>] [colore] [<of>] <name>

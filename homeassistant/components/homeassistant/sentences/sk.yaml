@@ -1,0 +1,83 @@
+language: sk
+intents:
+  HassTurnOff:
+    data:
+      - sentences:
+          - <turn_off> <name>
+      - sentences:
+          - "(<turn_off> | <turn_off_light>) (svetlo | svetl\xE1 | osvetlenie) (v | na)\
+            \ <area>"
+          - "(<turn_off> | <turn_off_light>) v\u0161etky svetl\xE1 (v | na) <area>"
+        slots:
+          domain: light
+  HassTurnOn:
+    data:
+      - sentences:
+          - "(<turn_on> | <turn_on_light>) (svetlo | svetl\xE1 | osvetlenie) (v | na)\
+            \ <area>"
+          - "(<turn_on> | <turn_on_light>) v\u0161etky svetl\xE1 (v | na) <area>"
+        slots:
+          domain: light
+      - sentences:
+          - <turn_on> <name>
+responses:
+  errors:
+    no_intent: "Prep\xE1\u010D, nerozumel som tomu"
+    no_area: "\u017Diadna oblas\u0165 s n\xE1zvom {{ area }}"
+    no_domain: "{{ area }} neobsahuje {{ domain }}"
+    no_device_class: "{{ area }} neobsahuje {{ device_class }}"
+    no_entity: "\u017Diadne zariadenie alebo entita s n\xE1zvom {{ entity }}"
+    handle_error: "Pri spracovan\xED do\u0161lo k neo\u010Dak\xE1vanej chybe"
+lists:
+  color:
+    values:
+      - in: biel(a|e|y|o|u)
+        out: white
+      - in: "\u010Diern(a|e|y|o|u)"
+        out: black
+      - in: "\u010Derven(\xE1|\xE9|\xFD|o|\xFA)"
+        out: red
+      - in: "oran\u017Eov(\xE1|\xE9|\xFD|o|\xFA)"
+        out: orange
+      - in: "\u017Elt(\xE1|\xE9|\xFD|o|\xFA)"
+        out: yellow
+      - in: "zelen(\xE1|\xE9|\xFD|o|\xFA)"
+        out: green
+      - in: "modr(\xE1|\xE9|\xFD|o|\xFA)"
+        out: blue
+      - in: "fialov(\xE1|\xE9|\xFD|o|\xFA)"
+        out: purple
+      - in: "hned(\xE1|\xE9|\xFD|o|\xFA)"
+        out: brown
+  brightness:
+    range:
+      type: percentage
+      from: 0
+      to: 100
+  temperature:
+    range:
+      type: temperature
+      from: 0
+      to: 100
+  temperature_unit:
+    values:
+      - celsius
+      - in: c
+        out: Celsius
+      - fahrenheit
+      - in: f
+        out: Fahrenheit
+expansion_rules:
+  name: "{name}"
+  area: "{area}"
+  what_is: "ak(\xE1|\xE9|\xFD|o) je"
+  how_many: "ko\u013Eko je"
+  brightness: "{brightness:brightness_pct} [percent]"
+  temp: (teplota)
+  temperature: "{temperature} [stup\u0148ov] [{temperature_unit}]"
+  turn_on: zapni
+  turn_off: vypni
+  turn_on_light: "(zasvie\u0165 | za\u017Eni | roz\u017Eni)"
+  turn_off_light: (zahas | zhasni)
+skip_words:
+  - "pros\xEDm"

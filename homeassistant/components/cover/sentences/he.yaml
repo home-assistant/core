@@ -1,0 +1,48 @@
+language: he
+intents:
+  HassCloseCover:
+    data:
+      - sentences:
+          - "\u05E1\u05D2\u05D5\u05E8 [\u05D0\u05EA] [\u05D4] <name>"
+        slots:
+          device_class:
+            - garage_door
+            - blind
+            - curtain
+            - shutter
+      - sentences:
+          - "\u05E1\u05D2\u05D5\u05E8 [\u05D0\u05EA] [\u05D4] (\u05EA\u05E8\u05D9\u05E1\
+            \u05D9\u05DD) \u05D1<area>"
+        slots:
+          device_class:
+            - blind
+            - curtain
+            - shutter
+      - sentences:
+          - "\u05E1\u05D2\u05D5\u05E8 [\u05D0\u05EA] [\u05D4] <name> \u05D1<area>"
+        slots:
+          device_class:
+            - garage_door
+  HassOpenCover:
+    data:
+      - sentences:
+          - "\u05E4\u05EA\u05D7 [\u05D0\u05EA] [\u05D4] <name>"
+        slots:
+          device_class:
+            - garage_door
+            - blind
+            - curtain
+            - shutter
+      - sentences:
+          - "\u05E4\u05EA\u05D7 [\u05D0\u05EA \u05D4]\u05EA\u05E8\u05D9\u05E1\u05D9\u05DD\
+            \ \u05D1<area>"
+        slots:
+          device_class:
+            - blind
+            - curtain
+            - shutter
+      - sentences:
+          - "\u05E4\u05EA\u05D7 [\u05D0\u05EA] [\u05D4] <name> \u05D1<area>"
+        slots:
+          device_class:
+            - garage_door

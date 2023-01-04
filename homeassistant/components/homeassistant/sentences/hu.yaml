@@ -1,0 +1,96 @@
+language: hu
+intents:
+  HassTurnOff:
+    data:
+      - sentences:
+          - "<turn_off> a (ventil\xE1tort | ventil\xE1torokat | szell\u0151ztet\xE9st)\
+            \ <area>"
+          - "(ventil\xE1tort | szell\u0151ztet\xE9st) ki <area>"
+        slots:
+          domain: fan
+          name: all
+      - sentences:
+          - <name> <turn_off>
+      - sentences:
+          - "<turn_off> a (l\xE1mp\xE1t | l\xE1mp\xE1kat) <area>"
+          - "<turn_off> <area> a (l\xE1mp\xE1t | l\xE1mp\xE1kat)"
+        slots:
+          domain: light
+          name: all
+  HassTurnOn:
+    data:
+      - sentences:
+          - "<turn_on> a (l\xE1mp\xE1t | l\xE1mp\xE1kat) <area>"
+          - "<turn_on> <area> a (l\xE1mp\xE1t | l\xE1mp\xE1kat)"
+        slots:
+          domain: light
+          name: all
+      - sentences:
+          - "<turn_on> a (ventil\xE1tort | ventil\xE1torokat | szell\u0151ztet\xE9st)\
+            \ <area>"
+          - "(ventil\xE1tort | szell\u0151ztet\xE9st) be <area> "
+        slots:
+          domain: fan
+          name: all
+      - sentences:
+          - <name> <turn_on>
+responses:
+  errors:
+    no_intent: "Eln\xE9z\xE9st, ezt nem \xE9rtem"
+    no_area: "{{ area }} ter\xFClet nem tal\xE1lhat\xF3"
+    no_domain: "{{ area }} nem tal\xE1lhat\xF3 {{ domain }}(ban | ben)"
+    no_device_class: "{{ area }} (ban | ben) nem tal\xE1lhat\xF3 {{ device_class }}"
+    no_entity: "{{ entity }} nem tal\xE1lhat\xF3"
+    handle_error: "V\xE1ratlan hiba t\xF6rt\xE9nt."
+lists:
+  color:
+    values:
+      - in: "feh\xE9r"
+        out: white
+      - in: fekete
+        out: black
+      - in: piros
+        out: red
+      - in: narancs
+        out: orange
+      - in: "s\xE1rga"
+        out: yellow
+      - in: "z\xF6ld"
+        out: green
+      - in: "k\xE9k"
+        out: blue
+      - in: lila
+        out: purple
+      - in: barna
+        out: brown
+  brightness:
+    range:
+      type: percentage
+      from: 0
+      to: 100
+  temperature:
+    range:
+      type: temperature
+      from: 0
+      to: 100
+  temperature_unit:
+    values:
+      - in: c | celziusz | celsziusz
+        out: celsius
+      - in: "f | f\xE1renhejt | f\xE1renh\xE1jt"
+        out: fahrenheit
+expansion_rules:
+  area: "[(a | az)] {area} [ban | ben]"
+  name: "[(a | az)] {name}"
+  what_is: (mi | mennyi)
+  brightness: "{brightness:brightness_pct}"
+  turn_on:
+    "[kapcsol | kapcsold | kapcsolj | nyisd] (be | fel | f\xF6l) [kapcsol][\xE1\
+    s]"
+  turn_off:
+    "[kapcsol | kapcsold | kapcsolj | z\xE1rd | oltsd] (ki | le | el) [kapcsol][\xE1\
+    s]"
+  temp: "(h\u0151fok | h\u0151m\xE9rs\xE9klet)"
+  temperature: "{temperature}"
+  set: "(\xE1ll\xEDtsd | k\xE9rem | k\xE9rek | szeretn\xE9k)"
+skip_words: []

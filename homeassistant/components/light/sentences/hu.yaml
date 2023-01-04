@@ -1,0 +1,26 @@
+language: hu
+intents:
+  HassLightSet:
+    data:
+      - sentences:
+          - "[a | az] <name> (f\xE9nyer\u0151t | f\xE9nyerej\xE9t) <brightness> (re |\
+            \ ra | sz\xE1zal\xE9kra)"
+          - "[a | az] <name> (f\xE9nyer\u0151t | f\xE9nyerej\xE9t) (\xE1ll\xEDtsd | k\xE9\
+            rem) <brightness> (re | ra | sz\xE1zal\xE9kra)"
+          - "(\xE1ll\xEDtsd | k\xE9rem) [a | az] <name> (f\xE9nyer\u0151t | f\xE9nyerej\xE9\
+            t) <brightness> (re | ra | sz\xE1zal\xE9kra)"
+      - sentences:
+          - "[a | az] <area> (f\xE9nyer\u0151t | f\xE9nyerej\xE9t) <brightness> (re |\
+            \ ra | sz\xE1zal\xE9kra)"
+          - "[a | az] <area> (f\xE9nyer\u0151t | f\xE9nyerej\xE9t) (\xE1ll\xEDtsd | k\xE9\
+            rem) <brightness> (re | ra | sz\xE1zal\xE9kra)"
+          - "(\xE1ll\xEDtsd | k\xE9rem) [a | az] <area> (f\xE9nyer\u0151t | f\xE9nyerej\xE9\
+            t) <brightness> (re | ra | sz\xE1zal\xE9kra)"
+        slots:
+          name: all
+      - sentences:
+          - "[a | az] <name> (sz\xEDnt | sz\xEDn\xE9t) {color} (re | ra)"
+          - "[a | az] <name> (sz\xEDnt | sz\xEDn\xE9t) (\xE1ll\xEDtsd | k\xE9rem) {color}\
+            \ (re | ra)"
+          - "(\xE1ll\xEDtsd | k\xE9rem) [a | az] <name> (sz\xEDnt | sz\xEDn\xE9t) {color}\
+            \ (re | ra)"

@@ -1,0 +1,74 @@
+language: sv
+intents:
+  HassTurnOff:
+    data:
+      - sentences:
+          - <turn_off> <name>
+  HassTurnOn:
+    data:
+      - sentences:
+          - "<turn_on> [alla] (fl\xE4ktar | fl\xE4ktarna) ( i | p\xE5 ) <area>"
+        slots:
+          domain: fan
+          name: all
+      - sentences:
+          - "s\xE4tt p\xE5 <name>"
+responses:
+  errors:
+    no_intent: "Urs\xE4kta, jag kunde inte f\xF6rst\xE5"
+    no_area: Ingen area med namn {{ area }} hittades
+    no_domain: "{{ area }} har inga {{ domain }}"
+    no_device_class: "{{ area }} har ingen {{ device_class }}"
+    no_entity: Det finns ingen enhet eller entitet som heter {{ entity }}
+    handle_error: "Ett ov\xE4ntat fel intr\xE4ffade under utf\xF6randet av avsikten"
+lists:
+  color:
+    values:
+      - in: vit
+        out: white
+      - in: svart
+        out: black
+      - in: "r\xF6d"
+        out: red
+      - in: orange
+        out: orange
+      - in: gul
+        out: yellow
+      - in: "gr\xF6n"
+        out: green
+      - in: "bl\xE5"
+        out: blue
+      - in: lila
+        out: purple
+      - in: brun
+        out: brown
+  brightness:
+    range:
+      type: percentage
+      from: 0
+      to: 100
+  temperature:
+    range:
+      type: temperature
+      from: 0
+      to: 100
+  temperature_unit:
+    values:
+      - celsius
+      - in: c
+        out: celsius
+      - fahrenheit
+      - in: f
+        out: fahrenheit
+expansion_rules:
+  name: "{name}"
+  area: "{area}"
+  what_is: "(vad \xE4r | vad \xE4r det | vad \xE4r det f\xF6r | vilken)"
+  is_it: "(\xE4r det)"
+  brightness: "{brightness:brightness_pct} [percent]"
+  turn_on: "( t\xE4nd | s\xE4tt p\xE5 | sl\xE5 p\xE5 | starta )"
+  turn_off: "( sl\xE4ck | st\xE4ng av | stoppa )"
+  temp: (temperatur)
+  temperature: "{temperature} [grader] [{temperature_unit}]"
+skip_words:
+  - "sn\xE4lla"

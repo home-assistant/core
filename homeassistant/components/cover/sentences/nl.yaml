@@ -1,0 +1,46 @@
+language: nl
+intents:
+  HassCloseCover:
+    data:
+      - sentences:
+          - sluit <name>
+          - sluit <name> in <area>
+      - sentences:
+          - sluit de garage [deur]
+          - (doe | mag) de garage [deur] dicht
+        slots:
+          device_class: garage_door
+      - sentences:
+          - sluit [de | het] (gordijn | gordijnen | luxaflex | rolluik | rolluiken | screen
+            |screens) in <area>
+          - (doe | mogen) [de] (gordijnen | rolluiken | screens) dicht in <area>
+          - (doe | mogen) [de] (gordijnen | rolluiken | screens) in <area> dicht
+          - (doe | mag) [de | het] (gordijn | luxaflex | rolluik | screen) dicht in <area>
+          - (doe | mag) [de | het] (gordijn | luxaflex | rolluik | screen) in <area> dicht
+        slots:
+          device_class:
+            - blind
+            - curtain
+            - shutter
+  HassOpenCover:
+    data:
+      - sentences:
+          - open <name>
+          - open <name> in <area>
+      - sentences:
+          - open [de] garage [deur]
+          - (mag | doe) [de] garage [deur] open
+        slots:
+          device_class: garage_door
+      - sentences:
+          - open [de | het](gordijn | gordijnen | luxaflex | rolluik | rolluiken | screen
+            | screens) in <area>
+          - (doe | mogen) [de] (gordijnen | rolluiken | screens) open in <area>
+          - (doe | mogen) [de] (gordijnen | rolluiken | screens) in <area> open
+          - (doe | mag) [de | het] (gordijn | luxaflex | rolluik | screen) open in <area>
+          - (doe | mag) [de | het] (gordijn | luxaflex | rolluik | screen) in <area> open
+        slots:
+          device_class:
+            - blind
+            - curtain
+            - shutter

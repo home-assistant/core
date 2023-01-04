@@ -1,0 +1,34 @@
+language: es
+intents:
+  HassCloseCover:
+    data:
+      - sentences:
+          - cierra <name>
+          - cierra <name> <area>
+      - sentences:
+          - cierra [la] puerta del garaje
+        slots:
+          device_class: garage_door
+      - sentences:
+          - cierra [la|las] <name> [<area>]
+        slots:
+          device_class:
+            - blind
+            - curtain
+            - shutter
+  HassOpenCover:
+    data:
+      - sentences:
+          - abre <name>
+          - abre <name> <area>
+      - sentences:
+          - abre [la] puerta del garaje
+        slots:
+          device_class: garage_door
+      - sentences:
+          - abre [la | las] (cortinas | persianas) <area>
+        slots:
+          device_class:
+            - blind
+            - curtain
+            - shutter

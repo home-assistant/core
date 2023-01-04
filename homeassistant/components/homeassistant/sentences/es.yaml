@@ -1,0 +1,90 @@
+language: es
+intents:
+  HassTurnOff:
+    data:
+      - sentences:
+          - apaga [todos] [los] ventiladores <area>
+        slots:
+          domain: fan
+          name: all
+      - sentences:
+          - apaga <name> <area>
+      - sentences:
+          - apaga (la luz | las luces | luces) <area>
+          - apaga todas las luces <area>
+        slots:
+          domain: light
+          name: all
+  HassTurnOn:
+    data:
+      - sentences:
+          - <enciende> ([la] luz | [las] luces) <area>
+          - <enciende> todas las luces <area>
+        slots:
+          domain: light
+      - sentences:
+          - enciende [todos] [los] ventiladores <area>
+        slots:
+          domain: fan
+          name: all
+      - sentences:
+          - enciende <name>
+responses:
+  errors:
+    no_intent: Lo siento, no te he entendido
+    no_area: "No existe ninguna \xE1rea llamada {{ area }}"
+    no_domain: "{{ area }} no tiene {{ domain }}"
+    no_device_class: "{{ area }} no tiene {{ device_class }}"
+    no_entity: No el existe dispositivo o entidad llamado {{ entity }}
+    handle_error:
+      "Un error inesperado ha ocurrido intentando procesar la instrucci\xF3\
+      n"
+lists:
+  color:
+    values:
+      - in: blanco
+        out: white
+      - in: negro
+        out: black
+      - in: rojo
+        out: red
+      - in: naranja
+        out: orange
+      - in: amarillo
+        out: yellow
+      - in: verde
+        out: green
+      - in: azul
+        out: blue
+      - in: "(lila|morado|p\xFArpura)"
+        out: purple
+      - in: "marr\xF3n"
+        out: brown
+  brightness:
+    range:
+      type: percentage
+      from: 0
+      to: 100
+  temperature:
+    range:
+      type: temperature
+      from: 0
+      to: 100
+  temperature_unit:
+    values:
+      - celsius
+      - in: c
+        out: celsius
+      - fahrenheit
+      - in: f
+        out: fahrenheit
+expansion_rules:
+  name: "[el | la] {name}"
+  area: "[en | en el | en la | la | de la | del | de | el] {area}"
+  brightness: "{brightness:brightness_pct} [porciento]"
+  enciende: (enciende | activa)
+  temp: "[la] (temperatura)"
+  temperature: "{temperature} [grados] [{temperature_unit}]"
+skip_words:
+  - por favor
+  - gracias

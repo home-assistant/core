@@ -1,0 +1,19 @@
+language: ca
+intents:
+  HassClimateSetTemperature:
+    data:
+      - sentences:
+          - (posa | puja) [la] <temp> a <graus> [<area>]
+          - "(posa | puja) [la] calefacci\xF3 a <graus> [<area>]"
+  HassClimateGetTemperature:
+    data:
+      - sentences:
+          - quina <temp> fa
+          - "quina \xE9s la <temp>"
+          - "quina \xE9s la <temp> <area>"
+          - quanta calor fa <area>
+responses:
+  intents:
+    HassClimateGetTemperature:
+      success:
+        - "{{ state.state }} graus"

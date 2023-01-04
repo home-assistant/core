@@ -1,0 +1,179 @@
+language: ur
+intents:
+  HassTurnOff:
+    data:
+      - sentences:
+          - "<area> [<all>] (\u067E\u0646\u06A9\u06BE\u06D2 | \u067E\u0646\u06A9\u06BE\
+            \u0627) [\u06A9\u0648] (\u0628\u0646\u062F | off) [<set>]"
+          - "[<all>] (\u067E\u0646\u06A9\u06BE\u06D2 | \u067E\u0646\u06A9\u06BE\u0627\
+            ) <area> (\u0628\u0646\u062F | off) [<set>]"
+          - "[<all>] <area> (\u067E\u0646\u06A9\u06BE\u06D2 | \u067E\u0646\u06A9\u06BE\
+            \u0627) [\u06A9\u0648] (\u0628\u0646\u062F | off) [<set>]"
+        slots:
+          domain: fan
+          name: all
+      - sentences:
+          - "<name> (\u0628\u0646\u062F | off) <set>"
+          - "(\u0628\u0646\u062F | off) <set> <name> "
+      - sentences:
+          - "<area> [<all>] (\u0644\u0627\u06CC\u0679 | \u0644\u0627\u06CC\u0679\u06CC\
+            \u06BA | light[s]) [\u06A9\u0648] ((\u0628\u0646\u062F | off) [<set>] | \u0628\
+            \u062C\u06BE\u0627\u062F\u0648)"
+          - "[<all>] (\u0644\u0627\u06CC\u0679 | \u0644\u0627\u06CC\u0679\u06CC\u06BA\
+            \ | light[s]) <area> ((\u0628\u0646\u062F | off) [<set>] | \u0628\u062C\u06BE\
+            \u0627\u062F\u0648)"
+          - "[<all>] <area> (\u0644\u0627\u06CC\u0679 | \u0644\u0627\u06CC\u0679\u06CC\
+            \u06BA | light[s]) [\u06A9\u0648] ((\u0628\u0646\u062F | off) [<set>] | \u0628\
+            \u062C\u06BE\u0627\u062F\u0648)"
+        slots:
+          domain: light
+  HassTurnOn:
+    data:
+      - sentences:
+          - "<area> [<all>] (\u0644\u0627\u06CC\u0679 | \u0644\u0627\u06CC\u0679\u06CC\
+            \u06BA | light[s]) [\u06A9\u0648] (\u06A9\u06BE\u0648\u0644\u062F\u0648 |\
+            \ \u06A9\u06BE\u0648\u0644\u0648 | on [<set>])"
+          - "[<all>] (\u0644\u0627\u06CC\u0679 | \u0644\u0627\u06CC\u0679\u06CC\u06BA\
+            \ | light[s]) <area> (\u06A9\u06BE\u0648\u0644\u062F\u0648 | \u06A9\u06BE\u0648\
+            \u0644\u0648 | on [<set>])"
+          - "[<all>] <area> (\u0644\u0627\u06CC\u0679 | \u0644\u0627\u06CC\u0679\u06CC\
+            \u06BA | light[s]) [\u06A9\u0648] (\u06A9\u06BE\u0648\u0644\u062F\u0648 |\
+            \ \u06A9\u06BE\u0648\u0644\u0648 | on [<set>])"
+        slots:
+          domain: light
+      - sentences:
+          - "<area> [<all>] (\u067E\u0646\u06A9\u06BE\u06D2 | \u067E\u0646\u06A9\u06BE\
+            \u0627) [\u06A9\u0648] (\u06A9\u06BE\u0648\u0644\u062F\u0648 | \u06A9\u06BE\
+            \u0648\u0644\u0648 | on [<set>])"
+          - "[<all>] (\u067E\u0646\u06A9\u06BE\u06D2 | \u067E\u0646\u06A9\u06BE\u0627\
+            ) <area> (\u06A9\u06BE\u0648\u0644\u062F\u0648 | \u06A9\u06BE\u0648\u0644\u0648\
+            \ | on [<set>])"
+          - "[<all>] <area> (\u067E\u0646\u06A9\u06BE\u06D2 | \u067E\u0646\u06A9\u06BE\
+            \u0627) [\u06A9\u0648] (\u06A9\u06BE\u0648\u0644\u062F\u0648 | \u06A9\u06BE\
+            \u0648\u0644\u0648 | on [<set>])"
+        slots:
+          domain: fan
+          name: all
+      - sentences:
+          - "<name> (\u06A9\u06BE\u0648\u0644\u062F\u0648 | \u06A9\u06BE\u0648\u0644\u0648\
+            \ | on [<set>])"
+          - "(\u06A9\u06BE\u0648\u0644\u062F\u0648 | \u06A9\u06BE\u0648\u0644\u0648 |\
+            \ [<set>]) <name>"
+responses:
+  errors:
+    no_intent:
+      "\u0645\u062C\u06BE\u06D2 \u0633\u0645\u062C\u06BE \u0645\u06CC\u06BA\
+      \ \u0646\u06C1\u06CC\u06BA \u0622\u06CC\u0627"
+    no_area:
+      "\u06A9\u0633\u06CC \u062C\u06AF\u06C1 \u06A9\u0627 \u0646\u0627\u0645\
+      \  {{ area }} \u0646\u06C1\u06CC\u06BA \u06BE\u06D2"
+    no_domain:
+      "{{ area }} \u0645\u06CC\u06BA {{ domain }} \u0646\u06C1\u06CC\u06BA\
+      \ \u06C1\u06D2"
+    no_device_class:
+      "{{ area }} \u0645\u06CC\u06BA {{ device_class }} \u0646\u06C1\
+      \u06CC\u06BA \u06C1\u06D2"
+    no_entity:
+      "\u06A9\u0648\u0626\u06CC \u0688\u0648\u0627\u0626\u0633 \u06A9\u0627\
+      \ \u0646\u0627\u0645 {{ entity }} \u0646\u06C1\u06CC\u06BA \u06BE\u06D2 "
+    handle_error:
+      "\u0622\u067E \u06A9\u06D2 \u062C\u0648\u0627\u0628 \u06A9\u0648\
+      \ \u0633\u0646\u0628\u06BE\u0627\u0644\u062A\u06D2 \u0648\u0642\u062A \u06A9\
+      \u0686\u06BE \u0639\u062C\u06CC\u0628 \u0645\u0633\u0626\u0644\u06C1 \u0622\u06AF\
+      \u06CC\u0627"
+lists:
+  color:
+    values:
+      - in: "\u0633\u0641\u06CC\u062F"
+        out: white
+      - in: white
+        out: white
+      - in: "\u0633\u06CC\u0627\u06C1"
+        out: black
+      - in: "\u06A9\u0627\u0644\u0627"
+        out: black
+      - in: black
+        out: black
+      - in: "\u0633\u0631\u062E"
+        out: red
+      - in: "\u0644\u0627\u0644"
+        out: red
+      - in: red
+        out: red
+      - in: "\u0627\u0648\u0631\u0646\u062C"
+        out: orange
+      - in: "\u0646\u0627\u0631\u0646\u062C\u06CC"
+        out: orange
+      - in: orange
+        out: orange
+      - in: "\u067E\u06CC\u0644\u0627"
+        out: yellow
+      - in: yellow
+        out: yellow
+      - in: "\u0633\u0628\u0632"
+        out: green
+      - in: "\u06C1\u0631\u0627"
+        out: green
+      - in: green
+        out: green
+      - in: "\u0646\u06CC\u0644\u0627"
+        out: blue
+      - in: blue
+        out: blue
+      - in: "\u062C\u0627\u0645\u0646\u06CC"
+        out: purple
+      - in: purple
+        out: purple
+      - in: "\u067E\u0646\u06A9"
+        out: pink
+      - in: "\u06AF\u0644\u0627\u0628\u06CC"
+        out: pink
+      - in: pink
+        out: pink
+      - in: "\u0628\u0631\u0627\u0624\u0646"
+        out: brown
+      - in: brown
+        out: brown
+      - in: "\u0622\u0633\u0645\u0627\u0646\u06CC"
+        out: sky blue
+      - in: sky blue
+        out: sky blue
+  brightness:
+    range:
+      type: percentage
+      from: 0
+      to: 100
+  temperature:
+    range:
+      type: temperature
+      from: 0
+      to: 100
+  temperature_unit:
+    values:
+      - celsius
+      - in: c
+        out: celsius
+expansion_rules:
+  name: "{name} [\u06A9\u0648] [\u06A9\u06D2] [\u06A9\u0627]"
+  area: "{area} [\u06A9\u0627] [\u06A9\u06D2] [\u06A9\u0648] [\u0645\u06CC\u06BA]"
+  temp:
+    "(temperature | \u062F\u0631\u062C\u06C1 \u062D\u0631\u0627\u0631\u062A |\
+    \ \u0679\u06CC\u0645\u067E\u0631\u06CC\u0686\u0631)"
+  temperature:
+    "{temperature} [\u0688\u06AF\u0631\u06CC] [degree] [\u062F\u0631\u062C\
+    \u06C1 \u062D\u0631\u0627\u0631\u062A] [{temperature_unit}]"
+  brightness:
+    "{brightness:brightness_pct} [percent | \u067E\u0631\u0633\u0646\u0679\
+    ]"
+  set:
+    "[\u0645\u06CC\u06BA] [\u067E\u0631] (\u06A9\u0631 \u062F\u06CC\u06BA | \u0633\
+    \u06CC\u0679 \u06A9\u0631\u062F\u0648 | \u06A9\u0631\u062F\u0648 | \u0631\u06A9\
+    \u06BE\u0644\u0648 | \u062F\u0627\u0644\u062F\u0648 | \u062F\u0627\u0644\u0648\
+    \ | \u0633\u06CC\u0679 \u06A9\u0631\u0648 | \u06A9\u0631\u0648 | \u06A9\u0631)"
+  all:
+    "(\u062A\u0645\u0627\u0645 | \u0633\u0628 | \u0633\u0627\u0631\u06CC | \u0633\
+    \u0627\u0631\u06D2)"
+skip_words:
+  - "\u06CC\u0627\u0631"
+  - "\u0632\u0631\u0627"
+  - please

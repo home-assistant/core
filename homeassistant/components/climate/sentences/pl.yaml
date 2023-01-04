@@ -1,0 +1,16 @@
+language: pl
+intents:
+  HassClimateSetTemperature:
+    data:
+      - sentences:
+          - "(Ustaw|Zmie\u0144) [<temp>] na <temperature>"
+          - "(Ustaw|Zmie\u0144) [<temp>] <area> na <temperature>"
+  HassClimateGetTemperature:
+    data:
+      - sentences:
+          - (<what_is>|<how_many_is>) <temp> [<area>]
+responses:
+  intents:
+    HassClimateGetTemperature:
+      success:
+        - "{{ state.state }} stopni"

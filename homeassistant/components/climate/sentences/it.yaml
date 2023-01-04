@@ -1,0 +1,24 @@
+language: it
+intents:
+  HassClimateSetTemperature:
+    data:
+      - sentences:
+          - imposta <temp> a <temperature>
+          - imposta [<temp>] [<in>] <area> [a] <temperature>
+          - imposta [<temp>] [di] <temperature> [<in>] <area>
+          - imposta [<in>] <area> [<temp>] [di] <temperature>
+          - Imposta <temp> <area> [a] <temperature>
+  HassClimateGetTemperature:
+    data:
+      - sentences:
+          - <what_is> <temp>
+          - "[(<what_is> | che)] <temp> [c'\xE8]"
+          - <what_is> <temp> [(<in> | <of>)] <area>
+          - "quanto (caldo | freddo) [(\xE8 | c'\xE8 | fa)] [(<in>|<the>) <area>]"
+          - "quanto [(\xE8 | c'\xE8 | fa)] (caldo | freddo) [(<in>|<the>) <area>]"
+          - "[(<what_is> | che)] <temp> [c'\xE8] [<in>] <area>"
+responses:
+  intents:
+    HassClimateGetTemperature:
+      success:
+        - "{{ state.state }} gradi"

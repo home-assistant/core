@@ -1,0 +1,6 @@
+language: el
+responses:
+  intents:
+    HassClimateGetTemperature:
+      success:
+        - "{{ state.state }} \u03B2\u03B1\u03B8\u03BC\u03BF\u03AF"

@@ -1,0 +1,15 @@
+language: nl
+intents:
+  HassLightSet:
+    data:
+      - sentences:
+          - <doe> <name> [<helderheid>] [<naar>] <brightness>
+          - <doe> [de] <helderheid> van <name> [<naar>] <brightness>
+      - sentences:
+          - <doe> [de] <helderheid> in <area> [<naar>] <brightness>
+          - <doe> <area> <helderheid> [<naar>] <brightness>
+        slots:
+          name: all
+      - sentences:
+          - <doe> <name> [kleur] [<naar>] {color}
+          - <doe> [[de] kleur van] <name> [<naar>] {color}

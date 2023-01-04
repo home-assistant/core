@@ -1,0 +1,35 @@
+language: en
+intents:
+  HassCloseCover:
+    data:
+      - sentences:
+          - close <name>
+          - close <name> in <area>
+      - sentences:
+          - close [the] garage door
+        slots:
+          device_class: garage_door
+      - sentences:
+          - close [the] blinds in <area>
+          - close <area> blinds
+        slots:
+          device_class:
+            - blind
+            - curtain
+            - shutter
+  HassOpenCover:
+    data:
+      - sentences:
+          - open <name>
+          - open <name> in <area>
+      - sentences:
+          - open [the] garage door
+        slots:
+          device_class: garage_door
+      - sentences:
+          - open [the] blinds in <area>
+        slots:
+          device_class:
+            - blind
+            - curtain
+            - shutter

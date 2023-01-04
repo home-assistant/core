@@ -1,0 +1,38 @@
+language: ca
+intents:
+  HassCloseCover:
+    data:
+      - sentences:
+          - <tanca> <name> [<area>]
+      - sentences:
+          - <tanca> [(la|les)] port(a|es) [del] garatge
+        slots:
+          device_class: garage_door
+      - sentences:
+          - <tanca> [(la|les)] persian(a|es) <area>
+        slots:
+          device_class:
+            - blind
+            - shutter
+      - sentences:
+          - <tanca> [(la|les)] cortin(a|es) <area>
+        slots:
+          device_class: curtain
+  HassOpenCover:
+    data:
+      - sentences:
+          - <obre> <name> [<area>]
+      - sentences:
+          - <obre> [(la|les)] port(a|es) [del] garatge
+        slots:
+          device_class: garage_door
+      - sentences:
+          - <obre> [(la|les)] persian(a|es) <area>
+        slots:
+          device_class:
+            - blind
+            - shutter
+      - sentences:
+          - <obre> [(la|les)] cortin(a|es) <area>
+        slots:
+          device_class: curtain

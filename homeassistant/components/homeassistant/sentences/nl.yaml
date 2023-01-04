@@ -1,0 +1,96 @@
+language: nl
+intents:
+  HassTurnOff:
+    data:
+      - sentences:
+          - <doe> [alle] [de] (ventilator | ventilatoren) in <area> [<naar>] uit
+          - <doe> [alle] <area> (ventilator | ventilatoren) [<naar>] uit
+        slots:
+          domain: fan
+          name: all
+      - sentences:
+          - <doe> <name> [<naar>] uit
+      - sentences:
+          - <doe> <lamp> [<naar>] uit in <area>
+          - <doe> <lamp> in <area> [<naar>] uit
+        slots:
+          domain: light
+          name: all
+  HassTurnOn:
+    data:
+      - sentences:
+          - <doe> <lamp> [<naar>] aan in <area>
+          - <doe> <lamp> in <area> [<naar>] aan
+        slots:
+          domain: light
+          name: all
+      - sentences:
+          - <doe> [(alle | de)] (ventilator | ventilatoren) in <area> [<naar>] aan
+          - <doe> [alle] <area> (ventilator | ventilatoren) [<naar>] aan
+        slots:
+          domain: fan
+          name: all
+      - sentences:
+          - <doe> <name> [<naar>] aan
+responses:
+  errors:
+    no_intent: Sorry, ik snap het niet
+    no_area: Kan geen {{ area }} vinden
+    no_domain: "{{ area }} heeft geen {{ domain }}"
+    no_device_class: "{{ area }} heeft geen {{ device_class }}"
+    no_entity: Kan {{ entity }} niet vinden
+    handle_error: Er is iets misgegaan
+lists:
+  brightness:
+    range:
+      type: percentage
+      from: 0
+      to: 100
+  color:
+    values:
+      - in: wit
+        out: white
+      - in: zwart
+        out: black
+      - in: rood
+        out: red
+      - in: oranje
+        out: orange
+      - in: geel
+        out: yellow
+      - in: groen
+        out: green
+      - in: blauw
+        out: blue
+      - in: paars
+        out: purple
+      - in: bruin
+        out: brown
+      - in: roze
+        out: pink
+  temperature:
+    range:
+      type: temperature
+      from: 0
+      to: 100
+  temperature_unit:
+    values:
+      - celsius
+      - in: c
+        out: celsius
+      - fahrenheit
+      - in: f
+        out: fahrenheit
+expansion_rules:
+  lamp: "[(de | het)] (lamp  | lampen | licht | lichten | verlichting)"
+  name: "[de | het] {name}"
+  area: "[de | het] {area}"
+  doe: (zet | mag | mogen | doe | verander | maak | schakel)
+  naar: (naar | op)
+  helderheid: (helderheid | felheid | intensiteit)
+  brightness: "{brightness:brightness_pct} [procent]"
+  temperature: "{temperature} [graden] [{temperature_unit}]"
+skip_words:
+  - alstublieft
+  - alsjeblieft
+  - aub

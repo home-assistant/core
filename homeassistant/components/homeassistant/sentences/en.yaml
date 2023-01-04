@@ -1,0 +1,87 @@
+language: en
+intents:
+  HassTurnOff:
+    data:
+      - sentences:
+          - <turn> off [all] [the] (fan | fans) in <area>
+          - <turn> off <area> (fan | fans)
+          - <turn> [all] <area> (fan | fans) off
+        slots:
+          domain: fan
+          name: all
+      - sentences:
+          - turn off <name>
+          - turn <name> off
+      - sentences:
+          - <turn> off [all] [the] (light | lights) in <area>
+          - <turn> off [all] <area> (light | lights)
+          - <turn> [all] [the] (light | lights) in <area> off
+        slots:
+          domain: light
+  HassTurnOn:
+    data:
+      - sentences:
+          - <turn> on [all] [the] (light | lights) in <area>
+          - <turn> on [all] <area> (light | lights)
+          - <turn> [all] [the] (light | lights) in <area> on
+        slots:
+          domain: light
+      - sentences:
+          - <turn> on [all] [the] (fan | fans) in <area>
+          - <turn> on <area> (fan | fans)
+          - <turn> [all] <area> (fan | fans) on
+        slots:
+          domain: fan
+          name: all
+      - sentences:
+          - turn on <name>
+          - turn <name> on
+responses:
+  errors:
+    no_intent: Sorry, I couldn't understand that
+    no_area: No area named {{ area }}
+    no_domain: "{{ area }} does not contain a {{ domain }}"
+    no_device_class: "{{ area }} does not contain a {{ device_class }}"
+    no_entity: No device or entity named {{ entity }}
+    handle_error: An unexpected error occurred while handling the intent
+lists:
+  color:
+    values:
+      - white
+      - black
+      - red
+      - orange
+      - yellow
+      - green
+      - blue
+      - purple
+      - brown
+  brightness:
+    range:
+      type: percentage
+      from: 0
+      to: 100
+  temperature:
+    range:
+      type: temperature
+      from: 0
+      to: 100
+  temperature_unit:
+    values:
+      - celsius
+      - in: c
+        out: celsius
+      - fahrenheit
+      - in: f
+        out: fahrenheit
+expansion_rules:
+  name: "[the] {name}"
+  area: "[the] {area}"
+  what_is: (what's | whats | what is)
+  brightness: "{brightness:brightness_pct} [percent]"
+  turn: (turn | switch)
+  temp: (temp | temperature)
+  temperature: "{temperature} [degrees] [{temperature_unit}]"
+skip_words:
+  - please
+  - can you

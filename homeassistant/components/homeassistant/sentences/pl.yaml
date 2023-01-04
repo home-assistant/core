@@ -1,0 +1,91 @@
+language: pl
+intents:
+  HassTurnOff:
+    data:
+      - sentences:
+          - <turn_off> (wentylator | [wszystkie] wentylatory) <area>
+          - <turn_off> <area> (wentylator | [wszystkie] wentylatory)
+        slots:
+          domain: fan
+          name: all
+      - sentences:
+          - <turn_off> <name>
+      - sentences:
+          - "<turn_off> [wszystkie | ca\u0142e ] [\u015Bwiat\u0142a | \u015Bwiat\u0142\
+            o] <area>"
+        slots:
+          domain: light
+  HassTurnOn:
+    data:
+      - sentences:
+          - "<turn_on> [\u015Bwiat\u0142a | \u015Bwiat\u0142o] <area>"
+        slots:
+          domain: light
+      - sentences:
+          - <turn_on> (wentylator | [wszystkie] wentylatory) <area>
+          - <turn_on> <area> (wentylator | [wszystkie] wentylatory)
+        slots:
+          domain: fan
+          name: all
+      - sentences:
+          - <turn_on> <name>
+responses:
+  errors:
+    no_intent: "Wybacz, niestety nie mog\u0119 tego zrozumie\u0107"
+    no_area: Brak obszaru nazwanego {{ area }}
+    no_domain: W obszarze {{ area }} nie ma {{ domain }}
+    no_device_class: Obszar {{ area }} nie zawiera {{ device_class }}
+    no_entity: "Brak urz\u0105dzenia lub encji nazwanej {{ entity }}"
+    handle_error:
+      "Podczas przetwarzania zapytania wyst\u0105pi\u0142 nieoczekiwany\
+      \ b\u0142\u0105d"
+lists:
+  color:
+    values:
+      - in: "biel | bia\u0142(y|o)"
+        out: white
+      - in: "czer\u0144 | czarn(y|o)"
+        out: black
+      - in: "czerwie\u0144 | czerwon(y|o)"
+        out: red
+      - in: "pomara\u0144cz | pomara\u0144czow(y|o)"
+        out: orange
+      - in: "\u017C\xF3\u0142t(y|o)"
+        out: yellow
+      - in: "ziele\u0144 | zielon(y|o)"
+        out: green
+      - in: niebiesk(i|o)
+        out: blue
+      - in: fiolet | fioletow(y|o)
+        out: purple
+      - in: "br\u0105z | br\u0105zow(y|o)"
+        out: brown
+  brightness:
+    range:
+      type: percentage
+      from: 0
+      to: 100
+  temperature:
+    range:
+      type: temperature
+      from: 0
+      to: 100
+  temperature_unit:
+    values:
+      - in: c | celsjusza
+        out: celsius
+      - in: f | fahrenheita
+        out: fahrenheit
+expansion_rules:
+  name: "{name}"
+  area: "[w] {area}"
+  what_is: Jak[a] jest
+  how_many_is: Ile jest
+  turn_on: "(w\u0142\u0105cz | zapal | uruchom)"
+  turn_off: "(wy\u0142\u0105cz | zga\u015B | zatrzymaj)"
+  brightness: "{brightness:brightness_pct} [procent]"
+  temp: "temperatur(a|\u0119) | stopni | zimno | gor\u0105co"
+  temperature: "{temperature} [stopni] [{temperature_unit}]"
+skip_words:
+  - "Prosz\u0119"
+  - "Poprosz\u0119"

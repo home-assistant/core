@@ -1,0 +1,35 @@
+language: pt
+intents:
+  HassCloseCover:
+    data:
+      - sentences:
+          - (fecha | feche) <nome>
+          - (fecha | feche) <nome> <na_zona>
+      - sentences:
+          - "(fecha | feche) [(o | a)] [(porta | port\xE3o) da] garagem"
+        slots:
+          device_class: garage_door
+      - sentences:
+          - (fecha | feche) [as | os] [(cortinas | cortinados | estores | persianas)]
+            <na_zona>
+        slots:
+          device_class:
+            - blind
+            - curtain
+            - shutter
+  HassOpenCover:
+    data:
+      - sentences:
+          - (abra | abre) <nome>
+          - (abra | abre) <nome> <na_zona>
+      - sentences:
+          - "(abra | abre) [(o | a)] [(porta | port\xE3o) da] garagem"
+        slots:
+          device_class: garage_door
+      - sentences:
+          - (abra | abre) [as | os] [(cortinas | cortinados | estores | persianas)] <na_zona>
+        slots:
+          device_class:
+            - blind
+            - curtain
+            - shutter

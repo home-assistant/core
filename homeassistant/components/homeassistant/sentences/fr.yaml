@@ -1,0 +1,37 @@
+language: fr
+intents:
+  HassTurnOff:
+    data:
+      - sentences:
+          - "\xE9teint <name>"
+          - "arr\xEAte <name>"
+          - stop <name>
+      - sentences:
+          - "\xE9teins (la lumi\xE8re | les lumi\xE8res) (dans | du | de) <area>"
+          - "\xE9teins toutes les lumi\xE8res (dans | du | de) <area>"
+        slots:
+          domain: light
+  HassTurnOn:
+    data:
+      - sentences:
+          - "allume (la lumi\xE8re | les lumi\xE8res) (dans | du | de) <area>"
+          - "allume toutes les lumi\xE8res (dans | du | de) <area>"
+        slots:
+          domain: light
+      - sentences:
+          - allume <name>
+          - "d\xE9marre <name>"
+responses:
+  errors:
+    no_intent: "D\xE9sol\xE9, je n'ai pas compris"
+    no_area: "Aucune zone appel\xE9e {{ area }}"
+    no_domain: "{{ area }} ne contient pas de {{ domain }}"
+    no_device_class: "{{ area }} ne contient pas de {{ device_class }}"
+    no_entity: "Aucun appareil ou entit\xE9 appel\xE9 {{ entity }}"
+    handle_error: Une erreur est intervenue pendant le traitement
+lists: {}
+expansion_rules:
+  name: ([le | la | les] {name} | [l']{name})
+  area: ([le | la] {area} | [l']{area})
+skip_words:
+  - "s'il te pla\xEEt"

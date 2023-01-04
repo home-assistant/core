@@ -1,0 +1,117 @@
+language: he
+intents:
+  HassTurnOff:
+    data:
+      - sentences:
+          - "(\u05DB\u05D1\u05D4 | \u05DB\u05D9\u05D1\u05D5\u05D9 | \u05DC\u05DB\u05D1\
+            \u05D5\u05EA) [\u05E9\u05DC] [\u05DB\u05DC] [\u05D0\u05EA] [\u05D4](\u05DE\
+            \u05D0\u05D5\u05D5\u05E8\u05E8) \u05D1<area>"
+        slots:
+          domain: fan
+      - sentences:
+          - "(\u05DB\u05D1\u05D4 | \u05DB\u05D9\u05D1\u05D5\u05D9 | \u05DC\u05DB\u05D1\
+            \u05D5\u05EA) [\u05E9\u05DC] [\u05DB\u05DC] [\u05D0\u05EA] [\u05D4](\u05DE\
+            \u05D0\u05D5\u05D5\u05E8\u05E8\u05D9\u05DD) \u05D1<area>"
+        slots:
+          domain: fan
+          name: all
+      - sentences:
+          - "\u05DB\u05D1\u05D4 [\u05D0\u05EA] [\u05D4]<name>"
+          - "\u05DB\u05D9\u05D1\u05D5\u05D9 [\u05E9\u05DC] [\u05D4]<name>"
+          - "\u05DC\u05DB\u05D1\u05D5\u05EA [\u05D0\u05EA] [\u05D4]<name>"
+      - sentences:
+          - "(\u05DB\u05D1\u05D4 | \u05DB\u05D9\u05D1\u05D5\u05D9 | \u05DC\u05DB\u05D1\
+            \u05D5\u05EA) [\u05E9\u05DC] [\u05DB\u05DC] [\u05D0\u05EA] [\u05D4](\u05D0\
+            \u05D5\u05E8 | \u05D0\u05D5\u05E8\u05D5\u05EA) \u05D1<area>"
+        slots:
+          domain: light
+  HassTurnOn:
+    data:
+      - sentences:
+          - "(\u05D4\u05D3\u05DC\u05E7 | \u05D4\u05D3\u05DC\u05E7\u05D4 | \u05DC\u05D4\
+            \u05D3\u05DC\u05D9\u05E7) [\u05E9\u05DC] [\u05DB\u05DC] [\u05D0\u05EA] [\u05D4\
+            ](\u05D0\u05D5\u05E8 | \u05D0\u05D5\u05E8\u05D5\u05EA) \u05D1<area>"
+        slots:
+          domain: light
+      - sentences:
+          - "(\u05D4\u05D3\u05DC\u05E7 | \u05D4\u05D3\u05DC\u05E7\u05D4 | \u05DC\u05D4\
+            \u05D3\u05DC\u05D9\u05E7) [\u05E9\u05DC] [\u05DB\u05DC] [\u05D0\u05EA] [\u05D4\
+            ](\u05DE\u05D0\u05D5\u05D5\u05E8\u05E8) \u05D1<area>"
+        slots:
+          domain: fan
+      - sentences:
+          - "(\u05D4\u05D3\u05DC\u05E7 | \u05D4\u05D3\u05DC\u05E7\u05D4 | \u05DC\u05D4\
+            \u05D3\u05DC\u05D9\u05E7) [\u05E9\u05DC] [\u05DB\u05DC] [\u05D0\u05EA] [\u05D4\
+            ](\u05DE\u05D0\u05D5\u05D5\u05E8\u05E8\u05D9\u05DD) \u05D1<area>"
+        slots:
+          domain: fan
+          name: all
+      - sentences:
+          - "\u05D4\u05D3\u05DC\u05E7 [\u05D0\u05EA] [\u05D4]<name>"
+          - "\u05D4\u05D3\u05DC\u05E7\u05D4 [\u05E9\u05DC] [\u05D4]<name>"
+          - "\u05DC\u05D4\u05D3\u05DC\u05D9\u05E7 [\u05D0\u05EA] [\u05D4]<name>"
+responses:
+  errors:
+    no_intent: Sorry, I couldn't understand that
+    no_area: "\u05D0\u05D9\u05DF \u05E9\u05D8\u05D7 \u05D1\u05E9\u05DD {{ area }}"
+    no_domain: "\u05D0\u05D9\u05DF {{ domain }} \u05D1{{ area }}"
+    no_device_class: "\u05D0\u05D9\u05DF {{ device_class }} \u05D1{{ area }}"
+    no_entity:
+      "\u05D0\u05D9\u05DF \u05D4\u05EA\u05E7\u05DF \u05D0\u05D5 \u05D9\u05D9\
+      \u05E9\u05D5\u05EA \u05D1\u05E9\u05DD {{ entity }}"
+    handle_error: An unexpected error occurred while handling the intent
+lists:
+  color:
+    values:
+      - in: "\u05DC\u05D1\u05DF"
+        out: white
+      - in: "\u05E9\u05D7\u05D5\u05E8"
+        out: black
+      - in: "\u05D0\u05D3\u05D5\u05DD"
+        out: red
+      - in: "\u05DB\u05EA\u05D5\u05DD"
+        out: orange
+      - in: "\u05E6\u05D4\u05D5\u05D1"
+        out: yellow
+      - in: "\u05D9\u05E8\u05D5\u05E7"
+        out: green
+      - in: "\u05DB\u05D7\u05D5\u05DC"
+        out: blue
+      - in: "\u05E1\u05D2\u05D5\u05DC"
+        out: purple
+      - in: "\u05D7\u05D5\u05DD"
+        out: brown
+      - in: "\u05D5\u05E8\u05D5\u05D3"
+        out: pink
+  brightness:
+    range:
+      type: percentage
+      from: 0
+      to: 100
+  temperature:
+    range:
+      type: temperature
+      from: 0
+      to: 100
+  temperature_unit:
+    values:
+      - in: "\u05DE\u05E2\u05DC\u05D5\u05EA"
+        out: celsius
+expansion_rules:
+  name: "[\u05D4]{name}"
+  area: "[\u05D4]{area}"
+  what_is:
+    "(\u05DE\u05D4 | \u05DE\u05D4\u05D5 | \u05DE\u05D4\u05D9 | \u05DE\u05D4\
+    \u05DD | \u05DE\u05D4\u05DF)"
+  brightness: "{brightness:brightness_pct} [percent]"
+  turn: (turn | switch)
+  temp:
+    "(\u05DE\u05E2\u05DC\u05D5\u05EA | \u05D8\u05DE\u05E4\u05E8\u05D8\u05D5\u05E8\
+    \u05D4 | \u05D8\u05DE\u05E4\u05E8\u05D8\u05D5\u05E8\u05EA)"
+  temperature:
+    "{temperature} [{temperature_unit}] [\u05DE\u05E2\u05DC\u05D5\u05EA\
+    ]"
+skip_words:
+  - "\u05D0\u05E0\u05D0"
+  - "\u05E0\u05D0"
+  - "\u05D1\u05D1\u05E7\u05E9\u05D4"

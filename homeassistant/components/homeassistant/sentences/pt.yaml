@@ -1,0 +1,108 @@
+language: pt
+intents:
+  HassTurnOff:
+    data:
+      - sentences:
+          - (desliga | desligue) [todas] as ventoinhas <na_zona>
+        slots:
+          domain: fan
+          name: all
+      - sentences:
+          - (desligue | desliga) [(o | a)] <nome>
+          - (desligue | desliga) [(o | a)] <nome> <na_zona>
+      - sentences:
+          - (desliga | desligue | apaga | apague) [(todas | todos)] [(o | os | a | as)]
+            (luz | luzes | candeeiro | candeeiros) <na_zona>
+        slots:
+          domain: light
+  HassTurnOn:
+    data:
+      - sentences:
+          - (liga | ligue | acende | acenda) [(todas | todos)] [(o | os | a | as)] (luz
+            | luzes | candeeiro | candeeiros) <na_zona>
+        slots:
+          domain: light
+      - sentences:
+          - (liga | ligue) [todas] as ventoinhas <na_zona>
+        slots:
+          domain: fan
+          name: all
+      - sentences:
+          - (ligue | liga) [(o | a)] <nome>
+          - (ligue | liga) [(o | a)] <nome> <na_zona>
+responses:
+  errors:
+    no_intent: "Desculpe, n\xE3o percebi o pedido."
+    no_area: "N\xE3o existe nenhuma \xE1rea com o nome {{ area }}."
+    no_domain: "{{ area }} n\xE3o cont\xE9m {{ domain }}."
+    no_device_class: "{{ area }} n\xE3o cont\xE9m {{ device_class }}."
+    no_entity:
+      "N\xE3o existe nenhum dispositivo ou entidade com o nome {{ entity\
+      \ }}."
+    handle_error: Ocurreu um erro inesperado ao processar o pedido.
+lists:
+  color:
+    values:
+      - in: branco
+        out: white
+      - in: branca
+        out: white
+      - in: preto
+        out: black
+      - in: preta
+        out: black
+      - in: vermelho
+        out: red
+      - in: vermelha
+        out: red
+      - in: laranja
+        out: orange
+      - in: amarelo
+        out: yellow
+      - in: amarela
+        out: yellow
+      - in: verde
+        out: green
+      - in: azul
+        out: blue
+      - in: roxo
+        out: purple
+      - in: roxa
+        out: purple
+      - in: castanho
+        out: brown
+      - in: castanha
+        out: brown
+  brightness:
+    range:
+      type: percentage
+      from: 0
+      to: 100
+  temperature:
+    range:
+      type: temperature
+      from: 0
+      to: 100
+  temperature_unit:
+    values:
+      - celsius
+      - in: c
+        out: celsius
+      - "cent\xEDgrados"
+      - in: c
+        out: celsius
+      - fahrenheit
+      - in: f
+        out: fahrenheit
+expansion_rules:
+  nome: "[(o | a)] {name}"
+  zona: "[(o | a)] {area}"
+  na_zona: (no | na | do | da) {area}
+  qual: "(qual | qual \xE9)"
+  brilho: "{brightness:brightness_pct} [porcento]"
+  temperatura: "{temperature} [graus] [{temperature_unit}]"
+skip_words:
+  - por favor
+  - se faz favor
+  - pode
+  - podes

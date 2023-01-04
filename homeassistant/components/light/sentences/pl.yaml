@@ -1,0 +1,13 @@
+language: pl
+intents:
+  HassLightSet:
+    data:
+      - sentences:
+          - "(Ustaw | Zmie\u0144) [jasno\u015B\u0107] <name> na <brightness>"
+      - sentences:
+          - "(Ustaw | Zmie\u0144) [jasno\u015B\u0107] <area> na <brightness>"
+        slots:
+          name: all
+      - sentences:
+          - "(Ustaw | Zmie\u0144) [kolor] <name> na {color}"
+          - "Zmie\u0144 kolor lampki nocnej na {color}"

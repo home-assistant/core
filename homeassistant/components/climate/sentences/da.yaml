@@ -1,0 +1,6 @@
+language: da
+responses:
+  intents:
+    HassClimateGetTemperature:
+      success:
+        - "{{ state.state }} grader"

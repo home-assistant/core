@@ -1,0 +1,16 @@
+language: de
+intents:
+  HassLightSet:
+    data:
+      - sentences:
+          - <setzen> die Helligkeit von <name> auf <brightness>
+        slots:
+          name: all
+      - sentences:
+          - <setzen> die Helligkeit [<area>] auf <brightness>
+      - sentences:
+          - <setzen> [die Farbe von] <name> auf {color}
+        slots:
+          name: all
+      - sentences:
+          - <setzen> die Farbe [<area>] auf {color}

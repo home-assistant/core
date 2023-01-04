@@ -1,0 +1,20 @@
+language: ro
+intents:
+  HassLightSet:
+    data:
+      - sentences:
+          - "[<modifica>] <luminozitatea> [<din>] [pentru] <name> [la] [valoarea de] <brightness>"
+          - "[<modifica>] <name> [la] <luminozitatea> [de] <brightness>"
+      - sentences:
+          - "[<modifica>] <luminozitatea> [<din>] <area> [la] [valoarea de] <brightness>"
+          - "[<modifica>] [<din>] <area> [la] <luminozitatea> [de] <brightness>"
+        slots:
+          name: all
+      - sentences:
+          - "[<modifica>] culoarea <din> <name> (in | \xEEn) [culoarea] {color}"
+          - "[<modifica>] culoarea [(in | \xEEn)] {color} [culoarea] [<din>] <name>"
+      - sentences:
+          - "[<modifica>] culoarea <din> <area> (in | \xEEn) [culoarea] {color}"
+          - "[<modifica>] culoarea [(in | \xEEn)] {color} [culoarea] [<din>] <area>"
+        slots:
+          name: all

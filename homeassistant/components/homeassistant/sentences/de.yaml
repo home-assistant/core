@@ -1,0 +1,135 @@
+language: de
+intents:
+  HassTurnOff:
+    data:
+      - sentences:
+          - schalte <luefter> <area> <ab_aus>
+          - schalte <area> <luefter> <ab_aus>
+          - stoppe <luefter> <area> [<ab_aus>]
+          - stoppe <area> <luefter> [<ab_aus>]
+          - (mach | mache) <luefter> <area> <ab_aus>
+          - (mach | mache) <area> <luefter> <ab_aus>
+          - schalte <alle_luefter> [<area>] <ab_aus>
+          - schalte [<area>] <alle_luefter> <ab_aus>
+          - stoppe <alle_luefter> [<area>] [<ab_aus>]
+          - stoppe [<area>] <alle_luefter> [<ab_aus>]
+          - (mach | mache) <alle_luefter> [<area>] <ab_aus>
+          - (mach | mache) [<area>] <alle_luefter> <ab_aus>
+        slots:
+          domain: fan
+          name: all
+      - sentences:
+          - schalte <name> (ab | aus)
+          - stoppe <name>
+      - sentences:
+          - Schalte (das Licht | die Lichter) <area> <ab_aus>
+          - Schalte <area> (das Licht | die Lichter) <ab_aus>
+          - <machen> (das Licht | die Lichter) <area> <ab_aus>
+          - <machen> <area> (das Licht | die Lichter) <ab_aus>
+          - Schalte alle Lichter [<area>] <ab_aus>
+          - Schalte [<area>] alle Lichter <ab_aus>
+          - <machen> alle Lichter [<area>] <ab_aus>
+          - <machen> [<area>] alle Lichter <ab_aus>
+        slots:
+          domain: light
+  HassTurnOn:
+    data:
+      - sentences:
+          - Schalte (das Licht | die Lichter) <area> <an_ein>
+          - Schalte <area> (das Licht | die Lichter) <an_ein>
+          - <machen> <area> (das Licht | die Lichter) <an_ein>
+          - <machen> (das Licht | die Lichter) <area> <an_ein>
+          - Schalte alle Lichter [<area>] <an_ein>
+          - Schalte [<area>] alle Lichter <an_ein>
+          - <machen> [<area>] alle Lichter <an_ein>
+          - <machen> alle Lichter [<area>] <an_ein>
+        slots:
+          domain: light
+      - sentences:
+          - schalte <luefter> <area> <an_ein>
+          - schalte <area> <luefter> <an_ein>
+          - starte <luefter> <area> [<an_ein>]
+          - starte <area> <luefter> [<an_ein>]
+          - (mach | mache) <luefter> <area> <an_ein>
+          - (mach | mache) <area> <luefter> <an_ein>
+          - starte <alle_luefter> [<area>] [<an_ein>]
+          - starte [<area>] <alle_luefter> [<an_ein>]
+          - schalte <alle_luefter> [<area>] <an_ein>
+          - schalte [<area>] <alle_luefter> <an_ein>
+          - (mach | mache) <alle_luefter> [<area>] <an_ein>
+          - (mach | mache) [<area>] <alle_luefter> <an_ein>
+        slots:
+          domain: fan
+          name: all
+      - sentences:
+          - schalte <name> <an_ein>
+          - starte <name>
+responses:
+  errors:
+    no_intent: Entschuldigung, das habe ich nicht verstanden
+    no_area: Kein Bereich mit dem Namen {{ area }} vorhanden
+    no_domain: "{{ domain }} ist nicht im Bereich {{ area }} vorhanden"
+    no_device_class: "{{ device_class }} ist nicht im Bereich {{ area }} vorhanden"
+    no_entity: "{{ entity }} existiert nicht"
+    handle_error: Es ist ein unerwarteter Fehler aufgetreten
+lists:
+  color:
+    values:
+      - in: "wei\xDF"
+        out: white
+      - in: schwarz
+        out: black
+      - in: rot
+        out: red
+      - in: orange
+        out: orange
+      - in: gelb
+        out: yellow
+      - in: "gr\xFCn"
+        out: green
+      - in: blau
+        out: blue
+      - in: violett
+        out: purple
+      - in: braun
+        out: brown
+  brightness:
+    range:
+      type: percentage
+      from: 0
+      to: 100
+  temperature:
+    range:
+      type: temperature
+      from: 0
+      to: 100
+  temperature_unit:
+    values:
+      - celsius
+      - in: c
+        out: Celsius
+      - fahrenheit
+      - in: f
+        out: Fahrenheit
+expansion_rules:
+  name: "[(der | den | die | das)] {name}"
+  area: (in (der | dem) | im) {area}
+  an_ein: (an | ein)
+  ab_aus: (ab | aus)
+  schliessen: "(schlie\xDF | schlie\xDFe)"
+  machen: (mach | mache)
+  setzen: "(setze | stelle | \xE4ndere)"
+  abdeckung:
+    "(das Rollo | die Rollos | die Abdeckung | die Abdeckungen | den Rollladen\
+    \ | die Rolll\xE4den | die (Jalousie | Jalousien))"
+  alle_abdeckungen: "alle (Rollos | Abdeckungen | Rolll\xE4den | Jalousien)"
+  garage: (die Garage | die Garagen | das Garagentor | die Garagentore)
+  alle_garagen: (alle Garagen | alle Garagentore)
+  tor: (das Tor | die Tore)
+  alle_tore: alle (Tore | Garagentore)
+  luefter: "(den Ventilator | die Ventilatoren | (den | die) L\xFCfter)"
+  alle_luefter: "alle (Ventilatoren | L\xFCfter)"
+  brightness: "{brightness:brightness_pct} [Prozent]"
+  temperature: "{temperature} [Grad] [{temperature_unit}]"
+skip_words:
+  - bitte
