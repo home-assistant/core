@@ -1,96 +1,122 @@
 """Support for Rheem EcoNet water heaters."""
+from __future__ import annotations
+
+from dataclasses import dataclass
+
 from pyeconet.equipment import EquipmentType
 
-from homeassistant.components.sensor import SensorEntity, SensorDeviceClass, SensorStateClass
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS, UnitOfEnergy, UnitOfVolume
+from homeassistant.const import (
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS,
+    UnitOfEnergy,
+    UnitOfVolume,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import EcoNetEntity
 from .const import DOMAIN, EQUIPMENT
 
+
+@dataclass
+class EcoNetSensorEntityDescription(SensorEntityDescription):
+    """Represent the econet sensor entity description."""
+
+
+SENSOR_TYPES: tuple[EcoNetSensorEntityDescription, ...] = (
+    EcoNetSensorEntityDescription(
+        key="tank_health",
+        name="tank_health",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=None,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    EcoNetSensorEntityDescription(
+        key="tank_hot_water_availability",
+        name="available_hot_water",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=None,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    EcoNetSensorEntityDescription(
+        key="compressor_health",
+        name="compressor_health",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=None,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    EcoNetSensorEntityDescription(
+        key="override_status",
+        name="override_status",
+        native_unit_of_measurement=None,
+        device_class=None,
+        state_class=None,
+    ),
+    EcoNetSensorEntityDescription(
+        key="todays_water_usage",
+        name="water_usage_today",
+        native_unit_of_measurement=UnitOfVolume.GALLONS,
+        device_class=SensorDeviceClass.WATER,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    EcoNetSensorEntityDescription(
+        key="todays_energy_usage",
+        name="power_usage_today",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    EcoNetSensorEntityDescription(
+        key="alert_count",
+        name="alert_count",
+        native_unit_of_measurement=None,
+        device_class=None,
+        state_class=None,
+    ),
+    EcoNetSensorEntityDescription(
+        key="wifi_signal",
+        name="wifi_signal",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    EcoNetSensorEntityDescription(
+        key="running_state",
+        name="running_state",
+        native_unit_of_measurement=None,
+        device_class=None,
+        state_class=None,
+    ),
+)
+
+
 ENERGY_KILO_BRITISH_THERMAL_UNIT = "kBtu"
 
-TANK_HEALTH = "tank_health"
-AVAILABLE_HOT_WATER = "available_hot_water"
-COMPRESSOR_HEALTH = "compressor_health"
-OVERRIDE_STATUS = "override_status"
-WATER_USAGE_TODAY = "water_usage_today"
-POWER_USAGE_TODAY = "power_usage_today"
-ALERT_COUNT = "alert_count"
-WIFI_SIGNAL = "wifi_signal"
-RUNNING_STATE = "running_state"
-
-SENSOR_NAMES_TO_ATTRIBUTES = {
-    TANK_HEALTH: "tank_health",
-    AVAILABLE_HOT_WATER: "tank_hot_water_availability",
-    COMPRESSOR_HEALTH: "compressor_health",
-    OVERRIDE_STATUS: "override_status",
-    WATER_USAGE_TODAY: "todays_water_usage",
-    POWER_USAGE_TODAY: "todays_energy_usage",
-    ALERT_COUNT: "alert_count",
-    WIFI_SIGNAL: "wifi_signal",
-    RUNNING_STATE: "running_state",
-}
-
-SENSOR_NAMES_TO_UNIT_OF_MEASUREMENT = {
-    TANK_HEALTH: PERCENTAGE,
-    AVAILABLE_HOT_WATER: PERCENTAGE,
-    COMPRESSOR_HEALTH: PERCENTAGE,
-    OVERRIDE_STATUS: None,
-    WATER_USAGE_TODAY: UnitOfVolume.GALLONS,
-    POWER_USAGE_TODAY: None,  # Depends on unit type
-    ALERT_COUNT: None,
-    WIFI_SIGNAL: SIGNAL_STRENGTH_DECIBELS,
-    RUNNING_STATE: None,  # This is just a string
-}
-
-SENSOR_NAMES_TO_STATE_CLASS = {
-    TANK_HEALTH: SensorStateClass.MEASUREMENT,
-    AVAILABLE_HOT_WATER: SensorStateClass.MEASUREMENT,
-    COMPRESSOR_HEALTH: SensorStateClass.MEASUREMENT,
-    OVERRIDE_STATUS: None,
-    WATER_USAGE_TODAY: SensorStateClass.TOTAL_INCREASING,
-    POWER_USAGE_TODAY: SensorStateClass.TOTAL_INCREASING,
-    ALERT_COUNT: None,
-    WIFI_SIGNAL: SensorStateClass.MEASUREMENT,
-    RUNNING_STATE: None,
-}
-
-SENSOR_NAMES_TO_DEVICE_CLASS = {
-    TANK_HEALTH: None,
-    AVAILABLE_HOT_WATER: None,
-    COMPRESSOR_HEALTH: None,
-    OVERRIDE_STATUS: None,
-    WATER_USAGE_TODAY: SensorDeviceClass.WATER,
-    POWER_USAGE_TODAY: SensorDeviceClass.ENERGY,
-    ALERT_COUNT: None,
-    WIFI_SIGNAL: SensorDeviceClass.SIGNAL_STRENGTH,
-    RUNNING_STATE: None,
-}
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up EcoNet sensor based on a config entry."""
 
-    equipment = hass.data[DOMAIN][EQUIPMENT][entry.entry_id]
+    data = hass.data[DOMAIN][EQUIPMENT][entry.entry_id]
+    equipment = data[EquipmentType.WATER_HEATER].copy()
+    equipment.extend(data[EquipmentType.THERMOSTAT].copy())
+
     sensors = []
-    all_equipment = equipment[EquipmentType.WATER_HEATER].copy()
-    all_equipment.extend(equipment[EquipmentType.THERMOSTAT].copy())
 
-    for _equip in all_equipment:
-        for name, attribute in SENSOR_NAMES_TO_ATTRIBUTES.items():
-            if getattr(_equip, attribute, None) is not None:
-                sensors.append(EcoNetSensor(_equip, name))
-        # This is None to start with and all device have it
-        sensors.append(EcoNetSensor(_equip, WIFI_SIGNAL))
-
-    for water_heater in equipment[EquipmentType.WATER_HEATER]:
-        # These aren't part of the device and start off as None in pyeconet so always add them
-        sensors.append(EcoNetSensor(water_heater, WATER_USAGE_TODAY))
-        sensors.append(EcoNetSensor(water_heater, POWER_USAGE_TODAY))
+    sensors = [
+        EcoNetSensor(_equip, description.name, description)
+        for _equip in equipment
+        for description in SENSOR_TYPES
+        if getattr(_equip, description.key, False) is not False
+    ]
 
     async_add_entities(sensors)
 
@@ -98,16 +124,24 @@ async def async_setup_entry(
 class EcoNetSensor(EcoNetEntity, SensorEntity):
     """Define a Econet sensor."""
 
-    def __init__(self, econet_device, device_name):
+    entity_description: EcoNetSensorEntityDescription
+
+    def __init__(
+        self,
+        econet_device,
+        device_name,
+        description: EcoNetSensorEntityDescription,
+    ):
         """Initialize."""
         super().__init__(econet_device)
+        self.entity_description = description
         self._econet = econet_device
         self._device_name = device_name
 
     @property
     def native_value(self):
         """Return sensors state."""
-        value = getattr(self._econet, SENSOR_NAMES_TO_ATTRIBUTES[self._device_name])
+        value = getattr(self._econet, self.entity_description.key)
         if isinstance(value, float):
             value = round(value, 2)
         return value
@@ -115,12 +149,10 @@ class EcoNetSensor(EcoNetEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        unit_of_measurement = SENSOR_NAMES_TO_UNIT_OF_MEASUREMENT[self._device_name]
-        if self._device_name == POWER_USAGE_TODAY:
+        unit_of_measurement = self.entity_description.native_unit_of_measurement
+        if self._device_name == "power_usage_today":
             if self._econet.energy_type == ENERGY_KILO_BRITISH_THERMAL_UNIT.upper():
                 unit_of_measurement = ENERGY_KILO_BRITISH_THERMAL_UNIT
-            else:
-                unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
         return unit_of_measurement
 
     @property
@@ -134,13 +166,3 @@ class EcoNetSensor(EcoNetEntity, SensorEntity):
         return (
             f"{self._econet.device_id}_{self._econet.device_name}_{self._device_name}"
         )
-    
-    @property
-    def state_class(self):
-        '''Return the state class'''
-        return SENSOR_NAMES_TO_STATE_CLASS[self._device_name]
-    
-    @property
-    def device_class(self):
-        '''Return the device class'''
-        return SENSOR_NAMES_TO_DEVICE_CLASS[self._device_name]
