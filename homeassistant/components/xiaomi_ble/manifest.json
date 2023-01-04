@@ -15,6 +15,7 @@
   ],
   "requirements": ["xiaomi-ble==0.14.3"],
   "dependencies": ["bluetooth_adapters"],
+  "requirements": ["xiaomi-ble==0.15.0"],
   "codeowners": ["@Jc2k", "@Ernst79"],
   "iot_class": "local_push"
 }
