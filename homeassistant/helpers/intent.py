@@ -1,12 +1,11 @@
 """Module to coordinate user intentions."""
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
+from collections.abc import Iterable
 import dataclasses
 from dataclasses import dataclass
 from enum import Enum
 import logging
-import re
 from typing import Any, TypeVar
 
 import voluptuous as vol
@@ -189,22 +188,6 @@ class IntentHandler:
     def __repr__(self) -> str:
         """Represent a string of an intent handler."""
         return f"<{self.__class__.__name__} - {self.intent_type}>"
-
-
-def _fuzzymatch(name: str, items: Iterable[_T], key: Callable[[_T], str]) -> _T | None:
-    """Fuzzy matching function."""
-    matches = []
-    pattern = ".*?".join(name)
-    regex = re.compile(pattern, re.IGNORECASE)
-    for idx, item in enumerate(items):
-        if match := regex.search(key(item)):
-            # Add key length so we prefer shorter keys with the same group and start.
-            # Add index so we pick first match in case same group, start, and key length.
-            matches.append(
-                (len(match.group()), match.start(), len(key(item)), idx, item)
-            )
-
-    return sorted(matches)[0][4] if matches else None
 
 
 class ServiceIntentHandler(IntentHandler):

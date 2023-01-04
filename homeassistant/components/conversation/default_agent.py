@@ -77,6 +77,10 @@ class DefaultAgent(AbstractConversationAgent):
         """Process a sentence."""
         language = language or self.hass.config.language
         lang_intents = await self.async_get_or_load_intents(language)
+        if lang_intents is None:
+            # No intents loaded
+            return None
+
         slot_lists: dict[str, SlotList] = {
             "area": self._make_areas_list(),
             "name": self._make_names_list(),
@@ -103,7 +107,7 @@ class DefaultAgent(AbstractConversationAgent):
 
         return None
 
-    async def async_get_or_load_intents(self, language: str) -> Intents:
+    async def async_get_or_load_intents(self, language: str) -> Intents | None:
         """Load all intents for language."""
         lang_intents = self._lang_intents.get(language)
 
@@ -119,6 +123,10 @@ class DefaultAgent(AbstractConversationAgent):
                     _LOGGER.info("Loading intents YAML file %s", yaml_path)
                     with open(yaml_path, encoding="utf-8") as yaml_file:
                         merge_dict(intents_dict, safe_load(yaml_file))
+
+            if not intents_dict:
+                _LOGGER.warning("No intents loaded")
+                return None
 
             lang_intents = LanguageIntents(
                 intents=Intents.from_dict(intents_dict),
