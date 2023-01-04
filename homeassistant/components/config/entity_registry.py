@@ -9,11 +9,6 @@ from homeassistant import config_entries
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ERR_NOT_FOUND
 from homeassistant.components.websocket_api.decorators import require_admin
-from homeassistant.components.websocket_api.messages import (
-    IDEN_JSON_TEMPLATE,
-    IDEN_TEMPLATE,
-    message_to_json,
-)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
@@ -41,10 +36,8 @@ def websocket_list_entities(
 ) -> None:
     """Handle list registry entries command."""
     registry = er.async_get(hass)
-    msg_template = message_to_json(
-        websocket_api.result_message(msg["id"], IDEN_TEMPLATE)
-    )
-    result = (
+    # Concatenate cached entity registry item JSON serializations
+    entries_json = (
         "["
         + ",".join(
             entry.json_repr
@@ -53,7 +46,12 @@ def websocket_list_entities(
         )
         + "]"
     )
-    connection.send_message(msg_template.replace(IDEN_JSON_TEMPLATE, result, 1))
+    # Build response message
+    msg_json = (
+        f'{{"id":{msg["id"]},"type": "{websocket_api.const.TYPE_RESULT}",'
+        f'"success":true,"result": {entries_json}}}'
+    )
+    connection.send_message(msg_json)
 
 
 @websocket_api.websocket_command(
