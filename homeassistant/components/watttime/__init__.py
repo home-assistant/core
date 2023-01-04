@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 
 from aiowatttime import Client
-from aiowatttime.emissions import RealTimeEmissionsResponseType
 from aiowatttime.errors import InvalidCredentialsError, WattTimeError
 
 from homeassistant.config_entries import ConfigEntry
@@ -41,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         LOGGER.error("Error while authenticating with WattTime: %s", err)
         return False
 
-    async def async_update_data() -> RealTimeEmissionsResponseType:
+    async def async_update_data() -> dict[str, Any]:
         """Get the latest realtime emissions data."""
         try:
             return await client.emissions.async_get_realtime_emissions(

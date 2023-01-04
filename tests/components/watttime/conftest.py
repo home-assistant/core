@@ -4,10 +4,6 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant.components.watttime.config_flow import (
-    CONF_LOCATION_TYPE,
-    LOCATION_TYPE_COORDINATES,
-)
 from homeassistant.components.watttime.const import (
     CONF_BALANCING_AUTHORITY,
     CONF_BALANCING_AUTHORITY_ABBREV,
@@ -19,50 +15,51 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
-from homeassistant.setup import async_setup_component
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
+TEST_BALANCING_AUTHORITY = "PJM New Jersey"
+TEST_BALANCING_AUTHORITY_ABBREV = "PJM_NJ"
+TEST_LATITUDE = 32.87336
+TEST_LONGITUDE = -117.22743
+TEST_PASSWORD = "password"
+TEST_USERNAME = "user"
+
 
 @pytest.fixture(name="client")
-def client_fixture(get_grid_region, data_realtime_emissions):
+def client_fixture(data_grid_region, data_realtime_emissions):
     """Define an aiowatttime client."""
-    client = Mock()
-    client.emissions.async_get_grid_region = get_grid_region
-    client.emissions.async_get_realtime_emissions = AsyncMock(
-        return_value=data_realtime_emissions
+    return Mock(
+        emissions=Mock(
+            async_get_grid_region=AsyncMock(return_value=data_grid_region),
+            async_get_realtime_emissions=AsyncMock(
+                return_value=data_realtime_emissions
+            ),
+        )
     )
-    return client
 
 
 @pytest.fixture(name="config_auth")
-def config_auth_fixture(hass):
+def config_auth_fixture():
     """Define an auth config entry data fixture."""
     return {
-        CONF_USERNAME: "user",
-        CONF_PASSWORD: "password",
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_PASSWORD: TEST_PASSWORD,
     }
 
 
 @pytest.fixture(name="config_coordinates")
-def config_coordinates_fixture(hass):
+def config_coordinates_fixture():
     """Define a coordinates config entry data fixture."""
     return {
-        CONF_LATITUDE: 32.87336,
-        CONF_LONGITUDE: -117.22743,
-    }
-
-
-@pytest.fixture(name="config_location_type")
-def config_location_type_fixture(hass):
-    """Define a location type config entry data fixture."""
-    return {
-        CONF_LOCATION_TYPE: LOCATION_TYPE_COORDINATES,
+        CONF_LATITUDE: TEST_LATITUDE,
+        CONF_LONGITUDE: TEST_LONGITUDE,
     }
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(hass, config_auth, config_coordinates):
+def config_entry_fixture(hass: HomeAssistant, config_auth, config_coordinates):
     """Define a config entry fixture."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -72,8 +69,8 @@ def config_entry_fixture(hass, config_auth, config_coordinates):
         data={
             **config_auth,
             **config_coordinates,
-            CONF_BALANCING_AUTHORITY: "PJM New Jersey",
-            CONF_BALANCING_AUTHORITY_ABBREV: "PJM_NJ",
+            CONF_BALANCING_AUTHORITY: TEST_BALANCING_AUTHORITY,
+            CONF_BALANCING_AUTHORITY_ABBREV: TEST_BALANCING_AUTHORITY_ABBREV,
         },
     )
     entry.add_to_hass(hass)
@@ -92,25 +89,23 @@ def data_realtime_emissions_fixture():
     return json.loads(load_fixture("realtime_emissions_data.json", "watttime"))
 
 
-@pytest.fixture(name="get_grid_region")
-def get_grid_region_fixture(data_grid_region):
-    """Define an aiowatttime method to get grid region data."""
-    return AsyncMock(return_value=data_grid_region)
-
-
-@pytest.fixture(name="setup_watttime")
-async def setup_watttime_fixture(hass, client, config_auth, config_coordinates):
-    """Define a fixture to set up WattTime."""
+@pytest.fixture(name="mock_aiowatttime")
+async def mock_aiowatttime_fixture(client, config_auth, config_coordinates):
+    """Define a fixture to patch aiowatttime."""
     with patch(
         "homeassistant.components.watttime.Client.async_login", return_value=client
     ), patch(
         "homeassistant.components.watttime.config_flow.Client.async_login",
         return_value=client,
-    ), patch(
-        "homeassistant.components.watttime.PLATFORMS", []
     ):
-        assert await async_setup_component(
-            hass, DOMAIN, {**config_auth, **config_coordinates}
-        )
-        await hass.async_block_till_done()
         yield
+
+
+@pytest.fixture(name="setup_config_entry")
+async def setup_config_entry_fixture(
+    hass: HomeAssistant, config_entry, mock_aiowatttime
+):
+    """Define a fixture to set up watttime."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    return
