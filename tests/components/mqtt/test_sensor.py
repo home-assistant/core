@@ -745,6 +745,11 @@ async def test_valid_state_class(hass, mqtt_mock_entry_with_yaml_config):
                         "state_class": "measurement",
                     },
                     {"name": "Test 2", "state_topic": "test-topic"},
+                    {
+                        "name": "Test 3",
+                        "state_topic": "test-topic",
+                        "state_class": None,
+                    },
                 ]
             }
         },
@@ -755,6 +760,8 @@ async def test_valid_state_class(hass, mqtt_mock_entry_with_yaml_config):
     state = hass.states.get("sensor.test_1")
     assert state.attributes["state_class"] == "measurement"
     state = hass.states.get("sensor.test_2")
+    assert "state_class" not in state.attributes
+    state = hass.states.get("sensor.test_3")
     assert "state_class" not in state.attributes
 
 
