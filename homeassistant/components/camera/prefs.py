@@ -73,7 +73,8 @@ class CameraPreferences:
                 )
             else:
                 raise HomeAssistantError(
-                    "Orientation is only supported on entities set up through config flows"
+                    "Orientation is only supported on entities set up through config"
+                    " flows"
                 )
             if dynamic_stream_settings:
                 dynamic_stream_settings.orientation = orientation

@@ -11,7 +11,6 @@ import pytest
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     BaseHaRemoteScanner,
-    BaseHaScanner,
     BluetoothChange,
     BluetoothScanningMode,
     BluetoothServiceInfo,
@@ -21,16 +20,19 @@ from homeassistant.components.bluetooth import (
     async_get_advertisement_callback,
     async_scanner_count,
     async_track_unavailable,
+    storage,
 )
 from homeassistant.components.bluetooth.const import UNAVAILABLE_TRACK_SECONDS
 from homeassistant.components.bluetooth.manager import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.json import json_loads
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import (
+    FakeScanner,
     MockBleakClient,
     _get_manager,
     generate_advertisement_data,
@@ -39,13 +41,13 @@ from . import (
     inject_advertisement_with_time_and_source_connectable,
 )
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, load_fixture
 
 
 @pytest.fixture
 def register_hci0_scanner(hass: HomeAssistant) -> None:
     """Register an hci0 scanner."""
-    hci0_scanner = BaseHaScanner(hass, "hci0", "hci0")
+    hci0_scanner = FakeScanner(hass, "hci0", "hci0")
     cancel = bluetooth.async_register_scanner(hass, hci0_scanner, True)
     yield
     cancel()
@@ -54,7 +56,7 @@ def register_hci0_scanner(hass: HomeAssistant) -> None:
 @pytest.fixture
 def register_hci1_scanner(hass: HomeAssistant) -> None:
     """Register an hci1 scanner."""
-    hci1_scanner = BaseHaScanner(hass, "hci1", "hci1")
+    hci1_scanner = FakeScanner(hass, "hci1", "hci1")
     cancel = bluetooth.async_register_scanner(hass, hci1_scanner, True)
     yield
     cancel()
@@ -301,6 +303,76 @@ async def test_restore_history_from_dbus(hass, one_adapter):
     assert bluetooth.async_ble_device_from_address(hass, address) is ble_device
 
 
+async def test_restore_history_from_dbus_and_remote_adapters(
+    hass, one_adapter, hass_storage
+):
+    """Test we can restore history from dbus along with remote adapters."""
+    address = "AA:BB:CC:CC:CC:FF"
+
+    data = hass_storage[storage.REMOTE_SCANNER_STORAGE_KEY] = json_loads(
+        load_fixture("bluetooth.remote_scanners", bluetooth.DOMAIN)
+    )
+    now = time.time()
+    timestamps = data["data"]["atom-bluetooth-proxy-ceaac4"][
+        "discovered_device_timestamps"
+    ]
+    for address in timestamps:
+        timestamps[address] = now
+
+    ble_device = BLEDevice(address, "name")
+    history = {
+        address: AdvertisementHistory(
+            ble_device, generate_advertisement_data(local_name="name"), "hci0"
+        )
+    }
+
+    with patch(
+        "bluetooth_adapters.systems.linux.LinuxAdapters.history",
+        history,
+    ):
+        assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+        await hass.async_block_till_done()
+
+    assert bluetooth.async_ble_device_from_address(hass, address) is not None
+    assert (
+        bluetooth.async_ble_device_from_address(hass, "EB:0B:36:35:6F:A4") is not None
+    )
+
+
+async def test_restore_history_from_dbus_and_corrupted_remote_adapters(
+    hass, one_adapter, hass_storage
+):
+    """Test we can restore history from dbus when the remote adapters data is corrupted."""
+    address = "AA:BB:CC:CC:CC:FF"
+
+    data = hass_storage[storage.REMOTE_SCANNER_STORAGE_KEY] = json_loads(
+        load_fixture("bluetooth.remote_scanners.corrupt", bluetooth.DOMAIN)
+    )
+    now = time.time()
+    timestamps = data["data"]["atom-bluetooth-proxy-ceaac4"][
+        "discovered_device_timestamps"
+    ]
+    for address in timestamps:
+        timestamps[address] = now
+
+    ble_device = BLEDevice(address, "name")
+    history = {
+        address: AdvertisementHistory(
+            ble_device, generate_advertisement_data(local_name="name"), "hci0"
+        )
+    }
+
+    with patch(
+        "bluetooth_adapters.systems.linux.LinuxAdapters.history",
+        history,
+    ):
+        assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+        await hass.async_block_till_done()
+
+    assert bluetooth.async_ble_device_from_address(hass, address) is not None
+    assert bluetooth.async_ble_device_from_address(hass, "EB:0B:36:35:6F:A4") is None
+
+
 async def test_switching_adapters_based_on_rssi_connectable_to_non_connectable(
     hass, enable_bluetooth, register_hci0_scanner, register_hci1_scanner
 ):
@@ -437,7 +509,7 @@ async def test_switching_adapters_when_one_goes_away(
 ):
     """Test switching adapters when one goes away."""
     cancel_hci2 = bluetooth.async_register_scanner(
-        hass, BaseHaScanner(hass, "hci2", "hci2"), True
+        hass, FakeScanner(hass, "hci2", "hci2"), True
     )
 
     address = "44:44:33:11:23:45"
@@ -487,7 +559,7 @@ async def test_switching_adapters_when_one_stop_scanning(
     hass, enable_bluetooth, register_hci0_scanner
 ):
     """Test switching adapters when stops scanning."""
-    hci2_scanner = BaseHaScanner(hass, "hci2", "hci2")
+    hci2_scanner = FakeScanner(hass, "hci2", "hci2")
     cancel_hci2 = bluetooth.async_register_scanner(hass, hci2_scanner, True)
 
     address = "44:44:33:11:23:45"

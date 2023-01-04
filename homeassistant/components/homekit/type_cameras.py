@@ -325,7 +325,8 @@ class Camera(HomeAccessory, PyhapCamera):
             )
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
-                "Failed to get stream source - this could be a transient error or your camera might not be compatible with HomeKit yet"
+                "Failed to get stream source - this could be a transient error or your"
+                " camera might not be compatible with HomeKit yet"
             )
         return stream_source
 

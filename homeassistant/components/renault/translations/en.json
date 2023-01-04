@@ -31,5 +31,38 @@
                 "title": "Set Renault credentials"
             }
         }
+    },
+    "entity": {
+        "select": {
+            "charge_mode": {
+                "state": {
+                    "always": "Instant",
+                    "always_charging": "Instant",
+                    "schedule_mode": "Planner"
+                }
+            }
+        },
+        "sensor": {
+            "charge_state": {
+                "state": {
+                    "charge_ended": "Charge ended",
+                    "charge_error": "Not charging or plugged in",
+                    "charge_in_progress": "Charging",
+                    "energy_flap_opened": "Energy flap opened",
+                    "not_in_charge": "Not charging",
+                    "unavailable": "Unavailable",
+                    "waiting_for_a_planned_charge": "Waiting for planned charge",
+                    "waiting_for_current_charge": "Waiting for current charge"
+                }
+            },
+            "plug_state": {
+                "state": {
+                    "plug_error": "Plug error",
+                    "plug_unknown": "Plug unknown",
+                    "plugged": "Plugged in",
+                    "unplugged": "Unplugged"
+                }
+            }
+        }
     }
 }

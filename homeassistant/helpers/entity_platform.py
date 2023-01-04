@@ -145,7 +145,12 @@ class EntityPlatform:
 
     def __repr__(self) -> str:
         """Represent an EntityPlatform."""
-        return f"<EntityPlatform domain={self.domain} platform_name={self.platform_name} config_entry={self.config_entry}>"
+        return (
+            "<EntityPlatform "
+            f"domain={self.domain} "
+            f"platform_name={self.platform_name} "
+            f"config_entry={self.config_entry}>"
+        )
 
     @callback
     def _get_parallel_updates_semaphore(
@@ -191,7 +196,10 @@ class EntityPlatform:
             platform, "setup_platform"
         ):
             self.logger.error(
-                "The %s platform for the %s integration does not support platform setup. Please remove it from your config.",
+                (
+                    "The %s platform for the %s integration does not support platform"
+                    " setup. Please remove it from your config."
+                ),
                 self.platform_name,
                 self.domain,
             )
@@ -327,8 +335,10 @@ class EntityPlatform:
                 return False
             except asyncio.TimeoutError:
                 logger.error(
-                    "Setup of platform %s is taking longer than %s seconds."
-                    " Startup will proceed without waiting any longer.",
+                    (
+                        "Setup of platform %s is taking longer than %s seconds."
+                        " Startup will proceed without waiting any longer."
+                    ),
                     self.platform_name,
                     SLOW_SETUP_MAX_WAIT,
                 )
@@ -514,9 +524,15 @@ class EntityPlatform:
                         f"Platform {self.platform_name} does not generate unique IDs. "
                     )
                     if entity.entity_id:
-                        msg += f"ID {entity.unique_id} is already used by {registered_entity_id} - ignoring {entity.entity_id}"
+                        msg += (
+                            f"ID {entity.unique_id} is already used by"
+                            f" {registered_entity_id} - ignoring {entity.entity_id}"
+                        )
                     else:
-                        msg += f"ID {entity.unique_id} already exists - ignoring {registered_entity_id}"
+                        msg += (
+                            f"ID {entity.unique_id} already exists - ignoring"
+                            f" {registered_entity_id}"
+                        )
                     self.logger.error(msg)
                     entity.add_to_platform_abort()
                     return
@@ -616,6 +632,7 @@ class EntityPlatform:
                 original_name=entity.name,
                 suggested_object_id=suggested_object_id,
                 supported_features=entity.supported_features,
+                translation_key=entity.translation_key,
                 unit_of_measurement=entity.unit_of_measurement,
             )
 

@@ -15,9 +15,9 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
-    ELECTRIC_POTENTIAL_MILLIVOLT,
     PERCENTAGE,
-    TEMP_CELSIUS,
+    UnitOfElectricPotential,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -34,24 +34,21 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="temperature",
         name="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        icon=None,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="orp",
         name="Oxydo Reduction Potential",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_MILLIVOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
         icon="mdi:pool",
-        device_class=None,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="ph",
         name="pH",
         icon="mdi:pool",
-        device_class=None,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -59,14 +56,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="TDS",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         icon="mdi:pool",
-        device_class=None,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="battery",
         name="Battery",
         native_unit_of_measurement=PERCENTAGE,
-        icon=None,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -74,7 +69,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="rssi",
         name="RSSI",
         native_unit_of_measurement=PERCENTAGE,
-        icon=None,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -83,7 +77,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Salt",
         native_unit_of_measurement="mg/L",
         icon="mdi:pool",
-        device_class=None,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )

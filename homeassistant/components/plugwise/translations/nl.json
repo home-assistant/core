@@ -23,5 +23,19 @@
                 "title": "Plugwise type"
             }
         }
+    },
+    "entity": {
+        "select": {
+            "dhw_mode": {
+                "state": {
+                    "off": "Uit"
+                }
+            },
+            "regulation_mode": {
+                "state": {
+                    "off": "Uit"
+                }
+            }
+        }
     }
 }

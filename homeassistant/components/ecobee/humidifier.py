@@ -137,7 +137,8 @@ class EcobeeHumidifier(HumidifierEntity):
         """Set humidifier mode (auto, off, manual)."""
         if mode.lower() not in (self.available_modes):
             raise ValueError(
-                f"Invalid mode value: {mode}  Valid values are {', '.join(self.available_modes)}."
+                f"Invalid mode value: {mode}  Valid values are"
+                f" {', '.join(self.available_modes)}."
             )
 
         self.data.ecobee.set_humidifier_mode(self.thermostat_index, mode)

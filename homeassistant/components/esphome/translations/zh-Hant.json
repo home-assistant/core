@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "already_in_progress": "\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d",
+            "mdns_missing_mac": "MDNS \u5c6c\u6027\u4e2d\u7f3a\u5c11 MAC \u4f4d\u5740\u3002",
             "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
         },
         "error": {
@@ -46,8 +47,8 @@
     },
     "issues": {
         "ble_firmware_outdated": {
-            "description": "\u6b32\u6539\u5584\u85cd\u82bd\u53ef\u9760\u6027\u8207\u6548\u80fd\uff0c\u5f37\u70c8\u5efa\u8b70\u60a8\u66f4\u65b0\u81f3 2022.11.0 \u7248\u6216\u66f4\u65b0\u7248\u672c ESPHome \u4e4b {name}\u3002",
-            "title": "\u66f4\u65b0\u81f3 2022.11.0 \u7248\u6216\u66f4\u65b0\u7248\u672c ESPHome \u4e4b {name} "
+            "description": "\u6b32\u6539\u5584\u85cd\u82bd\u53ef\u9760\u6027\u8207\u6548\u80fd\uff0c\u5f37\u70c8\u5efa\u8b70\u60a8\u66f4\u65b0\u81f3{version}  \u7248\u6216\u66f4\u65b0\u7248\u672c ESPHome \u4e4b {name}\u3002\u7576\u9032\u884c\u66f4\u65b0\u81f3 ESPHome {version} \u7248\u6642\uff0c\u5efa\u8b70\u4f7f\u7528\u5e8f\u5217\u7dda\u3001\u800c\u975e\u4f7f\u7528\u7121\u7dda\u7db2\u8def\u4ee5\u4f7f\u7528\u65b0\u5206\u5340\u7684\u65b0\u529f\u80fd\u3002",
+            "title": "\u66f4\u65b0\u81f3 {version} \u7248\u6216\u66f4\u65b0\u7248\u672c ESPHome \u4e4b {name}"
         }
     }
 }

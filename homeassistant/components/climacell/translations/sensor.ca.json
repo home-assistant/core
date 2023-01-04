@@ -4,7 +4,7 @@
             "good": "Bo",
             "hazardous": "Perill\u00f3s",
             "moderate": "Moderat",
-            "unhealthy": "Poc saludable",
+            "unhealthy": "No saludable",
             "unhealthy_for_sensitive_groups": "No saludable per a grups sensibles",
             "very_unhealthy": "Gens saludable"
         },

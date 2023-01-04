@@ -148,8 +148,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         if entity_id not in notifications:
             _LOGGER.error(
-                "Marking persistent_notification read failed: "
-                "Notification ID %s not found",
+                (
+                    "Marking persistent_notification read failed: "
+                    "Notification ID %s not found"
+                ),
                 notification_id,
             )
             return

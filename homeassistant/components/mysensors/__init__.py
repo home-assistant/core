@@ -181,5 +181,5 @@ def setup_mysensors_platform(
     if new_devices:
         _LOGGER.info("Adding new devices: %s", new_devices)
         if async_add_entities is not None:
-            async_add_entities(new_devices, True)
+            async_add_entities(new_devices)
     return new_devices

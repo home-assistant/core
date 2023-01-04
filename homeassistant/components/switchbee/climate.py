@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from switchbee.api import SwitchBeeDeviceOfflineError, SwitchBeeError
+from switchbee.api.central_unit import SwitchBeeDeviceOfflineError, SwitchBeeError
 from switchbee.const import (
     ApiAttribute,
     ThermostatFanSpeed,
@@ -23,7 +23,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -65,8 +65,8 @@ HVAC_ACTION_SB_TO_HASS = {
 }
 
 HVAC_UNIT_SB_TO_HASS = {
-    ThermostatTemperatureUnit.CELSIUS: TEMP_CELSIUS,
-    ThermostatTemperatureUnit.FAHRENHEIT: TEMP_FAHRENHEIT,
+    ThermostatTemperatureUnit.CELSIUS: UnitOfTemperature.CELSIUS,
+    ThermostatTemperatureUnit.FAHRENHEIT: UnitOfTemperature.FAHRENHEIT,
 }
 
 SUPPORTED_FAN_MODES = [FAN_AUTO, FAN_HIGH, FAN_MEDIUM, FAN_LOW]

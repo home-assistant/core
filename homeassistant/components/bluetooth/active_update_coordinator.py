@@ -1,4 +1,4 @@
-"""A Bluetooth passive coordinator that collects data from advertisements but can also poll."""
+"""A Bluetooth passive coordinator that receives data from advertisements but can also poll."""
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -12,7 +12,7 @@ from homeassistant.helpers.debounce import Debouncer
 from homeassistant.util.dt import monotonic_time_coarse
 
 from . import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
-from .passive_update_processor import PassiveBluetoothProcessorCoordinator
+from .passive_update_coordinator import PassiveBluetoothDataUpdateCoordinator
 
 POLL_DEFAULT_COOLDOWN = 10
 POLL_DEFAULT_IMMEDIATE = True
@@ -20,11 +20,14 @@ POLL_DEFAULT_IMMEDIATE = True
 _T = TypeVar("_T")
 
 
-class ActiveBluetoothProcessorCoordinator(
-    Generic[_T], PassiveBluetoothProcessorCoordinator[_T]
+class ActiveBluetoothDataUpdateCoordinator(
+    Generic[_T], PassiveBluetoothDataUpdateCoordinator
 ):
     """
-    A coordinator that parses passive data from advertisements but can also poll.
+    A coordinator that receives passive data from advertisements but can also poll.
+
+    Unlike the passive processor coordinator, this coordinator does call a parser
+    method to parse the data from the advertisement.
 
     Every time an advertisement is received, needs_poll_method is called to work
     out if a poll is needed. This should return True if it is and False if it is
@@ -46,6 +49,9 @@ class ActiveBluetoothProcessorCoordinator(
 
     BluetoothServiceInfoBleak.device contains a BLEDevice. You should use this in
     your poll function, as it is the most efficient way to get a BleakClient.
+
+    Once the poll is complete, the coordinator will call _async_handle_bluetooth_poll
+    which needs to be implemented in the subclass.
     """
 
     def __init__(
@@ -55,7 +61,6 @@ class ActiveBluetoothProcessorCoordinator(
         *,
         address: str,
         mode: BluetoothScanningMode,
-        update_method: Callable[[BluetoothServiceInfoBleak], _T],
         needs_poll_method: Callable[[BluetoothServiceInfoBleak, float | None], bool],
         poll_method: Callable[
             [BluetoothServiceInfoBleak],
@@ -65,8 +70,12 @@ class ActiveBluetoothProcessorCoordinator(
         poll_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None,
         connectable: bool = True,
     ) -> None:
-        """Initialize the processor."""
-        super().__init__(hass, logger, address, mode, update_method, connectable)
+        """Initialize the coordinator."""
+        super().__init__(hass, logger, address, mode, connectable)
+        # It's None before the first successful update.
+        # Set type to just T to remove annoying checks that data is not None
+        # when it was already checked during setup.
+        self.data: _T = None  # type: ignore[assignment]
 
         self._needs_poll_method = needs_poll_method
         self._poll_method = poll_method
@@ -110,7 +119,7 @@ class ActiveBluetoothProcessorCoordinator(
         assert self._last_service_info
 
         try:
-            update = await self._async_poll_data(self._last_service_info)
+            self.data = await self._async_poll_data(self._last_service_info)
         except BleakError as exc:
             if self.last_poll_successful:
                 self.logger.error(
@@ -130,8 +139,12 @@ class ActiveBluetoothProcessorCoordinator(
             self.logger.debug("%s: Polling recovered")
             self.last_poll_successful = True
 
-        for processor in self._processors:
-            processor.async_handle_update(update)
+        self._async_handle_bluetooth_poll()
+
+    @callback
+    def _async_handle_bluetooth_poll(self) -> None:
+        """Handle a poll event."""
+        self.async_update_listeners()
 
     @callback
     def _async_handle_bluetooth_event(

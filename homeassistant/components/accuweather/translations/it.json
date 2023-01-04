@@ -22,13 +22,24 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "pressure_tendency": {
+                "state": {
+                    "falling": "In diminuzione",
+                    "rising": "In aumento",
+                    "steady": "Stabile"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
-            "user": {
+            "init": {
                 "data": {
-                    "forecast": "Previsioni meteo"
+                    "forecast": "Previsioni del tempo"
                 },
-                "description": "A causa delle limitazioni della versione gratuita della chiave API AccuWeather, quando si abilitano le previsioni del tempo, gli aggiornamenti dei dati verranno eseguiti ogni 80 minuti invece che ogni 40."
+                "description": "A causa delle limitazioni della versione gratuita della chiave API AccuWeather, quando abiliti le previsioni del tempo, gli aggiornamenti dei dati verranno eseguiti ogni 80 minuti anzich\u00e9 ogni 40 minuti."
             }
         }
     },

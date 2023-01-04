@@ -12,6 +12,7 @@ from homeassistant.components.asuswrt.const import (
     CONF_SSH_KEY,
     CONF_TRACK_UNKNOWN,
     DOMAIN,
+    PROTOCOL_TELNET,
 )
 from homeassistant.components.device_tracker import CONF_CONSIDER_HOME
 from homeassistant.config_entries import SOURCE_USER
@@ -34,8 +35,8 @@ SSH_KEY = "1234"
 
 CONFIG_DATA = {
     CONF_HOST: HOST,
-    CONF_PORT: 22,
-    CONF_PROTOCOL: "telnet",
+    CONF_PORT: 23,
+    CONF_PROTOCOL: PROTOCOL_TELNET,
     CONF_USERNAME: "user",
     CONF_PASSWORD: "pwd",
     CONF_MODE: "ap",

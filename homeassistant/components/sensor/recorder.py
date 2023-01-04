@@ -26,16 +26,18 @@ from homeassistant.components.recorder.models import (
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     REVOLUTIONS_PER_MINUTE,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
+    UnitOfIrradiance,
+    UnitOfSoundPressure,
+    UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant, State, split_entity_id
+from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import entity_sources
 from homeassistant.util import dt as dt_util
 
 from . import (
     ATTR_LAST_RESET,
+    ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     DOMAIN,
     STATE_CLASS_MEASUREMENT,
@@ -53,9 +55,11 @@ DEFAULT_STATISTICS = {
 }
 
 EQUIVALENT_UNITS = {
+    "BTU/(h×ft²)": UnitOfIrradiance.BTUS_PER_HOUR_SQUARE_FOOT,
+    "dBa": UnitOfSoundPressure.WEIGHTED_DECIBEL_A,
     "RPM": REVOLUTIONS_PER_MINUTE,
-    "ft3": VOLUME_CUBIC_FEET,
-    "m3": VOLUME_CUBIC_METERS,
+    "ft3": UnitOfVolume.CUBIC_FEET,
+    "m3": UnitOfVolume.CUBIC_METERS,
 }
 
 # Keep track of entities for which a warning about decreasing value has been logged
@@ -198,9 +202,11 @@ def _normalize_states(
                         f"({old_metadata['unit_of_measurement']})"
                     )
                 _LOGGER.warning(
-                    "The unit of %s is changing, got multiple %s, generation of long term "
-                    "statistics will be suppressed unless the unit is stable%s. "
-                    "Go to %s to fix this",
+                    (
+                        "The unit of %s is changing, got multiple %s, generation of"
+                        " long term statistics will be suppressed unless the unit is"
+                        " stable%s. Go to %s to fix this"
+                    ),
                     entity_id,
                     all_units,
                     extra,
@@ -222,11 +228,12 @@ def _normalize_states(
             if entity_id not in hass.data[WARN_UNSUPPORTED_UNIT]:
                 hass.data[WARN_UNSUPPORTED_UNIT].add(entity_id)
                 _LOGGER.warning(
-                    "The unit of %s (%s) can not be converted to the unit of previously "
-                    "compiled statistics (%s). Generation of long term statistics "
-                    "will be suppressed unless the unit changes back to %s or a "
-                    "compatible unit. "
-                    "Go to %s to fix this",
+                    (
+                        "The unit of %s (%s) can not be converted to the unit of"
+                        " previously compiled statistics (%s). Generation of long term"
+                        " statistics will be suppressed unless the unit changes back to"
+                        " %s or a compatible unit. Go to %s to fix this"
+                    ),
                     entity_id,
                     state_unit,
                     statistics_unit,
@@ -287,9 +294,11 @@ def warn_dip(
         if domain in ["energy", "growatt_server", "solaredge"]:
             return
         _LOGGER.warning(
-            "Entity %s %shas state class total_increasing, but its state is "
-            "not strictly increasing. Triggered by state %s (%s) with last_updated set to %s. "
-            "Please %s",
+            (
+                "Entity %s %shas state class total_increasing, but its state is not"
+                " strictly increasing. Triggered by state %s (%s) with last_updated set"
+                " to %s. Please %s"
+            ),
             entity_id,
             f"from integration {domain} " if domain else "",
             state.state,
@@ -307,8 +316,10 @@ def warn_negative(hass: HomeAssistant, entity_id: str, state: State) -> None:
         hass.data[WARN_NEGATIVE].add(entity_id)
         domain = entity_sources(hass).get(entity_id, {}).get("domain")
         _LOGGER.warning(
-            "Entity %s %shas state class total_increasing, but its state is "
-            "negative. Triggered by state %s with last_updated set to %s. Please %s",
+            (
+                "Entity %s %shas state class total_increasing, but its state is "
+                "negative. Triggered by state %s with last_updated set to %s. Please %s"
+            ),
             entity_id,
             f"from integration {domain} " if domain else "",
             state.state,
@@ -468,11 +479,13 @@ def _compile_statistics(  # noqa: C901
                 if entity_id not in hass.data[WARN_UNSTABLE_UNIT]:
                     hass.data[WARN_UNSTABLE_UNIT].add(entity_id)
                     _LOGGER.warning(
-                        "The unit of %s (%s) can not be converted to the unit of previously "
-                        "compiled statistics (%s). Generation of long term statistics "
-                        "will be suppressed unless the unit changes back to %s or a "
-                        "compatible unit. "
-                        "Go to %s to fix this",
+                        (
+                            "The unit of %s (%s) can not be converted to the unit of"
+                            " previously compiled statistics (%s). Generation of long"
+                            " term statistics will be suppressed unless the unit"
+                            " changes back to %s or a compatible unit. Go to %s to fix"
+                            " this"
+                        ),
                         entity_id,
                         statistics_unit,
                         old_metadata[1]["unit_of_measurement"],
@@ -527,13 +540,19 @@ def _compile_statistics(  # noqa: C901
                 ):
                     if old_state is None:
                         _LOGGER.info(
-                            "Compiling initial sum statistics for %s, zero point set to %s",
+                            (
+                                "Compiling initial sum statistics for %s, zero point"
+                                " set to %s"
+                            ),
                             entity_id,
                             fstate,
                         )
                     else:
                         _LOGGER.info(
-                            "Detected new cycle for %s, last_reset set to %s (old last_reset %s)",
+                            (
+                                "Detected new cycle for %s, last_reset set to %s (old"
+                                " last_reset %s)"
+                            ),
                             entity_id,
                             last_reset,
                             old_last_reset,
@@ -553,8 +572,11 @@ def _compile_statistics(  # noqa: C901
                         ):
                             reset = True
                             _LOGGER.info(
-                                "Detected new cycle for %s, value dropped from %s to %s, "
-                                "triggered by state with last_updated set to %s",
+                                (
+                                    "Detected new cycle for %s, value dropped from %s"
+                                    " to %s, triggered by state with last_updated set"
+                                    " to %s"
+                                ),
                                 entity_id,
                                 new_state,
                                 state.last_updated.isoformat(),
@@ -724,3 +746,9 @@ def validate_statistics(
         )
 
     return validation_result
+
+
+@callback
+def exclude_attributes(hass: HomeAssistant) -> set[str]:
+    """Exclude attributes from being recorded in the database."""
+    return {ATTR_OPTIONS}

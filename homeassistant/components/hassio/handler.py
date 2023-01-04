@@ -414,7 +414,8 @@ class HassIO:
         if http_config.get(CONF_SERVER_HOST) is not None:
             options["watchdog"] = False
             _LOGGER.warning(
-                "Found incompatible HTTP option 'server_host'. Watchdog feature disabled"
+                "Found incompatible HTTP option 'server_host'. Watchdog feature"
+                " disabled"
             )
 
         return await self.send_command("/homeassistant/options", payload=options)
@@ -455,7 +456,9 @@ class HassIO:
                 f"http://{self._ip}{command}",
                 json=payload,
                 headers={
-                    aiohttp.hdrs.AUTHORIZATION: f"Bearer {os.environ.get('SUPERVISOR_TOKEN', '')}"
+                    aiohttp.hdrs.AUTHORIZATION: (
+                        f"Bearer {os.environ.get('SUPERVISOR_TOKEN', '')}"
+                    )
                 },
                 timeout=aiohttp.ClientTimeout(total=timeout),
             )

@@ -15,12 +15,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    Platform,
-)
+from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -176,9 +171,9 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
                 self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
 
         if tempunit == "F":
-            self._attr_temperature_unit = TEMP_FAHRENHEIT
+            self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
         else:
-            self._attr_temperature_unit = TEMP_CELSIUS
+            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
 
         if self._fan_mode_device:
             fan_modes = (
@@ -222,11 +217,13 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         _LOGGER.debug(
-            "Climate %s\n"
-            "- _temp_sensor_device %s\n"
-            "- _target_temp_device %s\n"
-            "- _op_mode_device %s\n"
-            "- _fan_mode_device %s",
+            (
+                "Climate %s\n"
+                "- _temp_sensor_device %s\n"
+                "- _target_temp_device %s\n"
+                "- _op_mode_device %s\n"
+                "- _fan_mode_device %s"
+            ),
             self.ha_id,
             self._temp_sensor_device.ha_id if self._temp_sensor_device else "None",
             self._target_temp_device.ha_id if self._target_temp_device else "None",

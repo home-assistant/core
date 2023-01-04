@@ -7,11 +7,13 @@
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "file_not_found": "A megadott '.knxkeys' f\u00e1jl nem tal\u00e1lhat\u00f3 a config/.storage/knx/ el\u00e9r\u00e9si \u00fatvonalon.",
+            "invalid_backbone_key": "\u00c9rv\u00e9nytelen gerinckulcs. 32 hexadecim\u00e1lis sz\u00e1m az elv\u00e1rt.",
             "invalid_individual_address": "Az \u00e9rt\u00e9k nem felel meg a KNX egyedi c\u00edm mint\u00e1j\u00e1nak.\n'area.line.device'",
             "invalid_ip_address": "\u00c9rv\u00e9nytelen IPv4-c\u00edm.",
             "invalid_signature": "A '.knxkeys' f\u00e1jl visszafejt\u00e9s\u00e9hez haszn\u00e1lt jelsz\u00f3 helytelen.",
             "no_router_discovered": "Nem tal\u00e1lhat\u00f3 KNXnet/IP \u00fatv\u00e1laszt\u00f3 a h\u00e1l\u00f3zaton.",
-            "no_tunnel_discovered": "Nem tal\u00e1lhat\u00f3 KNX alag\u00fat-kiszolg\u00e1l\u00f3 a h\u00e1l\u00f3zaton."
+            "no_tunnel_discovered": "Nem tal\u00e1lhat\u00f3 KNX alag\u00fat-kiszolg\u00e1l\u00f3 a h\u00e1l\u00f3zaton.",
+            "unsupported_tunnel_type": "A kiv\u00e1lasztott alag\u00fatt\u00edpust az \u00e1tj\u00e1r\u00f3 nem t\u00e1mogatja."
         },
         "step": {
             "connection_type": {
@@ -41,13 +43,22 @@
                     "individual_address": "Egy\u00e9ni c\u00edm",
                     "local_ip": "Home Assistant lok\u00e1lis IP c\u00edme",
                     "multicast_group": "Multicast csoport",
-                    "multicast_port": "Multicast portsz\u00e1m"
+                    "multicast_port": "Multicast portsz\u00e1m",
+                    "routing_secure": "KNX IP Secure haszn\u00e1lata"
                 },
                 "data_description": {
                     "individual_address": "A Home Assistant \u00e1ltal haszn\u00e1land\u00f3 KNX-c\u00edm, pl. \"0.0.4\".",
                     "local_ip": "Az automatikus felder\u00edt\u00e9s haszn\u00e1lat\u00e1hoz hagyja \u00fcresen."
                 },
                 "description": "K\u00e9rem, konfigur\u00e1lja az \u00fatv\u00e1laszt\u00e1si (routing) be\u00e1ll\u00edt\u00e1sokat."
+            },
+            "secure_key_source": {
+                "description": "V\u00e1lassza ki, hogyan szeretn\u00e9 konfigur\u00e1lni az KNX/IP secure-t.",
+                "menu_options": {
+                    "secure_knxkeys": "IP secure kulcsokat tartalmaz\u00f3 '.knxkeys' f\u00e1jl haszn\u00e1lata",
+                    "secure_routing_manual": "IP biztons\u00e1gos gerinch\u00e1l\u00f3zati kulcs manu\u00e1lis konfigur\u00e1l\u00e1sa",
+                    "secure_tunnel_manual": "Biztons\u00e1gos IP-hiteles\u00edt\u0151 adatok manu\u00e1lis konfigur\u00e1l\u00e1sa"
+                }
             },
             "secure_knxkeys": {
                 "data": {
@@ -59,6 +70,17 @@
                     "knxkeys_password": "Ez a be\u00e1ll\u00edt\u00e1s a f\u00e1jl ETS-b\u0151l t\u00f6rt\u00e9n\u0151 export\u00e1l\u00e1sakor t\u00f6rt\u00e9nt."
                 },
                 "description": "K\u00e9rem, adja meg a '.knxkeys' f\u00e1jl adatait."
+            },
+            "secure_routing_manual": {
+                "data": {
+                    "backbone_key": "Gerinch\u00e1l\u00f3zati kulcs",
+                    "sync_latency_tolerance": "H\u00e1l\u00f3zatk\u00e9sleltet\u00e9si tolerancia"
+                },
+                "data_description": {
+                    "backbone_key": "Megtekinthet\u0151 egy ETS projekt 'Biztons\u00e1g' jelent\u00e9s\u00e9ben. P\u00e9ld\u00e1ul '00112233445566778899AABBCCDDEEFF'",
+                    "sync_latency_tolerance": "Az alap\u00e9rtelmezett \u00e9rt\u00e9k 1000."
+                },
+                "description": "K\u00e9rem, adja meg az IP secure adatokat."
             },
             "secure_tunnel_manual": {
                 "data": {
@@ -73,13 +95,6 @@
                 },
                 "description": "K\u00e9rem, adja meg az IP secure adatokat."
             },
-            "secure_tunneling": {
-                "description": "V\u00e1lassza ki, hogyan szeretn\u00e9 konfigur\u00e1lni az KNX/IP secure-t.",
-                "menu_options": {
-                    "secure_knxkeys": "IP secure kulcsokat tartalmaz\u00f3 '.knxkeys' f\u00e1jl haszn\u00e1lata",
-                    "secure_tunnel_manual": "IP secure kulcsok manu\u00e1lis be\u00e1ll\u00edt\u00e1sa"
-                }
-            },
             "tunnel": {
                 "data": {
                     "gateway": "KNX alag\u00fat (tunnel) kapcsolat"
@@ -92,11 +107,13 @@
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "file_not_found": "A megadott '.knxkeys' f\u00e1jl nem tal\u00e1lhat\u00f3 a config/.storage/knx/ el\u00e9r\u00e9si \u00fatvonalon.",
+            "invalid_backbone_key": "\u00c9rv\u00e9nytelen gerinckulcs. 32 hexadecim\u00e1lis sz\u00e1m az elv\u00e1rt.",
             "invalid_individual_address": "Az \u00e9rt\u00e9k nem felel meg a KNX egyedi c\u00edm mint\u00e1j\u00e1nak.\n'area.line.device'",
             "invalid_ip_address": "\u00c9rv\u00e9nytelen IPv4-c\u00edm.",
             "invalid_signature": "A '.knxkeys' f\u00e1jl visszafejt\u00e9s\u00e9hez haszn\u00e1lt jelsz\u00f3 helytelen.",
             "no_router_discovered": "Nem tal\u00e1lhat\u00f3 KNXnet/IP \u00fatv\u00e1laszt\u00f3 a h\u00e1l\u00f3zaton.",
-            "no_tunnel_discovered": "Nem tal\u00e1lhat\u00f3 KNX alag\u00fat-kiszolg\u00e1l\u00f3 a h\u00e1l\u00f3zaton."
+            "no_tunnel_discovered": "Nem tal\u00e1lhat\u00f3 KNX alag\u00fat-kiszolg\u00e1l\u00f3 a h\u00e1l\u00f3zaton.",
+            "unsupported_tunnel_type": "A kiv\u00e1lasztott alag\u00fatt\u00edpust az \u00e1tj\u00e1r\u00f3 nem t\u00e1mogatja."
         },
         "step": {
             "communication_settings": {
@@ -142,13 +159,22 @@
                     "individual_address": "Egy\u00e9ni c\u00edm",
                     "local_ip": "Home Assistant lok\u00e1lis IP c\u00edme",
                     "multicast_group": "Multicast csoport",
-                    "multicast_port": "Multicast portsz\u00e1m"
+                    "multicast_port": "Multicast portsz\u00e1m",
+                    "routing_secure": "KNX IP Secure haszn\u00e1lata"
                 },
                 "data_description": {
                     "individual_address": "A Home Assistant \u00e1ltal haszn\u00e1land\u00f3 KNX-c\u00edm, pl. \"0.0.4\".",
                     "local_ip": "Az automatikus felder\u00edt\u00e9s haszn\u00e1lat\u00e1hoz hagyja \u00fcresen."
                 },
                 "description": "K\u00e9rem, konfigur\u00e1lja az \u00fatv\u00e1laszt\u00e1si (routing) be\u00e1ll\u00edt\u00e1sokat."
+            },
+            "secure_key_source": {
+                "description": "V\u00e1lassza ki, hogyan szeretn\u00e9 konfigur\u00e1lni az KNX/IP secure-t.",
+                "menu_options": {
+                    "secure_knxkeys": "IP secure kulcsokat tartalmaz\u00f3 '.knxkeys' f\u00e1jl haszn\u00e1lata",
+                    "secure_routing_manual": "IP biztons\u00e1gos gerinch\u00e1l\u00f3zati kulcs manu\u00e1lis konfigur\u00e1l\u00e1sa",
+                    "secure_tunnel_manual": "Biztons\u00e1gos IP-hiteles\u00edt\u0151 adatok manu\u00e1lis konfigur\u00e1l\u00e1sa"
+                }
             },
             "secure_knxkeys": {
                 "data": {
@@ -160,6 +186,17 @@
                     "knxkeys_password": "Ez a be\u00e1ll\u00edt\u00e1s a f\u00e1jl ETS-b\u0151l t\u00f6rt\u00e9n\u0151 export\u00e1l\u00e1sakor t\u00f6rt\u00e9nt."
                 },
                 "description": "K\u00e9rem, adja meg a '.knxkeys' f\u00e1jl adatait."
+            },
+            "secure_routing_manual": {
+                "data": {
+                    "backbone_key": "Gerinch\u00e1l\u00f3zati kulcs",
+                    "sync_latency_tolerance": "H\u00e1l\u00f3zatk\u00e9sleltet\u00e9si tolerancia"
+                },
+                "data_description": {
+                    "backbone_key": "Megtekinthet\u0151 egy ETS projekt 'Biztons\u00e1g' jelent\u00e9s\u00e9ben. P\u00e9ld\u00e1ul '00112233445566778899AABBCCDDEEFF'",
+                    "sync_latency_tolerance": "Az alap\u00e9rtelmezett \u00e9rt\u00e9k 1000."
+                },
+                "description": "K\u00e9rem, adja meg az IP secure adatokat."
             },
             "secure_tunnel_manual": {
                 "data": {
@@ -173,13 +210,6 @@
                     "user_password": "Jelsz\u00f3 az adott tunnelhez, amely a tunnel \u201eProperties\u201d panelj\u00e9n van be\u00e1ll\u00edtva az ETS-ben."
                 },
                 "description": "K\u00e9rem, adja meg az IP secure adatokat."
-            },
-            "secure_tunneling": {
-                "description": "V\u00e1lassza ki, hogyan szeretn\u00e9 konfigur\u00e1lni az KNX/IP secure-t.",
-                "menu_options": {
-                    "secure_knxkeys": "IP secure kulcsokat tartalmaz\u00f3 '.knxkeys' f\u00e1jl haszn\u00e1lata",
-                    "secure_tunnel_manual": "IP secure kulcsok manu\u00e1lis be\u00e1ll\u00edt\u00e1sa"
-                }
             },
             "tunnel": {
                 "data": {
