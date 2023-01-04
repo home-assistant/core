@@ -34,7 +34,7 @@ async def test_select(
     assert state1.state == "stopped"
 
     monkeypatch.setattr(
-        get_data.parsed["ABC999111"], "horizontal_swing_mode", "fixedLeft"
+        get_data.parsed["ABC999111"], "horizontal_swing_mode", "fixedleft"
     )
 
     with patch(
@@ -48,7 +48,7 @@ async def test_select(
         await hass.async_block_till_done()
 
     state1 = hass.states.get("select.hallway_horizontal_swing")
-    assert state1.state == "fixedLeft"
+    assert state1.state == "fixedleft"
 
 
 async def test_select_set_option(
@@ -95,7 +95,7 @@ async def test_select_set_option(
             await hass.services.async_call(
                 SELECT_DOMAIN,
                 SERVICE_SELECT_OPTION,
-                {ATTR_ENTITY_ID: state1.entity_id, ATTR_OPTION: "fixedLeft"},
+                {ATTR_ENTITY_ID: state1.entity_id, ATTR_OPTION: "fixedleft"},
                 blocking=True,
             )
     await hass.async_block_till_done()
@@ -136,7 +136,7 @@ async def test_select_set_option(
             await hass.services.async_call(
                 SELECT_DOMAIN,
                 SERVICE_SELECT_OPTION,
-                {ATTR_ENTITY_ID: state1.entity_id, ATTR_OPTION: "fixedLeft"},
+                {ATTR_ENTITY_ID: state1.entity_id, ATTR_OPTION: "fixedleft"},
                 blocking=True,
             )
     await hass.async_block_till_done()
@@ -154,10 +154,10 @@ async def test_select_set_option(
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: state1.entity_id, ATTR_OPTION: "fixedLeft"},
+            {ATTR_ENTITY_ID: state1.entity_id, ATTR_OPTION: "fixedleft"},
             blocking=True,
         )
     await hass.async_block_till_done()
 
     state2 = hass.states.get("select.hallway_horizontal_swing")
-    assert state2.state == "fixedLeft"
+    assert state2.state == "fixedleft"
