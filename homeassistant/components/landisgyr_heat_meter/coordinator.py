@@ -4,6 +4,7 @@ import logging
 
 import async_timeout
 import serial
+from ultraheat_api.response import HeatMeterResponse
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -25,7 +26,7 @@ class UltraheatCoordinator(DataUpdateCoordinator):
         )
         self.api = api
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> HeatMeterResponse:
         """Fetch data from API endpoint."""
         try:
             async with async_timeout.timeout(ULTRAHEAT_TIMEOUT):

@@ -4,7 +4,6 @@ from __future__ import annotations
 import logging
 
 import ultraheat_api
-from ultraheat_api.response import HeatMeterResponse
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, Platform
