@@ -14,13 +14,13 @@ from .conftest import TEST_PASSWORD, TEST_USERNAME
 
 
 @pytest.mark.parametrize(
-    "mock_get_client,errors",
+    "get_client_response,errors",
     [
         (AsyncMock(side_effect=InvalidCredentialsError), {"base": "invalid_auth"}),
         (AsyncMock(side_effect=RidwellError), {"base": "unknown"}),
     ],
 )
-async def test_create_entry(hass, config, errors, mock_get_client, mock_aioridwell):
+async def test_create_entry(hass, config, errors, get_client_response, mock_aioridwell):
     """Test creating an entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -31,7 +31,7 @@ async def test_create_entry(hass, config, errors, mock_get_client, mock_aioridwe
     # Test errors that can arise:
     with patch(
         "homeassistant.components.ridwell.config_flow.async_get_client",
-        mock_get_client,
+        get_client_response,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=config
