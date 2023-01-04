@@ -5,9 +5,6 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-CALENDAR_ID = "calendar.sonarr_episodes"
-DOMAIN = "sonarr"
-
 
 async def test_calendar(
     hass: HomeAssistant,
