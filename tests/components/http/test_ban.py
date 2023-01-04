@@ -14,6 +14,8 @@ import pytest
 import homeassistant.components.http as http
 from homeassistant.components.http import KEY_AUTHENTICATED
 from homeassistant.components.http.ban import (
+    EVENT_BAN_IP,
+    EVENT_FAILED_LOGIN,
     IP_BANS_FILE,
     KEY_BAN_MANAGER,
     KEY_FAILED_LOGIN_ATTEMPTS,
@@ -25,6 +27,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from . import mock_real_ip
+
+from tests.common import async_capture_events
 
 SUPERVISOR_IP = "1.2.3.4"
 BANNED_IPS = ["200.201.202.203", "100.64.0.2"]
@@ -352,3 +356,68 @@ async def test_failed_login_attempts_counter(hass, aiohttp_client):
     resp = await client.get("/auth_true")
     assert resp.status == HTTPStatus.OK
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 2
+
+
+async def test_failed_login_fires_event(hass, aiohttp_client):
+    """Testing if a failed login without ban enabled fires event."""
+    events = async_capture_events(hass, EVENT_FAILED_LOGIN)
+
+    app = web.Application()
+    app["hass"] = hass
+
+    setup_bans(hass, app, 5)
+
+    @middleware
+    async def mock_auth(request, handler):
+        request[KEY_AUTHENTICATED] = False
+        return await handler(request)
+
+    async def auth_handler(request):
+        """Return 200 status code."""
+        return None, 200
+
+    app.router.add_get(
+        "/unauth", request_handler_factory(Mock(requires_auth=True), auth_handler)
+    )
+    app.middlewares.append(mock_auth)
+    mock_real_ip(app)("200.201.202.204")
+
+    client = await aiohttp_client(app)
+    await client.get("/unauth")
+
+    assert len(events) == 1
+    assert events[0].data["ip"] == "200.201.202.204"
+    assert events[0].data["host"] == "example.com"
+
+
+async def test_banning_ip_fires_event(hass, aiohttp_client):
+    """Testing if banning IP fires event."""
+    events = async_capture_events(hass, EVENT_BAN_IP)
+
+    app = web.Application()
+    app["hass"] = hass
+
+    setup_bans(hass, app, 1)
+
+    @middleware
+    async def mock_auth(request, handler):
+        request[KEY_AUTHENTICATED] = False
+        return await handler(request)
+
+    async def auth_handler(request):
+        """Return 200 status code."""
+        return None, 200
+
+    app.router.add_get(
+        "/unauth", request_handler_factory(Mock(requires_auth=True), auth_handler)
+    )
+    app.middlewares.append(mock_auth)
+
+    mock_real_ip(app)("200.201.202.204")
+
+    client = await aiohttp_client(app)
+    await client.get("/unauth")
+
+    assert len(events) == 1
+    assert events[0].data["ip"] == "200.201.202.204"
+    assert events[0].data["host"] == "example.com"
