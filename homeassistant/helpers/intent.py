@@ -16,7 +16,7 @@ from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 
-from . import config_validation as cv
+from . import config_validation as cv, entity_registry
 
 _LOGGER = logging.getLogger(__name__)
 _SlotsType = dict[str, Any]
@@ -119,7 +119,25 @@ def async_match_state(
     if states is None:
         states = hass.states.async_all()
 
-    state = _fuzzymatch(name, states, lambda state: state.name)
+    name = name.casefold()
+    state: State | None = None
+    registry = entity_registry.async_get(hass)
+
+    for maybe_state in states:
+        # Check entity id and name
+        if name in (maybe_state.entity_id, maybe_state.name.casefold()):
+            state = maybe_state
+        else:
+            # Check aliases
+            entry = registry.async_get(maybe_state.entity_id)
+            if (entry is not None) and entry.aliases:
+                for alias in entry.aliases:
+                    if name == alias.casefold():
+                        state = maybe_state
+                        break
+
+        if state is not None:
+            break
 
     if state is None:
         raise IntentHandleError(f"Unable to find an entity called {name}")

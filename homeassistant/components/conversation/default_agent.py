@@ -1,36 +1,28 @@
 """Standard conversation implementation for Home Assistant."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+import logging
+from pathlib import Path
 import re
+from typing import Any
+
+from hassil.intents import Intents, SlotList, TextSlotList
+from hassil.recognize import recognize
+from hassil.util import merge_dict
+from yaml import safe_load
 
 from homeassistant import core, setup
-from homeassistant.components.cover.intent import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
-from homeassistant.components.shopping_list.intent import (
-    INTENT_ADD_ITEM,
-    INTENT_LAST_ITEMS,
-)
-from homeassistant.const import EVENT_COMPONENT_LOADED
-from homeassistant.core import callback
-from homeassistant.helpers import intent
-from homeassistant.setup import ATTR_COMPONENT
+from homeassistant.helpers import area_registry, entity_registry, intent
+from homeassistant.loader import async_get_integration
 
 from .agent import AbstractConversationAgent, ConversationResult
 from .const import DOMAIN
 from .util import create_matcher
 
-REGEX_TURN_COMMAND = re.compile(r"turn (?P<name>(?: |\w)+) (?P<command>\w+)")
-REGEX_TYPE = type(re.compile(""))
+_LOGGER = logging.getLogger(__name__)
 
-UTTERANCES = {
-    "cover": {
-        INTENT_OPEN_COVER: ["Open [the] [a] [an] {name}[s]"],
-        INTENT_CLOSE_COVER: ["Close [the] [a] [an] {name}[s]"],
-    },
-    "shopping_list": {
-        INTENT_ADD_ITEM: ["Add [the] [a] [an] {item} to my shopping list"],
-        INTENT_LAST_ITEMS: ["What is on my shopping list"],
-    },
-}
+REGEX_TYPE = type(re.compile(""))
 
 
 @core.callback
@@ -50,12 +42,22 @@ def async_register(hass, intent_type, utterances):
             conf.append(create_matcher(utterance))
 
 
+@dataclass
+class LanguageIntents:
+    """Loaded intents for a language."""
+
+    intents: Intents
+    intents_dict: dict[str, Any]
+    loaded_components: set[str]
+
+
 class DefaultAgent(AbstractConversationAgent):
     """Default agent for conversation agent."""
 
     def __init__(self, hass: core.HomeAssistant) -> None:
         """Initialize the default agent."""
         self.hass = hass
+        self._lang_intents: dict[str, LanguageIntents] = {}
 
     async def async_initialize(self, config):
         """Initialize the default agent."""
@@ -63,52 +65,7 @@ class DefaultAgent(AbstractConversationAgent):
             await setup.async_setup_component(self.hass, "intent", {})
 
         config = config.get(DOMAIN, {})
-        intents = self.hass.data.setdefault(DOMAIN, {})
-
-        for intent_type, utterances in config.get("intents", {}).items():
-            if (conf := intents.get(intent_type)) is None:
-                conf = intents[intent_type] = []
-
-            conf.extend(create_matcher(utterance) for utterance in utterances)
-
-        # We strip trailing 's' from name because our state matcher will fail
-        # if a letter is not there. By removing 's' we can match singular and
-        # plural names.
-
-        async_register(
-            self.hass,
-            intent.INTENT_TURN_ON,
-            ["Turn [the] [a] {name}[s] on", "Turn on [the] [a] [an] {name}[s]"],
-        )
-        async_register(
-            self.hass,
-            intent.INTENT_TURN_OFF,
-            ["Turn [the] [a] [an] {name}[s] off", "Turn off [the] [a] [an] {name}[s]"],
-        )
-        async_register(
-            self.hass,
-            intent.INTENT_TOGGLE,
-            ["Toggle [the] [a] [an] {name}[s]", "[the] [a] [an] {name}[s] toggle"],
-        )
-
-        @callback
-        def component_loaded(event):
-            """Handle a new component loaded."""
-            self.register_utterances(event.data[ATTR_COMPONENT])
-
-        self.hass.bus.async_listen(EVENT_COMPONENT_LOADED, component_loaded)
-
-        # Check already loaded components.
-        for component in self.hass.config.components:
-            self.register_utterances(component)
-
-    @callback
-    def register_utterances(self, component):
-        """Register utterances for a component."""
-        if component not in UTTERANCES:
-            return
-        for intent_type, sentences in UTTERANCES[component].items():
-            async_register(self.hass, intent_type, sentences)
+        self.hass.data.setdefault(DOMAIN, {})
 
     async def async_process(
         self,
@@ -118,25 +75,111 @@ class DefaultAgent(AbstractConversationAgent):
         language: str | None = None,
     ) -> ConversationResult | None:
         """Process a sentence."""
-        intents = self.hass.data[DOMAIN]
+        language = language or self.hass.config.language
+        lang_intents = await self.async_get_or_load_intents(language)
+        slot_lists: dict[str, SlotList] = {
+            "area": self._make_areas_list(),
+            "name": self._make_names_list(),
+        }
 
-        for intent_type, matchers in intents.items():
-            for matcher in matchers:
-                if not (match := matcher.match(text)):
-                    continue
+        result = recognize(text, lang_intents, slot_lists=slot_lists)
+        if result is not None:
+            intent_response = await intent.async_handle(
+                self.hass,
+                DOMAIN,
+                result.intent.name,
+                {
+                    entity.name: {"value": entity.value}
+                    for entity in result.entities_list
+                },
+                text,
+                context,
+                language,
+            )
 
-                intent_response = await intent.async_handle(
-                    self.hass,
-                    DOMAIN,
-                    intent_type,
-                    {key: {"value": value} for key, value in match.groupdict().items()},
-                    text,
-                    context,
-                    language,
-                )
-
-                return ConversationResult(
-                    response=intent_response, conversation_id=conversation_id
-                )
+            return ConversationResult(
+                response=intent_response, conversation_id=conversation_id
+            )
 
         return None
+
+    async def async_get_or_load_intents(self, language: str) -> Intents:
+        """Load all intents for language."""
+        lang_intents = self._lang_intents.get(language)
+
+        if lang_intents is None:
+            # Load all sentences for language
+            intents_dict: dict[str, Any] = {}
+            for component in self.hass.config.components:
+                # Check for sentences in this component with the target language
+                sentences_dir = await self.async_get_sentences_dir(component)
+                yaml_path = sentences_dir / f"{language}.yaml"
+                if yaml_path.exists():
+                    # Merge sentences into existing dictionary
+                    _LOGGER.info("Loading intents YAML file %s", yaml_path)
+                    with open(yaml_path, encoding="utf-8") as yaml_file:
+                        merge_dict(intents_dict, safe_load(yaml_file))
+
+            lang_intents = LanguageIntents(
+                intents=Intents.from_dict(intents_dict),
+                intents_dict=intents_dict,
+                loaded_components=set(self.hass.config.components),
+            )
+            self._lang_intents[language] = lang_intents
+        else:
+            # Check if any new components have been loaded
+            components_change = False
+            for component in self.hass.config.components:
+                if component not in lang_intents.loaded_components:
+                    # Check for sentences in this component with the target language
+                    sentences_dir = await self.async_get_sentences_dir(component)
+                    yaml_path = sentences_dir / f"{language}.yaml"
+                    if yaml_path.exists():
+                        # Merge sentences into existing dictionary
+                        _LOGGER.info("Loading intents YAML file %s", yaml_path)
+                        with open(yaml_path, encoding="utf-8") as yaml_file:
+                            merge_dict(lang_intents.intents_dict, safe_load(yaml_file))
+
+                        # Will need to recreate graph
+                        lang_intents.loaded_components.add(component)
+                        components_change = True
+
+            if components_change:
+                # This can be made faster by not re-parsing existing sentences.
+                # But it will likely only be called once anyways, unless new
+                # components with sentences are often being loaded.
+                lang_intents.intents = Intents.from_dict(lang_intents.intents_dict)
+
+        return lang_intents.intents
+
+    async def async_get_sentences_dir(self, component: str) -> Path:
+        """Get the sentences directory for a component."""
+        domain = component.rpartition(".")[-1]
+        integration = await async_get_integration(self.hass, domain)
+        return integration.file_path / "sentences"
+
+    def _make_areas_list(self) -> TextSlotList:
+        """Create slot list mapping area names/aliases to area ids."""
+        registry = area_registry.async_get(self.hass)
+        areas = []
+        for entry in registry.async_list_areas():
+            areas.append((entry.name, entry.id))
+            if entry.aliases:
+                for alias in entry.aliases:
+                    areas.append((alias, entry.id))
+
+        return TextSlotList.from_tuples(areas)
+
+    def _make_names_list(self) -> TextSlotList:
+        """Create slot list mapping entity names/aliases to entity ids."""
+        states = self.hass.states.async_all()
+        registry = entity_registry.async_get(self.hass)
+        names = []
+        for state in states:
+            names.append((state.name, state.entity_id))
+            entry = registry.async_get(state.entity_id)
+            if (entry is not None) and entry.aliases:
+                for alias in entry.aliases:
+                    names.append((alias, state.entity_id))
+
+        return TextSlotList.from_tuples(names)
