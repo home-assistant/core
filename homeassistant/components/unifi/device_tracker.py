@@ -25,7 +25,13 @@ import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN as UNIFI_DOMAIN
 from .controller import UniFiController
-from .entity import DataT, HandlerT, UnifiEntity, UnifiEntityDescription
+from .entity import (
+    DataT,
+    HandlerT,
+    UnifiEntity,
+    UnifiEntityDescription,
+    async_device_available_fn,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -125,14 +131,8 @@ def async_client_is_connected_fn(controller: UniFiController, obj_id: str) -> bo
         > controller.option_detection_time
     ):
         return False
+
     return True
-
-
-@callback
-def async_device_available_fn(controller: UniFiController, obj_id: str) -> bool:
-    """Check if device object is disabled."""
-    device = controller.api.devices[obj_id]
-    return controller.available and not device.disabled
 
 
 @callback
