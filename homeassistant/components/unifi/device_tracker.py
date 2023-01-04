@@ -322,14 +322,15 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, DataT], ScannerEntity):
             self.controller.async_heartbeat(self.unique_id)
             self._is_connected = True
             self.async_write_ha_state()
-        else:
-            self.controller.async_heartbeat(
-                self.unique_id,
-                dt_util.utcnow()
-                + self.entity_description.heartbeat_timedelta_fn(
-                    self.controller, self._obj_id
-                ),
-            )
+            return
+
+        self.controller.async_heartbeat(
+            self.unique_id,
+            dt_util.utcnow()
+            + self.entity_description.heartbeat_timedelta_fn(
+                self.controller, self._obj_id
+            ),
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
