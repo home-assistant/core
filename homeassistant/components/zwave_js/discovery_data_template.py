@@ -138,7 +138,7 @@ from .const import (
 )
 from .helpers import ZwaveValueID
 
-METER_DEVICE_CLASS_MAP: dict[str, set[MeterScaleType]] = {
+METER_DEVICE_CLASS_MAP: dict[str, list[MeterScaleType]] = {
     ENTITY_DESC_KEY_CURRENT: CURRENT_METER_TYPES,
     ENTITY_DESC_KEY_VOLTAGE: VOLTAGE_METER_TYPES,
     ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING: ENERGY_TOTAL_INCREASING_METER_TYPES,
@@ -146,7 +146,7 @@ METER_DEVICE_CLASS_MAP: dict[str, set[MeterScaleType]] = {
     ENTITY_DESC_KEY_POWER_FACTOR: POWER_FACTOR_METER_TYPES,
 }
 
-MULTILEVEL_SENSOR_DEVICE_CLASS_MAP: dict[str, set[MultilevelSensorType]] = {
+MULTILEVEL_SENSOR_DEVICE_CLASS_MAP: dict[str, list[MultilevelSensorType]] = {
     ENTITY_DESC_KEY_CO: CO_SENSORS,
     ENTITY_DESC_KEY_CO2: CO2_SENSORS,
     ENTITY_DESC_KEY_CURRENT: CURRENT_SENSORS,
@@ -160,7 +160,7 @@ MULTILEVEL_SENSOR_DEVICE_CLASS_MAP: dict[str, set[MultilevelSensorType]] = {
     ENTITY_DESC_KEY_VOLTAGE: VOLTAGE_SENSORS,
 }
 
-METER_UNIT_MAP: dict[str, set[MeterScaleType]] = {
+METER_UNIT_MAP: dict[str, list[MeterScaleType]] = {
     UnitOfElectricCurrent.AMPERE: METER_UNIT_AMPERE,
     UnitOfVolume.CUBIC_FEET: UNIT_CUBIC_FEET,
     UnitOfVolume.CUBIC_METERS: METER_UNIT_CUBIC_METER,
@@ -170,7 +170,7 @@ METER_UNIT_MAP: dict[str, set[MeterScaleType]] = {
     UnitOfPower.WATT: METER_UNIT_WATT,
 }
 
-MULTILEVEL_SENSOR_UNIT_MAP: dict[str, set[MultilevelSensorScaleType]] = {
+MULTILEVEL_SENSOR_UNIT_MAP: dict[str, list[MultilevelSensorScaleType]] = {
     UnitOfElectricCurrent.AMPERE: SENSOR_UNIT_AMPERE,
     UnitOfPower.BTU_PER_HOUR: UNIT_BTU_H,
     UnitOfTemperature.CELSIUS: UNIT_CELSIUS,
@@ -181,10 +181,10 @@ MULTILEVEL_SENSOR_UNIT_MAP: dict[str, set[MultilevelSensorScaleType]] = {
     UnitOfSoundPressure.DECIBEL: UNIT_DECIBEL,
     UnitOfSoundPressure.WEIGHTED_DECIBEL_A: UNIT_A_WEIGHTED_DECIBELS,
     DEGREE: UNIT_DEGREES,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: {
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: [
         *UNIT_DENSITY,
         *UNIT_MICROGRAM_PER_CUBIC_METER,
-    },
+    ],
     UnitOfTemperature.FAHRENHEIT: UNIT_FAHRENHEIT,
     UnitOfLength.FEET: UNIT_FEET,
     UnitOfVolume.GALLONS: UNIT_GALLONS,
@@ -203,7 +203,7 @@ MULTILEVEL_SENSOR_UNIT_MAP: dict[str, set[MultilevelSensorScaleType]] = {
     UnitOfSpeed.MILES_PER_HOUR: UNIT_MPH,
     UnitOfSpeed.METERS_PER_SECOND: UNIT_M_S,
     CONCENTRATION_PARTS_PER_MILLION: UNIT_PARTS_MILLION,
-    PERCENTAGE: {*UNIT_PERCENTAGE_VALUE, *UNIT_RSSI},
+    PERCENTAGE: [*UNIT_PERCENTAGE_VALUE, *UNIT_RSSI],
     UnitOfMass.POUNDS: UNIT_POUNDS,
     UnitOfPressure.PSI: UNIT_POUND_PER_SQUARE_INCH,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT: UNIT_POWER_LEVEL,
@@ -326,9 +326,9 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
         enum_value: MultilevelSensorType | MultilevelSensorScaleType | MeterScaleType,
         set_map: Mapping[
             str,
-            set[MultilevelSensorType]
-            | set[MultilevelSensorScaleType]
-            | set[MeterScaleType],
+            list[MultilevelSensorType]
+            | list[MultilevelSensorScaleType]
+            | list[MeterScaleType],
         ],
     ) -> str | None:
         """Find a key in a set map that matches a given enum value."""
