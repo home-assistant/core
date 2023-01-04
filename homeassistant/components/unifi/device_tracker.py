@@ -223,6 +223,7 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, DataT], ScannerEntity):
 
     entity_description: UnifiTrackerEntityDescription
 
+    _event_is_on: tuple[EventKey, ...]
     _ignore_events: bool
     _is_connected: bool
 
@@ -233,6 +234,7 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, DataT], ScannerEntity):
         Initiate is_connected.
         """
         description = self.entity_description
+        self._event_is_on = description.event_is_on or ()
         self._ignore_events = False
         self._is_connected = description.is_connected_fn(self.controller, self._obj_id)
         if self.is_connected:
@@ -314,11 +316,7 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, DataT], ScannerEntity):
         if event.mac != self._obj_id or self._ignore_events:
             return
 
-        description = self.entity_description
-        assert isinstance(description.event_to_subscribe, tuple)
-        assert isinstance(description.event_is_on, tuple)
-
-        if event.key in description.event_is_on:
+        if event.key in self._event_is_on:
             self.controller.async_heartbeat(self.unique_id)
             self._is_connected = True
             self.async_write_ha_state()
