@@ -58,7 +58,7 @@ def setup_platform(
             name = f"{prefix}_{idx!s}"
         TEMPER_SENSORS.append(TemperatureSensor(dev, name, scaling))
         if dev.lookup_humidity_offset(0) is not None:
-            TEMPER_SENSORS.append(HumiditySensor(dev, f"{name} humidity"))
+            TEMPER_SENSORS.append(HumiditySensor(dev, name))
     add_entities(TEMPER_SENSORS)
 
 
@@ -86,6 +86,7 @@ class TemperatureSensor(SensorEntity):
         self.set_temper_device(temper_device)
 
         self._attr_name = name
+        self._attr_unique_id = f"temper_{temper_device.type.name}_temperature"
 
     def set_temper_device(self, temper_device):
         """Assign the underlying device for this sensor."""
@@ -116,7 +117,8 @@ class HumiditySensor(SensorEntity):
         """Initialize the sensor."""
         self.set_temper_device(temper_device)
 
-        self._attr_name = name
+        self._attr_name = f"{name} humidity"
+        self._attr_unique_id = f"temper_{temper_device.type.name}_humidity"
 
     def set_temper_device(self, temper_device):
         """Assign the underlying device for this sensor."""
