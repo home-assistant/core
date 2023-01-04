@@ -2,7 +2,6 @@
 from datetime import datetime, timezone
 from unittest.mock import MagicMock
 
-from attr import dataclass
 from whirlpool.washerdryer import MachineState
 
 from homeassistant.core import CoreState, HomeAssistant, State
@@ -48,18 +47,8 @@ async def test_dryer_sensor_values(
     """Test the sensor value callbacks."""
     await init_integration(hass)
 
-    @dataclass
-    class SensorTestInstance:
-        """Helper class for multiple washer/dryer and mock instances."""
-
-        entity_id: str
-        mock_instance: MagicMock
-        mock_instance_idx: int
-
-    sensor_test_instance = SensorTestInstance("sensor.dryer_state", mock_sensor2_api, 1)
-
-    entity_id = sensor_test_instance.entity_id
-    mock_instance = sensor_test_instance.mock_instance
+    entity_id = "sensor.dryer_state"
+    mock_instance = mock_sensor2_api
     registry = entity_registry.async_get(hass)
     entry = registry.async_get(entity_id)
     assert entry
@@ -103,20 +92,8 @@ async def test_washer_sensor_values(
     """Test the sensor value callbacks."""
     await init_integration(hass)
 
-    @dataclass
-    class SensorTestInstance:
-        """Helper class for multiple climate and mock instances."""
-
-        entity_id: str
-        mock_instance: MagicMock
-        mock_instance_idx: int
-
-    sensor_test_instance = SensorTestInstance(
-        "sensor.washer_state", mock_sensor1_api, 0
-    )
-
-    entity_id = sensor_test_instance.entity_id
-    mock_instance = sensor_test_instance.mock_instance
+    entity_id = "sensor.washer_state"
+    mock_instance = mock_sensor1_api
     registry = entity_registry.async_get(hass)
     entry = registry.async_get(entity_id)
     assert entry
