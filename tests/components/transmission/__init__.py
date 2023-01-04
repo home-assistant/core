@@ -6,4 +6,5 @@ MOCK_CONFIG_DATA = {
     "username": "user",
     "password": "pass",
     "port": 9091,
+    "ssl": True,
 }
