@@ -105,7 +105,6 @@ async def test_create_entry(
 
 async def test_duplicate_error(hass, config, setup_config_entry):
     """Test that errors are shown when duplicate entries are added."""
-    print(hass.config_entries.async_entries(DOMAIN)[0].unique_id)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
