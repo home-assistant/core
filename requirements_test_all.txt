@@ -674,7 +674,7 @@ hole==0.8.0
 holidays==0.18.0
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230102.0
+home-assistant-frontend==20230104.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
