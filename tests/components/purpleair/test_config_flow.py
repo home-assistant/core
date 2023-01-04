@@ -205,7 +205,6 @@ async def test_options_add_sensor(
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        "last_update_sensor_add": True,
         "sensor_indices": [123456, 567890],
     }
 
@@ -265,7 +264,6 @@ async def test_options_remove_sensor(hass, config_entry, setup_purpleair):
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        "last_update_sensor_add": False,
         "sensor_indices": [],
     }
 
