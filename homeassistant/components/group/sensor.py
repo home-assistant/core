@@ -1,6 +1,7 @@
 """This platform allows several sensors to be grouped into one sensor to provide numeric combinations."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
 import logging
 import statistics
@@ -138,68 +139,94 @@ async def async_setup_entry(
     )
 
 
-def calc_min(sensor_values: list[tuple[str, float]]) -> tuple[str, float]:
+def calc_min(sensor_values: list[tuple[str, float]]) -> tuple[dict[str, Any], float]:
     """Calculate min value."""
     val: float | None = None
     entity_id: str | None = None
     for sensor_id, sensor_value in sensor_values:
         if val is None or val > sensor_value:
             entity_id, val = sensor_id, sensor_value
+
+    attributes = {ATTR_MIN_ENTITY_ID: entity_id}
     if TYPE_CHECKING:
-        assert entity_id and val
-    return entity_id, val
+        assert val is not None
+    return attributes, val
 
 
-def calc_max(sensor_values: list[tuple[str, float]]) -> tuple[str, float]:
+def calc_max(sensor_values: list[tuple[str, float]]) -> tuple[dict[str, Any], float]:
     """Calculate max value."""
     val: float | None = None
     entity_id: str | None = None
     for sensor_id, sensor_value in sensor_values:
         if val is None or val < sensor_value:
             entity_id, val = sensor_id, sensor_value
+
+    attributes = {ATTR_MAX_ENTITY_ID: entity_id}
     if TYPE_CHECKING:
-        assert entity_id and val
-    return entity_id, val
+        assert val is not None
+    return attributes, val
 
 
 def calc_mean(
     sensor_values: list[tuple[str, float]], round_digits: int
-) -> float | None:
+) -> tuple[dict[str, Any], float]:
     """Calculate mean value."""
     result = [sensor_value for _, sensor_value in sensor_values]
 
     value: float = round(statistics.mean(result), round_digits)
-    return value
+    return {}, value
 
 
 def calc_median(
     sensor_values: list[tuple[str, float]], round_digits: int
-) -> float | None:
+) -> tuple[dict[str, Any], float]:
     """Calculate median value."""
     result = [sensor_value for _, sensor_value in sensor_values]
 
     value: float = round(statistics.median(result), round_digits)
-    return value
+    return {}, value
+
+
+def calc_last(
+    sensor_values: list[tuple[str, float]], round_digits: int
+) -> tuple[dict[str, Any], float]:
+    """Calculate last value."""
+    entity_id, value = sensor_values[0]
+    attributes = {ATTR_LAST_ENTITY_ID: entity_id}
+    return attributes, value
 
 
 def calc_range(
     sensor_values: list[tuple[str, float]], round_digits: int
-) -> float | None:
+) -> tuple[dict[str, Any], float]:
     """Calculate range value."""
     result = [sensor_value for _, sensor_value in sensor_values]
 
     value: float = round(max(result) - min(result), round_digits)
-    return value
+    return {}, value
 
 
-def calc_sum(sensor_values: list[tuple[str, float]], round_digits: int) -> float:
+def calc_sum(
+    sensor_values: list[tuple[str, float]], round_digits: int
+) -> tuple[dict[str, Any], float]:
     """Calculate a sum of values."""
     result = 0.0
     for _, sensor_value in sensor_values:
         result += sensor_value
 
     value: float = round(result, round_digits)
-    return value
+    return {}, value
+
+
+CALC_TYPES: dict[str, Callable] = {
+    ATTR_MIN_VALUE: calc_min,
+    ATTR_MAX_VALUE: calc_max,
+    ATTR_MEAN: calc_mean,
+    ATTR_MEDIAN: calc_median,
+    ATTR_LAST: calc_last,
+    ATTR_RANGE: calc_range,
+    ATTR_SUM: calc_sum,
+}
 
 
 class SensorGroup(GroupEntity, SensorEntity):
@@ -238,6 +265,9 @@ class SensorGroup(GroupEntity, SensorEntity):
         self._attr_unique_id = unique_id
         self.mode = all if mode else any
         self._sensor_attr = SENSOR_TYPE_TO_ATTR[self._sensor_type]
+        self._state_calc: Callable[
+            [list[tuple[str, float]], int], tuple[dict[str, str], float | None]
+        ] = CALC_TYPES[self._sensor_type]
         self.min_value: float | None = None
         self.max_value: float | None = None
         self.mean: float | None = None
@@ -249,6 +279,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         self.max_entity_id: str | None = None
         self.last_entity_id: str | None = None
         self._state_incorrect: set[str] = set()
+        self._extra_state_attribute: dict[str, Any] = {}
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -315,31 +346,18 @@ class SensorGroup(GroupEntity, SensorEntity):
 
         # Calculate values
         self._calculate_entity_properties()
-        self._calc_values(sensor_values)
-        self._attr_native_value = getattr(self, self._sensor_attr)
+        if self._sensor_type == "last":
+            if TYPE_CHECKING:
+                assert self.last_entity_id and self.last is not None
+            sensor_values = [(self.last_entity_id, self.last)]
+        self._extra_state_attribute, self._attr_native_value = self._state_calc(
+            sensor_values, self._round_digits
+        )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
-        attributes: dict[str, Any] = {ATTR_ENTITY_ID: self._entity_ids}
-        if self._sensor_type == "min":
-            attributes[ATTR_MIN_ENTITY_ID] = self.min_entity_id
-        if self._sensor_type == "max":
-            attributes[ATTR_MAX_ENTITY_ID] = self.max_entity_id
-        if self._sensor_type == "last":
-            attributes[ATTR_LAST_ENTITY_ID] = self.last_entity_id
-        return attributes
-
-    @callback
-    def _calc_values(self, sensor_values: list[tuple[str, Any]]) -> None:
-        """Calculate the values."""
-
-        self.min_entity_id, self.min_value = calc_min(sensor_values)
-        self.max_entity_id, self.max_value = calc_max(sensor_values)
-        self.mean = calc_mean(sensor_values, self._round_digits)
-        self.median = calc_median(sensor_values, self._round_digits)
-        self.range = calc_range(sensor_values, self._round_digits)
-        self.sum = calc_sum(sensor_values, self._round_digits)
+        return {ATTR_ENTITY_ID: self._entity_ids, **self._extra_state_attribute}
 
     @property
     def device_class(self) -> SensorDeviceClass | None:
