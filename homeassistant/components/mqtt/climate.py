@@ -440,7 +440,9 @@ class MqttClimate(MqttEntity, ClimateEntity):
     ) -> None:
         """Initialize the climate device."""
         self._attr_fan_mode = None
+        self._attr_hvac_action = None
         self._attr_hvac_mode = None
+        self._attr_is_aux_heat = None
         self._attr_swing_mode = None
         self._attr_target_temperature_low = None
         self._attr_target_temperature_high = None
@@ -498,7 +500,6 @@ class MqttClimate(MqttEntity, ClimateEntity):
         self._optimistic_preset_mode = (
             self._optimistic or CONF_PRESET_MODE_STATE_TOPIC not in config
         )
-        self._attr_hvac_action = None
 
         value_templates: dict[str, Template | None] = {}
         for key in VALUE_TEMPLATE_KEYS:
