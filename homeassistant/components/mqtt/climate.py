@@ -439,6 +439,9 @@ class MqttClimate(MqttEntity, ClimateEntity):
         discovery_data: DiscoveryInfoType | None,
     ) -> None:
         """Initialize the climate device."""
+        self._attr_fan_mode = None
+        self._attr_hvac_mode = None
+        self._attr_swing_mode = None
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
@@ -463,11 +466,6 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
         self._topic = {key: config.get(key) for key in TOPIC_KEYS}
 
-        # set to None in non-optimistic mode
-        self._attr_target_temperature = None
-        self._attr_fan_mode = None
-        self._attr_hvac_mode = None
-        self._attr_swing_mode = None
         self._attr_target_temperature_low = None
         self._attr_target_temperature_high = None
 
