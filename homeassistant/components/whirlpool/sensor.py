@@ -276,6 +276,7 @@ class WasherDryerTimeClass(RestoreSensor):
         ):
             self._running = False
             self._attr_native_value = now
+            self._async_write_ha_state()
 
         if machine_state is MachineState.RunningMainCycle:
             self._running = True
@@ -283,4 +284,4 @@ class WasherDryerTimeClass(RestoreSensor):
                 seconds=int(self._wd.get_attribute("Cavity_TimeStatusEstTimeRemaining"))
             )
 
-        self._async_write_ha_state()
+            self._async_write_ha_state()
