@@ -34,7 +34,9 @@
         "step": {
             "device_tracker": {
                 "data": {
-                    "arp_ping": "Povoli\u0165 ARP ping"
+                    "arp_ping": "Povoli\u0165 ARP ping",
+                    "detection_time": "Zv\u00e1\u017ete dom\u00e1ci interval",
+                    "force_dhcp": "Vyn\u00fati\u0165 skenovanie pomocou DHCP"
                 }
             }
         }

@@ -55,7 +55,10 @@ def _reauth_flow_wrapper(hass, data):
     )
     persistent_notification.async_create(
         hass,
-        "Blink configuration migrated to a new version. Please go to the integrations page to re-configure (such as sending a new 2FA key).",
+        (
+            "Blink configuration migrated to a new version. Please go to the"
+            " integrations page to re-configure (such as sending a new 2FA key)."
+        ),
         "Blink Migration",
     )
 

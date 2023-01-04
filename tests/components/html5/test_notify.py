@@ -12,6 +12,7 @@ from homeassistant.setup import async_setup_component
 CONFIG_FILE = "file.conf"
 
 VAPID_CONF = {
+    "platform": "html5",
     "vapid_pub_key": "BJMA2gDZEkHaXRhf1fhY_"
     + "QbKbhVIHlSJXI0bFyo0eJXnUPOjdgycCAbj-2bMKMKNKs"
     + "_rM8JoSnyKGCXAY2dbONI",
@@ -70,7 +71,7 @@ async def mock_client(hass, hass_client, registrations=None):
     with patch(
         "homeassistant.components.html5.notify._load_config", return_value=registrations
     ):
-        await async_setup_component(hass, "notify", {"notify": {"platform": "html5"}})
+        await async_setup_component(hass, "notify", {"notify": VAPID_CONF})
         await hass.async_block_till_done()
 
     return await hass_client()
@@ -85,7 +86,7 @@ class TestHtml5Notify:
 
         m = mock_open()
         with patch("homeassistant.util.json.open", m, create=True):
-            service = html5.get_service(hass, {})
+            service = html5.get_service(hass, VAPID_CONF)
 
         assert service is not None
 
@@ -99,7 +100,7 @@ class TestHtml5Notify:
 
         m = mock_open(read_data=json.dumps(data))
         with patch("homeassistant.util.json.open", m, create=True):
-            service = html5.get_service(hass, {"gcm_sender_id": "100"})
+            service = html5.get_service(hass, VAPID_CONF)
 
         assert service is not None
 
@@ -111,7 +112,7 @@ class TestHtml5Notify:
         assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_1["subscription"]
 
         # Call to send
-        payload = json.loads(mock_wp.mock_calls[3][1][0])
+        payload = json.loads(mock_wp.mock_calls[3][2]["data"])
 
         assert payload["dismiss"] is True
         assert payload["tag"] == "test"
@@ -126,7 +127,7 @@ class TestHtml5Notify:
 
         m = mock_open(read_data=json.dumps(data))
         with patch("homeassistant.util.json.open", m, create=True):
-            service = html5.get_service(hass, {"gcm_sender_id": "100"})
+            service = html5.get_service(hass, VAPID_CONF)
 
         assert service is not None
 
@@ -140,38 +141,10 @@ class TestHtml5Notify:
         assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_1["subscription"]
 
         # Call to send
-        payload = json.loads(mock_wp.mock_calls[3][1][0])
+        payload = json.loads(mock_wp.mock_calls[3][2]["data"])
 
         assert payload["body"] == "Hello"
         assert payload["icon"] == "beer.png"
-
-    @patch("homeassistant.components.html5.notify.WebPusher")
-    def test_gcm_key_include(self, mock_wp):
-        """Test if the gcm_key is only included for GCM endpoints."""
-        hass = MagicMock()
-        mock_wp().send().status_code = 201
-
-        data = {"chrome": SUBSCRIPTION_1, "firefox": SUBSCRIPTION_2}
-
-        m = mock_open(read_data=json.dumps(data))
-        with patch("homeassistant.util.json.open", m, create=True):
-            service = html5.get_service(
-                hass, {"gcm_sender_id": "100", "gcm_api_key": "Y6i0JdZ0mj9LOaSI"}
-            )
-
-        assert service is not None
-
-        service.send_message("Hello", target=["chrome", "firefox"])
-
-        assert len(mock_wp.mock_calls) == 6
-
-        # WebPusher constructor
-        assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_1["subscription"]
-        assert mock_wp.mock_calls[4][1][0] == SUBSCRIPTION_2["subscription"]
-
-        # Get the keys passed to the WebPusher's send method
-        assert mock_wp.mock_calls[3][2]["gcm_key"] is not None
-        assert mock_wp.mock_calls[5][2]["gcm_key"] is None
 
     @patch("homeassistant.components.html5.notify.WebPusher")
     def test_fcm_key_include(self, mock_wp):
@@ -264,14 +237,6 @@ class TestHtml5Notify:
 
         # Get the keys passed to the WebPusher's send method
         assert mock_wp.mock_calls[3][2]["headers"]["priority"] == "normal"
-
-
-def test_create_vapid_withoutvapid():
-    """Test creating empty vapid."""
-    resp = html5.create_vapid_headers(
-        vapid_email=None, vapid_private_key=None, subscription_info=None, timestamp=None
-    )
-    assert resp is None
 
 
 async def test_registering_new_device_view(hass, hass_client):
@@ -479,7 +444,7 @@ async def test_callback_view_with_jwt(hass, hass_client):
     assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_1["subscription"]
 
     # Call to send
-    push_payload = json.loads(mock_wp.mock_calls[3][1][0])
+    push_payload = json.loads(mock_wp.mock_calls[3][2]["data"])
 
     assert push_payload["body"] == "Hello"
     assert push_payload["icon"] == "beer.png"

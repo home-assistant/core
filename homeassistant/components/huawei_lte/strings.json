@@ -1,7 +1,6 @@
 {
   "config": {
     "abort": {
-      "not_huawei_lte": "Not a Huawei LTE device",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {

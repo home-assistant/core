@@ -60,7 +60,8 @@ def mock_forecast_solar(hass) -> Generator[None, MagicMock, None]:
     hass fixture included because it sets the time zone.
     """
     with patch(
-        "homeassistant.components.forecast_solar.ForecastSolar", autospec=True
+        "homeassistant.components.forecast_solar.coordinator.ForecastSolar",
+        autospec=True,
     ) as forecast_solar_mock:
         forecast_solar = forecast_solar_mock.return_value
         now = datetime(2021, 6, 27, 6, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE)

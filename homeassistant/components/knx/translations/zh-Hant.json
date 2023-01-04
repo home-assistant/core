@@ -12,7 +12,8 @@
             "invalid_ip_address": "IPv4 \u4f4d\u5740\u7121\u6548\u3002",
             "invalid_signature": "\u52a0\u5bc6 `.knxkeys` \u6a94\u6848\u5bc6\u78bc\u932f\u8aa4\u3002",
             "no_router_discovered": "\u7db2\u8def\u4e0a\u627e\u4e0d\u5230 KNXnet/IP \u8def\u7531\u5668\u3002",
-            "no_tunnel_discovered": "\u7db2\u8def\u4e0a\u627e\u4e0d\u5230 KNX \u901a\u9053\u4f3a\u670d\u5668\u3002"
+            "no_tunnel_discovered": "\u7db2\u8def\u4e0a\u627e\u4e0d\u5230 KNX \u901a\u9053\u4f3a\u670d\u5668\u3002",
+            "unsupported_tunnel_type": "\u9598\u9053\u5668\u4e0d\u652f\u63f4\u6240\u9078\u64c7\u7684\u901a\u9053\u985e\u578b\u3002"
         },
         "step": {
             "connection_type": {
@@ -94,13 +95,6 @@
                 },
                 "description": "\u8acb\u8f38\u5165 IP \u52a0\u5bc6\u8cc7\u8a0a\u3002"
             },
-            "secure_tunneling": {
-                "description": "\u9078\u64c7\u5982\u4f55\u8a2d\u5b9a KNX/IP \u52a0\u5bc6\u3002",
-                "menu_options": {
-                    "secure_knxkeys": "\u4f7f\u7528\u5305\u542b IP \u52a0\u5bc6\u91d1\u8000\u7684 knxkeys \u6a94\u6848",
-                    "secure_tunnel_manual": "\u624b\u52d5\u8a2d\u5b9a IP \u52a0\u5bc6\u91d1\u8000"
-                }
-            },
             "tunnel": {
                 "data": {
                     "gateway": "KNX \u901a\u9053\u9023\u7dda"
@@ -118,7 +112,8 @@
             "invalid_ip_address": "IPv4 \u4f4d\u5740\u7121\u6548\u3002",
             "invalid_signature": "\u52a0\u5bc6 `.knxkeys` \u6a94\u6848\u5bc6\u78bc\u932f\u8aa4\u3002",
             "no_router_discovered": "\u7db2\u8def\u4e0a\u627e\u4e0d\u5230 KNXnet/IP \u8def\u7531\u5668\u3002",
-            "no_tunnel_discovered": "\u7db2\u8def\u4e0a\u627e\u4e0d\u5230 KNX \u901a\u9053\u4f3a\u670d\u5668\u3002"
+            "no_tunnel_discovered": "\u7db2\u8def\u4e0a\u627e\u4e0d\u5230 KNX \u901a\u9053\u4f3a\u670d\u5668\u3002",
+            "unsupported_tunnel_type": "\u9598\u9053\u5668\u4e0d\u652f\u63f4\u6240\u9078\u64c7\u7684\u901a\u9053\u985e\u578b\u3002"
         },
         "step": {
             "communication_settings": {
@@ -215,13 +210,6 @@
                     "user_password": "\u65bc ETS \u901a\u9053 'Properties' \u9762\u677f\u53ef\u8a2d\u5b9a\u6307\u5b9a\u901a\u9053\u9023\u7dda\u5bc6\u78bc\u3002"
                 },
                 "description": "\u8acb\u8f38\u5165 IP \u52a0\u5bc6\u8cc7\u8a0a\u3002"
-            },
-            "secure_tunneling": {
-                "description": "\u9078\u64c7\u5982\u4f55\u8a2d\u5b9a KNX/IP \u52a0\u5bc6\u3002",
-                "menu_options": {
-                    "secure_knxkeys": "\u4f7f\u7528\u5305\u542b IP \u52a0\u5bc6\u91d1\u8000\u7684 knxkeys \u6a94\u6848",
-                    "secure_tunnel_manual": "\u624b\u52d5\u8a2d\u5b9a IP \u52a0\u5bc6\u91d1\u8000"
-                }
             },
             "tunnel": {
                 "data": {

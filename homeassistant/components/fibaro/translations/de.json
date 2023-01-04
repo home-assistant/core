@@ -19,7 +19,7 @@
             },
             "user": {
                 "data": {
-                    "import_plugins": "Entit\u00e4ten aus Fibaro-Plugins importieren?",
+                    "import_plugins": "Entit\u00e4ten aus Fibaro Plugins importieren?",
                     "password": "Passwort",
                     "url": "URL im Format http://HOST/api/",
                     "username": "Benutzername"

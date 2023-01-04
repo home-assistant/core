@@ -80,12 +80,8 @@ async def async_setup_entry(
         config[CONF_URL] = url
         hass.config_entries.async_update_entry(config_entry, data=config)
 
-    # Initialise the library with a random user id each time it is started,
-    # also extend the library's default identifier to include 'home-assistant'
-    api = growattServer.GrowattApi(
-        add_random_user_id=True,
-        agent_identifier=f"{growattServer.GrowattApi.agent_identifier} - home-assistant",
-    )
+    # Initialise the library with the username & a random id each time it is started
+    api = growattServer.GrowattApi(add_random_user_id=True, agent_identifier=username)
     api.server_url = url
 
     devices, plant_id = await hass.async_add_executor_job(get_device_list, api, config)
@@ -290,7 +286,10 @@ class GrowattData:
             and api_value is not None
         ):
             _LOGGER.debug(
-                "%s - Drop threshold specified (%s), checking for drop... API Value: %s, Previous Value: %s",
+                (
+                    "%s - Drop threshold specified (%s), checking for drop... API"
+                    " Value: %s, Previous Value: %s"
+                ),
                 entity_description.name,
                 entity_description.previous_value_drop_threshold,
                 api_value,
@@ -304,8 +303,11 @@ class GrowattData:
             # however if the value is low e.g. 0.2 and drops by 0.1 it classes as a reset.
             if -(entity_description.previous_value_drop_threshold) <= diff < 0:
                 _LOGGER.debug(
-                    "Diff is negative, but only by a small amount therefore not a nightly reset, "
-                    "using previous value (%s) instead of api value (%s)",
+                    (
+                        "Diff is negative, but only by a small amount therefore not a"
+                        " nightly reset, using previous value (%s) instead of api value"
+                        " (%s)"
+                    ),
                     previous_value,
                     api_value,
                 )
@@ -329,7 +331,10 @@ class GrowattData:
         #          value of the entity from the recorder
         if entity_description.never_resets and api_value == 0 and previous_value:
             _LOGGER.debug(
-                "API value is 0, but this value should never reset, returning previous value (%s) instead",
+                (
+                    "API value is 0, but this value should never reset, returning"
+                    " previous value (%s) instead"
+                ),
                 previous_value,
             )
             return_value = previous_value

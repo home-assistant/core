@@ -40,8 +40,10 @@ def deprecated_substitute(
                 if not warnings.get(module_name):
                     logger = logging.getLogger(module_name)
                     logger.warning(
-                        "'%s' is deprecated. Please rename '%s' to "
-                        "'%s' in '%s' to ensure future support.",
+                        (
+                            "'%s' is deprecated. Please rename '%s' to "
+                            "'%s' in '%s' to ensure future support."
+                        ),
                         substitute_name,
                         substitute_name,
                         func.__name__,
@@ -79,8 +81,10 @@ def get_deprecated(
 
         logger = logging.getLogger(module_name)
         logger.warning(
-            "'%s' is deprecated. Please rename '%s' to '%s' in your "
-            "configuration file.",
+            (
+                "'%s' is deprecated. Please rename '%s' to '%s' in your "
+                "configuration file."
+            ),
             old_name,
             old_name,
             new_name,
@@ -133,7 +137,10 @@ def _print_deprecation_warning(obj: Any, replacement: str, description: str) -> 
         _, integration, path = get_integration_frame()
         if path == "custom_components/":
             logger.warning(
-                "%s was called from %s, this is a deprecated %s. Use %s instead, please report this to the maintainer of %s",
+                (
+                    "%s was called from %s, this is a deprecated %s. Use %s instead,"
+                    " please report this to the maintainer of %s"
+                ),
                 obj.__name__,
                 integration,
                 description,

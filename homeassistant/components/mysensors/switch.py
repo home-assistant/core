@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -178,7 +178,8 @@ class MySensorsIRSwitch(MySensorsSwitch):
             self._values[set_req.V_LIGHT] = STATE_OFF
             self.async_write_ha_state()
 
-    async def async_update(self) -> None:
+    @callback
+    def _async_update(self) -> None:
         """Update the controller with the latest value from a sensor."""
-        await super().async_update()
+        super()._async_update()
         self._ir_code = self._values.get(self.value_type)

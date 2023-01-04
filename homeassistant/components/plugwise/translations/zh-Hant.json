@@ -24,5 +24,41 @@
                 "title": "\u9023\u7dda\u81f3 Smile"
             }
         }
+    },
+    "entity": {
+        "climate": {
+            "plugwise": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "asleep": "\u591c\u9593\u6a21\u5f0f",
+                            "away": "\u96e2\u5bb6\u6a21\u5f0f",
+                            "home": "\u5728\u5bb6\u6a21\u5f0f",
+                            "no_frost": "\u9632\u971c\u6a21\u5f0f",
+                            "vacation": "\u5ea6\u5047\u6a21\u5f0f"
+                        }
+                    }
+                }
+            }
+        },
+        "select": {
+            "dhw_mode": {
+                "state": {
+                    "auto": "\u81ea\u52d5",
+                    "boost": "\u5168\u901f\u6a21\u5f0f",
+                    "comfort": "\u8212\u9069\u6a21\u5f0f",
+                    "off": "\u95dc\u9589"
+                }
+            },
+            "regulation_mode": {
+                "state": {
+                    "bleeding_cold": "\u5f37\u51b7",
+                    "bleeding_hot": "\u5f37\u6696",
+                    "cooling": "\u51b7\u6c23",
+                    "heating": "\u6696\u6c23",
+                    "off": "\u95dc\u9589"
+                }
+            }
+        }
     }
 }

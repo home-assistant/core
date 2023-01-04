@@ -177,7 +177,27 @@ HVAC_MOCK = {
                     API_FLOOR_DEMAND: 0,
                 },
             ]
-        }
+        },
+        {
+            API_DATA: [
+                {
+                    API_SYSTEM_ID: 2,
+                    API_ZONE_ID: 1,
+                    API_ON: 0,
+                    API_MAX_TEMP: 30,
+                    API_MIN_TEMP: 15,
+                    API_SET_POINT: 19,
+                    API_ROOM_TEMP: 22.299999,
+                    API_COLD_STAGES: 1,
+                    API_COLD_STAGE: 1,
+                    API_HEAT_STAGES: 1,
+                    API_HEAT_STAGE: 1,
+                    API_HUMIDITY: 62,
+                    API_UNITS: 0,
+                    API_ERRORS: [],
+                },
+            ]
+        },
     ]
 }
 

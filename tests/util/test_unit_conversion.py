@@ -2,7 +2,10 @@
 import pytest
 
 from homeassistant.const import (
+    UnitOfDataRate,
+    UnitOfElectricCurrent,
     UnitOfEnergy,
+    UnitOfInformation,
     UnitOfLength,
     UnitOfMass,
     UnitOfPower,
@@ -15,8 +18,11 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    DataRateConverter,
     DistanceConverter,
+    ElectricCurrentConverter,
     EnergyConverter,
+    InformationConverter,
     MassConverter,
     PowerConverter,
     PressureConverter,
@@ -31,6 +37,7 @@ INVALID_SYMBOL = "bob"
 @pytest.mark.parametrize(
     "converter,valid_unit",
     [
+        (DataRateConverter, UnitOfDataRate.GIBIBYTES_PER_SECOND),
         (DistanceConverter, UnitOfLength.KILOMETERS),
         (DistanceConverter, UnitOfLength.METERS),
         (DistanceConverter, UnitOfLength.CENTIMETERS),
@@ -39,10 +46,13 @@ INVALID_SYMBOL = "bob"
         (DistanceConverter, UnitOfLength.YARDS),
         (DistanceConverter, UnitOfLength.FEET),
         (DistanceConverter, UnitOfLength.INCHES),
+        (ElectricCurrentConverter, UnitOfElectricCurrent.AMPERE),
+        (ElectricCurrentConverter, UnitOfElectricCurrent.MILLIAMPERE),
         (EnergyConverter, UnitOfEnergy.WATT_HOUR),
         (EnergyConverter, UnitOfEnergy.KILO_WATT_HOUR),
         (EnergyConverter, UnitOfEnergy.MEGA_WATT_HOUR),
         (EnergyConverter, UnitOfEnergy.GIGA_JOULE),
+        (InformationConverter, UnitOfInformation.GIGABYTES),
         (MassConverter, UnitOfMass.GRAMS),
         (MassConverter, UnitOfMass.KILOGRAMS),
         (MassConverter, UnitOfMass.MICROGRAMS),
@@ -85,8 +95,11 @@ def test_convert_same_unit(converter: type[BaseUnitConverter], valid_unit: str) 
 @pytest.mark.parametrize(
     "converter,valid_unit",
     [
+        (DataRateConverter, UnitOfDataRate.GIBIBYTES_PER_SECOND),
         (DistanceConverter, UnitOfLength.KILOMETERS),
+        (ElectricCurrentConverter, UnitOfElectricCurrent.AMPERE),
         (EnergyConverter, UnitOfEnergy.KILO_WATT_HOUR),
+        (InformationConverter, UnitOfInformation.GIBIBYTES),
         (MassConverter, UnitOfMass.GRAMS),
         (PowerConverter, UnitOfPower.WATT),
         (PressureConverter, UnitOfPressure.PA),
@@ -111,8 +124,18 @@ def test_convert_invalid_unit(
 @pytest.mark.parametrize(
     "converter,from_unit,to_unit",
     [
+        (
+            DataRateConverter,
+            UnitOfDataRate.BYTES_PER_SECOND,
+            UnitOfDataRate.BITS_PER_SECOND,
+        ),
         (DistanceConverter, UnitOfLength.KILOMETERS, UnitOfLength.METERS),
         (EnergyConverter, UnitOfEnergy.WATT_HOUR, UnitOfEnergy.KILO_WATT_HOUR),
+        (
+            InformationConverter,
+            UnitOfInformation.GIBIBYTES,
+            UnitOfInformation.GIGABYTES,
+        ),
         (MassConverter, UnitOfMass.GRAMS, UnitOfMass.KILOGRAMS),
         (PowerConverter, UnitOfPower.WATT, UnitOfPower.KILO_WATT),
         (PressureConverter, UnitOfPressure.HPA, UnitOfPressure.INHG),
@@ -132,8 +155,21 @@ def test_convert_nonnumeric_value(
 @pytest.mark.parametrize(
     "converter,from_unit,to_unit,expected",
     [
+        (
+            DataRateConverter,
+            UnitOfDataRate.BITS_PER_SECOND,
+            UnitOfDataRate.BYTES_PER_SECOND,
+            8,
+        ),
         (DistanceConverter, UnitOfLength.KILOMETERS, UnitOfLength.METERS, 1 / 1000),
+        (
+            ElectricCurrentConverter,
+            UnitOfElectricCurrent.AMPERE,
+            UnitOfElectricCurrent.MILLIAMPERE,
+            1 / 1000,
+        ),
         (EnergyConverter, UnitOfEnergy.WATT_HOUR, UnitOfEnergy.KILO_WATT_HOUR, 1000),
+        (InformationConverter, UnitOfInformation.BITS, UnitOfInformation.BYTES, 8),
         (PowerConverter, UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
         (
             PressureConverter,
@@ -166,6 +202,65 @@ def test_get_unit_ratio(
 ) -> None:
     """Test unit ratio."""
     assert converter.get_unit_ratio(from_unit, to_unit) == expected
+
+
+@pytest.mark.parametrize(
+    "value,from_unit,expected,to_unit",
+    [
+        (8e3, UnitOfDataRate.BITS_PER_SECOND, 8, UnitOfDataRate.KILOBITS_PER_SECOND),
+        (8e6, UnitOfDataRate.BITS_PER_SECOND, 8, UnitOfDataRate.MEGABITS_PER_SECOND),
+        (8e9, UnitOfDataRate.BITS_PER_SECOND, 8, UnitOfDataRate.GIGABITS_PER_SECOND),
+        (8, UnitOfDataRate.BITS_PER_SECOND, 1, UnitOfDataRate.BYTES_PER_SECOND),
+        (8e3, UnitOfDataRate.BITS_PER_SECOND, 1, UnitOfDataRate.KILOBYTES_PER_SECOND),
+        (8e6, UnitOfDataRate.BITS_PER_SECOND, 1, UnitOfDataRate.MEGABYTES_PER_SECOND),
+        (8e9, UnitOfDataRate.BITS_PER_SECOND, 1, UnitOfDataRate.GIGABYTES_PER_SECOND),
+        (
+            8 * 2**10,
+            UnitOfDataRate.BITS_PER_SECOND,
+            1,
+            UnitOfDataRate.KIBIBYTES_PER_SECOND,
+        ),
+        (
+            8 * 2**20,
+            UnitOfDataRate.BITS_PER_SECOND,
+            1,
+            UnitOfDataRate.MEBIBYTES_PER_SECOND,
+        ),
+        (
+            8 * 2**30,
+            UnitOfDataRate.BITS_PER_SECOND,
+            1,
+            UnitOfDataRate.GIBIBYTES_PER_SECOND,
+        ),
+    ],
+)
+def test_data_rate_convert(
+    value: float,
+    from_unit: str,
+    expected: float,
+    to_unit: str,
+) -> None:
+    """Test conversion to other units."""
+    assert DataRateConverter.convert(value, from_unit, to_unit) == pytest.approx(
+        expected
+    )
+
+
+@pytest.mark.parametrize(
+    "value,from_unit,expected,to_unit",
+    [
+        (5, UnitOfElectricCurrent.AMPERE, 5000, UnitOfElectricCurrent.MILLIAMPERE),
+        (5, UnitOfElectricCurrent.MILLIAMPERE, 0.005, UnitOfElectricCurrent.AMPERE),
+    ],
+)
+def test_electric_current_convert(
+    value: float,
+    from_unit: str,
+    expected: float,
+    to_unit: str,
+) -> None:
+    """Test conversion to other units."""
+    assert ElectricCurrentConverter.convert(value, from_unit, to_unit) == expected
 
 
 @pytest.mark.parametrize(
@@ -310,6 +405,43 @@ def test_energy_convert(
 @pytest.mark.parametrize(
     "value,from_unit,expected,to_unit",
     [
+        (8e3, UnitOfInformation.BITS, 8, UnitOfInformation.KILOBITS),
+        (8e6, UnitOfInformation.BITS, 8, UnitOfInformation.MEGABITS),
+        (8e9, UnitOfInformation.BITS, 8, UnitOfInformation.GIGABITS),
+        (8, UnitOfInformation.BITS, 1, UnitOfInformation.BYTES),
+        (8e3, UnitOfInformation.BITS, 1, UnitOfInformation.KILOBYTES),
+        (8e6, UnitOfInformation.BITS, 1, UnitOfInformation.MEGABYTES),
+        (8e9, UnitOfInformation.BITS, 1, UnitOfInformation.GIGABYTES),
+        (8e12, UnitOfInformation.BITS, 1, UnitOfInformation.TERABYTES),
+        (8e15, UnitOfInformation.BITS, 1, UnitOfInformation.PETABYTES),
+        (8e18, UnitOfInformation.BITS, 1, UnitOfInformation.EXABYTES),
+        (8e21, UnitOfInformation.BITS, 1, UnitOfInformation.ZETTABYTES),
+        (8e24, UnitOfInformation.BITS, 1, UnitOfInformation.YOTTABYTES),
+        (8 * 2**10, UnitOfInformation.BITS, 1, UnitOfInformation.KIBIBYTES),
+        (8 * 2**20, UnitOfInformation.BITS, 1, UnitOfInformation.MEBIBYTES),
+        (8 * 2**30, UnitOfInformation.BITS, 1, UnitOfInformation.GIBIBYTES),
+        (8 * 2**40, UnitOfInformation.BITS, 1, UnitOfInformation.TEBIBYTES),
+        (8 * 2**50, UnitOfInformation.BITS, 1, UnitOfInformation.PEBIBYTES),
+        (8 * 2**60, UnitOfInformation.BITS, 1, UnitOfInformation.EXBIBYTES),
+        (8 * 2**70, UnitOfInformation.BITS, 1, UnitOfInformation.ZEBIBYTES),
+        (8 * 2**80, UnitOfInformation.BITS, 1, UnitOfInformation.YOBIBYTES),
+    ],
+)
+def test_information_convert(
+    value: float,
+    from_unit: str,
+    expected: float,
+    to_unit: str,
+) -> None:
+    """Test conversion to other units."""
+    assert InformationConverter.convert(value, from_unit, to_unit) == pytest.approx(
+        expected
+    )
+
+
+@pytest.mark.parametrize(
+    "value,from_unit,expected,to_unit",
+    [
         (10, UnitOfMass.KILOGRAMS, 10000, UnitOfMass.GRAMS),
         (10, UnitOfMass.KILOGRAMS, 10000000, UnitOfMass.MILLIGRAMS),
         (10, UnitOfMass.KILOGRAMS, 10000000000, UnitOfMass.MICROGRAMS),
@@ -345,6 +477,11 @@ def test_energy_convert(
         (16, UnitOfMass.OUNCES, 453592.37, UnitOfMass.MILLIGRAMS),
         (16, UnitOfMass.OUNCES, 453592370, UnitOfMass.MICROGRAMS),
         (16, UnitOfMass.OUNCES, 1, UnitOfMass.POUNDS),
+        (1, UnitOfMass.STONES, pytest.approx(6.350293), UnitOfMass.KILOGRAMS),
+        (1, UnitOfMass.STONES, pytest.approx(6350.293), UnitOfMass.GRAMS),
+        (1, UnitOfMass.STONES, pytest.approx(6350293), UnitOfMass.MILLIGRAMS),
+        (1, UnitOfMass.STONES, pytest.approx(14), UnitOfMass.POUNDS),
+        (1, UnitOfMass.STONES, pytest.approx(224), UnitOfMass.OUNCES),
     ],
 )
 def test_mass_convert(
@@ -559,110 +696,45 @@ def test_temperature_convert_with_interval(
 @pytest.mark.parametrize(
     "value,from_unit,expected,to_unit",
     [
-        (5, UnitOfVolume.LITERS, pytest.approx(1.32086), UnitOfVolume.GALLONS),
-        (5, UnitOfVolume.GALLONS, pytest.approx(18.92706), UnitOfVolume.LITERS),
-        (
-            5,
-            UnitOfVolume.CUBIC_METERS,
-            pytest.approx(176.5733335),
-            UnitOfVolume.CUBIC_FEET,
-        ),
-        (
-            500,
-            UnitOfVolume.CUBIC_FEET,
-            pytest.approx(14.1584233),
-            UnitOfVolume.CUBIC_METERS,
-        ),
-        (
-            500,
-            UnitOfVolume.CUBIC_FEET,
-            pytest.approx(14.1584233),
-            UnitOfVolume.CUBIC_METERS,
-        ),
-        (
-            500,
-            UnitOfVolume.CUBIC_FEET,
-            pytest.approx(478753.2467),
-            UnitOfVolume.FLUID_OUNCES,
-        ),
-        (500, UnitOfVolume.CUBIC_FEET, pytest.approx(3740.25974), UnitOfVolume.GALLONS),
-        (
-            500,
-            UnitOfVolume.CUBIC_FEET,
-            pytest.approx(14158.42329599),
-            UnitOfVolume.LITERS,
-        ),
-        (
-            500,
-            UnitOfVolume.CUBIC_FEET,
-            pytest.approx(14158423.29599),
-            UnitOfVolume.MILLILITERS,
-        ),
+        (5, UnitOfVolume.LITERS, 1.32086, UnitOfVolume.GALLONS),
+        (5, UnitOfVolume.GALLONS, 18.92706, UnitOfVolume.LITERS),
+        (5, UnitOfVolume.CUBIC_METERS, 176.5733335, UnitOfVolume.CUBIC_FEET),
+        (500, UnitOfVolume.CUBIC_FEET, 14.1584233, UnitOfVolume.CUBIC_METERS),
+        (500, UnitOfVolume.CUBIC_FEET, 14.1584233, UnitOfVolume.CUBIC_METERS),
+        (500, UnitOfVolume.CUBIC_FEET, 478753.2467, UnitOfVolume.FLUID_OUNCES),
+        (500, UnitOfVolume.CUBIC_FEET, 3740.25974, UnitOfVolume.GALLONS),
+        (500, UnitOfVolume.CUBIC_FEET, 14158.42329599, UnitOfVolume.LITERS),
+        (500, UnitOfVolume.CUBIC_FEET, 14158423.29599, UnitOfVolume.MILLILITERS),
         (500, UnitOfVolume.CUBIC_METERS, 500, UnitOfVolume.CUBIC_METERS),
-        (
-            500,
-            UnitOfVolume.CUBIC_METERS,
-            pytest.approx(16907011.35),
-            UnitOfVolume.FLUID_OUNCES,
-        ),
-        (
-            500,
-            UnitOfVolume.CUBIC_METERS,
-            pytest.approx(132086.02617),
-            UnitOfVolume.GALLONS,
-        ),
+        (500, UnitOfVolume.CUBIC_METERS, 16907011.35, UnitOfVolume.FLUID_OUNCES),
+        (500, UnitOfVolume.CUBIC_METERS, 132086.02617, UnitOfVolume.GALLONS),
         (500, UnitOfVolume.CUBIC_METERS, 500000, UnitOfVolume.LITERS),
         (500, UnitOfVolume.CUBIC_METERS, 500000000, UnitOfVolume.MILLILITERS),
-        (
-            500,
-            UnitOfVolume.FLUID_OUNCES,
-            pytest.approx(0.52218967),
-            UnitOfVolume.CUBIC_FEET,
-        ),
-        (
-            500,
-            UnitOfVolume.FLUID_OUNCES,
-            pytest.approx(0.014786764),
-            UnitOfVolume.CUBIC_METERS,
-        ),
+        (500, UnitOfVolume.FLUID_OUNCES, 0.52218967, UnitOfVolume.CUBIC_FEET),
+        (500, UnitOfVolume.FLUID_OUNCES, 0.014786764, UnitOfVolume.CUBIC_METERS),
         (500, UnitOfVolume.FLUID_OUNCES, 3.90625, UnitOfVolume.GALLONS),
-        (500, UnitOfVolume.FLUID_OUNCES, pytest.approx(14.786764), UnitOfVolume.LITERS),
-        (
-            500,
-            UnitOfVolume.FLUID_OUNCES,
-            pytest.approx(14786.764),
-            UnitOfVolume.MILLILITERS,
-        ),
-        (500, UnitOfVolume.GALLONS, pytest.approx(66.84027), UnitOfVolume.CUBIC_FEET),
-        (500, UnitOfVolume.GALLONS, pytest.approx(1.892706), UnitOfVolume.CUBIC_METERS),
+        (500, UnitOfVolume.FLUID_OUNCES, 14.786764, UnitOfVolume.LITERS),
+        (500, UnitOfVolume.FLUID_OUNCES, 14786.764, UnitOfVolume.MILLILITERS),
+        (500, UnitOfVolume.GALLONS, 66.84027, UnitOfVolume.CUBIC_FEET),
+        (500, UnitOfVolume.GALLONS, 1.892706, UnitOfVolume.CUBIC_METERS),
         (500, UnitOfVolume.GALLONS, 64000, UnitOfVolume.FLUID_OUNCES),
-        (500, UnitOfVolume.GALLONS, pytest.approx(1892.70589), UnitOfVolume.LITERS),
-        (
-            500,
-            UnitOfVolume.GALLONS,
-            pytest.approx(1892705.89),
-            UnitOfVolume.MILLILITERS,
-        ),
-        (500, UnitOfVolume.LITERS, pytest.approx(17.65733), UnitOfVolume.CUBIC_FEET),
+        (500, UnitOfVolume.GALLONS, 1892.70589, UnitOfVolume.LITERS),
+        (500, UnitOfVolume.GALLONS, 1892705.89, UnitOfVolume.MILLILITERS),
+        (500, UnitOfVolume.LITERS, 17.65733, UnitOfVolume.CUBIC_FEET),
         (500, UnitOfVolume.LITERS, 0.5, UnitOfVolume.CUBIC_METERS),
-        (500, UnitOfVolume.LITERS, pytest.approx(16907.011), UnitOfVolume.FLUID_OUNCES),
-        (500, UnitOfVolume.LITERS, pytest.approx(132.086), UnitOfVolume.GALLONS),
+        (500, UnitOfVolume.LITERS, 16907.011, UnitOfVolume.FLUID_OUNCES),
+        (500, UnitOfVolume.LITERS, 132.086, UnitOfVolume.GALLONS),
         (500, UnitOfVolume.LITERS, 500000, UnitOfVolume.MILLILITERS),
-        (
-            500,
-            UnitOfVolume.MILLILITERS,
-            pytest.approx(0.01765733),
-            UnitOfVolume.CUBIC_FEET,
-        ),
+        (500, UnitOfVolume.MILLILITERS, 0.01765733, UnitOfVolume.CUBIC_FEET),
         (500, UnitOfVolume.MILLILITERS, 0.0005, UnitOfVolume.CUBIC_METERS),
-        (
-            500,
-            UnitOfVolume.MILLILITERS,
-            pytest.approx(16.907),
-            UnitOfVolume.FLUID_OUNCES,
-        ),
-        (500, UnitOfVolume.MILLILITERS, pytest.approx(0.132086), UnitOfVolume.GALLONS),
+        (500, UnitOfVolume.MILLILITERS, 16.907, UnitOfVolume.FLUID_OUNCES),
+        (500, UnitOfVolume.MILLILITERS, 0.132086, UnitOfVolume.GALLONS),
         (500, UnitOfVolume.MILLILITERS, 0.5, UnitOfVolume.LITERS),
+        (5, UnitOfVolume.CENTUM_CUBIC_FEET, 500, UnitOfVolume.CUBIC_FEET),
+        (5, UnitOfVolume.CENTUM_CUBIC_FEET, 14.15842, UnitOfVolume.CUBIC_METERS),
+        (5, UnitOfVolume.CENTUM_CUBIC_FEET, 478753.24, UnitOfVolume.FLUID_OUNCES),
+        (5, UnitOfVolume.CENTUM_CUBIC_FEET, 3740.26, UnitOfVolume.GALLONS),
+        (5, UnitOfVolume.CENTUM_CUBIC_FEET, 14158.42, UnitOfVolume.LITERS),
     ],
 )
 def test_volume_convert(
@@ -672,4 +744,4 @@ def test_volume_convert(
     to_unit: str,
 ) -> None:
     """Test conversion to other units."""
-    assert VolumeConverter.convert(value, from_unit, to_unit) == expected
+    assert VolumeConverter.convert(value, from_unit, to_unit) == pytest.approx(expected)

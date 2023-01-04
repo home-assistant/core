@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     FREQUENCY_GIGAHERTZ,
+    LIGHT_LUX,
     PERCENTAGE,
     POWER_VOLT_AMPERE,
     POWER_VOLT_AMPERE_REACTIVE,
@@ -31,7 +32,7 @@ UNITS_OF_MEASUREMENT = {
     SensorDeviceClass.CO: CONCENTRATION_PARTS_PER_MILLION,  # ppm of CO concentration
     SensorDeviceClass.CO2: CONCENTRATION_PARTS_PER_MILLION,  # ppm of CO2 concentration
     SensorDeviceClass.HUMIDITY: PERCENTAGE,  # % of humidity in the air
-    SensorDeviceClass.ILLUMINANCE: "lm",  # current light level (lx/lm)
+    SensorDeviceClass.ILLUMINANCE: LIGHT_LUX,  # current light level lx
     SensorDeviceClass.MOISTURE: PERCENTAGE,  # % of water in a substance
     SensorDeviceClass.NITROGEN_DIOXIDE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of nitrogen dioxide
     SensorDeviceClass.NITROGEN_MONOXIDE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of nitrogen monoxide
@@ -70,7 +71,7 @@ def init(empty=False):
                 name=f"{device_class} sensor",
                 unique_id=f"unique_{device_class}",
                 device_class=device_class,
-                unit_of_measurement=UNITS_OF_MEASUREMENT.get(device_class),
+                native_unit_of_measurement=UNITS_OF_MEASUREMENT.get(device_class),
             )
             for device_class in DEVICE_CLASSES
         }
@@ -106,6 +107,11 @@ class MockSensor(MockEntity, SensorEntity):
     def native_value(self):
         """Return the native value of this sensor."""
         return self._handle("native_value")
+
+    @property
+    def options(self):
+        """Return the options for this sensor."""
+        return self._handle("options")
 
     @property
     def state_class(self):

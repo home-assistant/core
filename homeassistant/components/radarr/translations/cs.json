@@ -24,9 +24,6 @@
         }
     },
     "issues": {
-        "deprecated_yaml": {
-            "title": "Konfigurace Radarr YAML se odstra\u0148uje"
-        },
         "removed_yaml": {
             "description": "Konfigurace Radaru pomoc\u00ed YAML byla odstran\u011bna. \n\nVa\u0161i st\u00e1vaj\u00edc\u00ed konfigurace YAML nen\u00ed vyu\u017eita Home Assistantem. \n\nOdstra\u0148te konfiguraci YAML ze souboru configuration.yaml a restartujte Home Assistant, abyste se tento probl\u00e9m vy\u0159e\u0161il.",
             "title": "Konfigurace Radarr YAML byla odstran\u011bna"

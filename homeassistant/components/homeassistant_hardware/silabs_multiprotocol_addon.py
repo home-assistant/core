@@ -1,7 +1,7 @@
 """Manage the Silicon Labs Multiprotocol add-on."""
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 import asyncio
 import dataclasses
 import logging
@@ -63,7 +63,7 @@ class SerialPortSettings:
     flow_control: bool
 
 
-def get_zigbee_socket(hass, addon_info: AddonInfo) -> str:
+def get_zigbee_socket(hass: HomeAssistant, addon_info: AddonInfo) -> str:
     """Return the zigbee socket.
 
     Raises AddonError on error
@@ -71,7 +71,7 @@ def get_zigbee_socket(hass, addon_info: AddonInfo) -> str:
     return f"socket://{addon_info.hostname}:9999"
 
 
-class BaseMultiPanFlow(FlowHandler):
+class BaseMultiPanFlow(FlowHandler, ABC):
     """Support configuring the Silicon Labs Multiprotocol add-on."""
 
     def __init__(self) -> None:
@@ -245,7 +245,7 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
 
         # pylint: disable=unreachable
 
-        return await self.async_step_on_supervisor()
+        return await self.async_step_on_supervisor()  # type: ignore[unreachable]
 
     async def async_step_on_supervisor(
         self, user_input: dict[str, Any] | None = None

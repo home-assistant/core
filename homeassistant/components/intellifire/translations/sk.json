@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "not_intellifire_device": "Nie je to zariadenie IntelliFire.",
             "reauth_successful": "Op\u00e4tovn\u00e9 overenie bolo \u00faspe\u0161n\u00e9"
         },
         "error": {
@@ -30,6 +31,7 @@
                 "data": {
                     "host": "Hostite\u013e"
                 },
+                "description": "Boli objaven\u00e9 nasleduj\u00face zariadenia IntelliFire. Vyberte, ktor\u00e9 chcete konfigurova\u0165.",
                 "title": "V\u00fdber zariadenia"
             }
         }

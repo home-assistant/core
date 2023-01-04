@@ -81,9 +81,11 @@ class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
 
     def _do_get_db_connection_protected(self) -> Any:
         report(
-            "accesses the database without the database executor; "
-            f"{ADVISE_MSG} "
-            "for faster database operations",
+            (
+                "accesses the database without the database executor; "
+                f"{ADVISE_MSG} "
+                "for faster database operations"
+            ),
             exclude_integrations={"recorder"},
             error_if_core=False,
         )

@@ -21,7 +21,6 @@ from .devolo_device import DevoloDeviceEntity
 DEVICE_CLASS_MAPPING = {
     "battery": SensorDeviceClass.BATTERY,
     "temperature": SensorDeviceClass.TEMPERATURE,
-    "light": SensorDeviceClass.ILLUMINANCE,
     "humidity": SensorDeviceClass.HUMIDITY,
     "current": SensorDeviceClass.POWER,
     "total": SensorDeviceClass.ENERGY,
@@ -168,9 +167,6 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
         self._attr_native_unit_of_measurement = getattr(
             device_instance.consumption_property[element_uid], f"{consumption}_unit"
         )
-
-        if consumption == "total":
-            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
         self._value = getattr(
             device_instance.consumption_property[element_uid], consumption

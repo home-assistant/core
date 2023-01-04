@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from typing import cast
 
 import async_timeout
 from matter_server.client import MatterClient
@@ -11,10 +10,11 @@ from matter_server.client.exceptions import (
     FailedCommand,
     InvalidServerVersion,
 )
+from matter_server.common.models.error import MatterError
 import voluptuous as vol
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
@@ -32,6 +32,10 @@ from .addon import get_addon_manager
 from .api import async_register_api
 from .const import CONF_INTEGRATION_CREATED_ADDON, CONF_USE_ADDON, DOMAIN, LOGGER
 from .device_platform import DEVICE_PLATFORM
+from .helpers import MatterEntryData, get_matter
+
+CONNECT_TIMEOUT = 10
+LISTEN_READY_TIMEOUT = 30
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -41,8 +45,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     matter_client = MatterClient(entry.data[CONF_URL], async_get_clientsession(hass))
     try:
-        await matter_client.connect()
-    except CannotConnect as err:
+        async with async_timeout.timeout(CONNECT_TIMEOUT):
+            await matter_client.connect()
+    except (CannotConnect, asyncio.TimeoutError) as err:
         raise ConfigEntryNotReady("Failed to connect to matter server") from err
     except InvalidServerVersion as err:
         if use_addon:
@@ -60,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(f"Invalid server version: {err}") from err
 
     except Exception as err:
-        matter_client.logger.exception("Failed to connect to matter server")
+        LOGGER.exception("Failed to connect to matter server")
         raise ConfigEntryNotReady(
             "Unknown error connecting to the Matter server"
         ) from err
@@ -75,16 +80,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
     )
 
-    # register websocket api
     async_register_api(hass)
 
     # launch the matter client listen task in the background
-    # use the init_ready event to keep track if it did initialize successfully
+    # use the init_ready event to wait until initialization is done
     init_ready = asyncio.Event()
-    listen_task = asyncio.create_task(matter_client.start_listening(init_ready))
+    listen_task = asyncio.create_task(
+        _client_listen(hass, entry, matter_client, init_ready)
+    )
 
     try:
-        async with async_timeout.timeout(30):
+        async with async_timeout.timeout(LISTEN_READY_TIMEOUT):
             await init_ready.wait()
     except asyncio.TimeoutError as err:
         listen_task.cancel()
@@ -94,18 +100,48 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN] = {}
         _async_init_services(hass)
 
-    # we create an intermediate layer (adapter) which keeps track of our nodes
-    # and discovery of platform entities from the node's attributes
+    # create an intermediate layer (adapter) which keeps track of the nodes
+    # and discovery of platform entities from the node attributes
     matter = MatterAdapter(hass, matter_client, entry)
-    hass.data[DOMAIN][entry.entry_id] = matter
+    hass.data[DOMAIN][entry.entry_id] = MatterEntryData(matter, listen_task)
 
-    # forward platform setup to all platforms in the discovery schema
     await hass.config_entries.async_forward_entry_setups(entry, DEVICE_PLATFORM)
+    await matter.setup_nodes()
 
-    # start discovering of node entities as task
-    asyncio.create_task(matter.setup_nodes())
+    # If the listen task is already failed, we need to raise ConfigEntryNotReady
+    if listen_task.done() and (listen_error := listen_task.exception()) is not None:
+        await hass.config_entries.async_unload_platforms(entry, DEVICE_PLATFORM)
+        hass.data[DOMAIN].pop(entry.entry_id)
+        try:
+            await matter_client.disconnect()
+        finally:
+            raise ConfigEntryNotReady(listen_error) from listen_error
 
     return True
+
+
+async def _client_listen(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    matter_client: MatterClient,
+    init_ready: asyncio.Event,
+) -> None:
+    """Listen with the client."""
+    try:
+        await matter_client.start_listening(init_ready)
+    except MatterError as err:
+        if entry.state != ConfigEntryState.LOADED:
+            raise
+        LOGGER.error("Failed to listen: %s", err)
+    except Exception as err:  # pylint: disable=broad-except
+        # We need to guard against unknown exceptions to not crash this task.
+        LOGGER.exception("Unexpected exception: %s", err)
+        if entry.state != ConfigEntryState.LOADED:
+            raise
+
+    if not hass.is_stopping:
+        LOGGER.debug("Disconnected from server. Reloading integration")
+        hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -113,8 +149,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, DEVICE_PLATFORM)
 
     if unload_ok:
-        matter: MatterAdapter = hass.data[DOMAIN].pop(entry.entry_id)
-        await matter.matter_client.disconnect()
+        matter_entry_data: MatterEntryData = hass.data[DOMAIN].pop(entry.entry_id)
+        matter_entry_data.listen_task.cancel()
+        await matter_entry_data.adapter.matter_client.disconnect()
 
     if entry.data.get(CONF_USE_ADDON) and entry.disabled_by:
         addon_manager: AddonManager = get_addon_manager(hass)
@@ -165,101 +202,20 @@ async def async_remove_config_entry_device(
     if not unique_id:
         return True
 
-    matter: MatterAdapter = hass.data[DOMAIN][config_entry.entry_id]
+    matter_entry_data: MatterEntryData = hass.data[DOMAIN][config_entry.entry_id]
+    matter_client = matter_entry_data.adapter.matter_client
 
-    for node in await matter.matter_client.get_nodes():
+    for node in await matter_client.get_nodes():
         if node.unique_id == unique_id:
-            await matter.matter_client.remove_node(node.node_id)
+            await matter_client.remove_node(node.node_id)
             break
 
     return True
 
 
 @callback
-def get_matter(hass: HomeAssistant) -> MatterAdapter:
-    """Return MatterAdapter instance."""
-    # NOTE: This assumes only one Matter connection/fabric can exist.
-    # Shall we support connecting to multiple servers in the client or by config entries?
-    # In case of the config entry we need to fix this.
-    matter: MatterAdapter = next(iter(hass.data[DOMAIN].values()))
-    return matter
-
-
-@callback
 def _async_init_services(hass: HomeAssistant) -> None:
     """Init services."""
-
-    async def commission(call: ServiceCall) -> None:
-        """Handle commissioning."""
-        matter_client = get_matter(hass).matter_client
-        try:
-            await matter_client.commission_with_code(call.data["code"])
-        except FailedCommand as err:
-            raise HomeAssistantError(str(err)) from err
-
-    async_register_admin_service(
-        hass,
-        DOMAIN,
-        "commission",
-        commission,
-        vol.Schema({"code": str}),
-    )
-
-    async def accept_shared_device(call: ServiceCall) -> None:
-        """Accept a shared device."""
-        matter_client = get_matter(hass).matter_client
-        try:
-            await matter_client.commission_on_network(call.data["pin"])
-        except FailedCommand as err:
-            raise HomeAssistantError(str(err)) from err
-
-    async_register_admin_service(
-        hass,
-        DOMAIN,
-        "accept_shared_device",
-        accept_shared_device,
-        vol.Schema({"pin": vol.Coerce(int)}),
-    )
-
-    async def set_wifi(call: ServiceCall) -> None:
-        """Handle set wifi creds."""
-        matter_client = get_matter(hass).matter_client
-        try:
-            await matter_client.set_wifi_credentials(
-                call.data["ssid"], call.data["password"]
-            )
-        except FailedCommand as err:
-            raise HomeAssistantError(str(err)) from err
-
-    async_register_admin_service(
-        hass,
-        DOMAIN,
-        "set_wifi",
-        set_wifi,
-        vol.Schema(
-            {
-                "ssid": str,
-                "password": str,
-            }
-        ),
-    )
-
-    async def set_thread_dataset(call: ServiceCall) -> None:
-        """Handle set Thread creds."""
-        matter_client = get_matter(hass).matter_client
-        thread_dataset = bytes.fromhex(call.data["dataset"])
-        try:
-            await matter_client.set_thread_operational_dataset(thread_dataset)
-        except FailedCommand as err:
-            raise HomeAssistantError(str(err)) from err
-
-    async_register_admin_service(
-        hass,
-        DOMAIN,
-        "set_thread",
-        set_thread_dataset,
-        vol.Schema({"dataset": str}),
-    )
 
     async def _node_id_from_ha_device_id(ha_device_id: str) -> int | None:
         """Get node id from ha device id."""
@@ -288,7 +244,7 @@ def _async_init_services(hass: HomeAssistant) -> None:
         # This could be more efficient
         for node in await matter_client.get_nodes():
             if node.unique_id == unique_id:
-                return cast(int, node.node_id)
+                return node.node_id
 
         return None
 

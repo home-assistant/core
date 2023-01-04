@@ -857,6 +857,7 @@ def test_device_classes_aligned():
     non_numeric_device_classes = {
         SensorDeviceClass.DATE,
         SensorDeviceClass.DURATION,
+        SensorDeviceClass.ENUM,
         SensorDeviceClass.TIMESTAMP,
     }
 

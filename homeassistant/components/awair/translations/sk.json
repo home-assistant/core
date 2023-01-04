@@ -18,10 +18,14 @@
                 "data": {
                     "access_token": "Pr\u00edstupov\u00fd token",
                     "email": "Email"
-                }
+                },
+                "description": "Mus\u00edte sa zaregistrova\u0165 na z\u00edskanie pr\u00edstupov\u00e9ho tokenu pre v\u00fdvoj\u00e1rov Awair na: {url}"
             },
             "discovery_confirm": {
                 "description": "Chcete nastavi\u0165 {model} ({device_id})?"
+            },
+            "local": {
+                "description": "Postupujte pod\u013ea [t\u00fdchto pokynov]({url}), ako povoli\u0165 Awair Local API. \n\n Po dokon\u010den\u00ed kliknite na odosla\u0165."
             },
             "local_pick": {
                 "data": {
@@ -33,9 +37,11 @@
                 "data": {
                     "access_token": "Pr\u00edstupov\u00fd token",
                     "email": "Email"
-                }
+                },
+                "description": "Znova zadajte svoj pr\u00edstupov\u00fd token pre v\u00fdvoj\u00e1rov Awair."
             },
             "user": {
+                "description": "Pro pr\u00edstupov\u00fd token v\u00fdvoj\u00e1ra Awair se mus\u00edte zaregistrova\u0165 na: https://developer.getawair.com/onboard/login",
                 "menu_options": {
                     "cloud": "Pripojenie cez cloud",
                     "local": "Lok\u00e1lne pripojenie (preferovan\u00e9)"

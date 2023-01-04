@@ -24,5 +24,26 @@
                 "title": "Stelle eine Verbindung zu Smile her"
             }
         }
+    },
+    "entity": {
+        "select": {
+            "dhw_mode": {
+                "state": {
+                    "auto": "Automatisch",
+                    "boost": "Boost",
+                    "comfort": "Komfort",
+                    "off": "Aus"
+                }
+            },
+            "regulation_mode": {
+                "state": {
+                    "bleeding_cold": "Kalt",
+                    "bleeding_hot": "Hei\u00df",
+                    "cooling": "K\u00fchlen",
+                    "heating": "Heizen",
+                    "off": "Aus"
+                }
+            }
+        }
     }
 }

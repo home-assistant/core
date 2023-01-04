@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
+            "mdns_missing_mac": "Manglende MAC-adresse i MDNS-egenskaper.",
             "reauth_successful": "Re-autentisering var vellykket"
         },
         "error": {
@@ -46,8 +47,8 @@
     },
     "issues": {
         "ble_firmware_outdated": {
-            "description": "For \u00e5 forbedre Bluetooth-p\u00e5litelighet og ytelse anbefaler vi p\u00e5 det sterkeste \u00e5 oppdatere {name} med ESPHome 2022.11.0 eller nyere.",
-            "title": "Oppdater {name} med ESPHome 2022.11.0 eller nyere"
+            "description": "For \u00e5 forbedre Bluetooth-p\u00e5litelighet og ytelse anbefaler vi p\u00e5 det sterkeste \u00e5 oppdatere {name} med ESPHome {version} eller nyere. N\u00e5r du oppdaterer enheten til ESPHome {version} , anbefales det \u00e5 bruke en seriell kabel i stedet for en tr\u00e5dl\u00f8s oppdatering for \u00e5 dra nytte av det nye partisjonsskjemaet.",
+            "title": "Oppdater {name} med ESPHome {version} eller nyere"
         }
     }
 }

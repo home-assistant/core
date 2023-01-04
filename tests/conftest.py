@@ -7,14 +7,13 @@ from contextlib import asynccontextmanager
 import functools
 import gc
 import itertools
-from json import JSONDecoder, loads
+from json import JSONDecoder
 import logging
 import sqlite3
 import ssl
 import threading
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
-import warnings
 
 from aiohttp import client
 from aiohttp.pytest_plugin import AiohttpClient
@@ -46,6 +45,7 @@ from homeassistant.components.websocket_api.http import URL
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, recorder as recorder_helper
+from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, location
@@ -212,14 +212,14 @@ def verify_cleanup(event_loop: asyncio.AbstractEventLoop):
     # before moving on to the next test.
     tasks = asyncio.all_tasks(event_loop) - tasks_before
     for task in tasks:
-        warnings.warn(f"Linger task after test {task}")
+        _LOGGER.warning("Linger task after test %r", task)
         task.cancel()
     if tasks:
         event_loop.run_until_complete(asyncio.wait(tasks))
 
     for handle in event_loop._scheduled:  # pylint: disable=protected-access
         if not handle.cancelled():
-            warnings.warn(f"Lingering timer after test {handle}")
+            _LOGGER.warning("Lingering timer after test %r", handle)
             handle.cancel()
 
     # Make sure garbage collect run in same test as allocation
@@ -272,7 +272,7 @@ class CoalescingResponse(client.ClientWebSocketResponse):
     async def receive_json(
         self,
         *,
-        loads: JSONDecoder = loads,
+        loads: JSONDecoder = json_loads,
         timeout: float | None = None,
     ) -> Any:
         """receive_json or from buffer."""
@@ -1092,6 +1092,9 @@ async def mock_enable_bluetooth(
     entry = MockConfigEntry(domain="bluetooth", unique_id="00:00:00:00:00:01")
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    yield
+    await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
 
