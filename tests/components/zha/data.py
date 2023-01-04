@@ -32,7 +32,7 @@ BASE_CUSTOM_CONFIGURATION = {
                 "type": "boolean",
                 "name": "group_members_assume_state",
                 "required": True,
-                "default": False,
+                "default": True,
             },
             {
                 "type": "boolean",
@@ -102,7 +102,7 @@ CONFIG_WITH_ALARM_OPTIONS = {
                 "type": "boolean",
                 "name": "group_members_assume_state",
                 "required": True,
-                "default": False,
+                "default": True,
             },
             {
                 "type": "boolean",

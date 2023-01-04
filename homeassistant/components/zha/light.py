@@ -1054,7 +1054,7 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             zha_device.gateway.config_entry,
             ZHA_OPTIONS,
             CONF_GROUP_MEMBERS_ASSUME_STATE,
-            False,
+            True,
         )
         if self._zha_config_group_members_assume_state:
             self._update_group_from_child_delay = ASSUME_UPDATE_GROUP_FROM_CHILD_DELAY
