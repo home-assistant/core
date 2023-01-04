@@ -1856,7 +1856,7 @@ wolf_smartset==0.1.11
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.14.3
+xiaomi-ble==0.15.0
 
 # homeassistant.components.knx
 xknx==2.3.0
