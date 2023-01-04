@@ -307,35 +307,43 @@ async def async_setup_entry(
 
     for description in LACP_PORT_SENSOR_TYPES:
         if (
-            description.key in coordinator.data
-            and QSD_LACP_PORTS in coordinator.data[description.key]
+            description.key not in coordinator.data
+            or QSD_LACP_PORTS not in coordinator.data[description.key]
         ):
-            for port_id, port_values in coordinator.data[description.key][
-                QSD_LACP_PORTS
-            ].items():
-                if description.subkey in port_values:
-                    _desc = replace(
-                        description,
-                        sep_key=f"_lacp_port_{port_id}_",
-                        name=f"LACP Port {port_id} {description.name}",
-                    )
-                    entities.append(QswSensor(coordinator, _desc, entry, port_id))
+            continue
+
+        for port_id, port_values in coordinator.data[description.key][
+            QSD_LACP_PORTS
+        ].items():
+            if description.subkey not in port_values:
+                continue
+
+            _desc = replace(
+                description,
+                sep_key=f"_lacp_port_{port_id}_",
+                name=f"LACP Port {port_id} {description.name}",
+            )
+            entities.append(QswSensor(coordinator, _desc, entry, port_id))
 
     for description in PORT_SENSOR_TYPES:
         if (
-            description.key in coordinator.data
-            and QSD_PORTS in coordinator.data[description.key]
+            description.key not in coordinator.data
+            or QSD_PORTS not in coordinator.data[description.key]
         ):
-            for port_id, port_values in coordinator.data[description.key][
-                QSD_PORTS
-            ].items():
-                if description.subkey in port_values:
-                    _desc = replace(
-                        description,
-                        sep_key=f"_port_{port_id}_",
-                        name=f"Port {port_id} {description.name}",
-                    )
-                    entities.append(QswSensor(coordinator, _desc, entry, port_id))
+            continue
+
+        for port_id, port_values in coordinator.data[description.key][
+            QSD_PORTS
+        ].items():
+            if description.subkey not in port_values:
+                continue
+
+            _desc = replace(
+                description,
+                sep_key=f"_port_{port_id}_",
+                name=f"Port {port_id} {description.name}",
+            )
+            entities.append(QswSensor(coordinator, _desc, entry, port_id))
 
     async_add_entities(entities)
 
