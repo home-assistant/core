@@ -107,8 +107,10 @@ class EcoNetSensor(EcoNetEntity, SensorEntity):
         """Initialize."""
         super().__init__(econet_device)
         self.entity_description = description
-        self._attr_name = f"{econet_device.device_name}_{self.entity_description.name}"
-        self._attr_unique_id = f"{econet_device.device_id}_{econet_device.device_name}_{self.entity_description.name}"
+        self._attr_name = f"{econet_device.device_name}_{description.name}"
+        self._attr_unique_id = (
+            f"{econet_device.device_id}_{econet_device.device_name}_{description.name}"
+        )
 
     @property
     def native_value(self):
