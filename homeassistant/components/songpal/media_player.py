@@ -34,7 +34,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_ENDPOINT, DOMAIN, SET_SOUND_SETTING
+from .const import CONF_ENDPOINT, DOMAIN, ERROR_REQUEST_RETRY, SET_SOUND_SETTING
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,8 +42,6 @@ PARAM_NAME = "name"
 PARAM_VALUE = "value"
 
 INITIAL_RETRY_DELAY = 10
-
-ERROR_REQUEST_RETRY = 40000
 
 
 async def async_setup_platform(
