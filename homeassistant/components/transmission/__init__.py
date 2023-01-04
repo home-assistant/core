@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
+    CONF_SSL,
     CONF_USERNAME,
     Platform,
 )
@@ -121,6 +122,7 @@ async def get_api(hass, entry):
     """Get Transmission client."""
     host = entry[CONF_HOST]
     port = entry[CONF_PORT]
+    protocol = "https" if entry[CONF_SSL] else "http"
     username = entry.get(CONF_USERNAME)
     password = entry.get(CONF_PASSWORD)
 
@@ -128,10 +130,12 @@ async def get_api(hass, entry):
         api = await hass.async_add_executor_job(
             partial(
                 transmission_rpc.Client,
+                protocol=protocol,
                 username=username,
                 password=password,
                 host=host,
                 port=port,
+                logger=_LOGGER,
             )
         )
         _LOGGER.debug("Successfully connected to %s", host)

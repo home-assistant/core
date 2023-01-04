@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
+    CONF_SSL,
     CONF_USERNAME,
 )
 from homeassistant.core import callback
@@ -39,12 +40,13 @@ DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_USERNAME): str,
         vol.Optional(CONF_PASSWORD): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        vol.Required(CONF_SSL, default=False): bool,
     }
 )
 
 
 class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle Tansmission config flow."""
+    """Handle Transmission config flow."""
 
     VERSION = 1
     _reauth_entry: config_entries.ConfigEntry | None
