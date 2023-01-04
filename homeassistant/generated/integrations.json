@@ -258,6 +258,11 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "anwb_energie": {
+      "name": "ANWB Energie",
+      "integration_type": "virtual",
+      "supported_by": "energyzero"
+    },
     "apache_kafka": {
       "name": "Apache Kafka",
       "integration_type": "hub",
@@ -1362,6 +1367,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "energyzero": {
+      "name": "EnergyZero",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "enigma2": {
       "name": "Enigma2 (OpenWebif)",
@@ -4569,6 +4580,12 @@
         }
       }
     },
+    "ruuvi_gateway": {
+      "name": "Ruuvi Gateway",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "ruuvitag_ble": {
       "name": "RuuviTag BLE",
       "integration_type": "hub",
@@ -6287,6 +6304,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
+    },
+    "zeversolar": {
+      "name": "Zeversolar",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "zha": {
       "name": "Zigbee Home Automation",

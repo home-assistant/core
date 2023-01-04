@@ -313,6 +313,8 @@ build.json @home-assistant/supervisor
 /tests/components/emulated_kasa/ @kbickar
 /homeassistant/components/energy/ @home-assistant/core
 /tests/components/energy/ @home-assistant/core
+/homeassistant/components/energyzero/ @klaasnicolaas
+/tests/components/energyzero/ @klaasnicolaas
 /homeassistant/components/enigma2/ @fbradyirl
 /homeassistant/components/enocean/ @bdurrer
 /tests/components/enocean/ @bdurrer
@@ -979,6 +981,8 @@ build.json @home-assistant/supervisor
 /tests/components/rtsp_to_webrtc/ @allenporter
 /homeassistant/components/ruckus_unleashed/ @gabe565
 /tests/components/ruckus_unleashed/ @gabe565
+/homeassistant/components/ruuvi_gateway/ @akx
+/tests/components/ruuvi_gateway/ @akx
 /homeassistant/components/ruuvitag_ble/ @akx
 /tests/components/ruuvitag_ble/ @akx
 /homeassistant/components/sabnzbd/ @shaiu
@@ -1357,6 +1361,8 @@ build.json @home-assistant/supervisor
 /tests/components/zeroconf/ @bdraco
 /homeassistant/components/zerproc/ @emlove
 /tests/components/zerproc/ @emlove
+/homeassistant/components/zeversolar/ @kvanzuijlen
+/tests/components/zeversolar/ @kvanzuijlen
 /homeassistant/components/zha/ @dmulcahey @adminiuga @puddly
 /tests/components/zha/ @dmulcahey @adminiuga @puddly
 /homeassistant/components/zodiac/ @JulienTant
