@@ -44,13 +44,13 @@ async def get_sonarr_episode_events(
 
 
 class SonarrCalendarEntity(CalendarEntity):
-    """Representation of a Demo Calendar element."""
+    """Representation of a Sonarr Calendar element."""
 
     coordinator: CalendarDataUpdateCoordinator
     _events: list[CalendarEvent]
 
     def __init__(self, coordinator: CalendarDataUpdateCoordinator, name: str) -> None:
-        """Initialize demo calendar."""
+        """Initialize Sonarr calendar."""
         self.coordinator = coordinator
         self._attr_name = name
         self._events = []
