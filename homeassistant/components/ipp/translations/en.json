@@ -36,8 +36,8 @@
         "sensor": {
             "printer": {
                 "state": {
-                    "printing": "Printing",
                     "idle": "Idle",
+                    "printing": "Printing",
                     "stopped": "Stopped"
                 }
             }

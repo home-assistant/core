@@ -5,6 +5,8 @@
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_host": "Ung\u00fcltiger Hostname oder IP-Adresse",
+            "timeout_connect": "Zeit\u00fcberschreitung beim Verbindungsaufbau",
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
