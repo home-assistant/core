@@ -86,7 +86,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         trvs = trv[CONF_TRVS]
         proxy_ip = trv[CONF_PROXY_IP]
         proxy_port = trv[CONF_PROXY_PORT]
-        lwlink.set_trv_proxy(proxy_ip, proxy_port)
+        if proxy_ip == DEFAULT_PROXY_IP:
+            await lwlink.LW_listen()
+        else:
+            lwlink.set_trv_proxy(proxy_ip, proxy_port)
 
         for platform in PLATFORMS:
             hass.async_create_task(
