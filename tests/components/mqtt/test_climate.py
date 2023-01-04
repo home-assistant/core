@@ -258,7 +258,7 @@ async def test_set_operation_optimistic(hass, mqtt_mock_entry_with_yaml_config):
     await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.state == "unknown"
+    assert state.state == "off"
 
     await common.async_set_hvac_mode(hass, "cool", ENTITY_CLIMATE)
     state = hass.states.get(ENTITY_CLIMATE)
@@ -351,7 +351,7 @@ async def test_set_fan_mode_optimistic(hass, mqtt_mock_entry_with_yaml_config):
     await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("fan_mode") is None
+    assert state.attributes.get("fan_mode") == "low"
 
     await common.async_set_fan_mode(hass, "high", ENTITY_CLIMATE)
     state = hass.states.get(ENTITY_CLIMATE)
@@ -431,7 +431,7 @@ async def test_set_swing_optimistic(hass, mqtt_mock_entry_with_yaml_config):
     await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("swing_mode") is None
+    assert state.attributes.get("swing_mode") == "off"
 
     await common.async_set_swing_mode(hass, "on", ENTITY_CLIMATE)
     state = hass.states.get(ENTITY_CLIMATE)
@@ -550,7 +550,7 @@ async def test_set_target_temperature_optimistic(
     await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("temperature") is None
+    assert state.attributes.get("temperature") == 21
     await common.async_set_hvac_mode(hass, "heat", ENTITY_CLIMATE)
     await common.async_set_temperature(hass, temperature=17, entity_id=ENTITY_CLIMATE)
     state = hass.states.get(ENTITY_CLIMATE)
@@ -634,8 +634,8 @@ async def test_set_target_temperature_low_high_optimistic(
     await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("target_temp_low") is None
-    assert state.attributes.get("target_temp_high") is None
+    assert state.attributes.get("target_temp_low") == 21
+    assert state.attributes.get("target_temp_high") == 21
     await common.async_set_temperature(
         hass, target_temp_low=20, target_temp_high=23, entity_id=ENTITY_CLIMATE
     )
