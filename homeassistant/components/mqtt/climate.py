@@ -439,6 +439,13 @@ class MqttClimate(MqttEntity, ClimateEntity):
         discovery_data: DiscoveryInfoType | None,
     ) -> None:
         """Initialize the climate device."""
+        self._attr_fan_mode = None
+        self._attr_hvac_action = None
+        self._attr_hvac_mode = None
+        self._attr_is_aux_heat = None
+        self._attr_swing_mode = None
+        self._attr_target_temperature_low = None
+        self._attr_target_temperature_high = None
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
@@ -463,29 +470,23 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
         self._topic = {key: config.get(key) for key in TOPIC_KEYS}
 
-        # set to None in non-optimistic mode
-        self._attr_target_temperature = None
-        self._attr_fan_mode = None
-        self._attr_hvac_mode = None
-        self._attr_swing_mode = None
-        self._attr_target_temperature_low = None
-        self._attr_target_temperature_high = None
-
         self._optimistic = config[CONF_OPTIMISTIC]
 
-        if self._topic[CONF_TEMP_STATE_TOPIC] is None:
+        if self._topic[CONF_TEMP_STATE_TOPIC] is None or self._optimistic:
             self._attr_target_temperature = config[CONF_TEMP_INITIAL]
-        if self._topic[CONF_TEMP_LOW_STATE_TOPIC] is None:
+        if self._topic[CONF_TEMP_LOW_STATE_TOPIC] is None or self._optimistic:
             self._attr_target_temperature_low = config[CONF_TEMP_INITIAL]
-        if self._topic[CONF_TEMP_HIGH_STATE_TOPIC] is None:
+        if self._topic[CONF_TEMP_HIGH_STATE_TOPIC] is None or self._optimistic:
             self._attr_target_temperature_high = config[CONF_TEMP_INITIAL]
 
-        if self._topic[CONF_FAN_MODE_STATE_TOPIC] is None:
+        if self._topic[CONF_FAN_MODE_STATE_TOPIC] is None or self._optimistic:
             self._attr_fan_mode = FAN_LOW
-        if self._topic[CONF_SWING_MODE_STATE_TOPIC] is None:
+        if self._topic[CONF_SWING_MODE_STATE_TOPIC] is None or self._optimistic:
             self._attr_swing_mode = SWING_OFF
-        if self._topic[CONF_MODE_STATE_TOPIC] is None:
+        if self._topic[CONF_MODE_STATE_TOPIC] is None or self._optimistic:
             self._attr_hvac_mode = HVACMode.OFF
+        if self._topic[CONF_AUX_STATE_TOPIC] is None or self._optimistic:
+            self._attr_is_aux_heat = False
         self._feature_preset_mode = CONF_PRESET_MODE_COMMAND_TOPIC in config
         if self._feature_preset_mode:
             presets = []
@@ -499,9 +500,6 @@ class MqttClimate(MqttEntity, ClimateEntity):
         self._optimistic_preset_mode = (
             self._optimistic or CONF_PRESET_MODE_STATE_TOPIC not in config
         )
-        self._attr_hvac_action = None
-
-        self._attr_is_aux_heat = False
 
         value_templates: dict[str, Template | None] = {}
         for key in VALUE_TEMPLATE_KEYS:
