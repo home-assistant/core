@@ -264,20 +264,9 @@ class SensorGroup(GroupEntity, SensorEntity):
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
         self.mode = all if mode else any
-        self._sensor_attr = SENSOR_TYPE_TO_ATTR[self._sensor_type]
         self._state_calc: Callable[
             [list[tuple[str, float]], int], tuple[dict[str, str], float | None]
         ] = CALC_TYPES[self._sensor_type]
-        self.min_value: float | None = None
-        self.max_value: float | None = None
-        self.mean: float | None = None
-        self.last: float | None = None
-        self.median: float | None = None
-        self.range: float | None = None
-        self.sum: float | None = None
-        self.min_entity_id: str | None = None
-        self.max_entity_id: str | None = None
-        self.last_entity_id: str | None = None
         self._state_incorrect: set[str] = set()
         self._extra_state_attribute: dict[str, Any] = {}
 
@@ -325,8 +314,8 @@ class SensorGroup(GroupEntity, SensorEntity):
                 valid_states.append(True)
                 if last_updated is None or state.last_updated > last_updated:
                     last_updated = state.last_updated
-                    self.last = float(state.state)
-                    self.last_entity_id = entity_id
+                    last = float(state.state)
+                    last_entity_id = entity_id
 
         # Set group as unavailable if all members does not have numeric values
         self._attr_available = any(state != STATE_UNAVAILABLE for state in states)
@@ -338,9 +327,6 @@ class SensorGroup(GroupEntity, SensorEntity):
 
         if not valid_state or not valid_state_numeric:
             # Set as unknown if any / all member is unknown or unavailable
-            self.min_entity_id = None
-            self.max_entity_id = None
-            self.last_entity_id = None
             self._attr_native_value = None
             return
 
@@ -348,8 +334,8 @@ class SensorGroup(GroupEntity, SensorEntity):
         self._calculate_entity_properties()
         if self._sensor_type == "last":
             if TYPE_CHECKING:
-                assert self.last_entity_id and self.last is not None
-            sensor_values = [(self.last_entity_id, self.last)]
+                assert last_entity_id and last
+            sensor_values = [(last_entity_id, last)]
         self._extra_state_attribute, self._attr_native_value = self._state_calc(
             sensor_values, self._round_digits
         )
@@ -385,9 +371,9 @@ class SensorGroup(GroupEntity, SensorEntity):
         device_classes = state_classes = unit_of_measurements = []
 
         if (
-            not self._attr_device_class
-            and not self._attr_state_class
-            and not self._attr_unit_of_measurement
+            self._attr_device_class
+            and self._attr_state_class
+            and self._attr_native_unit_of_measurement
         ):
             return
 
