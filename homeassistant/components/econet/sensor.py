@@ -99,8 +99,6 @@ async def async_setup_entry(
 class EcoNetSensor(EcoNetEntity, SensorEntity):
     """Define a Econet sensor."""
 
-    entity_description: SensorEntityDescription
-
     def __init__(
         self,
         econet_device: Equipment,
@@ -109,7 +107,6 @@ class EcoNetSensor(EcoNetEntity, SensorEntity):
         """Initialize."""
         super().__init__(econet_device)
         self.entity_description = description
-        self._econet = econet_device
 
     @property
     def native_value(self):
