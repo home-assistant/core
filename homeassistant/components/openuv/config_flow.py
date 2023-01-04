@@ -111,7 +111,7 @@ class OpenUvFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id=error_step_id,
                 data_schema=error_schema,
-                errors={CONF_API_KEY: "invalid_api_key"},
+                errors={"base": "invalid_api_key"},
                 description_placeholders={
                     CONF_LATITUDE: str(data.latitude),
                     CONF_LONGITUDE: str(data.longitude),
