@@ -47,7 +47,9 @@ def websocket_list_entities(
     result = (
         "["
         + ",".join(
-            entry.json_repr for entry in registry.entities.values() if entry is not None  # type: ignore[misc]
+            entry.json_repr
+            for entry in registry.entities.values()
+            if entry.json_repr is not None
         )
         + "]"
     )
