@@ -40,7 +40,9 @@ FIXTURE_CONFIG_ENTRY = {
 }
 
 
-async def mock_vehicles_from_fixture(account: MyBMWAccount) -> None:
+async def mock_vehicles_from_fixture(
+    account: MyBMWAccount, force_init: bool = False
+) -> None:
     """Load MyBMWVehicle from fixtures and add them to the account."""
 
     fixture_path = Path(get_fixture_path("", integration=BMW_DOMAIN))

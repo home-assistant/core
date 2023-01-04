@@ -28,12 +28,18 @@
           "model": "i3 (+ REX)",
           "softwareVersionCurrent": {
             "iStep": 510,
-            "puStep": { "month": 11, "year": 21 },
+            "puStep": {
+              "month": 11,
+              "year": 21
+            },
             "seriesCluster": "I001"
           },
           "softwareVersionExFactory": {
             "iStep": 502,
-            "puStep": { "month": 3, "year": 15 },
+            "puStep": {
+              "month": 3,
+              "year": 15
+            },
             "seriesCluster": "I001"
           },
           "year": 2015
@@ -102,7 +108,10 @@
               {
                 "action": "DEACTIVATE",
                 "id": 1,
-                "timeStamp": { "hour": 7, "minute": 35 },
+                "timeStamp": {
+                  "hour": 7,
+                  "minute": 35
+                },
                 "timerWeekDays": [
                   "MONDAY",
                   "TUESDAY",
@@ -114,7 +123,10 @@
               {
                 "action": "DEACTIVATE",
                 "id": 2,
-                "timeStamp": { "hour": 18, "minute": 0 },
+                "timeStamp": {
+                  "hour": 18,
+                  "minute": 0
+                },
                 "timerWeekDays": [
                   "MONDAY",
                   "TUESDAY",
@@ -128,32 +140,54 @@
               {
                 "action": "DEACTIVATE",
                 "id": 3,
-                "timeStamp": { "hour": 7, "minute": 0 },
+                "timeStamp": {
+                  "hour": 7,
+                  "minute": 0
+                },
                 "timerWeekDays": []
               },
-              { "action": "DEACTIVATE", "id": 4, "timerWeekDays": [] }
+              {
+                "action": "DEACTIVATE",
+                "id": 4,
+                "timerWeekDays": []
+              }
             ],
             "reductionOfChargeCurrent": {
-              "end": { "hour": 1, "minute": 30 },
-              "start": { "hour": 18, "minute": 1 }
+              "end": {
+                "hour": 1,
+                "minute": 30
+              },
+              "start": {
+                "hour": 18,
+                "minute": 1
+              }
             }
           },
           "checkControlMessages": [],
           "climateTimers": [
             {
-              "departureTime": { "hour": 6, "minute": 40 },
+              "departureTime": {
+                "hour": 6,
+                "minute": 40
+              },
               "isWeeklyTimer": true,
               "timerAction": "ACTIVATE",
               "timerWeekDays": ["THURSDAY", "SUNDAY"]
             },
             {
-              "departureTime": { "hour": 12, "minute": 50 },
+              "departureTime": {
+                "hour": 12,
+                "minute": 50
+              },
               "isWeeklyTimer": false,
               "timerAction": "ACTIVATE",
               "timerWeekDays": ["MONDAY"]
             },
             {
-              "departureTime": { "hour": 18, "minute": 59 },
+              "departureTime": {
+                "hour": 18,
+                "minute": 59
+              },
               "isWeeklyTimer": true,
               "timerAction": "DEACTIVATE",
               "timerWeekDays": ["WEDNESDAY"]
@@ -175,7 +209,9 @@
             "rightRear": "CLOSED",
             "trunk": "CLOSED"
           },
-          "driverPreferences": { "lscPrivacyMode": "OFF" },
+          "driverPreferences": {
+            "lscPrivacyMode": "OFF"
+          },
           "electricChargingState": {
             "chargingConnectionType": "CONDUCTIVE",
             "chargingLevelPercent": 82,
@@ -209,7 +245,10 @@
               "type": "VEHICLE_TUV"
             }
           ],
-          "roofState": { "roofState": "CLOSED", "roofStateType": "SUN_ROOF" },
+          "roofState": {
+            "roofState": "CLOSED",
+            "roofStateType": "SUN_ROOF"
+          },
           "windowsState": {
             "combinedState": "CLOSED",
             "leftFront": "CLOSED",
@@ -240,7 +279,7 @@
         "charging_start_time": "2022-07-10T18:01:00+00:00"
       },
       "vehicle_location": {
-        "location": { "latitude": null, "longitude": null },
+        "location": null,
         "heading": null,
         "vehicle_update_timestamp": "2022-07-10T09:25:53+00:00",
         "account_region": "row",
@@ -249,17 +288,53 @@
       "doors_and_windows": {
         "door_lock_state": "UNLOCKED",
         "lids": [
-          { "name": "**REDACTED**", "state": "CLOSED", "is_closed": true },
-          { "name": "**REDACTED**", "state": "CLOSED", "is_closed": true },
-          { "name": "**REDACTED**", "state": "CLOSED", "is_closed": true },
-          { "name": "**REDACTED**", "state": "CLOSED", "is_closed": true },
-          { "name": "**REDACTED**", "state": "CLOSED", "is_closed": true },
-          { "name": "**REDACTED**", "state": "CLOSED", "is_closed": true },
-          { "name": "**REDACTED**", "state": "CLOSED", "is_closed": true }
+          {
+            "name": "**REDACTED**",
+            "state": "CLOSED",
+            "is_closed": true
+          },
+          {
+            "name": "**REDACTED**",
+            "state": "CLOSED",
+            "is_closed": true
+          },
+          {
+            "name": "**REDACTED**",
+            "state": "CLOSED",
+            "is_closed": true
+          },
+          {
+            "name": "**REDACTED**",
+            "state": "CLOSED",
+            "is_closed": true
+          },
+          {
+            "name": "**REDACTED**",
+            "state": "CLOSED",
+            "is_closed": true
+          },
+          {
+            "name": "**REDACTED**",
+            "state": "CLOSED",
+            "is_closed": true
+          },
+          {
+            "name": "**REDACTED**",
+            "state": "CLOSED",
+            "is_closed": true
+          }
         ],
         "windows": [
-          { "name": "**REDACTED**", "state": "CLOSED", "is_closed": true },
-          { "name": "**REDACTED**", "state": "CLOSED", "is_closed": true }
+          {
+            "name": "**REDACTED**",
+            "state": "CLOSED",
+            "is_closed": true
+          },
+          {
+            "name": "**REDACTED**",
+            "state": "CLOSED",
+            "is_closed": true
+          }
         ],
         "all_lids_closed": true,
         "all_windows_closed": true,
@@ -301,7 +376,10 @@
             "_timer_dict": {
               "action": "DEACTIVATE",
               "id": 1,
-              "timeStamp": { "hour": 7, "minute": 35 },
+              "timeStamp": {
+                "hour": 7,
+                "minute": 35
+              },
               "timerWeekDays": [
                 "MONDAY",
                 "TUESDAY",
@@ -319,7 +397,10 @@
             "_timer_dict": {
               "action": "DEACTIVATE",
               "id": 2,
-              "timeStamp": { "hour": 18, "minute": 0 },
+              "timeStamp": {
+                "hour": 18,
+                "minute": 0
+              },
               "timerWeekDays": [
                 "MONDAY",
                 "TUESDAY",
@@ -347,7 +428,10 @@
             "_timer_dict": {
               "action": "DEACTIVATE",
               "id": 3,
-              "timeStamp": { "hour": 7, "minute": 0 },
+              "timeStamp": {
+                "hour": 7,
+                "minute": 0
+              },
               "timerWeekDays": []
             },
             "action": "DEACTIVATE",
@@ -369,8 +453,14 @@
         ],
         "preferred_charging_window": {
           "_window_dict": {
-            "end": { "hour": 1, "minute": 30 },
-            "start": { "hour": 18, "minute": 1 }
+            "end": {
+              "hour": 1,
+              "minute": 30
+            },
+            "start": {
+              "hour": 18,
+              "minute": 1
+            }
           },
           "end_time": "01:30:00",
           "start_time": "18:01:00"
@@ -431,221 +521,5 @@
       "vin": "**REDACTED**"
     }
   ],
-  "fingerprint": {
-    "vehicles_v2_mini_0.json": [],
-    "state_WBY00000000REXI01_0.json": {
-      "capabilities": {
-        "climateFunction": "AIR_CONDITIONING",
-        "climateNow": true,
-        "climateTimerTrigger": "DEPARTURE_TIMER",
-        "horn": true,
-        "isBmwChargingSupported": true,
-        "isCarSharingSupported": false,
-        "isChargeNowForBusinessSupported": false,
-        "isChargingHistorySupported": true,
-        "isChargingHospitalityEnabled": false,
-        "isChargingLoudnessEnabled": false,
-        "isChargingPlanSupported": true,
-        "isChargingPowerLimitEnabled": false,
-        "isChargingSettingsEnabled": false,
-        "isChargingTargetSocEnabled": false,
-        "isClimateTimerSupported": true,
-        "isCustomerEsimSupported": false,
-        "isDCSContractManagementSupported": true,
-        "isDataPrivacyEnabled": false,
-        "isEasyChargeEnabled": false,
-        "isEvGoChargingSupported": false,
-        "isMiniChargingSupported": false,
-        "isNonLscFeatureEnabled": false,
-        "isRemoteEngineStartSupported": false,
-        "isRemoteHistoryDeletionSupported": false,
-        "isRemoteHistorySupported": true,
-        "isRemoteParkingSupported": false,
-        "isRemoteServicesActivationRequired": false,
-        "isRemoteServicesBookingRequired": false,
-        "isScanAndChargeSupported": false,
-        "isSustainabilitySupported": false,
-        "isWifiHotspotServiceSupported": false,
-        "lastStateCallState": "ACTIVATED",
-        "lights": true,
-        "lock": true,
-        "remoteChargingCommands": {},
-        "sendPoi": true,
-        "specialThemeSupport": [],
-        "unlock": true,
-        "vehicleFinder": false,
-        "vehicleStateSource": "LAST_STATE_CALL"
-      },
-      "state": {
-        "chargingProfile": {
-          "chargingControlType": "WEEKLY_PLANNER",
-          "chargingMode": "DELAYED_CHARGING",
-          "chargingPreference": "CHARGING_WINDOW",
-          "chargingSettings": {
-            "hospitality": "NO_ACTION",
-            "idcc": "NO_ACTION",
-            "targetSoc": 100
-          },
-          "climatisationOn": false,
-          "departureTimes": [
-            {
-              "action": "DEACTIVATE",
-              "id": 1,
-              "timeStamp": { "hour": 7, "minute": 35 },
-              "timerWeekDays": [
-                "MONDAY",
-                "TUESDAY",
-                "WEDNESDAY",
-                "THURSDAY",
-                "FRIDAY"
-              ]
-            },
-            {
-              "action": "DEACTIVATE",
-              "id": 2,
-              "timeStamp": { "hour": 18, "minute": 0 },
-              "timerWeekDays": [
-                "MONDAY",
-                "TUESDAY",
-                "WEDNESDAY",
-                "THURSDAY",
-                "FRIDAY",
-                "SATURDAY",
-                "SUNDAY"
-              ]
-            },
-            {
-              "action": "DEACTIVATE",
-              "id": 3,
-              "timeStamp": { "hour": 7, "minute": 0 },
-              "timerWeekDays": []
-            },
-            { "action": "DEACTIVATE", "id": 4, "timerWeekDays": [] }
-          ],
-          "reductionOfChargeCurrent": {
-            "end": { "hour": 1, "minute": 30 },
-            "start": { "hour": 18, "minute": 1 }
-          }
-        },
-        "checkControlMessages": [],
-        "climateTimers": [
-          {
-            "departureTime": { "hour": 6, "minute": 40 },
-            "isWeeklyTimer": true,
-            "timerAction": "ACTIVATE",
-            "timerWeekDays": ["THURSDAY", "SUNDAY"]
-          },
-          {
-            "departureTime": { "hour": 12, "minute": 50 },
-            "isWeeklyTimer": false,
-            "timerAction": "ACTIVATE",
-            "timerWeekDays": ["MONDAY"]
-          },
-          {
-            "departureTime": { "hour": 18, "minute": 59 },
-            "isWeeklyTimer": true,
-            "timerAction": "DEACTIVATE",
-            "timerWeekDays": ["WEDNESDAY"]
-          }
-        ],
-        "combustionFuelLevel": {
-          "range": 105,
-          "remainingFuelLiters": 6,
-          "remainingFuelPercent": 65
-        },
-        "currentMileage": 137009,
-        "doorsState": {
-          "combinedSecurityState": "UNLOCKED",
-          "combinedState": "CLOSED",
-          "hood": "CLOSED",
-          "leftFront": "CLOSED",
-          "leftRear": "CLOSED",
-          "rightFront": "CLOSED",
-          "rightRear": "CLOSED",
-          "trunk": "CLOSED"
-        },
-        "driverPreferences": { "lscPrivacyMode": "OFF" },
-        "electricChargingState": {
-          "chargingConnectionType": "CONDUCTIVE",
-          "chargingLevelPercent": 82,
-          "chargingStatus": "WAITING_FOR_CHARGING",
-          "chargingTarget": 100,
-          "isChargerConnected": true,
-          "range": 174
-        },
-        "isLeftSteering": true,
-        "isLscSupported": true,
-        "lastFetched": "2022-06-22T14:24:23.982Z",
-        "lastUpdatedAt": "2022-06-22T13:58:52Z",
-        "range": 174,
-        "requiredServices": [
-          {
-            "dateTime": "2022-10-01T00:00:00.000Z",
-            "description": "Next service due by the specified date.",
-            "status": "OK",
-            "type": "BRAKE_FLUID"
-          },
-          {
-            "dateTime": "2023-05-01T00:00:00.000Z",
-            "description": "Next vehicle check due after the specified distance or date.",
-            "status": "OK",
-            "type": "VEHICLE_CHECK"
-          },
-          {
-            "dateTime": "2023-05-01T00:00:00.000Z",
-            "description": "Next state inspection due by the specified date.",
-            "status": "OK",
-            "type": "VEHICLE_TUV"
-          }
-        ],
-        "roofState": { "roofState": "CLOSED", "roofStateType": "SUN_ROOF" },
-        "windowsState": {
-          "combinedState": "CLOSED",
-          "leftFront": "CLOSED",
-          "rightFront": "CLOSED"
-        }
-      }
-    },
-    "vehicles_v2_bmw_0.json": [
-      {
-        "appVehicleType": "CONNECTED",
-        "attributes": {
-          "a4aType": "USB_ONLY",
-          "bodyType": "I01",
-          "brand": "BMW_I",
-          "color": 4284110934,
-          "countryOfOrigin": "CZ",
-          "driveTrain": "ELECTRIC_WITH_RANGE_EXTENDER",
-          "driverGuideInfo": {
-            "androidAppScheme": "com.bmwgroup.driversguide.row",
-            "androidStoreUrl": "https://play.google.com/store/apps/details?id=com.bmwgroup.driversguide.row",
-            "iosAppScheme": "bmwdriversguide:///open",
-            "iosStoreUrl": "https://apps.apple.com/de/app/id714042749?mt=8"
-          },
-          "headUnitType": "NBT",
-          "hmiVersion": "ID4",
-          "lastFetched": "2022-07-10T09:25:53.104Z",
-          "model": "i3 (+ REX)",
-          "softwareVersionCurrent": {
-            "iStep": 510,
-            "puStep": { "month": 11, "year": 21 },
-            "seriesCluster": "I001"
-          },
-          "softwareVersionExFactory": {
-            "iStep": 502,
-            "puStep": { "month": 3, "year": 15 },
-            "seriesCluster": "I001"
-          },
-          "year": 2015
-        },
-        "mappingInfo": {
-          "isAssociated": false,
-          "isLmmEnabled": false,
-          "isPrimaryUser": true,
-          "mappingStatus": "CONFIRMED"
-        },
-        "vin": "**REDACTED**"
-      }
-    ]
-  }
+  "fingerprint": []
 }
