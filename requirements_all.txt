@@ -2686,7 +2686,7 @@ zigpy==0.52.3
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.43.1
+zwave-js-server-python==0.44.0
 
 # homeassistant.components.zwave_me
 zwave_me_ws==0.3.0
