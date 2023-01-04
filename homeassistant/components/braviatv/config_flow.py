@@ -6,7 +6,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 from aiohttp import CookieJar
-from pybravia import BraviaTV, BraviaTVAuthError, BraviaTVError, BraviaTVNotSupported
+from pybravia import BraviaAuthError, BraviaClient, BraviaError, BraviaNotSupported
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -41,7 +41,7 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize config flow."""
-        self.client: BraviaTV | None = None
+        self.client: BraviaClient | None = None
         self.device_config: dict[str, Any] = {}
         self.entry: ConfigEntry | None = None
 
@@ -58,7 +58,7 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass,
             cookie_jar=CookieJar(unsafe=True, quote_cookie=False),
         )
-        self.client = BraviaTV(host=host, session=session)
+        self.client = BraviaClient(host=host, session=session)
 
     async def gen_instance_ids(self) -> tuple[str, str]:
         """Generate client_id and nickname."""
@@ -162,18 +162,18 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if self.entry:
                     return await self.async_reauth_device()
                 return await self.async_create_device()
-            except BraviaTVAuthError:
+            except BraviaAuthError:
                 errors["base"] = "invalid_auth"
-            except BraviaTVNotSupported:
+            except BraviaNotSupported:
                 errors["base"] = "unsupported_model"
-            except BraviaTVError:
+            except BraviaError:
                 errors["base"] = "cannot_connect"
 
         assert self.client
 
         try:
             await self.client.pair(client_id, nickname)
-        except BraviaTVError:
+        except BraviaError:
             return self.async_abort(reason="no_ip_control")
 
         return self.async_show_form(
@@ -198,11 +198,11 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if self.entry:
                     return await self.async_reauth_device()
                 return await self.async_create_device()
-            except BraviaTVAuthError:
+            except BraviaAuthError:
                 errors["base"] = "invalid_auth"
-            except BraviaTVNotSupported:
+            except BraviaNotSupported:
                 errors["base"] = "unsupported_model"
-            except BraviaTVError:
+            except BraviaError:
                 errors["base"] = "cannot_connect"
 
         return self.async_show_form(
@@ -273,7 +273,7 @@ class BraviaTVOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
 
         try:
             await coordinator.async_update_sources()
-        except BraviaTVError:
+        except BraviaError:
             return self.async_abort(reason="failed_update")
 
         sources = coordinator.source_map.values()
