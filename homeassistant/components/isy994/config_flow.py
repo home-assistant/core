@@ -202,7 +202,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle a discovered ISY/IoX device via dhcp."""
         friendly_name = discovery_info.hostname
-        if friendly_name.startswith("polisy"):
+        if friendly_name.startswith("polisy") or friendly_name.startswith("eisy"):
             url = f"http://{discovery_info.ip}:8080"
         else:
             url = f"http://{discovery_info.ip}"
