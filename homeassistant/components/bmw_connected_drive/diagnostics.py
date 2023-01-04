@@ -59,7 +59,7 @@ async def async_get_config_entry_diagnostics(
             for vehicle in coordinator.account.vehicles
         ],
         "fingerprint": async_redact_data(
-            await coordinator.account.get_fingerprints(), TO_REDACT_DATA
+            coordinator.account.get_stored_responses(), TO_REDACT_DATA
         ),
     }
 
@@ -83,7 +83,7 @@ async def async_get_device_diagnostics(
         "data": async_redact_data(vehicle_to_dict(vehicle), TO_REDACT_DATA),
         # Always have to get the full fingerprint as the VIN is redacted beforehand by the library
         "fingerprint": async_redact_data(
-            await coordinator.account.get_fingerprints(), TO_REDACT_DATA
+            coordinator.account.get_stored_responses(), TO_REDACT_DATA
         ),
     }
 

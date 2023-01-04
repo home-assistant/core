@@ -31,8 +31,6 @@ async def test_config_entry_diagnostics(hass: HomeAssistant, hass_client, bmw_fi
 
     mock_config_entry = await setup_mocked_integration(hass)
 
-    assert hass.data[DOMAIN]
-
     diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, mock_config_entry
     )
@@ -53,8 +51,6 @@ async def test_device_diagnostics(hass: HomeAssistant, hass_client, bmw_fixture)
     time.tzset()
 
     mock_config_entry = await setup_mocked_integration(hass)
-
-    assert hass.data[DOMAIN]
 
     device_registry = dr.async_get(hass)
     reg_device = device_registry.async_get_device(
@@ -84,8 +80,6 @@ async def test_device_diagnostics_vehicle_not_found(
     time.tzset()
 
     mock_config_entry = await setup_mocked_integration(hass)
-
-    assert hass.data[DOMAIN]
 
     device_registry = dr.async_get(hass)
     reg_device = device_registry.async_get_device(
