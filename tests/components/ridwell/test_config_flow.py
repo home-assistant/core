@@ -7,7 +7,6 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.ridwell.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_PASSWORD, TEST_USERNAME
@@ -52,7 +51,7 @@ async def test_create_entry(hass, config, errors, get_client_response, mock_aior
     }
 
 
-async def test_duplicate_error(hass: HomeAssistant, config, setup_config_entry):
+async def test_duplicate_error(hass, config, setup_config_entry):
     """Test that errors are shown when duplicate entries are added."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=config
@@ -61,9 +60,7 @@ async def test_duplicate_error(hass: HomeAssistant, config, setup_config_entry):
     assert result["reason"] == "already_configured"
 
 
-async def test_step_reauth(
-    hass: HomeAssistant, config, config_entry, setup_config_entry
-) -> None:
+async def test_step_reauth(hass, config, config_entry, setup_config_entry) -> None:
     """Test a full reauth flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=config
