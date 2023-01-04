@@ -99,8 +99,8 @@ async def test_climate(
         "fan_modes": ["quiet", "low", "medium"],
         "swing_modes": [
             "stopped",
-            "fixedTop",
-            "fixedMiddleTop",
+            "fixedtop",
+            "fixedmiddletop",
         ],
         "current_temperature": 21.2,
         "temperature": 25,
@@ -203,13 +203,13 @@ async def test_climate_swing(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_SWING_MODE,
-            {ATTR_ENTITY_ID: state1.entity_id, ATTR_SWING_MODE: "fixedTop"},
+            {ATTR_ENTITY_ID: state1.entity_id, ATTR_SWING_MODE: "fixedtop"},
             blocking=True,
         )
         await hass.async_block_till_done()
 
     state2 = hass.states.get("climate.hallway")
-    assert state2.attributes["swing_mode"] == "fixedTop"
+    assert state2.attributes["swing_mode"] == "fixedtop"
 
     monkeypatch.setattr(
         get_data.parsed["ABC999111"],
@@ -240,13 +240,13 @@ async def test_climate_swing(
             await hass.services.async_call(
                 CLIMATE_DOMAIN,
                 SERVICE_SET_SWING_MODE,
-                {ATTR_ENTITY_ID: state1.entity_id, ATTR_SWING_MODE: "fixedTop"},
+                {ATTR_ENTITY_ID: state1.entity_id, ATTR_SWING_MODE: "fixedtop"},
                 blocking=True,
             )
     await hass.async_block_till_done()
 
     state3 = hass.states.get("climate.hallway")
-    assert state3.attributes["swing_mode"] == "fixedTop"
+    assert state3.attributes["swing_mode"] == "fixedtop"
 
 
 async def test_climate_temperatures(
