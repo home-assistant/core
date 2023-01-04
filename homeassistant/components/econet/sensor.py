@@ -1,7 +1,7 @@
 """Support for Rheem EcoNet water heaters."""
 from __future__ import annotations
 
-from pyeconet.equipment import EquipmentType
+from pyeconet.equipment import Equipment, EquipmentType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -77,9 +77,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 )
 
 
-ENERGY_KILO_BRITISH_THERMAL_UNIT = "kBtu"
-
-
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -88,8 +85,6 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][EQUIPMENT][entry.entry_id]
     equipment = data[EquipmentType.WATER_HEATER].copy()
     equipment.extend(data[EquipmentType.THERMOSTAT].copy())
-
-    sensors = []
 
     sensors = [
         EcoNetSensor(_equip, description)
@@ -108,7 +103,7 @@ class EcoNetSensor(EcoNetEntity, SensorEntity):
 
     def __init__(
         self,
-        econet_device,
+        econet_device: Equipment,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize."""
@@ -121,16 +116,11 @@ class EcoNetSensor(EcoNetEntity, SensorEntity):
         """Return sensors state."""
         value = getattr(self._econet, self.entity_description.key)
         if self.entity_description.name == "power_usage_today":
-            if self._econet.energy_type == ENERGY_KILO_BRITISH_THERMAL_UNIT.upper():
+            if self._econet.energy_type == "KBTU":
                 value = value * 0.2930710702  # Convert kBtu to kWh
         if isinstance(value, float):
             value = round(value, 2)
         return value
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self.entity_description.native_unit_of_measurement
 
     @property
     def name(self) -> str:
