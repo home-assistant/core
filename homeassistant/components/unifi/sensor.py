@@ -30,14 +30,21 @@ from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
+from .const import DOMAIN as UNIFI_DOMAIN
 from .controller import UniFiController
-from .entity import DataT, HandlerT, UnifiEntity, UnifiEntityDescription
+from .entity import (
+    DataT,
+    HandlerT,
+    UnifiEntity,
+    UnifiEntityDescription,
+    async_device_available_fn,
+    async_device_device_info_fn,
+)
 
 
 @callback
 def async_client_rx_value_fn(controller: UniFiController, client: Client) -> float:
-    """Calculate if all apps are enabled."""
+    """Calculate receiving data transfer value."""
     if client.mac not in controller.wireless_clients:
         return client.wired_rx_bytes_r / 1000000
     return client.rx_bytes_r / 1000000
@@ -45,7 +52,7 @@ def async_client_rx_value_fn(controller: UniFiController, client: Client) -> flo
 
 @callback
 def async_client_tx_value_fn(controller: UniFiController, client: Client) -> float:
-    """Calculate if all apps are enabled."""
+    """Calculate transmission data transfer value."""
     if client.mac not in controller.wireless_clients:
         return client.wired_tx_bytes_r / 1000000
     return client.tx_bytes_r / 1000000
@@ -70,31 +77,6 @@ def async_client_device_info_fn(api: aiounifi.Controller, obj_id: str) -> Device
         default_manufacturer=client.oui,
         default_name=client.name or client.hostname,
     )
-
-
-@callback
-def async_device_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
-    """Create device registry entry for device."""
-    if "_" in obj_id:  # Sub device
-        obj_id = obj_id.partition("_")[0]
-
-    device = api.devices[obj_id]
-    return DeviceInfo(
-        connections={(CONNECTION_NETWORK_MAC, device.mac)},
-        manufacturer=ATTR_MANUFACTURER,
-        model=device.model,
-        name=device.name or device.model,
-        sw_version=device.version,
-        hw_version=str(device.board_revision),
-    )
-
-
-@callback
-def async_sub_device_available_fn(controller: UniFiController, obj_id: str) -> bool:
-    """Check if sub device object is disabled."""
-    device_id = obj_id.partition("_")[0]
-    device = controller.api.devices[device_id]
-    return controller.available and not device.disabled
 
 
 @dataclass
@@ -157,7 +139,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         allowed_fn=lambda controller, obj_id: True,
         api_handler_fn=lambda api: api.ports,
-        available_fn=async_sub_device_available_fn,
+        available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
