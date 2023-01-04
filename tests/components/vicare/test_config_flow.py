@@ -1,7 +1,5 @@
 """Test the ViCare config flow."""
-from unittest.mock import patch
-
-from PyViCare.PyViCareUtils import PyViCareInvalidCredentialsError
+from unittest.mock import MagicMock
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp
@@ -14,7 +12,9 @@ from . import ENTRY_CONFIG, MOCK_MAC
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant) -> None:
+async def test_form(
+    hass: HomeAssistant, mock_setup_entry: bool, mock_vicare_2_gas_boilers: MagicMock
+):
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -22,22 +22,15 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert len(result["errors"]) == 0
 
-    with patch(
-        "homeassistant.components.vicare.config_flow.vicare_login",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.vicare.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_USERNAME: "foo@bar.com",
-                CONF_PASSWORD: "1234",
-                CONF_CLIENT_ID: "5678",
-            },
-        )
-        await hass.async_block_till_done()
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "foo@bar.com",
+            CONF_PASSWORD: "1234",
+            CONF_CLIENT_ID: "5678",
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ViCare"
@@ -45,32 +38,32 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_invalid_login(hass: HomeAssistant) -> None:
+async def test_invalid_login(
+    hass: HomeAssistant,
+    mock_setup_entry: bool,
+    mock_vicare_login_invalid_credentials_config_flow,
+) -> None:
     """Test a flow with an invalid Vicare login."""
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "foo@bar.com",
+            CONF_PASSWORD: "1234",
+            CONF_CLIENT_ID: "5678",
+        },
+    )
+    await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.vicare.config_flow.vicare_login",
-        side_effect=PyViCareInvalidCredentialsError,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_USERNAME: "foo@bar.com",
-                CONF_PASSWORD: "1234",
-                CONF_CLIENT_ID: "5678",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
-    assert result2["step_id"] == "user"
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
 
 
-async def test_form_dhcp(hass: HomeAssistant) -> None:
+async def test_form_dhcp(
+    hass: HomeAssistant, mock_setup_entry: bool, mock_vicare_login_config_flow
+):
     """Test we can setup from dhcp."""
 
     result = await hass.config_entries.flow.async_init(
@@ -86,22 +79,15 @@ async def test_form_dhcp(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.vicare.config_flow.vicare_login",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.vicare.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_USERNAME: "foo@bar.com",
-                CONF_PASSWORD: "1234",
-                CONF_CLIENT_ID: "5678",
-            },
-        )
-        await hass.async_block_till_done()
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "foo@bar.com",
+            CONF_PASSWORD: "1234",
+            CONF_CLIENT_ID: "5678",
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ViCare"

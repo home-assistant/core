@@ -25,13 +25,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    CONF_HEATING_TYPE,
-    DOMAIN,
-    VICARE_API,
-    VICARE_DEVICE_CONFIG,
-    VICARE_NAME,
-)
+from .const import DOMAIN, VICARE_DEVICE_CONFIG, VICARE_NAME
+from .helpers import get_device_name, get_unique_device_id, get_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,22 +77,17 @@ async def async_setup_entry(
     """Set up the ViCare climate platform."""
     name = VICARE_NAME
     entities = []
-    api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
-    circuits = await hass.async_add_executor_job(_get_circuits, api)
 
-    for circuit in circuits:
-        suffix = ""
-        if len(circuits) > 1:
-            suffix = f" {circuit.id}"
+    for device in hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG]:
+        api = device.asAutoDetectDevice()
 
-        entity = ViCareWater(
-            f"{name} Water{suffix}",
-            api,
-            circuit,
-            hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
-            config_entry.data[CONF_HEATING_TYPE],
-        )
-        entities.append(entity)
+        circuits = await hass.async_add_executor_job(_get_circuits, api)
+        for circuit in circuits:
+            suffix = ""
+            if len(circuits) > 1:
+                suffix = f" {circuit.id}"
+            entity = ViCareWater(f"{name} Water{suffix}", api, circuit, device)
+            entities.append(entity)
 
     async_add_entities(entities)
 
@@ -108,7 +98,7 @@ class ViCareWater(WaterHeaterEntity):
     _attr_precision = PRECISION_TENTHS
     _attr_supported_features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
 
-    def __init__(self, name, api, circuit, device_config, heating_type):
+    def __init__(self, name, api, circuit, device_config):
         """Initialize the DHW water_heater device."""
         self._name = name
         self._state = None
@@ -119,7 +109,6 @@ class ViCareWater(WaterHeaterEntity):
         self._target_temperature = None
         self._current_temperature = None
         self._current_mode = None
-        self._heating_type = heating_type
 
     def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""
@@ -149,14 +138,19 @@ class ViCareWater(WaterHeaterEntity):
     @property
     def unique_id(self) -> str:
         """Return unique ID for this device."""
-        return f"{self._device_config.getConfig().serial}-{self._circuit.id}"
+        return get_unique_id(self._api, self._device_config, self._circuit.id)
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device info for this device."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self._device_config.getConfig().serial)},
-            name=self._device_config.getModel(),
+            identifiers={
+                (
+                    DOMAIN,
+                    get_unique_device_id(self._device_config),
+                )
+            },
+            name=get_device_name(self._device_config),
             manufacturer="Viessmann",
             model=self._device_config.getModel(),
             configuration_url="https://developer.viessmann.com/",

@@ -15,13 +15,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
 from . import vicare_login
-from .const import (
-    CONF_HEATING_TYPE,
-    DEFAULT_HEATING_TYPE,
-    DOMAIN,
-    VICARE_NAME,
-    HeatingType,
-)
+from .const import DOMAIN, VICARE_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ViCare."""
 
-    VERSION = 1
+    VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -42,9 +36,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_USERNAME): cv.string,
             vol.Required(CONF_PASSWORD): cv.string,
             vol.Required(CONF_CLIENT_ID): cv.string,
-            vol.Required(CONF_HEATING_TYPE, default=DEFAULT_HEATING_TYPE.value): vol.In(
-                [e.value for e in HeatingType]
-            ),
         }
         errors: dict[str, str] = {}
 
@@ -53,9 +44,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.hass.async_add_executor_job(
                     vicare_login, self.hass, user_input
                 )
+                _LOGGER.info("XXX ok")
             except PyViCareInvalidCredentialsError:
                 errors["base"] = "invalid_auth"
+                _LOGGER.info("XXX abort")
+                return self.async_abort(reason="invalid_auth")
             else:
+                _LOGGER.info("XXX else")
                 return self.async_create_entry(title=VICARE_NAME, data=user_input)
 
         return self.async_show_form(
