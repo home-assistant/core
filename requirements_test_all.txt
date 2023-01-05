@@ -1663,7 +1663,7 @@ starline==0.1.5
 statsd==3.2.1
 
 # homeassistant.components.steam_online
-steamodd==4.21
+steamodd==4.23
 
 # homeassistant.components.stookalert
 stookalert==0.1.4
