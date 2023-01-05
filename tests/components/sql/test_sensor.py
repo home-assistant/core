@@ -1,4 +1,7 @@
 """The test for the sql sensor platform."""
+from __future__ import annotations
+
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -8,12 +11,12 @@ from homeassistant.components.sql.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt
 
 from . import YAML_CONFIG, init_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_query(recorder_mock: AsyncMock, hass: HomeAssistant) -> None:
@@ -200,13 +203,17 @@ async def test_invalid_url_on_update(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    with patch(
+    with patch("homeassistant.components.recorder",), patch(
         "homeassistant.components.sql.sensor.sqlalchemy.engine.cursor.CursorResult",
         side_effect=SQLAlchemyError(
             "sqlite://homeassistant:hunter2@homeassistant.local"
         ),
     ):
-        await async_update_entity(hass, "sensor.count_tables")
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=1),
+        )
+        await hass.async_block_till_done()
 
     assert "sqlite://homeassistant:hunter2@homeassistant.local" not in caplog.text
     assert "sqlite://****:****@homeassistant.local" in caplog.text
