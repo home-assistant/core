@@ -1085,7 +1085,7 @@ pyblackbird==0.5
 pybotvac==0.0.23
 
 # homeassistant.components.braviatv
-pybravia==0.2.5
+pybravia==0.3.0
 
 # homeassistant.components.cloudflare
 pycfdns==2.0.1
