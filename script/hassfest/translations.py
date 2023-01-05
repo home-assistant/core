@@ -109,8 +109,8 @@ def translation_key_validator(value: str) -> str:
     """Validate value is valid translation key."""
     if RE_TRANSLATION_KEY.match(value) is None:
         raise vol.Invalid(
-            f"Invalid translation key '{value}', need to be [a-z0-9_]+ and"
-            " cannot start or end with a lower case"
+            f"Invalid translation key '{value}', need to be [a-z0-9-_]+ and"
+            " cannot start or end with a hyphen or underscore."
         )
 
     return value
