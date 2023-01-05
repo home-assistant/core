@@ -1,16 +1,20 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Service is already configured"
+            "already_configured": "Service is already configured",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
-            "cannot_connect": "Failed to connect"
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication"
         },
         "step": {
-            "api_key": {
+            "reauth_confirm": {
                 "data": {
                     "api_key": "API Key"
-                }
+                },
+                "description": "Please enter a new api key for PI-Hole at {host}/{location}",
+                "title": "PI-Hole Reauthenticate Integration"
             },
             "user": {
                 "data": {
@@ -20,16 +24,9 @@
                     "name": "Name",
                     "port": "Port",
                     "ssl": "Uses an SSL certificate",
-                    "statistics_only": "Statistics Only",
                     "verify_ssl": "Verify SSL certificate"
                 }
             }
-        }
-    },
-    "issues": {
-        "deprecated_yaml": {
-            "description": "Configuring PI-Hole using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the PI-Hole YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
-            "title": "The PI-Hole YAML configuration is being removed"
         }
     }
 }

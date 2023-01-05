@@ -154,9 +154,6 @@ BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
         },
         state_value=lambda api: bool(api.versions["FTL_update"]),
     ),
-)
-
-BINARY_SENSOR_TYPES_STATISTICS_ONLY: tuple[PiHoleBinarySensorEntityDescription, ...] = (
     PiHoleBinarySensorEntityDescription(
         key="status",
         name="Status",

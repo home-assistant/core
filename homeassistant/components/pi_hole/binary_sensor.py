@@ -15,8 +15,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from . import PiHoleEntity
 from .const import (
     BINARY_SENSOR_TYPES,
-    BINARY_SENSOR_TYPES_STATISTICS_ONLY,
-    CONF_STATISTICS_ONLY,
     DATA_KEY_API,
     DATA_KEY_COORDINATOR,
     DOMAIN as PIHOLE_DOMAIN,
@@ -41,18 +39,6 @@ async def async_setup_entry(
         )
         for description in BINARY_SENSOR_TYPES
     ]
-
-    if entry.data[CONF_STATISTICS_ONLY]:
-        binary_sensors += [
-            PiHoleBinarySensor(
-                hole_data[DATA_KEY_API],
-                hole_data[DATA_KEY_COORDINATOR],
-                name,
-                entry.entry_id,
-                description,
-            )
-            for description in BINARY_SENSOR_TYPES_STATISTICS_ONLY
-        ]
 
     async_add_entities(binary_sensors, True)
 
