@@ -36,20 +36,20 @@ def websocket_list_entities(
 ) -> None:
     """Handle list registry entries command."""
     registry = er.async_get(hass)
+    # Build start of response message
+    msg_json_prefix = (
+        f'{{"id":{msg["id"]},"type": "{websocket_api.const.TYPE_RESULT}",'
+        f'"success":true,"result": ['
+    )
     # Concatenate cached entity registry item JSON serializations
-    entries_json = (
-        "["
+    msg_json = (
+        msg_json_prefix
         + ",".join(
             entry.json_repr
             for entry in registry.entities.values()
             if entry.json_repr is not None
         )
-        + "]"
-    )
-    # Build response message
-    msg_json = (
-        f'{{"id":{msg["id"]},"type": "{websocket_api.const.TYPE_RESULT}",'
-        f'"success":true,"result": {entries_json}}}'
+        + "]}"
     )
     connection.send_message(msg_json)
 
