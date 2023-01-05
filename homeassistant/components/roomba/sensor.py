@@ -21,10 +21,10 @@ async def async_setup_entry(
 
     roomba_vac = RoombaBattery(roomba, blid)
     roomba_cleaning_time = CleaningTime(roomba, blid)
-    roomba_total_missions = TotalMissions(roomba, blid)
-    roomba_success_missions = SuccessMissions(roomba, blid)
-    roomba_cancelled_missions = CancelledMissions(roomba, blid)
-    roomba_failed_missions = FailedMissions(roomba, blid)
+    roomba_total_missions = MissionSensor(roomba, blid, "total", "nMssn")
+    roomba_success_missions = MissionSensor(roomba, blid, "successful", "nMssnOk")
+    roomba_canceled_missions = MissionSensor(roomba, blid, "canceled", "nMssnC")
+    roomba_failed_missions = MissionSensor(roomba, blid, "failed", "nMssnF")
     roomba_scrubs_count = ScrubsCount(roomba, blid)
     async_add_entities(
         [
@@ -32,7 +32,7 @@ async def async_setup_entry(
             roomba_cleaning_time,
             roomba_total_missions,
             roomba_success_missions,
-            roomba_cancelled_missions,
+            roomba_canceled_missions,
             roomba_failed_missions,
             roomba_scrubs_count,
         ],
@@ -89,15 +89,21 @@ class CleaningTime(IRobotEntity, SensorEntity):
         return self._run_stats.get("hr")
 
 
-class TotalMissions(IRobotEntity, SensorEntity):
-    """Class to hold Roomba Sensor basic info."""
+class MissionSensor(IRobotEntity, SensorEntity):
+    """Class to hold the Roomba missions info."""
+
+    def __init__(self, roomba, blid, mission_type, mission_value_string):
+        """Initialise iRobot sensor with mission details."""
+        super().__init__(roomba, blid)
+        self._mission_type = mission_type
+        self._mission_value_string = mission_value_string
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self._name} missions total"
+        return f"{self._name} missions {self._mission_type}"
 
     @property
     def unique_id(self):
@@ -117,115 +123,7 @@ class TotalMissions(IRobotEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return self._mission_stats.get("nMssn")
-
-
-class SuccessMissions(IRobotEntity, SensorEntity):
-    """Class to hold Roomba Sensor basic info."""
-
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._name} missions successful"
-
-    @property
-    def unique_id(self):
-        """Return the ID of this sensor."""
-        return f"successful_missions_{self._blid}"
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit_of_measurement of the device."""
-        return ""
-
-    @property
-    def icon(self):
-        """Return the counter icon."""
-        return "mdi:counter"
-
-    @property
-    def entity_registry_enabled_default(self):
-        """Disable sensor by default."""
-        return False
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._mission_stats.get("nMssnOk")
-
-
-class CancelledMissions(IRobotEntity, SensorEntity):
-    """Class to hold Roomba Sensor basic info."""
-
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._name} missions canceled"
-
-    @property
-    def unique_id(self):
-        """Return the ID of this sensor."""
-        return f"canceled_missions_{self._blid}"
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit_of_measurement of the device."""
-        return ""
-
-    @property
-    def icon(self):
-        """Return the counter icon."""
-        return "mdi:counter"
-
-    @property
-    def entity_registry_enabled_default(self):
-        """Disable sensor by default."""
-        return False
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._mission_stats.get("nMssnC")
-
-
-class FailedMissions(IRobotEntity, SensorEntity):
-    """Class to hold Roomba Sensor basic info."""
-
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._name} missions failed"
-
-    @property
-    def unique_id(self):
-        """Return the ID of this sensor."""
-        return f"failed_missions_{self._blid}"
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit_of_measurement of the device."""
-        return ""
-
-    @property
-    def icon(self):
-        """Return the counter icon."""
-        return "mdi:counter"
-
-    @property
-    def entity_registry_enabled_default(self):
-        """Disable sensor by default."""
-        return False
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._mission_stats.get("nMssnF")
+        return self._mission_stats.get(self._mission_value_string)
 
 
 class ScrubsCount(IRobotEntity, SensorEntity):
