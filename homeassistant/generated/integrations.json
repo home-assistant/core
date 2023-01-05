@@ -3251,6 +3251,11 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "mijndomein_energie": {
+      "name": "Mijndomein Energie",
+      "integration_type": "virtual",
+      "supported_by": "energyzero"
+    },
     "mikrotik": {
       "name": "Mikrotik",
       "integration_type": "hub",
