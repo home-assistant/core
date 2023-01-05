@@ -519,7 +519,6 @@ class UnitOfEnergy(StrEnum):
     KILO_WATT_HOUR = "kWh"
     MEGA_WATT_HOUR = "MWh"
     WATT_HOUR = "Wh"
-    CALORIE = "cal"
 
 
 ENERGY_KILO_WATT_HOUR: Final = "kWh"
@@ -658,7 +657,6 @@ class UnitOfFrequency(StrEnum):
     KILOHERTZ = "kHz"
     MEGAHERTZ = "MHz"
     GIGAHERTZ = "GHz"
-    BPM = "bpm"
 
 
 FREQUENCY_HERTZ: Final = "Hz"
