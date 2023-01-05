@@ -130,9 +130,9 @@ class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
         """Set fan mode."""
         self.coordinator.client.set_fan_on(fan_mode == FAN_ON)
 
-    def set_humidity(self, humidity: float) -> None:
+    def set_humidity(self, humidity: int) -> None:
         """Set desired target humidity."""
-        self.coordinator.client.set_target_humidity(round(humidity))
+        self.coordinator.client.set_target_humidity(humidity)
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set desired target temperature."""

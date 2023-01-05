@@ -481,7 +481,7 @@ async def test_user_setup_wolock_auth(hass):
 
     with patch(
         "homeassistant.components.switchbot.config_flow.SwitchbotLock.retrieve_encryption_key",
-        side_effect=SwitchbotAuthenticationError,
+        side_effect=SwitchbotAuthenticationError("error from api"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -494,6 +494,7 @@ async def test_user_setup_wolock_auth(hass):
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "lock_auth"
     assert result["errors"] == {"base": "auth_failed"}
+    assert "error from api" in result["description_placeholders"]["error_detail"]
 
     with patch_async_setup_entry() as mock_setup_entry, patch(
         "homeassistant.components.switchbot.config_flow.SwitchbotLock.verify_encryption_key",

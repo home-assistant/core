@@ -19,7 +19,12 @@ from homeassistant.helpers import (
 from .const import DOMAIN
 from .coordinator import AirzoneUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SENSOR]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.SELECT,
+    Platform.SENSOR,
+]
 
 _LOGGER = logging.getLogger(__name__)
 
