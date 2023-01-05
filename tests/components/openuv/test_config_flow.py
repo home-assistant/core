@@ -32,7 +32,7 @@ async def test_create_entry(hass, client, config, mock_pyopenuv):
         )
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "user"
-        assert result["errors"] == {"base": "invalid_api_key"}
+        assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
 
     # Test that we can recover from the error:
     result = await hass.config_entries.flow.async_configure(
