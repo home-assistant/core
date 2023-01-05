@@ -10,7 +10,7 @@ timer.
 from __future__ import annotations
 
 from collections import UserDict
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping, ValuesView
 import logging
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -308,6 +308,10 @@ class EntityRegistryItems(UserDict[str, "RegistryEntry"]):
         super().__init__()
         self._entry_ids: dict[str, RegistryEntry] = {}
         self._index: dict[tuple[str, str, str], str] = {}
+
+    def values(self) -> ValuesView[RegistryEntry]:
+        """Return the underlying values to avoid __iter__ overhead."""
+        return self.data.values()
 
     def __setitem__(self, key: str, entry: RegistryEntry) -> None:
         """Add an item."""
