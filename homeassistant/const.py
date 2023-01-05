@@ -1031,6 +1031,29 @@ DATA_RATE_GIBIBYTES_PER_SECOND: Final = "GiB/s"
 """Deprecated: please use UnitOfDataRate.GIBIBYTES_PER_SECOND"""
 
 
+# Radiation units
+class UnitOfRadiation(StrEnum):
+    """Radiation units."""
+
+    # Radioactivity units
+    BECQUEREL = "Bq"
+    CURIE = "Ci"
+    RADIOACTIVITY_BECQUEREL_PER_LITER = "Bq/L"
+    RADIOACTIVITY_PICOCURIE_PER_LITER = "pCi/L"
+    
+    # Absorbed dose units
+    GRAY = "Gy"
+    RAD = "rad"
+    ABSORBED_DOSE_MILLIGRAY = "mGy"
+    ABSORBED_DOSE_RAD = "rad"
+    
+    # Effective dose units
+    SIEVERT = "Sv"
+    REM = "rem"
+    EFFECTIVE_DOSE_MILLISIEVERT_PER_HOUR = "mSv/h"
+    EFFECTIVE_DOSE_REM_PER_HOUR = "rem/h"
+
+    
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP: Final = "stop"
 SERVICE_HOMEASSISTANT_RESTART: Final = "restart"
