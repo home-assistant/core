@@ -157,5 +157,20 @@
         "name": "Update available"
       }
     }
+  },
+  "state_attributes": {
+    "_": {
+      "id": { "name": "Id" },
+      "turn_on": { "name": "Turned on" },
+      "type": { "name": "Type" },
+      "fanlevel": { "name": "Fan level" },
+      "horizontalswing": { "name": "Horizontal swing" },
+      "light": { "name": "Light" },
+      "mode": { "name": "Mode" },
+      "on": { "name": "On" },
+      "swing": { "name": "Swing" },
+      "targettemperature": { "name": "Temperature target" },
+      "temperatureunit": { "name": "Temperature unit" }
+    }
   }
 }
