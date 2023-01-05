@@ -58,7 +58,7 @@ class SonarrCalendarEntity(CalendarEntity):
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
-        if len(self._events) > 0:
+        if self._events:
             return self._events[0]
         return None
 
