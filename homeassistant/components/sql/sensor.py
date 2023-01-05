@@ -44,33 +44,8 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the SQL sensor from yaml."""
-    if discovery_info is None:
+    if (conf := discovery_info) is None:
         return
-
-    conf = discovery_info
-
-    if not (db_url := conf.get(CONF_DB_URL)):
-        db_url = DEFAULT_URL.format(hass_config_path=hass.config.path(DEFAULT_DB_FILE))
-
-    sess: scoped_session | None = None
-    try:
-        engine = sqlalchemy.create_engine(db_url)
-        sessmaker = scoped_session(sessionmaker(bind=engine))
-
-        # Run a dummy query just to test the db_url
-        sess = sessmaker()
-        sess.execute("SELECT 1;")
-
-    except SQLAlchemyError as err:
-        _LOGGER.error(
-            "Couldn't connect using %s DB_URL: %s",
-            redact_credentials(db_url),
-            redact_credentials(str(err)),
-        )
-        return
-    finally:
-        if sess:
-            sess.close()
 
     name: str = conf[CONF_NAME]
     query_str: str = conf[CONF_QUERY]
@@ -78,32 +53,21 @@ async def async_setup_platform(
     value_template: Template | None = conf.get(CONF_VALUE_TEMPLATE)
     column_name: str = conf[CONF_COLUMN_NAME]
     unique_id: str | None = conf.get(CONF_UNIQUE_ID)
+    db_url: str | None = conf.get(CONF_DB_URL)
 
     if value_template is not None:
         value_template.hass = hass
 
-    # MSSQL uses TOP and not LIMIT
-    if not ("LIMIT" in query_str.upper() or "SELECT TOP" in query_str.upper()):
-        query_str = (
-            query_str.replace("SELECT", "SELECT TOP 1")
-            if "mssql" in db_url
-            else query_str.replace(";", " LIMIT 1;")
-        )
-
-    async_add_entities(
-        [
-            SQLSensor(
-                name,
-                sessmaker,
-                query_str,
-                column_name,
-                unit,
-                value_template,
-                unique_id,
-                True,
-            )
-        ],
-        True,
+    await async_setup_sensor(
+        hass,
+        name,
+        query_str,
+        column_name,
+        unit,
+        value_template,
+        unique_id,
+        db_url,
+        async_add_entities,
     )
 
 
@@ -129,12 +93,54 @@ async def async_setup_entry(
         if value_template is not None:
             value_template.hass = hass
 
+    await async_setup_sensor(
+        hass,
+        name,
+        query_str,
+        column_name,
+        unit,
+        value_template,
+        entry.entry_id,
+        db_url,
+        async_add_entities,
+    )
+
+
+async def async_setup_sensor(
+    hass: HomeAssistant,
+    name: str,
+    query_str: str,
+    column_name: str,
+    unit: str | None,
+    value_template: Template | None,
+    unique_id: str | None,
+    db_url: str | None,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the SQL sensor."""
+
+    if not db_url:
+        db_url = DEFAULT_URL.format(hass_config_path=hass.config.path(DEFAULT_DB_FILE))
+
+    sess: scoped_session | None = None
     try:
         engine = sqlalchemy.create_engine(db_url, future=True)
         sessmaker = scoped_session(sessionmaker(bind=engine, future=True))
+
+        # Run a dummy query just to test the db_url
+        sess = sessmaker()
+        sess.execute("SELECT 1;")
+
     except SQLAlchemyError as err:
-        _LOGGER.error("Can not open database %s", {redact_credentials(str(err))})
+        _LOGGER.error(
+            "Couldn't connect using %s DB_URL: %s",
+            redact_credentials(db_url),
+            redact_credentials(str(err)),
+        )
         return
+    finally:
+        if sess:
+            sess.close()
 
     # MSSQL uses TOP and not LIMIT
     if not ("LIMIT" in query_str.upper() or "SELECT TOP" in query_str.upper()):
@@ -152,7 +158,7 @@ async def async_setup_entry(
                 column_name,
                 unit,
                 value_template,
-                entry.entry_id,
+                unique_id,
                 False,
             )
         ],
