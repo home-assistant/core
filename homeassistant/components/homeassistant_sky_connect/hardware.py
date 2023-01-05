@@ -2,15 +2,15 @@
 from __future__ import annotations
 
 from homeassistant.components.hardware.models import HardwareInfo, USBInfo
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
+from .util import async_is_plugged_in
 
 DONGLE_NAME = "Home Assistant Sky Connect"
 
 
-@callback
-def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
+async def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
     """Return board info."""
     entries = hass.config_entries.async_entries(DOMAIN)
 
@@ -29,4 +29,5 @@ def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
             url=None,
         )
         for entry in entries
+        if await async_is_plugged_in(hass, entry)
     ]

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from homeassistant.components.hardware.models import BoardInfo, HardwareInfo
 from homeassistant.components.hassio import get_os_info
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
@@ -31,8 +31,7 @@ MODELS = {
 }
 
 
-@callback
-def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
+async def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
     """Return board info."""
     if (os_info := get_os_info(hass)) is None:
         raise HomeAssistantError

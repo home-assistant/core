@@ -19,8 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN
-from .util import get_usb_service_info
+from .util import async_is_plugged_in, get_usb_service_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,18 +63,9 @@ async def _multi_pan_addon_info(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a Home Assistant Sky Connect config entry."""
-    matcher = usb.USBCallbackMatcher(
-        domain=DOMAIN,
-        vid=entry.data["vid"].upper(),
-        pid=entry.data["pid"].upper(),
-        serial_number=entry.data["serial_number"].lower(),
-        manufacturer=entry.data["manufacturer"].lower(),
-        description=entry.data["description"].lower(),
-    )
-
-    if not usb.async_is_plugged_in(hass, matcher):
-        # The USB dongle is not plugged in
-        raise ConfigEntryNotReady
+    if not await async_is_plugged_in(hass, entry):
+        # The USB dongle is not plugged in, don't setup ZHA
+        return True
 
     addon_info = await _multi_pan_addon_info(hass, entry)
 

@@ -64,7 +64,7 @@ async def test_setup_entry(
     )
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.homeassistant_sky_connect.usb.async_is_plugged_in",
+        "homeassistant.components.homeassistant_sky_connect.util.usb.async_is_plugged_in",
         return_value=True,
     ) as mock_is_plugged_in, patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=onboarded
@@ -109,7 +109,7 @@ async def test_setup_zha(
     )
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.homeassistant_sky_connect.usb.async_is_plugged_in",
+        "homeassistant.components.homeassistant_sky_connect.util.usb.async_is_plugged_in",
         return_value=True,
     ) as mock_is_plugged_in, patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False
@@ -157,7 +157,7 @@ async def test_setup_zha_multipan(
     )
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.homeassistant_sky_connect.usb.async_is_plugged_in",
+        "homeassistant.components.homeassistant_sky_connect.util.usb.async_is_plugged_in",
         return_value=True,
     ) as mock_is_plugged_in, patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False
@@ -208,7 +208,7 @@ async def test_setup_zha_multipan_other_device(
     )
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.homeassistant_sky_connect.usb.async_is_plugged_in",
+        "homeassistant.components.homeassistant_sky_connect.util.usb.async_is_plugged_in",
         return_value=True,
     ) as mock_is_plugged_in, patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False
@@ -255,13 +255,16 @@ async def test_setup_entry_wait_usb(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.homeassistant_sky_connect.usb.async_is_plugged_in",
+        "homeassistant.components.homeassistant_sky_connect.util.usb.async_is_plugged_in",
         return_value=False,
     ) as mock_is_plugged_in:
-        assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         assert len(mock_is_plugged_in.mock_calls) == 1
-        assert config_entry.state == ConfigEntryState.SETUP_RETRY
+        assert config_entry.state == ConfigEntryState.LOADED
+
+    zha_flows = hass.config_entries.flow.async_progress_by_handler("zha")
+    assert len(zha_flows) == 0
 
 
 async def test_setup_entry_addon_info_fails(
@@ -279,7 +282,7 @@ async def test_setup_entry_addon_info_fails(
     )
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.homeassistant_sky_connect.usb.async_is_plugged_in",
+        "homeassistant.components.homeassistant_sky_connect.util.usb.async_is_plugged_in",
         return_value=True,
     ), patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False
@@ -305,7 +308,7 @@ async def test_setup_entry_addon_not_running(
     )
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.homeassistant_sky_connect.usb.async_is_plugged_in",
+        "homeassistant.components.homeassistant_sky_connect.util.usb.async_is_plugged_in",
         return_value=True,
     ), patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False

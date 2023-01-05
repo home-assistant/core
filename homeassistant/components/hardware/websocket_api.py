@@ -61,7 +61,9 @@ async def ws_info(
     for platform in hardware_platform.values():
         if hasattr(platform, "async_info"):
             with contextlib.suppress(HomeAssistantError):
-                hardware_info.extend([asdict(hw) for hw in platform.async_info(hass)])
+                hardware_info.extend(
+                    [asdict(hw) for hw in await platform.async_info(hass)]
+                )
 
     connection.send_result(msg["id"], {"hardware": hardware_info})
 

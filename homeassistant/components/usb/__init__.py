@@ -61,8 +61,7 @@ def async_register_scan_request_callback(
     return discovery.async_register_scan_request_callback(callback)
 
 
-@hass_callback
-def async_is_plugged_in(hass: HomeAssistant, matcher: USBCallbackMatcher) -> bool:
+async def async_is_plugged_in(hass: HomeAssistant, matcher: USBCallbackMatcher) -> bool:
     """Return True is a USB device is present."""
 
     vid = matcher.get("vid", "")
@@ -83,6 +82,7 @@ def async_is_plugged_in(hass: HomeAssistant, matcher: USBCallbackMatcher) -> boo
         )
 
     usb_discovery: USBDiscovery = hass.data[DOMAIN]
+    await usb_discovery.async_request_scan()
     return any(
         _is_matching(USBDevice(*device_tuple), matcher)
         for device_tuple in usb_discovery.seen

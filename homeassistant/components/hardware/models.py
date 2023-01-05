@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 
 
 @dataclass
@@ -42,6 +42,5 @@ class HardwareInfo:
 class HardwareProtocol(Protocol):
     """Define the format of hardware platforms."""
 
-    @callback
-    def async_info(self, hass: HomeAssistant) -> list[HardwareInfo]:
+    async def async_info(self, hass: HomeAssistant) -> list[HardwareInfo]:
         """Return info."""
