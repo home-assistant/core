@@ -231,14 +231,14 @@ async def test_sensor(hass):
 
     state = hass.states.get("sensor.nettigo_air_monitor_pmsx003_caqi_level")
     assert state
-    assert state.state == "very low"
+    assert state.state == "very_low"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
     assert state.attributes.get(ATTR_OPTIONS) == [
-        "very low",
+        "very_low",
         "low",
         "medium",
         "high",
-        "very high",
+        "very_high",
     ]
     assert state.attributes.get(ATTR_ICON) == "mdi:air-filter"
 
@@ -331,14 +331,14 @@ async def test_sensor(hass):
 
     state = hass.states.get("sensor.nettigo_air_monitor_sds011_caqi_level")
     assert state
-    assert state.state == "very low"
+    assert state.state == "very_low"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
     assert state.attributes.get(ATTR_OPTIONS) == [
-        "very low",
+        "very_low",
         "low",
         "medium",
         "high",
-        "very high",
+        "very_high",
     ]
     assert state.attributes.get(ATTR_ICON) == "mdi:air-filter"
 
@@ -377,11 +377,11 @@ async def test_sensor(hass):
     assert state.state == "medium"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
     assert state.attributes.get(ATTR_OPTIONS) == [
-        "very low",
+        "very_low",
         "low",
         "medium",
         "high",
-        "very high",
+        "very_high",
     ]
     assert state.attributes.get(ATTR_ICON) == "mdi:air-filter"
 
