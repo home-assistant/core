@@ -22,10 +22,10 @@ from .const import DOMAIN
 ENERGY_USAGE_DEVICE_CLASSES = (sensor.SensorDeviceClass.ENERGY,)
 ENERGY_USAGE_UNITS = {
     sensor.SensorDeviceClass.ENERGY: (
+        UnitOfEnergy.GIGA_JOULE,
         UnitOfEnergy.KILO_WATT_HOUR,
         UnitOfEnergy.MEGA_WATT_HOUR,
         UnitOfEnergy.WATT_HOUR,
-        UnitOfEnergy.GIGA_JOULE,
     )
 }
 ENERGY_PRICE_UNITS = tuple(
@@ -39,12 +39,16 @@ GAS_USAGE_DEVICE_CLASSES = (
 )
 GAS_USAGE_UNITS = {
     sensor.SensorDeviceClass.ENERGY: (
-        UnitOfEnergy.WATT_HOUR,
+        UnitOfEnergy.GIGA_JOULE,
         UnitOfEnergy.KILO_WATT_HOUR,
         UnitOfEnergy.MEGA_WATT_HOUR,
-        UnitOfEnergy.GIGA_JOULE,
+        UnitOfEnergy.WATT_HOUR,
     ),
-    sensor.SensorDeviceClass.GAS: (UnitOfVolume.CUBIC_METERS, UnitOfVolume.CUBIC_FEET),
+    sensor.SensorDeviceClass.GAS: (
+        UnitOfVolume.CENTUM_CUBIC_FEET,
+        UnitOfVolume.CUBIC_FEET,
+        UnitOfVolume.CUBIC_METERS,
+    ),
 }
 GAS_PRICE_UNITS = tuple(
     f"/{unit}" for units in GAS_USAGE_UNITS.values() for unit in units
@@ -54,8 +58,9 @@ GAS_PRICE_UNIT_ERROR = "entity_unexpected_unit_gas_price"
 WATER_USAGE_DEVICE_CLASSES = (sensor.SensorDeviceClass.WATER,)
 WATER_USAGE_UNITS = {
     sensor.SensorDeviceClass.WATER: (
-        UnitOfVolume.CUBIC_METERS,
+        UnitOfVolume.CENTUM_CUBIC_FEET,
         UnitOfVolume.CUBIC_FEET,
+        UnitOfVolume.CUBIC_METERS,
         UnitOfVolume.GALLONS,
         UnitOfVolume.LITERS,
     ),
