@@ -31,5 +31,16 @@
                 "title": "Avastatud printer"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "printer": {
+                "state": {
+                    "idle": "Ootel",
+                    "printing": "Tr\u00fckkimine",
+                    "stopped": "Peatatud"
+                }
+            }
+        }
     }
 }
