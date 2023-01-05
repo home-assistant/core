@@ -108,7 +108,7 @@ class MissionSensor(IRobotEntity, SensorEntity):
     @property
     def unique_id(self):
         """Return the ID of this sensor."""
-        return f"total_missions_{self._blid}"
+        return f"{self._mission_type}_missions_{self._blid}"
 
     @property
     def icon(self):
