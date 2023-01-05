@@ -835,7 +835,7 @@ def test_human_readable_device_name():
     assert "8A2A" in name
 
 
-async def test_async_is_plugged_in(hass, hass_ws_client):
+async def test_async_is_plugged_in(hass):
     """Test async_is_plugged_in."""
     new_usb = [{"domain": "test1", "vid": "3039", "pid": "3039"}]
 
@@ -859,22 +859,22 @@ async def test_async_is_plugged_in(hass, hass_ws_client):
         "homeassistant.components.usb.async_get_usb", return_value=new_usb
     ), patch("homeassistant.components.usb.comports", return_value=[]), patch.object(
         hass.config_entries.flow, "async_init"
+    ), patch(
+        "homeassistant.components.usb.REQUEST_SCAN_COOLDOWN", 0
     ):
         assert await async_setup_component(hass, "usb", {"usb": {}})
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
-        assert not usb.async_is_plugged_in(hass, matcher)
+        assert not await usb.async_is_plugged_in(hass, matcher)
 
     with patch(
         "homeassistant.components.usb.comports", return_value=mock_comports
-    ), patch.object(hass.config_entries.flow, "async_init"):
-        ws_client = await hass_ws_client(hass)
-        await ws_client.send_json({"id": 1, "type": "usb/scan"})
-        response = await ws_client.receive_json()
-        assert response["success"]
+    ), patch.object(hass.config_entries.flow, "async_init"), patch(
+        "homeassistant.components.usb.REQUEST_SCAN_COOLDOWN", 0
+    ):
         await hass.async_block_till_done()
-        assert usb.async_is_plugged_in(hass, matcher)
+        assert await usb.async_is_plugged_in(hass, matcher)
 
 
 @pytest.mark.parametrize(
@@ -903,7 +903,7 @@ async def test_async_is_plugged_in_case_enforcement(hass, matcher):
         await hass.async_block_till_done()
 
         with pytest.raises(ValueError):
-            usb.async_is_plugged_in(hass, matcher)
+            await usb.async_is_plugged_in(hass, matcher)
 
 
 async def test_web_socket_triggers_discovery_request_callbacks(hass, hass_ws_client):
