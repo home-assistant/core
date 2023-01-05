@@ -3,7 +3,7 @@
   "name": "Steam",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/steam_online",
-  "requirements": ["steamodd==4.21"],
+  "requirements": ["steamodd==4.23"],
   "codeowners": ["@tkdrob"],
   "iot_class": "cloud_polling",
   "loggers": ["steam"],
