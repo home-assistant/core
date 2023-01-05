@@ -56,7 +56,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return True
 
     for sensor_conf in conf:
-        discovery.load_platform(hass, Platform.SENSOR, DOMAIN, sensor_conf, config)
+        await discovery.async_load_platform(
+            hass, Platform.SENSOR, DOMAIN, sensor_conf, config
+        )
 
     return True
 
