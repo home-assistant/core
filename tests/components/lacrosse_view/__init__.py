@@ -85,3 +85,14 @@ TEST_ALREADY_INT_SENSOR = Sensor(
     permissions={"read": True},
     model="Test",
 )
+TEST_NO_FIELD_SENSOR = Sensor(
+    name="Test",
+    device_id="1",
+    type="Test",
+    sensor_id="2",
+    sensor_field_names=["Temperature"],
+    location=Location(id="1", name="Test"),
+    data={},
+    permissions={"read": True},
+    model="Test",
+)

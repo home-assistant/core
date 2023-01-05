@@ -34,7 +34,7 @@ from .const import DOMAIN, LOGGER
 class LaCrosseSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[Sensor, str], float | int | str]
+    value_fn: Callable[[Sensor, str], float | int | str | None]
 
 
 @dataclass
@@ -44,9 +44,15 @@ class LaCrosseSensorEntityDescription(
     """Description for LaCrosse View sensor."""
 
 
-def get_value(sensor: Sensor, field: str) -> float | int | str:
+def get_value(sensor: Sensor, field: str) -> float | int | str | None:
     """Get the value of a sensor field."""
-    value = sensor.data[field]["values"][-1]["s"]
+    field_data = sensor.data.get(field)
+    if field_data is None:
+        LOGGER.warning(
+            "No field %s in response for %s (%s)", field, sensor.name, sensor.model
+        )
+        return None
+    value = field_data["values"][-1]["s"]
     try:
         value = float(value)
     except ValueError:
@@ -185,7 +191,7 @@ class LaCrosseViewSensor(
         self.index = index
 
     @property
-    def native_value(self) -> int | float | str:
+    def native_value(self) -> int | float | str | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(
             self.coordinator.data[self.index], self.entity_description.key
