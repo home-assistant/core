@@ -4,7 +4,6 @@ import json
 from pathlib import Path
 
 from bimmer_connected.account import MyBMWAccount
-from bimmer_connected.api.utils import log_to_to_file
 
 from homeassistant import config_entries
 from homeassistant.components.bmw_connected_drive.const import (
@@ -64,15 +63,6 @@ async def mock_vehicles_from_fixture(account: MyBMWAccount) -> None:
     }
     fetched_at = utcnow()
 
-    # simulate storing fingerprints
-    if account.config.log_response_path:
-        for brand in ["bmw", "mini"]:
-            log_to_to_file(
-                json.dumps(vehicles[brand]),
-                account.config.log_response_path,
-                f"vehicles_v2_{brand}",
-            )
-
     # Create a vehicle with base + specific state as provided by state/VIN API
     for vehicle_base in [vehicle for brand in vehicles.values() for vehicle in brand]:
         vehicle_state_path = (
@@ -92,14 +82,6 @@ async def mock_vehicles_from_fixture(account: MyBMWAccount) -> None:
             vehicle_state,
             fetched_at,
         )
-
-        # simulate storing fingerprints
-        if account.config.log_response_path:
-            log_to_to_file(
-                json.dumps(vehicle_state),
-                account.config.log_response_path,
-                f"state_{vehicle_base['vin']}",
-            )
 
 
 async def setup_mocked_integration(hass: HomeAssistant) -> MockConfigEntry:
