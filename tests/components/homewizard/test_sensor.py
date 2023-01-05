@@ -1525,7 +1525,11 @@ async def test_sensor_entity_export_disabled_when_unused(
     api = get_mock_device()
     api.data = AsyncMock(
         return_value=Data.from_dict(
-            {"total_power_export_t1_kwh": 0, "total_power_export_t2_kwh": 0}
+            {
+                "total_power_export_kwh": 0,
+                "total_power_export_t1_kwh": 0,
+                "total_power_export_t2_kwh": 0,
+            }
         )
     )
 
@@ -1541,6 +1545,12 @@ async def test_sensor_entity_export_disabled_when_unused(
         await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
+
+    entry = entity_registry.async_get(
+        "sensor.product_name_aabbccddeeff_total_power_export"
+    )
+    assert entry
+    assert entry.disabled
 
     entry = entity_registry.async_get(
         "sensor.product_name_aabbccddeeff_total_power_export_t1"
