@@ -2,7 +2,7 @@
   "domain": "braviatv",
   "name": "Sony Bravia TV",
   "documentation": "https://www.home-assistant.io/integrations/braviatv",
-  "requirements": ["pybravia==0.2.5"],
+  "requirements": ["pybravia==0.3.0"],
   "codeowners": ["@bieniu", "@Drafteed"],
   "ssdp": [
     {
