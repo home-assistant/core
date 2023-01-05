@@ -25,6 +25,18 @@
             "confirm": {
                 "description": "El szeretn\u00e9 kezdeni a be\u00e1ll\u00edt\u00e1st?"
             },
+            "pin": {
+                "data": {
+                    "pin": "PIN-k\u00f3d"
+                },
+                "title": "Sony Bravia TV enged\u00e9lyez\u00e9se"
+            },
+            "psk": {
+                "data": {
+                    "pin": "PSK"
+                },
+                "title": "Sony Bravia TV enged\u00e9lyez\u00e9se"
+            },
             "reauth_confirm": {
                 "data": {
                     "pin": "PIN-k\u00f3d",
