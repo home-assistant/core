@@ -597,8 +597,8 @@ class DSMREntity(SensorEntity):
         """Return the device class of this entity."""
         device_class = super().device_class
 
-        # Override device class for gas sensors providing energy kWh
-        # In those cases, the device class should be energy, not gas
+        # Override device class for gas sensors providing energy units, like
+        # kWh, MWh, GJ, etc. In those cases, the class should be energy, not gas
         with suppress(ValueError):
             if device_class == SensorDeviceClass.GAS and UnitOfEnergy(
                 str(self.native_unit_of_measurement)
