@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from devolo_plc_api.device import Device
+from devolo_plc_api import Device
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -24,9 +24,9 @@ from .entity import DevoloEntity
 def _is_connected_to_router(entity: DevoloBinarySensorEntity) -> bool:
     """Check, if device is attached to the router."""
     return all(
-        device["attached_to_router"]
-        for device in entity.coordinator.data["network"]["devices"]
-        if device["mac_address"] == entity.device.mac
+        device.attached_to_router
+        for device in entity.coordinator.data.devices
+        if device.mac_address == entity.device.mac
     )
 
 
