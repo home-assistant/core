@@ -1,7 +1,8 @@
 """DataUpdateCoordinator for LaCrosse View."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import timedelta
+from time import time
 
 from lacrosse_view import HTTPError, LaCrosse, Location, LoginError, Sensor
 
@@ -30,7 +31,7 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
     ) -> None:
         """Initialize DataUpdateCoordinator for LaCrosse View."""
         self.api = api
-        self.last_update = datetime.utcnow()
+        self.last_update = time()
         self.username = entry.data["username"]
         self.password = entry.data["password"]
         self.hass = hass
@@ -45,26 +46,22 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
 
     async def _async_update_data(self) -> list[Sensor]:
         """Get the data for LaCrosse View."""
-        now = datetime.utcnow()
+        now = int(time())
 
-        if self.last_update < now - timedelta(minutes=59):  # Get new token
+        if self.last_update < now - 59 * 60:  # Get new token once in a hour
             self.last_update = now
             try:
                 await self.api.login(self.username, self.password)
             except LoginError as error:
                 raise ConfigEntryAuthFailed from error
 
-        # Get the timestamp for yesterday at 6 PM (this is what is used in the app, i noticed it when proxying the request)
-        yesterday = now - timedelta(days=1)
-        yesterday = yesterday.replace(hour=18, minute=0, second=0, microsecond=0)
-        yesterday_timestamp = datetime.timestamp(yesterday)
-
         try:
+            # Fetch last hour of data
             sensors = await self.api.get_sensors(
                 location=Location(id=self.id, name=self.name),
                 tz=self.hass.config.time_zone,
-                start=str(int(yesterday_timestamp)),
-                end=str(int(datetime.timestamp(now))),
+                start=str(now - 3600),
+                end=str(now),
             )
         except HTTPError as error:
             raise ConfigEntryNotReady from error
