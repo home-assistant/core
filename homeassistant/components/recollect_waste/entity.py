@@ -3,7 +3,7 @@ from aiorecollect.client import PickupEvent
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -21,23 +21,20 @@ class ReCollectWasteEntity(CoordinatorEntity[DataUpdateCoordinator[list[PickupEv
         self,
         coordinator: DataUpdateCoordinator[list[PickupEvent]],
         entry: ConfigEntry,
-        description: EntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
 
-        identifier = f"{entry.data[CONF_PLACE_ID]}_{entry.data[CONF_SERVICE_ID]}"
-
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, identifier)},
+            identifiers={
+                (DOMAIN, f"{entry.data[CONF_PLACE_ID]}_{entry.data[CONF_SERVICE_ID]}")
+            },
             manufacturer="ReCollect Waste",
             name="ReCollect Waste",
         )
         self._attr_extra_state_attributes = {}
-        self._attr_unique_id = f"{identifier}_{description.key}"
         self._entry = entry
-        self.entity_description = description
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""

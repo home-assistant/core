@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, LOGGER
+from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DOMAIN, LOGGER
 from .entity import ReCollectWasteEntity
 
 ATTR_PICKUP_TYPES = "pickup_types"
@@ -66,6 +66,19 @@ class ReCollectWasteSensor(ReCollectWasteEntity, SensorEntity):
     """Define a ReCollect Waste sensor."""
 
     _attr_device_class = SensorDeviceClass.DATE
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[list[PickupEvent]],
+        entry: ConfigEntry,
+        description: SensorEntityDescription,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator, entry)
+
+        identifier = f"{entry.data[CONF_PLACE_ID]}_{entry.data[CONF_SERVICE_ID]}"
+        self._attr_unique_id = f"{identifier}_{description.key}"
+        self.entity_description = description
 
     @callback
     def _handle_coordinator_update(self) -> None:
