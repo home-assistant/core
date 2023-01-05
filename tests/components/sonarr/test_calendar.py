@@ -35,3 +35,16 @@ async def test_get_episodes(
     assert response.status == HTTPStatus.OK
     events = await response.json()
     assert len(events) == 1
+
+
+async def test_dont_get_episodes_outside_date_range(
+    hass: HomeAssistant, init_integration: MockConfigEntry, hass_client
+) -> None:
+    """Test data is extracted from the coordinator."""
+    client = await hass_client()
+    response = await client.get(
+        "/api/calendars/calendar.sonarr_episodes?start=2014-01-30&end=2014-01-31"
+    )
+    assert response.status == HTTPStatus.OK
+    events = await response.json()
+    assert len(events) == 0
