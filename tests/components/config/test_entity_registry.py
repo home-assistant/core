@@ -217,6 +217,89 @@ async def test_get_entity(hass, client):
     }
 
 
+async def test_get_entities(hass, client):
+    """Test get entry."""
+    mock_registry(
+        hass,
+        {
+            "test_domain.name": RegistryEntry(
+                entity_id="test_domain.name",
+                unique_id="1234",
+                platform="test_platform",
+                name="Hello World",
+            ),
+            "test_domain.no_name": RegistryEntry(
+                entity_id="test_domain.no_name",
+                unique_id="6789",
+                platform="test_platform",
+            ),
+        },
+    )
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "config/entity_registry/get_entries",
+            "entity_ids": [
+                "test_domain.name",
+                "test_domain.no_name",
+                "test_domain.no_such_entity",
+            ],
+        }
+    )
+    msg = await client.receive_json()
+
+    assert msg["result"] == {
+        "test_domain.name": {
+            "aliases": [],
+            "area_id": None,
+            "capabilities": None,
+            "config_entry_id": None,
+            "device_class": None,
+            "device_id": None,
+            "disabled_by": None,
+            "entity_category": None,
+            "entity_id": "test_domain.name",
+            "has_entity_name": False,
+            "hidden_by": None,
+            "icon": None,
+            "id": ANY,
+            "name": "Hello World",
+            "options": {},
+            "original_device_class": None,
+            "original_icon": None,
+            "original_name": None,
+            "platform": "test_platform",
+            "translation_key": None,
+            "unique_id": "1234",
+        },
+        "test_domain.no_name": {
+            "aliases": [],
+            "area_id": None,
+            "capabilities": None,
+            "config_entry_id": None,
+            "device_class": None,
+            "device_id": None,
+            "disabled_by": None,
+            "entity_category": None,
+            "entity_id": "test_domain.no_name",
+            "has_entity_name": False,
+            "hidden_by": None,
+            "icon": None,
+            "id": ANY,
+            "name": None,
+            "options": {},
+            "original_device_class": None,
+            "original_icon": None,
+            "original_name": None,
+            "platform": "test_platform",
+            "translation_key": None,
+            "unique_id": "6789",
+        },
+        "test_domain.no_such_entity": None,
+    }
+
+
 async def test_update_entity(hass, client):
     """Test updating entity."""
     registry = mock_registry(
