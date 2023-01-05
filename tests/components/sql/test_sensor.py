@@ -179,7 +179,6 @@ async def test_invalid_url_setup(
 
 
 async def test_invalid_url_on_update(
-    recorder_mock: AsyncMock,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ):
