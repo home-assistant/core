@@ -113,7 +113,7 @@ class ISYEntity(Entity):
 
         # Get extra information for Z-Wave Devices
         if node.protocol == PROTO_ZWAVE:
-            device_info[ATTR_MANUFACTURER] = f" MfrID:{node.zwave_props.mfr_id}"
+            device_info[ATTR_MANUFACTURER] = f"Z-Wave MfrID:{node.zwave_props.mfr_id}"
             model += (
                 f" Type:{node.zwave_props.devtype_gen} "
                 f"ProductTypeID:{node.zwave_props.prod_type_id} "
