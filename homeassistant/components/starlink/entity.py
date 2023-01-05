@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DISHY_HARDWARE, DISHY_ID
+from .const import DOMAIN
 from .coordinator import StarlinkUpdateCoordinator
 
 
@@ -58,8 +58,7 @@ class StarlinkSensorEntity(CoordinatorEntity[StarlinkUpdateCoordinator], SensorE
         config_url = f"http://{self.coordinator.channel_context.target.split(':')[0]}"
         return DeviceInfo(
             identifiers={
-                (DISHY_ID, self.coordinator.data["id"]),
-                (DISHY_HARDWARE, self.coordinator.data["hardware_version"]),
+                (DOMAIN, self.coordinator.data["id"]),
             },
             sw_version=self.coordinator.data["software_version"],
             hw_version=self.coordinator.data["hardware_version"],

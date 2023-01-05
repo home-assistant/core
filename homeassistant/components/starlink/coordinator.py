@@ -24,11 +24,11 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StatusDict]):
             hass,
             _LOGGER,
             name=name,
-            update_interval=timedelta(seconds=1),
+            update_interval=timedelta(seconds=5),
         )
 
     async def _async_update_data(self) -> StatusDict:
-        async with async_timeout.timeout(1):
+        async with async_timeout.timeout(4):
             try:
                 status = await self.hass.async_add_executor_job(
                     lambda: status_data(self.channel_context)
