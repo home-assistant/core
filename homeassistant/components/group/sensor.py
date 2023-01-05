@@ -33,7 +33,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -140,12 +140,12 @@ async def async_setup_entry(
 
 
 def calc_min(
-    sensor_values: list[tuple[str, float]], round_digits: int
+    sensor_values: list[tuple[str, float, State]], round_digits: int
 ) -> tuple[dict[str, Any], float]:
     """Calculate min value."""
     val: float | None = None
     entity_id: str | None = None
-    for sensor_id, sensor_value in sensor_values:
+    for sensor_id, sensor_value, _ in sensor_values:
         if val is None or val > sensor_value:
             entity_id, val = sensor_id, sensor_value
 
@@ -156,12 +156,12 @@ def calc_min(
 
 
 def calc_max(
-    sensor_values: list[tuple[str, float]], round_digits: int
+    sensor_values: list[tuple[str, float, State]], round_digits: int
 ) -> tuple[dict[str, Any], float]:
     """Calculate max value."""
     val: float | None = None
     entity_id: str | None = None
-    for sensor_id, sensor_value in sensor_values:
+    for sensor_id, sensor_value, _ in sensor_values:
         if val is None or val < sensor_value:
             entity_id, val = sensor_id, sensor_value
 
@@ -172,51 +172,57 @@ def calc_max(
 
 
 def calc_mean(
-    sensor_values: list[tuple[str, float]], round_digits: int
+    sensor_values: list[tuple[str, float, State]], round_digits: int
 ) -> tuple[dict[str, Any], float]:
     """Calculate mean value."""
-    result = [sensor_value for _, sensor_value in sensor_values]
+    result = [sensor_value for _, sensor_value, _ in sensor_values]
 
     value: float = round(statistics.mean(result), round_digits)
     return {}, value
 
 
 def calc_median(
-    sensor_values: list[tuple[str, float]], round_digits: int
+    sensor_values: list[tuple[str, float, State]], round_digits: int
 ) -> tuple[dict[str, Any], float]:
     """Calculate median value."""
-    result = [sensor_value for _, sensor_value in sensor_values]
+    result = [sensor_value for _, sensor_value, _ in sensor_values]
 
     value: float = round(statistics.median(result), round_digits)
     return {}, value
 
 
 def calc_last(
-    sensor_values: list[tuple[str, float]], round_digits: int
+    sensor_values: list[tuple[str, float, State]], round_digits: int
 ) -> tuple[dict[str, Any], float]:
     """Calculate last value."""
-    entity_id, value = sensor_values[0]
-    attributes = {ATTR_LAST_ENTITY_ID: entity_id}
-    return attributes, value
+    last_updated: datetime | None = None
+    for entity_id, _, state in sensor_values:
+        if last_updated is None or state.last_updated > last_updated:
+            last_updated = state.last_updated
+            last = float(state.state)
+            last_entity_id = entity_id
+
+    attributes = {ATTR_LAST_ENTITY_ID: last_entity_id}
+    return attributes, last
 
 
 def calc_range(
-    sensor_values: list[tuple[str, float]], round_digits: int
+    sensor_values: list[tuple[str, float, State]], round_digits: int
 ) -> tuple[dict[str, Any], float]:
     """Calculate range value."""
-    result = [sensor_value for _, sensor_value in sensor_values]
+    result = [sensor_value for _, sensor_value, _ in sensor_values]
 
     value: float = round(max(result) - min(result), round_digits)
     return {}, value
 
 
 def calc_sum(
-    sensor_values: list[tuple[str, float]], round_digits: int
+    sensor_values: list[tuple[str, float, State]], round_digits: int
 ) -> tuple[dict[str, Any], float]:
     """Calculate a sum of values."""
     result = 0.0
     _LOGGER.debug("sensor_values: %s", sensor_values)
-    for _, sensor_value in sensor_values:
+    for _, sensor_value, _ in sensor_values:
         result += sensor_value
 
     value: float = round(result, round_digits)
@@ -270,7 +276,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         self._attr_unique_id = unique_id
         self.mode = all if mode else any
         self._state_calc: Callable[
-            [list[tuple[str, float]], int], tuple[dict[str, str], float | None]
+            [list[tuple[str, float, State]], int], tuple[dict[str, str], float | None]
         ] = CALC_TYPES[self._sensor_type]
         self._state_incorrect: set[str] = set()
         self._extra_state_attribute: dict[str, Any] = {}
@@ -297,13 +303,12 @@ class SensorGroup(GroupEntity, SensorEntity):
         """Query all members and determine the sensor group state."""
         states: list[StateType] = []
         valid_states: list[bool] = []
-        last_updated: datetime | None = None
-        sensor_values: list[tuple[str, float]] = []
+        sensor_values: list[tuple[str, float, State]] = []
         for entity_id in self._entity_ids:
             if (state := self.hass.states.get(entity_id)) is not None:
                 states.append(state.state)
                 try:
-                    sensor_values.append((entity_id, float(state.state)))
+                    sensor_values.append((entity_id, float(state.state), state))
                     if entity_id in self._state_incorrect:
                         self._state_incorrect.remove(entity_id)
                 except ValueError:
@@ -317,10 +322,6 @@ class SensorGroup(GroupEntity, SensorEntity):
                         )
                     continue
                 valid_states.append(True)
-                if last_updated is None or state.last_updated > last_updated:
-                    last_updated = state.last_updated
-                    last = float(state.state)
-                    last_entity_id = entity_id
 
         # Set group as unavailable if any/all members do not have numeric values
         self._attr_available = any(state != STATE_UNAVAILABLE for state in states)
@@ -336,10 +337,6 @@ class SensorGroup(GroupEntity, SensorEntity):
 
         # Calculate values
         self._calculate_entity_properties()
-        if self._sensor_type == "last":
-            if TYPE_CHECKING:
-                assert last_entity_id and last
-            sensor_values = [(last_entity_id, last)]
         self._extra_state_attribute, self._attr_native_value = self._state_calc(
             sensor_values, self._round_digits
         )
