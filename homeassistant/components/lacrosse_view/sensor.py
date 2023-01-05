@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    DEGREE,
     PERCENTAGE,
     UnitOfPrecipitationDepth,
     UnitOfSpeed,
@@ -33,7 +34,7 @@ from .const import DOMAIN, LOGGER
 class LaCrosseSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[Sensor, str], float]
+    value_fn: Callable[[Sensor, str], float | int | str | None]
 
 
 @dataclass
@@ -43,9 +44,20 @@ class LaCrosseSensorEntityDescription(
     """Description for LaCrosse View sensor."""
 
 
-def get_value(sensor: Sensor, field: str) -> float:
+def get_value(sensor: Sensor, field: str) -> float | int | str | None:
     """Get the value of a sensor field."""
-    return float(sensor.data[field]["values"][-1]["s"])
+    field_data = sensor.data.get(field)
+    if field_data is None:
+        LOGGER.warning(
+            "No field %s in response for %s (%s)", field, sensor.name, sensor.model
+        )
+        return None
+    value = field_data["values"][-1]["s"]
+    try:
+        value = float(value)
+    except ValueError:
+        return str(value)  # handle non-numericals
+    return int(value) if value.is_integer() else value
 
 
 PARALLEL_UPDATES = 0
@@ -89,6 +101,22 @@ SENSOR_DESCRIPTIONS = {
         value_fn=get_value,
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
+    ),
+    "WindHeading": LaCrosseSensorEntityDescription(
+        key="WindHeading",
+        name="Wind heading",
+        value_fn=get_value,
+        native_unit_of_measurement=DEGREE,
+    ),
+    "WetDry": LaCrosseSensorEntityDescription(
+        key="WetDry",
+        name="Wet/Dry",
+        value_fn=get_value,
+    ),
+    "Flex": LaCrosseSensorEntityDescription(
+        key="Flex",
+        name="Flex",
+        value_fn=get_value,
     ),
 }
 
@@ -163,7 +191,7 @@ class LaCrosseViewSensor(
         self.index = index
 
     @property
-    def native_value(self) -> float | str:
+    def native_value(self) -> int | float | str | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(
             self.coordinator.data[self.index], self.entity_description.key
