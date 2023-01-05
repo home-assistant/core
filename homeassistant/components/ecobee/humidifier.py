@@ -144,7 +144,7 @@ class EcobeeHumidifier(HumidifierEntity):
         self.data.ecobee.set_humidifier_mode(self.thermostat_index, mode)
         self.update_without_throttle = True
 
-    def set_humidity(self, humidity):
+    def set_humidity(self, humidity: int) -> None:
         """Set the humidity level."""
         self.data.ecobee.set_humidity(self.thermostat_index, humidity)
         self.update_without_throttle = True
