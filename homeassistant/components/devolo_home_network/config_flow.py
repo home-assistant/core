@@ -40,7 +40,7 @@ async def validate_input(
 
     return {
         SERIAL_NUMBER: str(device.serial_number),
-        TITLE: device.hostname.split(".")[0],
+        TITLE: device.hostname.split(".", maxsplit=1)[0],
     }
 
 
