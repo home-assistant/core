@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.core import Event, State
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import JSON_DUMP
+import homeassistant.util.dt as dt_util
 from homeassistant.util.json import (
     find_paths_unserializable_data,
     format_unserializable_data,
@@ -144,9 +145,13 @@ def _state_diff(
     if old_state.state != new_state.state:
         additions[COMPRESSED_STATE_STATE] = new_state.state
     if old_state.last_changed != new_state.last_changed:
-        additions[COMPRESSED_STATE_LAST_CHANGED] = new_state.last_changed.timestamp()
+        additions[COMPRESSED_STATE_LAST_CHANGED] = dt_util.utc_to_timestamp(
+            new_state.last_changed
+        )
     elif old_state.last_updated != new_state.last_updated:
-        additions[COMPRESSED_STATE_LAST_UPDATED] = new_state.last_updated.timestamp()
+        additions[COMPRESSED_STATE_LAST_UPDATED] = dt_util.utc_to_timestamp(
+            new_state.last_updated
+        )
     if old_state.context.parent_id != new_state.context.parent_id:
         additions.setdefault(COMPRESSED_STATE_CONTEXT, {})[
             "parent_id"
@@ -184,10 +189,12 @@ def compressed_state_dict_add(state: State) -> dict[str, Any]:
         COMPRESSED_STATE_STATE: state.state,
         COMPRESSED_STATE_ATTRIBUTES: state.attributes,
         COMPRESSED_STATE_CONTEXT: context,
-        COMPRESSED_STATE_LAST_CHANGED: state.last_changed.timestamp(),
+        COMPRESSED_STATE_LAST_CHANGED: dt_util.utc_to_timestamp(state.last_changed),
     }
     if state.last_changed != state.last_updated:
-        compressed_state[COMPRESSED_STATE_LAST_UPDATED] = state.last_updated.timestamp()
+        compressed_state[COMPRESSED_STATE_LAST_UPDATED] = dt_util.utc_to_timestamp(
+            state.last_updated
+        )
     return compressed_state
 
 
