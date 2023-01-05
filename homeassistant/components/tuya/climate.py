@@ -296,7 +296,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         """Set new target fan mode."""
         self._send_command([{"code": DPCode.FAN_SPEED_ENUM, "value": fan_mode}])
 
-    def set_humidity(self, humidity: float) -> None:
+    def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         if self._set_humidity is None:
             raise RuntimeError(
