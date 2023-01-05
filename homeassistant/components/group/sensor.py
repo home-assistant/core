@@ -322,7 +322,7 @@ class SensorGroup(GroupEntity, SensorEntity):
                     last = float(state.state)
                     last_entity_id = entity_id
 
-        # Set group as unavailable if all members does not have numeric values
+        # Set group as unavailable if any/all members do not have numeric values
         self._attr_available = any(state != STATE_UNAVAILABLE for state in states)
 
         valid_state = self.mode(
@@ -331,7 +331,6 @@ class SensorGroup(GroupEntity, SensorEntity):
         valid_state_numeric = self.mode(numeric_state for numeric_state in valid_states)
 
         if not valid_state or not valid_state_numeric:
-            # Set as unknown if any / all member is unknown or unavailable
             self._attr_native_value = None
             return
 
