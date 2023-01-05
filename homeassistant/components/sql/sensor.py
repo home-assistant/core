@@ -67,6 +67,7 @@ async def async_setup_platform(
         value_template,
         unique_id,
         db_url,
+        True,
         async_add_entities,
     )
 
@@ -102,6 +103,7 @@ async def async_setup_entry(
         value_template,
         entry.entry_id,
         db_url,
+        False,
         async_add_entities,
     )
 
@@ -115,6 +117,7 @@ async def async_setup_sensor(
     value_template: Template | None,
     unique_id: str | None,
     db_url: str | None,
+    yaml: bool,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the SQL sensor."""
@@ -159,7 +162,7 @@ async def async_setup_sensor(
                 unit,
                 value_template,
                 unique_id,
-                False,
+                yaml,
             )
         ],
         True,
