@@ -4,8 +4,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 
+from .patchers import COORDINATOR_SUCCESS_PATCHER
+
 from tests.common import MockConfigEntry
-from tests.components.starlink.patchers import COORDINATOR_SUCCESS_PATCHER
 
 
 async def test_successful_entry(hass: HomeAssistant) -> None:

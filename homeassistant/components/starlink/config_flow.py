@@ -49,6 +49,7 @@ class StarlinkConfigFlow(ConfigFlow, domain=DOMAIN):
             response: str = await self.hass.async_add_executor_job(
                 lambda: get_id(context)
             )
+            context.close()
             return response
         except GrpcError:
             return None
