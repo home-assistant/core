@@ -178,6 +178,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         )
         self._attr_supported_features = self.get_features()
         self._attr_precision = PRECISION_TENTHS
+        self._attr_translation_key = "climate_device"
 
     def get_features(self) -> ClimateEntityFeature:
         """Get supported features."""
