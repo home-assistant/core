@@ -253,7 +253,7 @@ class SensorDeviceClass(StrEnum):
     POWER_FACTOR = "power_factor"
     """Power factor.
 
-    Unit of measurement: `%`
+    Unit of measurement: `%`, `None`
     """
 
     POWER = "power"
@@ -465,7 +465,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.PM1: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.PM10: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.PM25: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
-    SensorDeviceClass.POWER_FACTOR: {PERCENTAGE},
+    SensorDeviceClass.POWER_FACTOR: {PERCENTAGE, None},
     SensorDeviceClass.POWER: {UnitOfPower.WATT, UnitOfPower.KILO_WATT},
     SensorDeviceClass.PRECIPITATION: set(UnitOfPrecipitationDepth),
     SensorDeviceClass.PRECIPITATION_INTENSITY: set(UnitOfVolumetricFlux),
