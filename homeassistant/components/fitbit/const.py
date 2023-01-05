@@ -13,6 +13,8 @@ from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     PERCENTAGE,
+    UnitOfEnergy,
+    UnitOfFrequency,
     UnitOfLength,
     UnitOfMass,
     UnitOfTime,
@@ -25,7 +27,9 @@ ATTR_LAST_SAVED_AT: Final = "last_saved_at"
 
 ATTR_DURATION: Final = "duration"
 ATTR_DISTANCE: Final = "distance"
+ATTR_ENERGY: Final = "calories"
 ATTR_ELEVATION: Final = "elevation"
+ATTR_FREQUENCY: Final = "bpm"
 ATTR_HEIGHT: Final = "height"
 ATTR_WEIGHT: Final = "weight"
 ATTR_BODY: Final = "body"
@@ -60,46 +64,57 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
     FitbitSensorEntityDescription(
         key="activities/activityCalories",
         name="Activity Calories",
-        native_unit_of_measurement="cal",
+        native_unit_of_measurement=UnitOfEnergy.CALORIE,
         icon="mdi:fire",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     FitbitSensorEntityDescription(
         key="activities/calories",
         name="Calories",
-        native_unit_of_measurement="cal",
+        native_unit_of_measurement=UnitOfEnergy.CALORIE,
         icon="mdi:fire",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     FitbitSensorEntityDescription(
         key="activities/caloriesBMR",
         name="Calories BMR",
-        native_unit_of_measurement="cal",
+        native_unit_of_measurement=UnitOfEnergy.CALORIE,
         icon="mdi:fire",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     FitbitSensorEntityDescription(
         key="activities/distance",
         name="Distance",
-        unit_type="distance",
+        native_unit_of_measurement=UnitOfLength.MILES,
         icon="mdi:map-marker",
         device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     FitbitSensorEntityDescription(
         key="activities/elevation",
         name="Elevation",
-        unit_type="elevation",
+        native_unit_of_measurement=UnitOfLength.FEET,
         icon="mdi:walk",
         device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     FitbitSensorEntityDescription(
         key="activities/floors",
         name="Floors",
         native_unit_of_measurement="floors",
         icon="mdi:walk",
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     FitbitSensorEntityDescription(
         key="activities/heart",
         name="Resting Heart Rate",
-        native_unit_of_measurement="bpm",
+        native_unit_of_measurement=UnitOfFrequency.BPM,
         icon="mdi:heart-pulse",
+        device_class=SensorDeviceClass.FREQUENCY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     FitbitSensorEntityDescription(
         key="activities/minutesFairlyActive",
@@ -107,6 +122,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:walk",
         device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     FitbitSensorEntityDescription(
         key="activities/minutesLightlyActive",
@@ -114,6 +130,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:walk",
         device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     FitbitSensorEntityDescription(
         key="activities/minutesSedentary",
@@ -121,6 +138,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:seat-recline-normal",
         device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     FitbitSensorEntityDescription(
         key="activities/minutesVeryActive",
@@ -128,44 +146,53 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:run",
         device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     FitbitSensorEntityDescription(
         key="activities/steps",
         name="Steps",
         native_unit_of_measurement="steps",
         icon="mdi:walk",
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/activityCalories",
         name="Tracker Activity Calories",
-        native_unit_of_measurement="cal",
+        native_unit_of_measurement=UnitOfEnergy.CALORIE,
         icon="mdi:fire",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/calories",
         name="Tracker Calories",
-        native_unit_of_measurement="cal",
+        native_unit_of_measurement=UnitOfEnergy.CALORIE,
         icon="mdi:fire",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/distance",
         name="Tracker Distance",
-        unit_type="distance",
+        native_unit_of_measurement=UnitOfLength.MILES,
         icon="mdi:map-marker",
         device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/elevation",
         name="Tracker Elevation",
-        unit_type="elevation",
+        native_unit_of_measurement=UnitOfLength.FEET,
         icon="mdi:walk",
         device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/floors",
         name="Tracker Floors",
         native_unit_of_measurement="floors",
         icon="mdi:walk",
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/minutesFairlyActive",
@@ -173,6 +200,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:walk",
         device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/minutesLightlyActive",
@@ -180,6 +208,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:walk",
         device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/minutesSedentary",
@@ -187,6 +216,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:seat-recline-normal",
         device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/minutesVeryActive",
@@ -194,12 +224,14 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:run",
         device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/steps",
         name="Tracker Steps",
         native_unit_of_measurement="steps",
         icon="mdi:walk",
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     FitbitSensorEntityDescription(
         key="body/bmi",
@@ -218,7 +250,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
     FitbitSensorEntityDescription(
         key="body/weight",
         name="Weight",
-        unit_type="weight",
+        native_unit_of_measurement=UnitOfMass.POUNDS,
         icon="mdi:human",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.WEIGHT,
@@ -226,8 +258,9 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
     FitbitSensorEntityDescription(
         key="sleep/awakeningsCount",
         name="Awakenings Count",
-        native_unit_of_measurement="times awaken",
+        native_unit_of_measurement="times awakened",
         icon="mdi:sleep",
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     FitbitSensorEntityDescription(
         key="sleep/efficiency",
@@ -242,6 +275,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:sleep",
         device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     FitbitSensorEntityDescription(
         key="sleep/minutesAsleep",
@@ -249,6 +283,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:sleep",
         device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     FitbitSensorEntityDescription(
         key="sleep/minutesAwake",
@@ -256,6 +291,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:sleep",
         device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     FitbitSensorEntityDescription(
         key="sleep/minutesToFallAsleep",
@@ -263,6 +299,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:sleep",
         device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     FitbitSensorEntityDescription(
         key="sleep/startTime",
@@ -275,6 +312,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:hotel",
         device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 )
 
@@ -299,6 +337,8 @@ FITBIT_MEASUREMENTS: Final[dict[str, dict[str, str]]] = {
         ATTR_LIQUIDS: UnitOfVolume.FLUID_OUNCES,
         ATTR_BLOOD_GLUCOSE: f"{UnitOfMass.MILLIGRAMS}/dL",
         ATTR_BATTERY: "",
+        ATTR_ENERGY: UnitOfEnergy.CALORIE,
+        ATTR_FREQUENCY: UnitOfFrequency.BPM,
     },
     "en_GB": {
         ATTR_DURATION: UnitOfTime.MILLISECONDS,
@@ -310,6 +350,8 @@ FITBIT_MEASUREMENTS: Final[dict[str, dict[str, str]]] = {
         ATTR_LIQUIDS: UnitOfVolume.MILLILITERS,
         ATTR_BLOOD_GLUCOSE: "mmol/L",
         ATTR_BATTERY: "",
+        ATTR_ENERGY: UnitOfEnergy.CALORIE,
+        ATTR_FREQUENCY: UnitOfFrequency.BPM,
     },
     "metric": {
         ATTR_DURATION: UnitOfTime.MILLISECONDS,
@@ -321,6 +363,8 @@ FITBIT_MEASUREMENTS: Final[dict[str, dict[str, str]]] = {
         ATTR_LIQUIDS: UnitOfVolume.MILLILITERS,
         ATTR_BLOOD_GLUCOSE: "mmol/L",
         ATTR_BATTERY: "",
+        ATTR_ENERGY: UnitOfEnergy.CALORIE,
+        ATTR_FREQUENCY: UnitOfFrequency.BPM,
     },
 }
 
