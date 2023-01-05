@@ -43,7 +43,7 @@ dependencies    = [
     "PyJWT==2.5.0",
     # PyJWT has loose dependency. We want the latest one.
     "cryptography==38.0.3",
-    "orjson==3.8.3",
+    "orjson==3.8.4",
     "pip>=21.0,<22.4",
     "python-slugify==4.0.1",
     "pyyaml==6.0",
