@@ -139,7 +139,9 @@ async def async_setup_entry(
     )
 
 
-def calc_min(sensor_values: list[tuple[str, float]]) -> tuple[dict[str, Any], float]:
+def calc_min(
+    sensor_values: list[tuple[str, float]], round_digits: int
+) -> tuple[dict[str, Any], float]:
     """Calculate min value."""
     val: float | None = None
     entity_id: str | None = None
@@ -153,7 +155,9 @@ def calc_min(sensor_values: list[tuple[str, float]]) -> tuple[dict[str, Any], fl
     return attributes, val
 
 
-def calc_max(sensor_values: list[tuple[str, float]]) -> tuple[dict[str, Any], float]:
+def calc_max(
+    sensor_values: list[tuple[str, float]], round_digits: int
+) -> tuple[dict[str, Any], float]:
     """Calculate max value."""
     val: float | None = None
     entity_id: str | None = None
@@ -211,6 +215,7 @@ def calc_sum(
 ) -> tuple[dict[str, Any], float]:
     """Calculate a sum of values."""
     result = 0.0
+    _LOGGER.debug("sensor_values: %s", sensor_values)
     for _, sensor_value in sensor_values:
         result += sensor_value
 
@@ -219,13 +224,13 @@ def calc_sum(
 
 
 CALC_TYPES: dict[str, Callable] = {
-    ATTR_MIN_VALUE: calc_min,
-    ATTR_MAX_VALUE: calc_max,
-    ATTR_MEAN: calc_mean,
-    ATTR_MEDIAN: calc_median,
-    ATTR_LAST: calc_last,
-    ATTR_RANGE: calc_range,
-    ATTR_SUM: calc_sum,
+    "min": calc_min,
+    "max": calc_max,
+    "mean": calc_mean,
+    "median": calc_median,
+    "last": calc_last,
+    "range": calc_range,
+    "sum": calc_sum,
 }
 
 
@@ -368,7 +373,9 @@ class SensorGroup(GroupEntity, SensorEntity):
 
     def _calculate_entity_properties(self) -> None:
         """Calculate device_class, state_class and unit of measurement."""
-        device_classes = state_classes = unit_of_measurements = []
+        device_classes = []
+        state_classes = []
+        unit_of_measurements = []
 
         if (
             self._attr_device_class
@@ -378,29 +385,31 @@ class SensorGroup(GroupEntity, SensorEntity):
             return
 
         for entity_id in self._entity_ids:
-            state = self.hass.states.get(entity_id)
-            device_classes.append(
-                state.attributes.get("device_class") if state else None
-            )
-            state_classes.append(state.attributes.get("state_class") if state else None)
-            unit_of_measurements.append(
-                state.attributes.get("unit_of_measurement") if state else None
-            )
+            if (state := self.hass.states.get(entity_id)) is not None:
+                device_classes.append(state.attributes.get("device_class"))
+                state_classes.append(state.attributes.get("state_class"))
+                unit_of_measurements.append(state.attributes.get("unit_of_measurement"))
 
         self.calc_device_class = None
         self.calc_state_class = None
         self.calc_unit_of_measurement = None
 
         # Calculate properties and save if all same
-        if not self._attr_device_class and all(
-            x == device_classes[0] for x in device_classes
+        if (
+            not self._attr_device_class
+            and device_classes
+            and all(x == device_classes[0] for x in device_classes)
         ):
             self.calc_device_class = device_classes[0]
-        if not self._attr_state_class and all(
-            x == state_classes[0] for x in state_classes
+        if (
+            not self._attr_state_class
+            and state_classes
+            and all(x == state_classes[0] for x in state_classes)
         ):
             self.calc_state_class = state_classes[0]
-        if not self._attr_unit_of_measurement and all(
-            x == unit_of_measurements[0] for x in unit_of_measurements
+        if (
+            not self._attr_unit_of_measurement
+            and unit_of_measurements
+            and all(x == unit_of_measurements[0] for x in unit_of_measurements)
         ):
             self.calc_unit_of_measurement = unit_of_measurements[0]

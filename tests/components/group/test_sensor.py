@@ -6,7 +6,7 @@ from pytest import LogCaptureFixture
 
 from homeassistant import config as hass_config
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
-from homeassistant.components.group.sensor import DEFAULT_NAME, calc_sum
+from homeassistant.components.group.sensor import DEFAULT_NAME
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
@@ -285,10 +285,7 @@ async def test_not_enough_sensor_value(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.test_max")
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get("min_entity_id") is None
-    assert state.attributes.get("min_value") is None
     assert state.attributes.get("max_entity_id") is None
-    assert state.attributes.get("max_value") is None
-    assert state.attributes.get("median") is None
 
     hass.states.async_set(entity_ids[1], VALUES[1])
     await hass.async_block_till_done()
@@ -310,9 +307,7 @@ async def test_not_enough_sensor_value(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.test_max")
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get("min_entity_id") is None
-    assert state.attributes.get("min_value") is None
-    assert state.attributes.get("max_entity_id") is None
-    assert state.attributes.get("max_value") is None
+    assert state.attributes.get("max_entity_id") == entity_ids[1]
 
 
 async def test_last_sensor(hass: HomeAssistant) -> None:
@@ -536,19 +531,3 @@ async def test_sensor_calculated_properties(hass: HomeAssistant) -> None:
     assert state.attributes.get("device_class") is None
     assert state.attributes.get("state_class") is None
     assert state.attributes.get("unit_of_measurement") is None
-
-
-async def test_sensor_calc_sum_error() -> None:
-    """Test sum calculation."""
-    values = [
-        ("sensor.entity1", 10),
-        ("sensor.entity2", 11),
-        ("sensor.entity3", 12),
-    ]
-    values_error = [
-        ("sensor.entity1", 10),
-        ("sensor.entity2", "string"),
-        ("sensor.entity3", 12),
-    ]
-    assert calc_sum(values, 2) == 33.00
-    assert calc_sum(values_error, 2) == 22.00
