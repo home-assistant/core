@@ -82,7 +82,7 @@ AQI_LEVEL_STATE_MAPPING = {
 
 @dataclass
 class NAMSensorEntityDescription(SensorEntityDescription):
-    """Describes WLED sensor entity."""
+    """Describes NAM sensor entity."""
 
     mapping: dict[str, str] | None = None
 
