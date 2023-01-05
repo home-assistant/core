@@ -95,7 +95,7 @@ class ISYEntity(Entity):
 
         device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{uuid}_{node.address}")},
-            manufacturer=str(node.protocol),
+            manufacturer=node.protocol,
             name=f"{basename} ({(str(node.address).rpartition(' ')[0] or node.address)})",
             via_device=(DOMAIN, uuid),
             configuration_url=url,
