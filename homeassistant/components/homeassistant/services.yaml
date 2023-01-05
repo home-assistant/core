@@ -31,6 +31,10 @@ set_location:
       selector:
         text:
 
+get_location:
+  name: Get location
+  description: Retrieves the Home Assistant location.
+
 stop:
   name: Stop
   description: Stop the Home Assistant service.

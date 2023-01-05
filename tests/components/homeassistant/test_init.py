@@ -313,6 +313,20 @@ async def test_setting_location(hass):
     assert hass.config.longitude == 40
 
 
+async def test_getting_location(hass):
+    """Test getting the location."""
+    await async_setup_component(hass, "homeassistant", {})
+    events = async_capture_events(hass, EVENT_CORE_CONFIG_UPDATE)
+    await hass.services.async_call(
+        "homeassistant",
+        "get_location",
+        blocking=True,
+    )
+    assert len(events) == 1
+    assert hass.config.latitude == 30
+    assert hass.config.longitude == 40
+
+
 async def test_require_admin(hass, hass_read_only_user):
     """Test services requiring admin."""
     await async_setup_component(hass, "homeassistant", {})

@@ -40,6 +40,7 @@ SERVICE_RELOAD_CONFIG_ENTRY = "reload_config_entry"
 SERVICE_CHECK_CONFIG = "check_config"
 SERVICE_UPDATE_ENTITY = "update_entity"
 SERVICE_SET_LOCATION = "set_location"
+SERVICE_GET_LOCATION = "get_location"
 SCHEMA_UPDATE_ENTITY = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 SCHEMA_RELOAD_CONFIG_ENTRY = vol.All(
     vol.Schema(
@@ -244,12 +245,24 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
             latitude=call.data[ATTR_LATITUDE], longitude=call.data[ATTR_LONGITUDE]
         )
 
+    async def async_get_location(call: ha.ServiceCall):
+        """Service handler to get location."""
+        location = hass.config.latitude, hass.config.longitude
+        return location
+
     async_register_admin_service(
         hass,
         ha.DOMAIN,
         SERVICE_SET_LOCATION,
         async_set_location,
         vol.Schema({ATTR_LATITUDE: cv.latitude, ATTR_LONGITUDE: cv.longitude}),
+    )
+
+    async_register_admin_service(
+        hass,
+        ha.DOMAIN,
+        SERVICE_GET_LOCATION,
+        async_get_location,
     )
 
     async def async_handle_reload_config_entry(call: ha.ServiceCall) -> None:
