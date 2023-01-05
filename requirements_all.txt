@@ -865,7 +865,7 @@ hass-nabucasa==0.61.0
 hass_splunk==0.1.1
 
 # homeassistant.components.conversation
-hassil==0.2.1
+hassil==0.2.2
 
 # homeassistant.components.tasmota
 hatasmota==0.6.2

@@ -133,6 +133,3 @@ pandas==1.4.3
 
 # uamqp 1.6.1, has 1 failing test during built on armv7/armhf
 uamqp==1.6.0
-
-# Required by pysiaalarm
-dataclasses-json==0.5.3
