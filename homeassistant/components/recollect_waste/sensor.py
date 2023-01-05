@@ -12,12 +12,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
+from .entity import ReCollectWasteEntity
 
 ATTR_PICKUP_TYPES = "pickup_types"
 ATTR_AREA_NAME = "area_name"
@@ -59,20 +57,15 @@ async def async_setup_entry(
     ]
 
     async_add_entities(
-        [
-            ReCollectWasteSensor(coordinator, entry, description)
-            for description in SENSOR_DESCRIPTIONS
-        ]
+        ReCollectWasteSensor(coordinator, entry, description)
+        for description in SENSOR_DESCRIPTIONS
     )
 
 
-class ReCollectWasteSensor(
-    CoordinatorEntity[DataUpdateCoordinator[list[PickupEvent]]], SensorEntity
-):
-    """ReCollect Waste Sensor."""
+class ReCollectWasteSensor(ReCollectWasteEntity, SensorEntity):
+    """Define a ReCollect Waste sensor."""
 
     _attr_device_class = SensorDeviceClass.DATE
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -80,28 +73,15 @@ class ReCollectWasteSensor(
         entry: ConfigEntry,
         description: SensorEntityDescription,
     ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator)
+        """Initialize."""
+        super().__init__(coordinator, entry)
 
-        self._attr_extra_state_attributes = {}
-        self._attr_unique_id = f"{entry.data[CONF_PLACE_ID]}_{entry.data[CONF_SERVICE_ID]}_{description.key}"
-        self._entry = entry
+        self._attr_unique_id = f"{self._identifier}_{description.key}"
         self.entity_description = description
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        """Respond to a DataUpdateCoordinator update."""
-        self.update_from_latest_data()
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-        self.update_from_latest_data()
-
-    @callback
-    def update_from_latest_data(self) -> None:
-        """Update the state."""
+        """Handle updated data from the coordinator."""
         if self.entity_description.key == SENSOR_TYPE_CURRENT_PICKUP:
             try:
                 event = self.coordinator.data[0]
