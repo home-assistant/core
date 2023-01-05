@@ -31,5 +31,16 @@
                 "title": "Impressora descoberta"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "printer": {
+                "state": {
+                    "idle": "Inactiva",
+                    "printing": "Imprimint",
+                    "stopped": "Aturada"
+                }
+            }
+        }
     }
 }

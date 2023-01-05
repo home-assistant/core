@@ -13,7 +13,8 @@
                     "heat": "Supporta la modalit\u00e0 di riscaldamento",
                     "heat_cool": "Supporta la modalit\u00e0 di riscaldamento/raffreddamento automatica",
                     "host": "Host",
-                    "off": "Pu\u00f2 essere spento"
+                    "off": "Pu\u00f2 essere spento",
+                    "swing_support": "Controlla la modalit\u00e0 di oscillazione"
                 },
                 "title": "Configura i dettagli della tua connessione CoolMasterNet."
             }

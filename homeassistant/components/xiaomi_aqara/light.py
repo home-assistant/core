@@ -70,8 +70,7 @@ class XiaomiGatewayLight(XiaomiDevice, LightEntity):
         rgbhexstr = f"{value:x}"
         if len(rgbhexstr) > 8:
             _LOGGER.error(
-                "Light RGB data error."
-                " Can't be more than 8 characters. Received: %s",
+                "Light RGB data error. Can't be more than 8 characters. Received: %s",
                 rgbhexstr,
             )
             return False

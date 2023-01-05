@@ -105,7 +105,7 @@ class BaseFan(FanEntity):
         await self.async_set_percentage(0)
 
     async def async_set_percentage(self, percentage: int) -> None:
-        """Set the speed percenage of the fan."""
+        """Set the speed percentage of the fan."""
         fan_mode = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
         await self._async_set_fan_mode(fan_mode)
 
@@ -113,7 +113,8 @@ class BaseFan(FanEntity):
         """Set the preset mode for the fan."""
         if preset_mode not in self.preset_modes:
             raise NotValidPresetModeError(
-                f"The preset_mode {preset_mode} is not a valid preset_mode: {self.preset_modes}"
+                f"The preset_mode {preset_mode} is not a valid preset_mode:"
+                f" {self.preset_modes}"
             )
         await self._async_set_fan_mode(NAME_TO_PRESET_MODE[preset_mode])
 
@@ -288,7 +289,8 @@ class IkeaFan(BaseFan, ZhaEntity):
         """Set the preset mode for the fan."""
         if preset_mode not in self.preset_modes:
             raise NotValidPresetModeError(
-                f"The preset_mode {preset_mode} is not a valid preset_mode: {self.preset_modes}"
+                f"The preset_mode {preset_mode} is not a valid preset_mode:"
+                f" {self.preset_modes}"
             )
         await self._async_set_fan_mode(IKEA_NAME_TO_PRESET_MODE[preset_mode])
 

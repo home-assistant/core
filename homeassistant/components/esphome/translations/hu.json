@@ -48,7 +48,7 @@
     "issues": {
         "ble_firmware_outdated": {
             "description": "A Bluetooth megb\u00edzhat\u00f3s\u00e1g\u00e1nak \u00e9s teljes\u00edtm\u00e9ny\u00e9nek jav\u00edt\u00e1sa \u00e9rdek\u00e9ben javasoljuk {name} v\u00e9gpont friss\u00edt\u00e9s\u00e9t az ESPHome 2022.11.0 vagy \u00fajabb verzi\u00f3ra.",
-            "title": "{name} v\u00e9gpont friss\u00edt\u00e9se ESPHome 2022.11.0 vagy \u00fajabb verzi\u00f3j\u00e1val"
+            "title": "Friss\u00edtse a {name} v\u00e9gpontot ESPHome {version} vagy \u00fajabb verzi\u00f3j\u00e1val"
         }
     }
 }

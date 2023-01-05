@@ -51,10 +51,10 @@ class AxisEventBase(AxisEntityBase):
         super().__init__(device)
         self.event = event
 
-        self._attr_name = f"{event.TYPE} {event.id}"
+        self._attr_name = f"{event.type} {event.id}"
         self._attr_unique_id = f"{device.unique_id}-{event.topic}-{event.id}"
 
-        self._attr_device_class = event.CLASS
+        self._attr_device_class = event.group
 
     async def async_added_to_hass(self) -> None:
         """Subscribe sensors events."""

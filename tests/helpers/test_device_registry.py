@@ -176,7 +176,6 @@ async def test_loading_from_storage(hass, hass_storage):
         "data": {
             "devices": [
                 {
-                    "aliases": ["alias_1", "alias_2"],
                     "area_id": "12345A",
                     "config_entries": ["1234"],
                     "configuration_url": "configuration_url",
@@ -219,7 +218,6 @@ async def test_loading_from_storage(hass, hass_storage):
         model="model",
     )
     assert entry == device_registry.DeviceEntry(
-        aliases={"alias_1", "alias_2"},
         area_id="12345A",
         config_entries={"1234"},
         configuration_url="configuration_url",
@@ -263,8 +261,8 @@ async def test_loading_from_storage(hass, hass_storage):
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_migration_from_1_1(hass, hass_storage):
-    """Test migration from version 1.1."""
+async def test_migration_1_1_to_1_3(hass, hass_storage):
+    """Test migration from version 1.1 to 1.3."""
     hass_storage[device_registry.STORAGE_KEY] = {
         "version": 1,
         "minor_version": 1,
@@ -339,7 +337,6 @@ async def test_migration_from_1_1(hass, hass_storage):
         "data": {
             "devices": [
                 {
-                    "aliases": [],
                     "area_id": None,
                     "config_entries": ["1234"],
                     "configuration_url": None,
@@ -357,7 +354,6 @@ async def test_migration_from_1_1(hass, hass_storage):
                     "via_device_id": None,
                 },
                 {
-                    "aliases": [],
                     "area_id": None,
                     "config_entries": [None],
                     "configuration_url": None,
@@ -389,8 +385,8 @@ async def test_migration_from_1_1(hass, hass_storage):
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_migration_from_1_2(hass, hass_storage):
-    """Test migration from version 1.2."""
+async def test_migration_1_2_to_1_3(hass, hass_storage):
+    """Test migration from version 1.2 to 1.3."""
     hass_storage[device_registry.STORAGE_KEY] = {
         "version": 1,
         "minor_version": 2,
@@ -464,7 +460,6 @@ async def test_migration_from_1_2(hass, hass_storage):
         "data": {
             "devices": [
                 {
-                    "aliases": [],
                     "area_id": None,
                     "config_entries": ["1234"],
                     "configuration_url": None,
@@ -482,7 +477,6 @@ async def test_migration_from_1_2(hass, hass_storage):
                     "via_device_id": None,
                 },
                 {
-                    "aliases": [],
                     "area_id": None,
                     "config_entries": [None],
                     "configuration_url": None,
@@ -914,7 +908,6 @@ async def test_update(hass, registry, update_events):
     with patch.object(registry, "async_schedule_save") as mock_save:
         updated_entry = registry.async_update_device(
             entry.id,
-            aliases={"alias_1", "alias_2"},
             area_id="12345A",
             configuration_url="configuration_url",
             disabled_by=device_registry.DeviceEntryDisabler.USER,
@@ -933,7 +926,6 @@ async def test_update(hass, registry, update_events):
     assert mock_save.call_count == 1
     assert updated_entry != entry
     assert updated_entry == device_registry.DeviceEntry(
-        aliases={"alias_1", "alias_2"},
         area_id="12345A",
         config_entries={"1234"},
         configuration_url="configuration_url",
@@ -976,7 +968,6 @@ async def test_update(hass, registry, update_events):
     assert update_events[1]["action"] == "update"
     assert update_events[1]["device_id"] == entry.id
     assert update_events[1]["changes"] == {
-        "aliases": set(),
         "area_id": None,
         "configuration_url": None,
         "disabled_by": None,
