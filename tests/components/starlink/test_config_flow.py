@@ -46,6 +46,5 @@ async def test_flow_user_success(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert not result["errors"]
     assert result["data"] == user_input
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
