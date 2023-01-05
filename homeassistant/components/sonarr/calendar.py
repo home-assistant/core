@@ -1,12 +1,13 @@
 """Support for Sonarr calendar."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.dt import as_utc
 
 from .const import DOMAIN
 from .coordinator import CalendarDataUpdateCoordinator
@@ -70,16 +71,14 @@ class SonarrCalendarEntity(CalendarEntity):
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
         episode_events = await get_sonarr_episode_events(self.coordinator)
-        if start_date and end_date:
-            start_date = start_date.replace(tzinfo=timezone.utc)
-            end_date = end_date.replace(tzinfo=timezone.utc)
-            self._events = [
-                episode
-                for episode in episode_events
-                if start_date <= episode.start <= end_date
-            ]
-        else:
-            self._events = episode_events
+        start_date = as_utc(start_date)
+        end_date = as_utc(end_date)
+        self._events = [
+            episode
+            for episode in episode_events
+            if start_date <= episode.start <= end_date
+        ]
+
         return self._events
 
     async def async_update(self) -> None:
