@@ -17,7 +17,7 @@
                     "offset": "Versetzen des Tages einer monatlichen Z\u00e4hlerr\u00fccksetzung.",
                     "tariffs": "Eine Liste der unterst\u00fctzten Tarife; leer lassen, wenn nur ein einziger Tarif ben\u00f6tigt wird."
                 },
-                "description": "Erstelle einen Sensor, der den Verbrauch verschiedener Versorgungsleistungen (z. B. Energie, Gas, Wasser, Heizung) \u00fcber einen konfigurierten Zeitraum, in der Regel monatlich, erfasst. Der Sensor f\u00fcr den Verbrauchsz\u00e4hler unterst\u00fctzt optional die Aufteilung des Verbrauchs nach Tarifen. In diesem Fall wird ein Sensor f\u00fcr jeden Tarif sowie eine Auswahlm\u00f6glichkeit zur Auswahl des aktuellen Tarifs erstellt.",
+                "description": "Erstelle einen Sensor, der den Verbrauch verschiedener Versorgungsleistungen (z.B. Energie, Gas, Wasser, Heizung) \u00fcber einen konfigurierten Zeitraum, in der Regel monatlich, erfasst. Der Sensor f\u00fcr den Verbrauchsz\u00e4hler unterst\u00fctzt optional die Aufteilung des Verbrauchs nach Tarifen. In diesem Fall wird ein Sensor f\u00fcr jeden Tarif sowie eine Auswahlm\u00f6glichkeit zur Auswahl des aktuellen Tarifs erstellt.",
                 "title": "Verbrauchsz\u00e4hler hinzuf\u00fcgen"
             }
         }

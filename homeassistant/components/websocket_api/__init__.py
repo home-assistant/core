@@ -12,6 +12,10 @@ from homeassistant.loader import bind_hass
 from . import commands, connection, const, decorators, http, messages  # noqa: F401
 from .connection import ActiveConnection, current_connection  # noqa: F401
 from .const import (  # noqa: F401
+    COMPRESSED_STATE_ATTRIBUTES,
+    COMPRESSED_STATE_LAST_CHANGED,
+    COMPRESSED_STATE_LAST_UPDATED,
+    COMPRESSED_STATE_STATE,
     ERR_HOME_ASSISTANT_ERROR,
     ERR_INVALID_FORMAT,
     ERR_NOT_FOUND,

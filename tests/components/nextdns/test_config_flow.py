@@ -13,11 +13,12 @@ from homeassistant.components.nextdns.const import (
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY
+from homeassistant.core import HomeAssistant
 
 from . import PROFILES, init_integration
 
 
-async def test_form_create_entry(hass):
+async def test_form_create_entry(hass: HomeAssistant) -> None:
     """Test that the user step works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -52,7 +53,7 @@ async def test_form_create_entry(hass):
 
 
 @pytest.mark.parametrize(
-    "error",
+    "exc,base_error",
     [
         (ApiError("API Error"), "cannot_connect"),
         (InvalidApiKeyError, "invalid_api_key"),
@@ -60,9 +61,10 @@ async def test_form_create_entry(hass):
         (ValueError, "unknown"),
     ],
 )
-async def test_form_errors(hass, error):
+async def test_form_errors(
+    hass: HomeAssistant, exc: Exception, base_error: str
+) -> None:
     """Test we handle errors."""
-    exc, base_error = error
     with patch(
         "homeassistant.components.nextdns.NextDns.get_profiles", side_effect=exc
     ):
@@ -75,10 +77,9 @@ async def test_form_errors(hass, error):
     assert result["errors"] == {"base": base_error}
 
 
-async def test_form_already_configured(hass):
+async def test_form_already_configured(hass: HomeAssistant) -> None:
     """Test that errors are shown when duplicates are added."""
-    entry = await init_integration(hass)
-    entry.add_to_hass(hass)
+    await init_integration(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

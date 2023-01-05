@@ -44,6 +44,8 @@
             "button_2": "2\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
             "button_3": "3\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
             "button_4": "4\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
+            "clock_wise": "\u6642\u8a08\u56de\u308a\u306b\u56de\u8ee2",
+            "counter_clock_wise": "\u53cd\u6642\u8a08\u56de\u308a\u306b\u56de\u8ee2",
             "dim_down": "\u8584\u6697\u304f\u3059\u308b",
             "dim_up": "\u5fae\u304b\u306b\u660e\u308b\u304f\u3059\u308b",
             "double_buttons_1_3": "1\u756a\u76ee\u30683\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
@@ -53,15 +55,16 @@
         },
         "trigger_type": {
             "double_short_release": "\u4e21\u65b9\u306e \"{subtype}\" \u3092\u96e2\u3059",
-            "initial_press": "\u30dc\u30bf\u30f3 \"{subtype}\" \u6700\u521d\u306b\u62bc\u3055\u308c\u305f",
-            "long_release": "\u30dc\u30bf\u30f3 \"{subtype}\" \u96e2\u3057\u305f\u5f8c\u306b\u9577\u62bc\u3057",
+            "initial_press": "\u300c {subtype} \u300d\u304c\u6700\u521d\u306b\u62bc\u3055\u308c\u307e\u3057\u305f",
+            "long_release": "\u300c {subtype} \u300d\u3092\u9577\u62bc\u3057\u3057\u3066\u96e2\u3059",
             "remote_button_long_release": "\u9577\u62bc\u3057\u3059\u308b\u3068 \"{subtype}\" \u30dc\u30bf\u30f3\u304c\u30ea\u30ea\u30fc\u30b9\u3055\u308c\u308b",
             "remote_button_short_press": "\"{subtype}\" \u30dc\u30bf\u30f3\u304c\u62bc\u3055\u308c\u307e\u3057\u305f\u3002",
             "remote_button_short_release": "\"{subtype}\" \u30dc\u30bf\u30f3\u304c\u30ea\u30ea\u30fc\u30b9\u3055\u308c\u307e\u3057\u305f",
             "remote_double_button_long_press": "\u4e21\u65b9\u306e \"{subtype}\" \u306f\u9577\u62bc\u3057\u5f8c\u306b\u30ea\u30ea\u30fc\u30b9\u3055\u308c\u307e\u3057\u305f",
             "remote_double_button_short_press": "\u4e21\u65b9\u306e \"{subtype}\" \u3092\u96e2\u3059",
-            "repeat": "\u30dc\u30bf\u30f3 \"{subtype}\" \u3092\u62bc\u3057\u305f\u307e\u307e",
-            "short_release": "\u30dc\u30bf\u30f3 \"{subtype}\" \u77ed\u62bc\u3057\u306e\u5f8c\u306b\u96e2\u3059"
+            "repeat": "\u300c {subtype} \u300d\u304c\u62bc\u3055\u308c\u305f",
+            "short_release": "\u30dc\u30bf\u30f3 \"{subtype}\" \u77ed\u62bc\u3057\u306e\u5f8c\u306b\u96e2\u3059",
+            "start": "\"{subtype}\" \u304c\u6700\u521d\u306b\u62bc\u3055\u308c\u307e\u3057\u305f"
         }
     },
     "options": {

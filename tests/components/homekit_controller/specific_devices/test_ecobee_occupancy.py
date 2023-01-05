@@ -4,7 +4,7 @@ Regression tests for Ecobee occupancy.
 https://github.com/home-assistant/core/issues/31827
 """
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
@@ -34,7 +34,7 @@ async def test_ecobee_occupancy_setup(hass):
                 EntityTestInfo(
                     entity_id="binary_sensor.master_fan",
                     friendly_name="Master Fan",
-                    unique_id="homekit-111111111111-56",
+                    unique_id="00:00:00:00:00:00_1_56",
                     state="off",
                 ),
             ],

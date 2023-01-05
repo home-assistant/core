@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_URL,
     EVENT_HOMEASSISTANT_START,
-    LENGTH_KILOMETERS,
+    UnitOfLength,
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
@@ -146,7 +146,7 @@ class GeoJsonLocationEvent(GeolocationEvent):
 
     _attr_should_poll = False
     _attr_source = SOURCE
-    _attr_unit_of_measurement = LENGTH_KILOMETERS
+    _attr_unit_of_measurement = UnitOfLength.KILOMETERS
 
     def __init__(self, feed_manager: GenericFeedManager, external_id: str) -> None:
         """Initialize entity with data from feed entry."""

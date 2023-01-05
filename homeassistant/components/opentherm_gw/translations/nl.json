@@ -3,7 +3,8 @@
         "error": {
             "already_configured": "Apparaat is al geconfigureerd",
             "cannot_connect": "Kan geen verbinding maken",
-            "id_exists": "Gateway id bestaat al"
+            "id_exists": "Gateway id bestaat al",
+            "timeout_connect": "Time-out bij het maken van verbinding"
         },
         "step": {
             "init": {

@@ -35,6 +35,7 @@ PLATFORMS = [
     Platform.LOCK,
     Platform.NUMBER,
     Platform.SCENE,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
@@ -56,3 +57,6 @@ POWER_PLUGS = [
 
 CONF_ANGLE = "angle"
 CONF_GESTURE = "gesture"
+
+ATTR_DURATION = "duration"
+ATTR_ROTATION = "rotation"

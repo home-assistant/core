@@ -1,4 +1,7 @@
 """Support for Abode Security System binary sensors."""
+from __future__ import annotations
+
+from contextlib import suppress
 from typing import cast
 
 from abodepy.devices.binary_sensor import AbodeBinarySensor as ABBinarySensor
@@ -30,12 +33,10 @@ async def async_setup_entry(
         CONST.TYPE_OPENING,
     ]
 
-    entities = []
-
-    for device in data.abode.get_devices(generic_type=device_types):
-        entities.append(AbodeBinarySensor(data, device))
-
-    async_add_entities(entities)
+    async_add_entities(
+        AbodeBinarySensor(data, device)
+        for device in data.abode.get_devices(generic_type=device_types)
+    )
 
 
 class AbodeBinarySensor(AbodeDevice, BinarySensorEntity):
@@ -49,8 +50,10 @@ class AbodeBinarySensor(AbodeDevice, BinarySensorEntity):
         return cast(bool, self._device.is_on)
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the class of the binary sensor."""
         if self._device.get_value("is_window") == "1":
             return BinarySensorDeviceClass.WINDOW
-        return cast(str, self._device.generic_type)
+        with suppress(ValueError):
+            return BinarySensorDeviceClass(cast(str, self._device.generic_type))
+        return None

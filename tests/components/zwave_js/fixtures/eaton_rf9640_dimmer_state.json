@@ -55,10 +55,10 @@
       "nodeId": 19,
       "index": 0,
       "installerIcon": 1536,
-      "userIcon": 1536
+      "userIcon": 1536,
+      "commandClasses": []
     }
   ],
-  "commandClasses": [],
   "values": [
     {
       "commandClassName": "Multilevel Switch",

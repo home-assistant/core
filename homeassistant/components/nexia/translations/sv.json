@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad"
+        },
         "error": {
             "cannot_connect": "Det gick inte att ansluta, f\u00f6rs\u00f6k igen",
             "invalid_auth": "Ogiltig autentisering",
@@ -8,6 +11,7 @@
         "step": {
             "user": {
                 "data": {
+                    "brand": "Varum\u00e4rke",
                     "password": "L\u00f6senord",
                     "username": "Anv\u00e4ndarnamn"
                 }

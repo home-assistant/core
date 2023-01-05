@@ -2,11 +2,12 @@
 import json
 import logging
 
-from azure.servicebus.aio import Message, ServiceBusClient
-from azure.servicebus.common.errors import (
-    MessageSendFailed,
+from azure.servicebus import ServiceBusMessage
+from azure.servicebus.aio import ServiceBusClient
+from azure.servicebus.exceptions import (
+    MessagingEntityNotFoundError,
     ServiceBusConnectionError,
-    ServiceBusResourceNotFound,
+    ServiceBusError,
 )
 import voluptuous as vol
 
@@ -60,10 +61,10 @@ def get_service(hass, config, discovery_info=None):
 
     try:
         if queue_name:
-            client = servicebus.get_queue(queue_name)
+            client = servicebus.get_queue_sender(queue_name)
         else:
-            client = servicebus.get_topic(topic_name)
-    except (ServiceBusConnectionError, ServiceBusResourceNotFound) as err:
+            client = servicebus.get_topic_sender(topic_name)
+    except (ServiceBusConnectionError, MessagingEntityNotFoundError) as err:
         _LOGGER.error(
             "Connection error while creating client for queue/topic '%s'. %s",
             queue_name or topic_name,
@@ -93,11 +94,12 @@ class ServiceBusNotificationService(BaseNotificationService):
         if data := kwargs.get(ATTR_DATA):
             dto.update(data)
 
-        queue_message = Message(json.dumps(dto))
-        queue_message.properties.content_type = CONTENT_TYPE_JSON
+        queue_message = ServiceBusMessage(
+            json.dumps(dto), content_type=CONTENT_TYPE_JSON
+        )
         try:
-            await self._client.send(queue_message)
-        except MessageSendFailed as err:
+            await self._client.send_messages(queue_message)
+        except ServiceBusError as err:
             _LOGGER.error(
                 "Could not send service bus notification to %s. %s",
                 self._client.name,

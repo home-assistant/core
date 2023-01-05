@@ -11,10 +11,10 @@
             "user": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
-                "description": "Introduce el nombre de usuario y contrase\u00f1a de tu cuenta de iAqualink.",
-                "title": "Conexi\u00f3n con iAqualink"
+                "description": "Por favor, introduce el nombre de usuario y contrase\u00f1a de tu cuenta iAqualink.",
+                "title": "Conectar a iAqualink"
             }
         }
     }

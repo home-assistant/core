@@ -7,15 +7,21 @@
             "switchbot_unsupported_type": "Jenis Switchbot yang tidak didukung.",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({address})",
         "step": {
-            "user": {
+            "confirm": {
+                "description": "Ingin menyiapkan {name}?"
+            },
+            "password": {
                 "data": {
-                    "mac": "Alamat MAC perangkat",
-                    "name": "Nama",
                     "password": "Kata Sandi"
                 },
-                "title": "Siapkan perangkat Switchbot"
+                "description": "Perangkat {name} memerlukan kata sandi"
+            },
+            "user": {
+                "data": {
+                    "address": "Alamat perangkat"
+                }
             }
         }
     },
@@ -23,10 +29,7 @@
         "step": {
             "init": {
                 "data": {
-                    "retry_count": "Jumlah percobaan",
-                    "retry_timeout": "Tenggang waktu antara percobaan ulang",
-                    "scan_timeout": "Berapa lama untuk memindai data iklan",
-                    "update_time": "Waktu antara pembaruan (detik)"
+                    "retry_count": "Jumlah percobaan"
                 }
             }
         }

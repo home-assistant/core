@@ -24,11 +24,10 @@
     },
     "options": {
         "step": {
-            "user": {
+            "init": {
                 "data": {
                     "forecast": "Pr\u00e9visions m\u00e9t\u00e9orologiques"
-                },
-                "description": "En raison des limitations de la version gratuite de la cl\u00e9 API AccuWeather, lorsque vous activez les pr\u00e9visions m\u00e9t\u00e9orologiques, les mises \u00e0 jour des donn\u00e9es seront effectu\u00e9es toutes les 64 minutes au lieu de toutes les 32 minutes."
+                }
             }
         }
     },

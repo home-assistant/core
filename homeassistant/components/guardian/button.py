@@ -15,12 +15,12 @@ from homeassistant.components.button import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ValveControllerEntity, ValveControllerEntityDescription
-from .const import API_SYSTEM_DIAGNOSTICS, DATA_CLIENT, DATA_COORDINATOR, DOMAIN
-from .util import GuardianDataUpdateCoordinator
+from . import GuardianData, ValveControllerEntity, ValveControllerEntityDescription
+from .const import API_SYSTEM_DIAGNOSTICS, DOMAIN
 
 
 @dataclass
@@ -77,13 +77,10 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Guardian buttons based on a config entry."""
-    entry_data = hass.data[DOMAIN][entry.entry_id]
-    client = entry_data[DATA_CLIENT]
-    valve_controller_coordinators = entry_data[DATA_COORDINATOR]
+    data: GuardianData = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        GuardianButton(entry, valve_controller_coordinators, description, client)
-        for description in BUTTON_DESCRIPTIONS
+        GuardianButton(entry, data, description) for description in BUTTON_DESCRIPTIONS
     )
 
 
@@ -98,14 +95,13 @@ class GuardianButton(ValveControllerEntity, ButtonEntity):
     def __init__(
         self,
         entry: ConfigEntry,
-        coordinators: dict[str, GuardianDataUpdateCoordinator],
+        data: GuardianData,
         description: ValveControllerButtonDescription,
-        client: Client,
     ) -> None:
         """Initialize."""
-        super().__init__(entry, coordinators, description)
+        super().__init__(entry, data.valve_controller_coordinators, description)
 
-        self._client = client
+        self._client = data.client
 
     async def async_press(self) -> None:
         """Send out a restart command."""
@@ -116,3 +112,5 @@ class GuardianButton(ValveControllerEntity, ButtonEntity):
             raise HomeAssistantError(
                 f'Error while pressing button "{self.entity_id}": {err}'
             ) from err
+
+        async_dispatcher_send(self.hass, self.coordinator.signal_reboot_requested)

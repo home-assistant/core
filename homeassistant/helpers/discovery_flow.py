@@ -60,17 +60,14 @@ class FlowDispatcher:
     @callback
     def async_setup(self) -> None:
         """Set up the flow disptcher."""
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, self.async_start)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, self._async_start)
 
-    @callback
-    def async_start(self, event: Event) -> None:
+    async def _async_start(self, event: Event) -> None:
         """Start processing pending flows."""
         self.hass.data.pop(DISCOVERY_FLOW_DISPATCHER)
-        self.hass.async_create_task(self._async_process_pending_flows())
 
-    async def _async_process_pending_flows(self) -> None:
-        """Process any pending discovery flows."""
         init_coros = [_async_init_flow(self.hass, *flow) for flow in self.pending_flows]
+
         await gather_with_concurrency(
             FLOW_INIT_LIMIT,
             *[init_coro for init_coro in init_coros if init_coro is not None],

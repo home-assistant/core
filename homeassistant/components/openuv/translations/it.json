@@ -1,12 +1,20 @@
 {
     "config": {
         "abort": {
-            "already_configured": "La posizione \u00e8 gi\u00e0 configurata"
+            "already_configured": "La posizione \u00e8 gi\u00e0 configurata",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
             "invalid_api_key": "Chiave API non valida"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Chiave API"
+                },
+                "description": "Inserisci nuovamente la chiave API per {latitude}, {longitude}.",
+                "title": "Autentica nuovamente l'integrazione"
+            },
             "user": {
                 "data": {
                     "api_key": "Chiave API",
@@ -16,6 +24,16 @@
                 },
                 "title": "Inserisci i tuoi dati"
             }
+        }
+    },
+    "issues": {
+        "deprecated_service_multiple_alternate_targets": {
+            "description": "Aggiorna tutte le automazioni o gli script che utilizzano questo servizio per utilizzare invece il servizio `{alternate_service}` con uno di questi ID entit\u00e0 come destinazione: `{alternate_targets}`.",
+            "title": "Il servizio {deprecated_service} \u00e8 stato rimosso"
+        },
+        "deprecated_service_single_alternate_target": {
+            "description": "Aggiorna tutte le automazioni o gli script che utilizzano questo servizio per utilizzare invece il servizio `{alternate_service}` con `{alternate_targets}` come destinazione.",
+            "title": "Il servizio {deprecated_service} \u00e8 stato rimosso"
         }
     },
     "options": {

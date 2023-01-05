@@ -1,7 +1,7 @@
 """Support for deCONZ lights."""
 from __future__ import annotations
 
-from typing import Any, Generic, TypedDict, TypeVar
+from typing import Any, TypedDict, TypeVar, Union
 
 from pydeconz.interfaces.groups import GroupHandler
 from pydeconz.interfaces.lights import LightHandler
@@ -47,7 +47,7 @@ DECONZ_TO_COLOR_MODE = {
     LightColorMode.XY: ColorMode.XY,
 }
 
-_L = TypeVar("_L", Group, Light)
+_LightDeviceT = TypeVar("_LightDeviceT", bound=Union[Group, Light])
 
 
 class SetStateAttributes(TypedDict, total=False):
@@ -121,14 +121,12 @@ async def async_setup_entry(
     )
 
 
-class DeconzBaseLight(Generic[_L], DeconzDevice, LightEntity):
+class DeconzBaseLight(DeconzDevice[_LightDeviceT], LightEntity):
     """Representation of a deCONZ light."""
 
     TYPE = DOMAIN
 
-    _device: _L
-
-    def __init__(self, device: _L, gateway: DeconzGateway) -> None:
+    def __init__(self, device: _LightDeviceT, gateway: DeconzGateway) -> None:
         """Set up light."""
         super().__init__(device, gateway)
 
@@ -261,8 +259,6 @@ class DeconzBaseLight(Generic[_L], DeconzDevice, LightEntity):
 class DeconzLight(DeconzBaseLight[Light]):
     """Representation of a deCONZ light."""
 
-    _device: Light
-
     @property
     def max_mireds(self) -> int:
         """Return the warmest color_temp that this light supports."""
@@ -288,8 +284,6 @@ class DeconzGroup(DeconzBaseLight[Group]):
     """Representation of a deCONZ group."""
 
     _attr_has_entity_name = True
-
-    _device: Group
 
     def __init__(self, device: Group, gateway: DeconzGateway) -> None:
         """Set up group and create an unique id."""

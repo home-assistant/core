@@ -3,7 +3,7 @@
   "name": "GoodWe Inverter",
   "documentation": "https://www.home-assistant.io/integrations/goodwe",
   "codeowners": ["@mletenay", "@starkillerOG"],
-  "requirements": ["goodwe==0.2.15"],
+  "requirements": ["goodwe==0.2.18"],
   "config_flow": true,
   "iot_class": "local_polling",
   "loggers": ["goodwe"]

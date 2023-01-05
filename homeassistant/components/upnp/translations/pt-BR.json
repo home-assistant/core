@@ -5,6 +5,10 @@
             "incomplete_discovery": "Descoberta incompleta",
             "no_devices_found": "Nenhum dispositivo encontrado na rede"
         },
+        "error": {
+            "one": "",
+            "other": ""
+        },
         "flow_title": "{name}",
         "step": {
             "ssdp_confirm": {

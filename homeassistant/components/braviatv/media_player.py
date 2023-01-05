@@ -1,13 +1,14 @@
-"""Support for interface with a Bravia TV."""
+"""Media player support for Bravia TV integration."""
 from __future__ import annotations
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -34,6 +35,7 @@ async def async_setup_entry(
 class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
     """Representation of a Bravia TV Media Player."""
 
+    _attr_assumed_state = True
     _attr_device_class = MediaPlayerDeviceClass.TV
     _attr_supported_features = (
         MediaPlayerEntityFeature.PAUSE
@@ -50,11 +52,11 @@ class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
     )
 
     @property
-    def state(self) -> str | None:
+    def state(self) -> MediaPlayerState:
         """Return the state of the device."""
         if self.coordinator.is_on:
-            return STATE_PLAYING if self.coordinator.playing else STATE_PAUSED
-        return STATE_OFF
+            return MediaPlayerState.ON
+        return MediaPlayerState.OFF
 
     @property
     def source(self) -> str | None:
@@ -74,7 +76,7 @@ class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
     @property
     def is_volume_muted(self) -> bool:
         """Boolean if volume is currently muted."""
-        return self.coordinator.muted
+        return self.coordinator.volume_muted
 
     @property
     def media_title(self) -> str | None:
@@ -84,12 +86,17 @@ class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
     @property
     def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
-        return self.coordinator.channel_name
+        return self.coordinator.media_content_id
+
+    @property
+    def media_content_type(self) -> MediaType | None:
+        """Content type of current playing media."""
+        return self.coordinator.media_content_type
 
     @property
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
-        return self.coordinator.duration
+        return self.coordinator.media_duration
 
     async def async_turn_on(self) -> None:
         """Turn the device on."""
@@ -125,6 +132,10 @@ class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
 
     async def async_media_pause(self) -> None:
         """Send pause command."""
+        await self.coordinator.async_media_pause()
+
+    async def async_media_play_pause(self) -> None:
+        """Send pause command that toggle play/pause."""
         await self.coordinator.async_media_pause()
 
     async def async_media_stop(self) -> None:

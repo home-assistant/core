@@ -7,9 +7,9 @@
             "user": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
-                "description": "Por favor, introduzca las credenciales utilizadas para iniciar sesi\u00f3n en mytotalconnectcomfort.com."
+                "description": "Por favor, introduce las credenciales usadas para iniciar sesi\u00f3n en mytotalconnectcomfort.com."
             }
         }
     },
@@ -17,8 +17,8 @@
         "step": {
             "init": {
                 "data": {
-                    "away_cool_temperature": "Temperatura fria, modo fuera",
-                    "away_heat_temperature": "Temperatura del calor exterior"
+                    "away_cool_temperature": "Temperatura en modo fr\u00edo cuando ausente",
+                    "away_heat_temperature": "Temperatura en modo calor cuando ausente"
                 },
                 "description": "Opciones de configuraci\u00f3n adicionales de Honeywell. Las temperaturas se establecen en Fahrenheit."
             }

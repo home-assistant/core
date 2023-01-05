@@ -32,12 +32,10 @@ async def async_setup_entry(
     """Set up Abode light devices."""
     data: AbodeSystem = hass.data[DOMAIN]
 
-    entities = []
-
-    for device in data.abode.get_devices(generic_type=CONST.TYPE_LIGHT):
-        entities.append(AbodeLight(data, device))
-
-    async_add_entities(entities)
+    async_add_entities(
+        AbodeLight(data, device)
+        for device in data.abode.get_devices(generic_type=CONST.TYPE_LIGHT)
+    )
 
 
 class AbodeLight(AbodeDevice, LightEntity):
@@ -118,8 +116,3 @@ class AbodeLight(AbodeDevice, LightEntity):
         if self._device.is_dimmable:
             return {ColorMode.BRIGHTNESS}
         return {ColorMode.ONOFF}
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return 0

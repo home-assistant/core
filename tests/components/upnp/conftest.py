@@ -1,11 +1,12 @@
 """Configuration for SSDP tests."""
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
+from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, create_autospec, patch
 from urllib.parse import urlparse
 
 from async_upnp_client.client import UpnpDevice
-from async_upnp_client.profiles.igd import IgdDevice, StatusInfo
+from async_upnp_client.profiles.igd import IgdDevice, IgdState, StatusInfo
 import pytest
 
 from homeassistant.components import ssdp
@@ -25,7 +26,7 @@ TEST_UDN = "uuid:device"
 TEST_ST = "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
 TEST_USN = f"{TEST_UDN}::{TEST_ST}"
 TEST_LOCATION = "http://192.168.1.1/desc.xml"
-TEST_HOSTNAME = urlparse(TEST_LOCATION).hostname
+TEST_HOST = urlparse(TEST_LOCATION).hostname
 TEST_FRIENDLY_NAME = "mock-name"
 TEST_MAC_ADDRESS = "00:11:22:33:44:55"
 TEST_DISCOVERY = ssdp.SsdpServiceInfo(
@@ -41,10 +42,11 @@ TEST_DISCOVERY = ssdp.SsdpServiceInfo(
         ssdp.ATTR_UPNP_FRIENDLY_NAME: TEST_FRIENDLY_NAME,
         ssdp.ATTR_UPNP_MANUFACTURER: "mock-manufacturer",
         ssdp.ATTR_UPNP_MODEL_NAME: "mock-model-name",
+        ssdp.ATTR_UPNP_SERIAL: "mock-serial",
         ssdp.ATTR_UPNP_UDN: TEST_UDN,
     },
     ssdp_headers={
-        "_host": TEST_HOSTNAME,
+        "_host": TEST_HOST,
     },
 )
 
@@ -54,24 +56,33 @@ def mock_igd_device() -> IgdDevice:
     """Mock async_upnp_client device."""
     mock_upnp_device = create_autospec(UpnpDevice, instance=True)
     mock_upnp_device.device_url = TEST_DISCOVERY.ssdp_location
+    mock_upnp_device.serial_number = TEST_DISCOVERY.upnp[ssdp.ATTR_UPNP_SERIAL]
 
     mock_igd_device = create_autospec(IgdDevice)
+    mock_igd_device.device_type = TEST_DISCOVERY.ssdp_st
     mock_igd_device.name = TEST_DISCOVERY.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
     mock_igd_device.manufacturer = TEST_DISCOVERY.upnp[ssdp.ATTR_UPNP_MANUFACTURER]
     mock_igd_device.model_name = TEST_DISCOVERY.upnp[ssdp.ATTR_UPNP_MODEL_NAME]
     mock_igd_device.udn = TEST_DISCOVERY.ssdp_udn
     mock_igd_device.device = mock_upnp_device
 
-    mock_igd_device.async_get_total_bytes_received.return_value = 0
-    mock_igd_device.async_get_total_bytes_sent.return_value = 0
-    mock_igd_device.async_get_total_packets_received.return_value = 0
-    mock_igd_device.async_get_total_packets_sent.return_value = 0
-    mock_igd_device.async_get_status_info.return_value = StatusInfo(
-        "Connected",
-        "",
-        10,
+    mock_igd_device.async_get_traffic_and_status_data.return_value = IgdState(
+        timestamp=datetime.now(),
+        bytes_received=0,
+        bytes_sent=0,
+        packets_received=0,
+        packets_sent=0,
+        status_info=StatusInfo(
+            "Connected",
+            "",
+            10,
+        ),
+        external_ip_address="8.9.10.11",
+        kibibytes_per_sec_received=None,
+        kibibytes_per_sec_sent=None,
+        packets_per_sec_received=None,
+        packets_per_sec_sent=None,
     )
-    mock_igd_device.async_get_external_ip_address.return_value = "8.9.10.11"
 
     with patch(
         "homeassistant.components.upnp.device.UpnpFactory.async_create_device"
@@ -119,6 +130,10 @@ async def silent_ssdp_scanner(hass):
         "homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"
     ), patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
         "homeassistant.components.ssdp.Scanner.async_scan"
+    ), patch(
+        "homeassistant.components.ssdp.Server._async_start_upnp_servers"
+    ), patch(
+        "homeassistant.components.ssdp.Server._async_stop_upnp_servers"
     ):
         yield
 
@@ -184,7 +199,11 @@ async def mock_config_entry(
 
     # Load config_entry.
     entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
+        PropertyMock(return_value=True),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     yield entry

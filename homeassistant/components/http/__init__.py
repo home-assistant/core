@@ -33,7 +33,12 @@ from homeassistant.util import ssl as ssl_util
 
 from .auth import async_setup_auth
 from .ban import setup_bans
-from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_HASS_USER  # noqa: F401
+from .const import (  # noqa: F401
+    KEY_AUTHENTICATED,
+    KEY_HASS,
+    KEY_HASS_REFRESH_TOKEN_ID,
+    KEY_HASS_USER,
+)
 from .cors import setup_cors
 from .forwarded import async_setup_forwarded
 from .request_context import current_request, setup_request_context
@@ -356,7 +361,8 @@ class HomeAssistantHTTP:
         except OSError as error:
             if not self.hass.config.safe_mode:
                 raise HomeAssistantError(
-                    f"Could not use SSL certificate from {self.ssl_certificate}: {error}"
+                    f"Could not use SSL certificate from {self.ssl_certificate}:"
+                    f" {error}"
                 ) from error
             _LOGGER.error(
                 "Could not read SSL certificate from %s: %s",
@@ -373,14 +379,17 @@ class HomeAssistantHTTP:
                 context = None
             else:
                 _LOGGER.critical(
-                    "Home Assistant is running in safe mode with an emergency self signed ssl certificate because the configured SSL certificate was not usable"
+                    "Home Assistant is running in safe mode with an emergency self"
+                    " signed ssl certificate because the configured SSL certificate was"
+                    " not usable"
                 )
                 return context
 
         if self.ssl_peer_certificate:
             if context is None:
                 raise HomeAssistantError(
-                    "Failed to create ssl context, no fallback available because a peer certificate is required."
+                    "Failed to create ssl context, no fallback available because a peer"
+                    " certificate is required."
                 )
 
             context.verify_mode = ssl.CERT_REQUIRED

@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "already_in_progress": "Konfigurationsfl\u00f6det p\u00e5g\u00e5r redan",
+            "no_devices_found": "Inga \u00e5terst\u00e5ende enheter hittades"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta."
+        },
+        "step": {
+            "usb_confirm": {
+                "description": "Detta \u00e4r en integration f\u00f6r fasta samtal med ett CX93001 r\u00f6stmodem. Detta kan h\u00e4mta nummerpresentationsinformation med ett alternativ att avvisa ett inkommande samtal."
+            },
+            "user": {
+                "data": {
+                    "name": "Namn",
+                    "port": "Port"
+                },
+                "description": "Detta \u00e4r en integration f\u00f6r fasta samtal med ett CX93001 r\u00f6stmodem. Detta kan h\u00e4mta nummerpresentationsinformation med ett alternativ att avvisa ett inkommande samtal."
+            }
+        }
+    }
+}

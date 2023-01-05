@@ -1,21 +1,23 @@
 """Platform for climate integration."""
 from __future__ import annotations
 
+from typing import Any
+
 from smarttub import Spa
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     PRESET_ECO,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.temperature import convert as convert_temperature
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN, SMARTTUB_CONTROLLER
 from .entity import SmartTubEntity
@@ -61,22 +63,18 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
         super().__init__(coordinator, spa, "Thermostat")
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement used by the platform."""
-        return TEMP_CELSIUS
-
-    @property
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation."""
         return HVAC_ACTIONS.get(self.spa_status.heater)
 
-    async def async_set_hvac_mode(self, hvac_mode: HVACMode):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode.
 
         As with hvac_mode, we don't really have an option here.
@@ -89,13 +87,17 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     def min_temp(self):
         """Return the minimum temperature."""
         min_temp = DEFAULT_MIN_TEMP
-        return convert_temperature(min_temp, TEMP_CELSIUS, self.temperature_unit)
+        return TemperatureConverter.convert(
+            min_temp, UnitOfTemperature.CELSIUS, self.temperature_unit
+        )
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
         max_temp = DEFAULT_MAX_TEMP
-        return convert_temperature(max_temp, TEMP_CELSIUS, self.temperature_unit)
+        return TemperatureConverter.convert(
+            max_temp, UnitOfTemperature.CELSIUS, self.temperature_unit
+        )
 
     @property
     def preset_mode(self):
@@ -117,13 +119,13 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
         """Return the target water temperature."""
         return self.spa_status.set_temperature
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
         await self.spa.set_temperature(temperature)
         await self.coordinator.async_refresh()
 
-    async def async_set_preset_mode(self, preset_mode: str):
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Activate the specified preset mode."""
         heat_mode = HEAT_MODES[preset_mode]
         await self.spa.set_heat_mode(heat_mode)

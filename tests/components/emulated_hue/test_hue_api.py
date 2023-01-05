@@ -829,7 +829,7 @@ async def test_put_light_state_climate_set_temperature(hass_hue, hue_client):
     assert len(hvac_result_json) == 2
 
     hvac = hass_hue.states.get("climate.hvac")
-    assert hvac.state == climate.const.HVAC_MODE_COOL
+    assert hvac.state == climate.HVACMode.COOL
     assert hvac.attributes[climate.ATTR_TEMPERATURE] == temperature
 
     # Make sure we can't change the ecobee temperature since it's not exposed

@@ -143,14 +143,17 @@ class MinecraftServer:
             self.online = True
         except OSError as error:
             _LOGGER.debug(
-                "Error occurred while trying to check the connection to '%s:%s' - OSError: %s",
+                (
+                    "Error occurred while trying to check the connection to '%s:%s' -"
+                    " OSError: %s"
+                ),
                 self.host,
                 self.port,
                 error,
             )
             self.online = False
 
-    async def async_update(self, now: datetime = None) -> None:
+    async def async_update(self, now: datetime | None = None) -> None:
         """Get server data from 3rd party library and update properties."""
         # Check connection status.
         server_online_old = self.online

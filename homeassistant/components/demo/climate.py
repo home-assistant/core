@@ -3,16 +3,16 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -20,7 +20,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN
 
-SUPPORT_FLAGS = 0
+SUPPORT_FLAGS = ClimateEntityFeature(0)
 
 
 async def async_setup_platform(
@@ -36,7 +36,7 @@ async def async_setup_platform(
                 unique_id="climate_1",
                 name="HeatPump",
                 target_temperature=68,
-                unit_of_measurement=TEMP_FAHRENHEIT,
+                unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
                 preset=None,
                 current_temperature=77,
                 fan_mode=None,
@@ -54,7 +54,7 @@ async def async_setup_platform(
                 unique_id="climate_2",
                 name="Hvac",
                 target_temperature=21,
-                unit_of_measurement=TEMP_CELSIUS,
+                unit_of_measurement=UnitOfTemperature.CELSIUS,
                 preset=None,
                 current_temperature=22,
                 fan_mode="On High",
@@ -72,7 +72,7 @@ async def async_setup_platform(
                 unique_id="climate_3",
                 name="Ecobee",
                 target_temperature=None,
-                unit_of_measurement=TEMP_CELSIUS,
+                unit_of_measurement=UnitOfTemperature.CELSIUS,
                 preset="home",
                 preset_modes=["home", "eco"],
                 current_temperature=23,
@@ -103,6 +103,9 @@ async def async_setup_entry(
 class DemoClimate(ClimateEntity):
     """Representation of a demo climate device."""
 
+    _attr_should_poll = False
+    _attr_translation_key = "ubercool"
+
     def __init__(
         self,
         unique_id: str,
@@ -125,27 +128,23 @@ class DemoClimate(ClimateEntity):
     ) -> None:
         """Initialize the climate device."""
         self._unique_id = unique_id
-        self._name = name
-        self._support_flags = SUPPORT_FLAGS
+        self._attr_name = name
+        self._attr_supported_features = SUPPORT_FLAGS
         if target_temperature is not None:
-            self._support_flags = (
-                self._support_flags | ClimateEntityFeature.TARGET_TEMPERATURE
-            )
+            self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
         if preset is not None:
-            self._support_flags = self._support_flags | ClimateEntityFeature.PRESET_MODE
+            self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
         if fan_mode is not None:
-            self._support_flags = self._support_flags | ClimateEntityFeature.FAN_MODE
+            self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
         if target_humidity is not None:
-            self._support_flags = (
-                self._support_flags | ClimateEntityFeature.TARGET_HUMIDITY
-            )
+            self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
         if swing_mode is not None:
-            self._support_flags = self._support_flags | ClimateEntityFeature.SWING_MODE
+            self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
         if aux is not None:
-            self._support_flags = self._support_flags | ClimateEntityFeature.AUX_HEAT
+            self._attr_supported_features |= ClimateEntityFeature.AUX_HEAT
         if HVACMode.HEAT_COOL in hvac_modes or HVACMode.AUTO in hvac_modes:
-            self._support_flags = (
-                self._support_flags | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             )
         self._target_temperature = target_temperature
         self._target_humidity = target_humidity
@@ -159,9 +158,9 @@ class DemoClimate(ClimateEntity):
         self._hvac_mode = hvac_mode
         self._aux = aux
         self._current_swing_mode = swing_mode
-        self._fan_modes = ["On Low", "On High", "Auto Low", "Auto High", "Off"]
+        self._fan_modes = ["on_low", "on_high", "auto_low", "auto_high", "off"]
         self._hvac_modes = hvac_modes
-        self._swing_modes = ["Auto", "1", "2", "3", "Off"]
+        self._swing_modes = ["auto", "1", "2", "3", "off"]
         self._target_temperature_high = target_temp_high
         self._target_temperature_low = target_temp_low
 
@@ -180,21 +179,6 @@ class DemoClimate(ClimateEntity):
     def unique_id(self) -> str:
         """Return the unique id."""
         return self._unique_id
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return self._support_flags
-
-    @property
-    def should_poll(self) -> bool:
-        """Return the polling state."""
-        return False
-
-    @property
-    def name(self) -> str:
-        """Return the name of the climate device."""
-        return self._name
 
     @property
     def temperature_unit(self) -> str:

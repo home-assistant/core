@@ -5,10 +5,7 @@ from unittest.mock import patch
 
 from homeassistant.const import STATE_IDLE
 
-from tests.components.august.mocks import (
-    _create_august_with_devices,
-    _mock_doorbell_from_fixture,
-)
+from .mocks import _create_august_with_devices, _mock_doorbell_from_fixture
 
 
 async def test_create_doorbell(hass, hass_client_no_auth):

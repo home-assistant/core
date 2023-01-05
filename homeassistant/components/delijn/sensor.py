@@ -92,7 +92,7 @@ class DeLijnPublicTransportSensor(SensorEntity):
         self.line = line
         self._attr_extra_state_attributes = {}
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data from the De Lijn API."""
         try:
             await self.line.get_passages()

@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant import bootstrap, core, runner
 import homeassistant.config as config_util
-from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATONS
+from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -212,6 +212,82 @@ async def test_setup_after_deps_in_stage_1_ignored(hass):
 
 
 @pytest.mark.parametrize("load_registries", [False])
+async def test_setup_frontend_before_recorder(hass):
+    """Test frontend is setup before recorder."""
+    order = []
+
+    def gen_domain_setup(domain):
+        async def async_setup(hass, config):
+            order.append(domain)
+            return True
+
+        return async_setup
+
+    mock_integration(
+        hass,
+        MockModule(
+            domain="normal_integration",
+            async_setup=gen_domain_setup("normal_integration"),
+            partial_manifest={"after_dependencies": ["an_after_dep"]},
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="an_after_dep",
+            async_setup=gen_domain_setup("an_after_dep"),
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="frontend",
+            async_setup=gen_domain_setup("frontend"),
+            partial_manifest={
+                "dependencies": ["http"],
+                "after_dependencies": ["an_after_dep"],
+            },
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="http",
+            async_setup=gen_domain_setup("http"),
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="recorder",
+            async_setup=gen_domain_setup("recorder"),
+        ),
+    )
+
+    await bootstrap._async_set_up_integrations(
+        hass,
+        {
+            "frontend": {},
+            "http": {},
+            "recorder": {},
+            "normal_integration": {},
+            "an_after_dep": {},
+        },
+    )
+
+    assert "frontend" in hass.config.components
+    assert "normal_integration" in hass.config.components
+    assert "recorder" in hass.config.components
+    assert order == [
+        "http",
+        "frontend",
+        "recorder",
+        "an_after_dep",
+        "normal_integration",
+    ]
+
+
+@pytest.mark.parametrize("load_registries", [False])
 async def test_setup_after_deps_via_platform(hass):
     """Test after_dependencies set up via platform."""
     order = []
@@ -384,7 +460,7 @@ async def test_setup_hass(
     mock_ensure_config_exists,
     mock_process_ha_config_upgrade,
     caplog,
-    loop,
+    event_loop,
 ):
     """Test it works."""
     verbose = Mock()
@@ -425,6 +501,8 @@ async def test_setup_hass(
     assert len(mock_ensure_config_exists.mock_calls) == 1
     assert len(mock_process_ha_config_upgrade.mock_calls) == 1
 
+    assert hass == core.async_get_hass()
+
 
 async def test_setup_hass_takes_longer_than_log_slow_startup(
     mock_enable_logging,
@@ -433,7 +511,7 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
     mock_ensure_config_exists,
     mock_process_ha_config_upgrade,
     caplog,
-    loop,
+    event_loop,
 ):
     """Test it works."""
     verbose = Mock()
@@ -475,7 +553,7 @@ async def test_setup_hass_invalid_yaml(
     mock_mount_local_lib_path,
     mock_ensure_config_exists,
     mock_process_ha_config_upgrade,
-    loop,
+    event_loop,
 ):
     """Test it works."""
     with patch(
@@ -503,7 +581,7 @@ async def test_setup_hass_config_dir_nonexistent(
     mock_mount_local_lib_path,
     mock_ensure_config_exists,
     mock_process_ha_config_upgrade,
-    loop,
+    event_loop,
 ):
     """Test it works."""
     mock_ensure_config_exists.return_value = False
@@ -530,7 +608,7 @@ async def test_setup_hass_safe_mode(
     mock_mount_local_lib_path,
     mock_ensure_config_exists,
     mock_process_ha_config_upgrade,
-    loop,
+    event_loop,
 ):
     """Test it works."""
     with patch("homeassistant.components.browser.setup") as browser_setup, patch(
@@ -563,7 +641,7 @@ async def test_setup_hass_invalid_core_config(
     mock_mount_local_lib_path,
     mock_ensure_config_exists,
     mock_process_ha_config_upgrade,
-    loop,
+    event_loop,
 ):
     """Test it works."""
     with patch(
@@ -591,7 +669,7 @@ async def test_setup_safe_mode_if_no_frontend(
     mock_mount_local_lib_path,
     mock_ensure_config_exists,
     mock_process_ha_config_upgrade,
-    loop,
+    event_loop,
 ):
     """Test we setup safe mode if frontend didn't load."""
     verbose = Mock()
@@ -670,7 +748,7 @@ async def test_empty_integrations_list_is_only_sent_at_the_end_of_bootstrap(hass
         integrations.append(data)
 
     async_dispatcher_connect(
-        hass, SIGNAL_BOOTSTRAP_INTEGRATONS, _bootstrap_integrations
+        hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, _bootstrap_integrations
     )
     with patch.object(bootstrap, "SLOW_STARTUP_CHECK_INTERVAL", 0.05):
         await bootstrap._async_set_up_integrations(

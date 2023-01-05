@@ -1,4 +1,5 @@
 """Tests for Renault sensors."""
+from collections.abc import Generator
 from datetime import datetime
 from unittest.mock import patch
 
@@ -29,14 +30,15 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
+from .const import MOCK_VEHICLES
+
 from tests.common import load_fixture
-from tests.components.renault.const import MOCK_VEHICLES
 
 pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
 
 
 @pytest.fixture(autouse=True)
-def override_platforms():
+def override_platforms() -> Generator[None, None, None]:
     """Override PLATFORMS."""
     with patch("homeassistant.components.renault.PLATFORMS", []):
         yield
@@ -56,7 +58,9 @@ def get_device_id(hass: HomeAssistant) -> str:
     return device.id
 
 
-async def test_service_registration(hass: HomeAssistant, config_entry: ConfigEntry):
+async def test_service_registration(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
     """Test entry setup and unload."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -73,7 +77,9 @@ async def test_service_registration(hass: HomeAssistant, config_entry: ConfigEnt
         assert not hass.services.has_service(DOMAIN, service)
 
 
-async def test_service_set_ac_cancel(hass: HomeAssistant, config_entry: ConfigEntry):
+async def test_service_set_ac_cancel(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
     """Test that service invokes renault_api with correct data."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -99,7 +105,7 @@ async def test_service_set_ac_cancel(hass: HomeAssistant, config_entry: ConfigEn
 
 async def test_service_set_ac_start_simple(
     hass: HomeAssistant, config_entry: ConfigEntry
-):
+) -> None:
     """Test that service invokes renault_api with correct data."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -127,7 +133,7 @@ async def test_service_set_ac_start_simple(
 
 async def test_service_set_ac_start_with_date(
     hass: HomeAssistant, config_entry: ConfigEntry
-):
+) -> None:
     """Test that service invokes renault_api with correct data."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -157,7 +163,7 @@ async def test_service_set_ac_start_with_date(
 
 async def test_service_set_charge_schedule(
     hass: HomeAssistant, config_entry: ConfigEntry
-):
+) -> None:
     """Test that service invokes renault_api with correct data."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -191,7 +197,7 @@ async def test_service_set_charge_schedule(
 
 async def test_service_set_charge_schedule_multi(
     hass: HomeAssistant, config_entry: ConfigEntry
-):
+) -> None:
     """Test that service invokes renault_api with correct data."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -238,7 +244,7 @@ async def test_service_set_charge_schedule_multi(
 
 async def test_service_set_charge_start(
     hass: HomeAssistant, config_entry: ConfigEntry, caplog: pytest.LogCaptureFixture
-):
+) -> None:
     """Test that service invokes renault_api with correct data."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -265,7 +271,7 @@ async def test_service_set_charge_start(
 
 async def test_service_invalid_device_id(
     hass: HomeAssistant, config_entry: ConfigEntry
-):
+) -> None:
     """Test that service fails with ValueError if device_id not found in registry."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -280,7 +286,7 @@ async def test_service_invalid_device_id(
 
 async def test_service_invalid_device_id2(
     hass: HomeAssistant, config_entry: ConfigEntry
-):
+) -> None:
     """Test that service fails with ValueError if device_id not found in vehicles."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

@@ -20,10 +20,10 @@ from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
 from fritzconnection.lib.fritzwlan import DEFAULT_PASSWORD_LENGTH, FritzGuestWLAN
 
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
-from homeassistant.components.device_tracker.const import (
+from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
 )
 from homeassistant.components.switch import DOMAIN as DEVICE_SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -136,7 +136,7 @@ class HostInfo(TypedDict):
     status: bool
 
 
-class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
+class FritzBoxTools(update_coordinator.DataUpdateCoordinator[None]):
     """FritzBoxTools class."""
 
     def __init__(
@@ -207,40 +207,36 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         self.fritz_hosts = FritzHosts(fc=self.connection)
         self.fritz_guest_wifi = FritzGuestWLAN(fc=self.connection)
         self.fritz_status = FritzStatus(fc=self.connection)
-        info = self.connection.call_action("DeviceInfo:1", "GetInfo")
+        info = self.fritz_status.get_device_info()
 
         _LOGGER.debug(
             "gathered device info of %s %s",
             self.host,
             {
-                **info,
+                **vars(info),
                 "NewDeviceLog": "***omitted***",
                 "NewSerialNumber": "***omitted***",
             },
         )
 
         if not self._unique_id:
-            self._unique_id = info["NewSerialNumber"]
+            self._unique_id = info.serial_number
 
-        self._model = info.get("NewModelName")
-        self._current_firmware = info.get("NewSoftwareVersion")
+        self._model = info.model_name
+        self._current_firmware = info.software_version
 
         (
             self._update_available,
             self._latest_firmware,
             self._release_url,
         ) = self._update_device_info()
-        if "Layer3Forwarding1" in self.connection.services:
-            if connection_type := self.connection.call_action(
-                "Layer3Forwarding1", "GetDefaultConnectionService"
-            ).get("NewDefaultConnectionService"):
-                # Return NewDefaultConnectionService sample: "1.WANPPPConnection.1"
-                self.device_conn_type = connection_type[2:][:-2]
-                self.device_is_router = self.connection.call_action(
-                    self.device_conn_type, "GetInfo"
-                ).get("NewEnable")
 
-    @callback
+        if self.fritz_status.has_wan_support:
+            self.device_conn_type = (
+                self.fritz_status.get_default_connection_service().connection_service
+            )
+            self.device_is_router = self.fritz_status.has_wan_enabled
+
     async def _async_update_data(self) -> None:
         """Update FritzboxTools data."""
         try:
@@ -332,7 +328,10 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
             ).get("NewDisallow")
         except FRITZ_EXCEPTIONS as ex:
             _LOGGER.debug(
-                "could not get WAN access rule for client device with IP '%s', error: %s",
+                (
+                    "could not get WAN access rule for client device with IP '%s',"
+                    " error: %s"
+                ),
                 ip_address,
                 ex,
             )
@@ -402,11 +401,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                 wan_access=None,
             )
 
-        if (
-            "Hosts1" not in self.connection.services
-            or "X_AVM-DE_GetMeshListPath"
-            not in self.connection.services["Hosts1"].actions
-        ) or (
+        if not self.fritz_status.device_has_mesh_support or (
             self._options
             and self._options.get(CONF_OLD_DISCOVERY, DEFAULT_CONF_OLD_DISCOVERY)
         ):
@@ -582,21 +577,24 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         try:
             if service_call.service == SERVICE_REBOOT:
                 _LOGGER.warning(
-                    'Service "fritz.reboot" is deprecated, please use the corresponding button entity instead'
+                    'Service "fritz.reboot" is deprecated, please use the corresponding'
+                    " button entity instead"
                 )
                 await self.async_trigger_reboot()
                 return
 
             if service_call.service == SERVICE_RECONNECT:
                 _LOGGER.warning(
-                    'Service "fritz.reconnect" is deprecated, please use the corresponding button entity instead'
+                    'Service "fritz.reconnect" is deprecated, please use the'
+                    " corresponding button entity instead"
                 )
                 await self.async_trigger_reconnect()
                 return
 
             if service_call.service == SERVICE_CLEANUP:
                 _LOGGER.warning(
-                    'Service "fritz.cleanup" is deprecated, please use the corresponding button entity instead'
+                    'Service "fritz.cleanup" is deprecated, please use the'
+                    " corresponding button entity instead"
                 )
                 await self.async_trigger_cleanup(config_entry)
                 return
@@ -642,7 +640,10 @@ class AvmWrapper(FritzBoxTools):
             return result
         except FritzSecurityError:
             _LOGGER.error(
-                "Authorization Error: Please check the provided credentials and verify that you can log into the web interface",
+                (
+                    "Authorization Error: Please check the provided credentials and"
+                    " verify that you can log into the web interface"
+                ),
                 exc_info=True,
             )
         except FRITZ_EXCEPTIONS:
@@ -654,7 +655,10 @@ class AvmWrapper(FritzBoxTools):
             )
         except FritzConnectionException:
             _LOGGER.error(
-                "Connection Error: Please check the device is properly configured for remote login",
+                (
+                    "Connection Error: Please check the device is properly configured"
+                    " for remote login"
+                ),
                 exc_info=True,
             )
         return {}
@@ -671,6 +675,17 @@ class AvmWrapper(FritzBoxTools):
             partial(self.get_wan_link_properties)
         )
 
+    async def async_ipv6_active(self) -> bool:
+        """Check ip an ipv6 is active on the WAn interface."""
+
+        def wrap_external_ipv6() -> str:
+            return str(self.fritz_status.external_ipv6)
+
+        if not self.device_is_router:
+            return False
+
+        return bool(await self.hass.async_add_executor_job(wrap_external_ipv6))
+
     async def async_get_connection_info(self) -> ConnectionInfo:
         """Return ConnectionInfo data."""
 
@@ -679,6 +694,7 @@ class AvmWrapper(FritzBoxTools):
             connection=link_properties.get("NewWANAccessType", "").lower(),
             mesh_role=self.mesh_role,
             wan_enabled=self.device_is_router,
+            ipv6_active=await self.async_ipv6_active(),
         )
         _LOGGER.debug(
             "ConnectionInfo for FritzBox %s: %s",
@@ -878,11 +894,6 @@ class FritzDeviceBase(update_coordinator.CoordinatorEntity[AvmWrapper]):
             return self._avm_wrapper.devices[self._mac].hostname
         return None
 
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
-
     async def async_process_update(self) -> None:
         """Update device."""
         raise NotImplementedError()
@@ -1024,3 +1035,4 @@ class ConnectionInfo:
     connection: str
     mesh_role: MeshRoles
     wan_enabled: bool
+    ipv6_active: bool

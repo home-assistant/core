@@ -15,6 +15,7 @@ from huawei_lte_api.Client import Client
 from huawei_lte_api.Connection import Connection
 from huawei_lte_api.enums.device import ControlModeEnum
 from huawei_lte_api.exceptions import (
+    LoginErrorInvalidCredentialsException,
     ResponseErrorException,
     ResponseErrorLoginRequiredException,
     ResponseErrorNotSupportedException,
@@ -38,7 +39,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -55,9 +56,11 @@ from .const import (
     ADMIN_SERVICES,
     ALL_KEYS,
     ATTR_UNIQUE_ID,
+    CONF_MANUFACTURER,
     CONF_UNAUTHENTICATED_MODE,
     CONNECTION_TIMEOUT,
     DEFAULT_DEVICE_NAME,
+    DEFAULT_MANUFACTURER,
     DEFAULT_NOTIFY_SERVICE_NAME,
     DOMAIN,
     KEY_DEVICE_BASIC_INFORMATION,
@@ -182,7 +185,7 @@ class Router:
         if not self.subscriptions.get(key):
             return
         if key in self.inflight_gets:
-            _LOGGER.debug("Skipping already inflight get for %s", key)
+            _LOGGER.debug("Skipping already in-flight get for %s", key)
             return
         self.inflight_gets.add(key)
         _LOGGER.debug("Getting %s for subscribers %s", key, self.subscriptions[key])
@@ -279,11 +282,12 @@ class Router:
         self._get_data(
             KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH,
             lambda: next(
-                filter(
-                    lambda ssid: ssid.get("wifiisguestnetwork") == "1",
-                    self.client.wlan.multi_basic_settings()
+                (
+                    ssid
+                    for ssid in self.client.wlan.multi_basic_settings()
                     .get("Ssids", {})
-                    .get("Ssid", []),
+                    .get("Ssid", [])
+                    if isinstance(ssid, dict) and ssid.get("wifiisguestnetwork") == "1"
                 ),
                 {},
             ),
@@ -338,6 +342,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         connection = await hass.async_add_executor_job(get_connection)
+    except LoginErrorInvalidCredentialsException as ex:
+        raise ConfigEntryAuthFailed from ex
     except Timeout as ex:
         raise ConfigEntryNotReady from ex
 
@@ -408,9 +414,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device_info = DeviceInfo(
             configuration_url=router.url,
             connections=router.device_connections,
+            default_manufacturer=DEFAULT_MANUFACTURER,
             identifiers=router.device_identifiers,
+            manufacturer=entry.data.get(CONF_MANUFACTURER),
             name=router.device_name,
-            manufacturer="Huawei",
         )
         hw_version = None
         sw_version = None
@@ -485,10 +492,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Huawei LTE component."""
-
-    # dicttoxml (used by huawei-lte-api) has uselessly verbose INFO level.
-    # https://github.com/quandyfactory/dicttoxml/issues/60
-    logging.getLogger("dicttoxml").setLevel(logging.WARNING)
 
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = HuaweiLteData(hass_config=config, routers={})
@@ -586,10 +589,8 @@ class HuaweiLteBaseEntity(Entity):
 
     _available: bool = field(default=True, init=False)
     _unsub_handlers: list[Callable] = field(default_factory=list, init=False)
-
-    @property
-    def _entity_name(self) -> str:
-        raise NotImplementedError
+    _attr_has_entity_name: bool = field(default=True, init=False)
+    _attr_should_poll = False
 
     @property
     def _device_unique_id(self) -> str:
@@ -602,19 +603,9 @@ class HuaweiLteBaseEntity(Entity):
         return f"{self.router.config_entry.unique_id}-{self._device_unique_id}"
 
     @property
-    def name(self) -> str:
-        """Return entity name."""
-        return f"Huawei {self.router.device_name} {self._entity_name}"
-
-    @property
     def available(self) -> bool:
         """Return whether the entity is available."""
         return self._available
-
-    @property
-    def should_poll(self) -> bool:
-        """Huawei LTE entities report their state without polling."""
-        return False
 
     async def async_update(self) -> None:
         """Update state."""

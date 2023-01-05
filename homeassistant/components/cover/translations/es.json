@@ -19,11 +19,11 @@
         },
         "trigger_type": {
             "closed": "{entity_name} cerrado",
-            "closing": "{entity_name} cerrando",
-            "opened": "abierto {entity_name}",
-            "opening": "abriendo {entity_name}",
-            "position": "Posici\u00f3n cambiada de {entity_name}",
-            "tilt_position": "Cambia la posici\u00f3n de inclinaci\u00f3n de {entity_name}"
+            "closing": "{entity_name} cerr\u00e1ndose",
+            "opened": "{entity_name} abierto",
+            "opening": "{entity_name} abri\u00e9ndose",
+            "position": "La posici\u00f3n de {entity_name} cambia",
+            "tilt_position": "La posici\u00f3n de inclinaci\u00f3n de {entity_name} cambia"
         }
     },
     "state": {

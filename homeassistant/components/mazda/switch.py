@@ -1,4 +1,6 @@
 """Platform for Mazda switch integration."""
+from typing import Any
+
 from pymazda import Client as MazdaAPIClient
 
 from homeassistant.components.switch import SwitchEntity
@@ -57,13 +59,13 @@ class MazdaChargingSwitch(MazdaEntity, SwitchEntity):
 
         self.async_write_ha_state()
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Start charging the vehicle."""
         await self.client.start_charging(self.vehicle_id)
 
         await self.refresh_status_and_write_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Stop charging the vehicle."""
         await self.client.stop_charging(self.vehicle_id)
 

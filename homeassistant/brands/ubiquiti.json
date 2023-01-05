@@ -1,0 +1,5 @@
+{
+  "domain": "ubiquiti",
+  "name": "Ubiquiti",
+  "integrations": ["unifi", "unifi_direct", "unifiled", "unifiprotect"]
+}

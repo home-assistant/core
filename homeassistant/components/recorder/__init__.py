@@ -21,16 +21,19 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from . import statistics, websocket_api
-from .const import (
+from .const import (  # noqa: F401
     CONF_DB_INTEGRITY_CHECK,
     DATA_INSTANCE,
     DOMAIN,
+    EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
+    EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,
     EXCLUDE_ATTRIBUTES,
     SQLITE_URL_PREFIX,
 )
 from .core import Recorder
 from .services import async_register_services
 from .tasks import AddRecorderPlatformTask
+from .util import get_instance
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,7 +71,10 @@ ALLOW_IN_MEMORY_DB = False
 def validate_db_url(db_url: str) -> Any:
     """Validate database URL."""
     # Don't allow on-memory sqlite databases
-    if (db_url == SQLITE_URL_PREFIX or ":memory:" in db_url) and not ALLOW_IN_MEMORY_DB:
+    if (
+        db_url == SQLITE_URL_PREFIX
+        or (db_url.startswith(SQLITE_URL_PREFIX) and ":memory:" in db_url)
+    ) and not ALLOW_IN_MEMORY_DB:
         raise vol.Invalid("In-memory SQLite database is not supported")
 
     return db_url
@@ -108,12 +114,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def get_instance(hass: HomeAssistant) -> Recorder:
-    """Get the recorder instance."""
-    instance: Recorder = hass.data[DATA_INSTANCE]
-    return instance
-
-
 @bind_hass
 def is_entity_recorded(hass: HomeAssistant, entity_id: str) -> bool:
     """Check if an entity is being recorded.
@@ -122,13 +122,12 @@ def is_entity_recorded(hass: HomeAssistant, entity_id: str) -> bool:
     """
     if DATA_INSTANCE not in hass.data:
         return False
-    instance: Recorder = hass.data[DATA_INSTANCE]
+    instance = get_instance(hass)
     return instance.entity_filter(entity_id)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
-    hass.data[DOMAIN] = {}
     exclude_attributes_by_domain: dict[str, set[str]] = {}
     hass.data[EXCLUDE_ATTRIBUTES] = exclude_attributes_by_domain
     conf = config[DOMAIN]
@@ -177,5 +176,5 @@ async def _process_recorder_platform(
     hass: HomeAssistant, domain: str, platform: Any
 ) -> None:
     """Process a recorder platform."""
-    instance: Recorder = hass.data[DATA_INSTANCE]
+    instance = get_instance(hass)
     instance.queue_task(AddRecorderPlatformTask(domain, platform))

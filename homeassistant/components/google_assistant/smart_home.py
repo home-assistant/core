@@ -130,6 +130,11 @@ async def async_devices_query(hass, data, payload):
         context=data.context,
     )
 
+    return await async_devices_query_response(hass, data.config, payload_devices)
+
+
+async def async_devices_query_response(hass, config, payload_devices):
+    """Generate the device serialization."""
     devices = {}
     for device in payload_devices:
         devid = device["id"]
@@ -139,7 +144,7 @@ async def async_devices_query(hass, data, payload):
             devices[devid] = {"online": False}
             continue
 
-        entity = GoogleEntity(hass, data.config, state)
+        entity = GoogleEntity(hass, config, state)
         try:
             devices[devid] = entity.query_serialize()
         except Exception:  # pylint: disable=broad-except

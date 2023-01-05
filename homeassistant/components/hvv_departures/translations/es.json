@@ -11,13 +11,13 @@
         "step": {
             "station": {
                 "data": {
-                    "station": "Estacion/Direccion"
+                    "station": "Estaci\u00f3n/Direcci\u00f3n"
                 },
-                "title": "Introducir Estaci\u00f3n/Direcci\u00f3n"
+                "title": "Introduce la Estaci\u00f3n/Direcci\u00f3n"
             },
             "station_select": {
                 "data": {
-                    "station": "Estacion/Direccion"
+                    "station": "Estaci\u00f3n/Direcci\u00f3n"
                 },
                 "title": "Seleccionar Estaci\u00f3n/Direcci\u00f3n"
             },
@@ -25,9 +25,9 @@
                 "data": {
                     "host": "Host",
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
-                "title": "Conectar con el API de HVV"
+                "title": "Conectar con la API de HVV"
             }
         }
     },
@@ -36,7 +36,7 @@
             "init": {
                 "data": {
                     "filter": "Seleccionar l\u00edneas",
-                    "offset": "Desfase (minutos)",
+                    "offset": "Compensaci\u00f3n (minutos)",
                     "real_time": "Usar datos en tiempo real"
                 },
                 "description": "Cambiar opciones para este sensor de salidas",

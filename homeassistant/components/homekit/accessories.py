@@ -7,7 +7,10 @@ from uuid import UUID
 
 from pyhap.accessory import Accessory, Bridge
 from pyhap.accessory_driver import AccessoryDriver
+from pyhap.characteristic import Characteristic
 from pyhap.const import CATEGORY_OTHER
+from pyhap.iid_manager import IIDManager
+from pyhap.service import Service
 from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
@@ -32,8 +35,7 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_ON,
     STATE_UNAVAILABLE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
     __version__,
 )
 from homeassistant.core import (
@@ -83,6 +85,7 @@ from .const import (
     TYPE_SWITCH,
     TYPE_VALVE,
 )
+from .iidmanager import AccessoryIIDStorage
 from .util import (
     accessory_friendly_name,
     async_dismiss_setup_message,
@@ -111,8 +114,10 @@ def get_accessory(  # noqa: C901
     """Take state and return an accessory object if supported."""
     if not aid:
         _LOGGER.warning(
-            'The entity "%s" is not supported, since it '
-            "generates an invalid aid, please change it",
+            (
+                'The entity "%s" is not supported, since it '
+                "generates an invalid aid, please change it"
+            ),
             state.entity_id,
         )
         return None
@@ -180,8 +185,8 @@ def get_accessory(  # noqa: C901
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if device_class == SensorDeviceClass.TEMPERATURE or unit in (
-            TEMP_CELSIUS,
-            TEMP_FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
         ):
             a_type = "TemperatureSensor"
         elif device_class == SensorDeviceClass.HUMIDITY and unit == PERCENTAGE:
@@ -196,6 +201,10 @@ def get_accessory(  # noqa: C901
             or SensorDeviceClass.PM25 in state.entity_id
         ):
             a_type = "PM25Sensor"
+        elif device_class == SensorDeviceClass.NITROGEN_DIOXIDE:
+            a_type = "NitrogenDioxideSensor"
+        elif device_class == SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS:
+            a_type = "VolatileOrganicCompoundsSensor"
         elif (
             device_class == SensorDeviceClass.GAS
             or SensorDeviceClass.GAS in state.entity_id
@@ -205,7 +214,7 @@ def get_accessory(  # noqa: C901
             a_type = "CarbonMonoxideSensor"
         elif device_class == SensorDeviceClass.CO2 or "co2" in state.entity_id:
             a_type = "CarbonDioxideSensor"
-        elif device_class == SensorDeviceClass.ILLUMINANCE or unit in ("lm", LIGHT_LUX):
+        elif device_class == SensorDeviceClass.ILLUMINANCE or unit == LIGHT_LUX:
             a_type = "LightSensor"
 
     elif state.domain == "switch":
@@ -266,6 +275,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             driver=driver,
             display_name=cleanup_name_for_homekit(name),
             aid=aid,
+            iid_manager=HomeIIDManager(driver.iid_storage),
             *args,
             **kwargs,
         )
@@ -316,8 +326,8 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             serv_info.configure_char(
                 CHAR_HARDWARE_REVISION, value=hw_version[:MAX_VERSION_LENGTH]
             )
-            self.iid_manager.assign(char)
             char.broker = self
+            self.iid_manager.assign(char)
 
         self.category = category
         self.entity_id = entity_id
@@ -349,12 +359,12 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             if state is not None:
                 battery_found = state.state
             else:
-                self.linked_battery_sensor = None
                 _LOGGER.warning(
                     "%s: Battery sensor state missing: %s",
                     self.entity_id,
                     self.linked_battery_sensor,
                 )
+                self.linked_battery_sensor = None
 
         if not battery_found:
             return
@@ -565,7 +575,7 @@ class HomeBridge(Bridge):  # type: ignore[misc]
 
     def __init__(self, hass: HomeAssistant, driver: HomeDriver, name: str) -> None:
         """Initialize a Bridge object."""
-        super().__init__(driver, name)
+        super().__init__(driver, name, iid_manager=HomeIIDManager(driver.iid_storage))
         self.set_info_service(
             firmware_revision=format_version(__version__),
             manufacturer=MANUFACTURER,
@@ -598,6 +608,7 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
         entry_id: str,
         bridge_name: str,
         entry_title: str,
+        iid_storage: AccessoryIIDStorage,
         **kwargs: Any,
     ) -> None:
         """Initialize a AccessoryDriver object."""
@@ -606,6 +617,7 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
         self._entry_id = entry_id
         self._bridge_name = bridge_name
         self._entry_title = entry_title
+        self.iid_storage = iid_storage
 
     @pyhap_callback  # type: ignore[misc]
     def pair(
@@ -632,3 +644,31 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
             self.state.pincode,
             self.accessory.xhm_uri(),
         )
+
+
+class HomeIIDManager(IIDManager):  # type: ignore[misc]
+    """IID Manager that remembers IIDs between restarts."""
+
+    def __init__(self, iid_storage: AccessoryIIDStorage) -> None:
+        """Initialize a IIDManager object."""
+        super().__init__()
+        self._iid_storage = iid_storage
+
+    def get_iid_for_obj(self, obj: Characteristic | Service) -> int:
+        """Get IID for object."""
+        aid = obj.broker.aid
+        if isinstance(obj, Characteristic):
+            service: Service = obj.service
+            iid = self._iid_storage.get_or_allocate_iid(
+                aid, service.type_id, service.unique_id, obj.type_id, obj.unique_id
+            )
+        else:
+            iid = self._iid_storage.get_or_allocate_iid(
+                aid, obj.type_id, obj.unique_id, None, None
+            )
+        if iid in self.objs:
+            raise RuntimeError(
+                f"Cannot assign IID {iid} to {obj} as it is already in use by:"
+                f" {self.objs[iid]}"
+            )
+        return iid

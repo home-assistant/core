@@ -6,16 +6,6 @@ from homeassistant.components.unifi.const import (
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
 )
-from homeassistant.components.unifi.device_tracker import CLIENT_TRACKER, DEVICE_TRACKER
-from homeassistant.components.unifi.sensor import RX_SENSOR, TX_SENSOR, UPTIME_SENSOR
-from homeassistant.components.unifi.switch import (
-    BLOCK_SWITCH,
-    DPI_SWITCH,
-    OUTLET_SWITCH,
-    POE_SWITCH,
-)
-from homeassistant.components.unifi.update import DEVICE_UPDATE
-from homeassistant.const import Platform
 
 from .test_controller import setup_unifi_integration
 
@@ -39,6 +29,7 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
         "wired-tx_bytes": 5678000000,
     }
     device = {
+        "board_rev": "1.2.3",
         "ethernet_table": [
             {
                 "mac": "22:22:22:22:22:22",
@@ -122,7 +113,6 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "config": {
             "data": {
-                "controller": REDACTED,
                 "host": REDACTED,
                 "password": REDACTED,
                 "port": 1234,
@@ -146,26 +136,6 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
             "version": 1,
         },
         "site_role": "admin",
-        "entities": {
-            str(Platform.DEVICE_TRACKER): {
-                CLIENT_TRACKER: ["00:00:00:00:00:00"],
-                DEVICE_TRACKER: ["00:00:00:00:00:01"],
-            },
-            str(Platform.SENSOR): {
-                RX_SENSOR: ["00:00:00:00:00:00"],
-                TX_SENSOR: ["00:00:00:00:00:00"],
-                UPTIME_SENSOR: ["00:00:00:00:00:00"],
-            },
-            str(Platform.SWITCH): {
-                BLOCK_SWITCH: ["00:00:00:00:00:00"],
-                DPI_SWITCH: ["5f976f4ae3c58f018ec7dff6"],
-                POE_SWITCH: ["00:00:00:00:00:00"],
-                OUTLET_SWITCH: [],
-            },
-            str(Platform.UPDATE): {
-                DEVICE_UPDATE: ["00:00:00:00:00:01"],
-            },
-        },
         "clients": {
             "00:00:00:00:00:00": {
                 "blocked": False,
@@ -184,6 +154,7 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
         },
         "devices": {
             "00:00:00:00:00:01": {
+                "board_rev": "1.2.3",
                 "ethernet_table": [
                     {
                         "mac": "00:00:00:00:00:02",

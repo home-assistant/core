@@ -1,0 +1,7 @@
+{
+    "config": {
+        "error": {
+            "wrong_host": "Neplatn\u00fd n\u00e1zev hostitele nebo IP adresa"
+        }
+    }
+}

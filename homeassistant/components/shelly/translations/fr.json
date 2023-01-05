@@ -2,6 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi",
+            "reauth_unsuccessful": "La r\u00e9authentification a \u00e9chou\u00e9, veuillez supprimer l'int\u00e9gration puis la configurer \u00e0 nouveau.",
             "unsupported_firmware": "L'appareil utilise une version de micrologiciel non prise en charge."
         },
         "error": {
@@ -16,6 +18,12 @@
                 "description": "Voulez-vous configurer le {model} \u00e0 {host}?\n\nLes appareils aliment\u00e9s par batterie prot\u00e9g\u00e9s par mot de passe doivent \u00eatre r\u00e9veill\u00e9s avant de continuer \u00e0 s\u2019installer.\nLes appareils aliment\u00e9s par batterie qui ne sont pas prot\u00e9g\u00e9s par mot de passe seront ajout\u00e9s lorsque l\u2019appareil se r\u00e9veillera, vous pouvez maintenant r\u00e9veiller manuellement l\u2019appareil \u00e0 l\u2019aide d\u2019un bouton dessus ou attendre la prochaine mise \u00e0 jour des donn\u00e9es de l\u2019appareil."
             },
             "credentials": {
+                "data": {
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                }
+            },
+            "reauth_confirm": {
                 "data": {
                     "password": "Mot de passe",
                     "username": "Nom d'utilisateur"

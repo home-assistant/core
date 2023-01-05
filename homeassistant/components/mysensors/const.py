@@ -22,11 +22,6 @@ ConfGatewayType = Literal["Serial", "TCP", "MQTT"]
 CONF_GATEWAY_TYPE_SERIAL: ConfGatewayType = "Serial"
 CONF_GATEWAY_TYPE_TCP: ConfGatewayType = "TCP"
 CONF_GATEWAY_TYPE_MQTT: ConfGatewayType = "MQTT"
-CONF_GATEWAY_TYPE_ALL: list[str] = [
-    CONF_GATEWAY_TYPE_MQTT,
-    CONF_GATEWAY_TYPE_SERIAL,
-    CONF_GATEWAY_TYPE_TCP,
-]
 
 DOMAIN: Final = "mysensors"
 MYSENSORS_GATEWAY_START_TASK: str = "mysensors_gateway_start_task_{}"
@@ -140,6 +135,7 @@ SWITCH_TYPES: dict[SensorType, set[ValueType]] = {
     "S_WATER_QUALITY": {"V_STATUS"},
 }
 
+TEXT_TYPES: dict[SensorType, set[ValueType]] = {"S_INFO": {"V_TEXT"}}
 
 PLATFORM_TYPES: dict[Platform, dict[SensorType, set[ValueType]]] = {
     Platform.BINARY_SENSOR: BINARY_SENSOR_TYPES,
@@ -150,6 +146,7 @@ PLATFORM_TYPES: dict[Platform, dict[SensorType, set[ValueType]]] = {
     Platform.NOTIFY: NOTIFY_TYPES,
     Platform.SENSOR: SENSOR_TYPES,
     Platform.SWITCH: SWITCH_TYPES,
+    Platform.TEXT: TEXT_TYPES,
 }
 
 FLAT_PLATFORM_TYPES: dict[tuple[str, SensorType], set[ValueType]] = {
@@ -166,5 +163,4 @@ for platform, platform_types in PLATFORM_TYPES.items():
 
 PLATFORMS_WITH_ENTRY_SUPPORT = set(PLATFORM_TYPES.keys()) - {
     Platform.NOTIFY,
-    Platform.DEVICE_TRACKER,
 }

@@ -14,7 +14,7 @@
                     "longitude": "Longitud",
                     "name": "Nombre de la integraci\u00f3n"
                 },
-                "description": "Configurar la integraci\u00f3n de AEMET OpenData. Para generar la clave API, ve a https://opendata.aemet.es/centrodedescargas/altaUsuario"
+                "description": "Para generar la clave API, ve a https://opendata.aemet.es/centrodedescargas/altaUsuario"
             }
         }
     },

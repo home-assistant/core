@@ -1,0 +1,8 @@
+{
+    "issues": {
+        "moved_yaml": {
+            "description": "A configura\u00e7\u00e3o do Wake on Lan usando YAML foi movida para a chave de integra\u00e7\u00e3o. \n\n Sua configura\u00e7\u00e3o YAML existente funcionar\u00e1 para mais 2 vers\u00f5es. \n\n Migre sua configura\u00e7\u00e3o YAML para a chave de integra\u00e7\u00e3o de acordo com a documenta\u00e7\u00e3o.",
+            "title": "A configura\u00e7\u00e3o YAML de Wake on Lan foi movida"
+        }
+    }
+}

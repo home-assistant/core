@@ -4,7 +4,7 @@
             "already_configured": "El dispositivo ya est\u00e1 configurado",
             "cannot_connect": "No se pudo conectar",
             "invalid_token": "Token de acceso no v\u00e1lido",
-            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
+            "reauth_successful": "La autenticaci\u00f3n se volvi\u00f3 a realizar correctamente",
             "unknown": "Error inesperado"
         },
         "error": {
@@ -15,8 +15,8 @@
         "flow_title": "{name}",
         "step": {
             "link": {
-                "description": "Mantenga presionado el bot\u00f3n de encendido en su Nanoleaf durante 5 segundos hasta que los LED de los botones comiencen a parpadear, luego haga clic en ** ENVIAR ** dentro de los 30 segundos.",
-                "title": "Link Nanoleaf"
+                "description": "Mant\u00e9n pulsado el bot\u00f3n de encendido de tu Nanoleaf durante 5 segundos hasta que los LED del bot\u00f3n comiencen a parpadear, luego haz clic en **ENVIAR** en los siguientes 30 segundos.",
+                "title": "Vincular Nanoleaf"
             },
             "user": {
                 "data": {

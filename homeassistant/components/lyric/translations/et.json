@@ -17,5 +17,11 @@
                 "title": "Taastuvastamine"
             }
         }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "Honeywell Lyric'i konfigureerimine YAML-i abil on eemaldatud.\n\nTeie olemasolevat YAML-konfiguratsiooni ei kasuta Home Assistant.\n\nProbleemi lahendamiseks eemaldage YAML-konfiguratsioon failist configuration.yaml ja k\u00e4ivitage Home Assistant uuesti.",
+            "title": "Honeywell Lyric YAML-i konfiguratsioon on eemaldatud"
+        }
     }
 }

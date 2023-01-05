@@ -76,6 +76,8 @@ async def async_setup_platform(
 class W800rf32BinarySensor(BinarySensorEntity):
     """A representation of a w800rf32 binary sensor."""
 
+    _attr_should_poll = False
+
     def __init__(self, device_id, name, device_class=None, off_delay=None):
         """Initialize the w800rf32 sensor."""
         self._signal = W800RF32_DEVICE.format(device_id)
@@ -95,11 +97,6 @@ class W800rf32BinarySensor(BinarySensorEntity):
     def name(self):
         """Return the device name."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def device_class(self):
@@ -141,6 +138,6 @@ class W800rf32BinarySensor(BinarySensorEntity):
         self._state = state
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register update callback."""
         async_dispatcher_connect(self.hass, self._signal, self.binary_sensor_update)

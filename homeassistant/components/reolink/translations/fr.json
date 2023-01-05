@@ -1,0 +1,20 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "use_https": "Activer HTTPS"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "protocol": "Protocole"
+                }
+            }
+        }
+    }
+}

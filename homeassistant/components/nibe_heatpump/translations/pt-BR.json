@@ -1,0 +1,49 @@
+{
+    "config": {
+        "error": {
+            "address": "Endere\u00e7o remoto inv\u00e1lido especificado. O endere\u00e7o deve ser um endere\u00e7o IP ou um nome de host resolv\u00edvel.",
+            "address_in_use": "A porta de escuta selecionada j\u00e1 est\u00e1 em uso neste sistema.",
+            "model": "O modelo selecionado parece n\u00e3o suportar MODBUS40",
+            "read": "Erro na solicita\u00e7\u00e3o de leitura da bomba. Verifique sua `Porta de leitura remota` ou `Endere\u00e7o remoto`.",
+            "unknown": "Erro inesperado",
+            "url": "A URL especificada n\u00e3o \u00e9 uma URL bem formada e suportada",
+            "write": "Erro na solicita\u00e7\u00e3o de grava\u00e7\u00e3o para bombear. Verifique sua `Porta de grava\u00e7\u00e3o remota` ou `Endere\u00e7o remoto`."
+        },
+        "step": {
+            "modbus": {
+                "data": {
+                    "modbus_unit": "Identificador da Unidade Modbus",
+                    "modbus_url": "URL de Modbus",
+                    "model": "Modelo de Bomba de Calor"
+                },
+                "data_description": {
+                    "modbus_unit": "Identifica\u00e7\u00e3o da unidade para a sua Bomba de Calor. Geralmente pode ser deixado em 0.",
+                    "modbus_url": "URL de Modbus que descreve a liga\u00e7\u00e3o \u00e0 sua Bomba de Calor ou unidade MODBUS40. Deve estar no formul\u00e1rio:\n - `tcp://[HOST]:[PORT]` para conex\u00e3o Modbus TCP\n - `serial://[LOCAL DEVICE]` para uma conex\u00e3o Modbus RTU local\n - `rfc2217://[HOST]:[PORT]` para uma conex\u00e3o Modbus RTU baseada em telnet remoto."
+                }
+            },
+            "nibegw": {
+                "data": {
+                    "ip_address": "Endere\u00e7o remoto",
+                    "listening_port": "Porta de escuta local",
+                    "model": "Modelo de Bomba de Calor",
+                    "remote_read_port": "Porta de leitura remota",
+                    "remote_write_port": "Porta de grava\u00e7\u00e3o remota"
+                },
+                "data_description": {
+                    "ip_address": "O endere\u00e7o da unidade NibeGW. O dispositivo deve ter sido configurado com um endere\u00e7o est\u00e1tico.",
+                    "listening_port": "A porta local neste sistema para a qual a unidade NibeGW est\u00e1 configurada para enviar dados.",
+                    "remote_read_port": "A porta na qual a unidade NibeGW est\u00e1 escutando solicita\u00e7\u00f5es de leitura.",
+                    "remote_write_port": "A porta na qual a unidade NibeGW est\u00e1 escutando solicita\u00e7\u00f5es de grava\u00e7\u00e3o."
+                },
+                "description": "Antes de tentar configurar a integra\u00e7\u00e3o, verifique se:\n - A unidade NibeGW est\u00e1 conectada a uma bomba de calor.\n - O acess\u00f3rio MODBUS40 foi habilitado na configura\u00e7\u00e3o da bomba de calor.\n - A bomba n\u00e3o entrou em estado de alarme por falta de acess\u00f3rio MODBUS40."
+            },
+            "user": {
+                "description": "Escolha o m\u00e9todo de conex\u00e3o para sua bomba. Em geral, as bombas da s\u00e9rie F requerem um acess\u00f3rio personalizado NibeGW, enquanto uma bomba da s\u00e9rie S tem suporte Modbus integrado.",
+                "menu_options": {
+                    "modbus": "Modbus",
+                    "nibegw": "NibeGW"
+                }
+            }
+        }
+    }
+}

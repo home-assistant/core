@@ -17,5 +17,11 @@
                 }
             }
         }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "Die Konfiguration von Simplepush mittels YAML wurde entfernt.\n\nDeine bestehende YAML-Konfiguration wird vom Home Assistant nicht verwendet.\n\nEntferne die Simplepush-YAML-Konfiguration aus deiner configuration.yaml-Datei und starte den Home Assistant neu, um dieses Problem zu beheben.",
+            "title": "Die Simplepush YAML-Konfiguration wurde entfernt"
+        }
     }
 }

@@ -5,13 +5,9 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
+from .conftest import BED_ID, BED_NAME, BED_NAME_LOWER, setup_platform
+
 from tests.common import async_fire_time_changed
-from tests.components.sleepiq.conftest import (
-    BED_ID,
-    BED_NAME,
-    BED_NAME_LOWER,
-    setup_platform,
-)
 
 
 async def test_setup(hass, mock_asyncsleepiq):

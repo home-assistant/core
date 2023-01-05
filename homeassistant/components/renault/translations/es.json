@@ -2,8 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "La cuenta ya est\u00e1 configurada",
-            "kamereon_no_account": "No se pudo encontrar la cuenta de Kamereon.",
-            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
+            "kamereon_no_account": "No se puede encontrar la cuenta de Kamereon",
+            "reauth_successful": "La autenticaci\u00f3n se volvi\u00f3 a realizar correctamente"
         },
         "error": {
             "invalid_credentials": "Autenticaci\u00f3n no v\u00e1lida"
@@ -29,6 +29,39 @@
                     "username": "Correo electr\u00f3nico"
                 },
                 "title": "Establecer las credenciales de Renault"
+            }
+        }
+    },
+    "entity": {
+        "select": {
+            "charge_mode": {
+                "state": {
+                    "always": "Instant\u00e1nea",
+                    "always_charging": "Instant\u00e1nea",
+                    "schedule_mode": "Planificador"
+                }
+            }
+        },
+        "sensor": {
+            "charge_state": {
+                "state": {
+                    "charge_ended": "Carga finalizada",
+                    "charge_error": "No est\u00e1 cargando ni est\u00e1 enchufado",
+                    "charge_in_progress": "Cargando",
+                    "energy_flap_opened": "Tapa de energ\u00eda abierta",
+                    "not_in_charge": "No est\u00e1 cargando",
+                    "unavailable": "No disponible",
+                    "waiting_for_a_planned_charge": "Esperando la carga planificada",
+                    "waiting_for_current_charge": "Esperando la carga actual"
+                }
+            },
+            "plug_state": {
+                "state": {
+                    "plug_error": "Error de enchufe",
+                    "plug_unknown": "Enchufe desconocido",
+                    "plugged": "Enchufado",
+                    "unplugged": "Desenchufado"
+                }
             }
         }
     }

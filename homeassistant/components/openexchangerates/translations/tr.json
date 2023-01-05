@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu",
+            "timeout_connect": "Ba\u011flant\u0131 kurulurken zaman a\u015f\u0131m\u0131"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "timeout_connect": "Ba\u011flant\u0131 kurulurken zaman a\u015f\u0131m\u0131",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Anahtar\u0131",
+                    "base": "Temel para birimi"
+                },
+                "data_description": {
+                    "base": "USD'den ba\u015fka bir temel para birimi kullanmak, bir [\u00fccretli plan]( {signup} ) gerektirir."
+                }
+            }
+        }
+    }
+}
