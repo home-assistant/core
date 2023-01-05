@@ -1209,6 +1209,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "easyenergy": {
+      "name": "easyEnergy",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "ebox": {
       "name": "EBox",
       "integration_type": "hub",

@@ -288,6 +288,8 @@ build.json @home-assistant/supervisor
 /tests/components/dynalite/ @ziv1234
 /homeassistant/components/eafm/ @Jc2k
 /tests/components/eafm/ @Jc2k
+/homeassistant/components/easyenergy/ @klaasnicolaas
+/tests/components/easyenergy/ @klaasnicolaas
 /homeassistant/components/ecobee/ @marthoc
 /tests/components/ecobee/ @marthoc
 /homeassistant/components/econet/ @vangorra @w1ll1am23
