@@ -25,11 +25,11 @@ class ReCollectWasteEntity(CoordinatorEntity[DataUpdateCoordinator[list[PickupEv
         """Initialize the sensor."""
         super().__init__(coordinator)
 
+        self._identifier = f"{entry.data[CONF_PLACE_ID]}_{entry.data[CONF_SERVICE_ID]}"
+
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={
-                (DOMAIN, f"{entry.data[CONF_PLACE_ID]}_{entry.data[CONF_SERVICE_ID]}")
-            },
+            identifiers={(DOMAIN, self._identifier)},
             manufacturer="ReCollect Waste",
             name="ReCollect Waste",
         )
