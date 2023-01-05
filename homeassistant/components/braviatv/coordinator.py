@@ -9,13 +9,13 @@ from types import MappingProxyType
 from typing import Any, Final, TypeVar
 
 from pybravia import (
-    BraviaTV,
-    BraviaTVAuthError,
-    BraviaTVConnectionError,
-    BraviaTVConnectionTimeout,
-    BraviaTVError,
-    BraviaTVNotFound,
-    BraviaTVTurnedOff,
+    BraviaAuthError,
+    BraviaClient,
+    BraviaConnectionError,
+    BraviaConnectionTimeout,
+    BraviaError,
+    BraviaNotFound,
+    BraviaTurnedOff,
 )
 from typing_extensions import Concatenate, ParamSpec
 
@@ -45,7 +45,7 @@ SCAN_INTERVAL: Final = timedelta(seconds=10)
 def catch_braviatv_errors(
     func: Callable[Concatenate[_BraviaTVCoordinatorT, _P], Awaitable[None]]
 ) -> Callable[Concatenate[_BraviaTVCoordinatorT, _P], Coroutine[Any, Any, None]]:
-    """Catch BraviaTV errors."""
+    """Catch BraviaClient errors."""
 
     @wraps(func)
     async def wrapper(
@@ -53,10 +53,10 @@ def catch_braviatv_errors(
         *args: _P.args,
         **kwargs: _P.kwargs,
     ) -> None:
-        """Catch BraviaTV errors and log message."""
+        """Catch BraviaClient errors and log message."""
         try:
             await func(self, *args, **kwargs)
-        except BraviaTVError as err:
+        except BraviaError as err:
             _LOGGER.error("Command error: %s", err)
         await self.async_request_refresh()
 
@@ -69,7 +69,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
     def __init__(
         self,
         hass: HomeAssistant,
-        client: BraviaTV,
+        client: BraviaClient,
         config: MappingProxyType[str, Any],
         ignored_sources: list[str],
     ) -> None:
@@ -95,8 +95,6 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.is_on = False
         self.is_channel = False
         self.connected = False
-        # Assume that the TV is in Play mode
-        self.playing = True
         self.skipped_updates = 0
 
         super().__init__(
@@ -135,7 +133,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                             nickname=self.nickname,
                         )
                     self.connected = True
-                except BraviaTVAuthError as err:
+                except BraviaAuthError as err:
                     raise ConfigEntryAuthFailed from err
 
             power_status = await self.client.get_power_status()
@@ -149,18 +147,18 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 await self.async_update_sources()
             await self.async_update_volume()
             await self.async_update_playing()
-        except BraviaTVNotFound as err:
+        except BraviaNotFound as err:
             if self.skipped_updates < 10:
                 self.connected = False
                 self.skipped_updates += 1
                 _LOGGER.debug("Update skipped, Bravia API service is reloading")
                 return
             raise UpdateFailed("Error communicating with device") from err
-        except (BraviaTVConnectionError, BraviaTVConnectionTimeout, BraviaTVTurnedOff):
+        except (BraviaConnectionError, BraviaConnectionTimeout, BraviaTurnedOff):
             self.is_on = False
             self.connected = False
             _LOGGER.debug("Update skipped, Bravia TV is off")
-        except BraviaTVError as err:
+        except BraviaError as err:
             self.is_on = False
             self.connected = False
             raise UpdateFailed("Error communicating with device") from err
@@ -249,13 +247,11 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
     async def async_media_play(self) -> None:
         """Send play command to device."""
         await self.client.play()
-        self.playing = True
 
     @catch_braviatv_errors
     async def async_media_pause(self) -> None:
         """Send pause command to device."""
         await self.client.pause()
-        self.playing = False
 
     @catch_braviatv_errors
     async def async_media_stop(self) -> None:

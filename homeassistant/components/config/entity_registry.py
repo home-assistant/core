@@ -62,6 +62,7 @@ async def async_setup(hass: HomeAssistant) -> bool:
     )
     websocket_api.async_register_command(hass, websocket_list_entities)
     websocket_api.async_register_command(hass, websocket_get_entity)
+    websocket_api.async_register_command(hass, websocket_get_entities)
     websocket_api.async_register_command(hass, websocket_update_entity)
     websocket_api.async_register_command(hass, websocket_remove_entity)
     return True
@@ -94,6 +95,33 @@ def websocket_get_entity(
     connection.send_message(
         websocket_api.result_message(msg["id"], _entry_ext_dict(entry))
     )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "config/entity_registry/get_entries",
+        vol.Required("entity_ids"): cv.entity_ids,
+    }
+)
+@callback
+def websocket_get_entities(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle get entity registry entries command.
+
+    Async friendly.
+    """
+    registry = er.async_get(hass)
+
+    entity_ids = msg["entity_ids"]
+    entries: dict[str, dict[str, Any] | None] = {}
+    for entity_id in entity_ids:
+        entry = registry.entities.get(entity_id)
+        entries[entity_id] = _entry_ext_dict(entry) if entry else None
+
+    connection.send_message(websocket_api.result_message(msg["id"], entries))
 
 
 @require_admin

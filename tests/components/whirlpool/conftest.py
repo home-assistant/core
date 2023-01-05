@@ -5,9 +5,19 @@ from unittest.mock import AsyncMock
 import pytest
 import whirlpool
 import whirlpool.aircon
+from whirlpool.backendselector import Brand, Region
 
 MOCK_SAID1 = "said1"
 MOCK_SAID2 = "said2"
+
+
+@pytest.fixture(
+    name="region",
+    params=[("EU", Region.EU, Brand.Whirlpool), ("US", Region.US, Brand.Maytag)],
+)
+def fixture_region(request):
+    """Return a region for input."""
+    return request.param
 
 
 @pytest.fixture(name="mock_auth_api")
@@ -33,10 +43,20 @@ def fixture_mock_appliances_manager_api():
         yield mock_appliances_manager
 
 
+@pytest.fixture(name="mock_backend_selector_api")
+def fixture_mock_backend_selector_api():
+    """Set up BackendSelector fixture."""
+    with mock.patch(
+        "homeassistant.components.whirlpool.BackendSelector"
+    ) as mock_backend_selector:
+        yield mock_backend_selector
+
+
 def get_aircon_mock(said):
     """Get a mock of an air conditioner."""
     mock_aircon = mock.Mock(said=said)
     mock_aircon.connect = AsyncMock()
+    mock_aircon.disconnect = AsyncMock()
     mock_aircon.get_online.return_value = True
     mock_aircon.get_power_on.return_value = True
     mock_aircon.get_mode.return_value = whirlpool.aircon.Mode.Cool

@@ -48,6 +48,7 @@ from .const import (
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.CLIMATE,
     Platform.NUMBER,
     Platform.SELECT,
@@ -113,7 +114,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             sw_version=str(product_info.firmware_version),
         )
 
-    if isinstance(connection, NibeGW):
+    if hasattr(connection, "PRODUCT_INFO_EVENT") and hasattr(connection, "subscribe"):
         connection.subscribe(connection.PRODUCT_INFO_EVENT, _on_product_info)
     else:
         reg.async_update_device(device_id=device_entry.id, model=heatpump.model.name)
@@ -251,6 +252,10 @@ class Coordinator(ContextCoordinator[dict[int, Coil], int]):
         self.data[coil.address] = coil
 
         self.async_update_context_listeners([coil.address])
+
+    async def async_read_coil(self, coil: Coil) -> Coil:
+        """Read coil and update state using callbacks."""
+        return await self.connection.read_coil(coil)
 
     async def _async_update_data(self) -> dict[int, Coil]:
         self.task = asyncio.current_task()

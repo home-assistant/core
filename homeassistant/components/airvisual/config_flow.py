@@ -132,15 +132,14 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     LOGGER.error(err)
                     errors["base"] = "unknown"
 
+                if errors:
+                    return self.async_show_form(
+                        step_id=error_step, data_schema=error_schema, errors=errors
+                    )
+
                 valid_keys.add(user_input[CONF_API_KEY])
 
-        if errors:
-            return self.async_show_form(
-                step_id=error_step, data_schema=error_schema, errors=errors
-            )
-
-        existing_entry = await self.async_set_unique_id(self._geo_id)
-        if existing_entry:
+        if existing_entry := await self.async_set_unique_id(self._geo_id):
             self.hass.config_entries.async_update_entry(existing_entry, data=user_input)
             self.hass.async_create_task(
                 self.hass.config_entries.async_reload(existing_entry.entry_id)

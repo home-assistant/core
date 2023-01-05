@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "mutable": "Consenti da remoto l'avvio / il blocco / ecc.",
+                    "mutable": "Consenti da remoto l'avvio / la chiusura / ecc.",
                     "password": "Password",
                     "region": "Regione",
                     "unit_system": "Unit\u00e0 di misura",

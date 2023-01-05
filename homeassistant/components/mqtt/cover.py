@@ -42,6 +42,7 @@ from .const import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
+    DEFAULT_OPTIMISTIC,
 )
 from .debug_info import log_messages
 from .mixins import (
@@ -84,7 +85,6 @@ TILT_PAYLOAD = "tilt"
 COVER_PAYLOAD = "cover"
 
 DEFAULT_NAME = "MQTT Cover"
-DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_CLOSE = "CLOSE"
 DEFAULT_PAYLOAD_OPEN = "OPEN"
 DEFAULT_PAYLOAD_STOP = "STOP"
@@ -161,7 +161,7 @@ def validate_options(config: ConfigType) -> ConfigType:
 _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
         vol.Optional(CONF_GET_POSITION_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,

@@ -31,6 +31,28 @@
         }
     },
     "entity": {
+        "select": {
+            "horizontalswing": {
+                "state": {
+                    "fixedcenter": "Csak k\u00f6z\u00e9pre",
+                    "fixedcenterleft": "Csak balra \u00e9s k\u00f6z\u00e9pre",
+                    "fixedcenterright": "Csak k\u00f6z\u00e9pre \u00e9s jobbra",
+                    "fixedleft": "Csak balra",
+                    "fixedleftright": "Csak jobbra \u00e9s balra",
+                    "fixedright": "Csak jobbra",
+                    "rangecenter": "Tartom\u00e1ny k\u00f6zepe",
+                    "rangefull": "Teljes tartom\u00e1ny",
+                    "stopped": "Meg\u00e1ll\u00edtva"
+                }
+            },
+            "light": {
+                "state": {
+                    "dim": "Halv\u00e1ny",
+                    "off": "Ki",
+                    "on": "Be"
+                }
+            }
+        },
         "sensor": {
             "sensitivity": {
                 "state": {

@@ -45,7 +45,7 @@ class DelugeSwitch(DelugeEntity, SwitchEntity):
     def is_on(self) -> bool:
         """Return state of the switch."""
         if self.coordinator.data:
-            data: dict = self.coordinator.data[Platform.SWITCH]
+            data = self.coordinator.data[Platform.SWITCH]
             for torrent in data.values():
                 item = torrent.popitem()
                 if not item[1]:

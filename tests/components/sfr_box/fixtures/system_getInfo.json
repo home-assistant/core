@@ -1,0 +1,17 @@
+{
+  "product_id": "NB6VAC-FXC-r0",
+  "mac_addr": "e4:5d:51:00:11:22",
+  "net_mode": "router",
+  "net_infra": "adsl",
+  "uptime": 2353575,
+  "version_mainfirmware": "NB6VAC-MAIN-R4.0.44k",
+  "version_rescuefirmware": "NB6VAC-MAIN-R4.0.44k",
+  "version_bootloader": "NB6VAC-BOOTLOADER-R4.0.8",
+  "version_dsldriver": "NB6VAC-XDSL-A2pv6F039p",
+  "current_datetime": "202212282233",
+  "refclient": "",
+  "idur": "RP3P85K",
+  "alimvoltage": 12251,
+  "temperature": 27560,
+  "serial_number": "XU1001001001001001"
+}
