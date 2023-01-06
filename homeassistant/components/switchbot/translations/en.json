@@ -8,7 +8,7 @@
             "unknown": "Unexpected error"
         },
         "error": {
-            "auth_failed": "Authentication failed",
+            "auth_failed": "Authentication failed: {error_detail}",
             "encryption_key_invalid": "Key ID or Encryption key is invalid",
             "key_id_invalid": "Key ID or Encryption key is invalid"
         },

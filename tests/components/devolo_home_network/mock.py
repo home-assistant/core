@@ -1,8 +1,6 @@
 """Mock of a devolo Home Network device."""
 from __future__ import annotations
 
-import dataclasses
-from typing import Any
 from unittest.mock import AsyncMock
 
 from devolo_plc_api.device import Device
@@ -27,12 +25,10 @@ class MockDevice(Device):
     def __init__(
         self,
         ip: str,
-        plcnetapi: dict[str, Any] | None = None,
-        deviceapi: dict[str, Any] | None = None,
         zeroconf_instance: AsyncZeroconf | Zeroconf | None = None,
     ) -> None:
         """Bring mock in a well defined state."""
-        super().__init__(ip, plcnetapi, deviceapi, zeroconf_instance)
+        super().__init__(ip, zeroconf_instance)
         self.reset()
 
     async def async_connect(
@@ -46,12 +42,12 @@ class MockDevice(Device):
     def reset(self):
         """Reset mock to starting point."""
         self.async_disconnect = AsyncMock()
-        self.device = DeviceApi(IP, None, dataclasses.asdict(DISCOVERY_INFO))
+        self.device = DeviceApi(IP, None, DISCOVERY_INFO)
         self.device.async_get_wifi_connected_station = AsyncMock(
             return_value=CONNECTED_STATIONS
         )
         self.device.async_get_wifi_neighbor_access_points = AsyncMock(
             return_value=NEIGHBOR_ACCESS_POINTS
         )
-        self.plcnet = PlcNetApi(IP, None, dataclasses.asdict(DISCOVERY_INFO))
+        self.plcnet = PlcNetApi(IP, None, DISCOVERY_INFO)
         self.plcnet.async_get_network_overview = AsyncMock(return_value=PLCNET)
