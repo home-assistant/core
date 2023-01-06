@@ -3,9 +3,11 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Generic, TypeVar, Union
 
 from devolo_plc_api.device import Device
+from devolo_plc_api.device_api import ConnectedStationInfo, NeighborAPInfo
+from devolo_plc_api.plcnet_api import LogicalNetwork
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -26,23 +28,32 @@ from .const import (
 )
 from .entity import DevoloEntity
 
+_DataT = TypeVar(
+    "_DataT",
+    bound=Union[
+        LogicalNetwork,
+        list[ConnectedStationInfo],
+        list[NeighborAPInfo],
+    ],
+)
+
 
 @dataclass
-class DevoloSensorRequiredKeysMixin:
+class DevoloSensorRequiredKeysMixin(Generic[_DataT]):
     """Mixin for required keys."""
 
-    value_func: Callable[[Any], int]
+    value_func: Callable[[_DataT], int]
 
 
 @dataclass
 class DevoloSensorEntityDescription(
-    SensorEntityDescription, DevoloSensorRequiredKeysMixin
+    SensorEntityDescription, DevoloSensorRequiredKeysMixin[_DataT]
 ):
     """Describes devolo sensor entity."""
 
 
-SENSOR_TYPES: dict[str, DevoloSensorEntityDescription] = {
-    CONNECTED_PLC_DEVICES: DevoloSensorEntityDescription(
+SENSOR_TYPES: dict[str, DevoloSensorEntityDescription[Any]] = {
+    CONNECTED_PLC_DEVICES: DevoloSensorEntityDescription[LogicalNetwork](
         key=CONNECTED_PLC_DEVICES,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -52,7 +63,7 @@ SENSOR_TYPES: dict[str, DevoloSensorEntityDescription] = {
             {device.mac_address_from for device in data.data_rates}
         ),
     ),
-    CONNECTED_WIFI_CLIENTS: DevoloSensorEntityDescription(
+    CONNECTED_WIFI_CLIENTS: DevoloSensorEntityDescription[list[ConnectedStationInfo]](
         key=CONNECTED_WIFI_CLIENTS,
         entity_registry_enabled_default=True,
         icon="mdi:wifi",
@@ -60,7 +71,7 @@ SENSOR_TYPES: dict[str, DevoloSensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         value_func=len,
     ),
-    NEIGHBORING_WIFI_NETWORKS: DevoloSensorEntityDescription(
+    NEIGHBORING_WIFI_NETWORKS: DevoloSensorEntityDescription[list[NeighborAPInfo]](
         key=NEIGHBORING_WIFI_NETWORKS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -76,11 +87,11 @@ async def async_setup_entry(
 ) -> None:
     """Get all devices and sensors and setup them via config entry."""
     device: Device = hass.data[DOMAIN][entry.entry_id]["device"]
-    coordinators: dict[str, DataUpdateCoordinator] = hass.data[DOMAIN][entry.entry_id][
-        "coordinators"
-    ]
+    coordinators: dict[str, DataUpdateCoordinator[Any]] = hass.data[DOMAIN][
+        entry.entry_id
+    ]["coordinators"]
 
-    entities: list[DevoloSensorEntity] = []
+    entities: list[DevoloSensorEntity[Any]] = []
     if device.plcnet:
         entities.append(
             DevoloSensorEntity(
@@ -110,18 +121,20 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class DevoloSensorEntity(DevoloEntity, SensorEntity):
+class DevoloSensorEntity(DevoloEntity[_DataT], SensorEntity):
     """Representation of a devolo sensor."""
+
+    entity_description: DevoloSensorEntityDescription[_DataT]
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
-        description: DevoloSensorEntityDescription,
+        coordinator: DataUpdateCoordinator[_DataT],
+        description: DevoloSensorEntityDescription[_DataT],
         device: Device,
         device_name: str,
     ) -> None:
         """Initialize entity."""
-        self.entity_description: DevoloSensorEntityDescription = description
+        self.entity_description = description
         super().__init__(coordinator, device, device_name)
 
     @property
