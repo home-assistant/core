@@ -28,18 +28,12 @@
           "model": "i3 (+ REX)",
           "softwareVersionCurrent": {
             "iStep": 510,
-            "puStep": {
-              "month": 11,
-              "year": 21
-            },
+            "puStep": { "month": 11, "year": 21 },
             "seriesCluster": "I001"
           },
           "softwareVersionExFactory": {
             "iStep": 502,
-            "puStep": {
-              "month": 3,
-              "year": 15
-            },
+            "puStep": { "month": 3, "year": 15 },
             "seriesCluster": "I001"
           },
           "year": 2015
@@ -110,10 +104,7 @@
               {
                 "action": "DEACTIVATE",
                 "id": 1,
-                "timeStamp": {
-                  "hour": 7,
-                  "minute": 35
-                },
+                "timeStamp": { "hour": 7, "minute": 35 },
                 "timerWeekDays": [
                   "MONDAY",
                   "TUESDAY",
@@ -125,10 +116,7 @@
               {
                 "action": "DEACTIVATE",
                 "id": 2,
-                "timeStamp": {
-                  "hour": 18,
-                  "minute": 0
-                },
+                "timeStamp": { "hour": 18, "minute": 0 },
                 "timerWeekDays": [
                   "MONDAY",
                   "TUESDAY",
@@ -142,54 +130,32 @@
               {
                 "action": "DEACTIVATE",
                 "id": 3,
-                "timeStamp": {
-                  "hour": 7,
-                  "minute": 0
-                },
+                "timeStamp": { "hour": 7, "minute": 0 },
                 "timerWeekDays": []
               },
-              {
-                "action": "DEACTIVATE",
-                "id": 4,
-                "timerWeekDays": []
-              }
+              { "action": "DEACTIVATE", "id": 4, "timerWeekDays": [] }
             ],
             "reductionOfChargeCurrent": {
-              "end": {
-                "hour": 1,
-                "minute": 30
-              },
-              "start": {
-                "hour": 18,
-                "minute": 1
-              }
+              "end": { "hour": 1, "minute": 30 },
+              "start": { "hour": 18, "minute": 1 }
             }
           },
           "checkControlMessages": [],
           "climateTimers": [
             {
-              "departureTime": {
-                "hour": 6,
-                "minute": 40
-              },
+              "departureTime": { "hour": 6, "minute": 40 },
               "isWeeklyTimer": true,
               "timerAction": "ACTIVATE",
               "timerWeekDays": ["THURSDAY", "SUNDAY"]
             },
             {
-              "departureTime": {
-                "hour": 12,
-                "minute": 50
-              },
+              "departureTime": { "hour": 12, "minute": 50 },
               "isWeeklyTimer": false,
               "timerAction": "ACTIVATE",
               "timerWeekDays": ["MONDAY"]
             },
             {
-              "departureTime": {
-                "hour": 18,
-                "minute": 59
-              },
+              "departureTime": { "hour": 18, "minute": 59 },
               "isWeeklyTimer": true,
               "timerAction": "DEACTIVATE",
               "timerWeekDays": ["WEDNESDAY"]
@@ -211,9 +177,7 @@
             "rightRear": "CLOSED",
             "trunk": "CLOSED"
           },
-          "driverPreferences": {
-            "lscPrivacyMode": "OFF"
-          },
+          "driverPreferences": { "lscPrivacyMode": "OFF" },
           "electricChargingState": {
             "chargingConnectionType": "CONDUCTIVE",
             "chargingLevelPercent": 82,
@@ -247,10 +211,7 @@
               "type": "VEHICLE_TUV"
             }
           ],
-          "roofState": {
-            "roofState": "CLOSED",
-            "roofStateType": "SUN_ROOF"
-          },
+          "roofState": { "roofState": "CLOSED", "roofStateType": "SUN_ROOF" },
           "windowsState": {
             "combinedState": "CLOSED",
             "leftFront": "CLOSED",
@@ -288,53 +249,17 @@
       "doors_and_windows": {
         "door_lock_state": "UNLOCKED",
         "lids": [
-          {
-            "name": "hood",
-            "state": "CLOSED",
-            "is_closed": true
-          },
-          {
-            "name": "leftFront",
-            "state": "CLOSED",
-            "is_closed": true
-          },
-          {
-            "name": "leftRear",
-            "state": "CLOSED",
-            "is_closed": true
-          },
-          {
-            "name": "rightFront",
-            "state": "CLOSED",
-            "is_closed": true
-          },
-          {
-            "name": "rightRear",
-            "state": "CLOSED",
-            "is_closed": true
-          },
-          {
-            "name": "trunk",
-            "state": "CLOSED",
-            "is_closed": true
-          },
-          {
-            "name": "sunRoof",
-            "state": "CLOSED",
-            "is_closed": true
-          }
+          { "name": "hood", "state": "CLOSED", "is_closed": true },
+          { "name": "leftFront", "state": "CLOSED", "is_closed": true },
+          { "name": "leftRear", "state": "CLOSED", "is_closed": true },
+          { "name": "rightFront", "state": "CLOSED", "is_closed": true },
+          { "name": "rightRear", "state": "CLOSED", "is_closed": true },
+          { "name": "trunk", "state": "CLOSED", "is_closed": true },
+          { "name": "sunRoof", "state": "CLOSED", "is_closed": true }
         ],
         "windows": [
-          {
-            "name": "leftFront",
-            "state": "CLOSED",
-            "is_closed": true
-          },
-          {
-            "name": "rightFront",
-            "state": "CLOSED",
-            "is_closed": true
-          }
+          { "name": "leftFront", "state": "CLOSED", "is_closed": true },
+          { "name": "rightFront", "state": "CLOSED", "is_closed": true }
         ],
         "all_lids_closed": true,
         "all_windows_closed": true,
@@ -376,10 +301,7 @@
             "_timer_dict": {
               "action": "DEACTIVATE",
               "id": 1,
-              "timeStamp": {
-                "hour": 7,
-                "minute": 35
-              },
+              "timeStamp": { "hour": 7, "minute": 35 },
               "timerWeekDays": [
                 "MONDAY",
                 "TUESDAY",
@@ -397,10 +319,7 @@
             "_timer_dict": {
               "action": "DEACTIVATE",
               "id": 2,
-              "timeStamp": {
-                "hour": 18,
-                "minute": 0
-              },
+              "timeStamp": { "hour": 18, "minute": 0 },
               "timerWeekDays": [
                 "MONDAY",
                 "TUESDAY",
@@ -428,10 +347,7 @@
             "_timer_dict": {
               "action": "DEACTIVATE",
               "id": 3,
-              "timeStamp": {
-                "hour": 7,
-                "minute": 0
-              },
+              "timeStamp": { "hour": 7, "minute": 0 },
               "timerWeekDays": []
             },
             "action": "DEACTIVATE",
@@ -453,14 +369,8 @@
         ],
         "preferred_charging_window": {
           "_window_dict": {
-            "end": {
-              "hour": 1,
-              "minute": 30
-            },
-            "start": {
-              "hour": 18,
-              "minute": 1
-            }
+            "end": { "hour": 1, "minute": 30 },
+            "start": { "hour": 18, "minute": 1 }
           },
           "end_time": "01:30:00",
           "start_time": "18:01:00"
@@ -523,7 +433,7 @@
   ],
   "fingerprint": [
     {
-      "filename": "bmw-vehicles_.json",
+      "filename": "bmw-vehicles.json",
       "content": [
         {
           "appVehicleType": "CONNECTED",
@@ -546,18 +456,12 @@
             "model": "i3 (+ REX)",
             "softwareVersionCurrent": {
               "iStep": 510,
-              "puStep": {
-                "month": 11,
-                "year": 21
-              },
+              "puStep": { "month": 11, "year": 21 },
               "seriesCluster": "I001"
             },
             "softwareVersionExFactory": {
               "iStep": 502,
-              "puStep": {
-                "month": 3,
-                "year": 15
-              },
+              "puStep": { "month": 3, "year": 15 },
               "seriesCluster": "I001"
             },
             "year": 2015
@@ -572,12 +476,9 @@
         }
       ]
     },
+    { "filename": "mini-vehicles.json", "content": [] },
     {
-      "filename": "mini-vehicles_.json",
-      "content": []
-    },
-    {
-      "filename": "bmw-vehicles_WBY0FINGERPRINT01_state_.json",
+      "filename": "bmw-vehicles_state_WBY0FINGERPRINT01.json",
       "content": {
         "capabilities": {
           "climateFunction": "AIR_CONDITIONING",
@@ -636,10 +537,7 @@
               {
                 "action": "DEACTIVATE",
                 "id": 1,
-                "timeStamp": {
-                  "hour": 7,
-                  "minute": 35
-                },
+                "timeStamp": { "hour": 7, "minute": 35 },
                 "timerWeekDays": [
                   "MONDAY",
                   "TUESDAY",
@@ -651,10 +549,7 @@
               {
                 "action": "DEACTIVATE",
                 "id": 2,
-                "timeStamp": {
-                  "hour": 18,
-                  "minute": 0
-                },
+                "timeStamp": { "hour": 18, "minute": 0 },
                 "timerWeekDays": [
                   "MONDAY",
                   "TUESDAY",
@@ -668,54 +563,32 @@
               {
                 "action": "DEACTIVATE",
                 "id": 3,
-                "timeStamp": {
-                  "hour": 7,
-                  "minute": 0
-                },
+                "timeStamp": { "hour": 7, "minute": 0 },
                 "timerWeekDays": []
               },
-              {
-                "action": "DEACTIVATE",
-                "id": 4,
-                "timerWeekDays": []
-              }
+              { "action": "DEACTIVATE", "id": 4, "timerWeekDays": [] }
             ],
             "reductionOfChargeCurrent": {
-              "end": {
-                "hour": 1,
-                "minute": 30
-              },
-              "start": {
-                "hour": 18,
-                "minute": 1
-              }
+              "end": { "hour": 1, "minute": 30 },
+              "start": { "hour": 18, "minute": 1 }
             }
           },
           "checkControlMessages": [],
           "climateTimers": [
             {
-              "departureTime": {
-                "hour": 6,
-                "minute": 40
-              },
+              "departureTime": { "hour": 6, "minute": 40 },
               "isWeeklyTimer": true,
               "timerAction": "ACTIVATE",
               "timerWeekDays": ["THURSDAY", "SUNDAY"]
             },
             {
-              "departureTime": {
-                "hour": 12,
-                "minute": 50
-              },
+              "departureTime": { "hour": 12, "minute": 50 },
               "isWeeklyTimer": false,
               "timerAction": "ACTIVATE",
               "timerWeekDays": ["MONDAY"]
             },
             {
-              "departureTime": {
-                "hour": 18,
-                "minute": 59
-              },
+              "departureTime": { "hour": 18, "minute": 59 },
               "isWeeklyTimer": true,
               "timerAction": "DEACTIVATE",
               "timerWeekDays": ["WEDNESDAY"]
@@ -737,9 +610,7 @@
             "rightRear": "CLOSED",
             "trunk": "CLOSED"
           },
-          "driverPreferences": {
-            "lscPrivacyMode": "OFF"
-          },
+          "driverPreferences": { "lscPrivacyMode": "OFF" },
           "electricChargingState": {
             "chargingConnectionType": "CONDUCTIVE",
             "chargingLevelPercent": 82,
@@ -773,10 +644,7 @@
               "type": "VEHICLE_TUV"
             }
           ],
-          "roofState": {
-            "roofState": "CLOSED",
-            "roofStateType": "SUN_ROOF"
-          },
+          "roofState": { "roofState": "CLOSED", "roofStateType": "SUN_ROOF" },
           "windowsState": {
             "combinedState": "CLOSED",
             "leftFront": "CLOSED",

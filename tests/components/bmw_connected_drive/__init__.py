@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from bimmer_connected.api.authentication import MyBMWAuthentication
+from bimmer_connected.const import VEHICLE_STATE_URL, VEHICLES_URL
 import httpx
 import respx
 
@@ -53,9 +54,9 @@ def vehicles_sideeffect(request: httpx.Request) -> httpx.Response:
     return httpx.Response(200, json=vehicles)
 
 
-def vehicle_state_sideeffect(request: httpx.Request, vin: str) -> httpx.Response:
-    """Return /vehicles/VIN/state response."""
-    state_file = next(FIXTURE_PATH.rglob(f"state_{vin}_*.json"))
+def vehicle_state_sideeffect(request: httpx.Request) -> httpx.Response:
+    """Return /vehicles/state response."""
+    state_file = next(FIXTURE_PATH.rglob(f"state_{request.headers['bmw-vin']}_*.json"))
     try:
         return httpx.Response(
             200, json=json.loads(load_fixture(state_file, integration=BMW_DOMAIN))
@@ -69,12 +70,10 @@ def mock_vehicles() -> respx.Router:
     router = respx.mock(assert_all_called=False)
 
     # Get vehicle list
-    router.get("/eadrax-vcs/v2/vehicles").mock(side_effect=vehicles_sideeffect)
+    router.get(VEHICLES_URL).mock(side_effect=vehicles_sideeffect)
 
     # Get vehicle state
-    router.get(path__regex=r"^/eadrax-vcs/v2/vehicles/(?P<vin>\w+)/state").mock(
-        side_effect=vehicle_state_sideeffect
-    )
+    router.get(VEHICLE_STATE_URL).mock(side_effect=vehicle_state_sideeffect)
 
     return router
 
