@@ -48,9 +48,6 @@ def get_value(sensor: Sensor, field: str) -> float | int | str | None:
     """Get the value of a sensor field."""
     field_data = sensor.data.get(field)
     if field_data is None:
-        LOGGER.warning(
-            "No field %s in response for %s (%s)", field, sensor.name, sensor.model
-        )
         return None
     value = field_data["values"][-1]["s"]
     try:
@@ -195,4 +192,12 @@ class LaCrosseViewSensor(
         """Return the sensor value."""
         return self.entity_description.value_fn(
             self.coordinator.data[self.index], self.entity_description.key
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return (
+            super().available
+            and self.entity_description.key in self.coordinator.data[self.index].data
         )
