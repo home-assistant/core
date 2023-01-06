@@ -566,7 +566,7 @@ datapoint==0.9.8
 dbus-fast==1.82.0
 
 # homeassistant.components.debugpy
-debugpy==1.6.4
+debugpy==1.6.5
 
 # homeassistant.components.decora
 # decora==0.6
