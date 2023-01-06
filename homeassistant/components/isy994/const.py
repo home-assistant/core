@@ -291,9 +291,9 @@ NODE_FILTERS: dict[Platform, dict[str, list[str]]] = {
 }
 
 UOM_FRIENDLY_NAME = {
-    "1": "A",
+    "1": UnitOfElectricCurrent.AMPERE,
     UOM_ON_OFF: "",  # Binary, no unit
-    "3": f"btu/{UnitOfTime.HOURS}",
+    "3": UnitOfPower.BTU_PER_HOUR,
     "4": UnitOfTemperature.CELSIUS,
     "5": UnitOfLength.CENTIMETERS,
     "6": UnitOfVolume.CUBIC_FEET,
@@ -319,7 +319,7 @@ UOM_FRIENDLY_NAME = {
     "28": UnitOfMass.KILOGRAMS,
     "29": "kV",
     "30": UnitOfPower.KILO_WATT,
-    "31": "kPa",
+    "31": UnitOfPressure.KPA,
     "32": UnitOfSpeed.KILOMETERS_PER_HOUR,
     "33": UnitOfEnergy.KILO_WATT_HOUR,
     "34": "liedu",
