@@ -170,11 +170,13 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
         api_handler_fn=lambda api: api.clients,
         available_fn=lambda controller, obj_id: controller.available,
         device_info_fn=lambda api, obj_id: None,
-        event_is_on=WIRED_CONNECTION + WIRELESS_CONNECTION,
-        event_to_subscribe=WIRED_CONNECTION
-        + WIRED_DISCONNECTION
-        + WIRELESS_CONNECTION
-        + WIRELESS_DISCONNECTION,
+        event_is_on=(WIRED_CONNECTION + WIRELESS_CONNECTION),
+        event_to_subscribe=(
+            WIRED_CONNECTION
+            + WIRED_DISCONNECTION
+            + WIRELESS_CONNECTION
+            + WIRELESS_DISCONNECTION
+        ),
         heartbeat_timedelta_fn=async_client_heartbeat_timedelta_fn,
         is_connected_fn=async_client_is_connected_fn,
         name_fn=lambda client: client.name or client.hostname,
