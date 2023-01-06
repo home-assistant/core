@@ -187,9 +187,9 @@ class RainBirdOptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Optional(
                         ATTR_DURATION,
-                        default=self.config_entry.options.get(
+                        default=self.config_entry.options[
                             ATTR_DURATION,
-                        ),
+                        ],
                     ): cv.positive_int,
                 }
             ),
