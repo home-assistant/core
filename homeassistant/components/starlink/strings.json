@@ -1,10 +1,10 @@
 {
   "config": {
     "abort": {
-      "already_configured": "Starlink terminal is already configured"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
-      "server_error": "Could not reach Starlink terminal."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
       "user": {
