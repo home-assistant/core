@@ -566,7 +566,7 @@ datapoint==0.9.8
 dbus-fast==1.82.0
 
 # homeassistant.components.debugpy
-debugpy==1.6.4
+debugpy==1.6.5
 
 # homeassistant.components.decora
 # decora==0.6
@@ -1684,7 +1684,7 @@ pyirishrail==0.0.2
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.0.10
+pyisy==3.0.11
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
@@ -2294,7 +2294,7 @@ sensorpush-ble==1.5.2
 sentry-sdk==1.12.1
 
 # homeassistant.components.sfr_box
-sfrbox-api==0.0.1
+sfrbox-api==0.0.2
 
 # homeassistant.components.sharkiq
 sharkiq==0.0.1
