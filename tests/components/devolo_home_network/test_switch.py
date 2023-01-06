@@ -2,6 +2,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+from devolo_plc_api.device_api import WifiGuestAccessGet
 from devolo_plc_api.exceptions.device import DevicePasswordProtected, DeviceUnavailable
 import pytest
 
@@ -83,7 +84,9 @@ async def test_update_enable_guest_wifi(hass: HomeAssistant, mock_device: MockDe
     assert state.state == STATE_OFF
 
     # Emulate state change
-    mock_device.device.async_get_wifi_guest_access.return_value["enabled"] = True
+    mock_device.device.async_get_wifi_guest_access.return_value = WifiGuestAccessGet(
+        enabled=True
+    )
     async_fire_time_changed(hass, dt.utcnow() + SHORT_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
@@ -92,7 +95,9 @@ async def test_update_enable_guest_wifi(hass: HomeAssistant, mock_device: MockDe
     assert state.state == STATE_ON
 
     # Switch off
-    mock_device.device.async_get_wifi_guest_access.return_value["enabled"] = False
+    mock_device.device.async_get_wifi_guest_access.return_value = WifiGuestAccessGet(
+        enabled=False
+    )
     with patch(
         "devolo_plc_api.device_api.deviceapi.DeviceApi.async_set_wifi_guest_access",
         new=AsyncMock(),
@@ -111,7 +116,9 @@ async def test_update_enable_guest_wifi(hass: HomeAssistant, mock_device: MockDe
     )
 
     # Switch on
-    mock_device.device.async_get_wifi_guest_access.return_value["enabled"] = True
+    mock_device.device.async_get_wifi_guest_access.return_value = WifiGuestAccessGet(
+        enabled=True
+    )
     with patch(
         "devolo_plc_api.device_api.deviceapi.DeviceApi.async_set_wifi_guest_access",
         new=AsyncMock(),
@@ -145,7 +152,7 @@ async def test_update_enable_leds(hass: HomeAssistant, mock_device: MockDevice):
     assert er.async_get(state_key).entity_category == EntityCategory.CONFIG
 
     # Emulate state change
-    mock_device.device.async_get_led_setting.return_value["state"] = "LED_ON"
+    mock_device.device.async_get_led_setting.return_value = True
     async_fire_time_changed(hass, dt.utcnow() + SHORT_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
@@ -154,7 +161,7 @@ async def test_update_enable_leds(hass: HomeAssistant, mock_device: MockDevice):
     assert state.state == STATE_ON
 
     # Switch off
-    mock_device.device.async_get_led_setting.return_value["state"] = "LED_OFF"
+    mock_device.device.async_get_led_setting.return_value = False
     with patch(
         "devolo_plc_api.device_api.deviceapi.DeviceApi.async_set_led_setting",
         new=AsyncMock(),
@@ -173,7 +180,7 @@ async def test_update_enable_leds(hass: HomeAssistant, mock_device: MockDevice):
     )
 
     # Switch on
-    mock_device.device.async_get_led_setting.return_value["state"] = "LED_ON"
+    mock_device.device.async_get_led_setting.return_value = True
     with patch(
         "devolo_plc_api.device_api.deviceapi.DeviceApi.async_set_led_setting",
         new=AsyncMock(),

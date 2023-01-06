@@ -24,7 +24,7 @@ from .entity import DevoloEntity
 class DevoloSwitchRequiredKeysMixin:
     """Mixin for required keys."""
 
-    is_on_func: Callable[[dict[str, Any]], bool]
+    is_on_func: Callable[[Any], bool]
     turn_on_func: Callable[[Device], Awaitable[bool]]
     turn_off_func: Callable[[Device], Awaitable[bool]]
 
@@ -42,7 +42,7 @@ SWITCH_TYPES: dict[str, DevoloSwitchEntityDescription] = {
         entity_registry_enabled_default=True,
         icon="mdi:wifi",
         name="Enable guest Wifi",
-        is_on_func=lambda data: data["enabled"] is True,
+        is_on_func=lambda data: data.enabled is True,
         turn_on_func=lambda device: device.device.async_set_wifi_guest_access(True),  # type: ignore[union-attr]
         turn_off_func=lambda device: device.device.async_set_wifi_guest_access(False),  # type: ignore[union-attr]
     ),
@@ -52,7 +52,7 @@ SWITCH_TYPES: dict[str, DevoloSwitchEntityDescription] = {
         entity_registry_enabled_default=True,
         icon="mdi:led-off",
         name="Enable LEDs",
-        is_on_func=lambda data: data["state"] == "LED_ON",  # type: ignore[no-any-return]
+        is_on_func=bool,
         turn_on_func=lambda device: device.device.async_set_led_setting(True),  # type: ignore[union-attr]
         turn_off_func=lambda device: device.device.async_set_led_setting(False),  # type: ignore[union-attr]
     ),
