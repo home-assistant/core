@@ -67,6 +67,11 @@ class DefaultAgent(AbstractConversationAgent):
         config = config.get(DOMAIN, {})
         self.hass.data.setdefault(DOMAIN, {})
 
+        if config:
+            _LOGGER.warning(
+                "Custom intent sentences have been moved to config/custom_sentences"
+            )
+
     async def async_process(
         self,
         text: str,
@@ -76,9 +81,23 @@ class DefaultAgent(AbstractConversationAgent):
     ) -> ConversationResult | None:
         """Process a sentence."""
         language = language or self.hass.config.language
-        lang_intents = await self.async_get_or_load_intents(language)
+        lang_intents = self._lang_intents.get(language)
+
+        # Reload intents if missing or new components
+        if (lang_intents is None) or (
+            lang_intents.loaded_components - self.hass.config.components
+        ):
+            # Load intents in executor
+            sentences_dirs = await self.async_get_sentences_dirs()
+            load_intents_job = self.hass.async_add_executor_job(
+                self.get_or_load_intents, language, sentences_dirs
+            )
+            assert load_intents_job is not None
+            lang_intents = await load_intents_job
+
         if lang_intents is None:
             # No intents loaded
+            _LOGGER.warning("No intents were loaded for language: %s", language)
             return None
 
         slot_lists: dict[str, SlotList] = {
@@ -86,7 +105,7 @@ class DefaultAgent(AbstractConversationAgent):
             "name": self._make_names_list(),
         }
 
-        result = recognize(text, lang_intents, slot_lists=slot_lists)
+        result = recognize(text, lang_intents.intents, slot_lists=slot_lists)
         if result is not None:
             intent_response = await intent.async_handle(
                 self.hass,
@@ -107,64 +126,67 @@ class DefaultAgent(AbstractConversationAgent):
 
         return None
 
-    async def async_get_or_load_intents(self, language: str) -> Intents | None:
+    def get_or_load_intents(
+        self, language: str, sentences_dirs: dict[str, Path]
+    ) -> LanguageIntents | None:
         """Load all intents for language."""
         lang_intents = self._lang_intents.get(language)
 
         if lang_intents is None:
-            # Load all sentences for language
             intents_dict: dict[str, Any] = {}
-            for component in self.hass.config.components:
-                # Check for sentences in this component with the target language
-                sentences_dir = await self.async_get_sentences_dir(component)
-                yaml_path = sentences_dir / f"{language}.yaml"
-                if yaml_path.exists():
-                    # Merge sentences into existing dictionary
-                    _LOGGER.info("Loading intents YAML file %s", yaml_path)
-                    with open(yaml_path, encoding="utf-8") as yaml_file:
-                        merge_dict(intents_dict, safe_load(yaml_file))
-
-            if not intents_dict:
-                _LOGGER.warning("No intents loaded")
-                return None
-
-            lang_intents = LanguageIntents(
-                intents=Intents.from_dict(intents_dict),
-                intents_dict=intents_dict,
-                loaded_components=set(self.hass.config.components),
-            )
-            self._lang_intents[language] = lang_intents
+            loaded_components: set[str] = set()
         else:
-            # Check if any new components have been loaded
-            components_change = False
-            for component in self.hass.config.components:
-                if component not in lang_intents.loaded_components:
-                    # Check for sentences in this component with the target language
-                    sentences_dir = await self.async_get_sentences_dir(component)
-                    yaml_path = sentences_dir / f"{language}.yaml"
-                    if yaml_path.exists():
-                        # Merge sentences into existing dictionary
-                        _LOGGER.info("Loading intents YAML file %s", yaml_path)
-                        with open(yaml_path, encoding="utf-8") as yaml_file:
-                            merge_dict(lang_intents.intents_dict, safe_load(yaml_file))
+            intents_dict = lang_intents.intents_dict
+            loaded_components = lang_intents.loaded_components
 
-                        # Will need to recreate graph
-                        lang_intents.loaded_components.add(component)
-                        components_change = True
+        # Check if any new components have been loaded
+        components_changed = False
+        for component in self.hass.config.components:
+            if component in loaded_components:
+                continue
 
-            if components_change:
-                # This can be made faster by not re-parsing existing sentences.
-                # But it will likely only be called once anyways, unless new
-                # components with sentences are often being loaded.
-                lang_intents.intents = Intents.from_dict(lang_intents.intents_dict)
+            # Check for sentences in this component with the target language
+            sentences_dir = sentences_dirs.get(component)
+            if sentences_dir is None:
+                continue
 
-        return lang_intents.intents
+            yaml_path = sentences_dir / f"{language}.yaml"
+            if yaml_path.exists():
+                # Merge sentences into existing dictionary
+                _LOGGER.info("Loading intents YAML file %s", yaml_path)
+                with open(yaml_path, encoding="utf-8") as yaml_file:
+                    merge_dict(intents_dict, safe_load(yaml_file))
 
-    async def async_get_sentences_dir(self, component: str) -> Path:
-        """Get the sentences directory for a component."""
-        domain = component.rpartition(".")[-1]
-        integration = await async_get_integration(self.hass, domain)
-        return integration.file_path / "sentences"
+                # Will need to recreate graph
+                loaded_components.add(component)
+                components_changed = True
+
+        if not intents_dict:
+            return None
+
+        if components_changed or (lang_intents is None):
+            # This can be made faster by not re-parsing existing sentences.
+            # But it will likely only be called once anyways, unless new
+            # components with sentences are often being loaded.
+            intents = Intents.from_dict(intents_dict)
+
+            if lang_intents is None:
+                lang_intents = LanguageIntents(intents, intents_dict, loaded_components)
+                self._lang_intents[language] = lang_intents
+            else:
+                lang_intents.intents = intents
+
+        return lang_intents
+
+    async def async_get_sentences_dirs(self) -> dict[str, Path]:
+        """Get sentences directories for all loaded components."""
+        sentences_dirs: dict[str, Path] = {}
+        for component in self.hass.config.components:
+            domain = component.rpartition(".")[-1]
+            integration = await async_get_integration(self.hass, domain)
+            sentences_dirs[component] = integration.file_path / "sentences"
+
+        return sentences_dirs
 
     def _make_areas_list(self) -> TextSlotList:
         """Create slot list mapping area names/aliases to area ids."""
@@ -184,10 +206,17 @@ class DefaultAgent(AbstractConversationAgent):
         registry = entity_registry.async_get(self.hass)
         names = []
         for state in states:
-            names.append((state.name, state.entity_id))
             entry = registry.async_get(state.entity_id)
-            if (entry is not None) and entry.aliases:
-                for alias in entry.aliases:
-                    names.append((alias, state.entity_id))
+            if entry is not None:
+                if entry.entity_category:
+                    # Skip configuration/diagnostic entities
+                    continue
+
+                if entry.aliases:
+                    for alias in entry.aliases:
+                        names.append((alias, state.entity_id))
+
+            # Default name
+            names.append((state.name, state.entity_id))
 
         return TextSlotList.from_tuples(names)
