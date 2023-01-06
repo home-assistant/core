@@ -46,7 +46,9 @@ async def async_setup_entry(
     )
 
 
-class LD2410BLEBinarySensor(CoordinatorEntity, BinarySensorEntity):
+class LD2410BLEBinarySensor(
+    CoordinatorEntity[LD2410BLECoordinator], BinarySensorEntity
+):
     """Moving/static sensor for LD2410BLE."""
 
     def __init__(
