@@ -17,5 +17,9 @@ class HomeWizardEntity(CoordinatorEntity[HWEnergyDeviceUpdateCoordinator]):
         """Initialize the HomeWizard entity."""
         super().__init__(coordinator=coordinator)
         self._attr_device_info = DeviceInfo(
+            name=coordinator.entry.title,
+            manufacturer="HomeWizard",
+            sw_version=coordinator.data["device"].firmware_version,
+            model=coordinator.data["device"].product_type,
             identifiers={(DOMAIN, coordinator.data["device"].serial)},
         )
