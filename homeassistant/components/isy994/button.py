@@ -21,11 +21,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up ISY/IoX button from config entry."""
     hass_isy_data = hass.data[ISY994_DOMAIN][config_entry.entry_id]
-    entities: list[ISYNodeQueryButtonEntity | ISYSystemQueryButtonEntity] = []
+    isy: ISY = hass_isy_data[ISY994_ISY]
+    uuid = isy.configuration["uuid"]
+    entities: list[ISYNodeQueryButtonEntity] = []
     for node in hass_isy_data[ISY994_NODES][Platform.BUTTON]:
-        entities.append(ISYNodeQueryButtonEntity(node))
+        entities.append(ISYNodeQueryButtonEntity(node, f"{uuid}_{node.address}"))
 
-    entities.append(ISYSystemQueryButtonEntity(hass_isy_data[ISY994_ISY]))
+    # Add entity to query full system
+    entities.append(ISYNodeQueryButtonEntity(isy, uuid))
 
     async_add_entities(entities)
 
@@ -37,15 +40,12 @@ class ISYNodeQueryButtonEntity(ButtonEntity):
     _attr_entity_category = EntityCategory.CONFIG
     _attr_has_entity_name = True
 
-    def __init__(self, node: Node) -> None:
+    def __init__(self, node: Node | ISY, base_unique_id: str) -> None:
         """Initialize a query ISY device button entity."""
         self._node = node
 
         # Entity class attributes
         self._attr_name = "Query"
-        base_unique_id: str = (
-            f"{self._node.isy.configuration['uuid']}_{self._node.address}"
-        )
         self._attr_unique_id = f"{base_unique_id}_query"
         self._attr_device_info = DeviceInfo(
             identifiers={(ISY994_DOMAIN, base_unique_id)}
@@ -54,27 +54,3 @@ class ISYNodeQueryButtonEntity(ButtonEntity):
     async def async_press(self) -> None:
         """Press the button."""
         self.hass.async_create_task(self._node.query())
-
-
-class ISYSystemQueryButtonEntity(ButtonEntity):
-    """Representation of a system query button entity."""
-
-    _attr_should_poll = False
-    _attr_entity_category = EntityCategory.CONFIG
-    _attr_has_entity_name = True
-
-    def __init__(self, isy: ISY) -> None:
-        """Initialize a query ISY system button entity."""
-        self._isy = isy
-
-        # Entity class attributes
-        self._attr_name = "Query"
-        base_unique_id: str = f"{self._isy.configuration['uuid']}"
-        self._attr_unique_id = f"{base_unique_id}_query"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(ISY994_DOMAIN, base_unique_id)}
-        )
-
-    async def async_press(self) -> None:
-        """Press the button."""
-        self.hass.async_create_task(self._isy.query())
