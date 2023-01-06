@@ -1,6 +1,0 @@
-language: nb
-responses:
-  intents:
-    HassClimateGetTemperature:
-      success:
-        - "{{ state.state }} grader"
