@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt
 
-from . import DATA_HYDRAWISE, HydrawiseEntity
+from . import DATA_YAML, DOMAIN, HydrawiseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up a sensor for a Hydrawise device."""
-    hydrawise = hass.data[DATA_HYDRAWISE].data
+    hydrawise = hass.data[DOMAIN][DATA_YAML].data
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
 
     entities = [
@@ -75,7 +75,7 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
 
     def update(self) -> None:
         """Get the latest data and updates the states."""
-        mydata = self.hass.data[DATA_HYDRAWISE].data
+        mydata = self.hass.data[DOMAIN][DATA_YAML].data
         _LOGGER.debug("Updating Hydrawise sensor: %s", self.name)
         relay_data = mydata.relays[self.data["relay"] - 1]
         if self.entity_description.key == "watering_time":

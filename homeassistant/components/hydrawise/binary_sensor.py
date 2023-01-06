@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DATA_HYDRAWISE, HydrawiseEntity
+from . import DATA_YAML, DOMAIN, HydrawiseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up a sensor for a Hydrawise device."""
-    hydrawise = hass.data[DATA_HYDRAWISE].data
+    hydrawise = hass.data[DOMAIN][DATA_YAML].data
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
 
     entities = []
@@ -83,7 +83,7 @@ class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):
     def update(self) -> None:
         """Get the latest data and updates the state."""
         _LOGGER.debug("Updating Hydrawise binary sensor: %s", self.name)
-        mydata = self.hass.data[DATA_HYDRAWISE].data
+        mydata = self.hass.data[DOMAIN][DATA_YAML].data
         if self.entity_description.key == "status":
             self._attr_is_on = mydata.status == "All good!"
         elif self.entity_description.key == "is_watering":

@@ -1563,6 +1563,9 @@ pydexcom==0.2.3
 # homeassistant.components.doods
 pydoods==1.0.2
 
+# homeassistant.components.hydrawise
+pydrawise==2023.1.2
+
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
 
