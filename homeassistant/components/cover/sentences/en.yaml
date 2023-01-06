@@ -10,13 +10,14 @@ intents:
         slots:
           device_class: garage_door
       - sentences:
-          - close [the] blinds in <area>
-          - close <area> blinds
+          - close [the] (window | blind | curtain | shutter)[s] in <area>
+          - close <area> (window | blind | curtain | shutter)
         slots:
           device_class:
             - blind
             - curtain
             - shutter
+            - window
   HassOpenCover:
     data:
       - sentences:
@@ -27,9 +28,11 @@ intents:
         slots:
           device_class: garage_door
       - sentences:
-          - open [the] blinds in <area>
+          - open [the] (window | blind | curtain | shutter)[s] in <area>
+          - open <area> (window | blind | curtain | shutter)[s]
         slots:
           device_class:
             - blind
             - curtain
             - shutter
+            - window

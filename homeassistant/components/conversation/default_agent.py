@@ -1,6 +1,7 @@
 """Standard conversation implementation for Home Assistant."""
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 import logging
 from pathlib import Path
@@ -92,7 +93,6 @@ class DefaultAgent(AbstractConversationAgent):
             load_intents_job = self.hass.async_add_executor_job(
                 self.get_or_load_intents, language, sentences_dirs
             )
-            assert load_intents_job is not None
             lang_intents = await load_intents_job
 
         if lang_intents is None:
@@ -106,25 +106,22 @@ class DefaultAgent(AbstractConversationAgent):
         }
 
         result = recognize(text, lang_intents.intents, slot_lists=slot_lists)
-        if result is not None:
-            intent_response = await intent.async_handle(
-                self.hass,
-                DOMAIN,
-                result.intent.name,
-                {
-                    entity.name: {"value": entity.value}
-                    for entity in result.entities_list
-                },
-                text,
-                context,
-                language,
-            )
+        if result is None:
+            return None
 
-            return ConversationResult(
-                response=intent_response, conversation_id=conversation_id
-            )
+        intent_response = await intent.async_handle(
+            self.hass,
+            DOMAIN,
+            result.intent.name,
+            {entity.name: {"value": entity.value} for entity in result.entities_list},
+            text,
+            context,
+            language,
+        )
 
-        return None
+        return ConversationResult(
+            response=intent_response, conversation_id=conversation_id
+        )
 
     def get_or_load_intents(
         self, language: str, sentences_dirs: dict[str, Path]
@@ -154,7 +151,7 @@ class DefaultAgent(AbstractConversationAgent):
             if yaml_path.exists():
                 # Merge sentences into existing dictionary
                 _LOGGER.info("Loading intents YAML file %s", yaml_path)
-                with open(yaml_path, encoding="utf-8") as yaml_file:
+                with yaml_path.open(encoding="utf-8") as yaml_file:
                     merge_dict(intents_dict, safe_load(yaml_file))
 
                 # Will need to recreate graph
@@ -164,29 +161,36 @@ class DefaultAgent(AbstractConversationAgent):
         if not intents_dict:
             return None
 
-        if components_changed or (lang_intents is None):
-            # This can be made faster by not re-parsing existing sentences.
-            # But it will likely only be called once anyways, unless new
-            # components with sentences are often being loaded.
-            intents = Intents.from_dict(intents_dict)
+        if not components_changed and (lang_intents is not None):
+            return lang_intents
 
-            if lang_intents is None:
-                lang_intents = LanguageIntents(intents, intents_dict, loaded_components)
-                self._lang_intents[language] = lang_intents
-            else:
-                lang_intents.intents = intents
+        # This can be made faster by not re-parsing existing sentences.
+        # But it will likely only be called once anyways, unless new
+        # components with sentences are often being loaded.
+        intents = Intents.from_dict(intents_dict)
+
+        if lang_intents is None:
+            lang_intents = LanguageIntents(intents, intents_dict, loaded_components)
+            self._lang_intents[language] = lang_intents
+        else:
+            lang_intents.intents = intents
 
         return lang_intents
 
     async def async_get_sentences_dirs(self) -> dict[str, Path]:
         """Get sentences directories for all loaded components."""
-        sentences_dirs: dict[str, Path] = {}
-        for component in self.hass.config.components:
+        # Create a copy in case a new component loads during this method
+        components = list(self.hass.config.components)
+        integration_coros = []
+        for component in components:
             domain = component.rpartition(".")[-1]
-            integration = await async_get_integration(self.hass, domain)
-            sentences_dirs[component] = integration.file_path / "sentences"
+            integration_coros.append(async_get_integration(self.hass, domain))
 
-        return sentences_dirs
+        integrations = await asyncio.gather(*integration_coros)
+        return {
+            component: integration.file_path / "sentences"
+            for component, integration in zip(components, integrations)
+        }
 
     def _make_areas_list(self) -> TextSlotList:
         """Create slot list mapping area names/aliases to area ids."""
