@@ -1,10 +1,14 @@
 """Constants used in the Mikrotik components."""
 from typing import Final
 
+ROUTERBOARD_ROUTER_TYPE: Final = "routerboard"
+CHR_ROUTER_TYPE: Final = "chr"
+
 DOMAIN: Final = "mikrotik"
 DEFAULT_NAME: Final = "Mikrotik"
 DEFAULT_API_PORT: Final = 8728
 DEFAULT_DETECTION_TIME: Final = 300
+DEFAULT_ROUTER_TYPE: Final = ROUTERBOARD_ROUTER_TYPE
 
 ATTR_MANUFACTURER: Final = "Mikrotik"
 ATTR_SERIAL_NUMBER: Final = "serial-number"
@@ -14,7 +18,7 @@ ATTR_MODEL: Final = "model"
 CONF_ARP_PING: Final = "arp_ping"
 CONF_FORCE_DHCP: Final = "force_dhcp"
 CONF_DETECTION_TIME: Final = "detection_time"
-
+CONF_ROUTER_TYPE: Final = "router_type"
 
 NAME: Final = "name"
 INFO: Final = "info"

@@ -25,7 +25,9 @@ from .const import (
     CONF_ARP_PING,
     CONF_DETECTION_TIME,
     CONF_FORCE_DHCP,
+    CONF_ROUTER_TYPE,
     DEFAULT_DETECTION_TIME,
+    DEFAULT_ROUTER_TYPE,
     DHCP,
     DOMAIN,
     IDENTITY,
@@ -38,6 +40,7 @@ from .const import (
     NAME,
     WIFI,
     WIFIWAVE2,
+    ROUTERBOARD_ROUTER_TYPE,
     WIRELESS,
 )
 from .device import Device
@@ -88,9 +91,18 @@ class MikrotikData:
         """Return force_dhcp option setting."""
         return self.config_entry.options.get(CONF_FORCE_DHCP, False)
 
+    @property
+    def router_type(self) -> str:
+        """Return router_type data setting."""
+        return self.config_entry.data.get(CONF_ROUTER_TYPE, DEFAULT_ROUTER_TYPE)
+
     def get_info(self, param: str) -> str:
         """Return device model name."""
         cmd = IDENTITY if param == NAME else INFO
+
+        if cmd == INFO and self.router_type != ROUTERBOARD_ROUTER_TYPE:
+            return ""
+
         if data := self.command(MIKROTIK_SERVICES[cmd]):
             return str(data[0].get(param))
         return ""
