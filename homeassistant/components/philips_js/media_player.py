@@ -509,6 +509,8 @@ class PhilipsTVMediaPlayer(
             self._media_title = self._sources.get(self._tv.source_id)
             self._media_channel = None
 
+        self._attr_assumed_state = True
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
