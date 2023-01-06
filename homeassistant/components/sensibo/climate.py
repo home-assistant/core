@@ -54,6 +54,22 @@ ATTR_HORIZONTAL_SWING_MODE = "horizontal_swing_mode"
 ATTR_LIGHT = "light"
 BOOST_INCLUSIVE = "boost_inclusive"
 
+AVAILABLE_FAN_MODES = {"quiet", "low", "medium", "medium_high", "high", "auto"}
+AVAILABLE_SWING_MODES = {
+    "stopped",
+    "fixedtop",
+    "fixedmiddletop",
+    "fixedmiddle",
+    "fixedmiddlebottom",
+    "fixedbottom",
+    "rangetop",
+    "rangemiddle",
+    "rangebottom",
+    "rangefull",
+    "horizontal",
+    "both",
+}
+
 PARALLEL_UPDATES = 0
 
 FIELD_TO_FLAG = {
@@ -245,27 +261,37 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     @property
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
-        fan_mode: str | None = self.device_data.fan_mode
-        return fan_mode
+        if (fan_mode := self.device_data.fan_mode) in AVAILABLE_FAN_MODES:
+            return fan_mode
+        return None
 
     @property
     def fan_modes(self) -> list[str] | None:
         """Return the list of available fan modes."""
-        if self.device_data.fan_modes:
-            return self.device_data.fan_modes
+        if fan_modes := self.device_data.fan_modes:
+            fan_modes_set = set(fan_modes)
+            available_fan_modes = sorted(
+                set(fan_modes_set).intersection(AVAILABLE_FAN_MODES)
+            )
+            return list(available_fan_modes)
         return None
 
     @property
     def swing_mode(self) -> str | None:
         """Return the swing setting."""
-        swing_mode: str | None = self.device_data.swing_mode
-        return swing_mode
+        if (swing_mode := self.device_data.swing_mode) in AVAILABLE_SWING_MODES:
+            return swing_mode
+        return None
 
     @property
     def swing_modes(self) -> list[str] | None:
         """Return the list of available swing modes."""
-        if self.device_data.swing_modes:
-            return self.device_data.swing_modes
+        if swing_modes := self.device_data.swing_modes:
+            swing_modes_set = set(swing_modes)
+            available_swing_modes = sorted(
+                set(swing_modes_set).intersection(AVAILABLE_SWING_MODES)
+            )
+            return list(available_swing_modes)
         return None
 
     @property

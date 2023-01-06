@@ -97,11 +97,7 @@ async def test_climate(
         "max_temp": 20,
         "target_temp_step": 1,
         "fan_modes": ["low", "medium", "quiet"],
-        "swing_modes": [
-            "fixedmiddletop",
-            "fixedtop",
-            "stopped",
-        ],
+        "swing_modes": ["fixedmiddletop", "fixedtop", "stopped"],
         "current_temperature": 21.2,
         "temperature": 25,
         "current_humidity": 32.9,
