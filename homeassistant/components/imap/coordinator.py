@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from datetime import timedelta
 import logging
-from types import MappingProxyType
 from typing import Any
 
 from aioimaplib import AUTH, IMAP4_SSL, SELECTED, AioImapException
@@ -21,7 +21,7 @@ from .errors import InvalidAuth, InvalidFolder
 _LOGGER = logging.getLogger(__name__)
 
 
-async def connect_to_server(data: MappingProxyType[str, Any]) -> IMAP4_SSL:
+async def connect_to_server(data: Mapping[str, Any]) -> IMAP4_SSL:
     """Connect to imap server and return client."""
     client = IMAP4_SSL(data[CONF_SERVER], data[CONF_PORT])
     await client.wait_hello_from_server()
