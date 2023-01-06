@@ -28,13 +28,13 @@
                 "data": {
                     "noise_psk": "Titkos\u00edt\u00e1si kulcs"
                 },
-                "description": "K\u00e9rem, adja meg a bekonfigur\u00e1lt titkos\u00edt\u00e1si kulcsot: {name}"
+                "description": "K\u00e9rem, adja meg a {name} titkos\u00edt\u00e1si kulcs\u00e1t, amit az ESPHome Dashboardon vagy az eszk\u00f6z konfigur\u00e1ci\u00f3j\u00e1ban tal\u00e1l."
             },
             "reauth_confirm": {
                 "data": {
                     "noise_psk": "Titkos\u00edt\u00e1si kulcs"
                 },
-                "description": "{name} ESPHome v\u00e9gpont aktiv\u00e1lta az adat\u00e1tviteli titkos\u00edt\u00e1st vagy megv\u00e1ltoztatta a titkos\u00edt\u00e1si kulcsot. K\u00e9rem, adja meg az aktu\u00e1lis titkos\u00edt\u00e1si kulcsot."
+                "description": "Az ESPHome {name} eszk\u00f6z\u00f6n be lett \u00e1ll\u00edtva az adat\u00e1tviteli titkos\u00edt\u00e1s, vagy meg lett v\u00e1ltoztatva a titkos\u00edt\u00e1si kulcs. K\u00e9rem, adja meg az \u00e9rv\u00e9nyes kulcsot. Ezt az ESPHome Dashboardon vagy az eszk\u00f6z konfigur\u00e1ci\u00f3j\u00e1ban tal\u00e1lja meg."
             },
             "user": {
                 "data": {
