@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 import datetime
 import logging
@@ -84,15 +85,13 @@ class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
             raise UpdateFailed(f"Error communicating with Device: {err}") from err
 
     async def _fetch_data(self) -> RainbirdDeviceState:
-        """Fetch data from the Rain Bird device.
-
-        The data is fetched serially to avoid overwheling the device.
-        TODO: Do additional testing with this in parallel to see how it holds up.
-        """
-        zones = await self._fetch_zones()
-        states = await self._controller.get_zone_states()
-        rain = await self._controller.get_rain_sensor_state()
-        rain_delay = await self._controller.get_rain_delay()
+        """Fetch data from the Rain Bird device."""
+        (zones, states, rain, rain_delay) = await asyncio.gather(
+            self._fetch_zones(),
+            self._controller.get_zone_states(),
+            self._controller.get_rain_sensor_state(),
+            self._controller.get_rain_delay(),
+        )
         return RainbirdDeviceState(
             zones=set(zones),
             active_zones={zone for zone in zones if states.active(zone)},
