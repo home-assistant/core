@@ -20,9 +20,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_ON
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -390,7 +392,7 @@ class ISYInsteonBinarySensorEntity(ISYBinarySensorEntity):
         return self._computed_state
 
 
-class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity):
+class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity, RestoreEntity):
     """Representation of the battery state of an ISY sensor."""
 
     def __init__(
@@ -406,8 +408,9 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity):
         Computed state is set to UNKNOWN unless the ISY provided a valid
         state. See notes above regarding ISY Sensor status on ISY restart.
         If a valid state is provided (either on or off), the computed state in
-        HA is set to OFF (Normal). If the heartbeat is not received in 25 hours
-        then the computed state is set to ON (Low Battery).
+        HA is restored to the previous value or defaulted to OFF (Normal).
+        If the heartbeat is not received in 25 hours then the computed state is
+        set to ON (Low Battery).
         """
         super().__init__(node)
         self._parent_device = parent_device
@@ -424,6 +427,11 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity):
 
         # Start the timer on bootup, so we can change from UNKNOWN to OFF
         self._restart_timer()
+
+        if (last_state := await self.async_get_last_state()) is not None:
+            # Only restore the state if it was previously ON (Low Battery)
+            if last_state.state == STATE_ON:
+                self._computed_state = True
 
     def _heartbeat_node_control_handler(self, event: NodeProperty) -> None:
         """Update the heartbeat timestamp when any ON/OFF event is sent.
