@@ -373,6 +373,7 @@ bluetooth-adapters==0.15.2
 bluetooth-auto-recovery==1.0.3
 
 # homeassistant.components.bluetooth
+# homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 bluetooth-data-tools==0.3.1
 
@@ -759,6 +760,9 @@ lacrosse-view==0.0.9
 
 # homeassistant.components.laundrify
 laundrify_aio==1.1.2
+
+# homeassistant.components.ld2410_ble
+ld2410-ble==0.1.1
 
 # homeassistant.components.led_ble
 led-ble==1.0.0
