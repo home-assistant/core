@@ -131,12 +131,12 @@ class PhilipsTVMediaPlayer(
         return MediaPlayerState.OFF
 
     @property
-    def source(self):
+    def source(self) -> str | None:
         """Return the current input source."""
         return self._sources.get(self._tv.source_id)
 
     @property
-    def source_list(self):
+    def source_list(self) -> list[str]:
         """List of available input sources."""
         return list(self._sources.values())
 
@@ -147,12 +147,12 @@ class PhilipsTVMediaPlayer(
         await self._async_update_soon()
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         return self._tv.volume
 
     @property
-    def is_volume_muted(self):
+    def is_volume_muted(self) -> bool | None:
         """Boolean if volume is currently muted."""
         return self._tv.muted
 
@@ -231,27 +231,27 @@ class PhilipsTVMediaPlayer(
         await self._async_update_soon()
 
     @property
-    def media_channel(self):
+    def media_channel(self) -> str | None:
         """Get current channel if it's a channel."""
         return self._media_channel
 
     @property
-    def media_title(self):
+    def media_title(self) -> str | None:
         """Title of current playing media."""
         return self._media_title
 
     @property
-    def media_content_type(self):
+    def media_content_type(self) -> str | None:
         """Return content type of playing media."""
         return self._media_content_type
 
     @property
-    def media_content_id(self):
+    def media_content_id(self) -> str | None:
         """Content type of current playing media."""
         return self._media_content_id
 
     @property
-    def media_image_url(self):
+    def media_image_url(self) -> str | None:
         """Image url of current playing media."""
         if self._media_content_id and self._media_content_type in (
             MediaType.APP,
@@ -263,18 +263,19 @@ class PhilipsTVMediaPlayer(
         return None
 
     @property
-    def app_id(self):
+    def app_id(self) -> str | None:
         """ID of the current running app."""
         return self._tv.application_id
 
     @property
-    def app_name(self):
+    def app_name(self) -> str | None:
         """Name of the current running app."""
         if app := self._tv.applications.get(self._tv.application_id):
             return app.get("label")
+        return None
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
         _LOGGER.debug("Call play media type <%s>, Id <%s>", media_type, media_id)
@@ -432,10 +433,15 @@ class PhilipsTVMediaPlayer(
             ],
         )
 
-    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+    async def async_browse_media(
+        self, media_content_type: str | None = None, media_content_id: str | None = None
+    ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         if not self._tv.on:
             raise BrowseError("Can't browse when tv is turned off")
+
+        if media_content_id is None:
+            raise BrowseError("Missing media content id")
 
         if media_content_id in (None, ""):
             return await self.async_browse_media_root()
@@ -469,6 +475,8 @@ class PhilipsTVMediaPlayer(
 
     async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
         """Serve album art. Returns (content, content_type)."""
+        if self.media_content_type is None or self.media_content_id is None:
+            return None, None
         return await self.async_get_browse_image(
             self.media_content_type, self.media_content_id, None
         )
