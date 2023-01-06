@@ -120,7 +120,8 @@ STATION_SCHEMA = vol.Schema(
             {
                 vol.Optional(ATTR_UID): cv.string,
                 vol.Optional(ATTR_FREE_EBIKES): cv.positive_int,
-            }, extra=vol.REMOVE_EXTRA
+            },
+            extra=vol.REMOVE_EXTRA,
         ),
     },
     extra=vol.REMOVE_EXTRA,
