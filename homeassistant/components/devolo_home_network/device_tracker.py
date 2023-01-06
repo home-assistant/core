@@ -1,9 +1,8 @@
 """Platform for device tracker integration."""
 from __future__ import annotations
 
-from typing import Any
-
 from devolo_plc_api.device import Device
+from devolo_plc_api.device_api import ConnectedStationInfo
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -20,14 +19,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import (
-    CONNECTED_STATIONS,
-    CONNECTED_WIFI_CLIENTS,
-    DOMAIN,
-    MAC_ADDRESS,
-    WIFI_APTYPE,
-    WIFI_BANDS,
-)
+from .const import CONNECTED_WIFI_CLIENTS, DOMAIN, WIFI_APTYPE, WIFI_BANDS
 
 
 async def async_setup_entry(
@@ -35,9 +27,9 @@ async def async_setup_entry(
 ) -> None:
     """Get all devices and sensors and setup them via config entry."""
     device: Device = hass.data[DOMAIN][entry.entry_id]["device"]
-    coordinators: dict[str, DataUpdateCoordinator] = hass.data[DOMAIN][entry.entry_id][
-        "coordinators"
-    ]
+    coordinators: dict[
+        str, DataUpdateCoordinator[list[ConnectedStationInfo]]
+    ] = hass.data[DOMAIN][entry.entry_id]["coordinators"]
     registry = entity_registry.async_get(hass)
     tracked = set()
 
@@ -45,16 +37,16 @@ async def async_setup_entry(
     def new_device_callback() -> None:
         """Add new devices if needed."""
         new_entities = []
-        for station in coordinators[CONNECTED_WIFI_CLIENTS].data[CONNECTED_STATIONS]:
-            if station[MAC_ADDRESS] in tracked:
+        for station in coordinators[CONNECTED_WIFI_CLIENTS].data:
+            if station.mac_address in tracked:
                 continue
 
             new_entities.append(
                 DevoloScannerEntity(
-                    coordinators[CONNECTED_WIFI_CLIENTS], device, station[MAC_ADDRESS]
+                    coordinators[CONNECTED_WIFI_CLIENTS], device, station.mac_address
                 )
             )
-            tracked.add(station[MAC_ADDRESS])
+            tracked.add(station.mac_address)
             async_add_entities(new_entities)
 
     @callback
@@ -90,7 +82,9 @@ async def async_setup_entry(
         )
 
 
-class DevoloScannerEntity(CoordinatorEntity, ScannerEntity):
+class DevoloScannerEntity(
+    CoordinatorEntity[DataUpdateCoordinator[list[ConnectedStationInfo]]], ScannerEntity
+):
     """Representation of a devolo device tracker."""
 
     def __init__(
@@ -105,22 +99,22 @@ class DevoloScannerEntity(CoordinatorEntity, ScannerEntity):
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the attributes."""
         attrs: dict[str, str] = {}
-        if not self.coordinator.data[CONNECTED_STATIONS]:
+        if not self.coordinator.data:
             return {}
 
-        station: dict[str, Any] = next(
+        station = next(
             (
                 station
-                for station in self.coordinator.data[CONNECTED_STATIONS]
-                if station[MAC_ADDRESS] == self.mac_address
+                for station in self.coordinator.data
+                if station.mac_address == self.mac_address
             ),
-            {},
+            None,
         )
         if station:
-            attrs["wifi"] = WIFI_APTYPE.get(station["vap_type"], STATE_UNKNOWN)
+            attrs["wifi"] = WIFI_APTYPE.get(station.vap_type, STATE_UNKNOWN)
             attrs["band"] = (
-                f"{WIFI_BANDS.get(station['band'])} {UnitOfFrequency.GIGAHERTZ}"
-                if WIFI_BANDS.get(station["band"])
+                f"{WIFI_BANDS.get(station.band)} {UnitOfFrequency.GIGAHERTZ}"
+                if WIFI_BANDS.get(station.band)
                 else STATE_UNKNOWN
             )
         return attrs
@@ -137,8 +131,8 @@ class DevoloScannerEntity(CoordinatorEntity, ScannerEntity):
         """Return true if the device is connected to the network."""
         return any(
             station
-            for station in self.coordinator.data[CONNECTED_STATIONS]
-            if station[MAC_ADDRESS] == self.mac_address
+            for station in self.coordinator.data
+            if station.mac_address == self.mac_address
         )
 
     @property
