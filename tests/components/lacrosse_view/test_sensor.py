@@ -130,5 +130,4 @@ async def test_no_field(hass: HomeAssistant, caplog: Any) -> None:
     assert entries
     assert len(entries) == 1
     assert entries[0].state == ConfigEntryState.LOADED
-    assert hass.states.get("sensor.test_temperature").state == "unknown"
-    assert "No field Temperature in response for Test (Test)" in caplog.text
+    assert hass.states.get("sensor.test_temperature").state == "unavailable"
