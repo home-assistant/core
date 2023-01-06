@@ -221,6 +221,7 @@ FLOWS = {
         "landisgyr_heat_meter",
         "launch_library",
         "laundrify",
+        "ld2410_ble",
         "led_ble",
         "lg_soundbar",
         "lidarr",
