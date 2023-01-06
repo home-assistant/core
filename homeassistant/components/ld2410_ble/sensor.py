@@ -1,12 +1,11 @@
 """LD2410 BLE integration sensor platform."""
 
 
-from collections.abc import Callable
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfLength
@@ -20,52 +19,67 @@ from . import LD2410BLE, LD2410BLECoordinator
 from .const import DOMAIN
 from .models import LD2410BLEData
 
-distance_description: Callable[
-    [str, str], SensorEntityDescription
-] = lambda key, name: SensorEntityDescription(
-    key=key,
+MOVING_TARGET_DISTANCE_DESCRIPTION = SensorEntityDescription(
+    key="moving_target_distance",
     device_class=SensorDeviceClass.DISTANCE,
     entity_registry_enabled_default=False,
     entity_registry_visible_default=True,
     has_entity_name=True,
-    name=name,
+    name="Moving Target Distance",
     native_unit_of_measurement=UnitOfLength.CENTIMETERS,
+    state_class=SensorStateClass.MEASUREMENT,
 )
 
-
-MOVING_TARGET_DISTANCE_DESCRIPTION = distance_description(
-    "moving_target_distance",
-    "Moving Target Distance",
-)
-STATIC_TARGET_DISTANCE_DESCRIPTION = distance_description(
-    "static_target_distance",
-    "Static Target Distance",
-)
-DETECTION_DISTANCE_DESCRIPTION = distance_description(
-    "detection_distance",
-    "Detection Distance",
+STATIC_TARGET_DISTANCE_DESCRIPTION = SensorEntityDescription(
+    key="static_target_distance",
+    device_class=SensorDeviceClass.DISTANCE,
+    entity_registry_enabled_default=False,
+    entity_registry_visible_default=True,
+    has_entity_name=True,
+    name="Static Target Distance",
+    native_unit_of_measurement=UnitOfLength.CENTIMETERS,
+    state_class=SensorStateClass.MEASUREMENT,
 )
 
-energy_description: Callable[
-    [str, str], SensorEntityDescription
-] = lambda key, name: SensorEntityDescription(
-    key=key,
+DETECTION_DISTANCE_DESCRIPTION = SensorEntityDescription(
+    key="detection_distance",
+    device_class=SensorDeviceClass.DISTANCE,
+    entity_registry_enabled_default=False,
+    entity_registry_visible_default=True,
+    has_entity_name=True,
+    name="Detection Distance",
+    native_unit_of_measurement=UnitOfLength.CENTIMETERS,
+    state_class=SensorStateClass.MEASUREMENT,
+)
+
+MOVING_TARGET_ENERGY_DESCRIPTION = SensorEntityDescription(
+    key="moving_target_energy",
     device_class=None,
     entity_registry_enabled_default=False,
     entity_registry_visible_default=True,
     has_entity_name=True,
-    name=name,
+    name="Moving Target Energy",
     native_unit_of_measurement="Target Energy",
+    state_class=SensorStateClass.MEASUREMENT,
 )
 
-
-MOVING_TARGET_ENERGY_DESCRIPTION = energy_description(
-    "moving_target_energy",
-    "Moving Target Energy",
+STATIC_TARGET_ENERGY_DESCRIPTION = SensorEntityDescription(
+    key="static_target_energy",
+    device_class=None,
+    entity_registry_enabled_default=False,
+    entity_registry_visible_default=True,
+    has_entity_name=True,
+    name="Static Target Energy",
+    native_unit_of_measurement="Target Energy",
+    state_class=SensorStateClass.MEASUREMENT,
 )
-STATIC_TARGET_ENERGY_DESCRIPTION = energy_description(
-    "static_target_energy",
-    "Static Target Energy",
+
+SENSOR_DESCRIPTIONS = (
+    MOVING_TARGET_DISTANCE_DESCRIPTION,
+    STATIC_TARGET_DISTANCE_DESCRIPTION,
+    MOVING_TARGET_ENERGY_DESCRIPTION,
+    STATIC_TARGET_ENERGY_DESCRIPTION,
+    DETECTION_DISTANCE_DESCRIPTION,
 )
 
 
@@ -82,32 +96,9 @@ async def async_setup_entry(
                 data.coordinator,
                 data.device,
                 entry.title,
-                MOVING_TARGET_DISTANCE_DESCRIPTION,
-            ),
-            LD2410BLESensor(
-                data.coordinator,
-                data.device,
-                entry.title,
-                STATIC_TARGET_DISTANCE_DESCRIPTION,
-            ),
-            LD2410BLESensor(
-                data.coordinator,
-                data.device,
-                entry.title,
-                MOVING_TARGET_ENERGY_DESCRIPTION,
-            ),
-            LD2410BLESensor(
-                data.coordinator,
-                data.device,
-                entry.title,
-                STATIC_TARGET_ENERGY_DESCRIPTION,
-            ),
-            LD2410BLESensor(
-                data.coordinator,
-                data.device,
-                entry.title,
-                DETECTION_DISTANCE_DESCRIPTION,
-            ),
+                description,
+            )
+            for description in SENSOR_DESCRIPTIONS
         ]
     )
 
