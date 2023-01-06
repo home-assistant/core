@@ -203,12 +203,9 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                     entity_registry, config_entry_id
                 )
                 alternate_target = next(
-                    (
-                        entity.entity_id
-                        for entity in entries_for_this_config
-                        if "query" in entity.entity_id and address in entity.unique_id
-                    ),
-                    "",
+                    entity.entity_id
+                    for entity in entries_for_this_config
+                    if f"{address}_query" in entity.unique_id
                 )
                 async_log_deprecated_service_call(
                     hass,
