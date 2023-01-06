@@ -5,6 +5,8 @@
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
+            "invalid_host": "Ugyldig vertsnavn eller IP-adresse",
+            "timeout_connect": "Tidsavbrudd oppretter forbindelse",
             "unknown": "Uventet feil"
         },
         "step": {
