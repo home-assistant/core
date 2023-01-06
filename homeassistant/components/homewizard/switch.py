@@ -3,18 +3,16 @@ from __future__ import annotations
 
 from typing import Any
 
-from homewizard_energy.errors import DisabledError, RequestError
-
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import HWEnergyDeviceUpdateCoordinator
 from .entity import HomeWizardEntity
+from .helpers import homewizard_exception_handler
 
 
 async def async_setup_entry(
@@ -62,24 +60,16 @@ class HWEnergyMainSwitchEntity(HWEnergySwitchEntity):
         """Initialize the switch."""
         super().__init__(coordinator, entry, "power_on")
 
+    @homewizard_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self._async_set_power_on(True)
+        await self.coordinator.api.state_set(power_on=True)
+        await self.coordinator.async_refresh()
 
+    @homewizard_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self._async_set_power_on(False)
-
-    async def _async_set_power_on(self, power_on: bool) -> None:
-        """Set power state helper method."""
-        try:
-            await self.coordinator.api.state_set(power_on=power_on)
-        except RequestError as ex:
-            raise HomeAssistantError from ex
-        except DisabledError as ex:
-            await self.hass.config_entries.async_reload(self.coordinator.entry_id)
-            raise HomeAssistantError from ex
-
+        await self.coordinator.api.state_set(power_on=False)
         await self.coordinator.async_refresh()
 
     @property
@@ -115,24 +105,16 @@ class HWEnergySwitchLockEntity(HWEnergySwitchEntity):
         """Initialize the switch."""
         super().__init__(coordinator, entry, "switch_lock")
 
+    @homewizard_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch-lock on."""
-        await self._async_set_switch_lock(True)
+        await self.coordinator.api.state_set(switch_lock=True)
+        await self.coordinator.async_refresh()
 
+    @homewizard_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch-lock off."""
-        await self._async_set_switch_lock(False)
-
-    async def _async_set_switch_lock(self, switch_lock: bool) -> None:
-        """Set switck lock helper method."""
-        try:
-            await self.coordinator.api.state_set(switch_lock=switch_lock)
-        except RequestError as ex:
-            raise HomeAssistantError from ex
-        except DisabledError as ex:
-            await self.hass.config_entries.async_reload(self.coordinator.entry_id)
-            raise HomeAssistantError from ex
-
+        await self.coordinator.api.state_set(switch_lock=False)
         await self.coordinator.async_refresh()
 
     @property
@@ -164,24 +146,16 @@ class HWEnergyEnableCloudEntity(HWEnergySwitchEntity):
         self.hass = hass
         self.entry = entry
 
+    @homewizard_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn cloud connection on."""
-        await self._async_set_cloud_enabled(True)
+        await self.coordinator.api.system_set(cloud_enabled=True)
+        await self.coordinator.async_refresh()
 
+    @homewizard_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn cloud connection off."""
-        await self._async_set_cloud_enabled(False)
-
-    async def _async_set_cloud_enabled(self, cloud_enabled: bool) -> None:
-        """Set cloud enabled helper method."""
-        try:
-            await self.coordinator.api.system_set(cloud_enabled=cloud_enabled)
-        except RequestError as ex:
-            raise HomeAssistantError from ex
-        except DisabledError as ex:
-            await self.hass.config_entries.async_reload(self.coordinator.entry_id)
-            raise HomeAssistantError from ex
-
+        await self.coordinator.api.system_set(cloud_enabled=False)
         await self.coordinator.async_refresh()
 
     @property

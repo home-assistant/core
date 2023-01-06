@@ -3,19 +3,17 @@ from __future__ import annotations
 
 from typing import Optional, cast
 
-from homewizard_energy.errors import DisabledError, RequestError
-
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import HWEnergyDeviceUpdateCoordinator
 from .entity import HomeWizardEntity
+from .helpers import homewizard_exception_handler
 
 
 async def async_setup_entry(
@@ -51,16 +49,10 @@ class HWEnergyNumberEntity(HomeWizardEntity, NumberEntity):
         self._attr_native_unit_of_measurement = PERCENTAGE
         self._attr_icon = "mdi:lightbulb-on"
 
+    @homewizard_exception_handler
     async def async_set_native_value(self, value: float) -> None:
         """Set a new value."""
-        try:
-            await self.coordinator.api.state_set(brightness=value * (255 / 100))
-        except RequestError as ex:
-            raise HomeAssistantError from ex
-        except DisabledError as ex:
-            await self.hass.config_entries.async_reload(self.coordinator.entry_id)
-            raise HomeAssistantError from ex
-
+        await self.coordinator.api.state_set(brightness=value * (255 / 100))
         await self.coordinator.async_refresh()
 
     @property
