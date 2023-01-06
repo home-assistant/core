@@ -13,5 +13,33 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "line_status": {
+        "state": {
+          "no_defect": "No Defect",
+          "of_frame": "Of Frame",
+          "loss_of_signal": "Loss Of Signal",
+          "loss_of_power": "Loss Of Power",
+          "loss_of_signal_quality": "Loss Of Signal Quality",
+          "unknown": "Unknown"
+        }
+      },
+      "training": {
+        "state": {
+          "idle": "Idle",
+          "g_994_training": "G.994 Training",
+          "g_992_started": "G.992 Started",
+          "g_922_channel_analysis": "G.922 Channel Analysis",
+          "g_992_message_exchange": "G.992 Message Exchange",
+          "g_993_started": "G.993 Started",
+          "g_993_channel_analysis": "G.993 Channel Analysis",
+          "g_993_message_exchange": "G.993 Message Exchange",
+          "showtime": "Showtime",
+          "unknown": "Unknown"
+        }
+      }
+    }
   }
 }
