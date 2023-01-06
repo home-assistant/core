@@ -1,17 +1,17 @@
 {
-  "config": {
-    "abort": {
-      "already_configured": "Starlink terminal is already configured"
-    },
-    "error": {
-      "server_error": "Could not reach Starlink terminal."
-    },
-    "step": {
-      "user": {
-        "data": {
-          "ip_address": "IP Address"
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP Address"
+                }
+            }
         }
-      }
     }
-  }
 }
