@@ -8,6 +8,7 @@ from xiaomi_ble.parser import EncryptionScheme
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import (
+    DOMAIN as BLUETOOTH_DOMAIN,
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
     async_ble_device_from_address,
@@ -42,33 +43,7 @@ def process_service_info(
             sensor_device_info = update.devices[device_key.device_id]
             device = device_registry.async_get_or_create(
                 config_entry_id=entry.entry_id,
-                identifiers={(DOMAIN, address)},
-                manufacturer=sensor_device_info.manufacturer,
-                model=sensor_device_info.model,
-                name=sensor_device_info.name,
-                sw_version=sensor_device_info.sw_version,
-                hw_version=sensor_device_info.hw_version,
-            )
-
-            hass.bus.async_fire(
-                XIAOMI_BLE_EVENT,
-                dict(
-                    XiaomiBleEvent(
-                        device_id=device.id,
-                        address=address,
-                        event_type=event.event_type,
-                        event_properties=event.event_properties,
-                    )
-                ),
-            )
-
-    if update.events:
-        address = service_info.device.address
-        for device_key, event in update.events.items():
-            sensor_device_info = update.devices[device_key.device_id]
-            device = device_registry.async_get_or_create(
-                config_entry_id=entry.entry_id,
-                identifiers={(DOMAIN, address)},
+                identifiers={(BLUETOOTH_DOMAIN, address)},
                 manufacturer=sensor_device_info.manufacturer,
                 model=sensor_device_info.model,
                 name=sensor_device_info.name,

@@ -30,7 +30,6 @@ from .const import (
 
 MOTION_DEVICE_TRIGGERS = [
     {CONF_TYPE: "motion_detected", CONF_EVENT_PROPERTIES: None},
-    {CONF_TYPE: "motion_clear", CONF_EVENT_PROPERTIES: None},
 ]
 
 MOTION_DEVICE_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
