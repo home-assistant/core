@@ -40,7 +40,7 @@
     },
     "error": {
       "encryption_key_invalid": "Key ID or Encryption key is invalid",
-      "auth_failed": "Authentication failed"
+      "auth_failed": "Authentication failed: {error_detail}"
     },
     "abort": {
       "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",

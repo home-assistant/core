@@ -163,6 +163,12 @@ class UnifiDeviceUpdateEntity(UnifiEntity[HandlerT, DataT], UpdateEntity):
         description = self.entity_description
 
         obj = description.object_fn(self.controller.api, self._obj_id)
-        self._attr_in_progress = description.state_fn(self.controller.api, obj)
+        if (
+            in_progress := description.state_fn(self.controller.api, obj)
+        ) != self.in_progress:
+            self._attr_in_progress = in_progress
+            self._write_state = True
         self._attr_installed_version = obj.version
         self._attr_latest_version = obj.upgrade_to_firmware or obj.version
+        if self.installed_version != self.latest_version:
+            self._write_state = True

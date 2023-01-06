@@ -217,6 +217,7 @@ class UnifiSensorEntity(SensorEntity, Generic[_HandlerT, _DataT]):
         self.async_on_remove(
             handler.subscribe(
                 self.async_signalling_callback,
+                id_filter=self._obj_id,
             )
         )
         self.async_on_remove(
@@ -253,11 +254,19 @@ class UnifiSensorEntity(SensorEntity, Generic[_HandlerT, _DataT]):
             self.hass.async_create_task(self.remove_item({self._obj_id}))
             return
 
+        update_state = False
+
         obj = description.object_fn(self.controller.api, self._obj_id)
         if (value := description.value_fn(self.controller, obj)) != self.native_value:
             self._attr_native_value = value
-        self._attr_available = description.available_fn(self.controller, self._obj_id)
-        self.async_write_ha_state()
+            update_state = True
+        if (
+            available := description.available_fn(self.controller, self._obj_id)
+        ) != self.available:
+            self._attr_available = available
+            update_state = True
+        if update_state:
+            self.async_write_ha_state()
 
     @callback
     def async_signal_reachable_callback(self) -> None:

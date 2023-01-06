@@ -361,6 +361,7 @@ class UnifiSwitchEntity(SwitchEntity, Generic[_HandlerT, _DataT]):
         self.async_on_remove(
             handler.subscribe(
                 self.async_signalling_callback,
+                id_filter=self._obj_id,
             )
         )
         self.async_on_remove(
@@ -410,11 +411,20 @@ class UnifiSwitchEntity(SwitchEntity, Generic[_HandlerT, _DataT]):
             self.hass.async_create_task(self.remove_item({self._obj_id}))
             return
 
+        update_state = False
+
         if not description.only_event_for_state_change:
             obj = description.object_fn(self.controller.api, self._obj_id)
-            self._attr_is_on = description.is_on_fn(self.controller.api, obj)
-        self._attr_available = description.available_fn(self.controller, self._obj_id)
-        self.async_write_ha_state()
+            if (is_on := description.is_on_fn(self.controller.api, obj)) != self.is_on:
+                self._attr_is_on = is_on
+                update_state = True
+        if (
+            available := description.available_fn(self.controller, self._obj_id)
+        ) != self.available:
+            self._attr_available = available
+            update_state = True
+        if update_state:
+            self.async_write_ha_state()
 
     @callback
     def async_signal_reachable_callback(self) -> None:

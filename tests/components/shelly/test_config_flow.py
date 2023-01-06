@@ -1,6 +1,7 @@
 """Test the Shelly config flow."""
 from __future__ import annotations
 
+from dataclasses import replace
 from unittest.mock import AsyncMock, Mock, patch
 
 from aioshelly.exceptions import (
@@ -12,6 +13,7 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import zeroconf
+from homeassistant.components.shelly import config_flow
 from homeassistant.components.shelly.const import (
     CONF_BLE_SCANNER_MODE,
     DOMAIN,
@@ -702,6 +704,30 @@ async def test_zeroconf_already_configured(hass):
 
     # Test config entry got updated with latest IP
     assert entry.data["host"] == "1.1.1.1"
+
+
+async def test_zeroconf_with_wifi_ap_ip(hass):
+    """Test we ignore the Wi-FI AP IP."""
+
+    entry = MockConfigEntry(
+        domain="shelly", unique_id="test-mac", data={"host": "2.2.2.2"}
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "aioshelly.common.get_info",
+        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=replace(DISCOVERY_INFO, host=config_flow.INTERNAL_WIFI_AP_IP),
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+
+    # Test config entry was not updated with the wifi ap ip
+    assert entry.data["host"] == "2.2.2.2"
 
 
 async def test_zeroconf_firmware_unsupported(hass):
