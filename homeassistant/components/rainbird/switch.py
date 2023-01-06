@@ -13,7 +13,12 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_DURATION, DEFAULT_TRIGGER_TIME_MINUTES, DOMAIN
+from .const import (
+    ATTR_DURATION,
+    CONF_IMPORTED_NAMES,
+    DEFAULT_TRIGGER_TIME_MINUTES,
+    DOMAIN,
+)
 from .coordinator import RainbirdUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,6 +51,7 @@ async def async_setup_entry(
             coordinator,
             zone,
             config_entry.options.get(ATTR_DURATION, DEFAULT_TRIGGER_TIME_MINUTES),
+            config_entry.data.get(CONF_IMPORTED_NAMES, {}).get(zone),
         )
         for zone in coordinator.data.zones
     )
@@ -66,11 +72,15 @@ class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity)
         coordinator: RainbirdUpdateCoordinator,
         zone: int,
         duration_minutes: int,
+        imported_name: str | None,
     ) -> None:
         """Initialize a Rain Bird Switch Device."""
         super().__init__(coordinator)
         self._zone = zone
-        self._attr_name = f"Sprinkler {zone}"
+        if imported_name:
+            self._attr_name = imported_name
+        else:
+            self._attr_name = f"Sprinkler {zone}"
         self._state = None
         self._duration_minutes = duration_minutes
         self._attr_unique_id = f"{coordinator.serial_number}-{zone}"
