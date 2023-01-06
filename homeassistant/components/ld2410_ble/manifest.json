@@ -3,7 +3,7 @@
   "name": "LD2410 BLE",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ld2410_ble/",
-  "requirements": ["bluetooth-data-tools==0.3.0", "ld2410-ble==0.1.1"],
+  "requirements": ["bluetooth-data-tools==0.3.1", "ld2410-ble==0.1.1"],
   "dependencies": ["bluetooth"],
   "codeowners": ["@930913"],
   "bluetooth": [{ "local_name": "HLK-LD2410B_*" }],
