@@ -8,7 +8,6 @@ import async_timeout
 import axis
 from axis.configuration import Configuration
 from axis.errors import Unauthorized
-from axis.event_stream import OPERATION_INITIALIZED
 from axis.stream_manager import Signal, State
 from axis.vapix.interfaces.mqtt import mqtt_json_to_event
 
@@ -153,12 +152,6 @@ class AxisNetworkDevice:
             self.available = not self.available
             async_dispatcher_send(self.hass, self.signal_reachable, True)
 
-    @callback
-    def async_event_callback(self, action, event_id):
-        """Call to configure events when initialized on event stream."""
-        if action == OPERATION_INITIALIZED:
-            async_dispatcher_send(self.hass, self.signal_new_event, event_id)
-
     @staticmethod
     async def async_new_address_callback(
         hass: HomeAssistant, entry: ConfigEntry
@@ -208,7 +201,7 @@ class AxisNetworkDevice:
         self.disconnect_from_stream()
 
         event = mqtt_json_to_event(message.payload)
-        self.api.event.update([event])
+        self.api.event.handler(event)
 
     # Setup and teardown methods
 
@@ -219,7 +212,7 @@ class AxisNetworkDevice:
             self.api.stream.connection_status_callback.append(
                 self.async_connection_status_callback
             )
-            self.api.enable_events(event_callback=self.async_event_callback)
+            self.api.enable_events()
             self.api.stream.start()
 
             if self.api.vapix.mqtt:

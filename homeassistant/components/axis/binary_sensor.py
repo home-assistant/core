@@ -3,17 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from axis.event_stream import (
-    AxisBinaryEvent,
-    AxisEvent,
-    EventGroup,
-    EventTopic,
-    FenceGuard,
-    LoiteringGuard,
-    MotionGuard,
-    ObjectAnalytics,
-    Vmd4,
-)
+from axis.models.event import Event, EventGroup, EventOperation, EventTopic
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -21,7 +11,6 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
@@ -37,6 +26,21 @@ DEVICE_CLASS = {
     EventGroup.SOUND: BinarySensorDeviceClass.SOUND,
 }
 
+EVENT_TOPICS = (
+    EventTopic.DAY_NIGHT_VISION,
+    EventTopic.FENCE_GUARD,
+    EventTopic.LOITERING_GUARD,
+    EventTopic.MOTION_DETECTION,
+    EventTopic.MOTION_DETECTION_3,
+    EventTopic.MOTION_DETECTION_4,
+    EventTopic.MOTION_GUARD,
+    EventTopic.OBJECT_ANALYTICS,
+    EventTopic.PIR,
+    EventTopic.PORT_INPUT,
+    EventTopic.PORT_SUPERVISED_INPUT,
+    EventTopic.SOUND_TRIGGER_LEVEL,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -47,26 +51,21 @@ async def async_setup_entry(
     device: AxisNetworkDevice = hass.data[AXIS_DOMAIN][config_entry.unique_id]
 
     @callback
-    def async_add_sensor(event_id):
-        """Add binary sensor from Axis device."""
-        event: AxisEvent = device.api.event[event_id]
+    def async_create_entity(event: Event) -> None:
+        """Create Axis binary sensor entity."""
+        async_add_entities([AxisBinarySensor(event, device)])
 
-        if event.group not in (EventGroup.OUTPUT, EventGroup.PTZ) and not (
-            event.topic_base == EventTopic.LIGHT_STATUS
-        ):
-            async_add_entities([AxisBinarySensor(event, device)])
-
-    config_entry.async_on_unload(
-        async_dispatcher_connect(hass, device.signal_new_event, async_add_sensor)
+    device.api.event.subscribe(
+        async_create_entity,
+        topic_filter=EVENT_TOPICS,
+        operation_filter=EventOperation.INITIALIZED,
     )
 
 
 class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
     """Representation of a binary Axis event."""
 
-    event: AxisBinaryEvent
-
-    def __init__(self, event: AxisEvent, device: AxisNetworkDevice) -> None:
+    def __init__(self, event: Event, device: AxisNetworkDevice) -> None:
         """Initialize the Axis binary sensor."""
         super().__init__(event, device)
         self.cancel_scheduled_update = None
@@ -114,15 +113,16 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
 
         if self.event.group == EventGroup.MOTION:
 
-            for event_class, event_data in (
-                (FenceGuard, self.device.api.vapix.fence_guard),
-                (LoiteringGuard, self.device.api.vapix.loitering_guard),
-                (MotionGuard, self.device.api.vapix.motion_guard),
-                (ObjectAnalytics, self.device.api.vapix.object_analytics),
-                (Vmd4, self.device.api.vapix.vmd4),
+            for event_topic, event_data in (
+                (EventTopic.FENCE_GUARD, self.device.api.vapix.fence_guard),
+                (EventTopic.LOITERING_GUARD, self.device.api.vapix.loitering_guard),
+                (EventTopic.MOTION_GUARD, self.device.api.vapix.motion_guard),
+                (EventTopic.OBJECT_ANALYTICS, self.device.api.vapix.object_analytics),
+                (EventTopic.MOTION_DETECTION_4, self.device.api.vapix.vmd4),
             ):
+
                 if (
-                    isinstance(self.event, event_class)
+                    self.event.topic_base == event_topic
                     and event_data
                     and self.event.id in event_data
                 ):

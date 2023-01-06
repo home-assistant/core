@@ -1,12 +1,11 @@
 """Support for Axis lights."""
 from typing import Any
 
-from axis.event_stream import AxisBinaryEvent, AxisEvent, EventTopic
+from axis.models.event import Event, EventOperation, EventTopic
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .axis_base import AxisEventBase
@@ -29,15 +28,14 @@ async def async_setup_entry(
         return
 
     @callback
-    def async_add_sensor(event_id):
-        """Add light from Axis device."""
-        event: AxisEvent = device.api.event[event_id]
+    def async_create_entity(event: Event) -> None:
+        """Create Axis light entity."""
+        async_add_entities([AxisLight(event, device)])
 
-        if event.topic_base == EventTopic.LIGHT_STATUS:
-            async_add_entities([AxisLight(event, device)])
-
-    config_entry.async_on_unload(
-        async_dispatcher_connect(hass, device.signal_new_event, async_add_sensor)
+    device.api.event.subscribe(
+        async_create_entity,
+        topic_filter=EventTopic.LIGHT_STATUS,
+        operation_filter=EventOperation.INITIALIZED,
     )
 
 
@@ -45,9 +43,8 @@ class AxisLight(AxisEventBase, LightEntity):
     """Representation of a light Axis event."""
 
     _attr_should_poll = True
-    event: AxisBinaryEvent
 
-    def __init__(self, event: AxisEvent, device: AxisNetworkDevice) -> None:
+    def __init__(self, event: Event, device: AxisNetworkDevice) -> None:
         """Initialize the Axis light."""
         super().__init__(event, device)
 
