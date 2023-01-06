@@ -1,7 +1,9 @@
 """Support for ReCollect Waste sensors."""
 from __future__ import annotations
 
-from aiorecollect.client import PickupEvent, PickupType
+from datetime import date
+
+from aiorecollect.client import PickupEvent
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -9,13 +11,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, LOGGER
 from .entity import ReCollectWasteEntity
+from .util import async_get_pickup_type_names
 
 ATTR_PICKUP_TYPES = "pickup_types"
 ATTR_AREA_NAME = "area_name"
@@ -33,19 +35,6 @@ SENSOR_DESCRIPTIONS = (
         name="Next pickup",
     ),
 )
-
-
-@callback
-def async_get_pickup_type_names(
-    entry: ConfigEntry, pickup_types: list[PickupType]
-) -> list[str]:
-    """Return proper pickup type names from their associated objects."""
-    return [
-        t.friendly_name
-        if entry.options.get(CONF_FRIENDLY_NAME) and t.friendly_name
-        else t.name
-        for t in pickup_types
-    ]
 
 
 async def async_setup_entry(
@@ -80,27 +69,39 @@ class ReCollectWasteSensor(ReCollectWasteEntity, SensorEntity):
         self.entity_description = description
 
     @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        if self.entity_description.key == SENSOR_TYPE_CURRENT_PICKUP:
-            try:
-                event = self.coordinator.data[0]
-            except IndexError:
-                LOGGER.error("No current pickup found")
-                return
-        else:
-            try:
-                event = self.coordinator.data[1]
-            except IndexError:
-                LOGGER.info("No next pickup found")
-                return
-
+    def _async_write_state_from_event(self, event: PickupEvent) -> None:
+        """Write the entity state from a pickup event."""
+        pickup_types = async_get_pickup_type_names(self._entry, event.pickup_types)
         self._attr_extra_state_attributes.update(
             {
-                ATTR_PICKUP_TYPES: async_get_pickup_type_names(
-                    self._entry, event.pickup_types
-                ),
                 ATTR_AREA_NAME: event.area_name,
+                ATTR_PICKUP_TYPES: pickup_types,
             }
         )
         self._attr_native_value = event.date
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        try:
+            current_event = next(
+                event for event in self.coordinator.data if event.date >= date.today()
+            )
+        except StopIteration:
+            LOGGER.error("No current pickup found")
+            return
+
+        if self.entity_description.key == SENSOR_TYPE_CURRENT_PICKUP:
+            self._async_write_state_from_event(current_event)
+        else:
+            try:
+                next_event = next(
+                    event
+                    for event in self.coordinator.data
+                    if event.date > current_event.date
+                )
+            except StopIteration:
+                LOGGER.info("No next pickup found")
+                return
+
+            self._async_write_state_from_event(next_event)
