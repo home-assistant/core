@@ -238,7 +238,11 @@ class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
         """Serve album art. Returns (content, content_type)."""
         if media_content_type == MediaType.APP and media_content_id:
             if icon := self.coordinator.source_map[media_content_id].get("icon"):
-                return await self._async_fetch_image(icon)
+                (content, content_type) = await self._async_fetch_image(icon)
+                if content_type:
+                    # Fix invalid Bravia Content-Type header
+                    content_type = content_type.replace("Content-Type: ", "")
+                return (content, content_type)
         return None, None
 
     async def async_play_media(
