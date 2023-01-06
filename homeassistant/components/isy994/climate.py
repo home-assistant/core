@@ -19,7 +19,6 @@ from pyisy.nodes import Node
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    DOMAIN as CLIMATE,
     FAN_AUTO,
     FAN_OFF,
     FAN_ON,
@@ -29,7 +28,12 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    PRECISION_TENTHS,
+    Platform,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -60,10 +64,10 @@ async def async_setup_entry(
     entities = []
 
     hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
-    for node in hass_isy_data[ISY994_NODES][CLIMATE]:
+    for node in hass_isy_data[ISY994_NODES][Platform.CLIMATE]:
         entities.append(ISYThermostatEntity(node))
 
-    await migrate_old_unique_ids(hass, CLIMATE, entities)
+    await migrate_old_unique_ids(hass, Platform.CLIMATE, entities)
     async_add_entities(entities)
 
 
