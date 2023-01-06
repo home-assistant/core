@@ -361,6 +361,7 @@ class UnifiSwitchEntity(SwitchEntity, Generic[_HandlerT, _DataT]):
         self.async_on_remove(
             handler.subscribe(
                 self.async_signalling_callback,
+                id_filter=self._obj_id,
             )
         )
         self.async_on_remove(
