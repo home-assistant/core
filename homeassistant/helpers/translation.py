@@ -311,6 +311,6 @@ async def async_get_translations(
         cached = await cache.async_fetch(language, category, components)
 
     result = {}
-    while cached:
-        result.update(cached.pop())
+    for entry in cached:
+        result.update(entry)
     return result
