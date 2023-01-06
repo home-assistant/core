@@ -51,7 +51,7 @@ async def async_setup_entry(
             coordinator,
             zone,
             config_entry.options.get(ATTR_DURATION, DEFAULT_TRIGGER_TIME_MINUTES),
-            config_entry.data.get(CONF_IMPORTED_NAMES, {}).get(zone),
+            config_entry.data.get(CONF_IMPORTED_NAMES, {}).get(str(zone)),
         )
         for zone in coordinator.data.zones
     )

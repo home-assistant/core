@@ -137,10 +137,10 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_PASSWORD: config[CONF_PASSWORD],
             CONF_SERIAL_NUMBER: serial_number,
         }
-        names: dict[int, str] = {}
+        names: dict[str, str] = {}
         for (zone, zone_config) in config.get(CONF_ZONES, {}).items():
             if name := zone_config.get(CONF_FRIENDLY_NAME):
-                names[int(zone)] = name
+                names[str(zone)] = name
         if names:
             data[CONF_IMPORTED_NAMES] = names
         return await self.async_finish(
