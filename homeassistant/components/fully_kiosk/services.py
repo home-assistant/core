@@ -49,7 +49,9 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             if device:
                 for key in device.config_entries:
                     entry = hass.config_entries.async_get_entry(key)
-                    if entry and entry.domain != DOMAIN:
+                    if not entry:
+                        continue
+                    if entry.domain != DOMAIN:
                         continue
                     coordinator = hass.data[DOMAIN][key]
                     # fully_method(coordinator.fully, *args, **kwargs) would make
