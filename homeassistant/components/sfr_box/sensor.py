@@ -22,6 +22,28 @@ from .const import DOMAIN
 from .coordinator import SFRDataUpdateCoordinator
 from .models import DomainData
 
+DSL_LINE_STATUS_ENUM_MAPPING = {
+    "No Defect": "no_defect",
+    "Of Frame": "of_frame",
+    "Loss Of Signal": "loss_of_signal",
+    "Loss Of Power": "loss_of_power",
+    "Loss Of Signal Quality": "loss_of_signal_quality",
+    "Unknown": "unknown",
+}
+
+DSL_TRAINING_ENUM_MAPPING = {
+    "Idle": "idle",
+    "G.994 Training": "g_994_training",
+    "G.992 Started": "g_992_started",
+    "G.922 Channel Analysis": "g_922_channel_analysis",
+    "G.992 Message Exchange": "g_992_message_exchange",
+    "G.993 Started": "g_993_started",
+    "G.993 Channel Analysis": "g_993_channel_analysis",
+    "G.993 Message Exchange": "g_993_message_exchange",
+    "Showtime": "showtime",
+    "Unknown": "unknown",
+}
+
 
 @dataclass
 class SFRBoxSensorMixin:
@@ -119,16 +141,9 @@ SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        options=[
-            "no_defect",
-            "of_frame",
-            "loss_of_signal",
-            "loss_of_power",
-            "loss_of_signal_quality",
-            "unknown",
-        ],
+        options=[*DSL_LINE_STATUS_ENUM_MAPPING.values()],
         translation_key="line_status",
-        value_fn=lambda x: x.line_status.lower().replace(" ", "_"),
+        value_fn=lambda x: DSL_LINE_STATUS_ENUM_MAPPING[x.line_status],
     ),
     SFRBoxSensorEntityDescription(
         key="training",
@@ -136,20 +151,9 @@ SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        options=[
-            "idle",
-            "g_994_training",
-            "g_992_started",
-            "g_922_channel_analysis",
-            "g_992_message_exchange",
-            "g_993_started",
-            "g_993_channel_analysis",
-            "g_993_message_exchange",
-            "showtime",
-            "unknown",
-        ],
+        options=[*DSL_TRAINING_ENUM_MAPPING.values()],
         translation_key="training",
-        value_fn=lambda x: x.training.lower().replace(" ", "_").replace(".", "_"),
+        value_fn=lambda x: DSL_TRAINING_ENUM_MAPPING[x.training],
     ),
 )
 
