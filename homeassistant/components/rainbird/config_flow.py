@@ -15,12 +15,14 @@ from pyrainbird.async_client import (
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import selector
+from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, TIMEOUT_SECONDS
+from .const import ATTR_DURATION, DOMAIN, TIMEOUT_SECONDS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +39,14 @@ DATA_SCHEMA = vol.Schema(
 
 class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Rain Bird."""
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> RainBirdOptionsFlowHandler:
+        """Define the config flow to handle options."""
+        return RainBirdOptionsFlowHandler(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -97,7 +107,10 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_finish(serial_number, config)
 
     async def async_finish(
-        self, serial_number: str, data: dict[str, Any]
+        self,
+        serial_number: str,
+        data: dict[str, Any],
+        options: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Create the config entry."""
         await self.async_set_unique_id(serial_number)
@@ -105,4 +118,34 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=data[CONF_HOST],
             data=data,
+            options=options,
+        )
+
+
+class RainBirdOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a RainBird options flow."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize RainBirdOptionsFlowHandler."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        ATTR_DURATION,
+                        default=self.config_entry.options.get(
+                            ATTR_DURATION,
+                        ),
+                    ): cv.positive_int,
+                }
+            ),
         )

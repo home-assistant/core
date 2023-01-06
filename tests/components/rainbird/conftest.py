@@ -51,7 +51,9 @@ CONFIG = {
     DOMAIN: {
         "host": HOST,
         "password": PASSWORD,
-        "trigger_time": 360,
+        "trigger_time": {
+            "minutes": 6,
+        },
     }
 }
 
@@ -102,6 +104,7 @@ async def setup_config_entry(
     hass: HomeAssistant, config_entry: MockConfigEntry | None
 ) -> None:
     """Fixture to set up the config entry."""
+    print("setup_config_entry")
     if config_entry:
         config_entry.add_to_hass(hass)
 

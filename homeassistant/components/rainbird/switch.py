@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from pyrainbird import AvailableStations
 from pyrainbird.async_client import AsyncRainbirdController, RainbirdApiException
@@ -11,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, CONF_FRIENDLY_NAME, CONF_TRIGGER_TIME
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -21,8 +20,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_DURATION,
-    CONF_ZONES,
-    DEFAULT_TRIGGER_TIME,
+    DEFAULT_TRIGGER_TIME_MINUTES,
     DEVICE_INFO,
     DOMAIN,
     RAINBIRD_CONTROLLER,
@@ -70,25 +68,16 @@ async def async_setup_entry(
     )
     await coordinator.async_config_entry_first_refresh()
 
-    config: dict[int | str, Any] = {
-        **config_entry.data,  # type: ignore[list-item]
-    }
-
     devices = []
     for zone in range(1, available_stations.stations.count + 1):
         if not available_stations.stations.active(zone):
             continue
-        zone_config = config.get(CONF_ZONES, {}).get(zone, {})
         devices.append(
             RainBirdSwitch(
                 coordinator,
                 controller,
                 zone,
-                zone_config.get(
-                    CONF_TRIGGER_TIME,
-                    config.get(CONF_TRIGGER_TIME, DEFAULT_TRIGGER_TIME),
-                ),
-                zone_config.get(CONF_FRIENDLY_NAME, f"Sprinkler {zone}"),
+                config_entry.options.get(ATTR_DURATION, DEFAULT_TRIGGER_TIME_MINUTES),
                 data[SERIAL_NUMBER],
                 data[DEVICE_INFO],
             )
@@ -114,8 +103,7 @@ class RainBirdSwitch(
         coordinator: RainbirdUpdateCoordinator[States],
         rainbird: AsyncRainbirdController,
         zone: int,
-        time: int,
-        name: str,
+        duration_minutes: int,
         serial_number: str,
         device_info: DeviceInfo,
     ) -> None:
@@ -123,10 +111,10 @@ class RainBirdSwitch(
         super().__init__(coordinator)
         self._rainbird = rainbird
         self._zone = zone
-        self._name = name
+        self._name = f"Sprinkler {zone}"
         self._state = None
-        self._duration = time
-        self._attributes = {ATTR_DURATION: self._duration, "zone": self._zone}
+        self._duration_minutes = duration_minutes
+        self._attributes = {"zone": self._zone}
         self._attr_unique_id = f"{serial_number}-{zone}"
         self._attr_device_info = device_info
 
@@ -144,7 +132,7 @@ class RainBirdSwitch(
         """Turn the switch on."""
         await self._rainbird.irrigate_zone(
             int(self._zone),
-            int(kwargs[ATTR_DURATION] if ATTR_DURATION in kwargs else self._duration),
+            int(kwargs.get(ATTR_DURATION, self._duration_minutes)),
         )
         await self.coordinator.async_request_refresh()
 

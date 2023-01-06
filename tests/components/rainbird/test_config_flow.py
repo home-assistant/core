@@ -9,9 +9,11 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.rainbird import DOMAIN
+from homeassistant.components.rainbird.const import ATTR_DURATION
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import FlowResult, FlowResultType
 
 from .conftest import CONFIG_ENTRY_DATA, HOST, PASSWORD, URL
 
@@ -19,7 +21,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockRespon
 
 
 @pytest.fixture(autouse=True)
-async def setup_config_entry() -> None:
+async def config_entry_data() -> None:
     """Fixture to disable config entry setup for exercising config flow."""
     return None
 
@@ -40,7 +42,7 @@ async def complete_flow(hass: HomeAssistant) -> FlowResult:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == "form"
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == "user"
     assert not result.get("errors")
     assert "flow_id" in result
@@ -59,6 +61,7 @@ async def test_controller_flow(hass: HomeAssistant, mock_setup: Mock) -> None:
     assert result.get("title") == HOST
     assert "result" in result
     assert result["result"].data == CONFIG_ENTRY_DATA
+    assert result["result"].options == {}
 
     assert len(mock_setup.mock_calls) == 1
 
@@ -78,7 +81,7 @@ async def test_controller_cannot_connect(
     )
 
     result = await complete_flow(hass)
-    assert result.get("type") == "form"
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == "user"
     assert result.get("errors") == {"base": "cannot_connect"}
 
@@ -96,8 +99,38 @@ async def test_controller_timeout(
         side_effect=asyncio.TimeoutError,
     ):
         result = await complete_flow(hass)
-        assert result.get("type") == "form"
+        assert result.get("type") == FlowResultType.FORM
         assert result.get("step_id") == "user"
         assert result.get("errors") == {"base": "timeout_connect"}
 
     assert not mock_setup.mock_calls
+
+
+async def test_options_flow(hass: HomeAssistant, mock_setup: Mock) -> None:
+    """Test config flow options."""
+
+    # Setup config flow
+    result = await complete_flow(hass)
+    assert result.get("type") == "create_entry"
+    assert result.get("title") == HOST
+    assert "result" in result
+    assert result["result"].data == CONFIG_ENTRY_DATA
+    assert result["result"].options == {}
+
+    # Assert single config entry is loaded
+    config_entry = next(iter(hass.config_entries.async_entries(DOMAIN)))
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    # Initiate the options flow
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("step_id") == "init"
+
+    # Change the default duration
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={ATTR_DURATION: 300}
+    )
+    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {
+        ATTR_DURATION: 300,
+    }
