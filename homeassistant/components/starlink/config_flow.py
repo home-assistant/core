@@ -36,7 +36,7 @@ class StarlinkConfigFlow(ConfigFlow, domain=DOMAIN):
                     title="Starlink",
                     data=user_input,
                 )
-            errors[CONF_IP_ADDRESS] = "server_error"
+            errors[CONF_IP_ADDRESS] = "cannot_connect"
         return self.async_show_form(
             step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
         )
