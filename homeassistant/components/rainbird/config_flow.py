@@ -37,6 +37,15 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
+class ConfigFlowError(Exception):
+    """Error raised during a config flow."""
+
+    def __init__(self, message: str, error_code: str) -> None:
+        """Initialize ConfigFlowError."""
+        super().__init__(message)
+        self.error_code = error_code
+
+
 class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Rain Bird."""
 
@@ -53,18 +62,14 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Configure the Rain Bird device."""
         error_code: str | None = None
-        _LOGGER.debug("async_step_user=%s", user_input)
         if user_input:
             try:
                 serial_number = await self._test_connection(
                     user_input[CONF_HOST], user_input[CONF_PASSWORD]
                 )
-            except asyncio.TimeoutError as exc:
-                _LOGGER.error("Timeout connecting to Rain Bird controller: %s", exc)
-                error_code = "timeout_connect"
-            except RainbirdApiException as exc:
-                _LOGGER.error("Error connecting to Rain Bird controller: %s", exc)
-                error_code = "cannot_connect"
+            except ConfigFlowError as err:
+                _LOGGER.error("Error during config flow: %s", err)
+                error_code = err.error_code
             else:
                 return await self.async_finish(serial_number, user_input)
 
@@ -77,7 +82,7 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def _test_connection(self, host: str, password: str) -> str:
         """Test the connection and return the device serial number.
 
-        Raises a TimeoutError or RainbirdApiException on failure.
+        Raises a ConfigFlowError on failure.
         """
         controller = AsyncRainbirdController(
             AsyncRainbirdClient(
@@ -86,8 +91,19 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 password,
             )
         )
-        async with async_timeout.timeout(TIMEOUT_SECONDS):
-            return await controller.get_serial_number()
+        try:
+            async with async_timeout.timeout(TIMEOUT_SECONDS):
+                return await controller.get_serial_number()
+        except asyncio.TimeoutError as err:
+            raise ConfigFlowError(
+                f"Timeout connecting to Rain Bird controller: {str(err)}",
+                "timeout_connect",
+            ) from err
+        except RainbirdApiException as err:
+            raise ConfigFlowError(
+                f"Error connecting to Rain Bird controller: {str(err)}",
+                "cannot_connect",
+            ) from err
 
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Import a config entry from configuration.yaml."""
@@ -98,12 +114,9 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             serial_number = await self._test_connection(
                 config[CONF_HOST], config[CONF_PASSWORD]
             )
-        except asyncio.TimeoutError as exc:
-            _LOGGER.error("Timeout connecting to Rain Bird controller: %s", exc)
-            return self.async_abort(reason="timeout_connect")
-        except RainbirdApiException as exc:
-            _LOGGER.error("Error connecting to Rain Bird controller: %s", exc)
-            return self.async_abort(reason="cannot_connect")
+        except ConfigFlowError as err:
+            _LOGGER.error("Error during config import: %s", err)
+            return self.async_abort(reason=err.error_code)
         return await self.async_finish(serial_number, config)
 
     async def async_finish(

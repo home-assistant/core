@@ -29,8 +29,13 @@ from .conftest import (
                 mock_response(SERIAL_RESPONSE),
             ],
         ),
+        (
+            CONFIG,
+            CONFIG_ENTRY_DATA,
+            [mock_response(SERIAL_RESPONSE), mock_response(SERIAL_RESPONSE)],
+        ),
     ],
-    ids=["config_entry", "yaml"],
+    ids=["config_entry", "yaml", "already_exists"],
 )
 async def test_init_success(
     hass: HomeAssistant,
