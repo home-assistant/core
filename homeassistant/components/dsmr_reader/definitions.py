@@ -560,8 +560,8 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
     DSMRReaderSensorEntityDescription(
         key="dsmr/consumption/quarter-hour-peak-electricity/average_delivered",
         name="Previous quarter-hour peak usage",
-        device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/consumption/quarter-hour-peak-electricity/read_at_start",
