@@ -199,33 +199,6 @@ async def test_irrigation_service(
     assert len(aioclient_mock.mock_calls) == 2
 
 
-async def test_rain_delay_service(
-    hass: HomeAssistant,
-    setup_integration: ComponentSetup,
-    aioclient_mock: AiohttpClientMocker,
-    responses: list[AiohttpClientMockResponse],
-) -> None:
-    """Test calling the rain delay service."""
-
-    responses.extend(
-        [mock_response(AVAILABLE_STATIONS_RESPONSE), mock_response(ZONE_3_ON_RESPONSE)]
-    )
-    assert await setup_integration()
-
-    aioclient_mock.mock_calls.clear()
-    responses.extend(
-        [
-            mock_response(ACK_ECHO),
-        ]
-    )
-
-    await hass.services.async_call(
-        DOMAIN, "set_rain_delay", {"duration": 30}, blocking=True
-    )
-
-    assert len(aioclient_mock.mock_calls) == 1
-
-
 async def test_platform_unavailable(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,

@@ -3,23 +3,43 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 import datetime
 import logging
 from typing import TypeVar
 
 import async_timeout
-from pyrainbird.async_client import RainbirdApiException
+from pyrainbird.async_client import AsyncRainbirdController, RainbirdApiException
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import TIMEOUT_SECONDS
+from .const import DOMAIN, TIMEOUT_SECONDS
 
 UPDATE_INTERVAL = datetime.timedelta(minutes=1)
+MANUFACTURER = "Rain Bird"
 
 _LOGGER = logging.getLogger(__name__)
 
 _T = TypeVar("_T")
+
+
+@dataclass
+class ConfigData:
+    """Global data used by a config entry."""
+
+    serial_number: str
+    controller: AsyncRainbirdController
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Information about the device for this config."""
+        return DeviceInfo(
+            default_name=MANUFACTURER,
+            identifiers={(DOMAIN, self.serial_number)},
+            manufacturer=MANUFACTURER,
+        )
 
 
 class RainbirdUpdateCoordinator(DataUpdateCoordinator[_T]):

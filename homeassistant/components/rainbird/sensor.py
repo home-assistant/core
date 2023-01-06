@@ -1,7 +1,6 @@
 """Support for Rain Bird Irrigation system LNK WiFi Module."""
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Union
 
@@ -10,34 +9,19 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import SENSOR_TYPE_RAINDELAY, SENSOR_TYPE_RAINSENSOR
+from .const import DOMAIN, SENSOR_TYPE_RAINDELAY
 from .coordinator import RainbirdUpdateCoordinator
-
-from .const import (
-    DEVICE_INFO,
-    DOMAIN,
-    SENSOR_TYPE_RAINDELAY,
-    SENSOR_TYPE_RAINSENSOR,
-    SERIAL_NUMBER,
-)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
-        key=SENSOR_TYPE_RAINSENSOR,
-        name="Rainsensor",
-        icon="mdi:water",
-    ),
-    SensorEntityDescription(
-        key=SENSOR_TYPE_RAINDELAY,
-        name="Raindelay",
-        icon="mdi:water-off",
-    ),
+RAIN_DELAY_ENTITY_DESCRIPTION = SensorEntityDescription(
+    key=SENSOR_TYPE_RAINDELAY,
+    name="Raindelay",
+    icon="mdi:water-off",
 )
 
 
@@ -48,17 +32,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry for a Rain Bird sensor."""
     data = hass.data[DOMAIN][config_entry.entry_id]
-    await asyncio.gather(
-        *[
-            data[description.key].async_config_entry_first_refresh()
-            for description in SENSOR_TYPES
-        ],
+    coordinator = RainbirdUpdateCoordinator(
+        hass, "Rain delay", data.controller.get_rain_delay
     )
-    async_add_devices(
-        RainBirdSensor(
-            data[description.key], description, data[SERIAL_NUMBER], data[DEVICE_INFO]
-        )
-        for description in SENSOR_TYPES
+    await coordinator.async_config_entry_first_refresh()
+    async_add_entities(
+        [
+            RainBirdSensor(
+                coordinator,
+                RAIN_DELAY_ENTITY_DESCRIPTION,
+                data.serial_number,
+                data.device_info,
+            )
+        ]
     )
 
 

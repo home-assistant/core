@@ -12,8 +12,9 @@ from pyrainbird.async_client import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryState
 from homeassistant.const import (
+    ATTR_DEVICE_ID,
     CONF_FRIENDLY_NAME,
     CONF_HOST,
     CONF_PASSWORD,
@@ -21,25 +22,15 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.service import async_extract_config_entry_ids
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    ATTR_DURATION,
-    CONF_ZONES,
-    DEVICE_INFO,
-    MANUFACTURER,
-    RAINBIRD_CONTROLLER,
-    SENSOR_TYPE_RAINDELAY,
-    SENSOR_TYPE_RAINSENSOR,
-    SERIAL_NUMBER,
-    TIMEOUT_SECONDS,
-)
-from .coordinator import RainbirdUpdateCoordinator
+from .const import ATTR_DURATION, CONF_ZONES, TIMEOUT_SECONDS
+from .coordinator import ConfigData
 
 PLATFORMS = [Platform.SWITCH, Platform.SENSOR, Platform.BINARY_SENSOR]
 
@@ -71,10 +62,14 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 SERVICE_SET_RAIN_DELAY = "set_rain_delay"
-SERVICE_SCHEMA_RAIN_DELAY = vol.Schema(
-    {
-        vol.Required(ATTR_DURATION): cv.positive_float,
-    }
+SERVICE_SCHEMA_RAIN_DELAY = vol.All(
+    vol.Schema(
+        {
+            **cv.TARGET_SERVICE_FIELDS,
+            vol.Required(ATTR_DURATION): cv.positive_float,
+        }
+    ),
+    cv.has_at_least_one_key(ATTR_DEVICE_ID),
 )
 
 
@@ -123,30 +118,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (RainbirdApiException, asyncio.TimeoutError) as err:
         raise ConfigEntryNotReady(f"Error talking to controller: {str(err)}") from err
 
-    device_info = DeviceInfo(
-        default_name=MANUFACTURER,
-        identifiers={(DOMAIN, serial_number)},
-        manufacturer=MANUFACTURER,
-    )
-    rain_coordinator = RainbirdUpdateCoordinator(
-        hass, "Rain", controller.get_rain_sensor_state
-    )
-    delay_coordinator = RainbirdUpdateCoordinator(
-        hass, "Rain delay", controller.get_rain_delay
-    )
-
-    hass.data[DOMAIN][entry.entry_id] = {
-        SERIAL_NUMBER: serial_number,
-        DEVICE_INFO: device_info,
-        RAINBIRD_CONTROLLER: controller,
-        SENSOR_TYPE_RAINSENSOR: rain_coordinator,
-        SENSOR_TYPE_RAINDELAY: delay_coordinator,
-    }
+    hass.data[DOMAIN][entry.entry_id] = ConfigData(serial_number, controller)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    async def set_rain_delay(service: ServiceCall) -> None:
-        await controller.set_rain_delay(service.data[ATTR_DURATION])
+    async def set_rain_delay(call: ServiceCall) -> None:
+        """Service call to delay automatic irrigigation."""
+        duration = call.data[ATTR_DURATION]
+        entry_ids = await async_extract_config_entry_ids(hass, call)
+        if not entry_ids:
+            raise HomeAssistantError("Device id did not match any devices")
+        await asyncio.gather(
+            *(
+                hass.data[DOMAIN][entry_id].controller.set_rain_delay(duration)
+                for entry_id in entry_ids
+            )
+        )
 
     hass.services.async_register(
         DOMAIN,
@@ -164,7 +151,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
 
-    if unload_ok and not hass.data[DOMAIN]:
+    loaded_entries = [
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.state == ConfigEntryState.LOADED
+    ]
+    if len(loaded_entries) == 1:
         hass.services.async_remove(DOMAIN, SERVICE_SET_RAIN_DELAY)
 
     return unload_ok

@@ -18,14 +18,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    ATTR_DURATION,
-    DEFAULT_TRIGGER_TIME_MINUTES,
-    DEVICE_INFO,
-    DOMAIN,
-    RAINBIRD_CONTROLLER,
-    SERIAL_NUMBER,
-)
+from .const import ATTR_DURATION, DEFAULT_TRIGGER_TIME_MINUTES, DOMAIN
 from .coordinator import RainbirdUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,10 +46,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry for a Rain Bird irrigation switches."""
     data = hass.data[DOMAIN][config_entry.entry_id]
-    controller: AsyncRainbirdController = data[RAINBIRD_CONTROLLER]
     try:
         available_stations: AvailableStations = (
-            await controller.get_available_stations()
+            await data.controller.get_available_stations()
         )
     except RainbirdApiException as err:
         raise PlatformNotReady(f"Failed to get stations: {str(err)}") from err
@@ -64,7 +56,7 @@ async def async_setup_entry(
         return
 
     coordinator = RainbirdUpdateCoordinator(
-        hass, "Zone States", controller.get_zone_states
+        hass, "Zone States", data.controller.get_zone_states
     )
     await coordinator.async_config_entry_first_refresh()
 
@@ -75,15 +67,15 @@ async def async_setup_entry(
         devices.append(
             RainBirdSwitch(
                 coordinator,
-                controller,
+                data.controller,
                 zone,
                 config_entry.options.get(ATTR_DURATION, DEFAULT_TRIGGER_TIME_MINUTES),
-                data[SERIAL_NUMBER],
-                data[DEVICE_INFO],
+                data.serial_number,
+                data.device_info,
             )
         )
 
-    async_add_devices(devices)
+    async_add_entities(devices)
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(

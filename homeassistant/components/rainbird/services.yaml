@@ -22,6 +22,9 @@ start_irrigation:
 set_rain_delay:
   name: Set rain delay
   description: Set how long automatic irrigation is turned off.
+  target:
+    device:
+      integration: rainbird
   fields:
     duration:
       name: Duration

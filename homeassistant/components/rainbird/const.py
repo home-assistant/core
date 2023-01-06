@@ -1,18 +1,13 @@
 """Constants for rainbird."""
 
 DOMAIN = "rainbird"
-
-DEFAULT_TRIGGER_TIME_MINUTES = 6
-DEVICE_INFO = "device_info"
 SENSOR_TYPE_RAINDELAY = "raindelay"
 SENSOR_TYPE_RAINSENSOR = "rainsensor"
-SERIAL_NUMBER = "serial_number"
-RAINBIRD_CONTROLLER = "controller"
+
+DEFAULT_TRIGGER_TIME_MINUTES = 6
 
 CONF_ZONES = "zones"
 
 ATTR_DURATION = "duration"
 
 TIMEOUT_SECONDS = 20
-
-MANUFACTURER = "Rain Bird"

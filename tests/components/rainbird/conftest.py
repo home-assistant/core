@@ -23,6 +23,7 @@ ComponentSetup = Callable[[], Awaitable[bool]]
 HOST = "example.com"
 URL = "http://example.com/stick"
 PASSWORD = "password"
+SERIAL_NUMBER = 0x12635436566
 
 #
 # Response payloads below come from pyrainbird test cases.
@@ -104,7 +105,6 @@ async def setup_config_entry(
     hass: HomeAssistant, config_entry: MockConfigEntry | None
 ) -> None:
     """Fixture to set up the config entry."""
-    print("setup_config_entry")
     if config_entry:
         config_entry.add_to_hass(hass)
 
