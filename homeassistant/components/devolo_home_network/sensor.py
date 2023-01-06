@@ -31,7 +31,7 @@ from .entity import DevoloEntity
 class DevoloSensorRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_func: Callable[[dict[str, Any]], int]
+    value_func: Callable[[Any], int]
 
 
 @dataclass
@@ -49,7 +49,7 @@ SENSOR_TYPES: dict[str, DevoloSensorEntityDescription] = {
         icon="mdi:lan",
         name="Connected PLC devices",
         value_func=lambda data: len(
-            {device["mac_address_from"] for device in data["network"]["data_rates"]}
+            {device.mac_address_from for device in data.data_rates}
         ),
     ),
     CONNECTED_WIFI_CLIENTS: DevoloSensorEntityDescription(
@@ -58,7 +58,7 @@ SENSOR_TYPES: dict[str, DevoloSensorEntityDescription] = {
         icon="mdi:wifi",
         name="Connected Wifi clients",
         state_class=SensorStateClass.MEASUREMENT,
-        value_func=lambda data: len(data["connected_stations"]),
+        value_func=len,
     ),
     NEIGHBORING_WIFI_NETWORKS: DevoloSensorEntityDescription(
         key=NEIGHBORING_WIFI_NETWORKS,
@@ -66,7 +66,7 @@ SENSOR_TYPES: dict[str, DevoloSensorEntityDescription] = {
         entity_registry_enabled_default=False,
         icon="mdi:wifi-marker",
         name="Neighboring Wifi networks",
-        value_func=lambda data: len(data["neighbor_aps"]),
+        value_func=len,
     ),
 }
 

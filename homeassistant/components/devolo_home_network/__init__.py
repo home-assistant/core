@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 import async_timeout
-from devolo_plc_api.device import Device
+from devolo_plc_api import Device
+from devolo_plc_api.device_api import ConnectedStationInfo, NeighborAPInfo
 from devolo_plc_api.exceptions.device import DeviceNotFound, DeviceUnavailable
+from devolo_plc_api.plcnet_api import LogicalNetwork
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
@@ -48,27 +49,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Unable to connect to {entry.data[CONF_IP_ADDRESS]}"
         ) from err
 
-    async def async_update_connected_plc_devices() -> dict[str, Any]:
+    async def async_update_connected_plc_devices() -> LogicalNetwork:
         """Fetch data from API endpoint."""
+        assert device.plcnet
         try:
             async with async_timeout.timeout(10):
-                return await device.plcnet.async_get_network_overview()  # type: ignore[no-any-return, union-attr]
+                return await device.plcnet.async_get_network_overview()
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err
 
-    async def async_update_wifi_connected_station() -> dict[str, Any]:
+    async def async_update_wifi_connected_station() -> list[ConnectedStationInfo]:
         """Fetch data from API endpoint."""
+        assert device.device
         try:
             async with async_timeout.timeout(10):
-                return await device.device.async_get_wifi_connected_station()  # type: ignore[no-any-return, union-attr]
+                return await device.device.async_get_wifi_connected_station()
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err
 
-    async def async_update_wifi_neighbor_access_points() -> dict[str, Any]:
+    async def async_update_wifi_neighbor_access_points() -> list[NeighborAPInfo]:
         """Fetch data from API endpoint."""
+        assert device.device
         try:
             async with async_timeout.timeout(30):
-                return await device.device.async_get_wifi_neighbor_access_points()  # type: ignore[no-any-return, union-attr]
+                return await device.device.async_get_wifi_neighbor_access_points()
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err
 

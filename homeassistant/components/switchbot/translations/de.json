@@ -8,7 +8,7 @@
             "unknown": "Unerwarteter Fehler"
         },
         "error": {
-            "auth_failed": "Authentifizierung fehlgeschlagen",
+            "auth_failed": "Authentifizierung fehlgeschlagen: {error_detail}",
             "encryption_key_invalid": "Schl\u00fcssel-ID oder Verschl\u00fcsselungsschl\u00fcssel ist ung\u00fcltig",
             "key_id_invalid": "Schl\u00fcssel-ID oder Verschl\u00fcsselungsschl\u00fcssel ist ung\u00fcltig"
         },
