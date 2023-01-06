@@ -19,6 +19,7 @@ from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import async_get_platforms
 import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.service import entity_service_call
 
 from .const import _LOGGER, DOMAIN, ISY994_ISY
@@ -195,11 +196,39 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                     isy.configuration["uuid"],
                 )
                 await isy.query(address)
+
+                # DEPRECATED NOTIFICATION
+                entity_registry = er.async_get(hass)
+                entries_for_this_config = er.async_entries_for_config_entry(
+                    entity_registry, config_entry_id
+                )
+                alternate_target = next(
+                    (
+                        entity.entity_id
+                        for entity in entries_for_this_config
+                        if "query" in entity.entity_id and address in entity.unique_id
+                    ),
+                    "",
+                )
+                async_log_deprecated_service_call(
+                    hass,
+                    call=service,
+                    alternate_service="button.press",
+                    alternate_target=alternate_target,
+                    breaks_in_ha_version="2023.5.0",
+                )
                 return
             _LOGGER.debug(
                 "Requesting system query of ISY %s", isy.configuration["uuid"]
             )
             await isy.query()
+            async_log_deprecated_service_call(
+                hass,
+                call=service,
+                alternate_service="button.press",
+                alternate_target=f"button.{isy.configuration['name'].lower().replace(' ','_')}_query",
+                breaks_in_ha_version="2023.5.0",
+            )
 
     async def async_run_network_resource_service_handler(service: ServiceCall) -> None:
         """Handle a network resource service call."""
@@ -446,4 +475,43 @@ def async_setup_light_services(hass: HomeAssistant) -> None:
     )
     platform.async_register_entity_service(
         SERVICE_SET_RAMP_RATE, SERVICE_SET_RAMP_RATE_SCHEMA, "async_set_ramp_rate"
+    )
+
+
+@callback
+def async_log_deprecated_service_call(
+    hass: HomeAssistant,
+    call: ServiceCall,
+    alternate_service: str,
+    alternate_target: str,
+    breaks_in_ha_version: str,
+) -> None:
+    """Log a warning about a deprecated service call."""
+    deprecated_service = f"{call.domain}.{call.service}"
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecated_service_{deprecated_service}",
+        breaks_in_ha_version=breaks_in_ha_version,
+        is_fixable=True,
+        is_persistent=True,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_service",
+        translation_placeholders={
+            "alternate_service": alternate_service,
+            "alternate_target": alternate_target,
+            "deprecated_service": deprecated_service,
+        },
+    )
+
+    _LOGGER.warning(
+        (
+            'The "%s" service is deprecated and will be removed in %s; use the "%s" '
+            'service and pass it a target entity ID of "%s"'
+        ),
+        deprecated_service,
+        breaks_in_ha_version,
+        alternate_service,
+        alternate_target,
     )
