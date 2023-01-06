@@ -60,6 +60,7 @@ SKIP_AUX_PROPERTIES = {PROP_BUSY, PROP_COMMS_ERROR, PROP_STATUS}
 
 # Reference pyisy.constants.COMMAND_FRIENDLY_NAME for API details.
 #   Note: "LUMIN"/Illuminance removed, some devices use non-conformant "%" unit
+#         "VOCLVL"/VOC removed, uses qualitative UOM not ug/m^3
 ISY_CONTROL_TO_DEVICE_CLASS = {
     PROP_BATTERY_LEVEL: SensorDeviceClass.BATTERY,
     PROP_HUMIDITY: SensorDeviceClass.HUMIDITY,
@@ -71,15 +72,29 @@ ISY_CONTROL_TO_DEVICE_CLASS = {
     "CV": SensorDeviceClass.VOLTAGE,
     "DEWPT": SensorDeviceClass.TEMPERATURE,
     "DISTANC": SensorDeviceClass.DISTANCE,
+    "ETO": SensorDeviceClass.PRECIPITATION_INTENSITY,
+    "FATM": SensorDeviceClass.WEIGHT,
+    "FREQ": SensorDeviceClass.FREQUENCY,
+    "MUSCLEM": SensorDeviceClass.WEIGHT,
     "PF": SensorDeviceClass.POWER_FACTOR,
+    "PM10": SensorDeviceClass.PM10,
+    "PM25": SensorDeviceClass.PM25,
+    "PRECIP": SensorDeviceClass.PRECIPITATION,
     "RAINRT": SensorDeviceClass.PRECIPITATION_INTENSITY,
+    "RFSS": SensorDeviceClass.SIGNAL_STRENGTH,
+    "SOILH": SensorDeviceClass.MOISTURE,
     "SOILT": SensorDeviceClass.TEMPERATURE,
     "SOLRAD": SensorDeviceClass.IRRADIANCE,
     "SPEED": SensorDeviceClass.SPEED,
+    "TEMPEXH": SensorDeviceClass.TEMPERATURE,
+    "TEMPOUT": SensorDeviceClass.TEMPERATURE,
     "TPW": SensorDeviceClass.ENERGY,
-    "VOCLVL": SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+    "WATERP": SensorDeviceClass.PRESSURE,
     "WATERT": SensorDeviceClass.TEMPERATURE,
+    "WATERTB": SensorDeviceClass.TEMPERATURE,
+    "WATERTD": SensorDeviceClass.TEMPERATURE,
     "WEIGHT": SensorDeviceClass.WEIGHT,
+    "WINDCH": SensorDeviceClass.TEMPERATURE,
 }
 ISY_CONTROL_TO_STATE_CLASS = {
     control: SensorStateClass.MEASUREMENT for control in ISY_CONTROL_TO_DEVICE_CLASS
