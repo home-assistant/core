@@ -1120,7 +1120,6 @@ omit =
     homeassistant/components/sesame/lock.py
     homeassistant/components/seven_segments/image_processing.py
     homeassistant/components/seventeentrack/sensor.py
-    homeassistant/components/sfr_box/sensor.py
     homeassistant/components/shiftr/*
     homeassistant/components/shodan/sensor.py
     homeassistant/components/sia/__init__.py
