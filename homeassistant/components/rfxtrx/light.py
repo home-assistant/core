@@ -37,13 +37,13 @@ async def async_setup_entry(
     def _constructor(
         event: rfxtrxmod.RFXtrxEvent,
         auto: rfxtrxmod.RFXtrxEvent | None,
-        device_id: DeviceTuple,
+        device_identifier: DeviceTuple,
         entity_info: dict[str, Any],
     ) -> list[Entity]:
         return [
             RfxtrxLight(
                 event.device,
-                device_id,
+                device_identifier,
                 event=event if auto else None,
             )
         ]
@@ -107,10 +107,10 @@ class RfxtrxLight(RfxtrxCommandEntity, LightEntity):
 
     @callback
     def _handle_event(
-        self, event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple
+        self, event: rfxtrxmod.RFXtrxEvent, device_identifier: DeviceTuple
     ) -> None:
         """Check if event applies to me and update."""
-        if device_id != self._device_id:
+        if device_identifier != self._device_identifier:
             return
 
         self._apply_event(event)

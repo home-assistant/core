@@ -40,13 +40,13 @@ async def async_setup_entry(
     def _constructor(
         event: rfxtrxmod.RFXtrxEvent,
         auto: rfxtrxmod.RFXtrxEvent | None,
-        device_id: DeviceTuple,
+        device_identifier: DeviceTuple,
         entity_info: dict[str, Any],
     ) -> list[Entity]:
         return [
             RfxtrxCover(
                 event.device,
-                device_id,
+                device_identifier,
                 venetian_blind_mode=entity_info.get(CONF_VENETIAN_BLIND_MODE),
                 event=event if auto else None,
             )
@@ -65,12 +65,12 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
     def __init__(
         self,
         device: rfxtrxmod.RFXtrxDevice,
-        device_id: DeviceTuple,
+        device_identifier: DeviceTuple,
         event: rfxtrxmod.RFXtrxEvent = None,
         venetian_blind_mode: str | None = None,
     ) -> None:
         """Initialize the RFXtrx cover device."""
-        super().__init__(device, device_id, event)
+        super().__init__(device, device_identifier, event)
         self._venetian_blind_mode = venetian_blind_mode
         self._attr_is_closed: bool | None = True
 
@@ -156,10 +156,10 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
 
     @callback
     def _handle_event(
-        self, event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple
+        self, event: rfxtrxmod.RFXtrxEvent, device_identifier: DeviceTuple
     ) -> None:
         """Check if event applies to me and update."""
-        if device_id != self._device_id:
+        if device_identifier != self._device_identifier:
             return
 
         self._apply_event(event)

@@ -472,8 +472,8 @@ async def test_options_replace_sensor_device(hass):
             "device": "/dev/tty123",
             "automatic_add": False,
             "devices": {
-                "0a520101f00400e22d0189": {"device_id": "52_1_f0:04"},
-                "0a520105230400c3260279": {"device_id": "52_1_23:04"},
+                "0a520101f00400e22d0189": {"device_identifier": "52_1_f0:04"},
+                "0a520105230400c3260279": {"device_identifier": "52_1_23:04"},
             },
         },
         unique_id=DOMAIN,
@@ -631,10 +631,10 @@ async def test_options_replace_control_device(hass):
             "automatic_add": False,
             "devices": {
                 "0b1100100118cdea02010f70": {
-                    "device_id": "11_0_118cdea:2",
+                    "device_identifier": "11_0_118cdea:2",
                 },
                 "0b1100101118cdea02010f70": {
-                    "device_id": "11_0_1118cdea:2",
+                    "device_identifier": "11_0_1118cdea:2",
                 },
             },
         },
@@ -878,7 +878,7 @@ async def test_options_configure_rfy_cover_device(hass):
         == "EU"
     )
     assert isinstance(
-        entry.data["devices"]["0C1a0000010203010000000000"]["device_id"], str
+        entry.data["devices"]["0C1a0000010203010000000000"]["device_identifier"], str
     )
 
     device_registry = dr.async_get(hass)
@@ -918,7 +918,7 @@ async def test_options_configure_rfy_cover_device(hass):
         == "EU"
     )
     assert isinstance(
-        entry.data["devices"]["0C1a0000010203010000000000"]["device_id"], str
+        entry.data["devices"]["0C1a0000010203010000000000"]["device_identifier"], str
     )
 
 

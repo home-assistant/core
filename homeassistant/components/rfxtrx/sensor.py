@@ -259,7 +259,7 @@ async def async_setup_entry(
     def _constructor(
         event: RFXtrxEvent,
         auto: RFXtrxEvent | None,
-        device_id: DeviceTuple,
+        device_identifier: DeviceTuple,
         entity_info: dict[str, Any],
     ) -> list[Entity]:
         entities: list[Entity] = []
@@ -267,7 +267,7 @@ async def async_setup_entry(
             entities.append(
                 RfxtrxSensor(
                     event.device,
-                    device_id,
+                    device_identifier,
                     SENSOR_TYPES_DICT[data_type],
                     event=event if auto else None,
                 )
@@ -293,14 +293,14 @@ class RfxtrxSensor(RfxtrxEntity, SensorEntity):
     def __init__(
         self,
         device: RFXtrxDevice,
-        device_id: DeviceTuple,
+        device_identifier: DeviceTuple,
         entity_description: RfxtrxSensorEntityDescription,
         event: RFXtrxEvent | None = None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(device, device_id, event=event)
+        super().__init__(device, device_identifier, event=event)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{device_id}_{entity_description.key}"
+        self._attr_unique_id = f"{device_identifier}_{entity_description.key}"
 
     async def async_added_to_hass(self) -> None:
         """Restore device state."""
@@ -322,9 +322,9 @@ class RfxtrxSensor(RfxtrxEntity, SensorEntity):
         return self.entity_description.convert(value)
 
     @callback
-    def _handle_event(self, event: RFXtrxEvent, device_id: DeviceTuple) -> None:
+    def _handle_event(self, event: RFXtrxEvent, device_identifier: DeviceTuple) -> None:
         """Check if event applies to me and update."""
-        if device_id != self._device_id:
+        if device_identifier != self._device_identifier:
             return
 
         if self.entity_description.key not in event.values:

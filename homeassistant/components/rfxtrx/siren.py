@@ -57,7 +57,7 @@ async def async_setup_entry(
     def _constructor(
         event: rfxtrxmod.RFXtrxEvent,
         auto: rfxtrxmod.RFXtrxEvent | None,
-        device_id: DeviceTuple,
+        device_identifier: DeviceTuple,
         entity_info: dict[str, Any],
     ) -> list[Entity]:
         """Construct a entity from an event."""
@@ -67,7 +67,7 @@ async def async_setup_entry(
             return [
                 RfxtrxChime(
                     event.device,
-                    device_id,
+                    device_identifier,
                     entity_info.get(CONF_OFF_DELAY, DEFAULT_OFF_DELAY),
                     auto,
                 )
@@ -80,7 +80,7 @@ async def async_setup_entry(
                 return [
                     RfxtrxSecurityPanic(
                         event.device,
-                        device_id,
+                        device_identifier,
                         entity_info.get(CONF_OFF_DELAY, DEFAULT_OFF_DELAY),
                         auto,
                     )
@@ -129,12 +129,12 @@ class RfxtrxChime(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin):
     def __init__(
         self,
         device: rfxtrxmod.RFXtrxDevice,
-        device_id: DeviceTuple,
+        device_identifier: DeviceTuple,
         off_delay: float | None = None,
         event: rfxtrxmod.RFXtrxEvent | None = None,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(device, device_id, event)
+        super().__init__(device, device_identifier, event)
         self._attr_available_tones = list(self._device.COMMANDS.values())
         self._default_tone = next(iter(self._device.COMMANDS))
         self._off_delay = off_delay
@@ -170,10 +170,10 @@ class RfxtrxChime(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin):
 
     @callback
     def _handle_event(
-        self, event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple
+        self, event: rfxtrxmod.RFXtrxEvent, device_identifier: DeviceTuple
     ) -> None:
         """Check if event applies to me and update."""
-        if self._event_applies(event, device_id):
+        if self._event_applies(event, device_identifier):
             self._apply_event(event)
 
             self.async_write_ha_state()
@@ -188,12 +188,12 @@ class RfxtrxSecurityPanic(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin)
     def __init__(
         self,
         device: rfxtrxmod.RFXtrxDevice,
-        device_id: DeviceTuple,
+        device_identifier: DeviceTuple,
         off_delay: float | None = None,
         event: rfxtrxmod.RFXtrxEvent | None = None,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(device, device_id, event)
+        super().__init__(device, device_identifier, event)
         self._on_value = get_first_key(self._device.STATUS, SECURITY_PANIC_ON)
         self._off_value = get_first_key(self._device.STATUS, SECURITY_PANIC_OFF)
         self._off_delay = off_delay
@@ -235,10 +235,10 @@ class RfxtrxSecurityPanic(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin)
 
     @callback
     def _handle_event(
-        self, event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple
+        self, event: rfxtrxmod.RFXtrxEvent, device_identifier: DeviceTuple
     ) -> None:
         """Check if event applies to me and update."""
-        if self._event_applies(event, device_id):
+        if self._event_applies(event, device_identifier):
             self._apply_event(event)
 
             self.async_write_ha_state()

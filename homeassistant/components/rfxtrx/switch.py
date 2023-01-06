@@ -52,13 +52,13 @@ async def async_setup_entry(
     def _constructor(
         event: rfxtrxmod.RFXtrxEvent,
         auto: rfxtrxmod.RFXtrxEvent | None,
-        device_id: DeviceTuple,
+        device_identifier: DeviceTuple,
         entity_info: dict[str, Any],
     ) -> list[Entity]:
         return [
             RfxtrxSwitch(
                 event.device,
-                device_id,
+                device_identifier,
                 entity_info.get(CONF_DATA_BITS),
                 entity_info.get(CONF_COMMAND_ON),
                 entity_info.get(CONF_COMMAND_OFF),
@@ -77,14 +77,14 @@ class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
     def __init__(
         self,
         device: rfxtrxmod.RFXtrxDevice,
-        device_id: DeviceTuple,
+        device_identifier: DeviceTuple,
         data_bits: int | None = None,
         cmd_on: int | None = None,
         cmd_off: int | None = None,
         event: rfxtrxmod.RFXtrxEvent | None = None,
     ) -> None:
         """Initialize the RFXtrx switch."""
-        super().__init__(device, device_id, event=event)
+        super().__init__(device, device_identifier, event=event)
         self._data_bits = data_bits
         self._cmd_on = cmd_on
         self._cmd_off = cmd_off
@@ -128,10 +128,10 @@ class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
 
     @callback
     def _handle_event(
-        self, event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple
+        self, event: rfxtrxmod.RFXtrxEvent, device_identifier: DeviceTuple
     ) -> None:
         """Check if event applies to me and update."""
-        if self._event_applies(event, device_id):
+        if self._event_applies(event, device_identifier):
             self._apply_event(event)
 
             self.async_write_ha_state()

@@ -14,8 +14,8 @@ from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from .conftest import create_rfx_test_cfg, setup_rfx_test_cfg
 from . import ENTRY_VERSION
+from .conftest import create_rfx_test_cfg, setup_rfx_test_cfg
 
 from tests.common import MockConfigEntry
 
@@ -102,7 +102,10 @@ async def test_ws_device_remove(hass, hass_ws_client):
     mock_entry = await setup_rfx_test_cfg(
         hass,
         devices={
-            "0b1100cd0213c7f210010f51": {"fire_event": True, "device_id": device_id},
+            "0b1100cd0213c7f210010f51": {
+                "fire_event": True,
+                "device_identifier": device_id,
+            },
         },
     )
 
@@ -211,10 +214,11 @@ async def test_migrate_entry(hass):
         "devices": {
             "0b1100cd0213c7f210010f51": {
                 "fire_event": True,
-                "device_id": "11_0_213c7f2:16",
+                "device_id": ["11", "0", "213c7f2:16"],
+                "device_identifier": "11_0_213c7f2:16",
             },
             "0716000100900970": {
-                "device_id": "16_0_00:90",
+                "device_identifier": "16_0_00:90",
             },
         },
     }
