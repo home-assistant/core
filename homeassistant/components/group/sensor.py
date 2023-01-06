@@ -196,10 +196,10 @@ def calc_last(
 ) -> tuple[dict[str, Any], float]:
     """Calculate last value."""
     last_updated: datetime | None = None
-    for entity_id, _, state in sensor_values:
+    for entity_id, state_f, state in sensor_values:
         if last_updated is None or state.last_updated > last_updated:
             last_updated = state.last_updated
-            last = float(state.state)
+            last = state_f
             last_entity_id = entity_id
 
     attributes = {ATTR_LAST_ENTITY_ID: last_entity_id}
