@@ -1483,6 +1483,8 @@ async def test_sensor_entity_export_disabled_when_unused(
                 "total_power_export_kwh": 0,
                 "total_power_export_t1_kwh": 0,
                 "total_power_export_t2_kwh": 0,
+                "total_power_export_t3_kwh": 0,
+                "total_power_export_t4_kwh": 0,
             }
         )
     )

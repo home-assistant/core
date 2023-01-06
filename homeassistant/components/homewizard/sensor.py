@@ -339,6 +339,8 @@ class HWEnergySensor(HomeWizardEntity, SensorEntity):
                 "total_power_export_kwh",
                 "total_power_export_t1_kwh",
                 "total_power_export_t2_kwh",
+                "total_power_export_t3_kwh",
+                "total_power_export_t4_kwh",
             ]
             and self.native_value == 0
         ):
