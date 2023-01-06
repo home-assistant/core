@@ -1306,8 +1306,8 @@ build.json @home-assistant/supervisor
 /tests/components/websocket_api/ @home-assistant/core
 /homeassistant/components/wemo/ @esev
 /tests/components/wemo/ @esev
-/homeassistant/components/whirlpool/ @abmantis
-/tests/components/whirlpool/ @abmantis
+/homeassistant/components/whirlpool/ @abmantis @mkmer
+/tests/components/whirlpool/ @abmantis @mkmer
 /homeassistant/components/whois/ @frenck
 /tests/components/whois/ @frenck
 /homeassistant/components/wiffi/ @mampfes
