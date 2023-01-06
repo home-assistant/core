@@ -68,24 +68,17 @@ class SimplePushNotificationService(BaseNotificationService):
             event = data.get(ATTR_EVENT)
 
             attachments_data = data.get(ATTR_ATTACHMENTS)
-            if isinstance(attachments_data, list) and attachments_data:
-                attachments = []
+            if isinstance(attachments_data, list):
                 for attachment in attachments_data:
-                    if (
+                    if not (
                         isinstance(attachment, dict)
                         and "video" in attachment.keys()
                         and "thumbnail" in attachment.keys()
-                    ):
-                        attachments.append(
-                            {
-                                "video": attachment["video"],
-                                "thumbnail": attachment["thumbnail"],
-                            }
-                        )
-                    elif isinstance(attachment, dict) and "video" in attachment.keys():
-                        attachments.append(attachment["video"])
-                    else:
-                        attachments.append(attachment)
+                    ) and not isinstance(attachment, str):
+                        _LOGGER.error("Attachment format is incorrect")
+                        return
+
+                attachments = attachments_data
 
         # use event from config until YAML config is removed
         event = event or self._event
