@@ -755,7 +755,6 @@ class RSSISensor(Sensor, id_suffix="rssi"):
     """RSSI sensor for a device."""
 
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_device_class: SensorDeviceClass = SensorDeviceClass.SIGNAL_STRENGTH
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
     _attr_should_poll = True  # BaseZhaEntity defaults to False

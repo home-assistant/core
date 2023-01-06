@@ -40,7 +40,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.36.1
+PySwitchbot==0.36.2
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -422,7 +422,7 @@ beautifulsoup4==4.11.1
 bellows==0.34.5
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.10.4
+bimmer_connected==0.12.0
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -488,7 +488,7 @@ brunt==1.2.0
 bt_proximity==0.2.1
 
 # homeassistant.components.bthome
-bthome-ble==2.4.0
+bthome-ble==2.4.1
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -858,7 +858,7 @@ hass-nabucasa==0.61.0
 hass_splunk==0.1.1
 
 # homeassistant.components.tasmota
-hatasmota==0.6.1
+hatasmota==0.6.2
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
@@ -1560,7 +1560,7 @@ pydroid-ipcam==2.0.0
 pyebox==1.1.4
 
 # homeassistant.components.econet
-pyeconet==0.1.17
+pyeconet==0.1.18
 
 # homeassistant.components.edimax
 pyedimax==0.2.1
@@ -2190,7 +2190,7 @@ regenmaschine==2022.11.0
 renault-api==0.1.11
 
 # homeassistant.components.reolink
-reolink-aio==0.1.1
+reolink-aio==0.1.2
 
 # homeassistant.components.python_script
 restrictedpython==5.2

@@ -65,6 +65,7 @@ class UnifiEntity(Entity, Generic[HandlerT, DataT]):
         self.entity_description = description
 
         self._removed = False
+        self._write_state = False
 
         self._attr_available = description.available_fn(controller, obj_id)
         self._attr_device_info = description.device_info_fn(controller.api, obj_id)
@@ -117,9 +118,14 @@ class UnifiEntity(Entity, Generic[HandlerT, DataT]):
             self.hass.async_create_task(self.remove_item({self._obj_id}))
             return
 
-        self._attr_available = description.available_fn(self.controller, self._obj_id)
+        if (
+            available := description.available_fn(self.controller, self._obj_id)
+        ) != self.available:
+            self._attr_available = available
+            self._write_state = True
         self.async_update_state(event, obj_id)
-        self.async_write_ha_state()
+        if self._write_state:
+            self.async_write_ha_state()
 
     @callback
     def async_signal_reachable_callback(self) -> None:

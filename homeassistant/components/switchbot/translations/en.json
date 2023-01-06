@@ -8,7 +8,7 @@
             "unknown": "Unexpected error"
         },
         "error": {
-            "auth_failed": "Authentication failed",
+            "auth_failed": "Authentication failed: {error_detail}",
             "encryption_key_invalid": "Key ID or Encryption key is invalid"
         },
         "flow_title": "{name} ({address})",
@@ -47,18 +47,7 @@
                 "data": {
                     "address": "Device address"
                 }
-            },
-            "lock_key": {
-            "description": "The {name} device requires encryption key, details on how to obtain it can be found in the documentation.",
-            "data": {
-                "key_id": "Key ID",
-                "encryption_key": "Encryption key"
             }
-      }
-        },
-        "error": {
-            "key_id_invalid": "Key ID or Encryption key is invalid",
-            "encryption_key_invalid": "Key ID or Encryption key is invalid"
         }
     },
     "options": {
