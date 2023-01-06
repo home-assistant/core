@@ -432,7 +432,6 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity, RestoreEntity)
             # Only restore the state if it was previously ON (Low Battery)
             if last_state.state == STATE_ON:
                 self._computed_state = True
-                self.async_write_ha_state()
 
     def _heartbeat_node_control_handler(self, event: NodeProperty) -> None:
         """Update the heartbeat timestamp when any ON/OFF event is sent.
