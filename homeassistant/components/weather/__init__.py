@@ -9,6 +9,8 @@ import inspect
 import logging
 from typing import Any, Final, TypedDict, final
 
+from typing_extensions import Required
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PRECISION_HALVES,
@@ -159,7 +161,7 @@ class Forecast(TypedDict, total=False):
     """
 
     condition: str | None
-    datetime: str
+    datetime: Required[str]
     precipitation_probability: int | None
     native_precipitation: float | None
     precipitation: None
