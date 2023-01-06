@@ -15,12 +15,11 @@ from pyisy.helpers import NodeProperty
 from pyisy.nodes import Group, Node
 
 from homeassistant.components.binary_sensor import (
-    DOMAIN as BINARY_SENSOR,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON
+from homeassistant.const import STATE_ON, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -76,7 +75,7 @@ async def async_setup_entry(
     entity: ISYInsteonBinarySensorEntity | ISYBinarySensorEntity | ISYBinarySensorHeartbeat | ISYBinarySensorProgramEntity
 
     hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
-    for node in hass_isy_data[ISY994_NODES][BINARY_SENSOR]:
+    for node in hass_isy_data[ISY994_NODES][Platform.BINARY_SENSOR]:
         assert isinstance(node, Node)
         device_class, device_type = _detect_device_type_and_class(node)
         if node.protocol == PROTO_INSTEON:
@@ -189,10 +188,10 @@ async def async_setup_entry(
         entity = ISYBinarySensorEntity(node, device_class)
         entities.append(entity)
 
-    for name, status, _ in hass_isy_data[ISY994_PROGRAMS][BINARY_SENSOR]:
+    for name, status, _ in hass_isy_data[ISY994_PROGRAMS][Platform.BINARY_SENSOR]:
         entities.append(ISYBinarySensorProgramEntity(name, status))
 
-    await migrate_old_unique_ids(hass, BINARY_SENSOR, entities)
+    await migrate_old_unique_ids(hass, Platform.BINARY_SENSOR, entities)
     async_add_entities(entities)
 
 

@@ -7,11 +7,11 @@ from pyisy.constants import ISY_VALUE_UNKNOWN
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DOMAIN as COVER,
     CoverEntity,
     CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -33,13 +33,13 @@ async def async_setup_entry(
     """Set up the ISY cover platform."""
     hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
     entities: list[ISYCoverEntity | ISYCoverProgramEntity] = []
-    for node in hass_isy_data[ISY994_NODES][COVER]:
+    for node in hass_isy_data[ISY994_NODES][Platform.COVER]:
         entities.append(ISYCoverEntity(node))
 
-    for name, status, actions in hass_isy_data[ISY994_PROGRAMS][COVER]:
+    for name, status, actions in hass_isy_data[ISY994_PROGRAMS][Platform.COVER]:
         entities.append(ISYCoverProgramEntity(name, status, actions))
 
-    await migrate_old_unique_ids(hass, COVER, entities)
+    await migrate_old_unique_ids(hass, Platform.COVER, entities)
     async_add_entities(entities)
 
 
