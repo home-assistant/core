@@ -14,7 +14,6 @@ from .conftest import (
     ACK_ECHO,
     CONFIG,
     CONFIG_ENTRY_DATA,
-    RAIN_DELAY,
     SERIAL_NUMBER,
     SERIAL_RESPONSE,
     UNAVAILABLE_RESPONSE,
@@ -26,21 +25,18 @@ from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockRespon
 
 
 @pytest.mark.parametrize(
-    "yaml_config,config_entry_data,responses",
+    "yaml_config,config_entry_data,initial_response",
     [
-        ({}, CONFIG_ENTRY_DATA, [mock_response(SERIAL_RESPONSE)]),
+        ({}, CONFIG_ENTRY_DATA, None),
         (
             CONFIG,
             None,
-            [
-                mock_response(SERIAL_RESPONSE),  # Issued during import
-                mock_response(SERIAL_RESPONSE),
-            ],
+            mock_response(SERIAL_RESPONSE),  # Extra import request
         ),
         (
             CONFIG,
             CONFIG_ENTRY_DATA,
-            [mock_response(SERIAL_RESPONSE), mock_response(SERIAL_RESPONSE)],
+            None,
         ),
     ],
     ids=["config_entry", "yaml", "already_exists"],
@@ -48,14 +44,22 @@ from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockRespon
 async def test_init_success(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
+    responses: list[AiohttpClientMockResponse],
+    initial_response: AiohttpClientMockResponse | None,
 ) -> None:
     """Test successful setup and unload."""
+    if initial_response:
+        responses.insert(0, initial_response)
 
     assert await setup_integration()
 
-    assert [entry.state for entry in hass.config_entries.async_entries(DOMAIN)] == [
-        ConfigEntryState.LOADED
-    ]
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state == ConfigEntryState.LOADED
+
+    await hass.config_entries.async_unload(entries[0].entry_id)
+    await hass.async_block_till_done()
+    assert entries[0].state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.parametrize(
@@ -101,12 +105,11 @@ async def test_rain_delay_service(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     aioclient_mock: AiohttpClientMocker,
-    responses: list[AiohttpClientMockResponse],
+    responses: list[str],
     config_entry: ConfigEntry,
 ) -> None:
     """Test calling the rain delay service."""
 
-    responses.append(mock_response(RAIN_DELAY))
     assert await setup_integration()
 
     device_registry = dr.async_get(hass)
@@ -115,11 +118,7 @@ async def test_rain_delay_service(
     assert device.name == "Rain Bird"
 
     aioclient_mock.mock_calls.clear()
-    responses.extend(
-        [
-            mock_response(ACK_ECHO),
-        ]
-    )
+    responses.append(mock_response(ACK_ECHO))
 
     await hass.services.async_call(
         DOMAIN,
@@ -135,7 +134,6 @@ async def test_rain_delay_invalid_device(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     aioclient_mock: AiohttpClientMocker,
-    responses: list[AiohttpClientMockResponse],
     config_entry: ConfigEntry,
 ) -> None:
     """Test calling the rain delay service."""
@@ -143,11 +141,6 @@ async def test_rain_delay_invalid_device(
     assert await setup_integration()
 
     aioclient_mock.mock_calls.clear()
-    responses.extend(
-        [
-            mock_response(ACK_ECHO),
-        ]
-    )
 
     with pytest.raises(HomeAssistantError, match="Device id did not match"):
         await hass.services.async_call(

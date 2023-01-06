@@ -22,7 +22,13 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import ATTR_DURATION, DEFAULT_TRIGGER_TIME_MINUTES, DOMAIN, TIMEOUT_SECONDS
+from .const import (
+    ATTR_DURATION,
+    CONF_SERIAL_NUMBER,
+    DEFAULT_TRIGGER_TIME_MINUTES,
+    DOMAIN,
+    TIMEOUT_SECONDS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,8 +79,12 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 return await self.async_finish(
                     serial_number,
-                    user_input,
-                    {ATTR_DURATION: DEFAULT_TRIGGER_TIME_MINUTES},
+                    data={
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                        CONF_SERIAL_NUMBER: serial_number,
+                    },
+                    options={ATTR_DURATION: DEFAULT_TRIGGER_TIME_MINUTES},
                 )
 
         return self.async_show_form(
@@ -124,6 +134,7 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data={
                 CONF_HOST: config[CONF_HOST],
                 CONF_PASSWORD: config[CONF_PASSWORD],
+                CONF_SERIAL_NUMBER: serial_number,
             },
             options={
                 ATTR_DURATION: config.get(ATTR_DURATION, DEFAULT_TRIGGER_TIME_MINUTES),

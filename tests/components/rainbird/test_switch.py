@@ -1,9 +1,6 @@
 """Tests for rainbird sensor platform."""
 
 
-from http import HTTPStatus
-import logging
-
 import pytest
 
 from homeassistant.components.rainbird import DOMAIN
@@ -12,9 +9,9 @@ from homeassistant.core import HomeAssistant
 
 from .conftest import (
     ACK_ECHO,
-    AVAILABLE_STATIONS_RESPONSE,
     EMPTY_STATIONS_RESPONSE,
-    URL,
+    RAIN_DELAY_OFF,
+    RAIN_SENSOR_OFF,
     ZONE_3_ON_RESPONSE,
     ZONE_5_ON_RESPONSE,
     ZONE_OFF_RESPONSE,
@@ -32,30 +29,32 @@ def platforms() -> list[str]:
     return [Platform.SWITCH]
 
 
+@pytest.mark.parametrize(
+    "stations_response",
+    [EMPTY_STATIONS_RESPONSE],
+)
 async def test_no_zones(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
-    responses: list[AiohttpClientMockResponse],
 ) -> None:
     """Test case where listing stations returns no stations."""
 
-    responses.append(mock_response(EMPTY_STATIONS_RESPONSE))
     assert await setup_integration()
 
     zone = hass.states.get("switch.sprinkler_1")
     assert zone is None
 
 
+@pytest.mark.parametrize(
+    "zone_state_response",
+    [ZONE_5_ON_RESPONSE],
+)
 async def test_zones(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     responses: list[AiohttpClientMockResponse],
 ) -> None:
     """Test switch platform with fake data that creates 7 zones with one enabled."""
-
-    responses.extend(
-        [mock_response(AVAILABLE_STATIONS_RESPONSE), mock_response(ZONE_5_ON_RESPONSE)]
-    )
 
     assert await setup_integration()
 
@@ -106,9 +105,6 @@ async def test_switch_on(
 ) -> None:
     """Test turning on irrigation switch."""
 
-    responses.extend(
-        [mock_response(AVAILABLE_STATIONS_RESPONSE), mock_response(ZONE_OFF_RESPONSE)]
-    )
     assert await setup_integration()
 
     # Initially all zones are off. Pick zone3 as an arbitrary to assert
@@ -121,13 +117,14 @@ async def test_switch_on(
     responses.extend(
         [
             mock_response(ACK_ECHO),  # Switch on response
-            mock_response(ZONE_3_ON_RESPONSE),  # Updated zone state
+            # API responses when state is refreshed
+            mock_response(ZONE_3_ON_RESPONSE),
+            mock_response(RAIN_SENSOR_OFF),
+            mock_response(RAIN_DELAY_OFF),
         ]
     )
     await switch_common.async_turn_on(hass, "switch.sprinkler_3")
     await hass.async_block_till_done()
-    assert len(aioclient_mock.mock_calls) == 2
-    aioclient_mock.mock_calls.clear()
 
     # Verify switch state is updated
     zone = hass.states.get("switch.sprinkler_3")
@@ -135,6 +132,10 @@ async def test_switch_on(
     assert zone.state == "on"
 
 
+@pytest.mark.parametrize(
+    "zone_state_response",
+    [ZONE_3_ON_RESPONSE],
+)
 async def test_switch_off(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
@@ -143,9 +144,6 @@ async def test_switch_off(
 ) -> None:
     """Test turning off irrigation switch."""
 
-    responses.extend(
-        [mock_response(AVAILABLE_STATIONS_RESPONSE), mock_response(ZONE_3_ON_RESPONSE)]
-    )
     assert await setup_integration()
 
     # Initially the test zone is on
@@ -158,13 +156,12 @@ async def test_switch_off(
         [
             mock_response(ACK_ECHO),  # Switch off response
             mock_response(ZONE_OFF_RESPONSE),  # Updated zone state
+            mock_response(RAIN_SENSOR_OFF),
+            mock_response(RAIN_DELAY_OFF),
         ]
     )
     await switch_common.async_turn_off(hass, "switch.sprinkler_3")
     await hass.async_block_till_done()
-
-    # One call to change the service and one to refresh state
-    assert len(aioclient_mock.mock_calls) == 2
 
     # Verify switch state is updated
     zone = hass.states.get("switch.sprinkler_3")
@@ -177,64 +174,34 @@ async def test_irrigation_service(
     setup_integration: ComponentSetup,
     aioclient_mock: AiohttpClientMocker,
     responses: list[AiohttpClientMockResponse],
+    api_responses: list[str],
 ) -> None:
     """Test calling the irrigation service."""
 
-    responses.extend(
-        [mock_response(AVAILABLE_STATIONS_RESPONSE), mock_response(ZONE_3_ON_RESPONSE)]
-    )
     assert await setup_integration()
 
+    zone = hass.states.get("switch.sprinkler_3")
+    assert zone is not None
+    assert zone.state == "off"
+
     aioclient_mock.mock_calls.clear()
-    responses.extend([mock_response(ACK_ECHO), mock_response(ZONE_OFF_RESPONSE)])
+    responses.extend(
+        [
+            mock_response(ACK_ECHO),
+            # API responses when state is refreshed
+            mock_response(ZONE_3_ON_RESPONSE),
+            mock_response(RAIN_SENSOR_OFF),
+            mock_response(RAIN_DELAY_OFF),
+        ]
+    )
 
     await hass.services.async_call(
         DOMAIN,
         "start_irrigation",
-        {ATTR_ENTITY_ID: "switch.sprinkler_5", "duration": 30},
+        {ATTR_ENTITY_ID: "switch.sprinkler_3", "duration": 30},
         blocking=True,
     )
 
-    # One call to change the service and one to refresh state
-    assert len(aioclient_mock.mock_calls) == 2
-
-
-async def test_platform_unavailable(
-    hass: HomeAssistant,
-    setup_integration: ComponentSetup,
-    responses: list[AiohttpClientMockResponse],
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test failure while listing the stations when setting up the platform."""
-
-    responses.append(
-        AiohttpClientMockResponse("POST", URL, status=HTTPStatus.SERVICE_UNAVAILABLE)
-    )
-
-    with caplog.at_level(logging.WARNING):
-        assert await setup_integration()
-
-    assert "Failed to get stations" in caplog.text
-
-
-async def test_coordinator_unavailable(
-    hass: HomeAssistant,
-    setup_integration: ComponentSetup,
-    responses: list[AiohttpClientMockResponse],
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test failure to refresh the update coordinator."""
-
-    responses.extend(
-        [
-            mock_response(AVAILABLE_STATIONS_RESPONSE),
-            AiohttpClientMockResponse(
-                "POST", URL, status=HTTPStatus.SERVICE_UNAVAILABLE
-            ),
-        ],
-    )
-
-    with caplog.at_level(logging.WARNING):
-        assert await setup_integration()
-
-    assert "Error while setting up rainbird platform for switch" in caplog.text
+    zone = hass.states.get("switch.sprinkler_3")
+    assert zone is not None
+    assert zone.state == "on"

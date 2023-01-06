@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import datetime
 import logging
@@ -26,44 +25,88 @@ _T = TypeVar("_T")
 
 
 @dataclass
-class ConfigData:
-    """Global data used by a config entry."""
+class RainbirdDeviceState:
+    """Data retrieved from a Rain Bird device."""
 
-    serial_number: str
-    controller: AsyncRainbirdController
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Information about the device for this config."""
-        return DeviceInfo(
-            default_name=MANUFACTURER,
-            identifiers={(DOMAIN, self.serial_number)},
-            manufacturer=MANUFACTURER,
-        )
+    zones: set[int]
+    active_zones: set[int]
+    rain: bool
+    rain_delay: int
 
 
-class RainbirdUpdateCoordinator(DataUpdateCoordinator[_T]):
+class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
     """Coordinator for rainbird API calls."""
 
     def __init__(
         self,
         hass: HomeAssistant,
         name: str,
-        update_method: Callable[[], Awaitable[_T]],
+        controller: AsyncRainbirdController,
+        serial_number: str,
     ) -> None:
         """Initialize ZoneStateUpdateCoordinator."""
         super().__init__(
             hass,
             _LOGGER,
             name=name,
-            update_method=update_method,
+            update_method=self._async_update_data,
             update_interval=UPDATE_INTERVAL,
         )
+        self._controller = controller
+        self._serial_number = serial_number
+        self._zones: set[int] | None = None
 
-    async def _async_update_data(self) -> _T:
-        """Fetch data from API endpoint."""
+    @property
+    def controller(self) -> AsyncRainbirdController:
+        """Return the API client for the device."""
+        return self._controller
+
+    @property
+    def serial_number(self) -> str:
+        """Return the device serial number."""
+        return self._serial_number
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return information about the device."""
+        return DeviceInfo(
+            default_name=MANUFACTURER,
+            identifiers={(DOMAIN, self._serial_number)},
+            manufacturer=MANUFACTURER,
+        )
+
+    async def _async_update_data(self) -> RainbirdDeviceState:
+        """Fetch data from Rain Bird device."""
         try:
             async with async_timeout.timeout(TIMEOUT_SECONDS):
-                return await self.update_method()  # type: ignore[misc]
+                return await self._fetch_data()
         except RainbirdApiException as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            raise UpdateFailed(f"Error communicating with Device: {err}") from err
+
+    async def _fetch_data(self) -> RainbirdDeviceState:
+        """Fetch data from the Rain Bird device.
+
+        The data is fetched serially to avoid overwheling the device.
+        TODO: Do additional testing with this in parallel to see how it holds up.
+        """
+        zones = await self._fetch_zones()
+        states = await self._controller.get_zone_states()
+        rain = await self._controller.get_rain_sensor_state()
+        rain_delay = await self._controller.get_rain_delay()
+        return RainbirdDeviceState(
+            zones=set(zones),
+            active_zones={zone for zone in zones if states.active(zone)},
+            rain=rain,
+            rain_delay=rain_delay,
+        )
+
+    async def _fetch_zones(self) -> set[int]:
+        """Fetch the zones from the device, caching the results."""
+        if self._zones is None:
+            available_stations = await self._controller.get_available_stations()
+            self._zones = {
+                zone
+                for zone in range(1, available_stations.stations.count + 1)
+                if available_stations.stations.active(zone)
+            }
+        return self._zones

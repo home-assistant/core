@@ -48,6 +48,7 @@ RAIN_DELAY_OFF = "B60000"
 # ACK command 0x10, Echo 0x06
 ACK_ECHO = "0106"
 
+
 CONFIG = {
     DOMAIN: {
         "host": HOST,
@@ -61,6 +62,7 @@ CONFIG = {
 CONFIG_ENTRY_DATA = {
     "host": HOST,
     "password": PASSWORD,
+    "serial_number": SERIAL_NUMBER,
 }
 
 
@@ -95,16 +97,17 @@ async def config_entry(
     if config_entry_data is None:
         return None
     return MockConfigEntry(
+        unique_id=SERIAL_NUMBER,
         domain=DOMAIN,
         data=config_entry_data,
     )
 
 
 @pytest.fixture(autouse=True)
-async def setup_config_entry(
+async def add_config_entry(
     hass: HomeAssistant, config_entry: MockConfigEntry | None
 ) -> None:
-    """Fixture to set up the config entry."""
+    """Fixture to add the config entry."""
     if config_entry:
         config_entry.add_to_hass(hass)
 
@@ -140,10 +143,48 @@ def mock_response(data: str) -> AiohttpClientMockResponse:
     return AiohttpClientMockResponse("POST", URL, response=rainbird_response(data))
 
 
+@pytest.fixture(name="stations_response")
+def mock_station_response() -> str:
+    """Mock response to return available stations."""
+    return AVAILABLE_STATIONS_RESPONSE
+
+
+@pytest.fixture(name="zone_state_response")
+def mock_zone_state_response() -> str:
+    """Mock response to return zone states."""
+    return ZONE_STATE_OFF_RESPONSE
+
+
+@pytest.fixture(name="rain_response")
+def mock_rain_response() -> str:
+    """Mock response to return rain sensor state."""
+    return RAIN_SENSOR_OFF
+
+
+@pytest.fixture(name="rain_delay_response")
+def mock_rain_delay_response() -> str:
+    """Mock response to return rain delay state."""
+    return RAIN_DELAY_OFF
+
+
+@pytest.fixture(name="api_responses")
+def mock_api_responses(
+    stations_response: str,
+    zone_state_response: str,
+    rain_response: str,
+    rain_delay_response: str,
+) -> list[str]:
+    """Fixture to set up a list of fake API responsees for tests to extend.
+
+    These are returned in the order they are requested by the update coordinator.
+    """
+    return [stations_response, zone_state_response, rain_response, rain_delay_response]
+
+
 @pytest.fixture(name="responses")
-def mock_responses() -> list[AiohttpClientMockResponse]:
+def mock_responses(api_responses: list[str]) -> list[AiohttpClientMockResponse]:
     """Fixture to set up a list of fake API responsees for tests to extend."""
-    return [mock_response(SERIAL_RESPONSE)]
+    return [mock_response(api_response) for api_response in api_responses]
 
 
 @pytest.fixture(autouse=True)

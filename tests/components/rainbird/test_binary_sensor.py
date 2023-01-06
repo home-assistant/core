@@ -6,7 +6,7 @@ import pytest
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .conftest import RAIN_SENSOR_OFF, RAIN_SENSOR_ON, ComponentSetup, mock_response
+from .conftest import RAIN_SENSOR_OFF, RAIN_SENSOR_ON, ComponentSetup
 
 from tests.test_util.aiohttp import AiohttpClientMockResponse
 
@@ -18,19 +18,16 @@ def platforms() -> list[Platform]:
 
 
 @pytest.mark.parametrize(
-    "sensor_payload,expected_state",
+    "rain_response,expected_state",
     [(RAIN_SENSOR_OFF, "off"), (RAIN_SENSOR_ON, "on")],
 )
 async def test_rainsensor(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     responses: list[AiohttpClientMockResponse],
-    sensor_payload: str,
     expected_state: bool,
 ) -> None:
     """Test rainsensor binary sensor."""
-
-    responses.append(mock_response(sensor_payload))
 
     assert await setup_integration()
 

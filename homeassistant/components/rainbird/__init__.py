@@ -4,12 +4,7 @@ from __future__ import annotations
 import asyncio
 import logging
 
-import async_timeout
-from pyrainbird.async_client import (
-    AsyncRainbirdClient,
-    AsyncRainbirdController,
-    RainbirdApiException,
-)
+from pyrainbird.async_client import AsyncRainbirdClient, AsyncRainbirdController
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryState
@@ -22,15 +17,15 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.service import async_extract_config_entry_ids
 from homeassistant.helpers.typing import ConfigType
 
-from .const import ATTR_DURATION, CONF_ZONES, TIMEOUT_SECONDS
-from .coordinator import ConfigData
+from .const import ATTR_DURATION, CONF_SERIAL_NUMBER, CONF_ZONES
+from .coordinator import RainbirdUpdateCoordinator
 
 PLATFORMS = [Platform.SWITCH, Platform.SENSOR, Platform.BINARY_SENSOR]
 
@@ -102,6 +97,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the config entry for Rain Bird."""
+
     hass.data.setdefault(DOMAIN, {})
 
     controller = AsyncRainbirdController(
@@ -111,14 +107,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_PASSWORD],
         )
     )
+    coordinator = RainbirdUpdateCoordinator(
+        hass,
+        name=entry.title,
+        controller=controller,
+        serial_number=entry.data[CONF_SERIAL_NUMBER],
+    )
+    await coordinator.async_config_entry_first_refresh()
 
-    try:
-        async with async_timeout.timeout(TIMEOUT_SECONDS):
-            serial_number = await controller.get_serial_number()
-    except (RainbirdApiException, asyncio.TimeoutError) as err:
-        raise ConfigEntryNotReady(f"Error talking to controller: {str(err)}") from err
-
-    hass.data[DOMAIN][entry.entry_id] = ConfigData(serial_number, controller)
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

@@ -15,9 +15,22 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
 
-from .conftest import CONFIG_ENTRY_DATA, HOST, PASSWORD, URL
+from .conftest import (
+    CONFIG_ENTRY_DATA,
+    HOST,
+    PASSWORD,
+    SERIAL_RESPONSE,
+    URL,
+    mock_response,
+)
 
 from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
+
+
+@pytest.fixture(name="responses")
+def mock_responses() -> list[AiohttpClientMockResponse]:
+    """Set up fake serial number response when testing the connection."""
+    return [mock_response(SERIAL_RESPONSE)]
 
 
 @pytest.fixture(autouse=True)
