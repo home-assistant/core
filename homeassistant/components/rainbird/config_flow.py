@@ -22,7 +22,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import ATTR_DURATION, DOMAIN, TIMEOUT_SECONDS
+from .const import ATTR_DURATION, DEFAULT_TRIGGER_TIME_MINUTES, DOMAIN, TIMEOUT_SECONDS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,7 +71,11 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.error("Error during config flow: %s", err)
                 error_code = err.error_code
             else:
-                return await self.async_finish(serial_number, user_input)
+                return await self.async_finish(
+                    serial_number,
+                    user_input,
+                    {ATTR_DURATION: DEFAULT_TRIGGER_TIME_MINUTES},
+                )
 
         return self.async_show_form(
             step_id="user",
@@ -107,9 +111,7 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Import a config entry from configuration.yaml."""
-        for entry in self._async_current_entries():
-            if entry.data[CONF_HOST] == entry.data[CONF_HOST]:
-                return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_HOST: config[CONF_HOST]})
         try:
             serial_number = await self._test_connection(
                 config[CONF_HOST], config[CONF_PASSWORD]
@@ -117,13 +119,22 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except ConfigFlowError as err:
             _LOGGER.error("Error during config import: %s", err)
             return self.async_abort(reason=err.error_code)
-        return await self.async_finish(serial_number, config)
+        return await self.async_finish(
+            serial_number,
+            data={
+                CONF_HOST: config[CONF_HOST],
+                CONF_PASSWORD: config[CONF_PASSWORD],
+            },
+            options={
+                ATTR_DURATION: config.get(ATTR_DURATION, DEFAULT_TRIGGER_TIME_MINUTES),
+            },
+        )
 
     async def async_finish(
         self,
         serial_number: str,
         data: dict[str, Any],
-        options: dict[str, Any] | None = None,
+        options: dict[str, Any],
     ) -> FlowResult:
         """Create the config entry."""
         await self.async_set_unique_id(serial_number)
