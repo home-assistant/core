@@ -21,7 +21,7 @@ pytestmark = pytest.mark.usefixtures("system_get_info", "dsl_get_info")
 @pytest.fixture(autouse=True)
 def override_platforms() -> Generator[None, None, None]:
     """Override PLATFORMS."""
-    with patch("homeassistant.components.renault.PLATFORMS", [Platform.SENSOR]):
+    with patch("homeassistant.components.sfr_box.PLATFORMS", [Platform.SENSOR]):
         yield
 
 
