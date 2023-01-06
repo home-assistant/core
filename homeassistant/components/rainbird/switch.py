@@ -49,7 +49,7 @@ SERVICE_SCHEMA_RAIN_DELAY = vol.Schema(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_devices: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entry for a Rain Bird irrigation switches."""
     data = hass.data[DOMAIN][config_entry.entry_id]

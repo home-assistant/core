@@ -46,7 +46,7 @@ SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_devices: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entry for a Rain Bird binary_sensor."""
     data = hass.data[DOMAIN][config_entry.entry_id]
