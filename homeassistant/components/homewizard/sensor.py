@@ -220,41 +220,49 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
     SensorEntityDescription(
         key="voltage_sag_l1_count",
         name="Voltage sags detected L1",
+        icon="mdi:alert",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="voltage_sag_l2_count",
         name="Voltage sags detected L2",
+        icon="mdi:alert",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="voltage_sag_l3_count",
         name="Voltage sags detected L3",
+        icon="mdi:alert",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="voltage_swell_l1_count",
         name="Voltage swells detected L1",
+        icon="mdi:alert",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="voltage_swell_l2_count",
         name="Voltage swells detected L2",
+        icon="mdi:alert",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="voltage_swell_l3_count",
         name="Voltage swells detected L3",
+        icon="mdi:alert",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="any_power_fail_count",
         name="Power failures detected",
+        icon="mdi:transmission-tower-off",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="long_power_fail_count",
         name="Long power failures detected",
+        icon="mdi:transmission-tower-off",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
