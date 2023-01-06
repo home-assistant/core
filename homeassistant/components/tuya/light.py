@@ -326,6 +326,8 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             color_temp=DPCode.TEMP_VALUE,
         ),
     ),
+    # Extractor hood
+    "yyj": (TuyaLightEntityDescription(key=DPCode.LIGHT),),
 }
 
 # Socket (duplicate of `kg`)

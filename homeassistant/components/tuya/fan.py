@@ -29,6 +29,7 @@ TUYA_SUPPORT_TYPE = {
     "fsd",  # Fan with Light
     "fskg",  # Fan wall switch
     "kj",  # Air Purifier
+    "yyj",  # Extractor hood
 }
 
 
@@ -204,6 +205,8 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         """Return true if fan is on."""
         if self._switch is None:
             return None
+        if self._speeds is not None and "off" in self._speeds.range:
+            return self.device.status.get(self._speeds.dpcode) != "off"
         return self.device.status.get(self._switch)
 
     @property
