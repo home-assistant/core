@@ -21,13 +21,12 @@ from pyisy.helpers import NodeProperty
 from pyisy.nodes import Node
 
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -113,7 +112,7 @@ async def async_setup_entry(
     hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
     entities: list[ISYSensorEntity | ISYSensorVariableEntity] = []
 
-    for node in hass_isy_data[ISY994_NODES][SENSOR]:
+    for node in hass_isy_data[ISY994_NODES][Platform.SENSOR]:
         _LOGGER.debug("Loading %s", node.name)
         entities.append(ISYSensorEntity(node))
 
@@ -135,7 +134,7 @@ async def async_setup_entry(
     for vname, vobj in hass_isy_data[ISY994_VARIABLES]:
         entities.append(ISYSensorVariableEntity(vname, vobj))
 
-    await migrate_old_unique_ids(hass, SENSOR, entities)
+    await migrate_old_unique_ids(hass, Platform.SENSOR, entities)
     async_add_entities(entities)
 
 
