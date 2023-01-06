@@ -272,12 +272,6 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        key="montly_power_peak_timestamp",
-        name="Peak demand detected timestamp",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorDeviceClass.TIMESTAMP,
-    ),
-    SensorEntityDescription(
         key="total_gas_m3",
         name="Total gas",
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
