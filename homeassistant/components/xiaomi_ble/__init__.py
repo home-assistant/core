@@ -36,7 +36,6 @@ def process_service_info(
 ) -> SensorUpdate:
     """Process a BluetoothServiceInfoBleak, running side effects and returning sensor data."""
     update = data.update(service_info)
-
     if update.events:
         address = service_info.device.address
         for device_key, event in update.events.items():
