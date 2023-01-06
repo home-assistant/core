@@ -7,9 +7,11 @@ from pytile.tile import Tile
 
 from homeassistant.components.tile.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
+
+TEST_PASSWORD = "123abc"
+TEST_USERNAME = "user@host.com"
 
 
 @pytest.fixture(name="api")
@@ -34,11 +36,11 @@ def config_entry_fixture(hass, config):
 
 
 @pytest.fixture(name="config")
-def config_fixture(hass):
+def config_fixture():
     """Define a config entry data fixture."""
     return {
-        CONF_USERNAME: "user@host.com",
-        CONF_PASSWORD: "123abc",
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_PASSWORD: TEST_PASSWORD,
     }
 
 
@@ -48,14 +50,18 @@ def data_tile_details_fixture():
     return json.loads(load_fixture("tile_details_data.json", "tile"))
 
 
-@pytest.fixture(name="setup_tile")
-async def setup_tile_fixture(hass, api, config):
-    """Define a fixture to set up Tile."""
+@pytest.fixture(name="mock_pytile")
+async def mock_pytile_fixture(api):
+    """Define a fixture to patch pytile."""
     with patch(
         "homeassistant.components.tile.config_flow.async_login", return_value=api
-    ), patch("homeassistant.components.tile.async_login", return_value=api), patch(
-        "homeassistant.components.tile.PLATFORMS", []
-    ):
-        assert await async_setup_component(hass, DOMAIN, config)
-        await hass.async_block_till_done()
+    ), patch("homeassistant.components.tile.async_login", return_value=api):
         yield
+
+
+@pytest.fixture(name="setup_config_entry")
+async def setup_config_entry_fixture(hass, config_entry, mock_pytile):
+    """Define a fixture to set up tile."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    yield
