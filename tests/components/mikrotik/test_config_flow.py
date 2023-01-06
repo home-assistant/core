@@ -9,6 +9,7 @@ from homeassistant.components.mikrotik.const import (
     CONF_ARP_PING,
     CONF_DETECTION_TIME,
     CONF_FORCE_DHCP,
+    CONF_ROUTER_TYPE,
     DOMAIN,
 )
 from homeassistant.const import (
@@ -28,6 +29,7 @@ DEMO_USER_INPUT = {
     CONF_PASSWORD: "password",
     CONF_PORT: 8278,
     CONF_VERIFY_SSL: False,
+    CONF_ROUTER_TYPE: "chr",
 }
 
 DEMO_CONFIG_ENTRY = {
@@ -87,6 +89,7 @@ async def test_flow_works(hass: HomeAssistant, api) -> None:
     assert result["data"][CONF_USERNAME] == "username"
     assert result["data"][CONF_PASSWORD] == "password"
     assert result["data"][CONF_PORT] == 8278
+    assert result["data"][CONF_ROUTER_TYPE] == "chr"
 
 
 async def test_options(hass: HomeAssistant, api) -> None:
