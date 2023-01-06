@@ -58,15 +58,28 @@ AUX_DISABLED_BY_DEFAULT_EXACT = {
 }
 SKIP_AUX_PROPERTIES = {PROP_BUSY, PROP_COMMS_ERROR, PROP_STATUS}
 
+# Reference pyisy.constants.COMMAND_FRIENDLY_NAME for API details.
+#   Note: "LUMIN"/Illuminance removed, some devices use non-conformant "%" unit
 ISY_CONTROL_TO_DEVICE_CLASS = {
     PROP_BATTERY_LEVEL: SensorDeviceClass.BATTERY,
     PROP_HUMIDITY: SensorDeviceClass.HUMIDITY,
     PROP_TEMPERATURE: SensorDeviceClass.TEMPERATURE,
-    "BARPRES": SensorDeviceClass.PRESSURE,
+    "BARPRES": SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+    "CC": SensorDeviceClass.CURRENT,
     "CO2LVL": SensorDeviceClass.CO2,
+    "CPW": SensorDeviceClass.POWER,
     "CV": SensorDeviceClass.VOLTAGE,
-    "LUMIN": SensorDeviceClass.ILLUMINANCE,
+    "DEWPT": SensorDeviceClass.TEMPERATURE,
+    "DISTANC": SensorDeviceClass.DISTANCE,
     "PF": SensorDeviceClass.POWER_FACTOR,
+    "RAINRT": SensorDeviceClass.PRECIPITATION_INTENSITY,
+    "SOILT": SensorDeviceClass.TEMPERATURE,
+    "SOLRAD": SensorDeviceClass.IRRADIANCE,
+    "SPEED": SensorDeviceClass.SPEED,
+    "TPW": SensorDeviceClass.ENERGY,
+    "VOCLVL": SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+    "WATERT": SensorDeviceClass.TEMPERATURE,
+    "WEIGHT": SensorDeviceClass.WEIGHT,
 }
 ISY_CONTROL_TO_STATE_CLASS = {
     control: SensorStateClass.MEASUREMENT for control in ISY_CONTROL_TO_DEVICE_CLASS
