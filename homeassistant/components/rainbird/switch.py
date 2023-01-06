@@ -7,7 +7,6 @@ import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -25,18 +24,9 @@ _LOGGER = logging.getLogger(__name__)
 
 SERVICE_START_IRRIGATION = "start_irrigation"
 
-SERVICE_SCHEMA_IRRIGATION = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_DURATION): cv.positive_float,
-    }
-)
-
-SERVICE_SCHEMA_RAIN_DELAY = vol.Schema(
-    {
-        vol.Required(ATTR_DURATION): cv.positive_float,
-    }
-)
+SERVICE_SCHEMA_IRRIGATION = {
+    vol.Required(ATTR_DURATION): cv.positive_float,
+}
 
 
 async def async_setup_entry(
