@@ -24,6 +24,9 @@ class EzvizEntity(CoordinatorEntity[EzvizDataUpdateCoordinator], Entity):
         self._camera_name = self.data["name"]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial)},
+            connections={
+                (device_registry.CONNECTION_NETWORK_MAC, self.data["mac_address"]),
+            },
             manufacturer=MANUFACTURER,
             model=self.data["device_sub_category"],
             name=self.data["name"],
