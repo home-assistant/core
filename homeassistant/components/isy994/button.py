@@ -56,7 +56,7 @@ class ISYNodeQueryButtonEntity(ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        self.hass.async_create_task(self._node.query())
+        await self._node.query()
 
 
 class ISYNodeBeepButtonEntity(ButtonEntity):
@@ -65,7 +65,6 @@ class ISYNodeBeepButtonEntity(ButtonEntity):
     _attr_should_poll = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_has_entity_name = True
-    _attr_entity_registry_enabled_default = False
 
     def __init__(self, node: Node, base_unique_id: str) -> None:
         """Initialize a beep Insteon device button entity."""
@@ -80,4 +79,4 @@ class ISYNodeBeepButtonEntity(ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        self.hass.async_create_task(self._node.beep())
+        await self._node.beep()
