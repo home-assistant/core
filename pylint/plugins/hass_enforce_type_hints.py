@@ -2884,7 +2884,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         self._class_matchers: list[ClassTypeHintMatch] = []
 
     def visit_module(self, node: nodes.Module) -> None:
-        """Build matchers when visiting a nodes.Module."""
+        """Populate matchers for a Module node."""
         self._function_matchers = []
         self._class_matchers = []
 
@@ -2908,7 +2908,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         self._class_matchers.reverse()
 
     def visit_classdef(self, node: nodes.ClassDef) -> None:
-        """Apply relevant class matchers on each nodes.ClassDef."""
+        """Apply relevant class matchers on a ClassDef node."""
         ancestor: nodes.ClassDef
         checked_class_methods: set[str] = set()
         ancestors = list(node.ancestors())  # cache result for inside loop
@@ -2935,7 +2935,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
                     checked_class_methods.add(function_node.name)
 
     def visit_functiondef(self, node: nodes.FunctionDef) -> None:
-        """Apply relevant function matchers on each nodes.FunctionDef."""
+        """Apply relevant function matchers on a FunctionDef node."""
         for match in self._function_matchers:
             if not match.need_to_check_function(node) or node.is_method():
                 continue
