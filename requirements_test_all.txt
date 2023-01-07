@@ -725,7 +725,7 @@ ismartgate==4.0.4
 janus==1.0.0
 
 # homeassistant.components.abode
-jaraco.abode==2.0.0
+jaraco.abode==3.1.2
 
 # homeassistant.components.jellyfin
 jellyfin-apiclient-python==1.9.2

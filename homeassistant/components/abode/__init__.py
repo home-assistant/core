@@ -10,7 +10,7 @@ from jaraco.abode.exceptions import (
     AuthenticationException as AbodeAuthenticationException,
     Exception as AbodeException,
 )
-from jaraco.abode.helpers import timeline as TIMELINE
+from jaraco.abode.helpers.timeline import Groups as GROUPS
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
@@ -30,7 +30,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, entity
 from homeassistant.helpers.dispatcher import dispatcher_send
 
-from .const import ATTRIBUTION, CONF_POLLING, DEFAULT_CACHEDB, DOMAIN, LOGGER
+from .const import ATTRIBUTION, CONF_POLLING, DOMAIN, LOGGER
 
 SERVICE_SETTINGS = "change_setting"
 SERVICE_CAPTURE_IMAGE = "capture_image"
@@ -86,7 +86,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
     polling = entry.data[CONF_POLLING]
-    cache = hass.config.path(DEFAULT_CACHEDB)
 
     # For previous config entries where unique_id is None
     if entry.unique_id is None:
@@ -96,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         abode = await hass.async_add_executor_job(
-            Abode, username, password, True, True, True, cache
+            Abode, username, password, True, True, True
         )
 
     except AbodeAuthenticationException as ex:
@@ -229,17 +228,17 @@ def setup_abode_events(hass: HomeAssistant) -> None:
         hass.bus.fire(event, data)
 
     events = [
-        TIMELINE.ALARM_GROUP,
-        TIMELINE.ALARM_END_GROUP,
-        TIMELINE.PANEL_FAULT_GROUP,
-        TIMELINE.PANEL_RESTORE_GROUP,
-        TIMELINE.AUTOMATION_GROUP,
-        TIMELINE.DISARM_GROUP,
-        TIMELINE.ARM_GROUP,
-        TIMELINE.ARM_FAULT_GROUP,
-        TIMELINE.TEST_GROUP,
-        TIMELINE.CAPTURE_GROUP,
-        TIMELINE.DEVICE_GROUP,
+        GROUPS.ALARM,
+        GROUPS.ALARM_END,
+        GROUPS.PANEL_FAULT,
+        GROUPS.PANEL_RESTORE,
+        GROUPS.AUTOMATION,
+        GROUPS.DISARM,
+        GROUPS.ARM,
+        GROUPS.ARM_FAULT,
+        GROUPS.TEST,
+        GROUPS.CAPTURE,
+        GROUPS.DEVICE,
     ]
 
     for event in events:
