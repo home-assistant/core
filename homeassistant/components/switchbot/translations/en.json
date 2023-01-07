@@ -21,7 +21,7 @@
                     "password": "Password",
                     "username": "Username"
                 },
-                "description": "Please provide your SwitchBot app username and password. This data won't be saved and only used to retrieve your locks encryption key."
+                "description": "Please provide your SwitchBot app username and password. This data won't be saved and only used to retrieve your locks encryption key. Usernames and passwords are case sensitive."
             },
             "lock_choose_method": {
                 "description": "A SwitchBot lock can be set up in Home Assistant in two different ways.\n\nYou can enter the key id and encryption key yourself, or Home Assistant can import them from your SwitchBot account.",
