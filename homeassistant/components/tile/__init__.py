@@ -33,7 +33,7 @@ CONF_SHOW_INACTIVE = "show_inactive"
 class TileData:
     """Define an object to be stored in `hass.data`."""
 
-    coordinators: dict[str, DataUpdateCoordinator]
+    coordinators: dict[str, DataUpdateCoordinator[None]]
     tiles: dict[str, Tile]
 
 
@@ -94,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except TileError as err:
             raise UpdateFailed(f"Error while retrieving data: {err}") from err
 
-    coordinators = {}
+    coordinators: dict[str, DataUpdateCoordinator[None]] = {}
     coordinator_init_tasks = []
 
     for tile_uuid, tile in tiles.items():
