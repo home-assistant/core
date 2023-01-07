@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pyisy import ISY
+from pyisy.constants import PROTO_INSTEON
 from pyisy.nodes import Node
 
 from homeassistant.components.button import ButtonEntity
@@ -23,9 +24,11 @@ async def async_setup_entry(
     hass_isy_data = hass.data[ISY994_DOMAIN][config_entry.entry_id]
     isy: ISY = hass_isy_data[ISY994_ISY]
     uuid = isy.configuration["uuid"]
-    entities: list[ISYNodeQueryButtonEntity] = []
+    entities: list[ISYNodeQueryButtonEntity | ISYNodeBeepButtonEntity] = []
     for node in hass_isy_data[ISY994_NODES][Platform.BUTTON]:
         entities.append(ISYNodeQueryButtonEntity(node, f"{uuid}_{node.address}"))
+        if node.protocol == PROTO_INSTEON:
+            entities.append(ISYNodeBeepButtonEntity(node, f"{uuid}_{node.address}"))
 
     # Add entity to query full system
     entities.append(ISYNodeQueryButtonEntity(isy, uuid))
@@ -54,3 +57,27 @@ class ISYNodeQueryButtonEntity(ButtonEntity):
     async def async_press(self) -> None:
         """Press the button."""
         self.hass.async_create_task(self._node.query())
+
+
+class ISYNodeBeepButtonEntity(ButtonEntity):
+    """Representation of a device beep button entity."""
+
+    _attr_should_poll = False
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_has_entity_name = True
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(self, node: Node, base_unique_id: str) -> None:
+        """Initialize a beep Insteon device button entity."""
+        self._node = node
+
+        # Entity class attributes
+        self._attr_name = "Beep"
+        self._attr_unique_id = f"{base_unique_id}_beep"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(ISY994_DOMAIN, base_unique_id)}
+        )
+
+    async def async_press(self) -> None:
+        """Press the button."""
+        self.hass.async_create_task(self._node.beep())
