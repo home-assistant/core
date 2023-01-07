@@ -8,7 +8,7 @@
             "unknown": "Ootamatu t\u00f5rge"
         },
         "error": {
-            "auth_failed": "Tuvastamine nurjus",
+            "auth_failed": "Tuvastamine nurjus: {error_detail}",
             "encryption_key_invalid": "V\u00f5tme ID v\u00f5i kr\u00fcptov\u00f5ti on sobimatu",
             "key_id_invalid": "V\u00f5tme ID v\u00f5i kr\u00fcptov\u00f5ti on sobimatu"
         },
