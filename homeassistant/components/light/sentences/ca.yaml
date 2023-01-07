@@ -1,7 +1,0 @@
-language: ca
-intents:
-  HassLightSet:
-    data:
-      - sentences:
-          - <configura> la llum (<area> | <name>) al <lluentor>
-          - <engega> la llum (<area> | <name>) al <lluentor>
