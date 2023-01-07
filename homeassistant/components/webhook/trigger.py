@@ -83,7 +83,7 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Trigger based on incoming webhooks."""
     webhook_id: str = config[CONF_WEBHOOK_ID]
-    local_only = config.get(CONF_LOCAL_ONLY, None)
+    local_only = config.get(CONF_LOCAL_ONLY)
     issue_id: str | None = None
     if local_only is None:
         issue_id = f"trigger_missing_local_only_{webhook_id}"
