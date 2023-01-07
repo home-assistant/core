@@ -19,7 +19,7 @@ async def async_setup_entry(
     coordinator = data[DATA_COORDINATOR]
 
     async_add_entities(
-        [NukiBatterySensor(coordinator, lock) for lock in data[DATA_LOCKS]]
+        NukiBatterySensor(coordinator, lock) for lock in data[DATA_LOCKS]
     )
 
 
@@ -27,7 +27,6 @@ class NukiBatterySensor(NukiEntity, SensorEntity):
     """Representation of a Nuki Lock Battery sensor."""
 
     _attr_has_entity_name = True
-
     _attr_name = "Battery"
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_device_class = SensorDeviceClass.BATTERY
@@ -41,10 +40,7 @@ class NukiBatterySensor(NukiEntity, SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the device specific state attributes."""
-        data = {
-            ATTR_NUKI_ID: self._nuki_device.nuki_id,
-        }
-        return data
+        return {ATTR_NUKI_ID: self._nuki_device.nuki_id}
 
     @property
     def native_value(self) -> float:
