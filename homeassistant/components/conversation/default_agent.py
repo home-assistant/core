@@ -89,11 +89,10 @@ class DefaultAgent(AbstractConversationAgent):
             lang_intents.loaded_components - self.hass.config.components
         ):
             # Load intents in executor
-            load_intents_job = self.hass.async_add_executor_job(
+            load_intents = await self.hass.async_add_executor_job(
                 self.get_or_load_intents,
                 language,
             )
-            lang_intents = await load_intents_job
 
         if lang_intents is None:
             # No intents loaded
@@ -170,21 +169,6 @@ class DefaultAgent(AbstractConversationAgent):
             lang_intents.intents = intents
 
         return lang_intents
-
-    async def async_get_sentences_dirs(self) -> dict[str, Path]:
-        """Get sentences directories for all loaded components."""
-        # Create a copy in case a new component loads during this method
-        components = list(self.hass.config.components)
-        integration_coros = []
-        for component in components:
-            domain = component.rpartition(".")[-1]
-            integration_coros.append(async_get_integration(self.hass, domain))
-
-        integrations = await asyncio.gather(*integration_coros)
-        return {
-            component: integration.file_path / "sentences"
-            for component, integration in zip(components, integrations)
-        }
 
     def _make_areas_list(self) -> TextSlotList:
         """Create slot list mapping area names/aliases to area ids."""
