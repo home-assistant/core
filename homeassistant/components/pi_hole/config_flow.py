@@ -57,10 +57,13 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
                 CONF_API_KEY: user_input[CONF_API_KEY],
             }
-            endpoint = f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}/{user_input[CONF_LOCATION]}"
 
-            if await self._async_endpoint_existed(endpoint):
-                return self.async_abort(reason="already_configured")
+            self._async_abort_entries_match(
+                {
+                    CONF_HOST: f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}",
+                    CONF_LOCATION: user_input[CONF_LOCATION],
+                }
+            )
 
             if not (errors := await self._async_try_connect()):
                 return self.async_create_entry(
@@ -130,13 +133,6 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
             errors=errors,
         )
-
-    async def _async_endpoint_existed(self, endpoint: str) -> bool:
-        existing_endpoints = [
-            f"{entry.data.get(CONF_HOST)}/{entry.data.get(CONF_LOCATION)}"
-            for entry in self._async_current_entries()
-        ]
-        return endpoint in existing_endpoints
 
     async def _async_try_connect(self) -> dict[str, str]:
         session = async_get_clientsession(self.hass, self._config[CONF_VERIFY_SSL])
