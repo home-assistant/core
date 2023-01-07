@@ -3,8 +3,10 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 from devolo_plc_api import Device
+from devolo_plc_api.plcnet_api import LogicalNetwork
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -62,9 +64,9 @@ async def async_setup_entry(
 ) -> None:
     """Get all devices and sensors and setup them via config entry."""
     device: Device = hass.data[DOMAIN][entry.entry_id]["device"]
-    coordinators: dict[str, DataUpdateCoordinator] = hass.data[DOMAIN][entry.entry_id][
-        "coordinators"
-    ]
+    coordinators: dict[str, DataUpdateCoordinator[Any]] = hass.data[DOMAIN][
+        entry.entry_id
+    ]["coordinators"]
 
     entities: list[BinarySensorEntity] = []
     if device.plcnet:
@@ -79,12 +81,12 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class DevoloBinarySensorEntity(DevoloEntity, BinarySensorEntity):
+class DevoloBinarySensorEntity(DevoloEntity[LogicalNetwork], BinarySensorEntity):
     """Representation of a devolo binary sensor."""
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[LogicalNetwork],
         description: DevoloBinarySensorEntityDescription,
         device: Device,
         device_name: str,
