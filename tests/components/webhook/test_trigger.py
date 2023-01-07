@@ -117,7 +117,7 @@ async def test_webhook_allowed_methods_internet(hass, hass_client_no_auth):
 
     @callback
     def store_event(event):
-        """Helepr to store events."""
+        """Help store events."""
         events.append(event)
 
     hass.bus.async_listen("test_success", store_event)
