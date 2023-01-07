@@ -9,8 +9,7 @@
         },
         "error": {
             "auth_failed": "Authentication failed: {error_detail}",
-            "encryption_key_invalid": "Key ID or Encryption key is invalid",
-            "key_id_invalid": "Key ID or Encryption key is invalid"
+            "encryption_key_invalid": "Key ID or Encryption key is invalid"
         },
         "flow_title": "{name} ({address})",
         "step": {
@@ -22,20 +21,13 @@
                     "password": "Password",
                     "username": "Username"
                 },
-                "description": "Please provide your SwitchBot app username and password. This data won't be saved and only used to retrieve your locks encryption key."
+                "description": "Please provide your SwitchBot app username and password. This data won't be saved and only used to retrieve your locks encryption key. Usernames and passwords are case sensitive."
             },
             "lock_choose_method": {
                 "description": "A SwitchBot lock can be set up in Home Assistant in two different ways.\n\nYou can enter the key id and encryption key yourself, or Home Assistant can import them from your SwitchBot account.",
                 "menu_options": {
                     "lock_auth": "SwitchBot account (recommended)",
                     "lock_key": "Enter lock encryption key manually"
-                }
-            },
-            "lock_chose_method": {
-                "description": "Choose configuration method, details can be found in the documentation.",
-                "menu_options": {
-                    "lock_auth": "SwitchBot app login and password",
-                    "lock_key": "Lock encryption key"
                 }
             },
             "lock_key": {
