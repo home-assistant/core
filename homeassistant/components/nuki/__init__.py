@@ -14,7 +14,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -179,15 +178,3 @@ class NukiEntity(CoordinatorEntity):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
         self._nuki_device = nuki_device
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._nuki_device.nuki_id)},
-            manufacturer="Nuki Home Solutions GmbH",
-            name=self._nuki_device.name,
-            sw_version=self._nuki_device.firmware_version,
-            hw_version=self._nuki_device.device_type_str,
-        )
