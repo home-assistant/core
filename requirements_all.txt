@@ -930,7 +930,7 @@ ibm-watson==5.2.2
 ibmiotf==0.3.4
 
 # homeassistant.components.local_calendar
-ical==4.2.8
+ical==4.2.9
 
 # homeassistant.components.ping
 icmplib==3.0
