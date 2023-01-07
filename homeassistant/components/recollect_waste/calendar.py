@@ -75,11 +75,11 @@ class ReCollectWasteCalendar(ReCollectWasteEntity, CalendarEntity):
                 if event.date >= datetime.date.today()
             )
         except StopIteration:
-            return
-
-        self._event = async_get_calendar_event_from_pickup_event(
-            self._entry, current_event
-        )
+            self._event = None
+        else:
+            self._event = async_get_calendar_event_from_pickup_event(
+                self._entry, current_event
+            )
 
         super()._handle_coordinator_update()
 

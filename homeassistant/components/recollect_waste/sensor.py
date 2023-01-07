@@ -56,6 +56,11 @@ class ReCollectWasteSensor(ReCollectWasteEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.DATE
 
+    PICKUP_INDEX_MAP = {
+        SENSOR_TYPE_CURRENT_PICKUP: 1,
+        SENSOR_TYPE_NEXT_PICKUP: 2,
+    }
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[list[PickupEvent]],
@@ -69,39 +74,21 @@ class ReCollectWasteSensor(ReCollectWasteEntity, SensorEntity):
         self.entity_description = description
 
     @callback
-    def _async_write_state_from_event(self, event: PickupEvent) -> None:
-        """Write the entity state from a pickup event."""
-        pickup_types = async_get_pickup_type_names(self._entry, event.pickup_types)
-        self._attr_extra_state_attributes.update(
-            {
-                ATTR_AREA_NAME: event.area_name,
-                ATTR_PICKUP_TYPES: pickup_types,
-            }
-        )
-        self._attr_native_value = event.date
-
-    @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
+        relevant_events = (e for e in self.coordinator.data if e.date >= date.today())
+        pickup_index = self.PICKUP_INDEX_MAP[self.entity_description.key]
+
         try:
-            current_event = next(
-                event for event in self.coordinator.data if event.date >= date.today()
-            )
+            for _ in range(pickup_index):
+                event = next(relevant_events)
         except StopIteration:
-            LOGGER.error("No current pickup found")
-            return
-
-        if self.entity_description.key == SENSOR_TYPE_CURRENT_PICKUP:
-            self._async_write_state_from_event(current_event)
+            LOGGER.info("No pickup event found for %s", self.entity_description.key)
+            self._attr_extra_state_attributes = {}
+            self._attr_native_value = None
         else:
-            try:
-                next_event = next(
-                    event
-                    for event in self.coordinator.data
-                    if event.date > current_event.date
-                )
-            except StopIteration:
-                LOGGER.info("No next pickup found")
-                return
-
-            self._async_write_state_from_event(next_event)
+            self._attr_extra_state_attributes[ATTR_AREA_NAME] = event.area_name
+            self._attr_extra_state_attributes[
+                ATTR_PICKUP_TYPES
+            ] = async_get_pickup_type_names(self._entry, event.pickup_types)
+            self._attr_native_value = event.date
