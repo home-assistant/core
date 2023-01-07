@@ -212,7 +212,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             _LOGGER.debug(
                 "Requesting system query of ISY %s", isy.configuration["uuid"]
             )
-            # await isy.query()
+            await isy.query()
             async_log_deprecated_service_call(
                 hass,
                 call=service,
