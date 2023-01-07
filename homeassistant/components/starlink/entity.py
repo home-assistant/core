@@ -46,24 +46,19 @@ class StarlinkSensorEntity(CoordinatorEntity[StarlinkUpdateCoordinator], SensorE
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{self.coordinator.data['id']}_{description.key}"
-
-    @property
-    def native_value(self) -> StateType | datetime:
-        """Calculate the sensor value from the entity description."""
-        return self.entity_description.value_fn(self.coordinator.data)
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Get a DeviceInfo for Dishy."""
-        config_url = f"http://{self.coordinator.channel_context.target.split(':')[0]}"
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={
                 (DOMAIN, self.coordinator.data["id"]),
             },
             sw_version=self.coordinator.data["software_version"],
             hw_version=self.coordinator.data["hardware_version"],
             name="Starlink",
-            configuration_url=config_url,
+            configuration_url=f"http://{self.coordinator.channel_context.target.split(':')[0]}",
             manufacturer="SpaceX",
             model="Starlink",
         )
+
+    @property
+    def native_value(self) -> StateType | datetime:
+        """Calculate the sensor value from the entity description."""
+        return self.entity_description.value_fn(self.coordinator.data)

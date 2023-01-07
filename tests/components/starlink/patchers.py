@@ -10,7 +10,9 @@ SETUP_ENTRY_PATCHER = patch(
 )
 
 COORDINATOR_SUCCESS_PATCHER = patch.object(
-    StarlinkUpdateCoordinator, "_async_update_data", return_value=StatusDict(id="1")
+    StarlinkUpdateCoordinator,
+    "_async_update_data",
+    return_value=StatusDict(id="1", software_version="1", hardware_version="1"),
 )
 
 DEVICE_FOUND_PATCHER = patch(

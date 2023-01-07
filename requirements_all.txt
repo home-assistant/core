@@ -74,7 +74,7 @@ WazeRouteCalculator==0.14
 abodepy==1.2.0
 
 # homeassistant.components.accuweather
-accuweather==0.4.0
+accuweather==0.5.0
 
 # homeassistant.components.adax
 adax==0.2.0
@@ -794,6 +794,9 @@ goalzero==0.2.1
 # homeassistant.components.goodwe
 goodwe==0.2.18
 
+# homeassistant.components.google_mail
+google-api-python-client==2.71.0
+
 # homeassistant.components.google_pubsub
 google-cloud-pubsub==2.13.11
 
@@ -1039,7 +1042,7 @@ librouteros==3.2.0
 libsoundtouch==0.8
 
 # homeassistant.components.life360
-life360==5.3.0
+life360==5.5.0
 
 # homeassistant.components.osramlightify
 lightify==1.0.7.3
@@ -2546,7 +2549,7 @@ venstarcolortouch==0.19
 vilfo-api-client==0.3.2
 
 # homeassistant.components.volkszaehler
-volkszaehler==0.3.2
+volkszaehler==0.4.0
 
 # homeassistant.components.volvooncall
 volvooncall==0.10.1

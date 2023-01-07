@@ -31,7 +31,7 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StatusDict]):
         async with async_timeout.timeout(4):
             try:
                 status = await self.hass.async_add_executor_job(
-                    lambda: status_data(self.channel_context)
+                    status_data, self.channel_context
                 )
                 return status[0]
             except GrpcError as exc:
