@@ -792,8 +792,8 @@ class LQISensor(RSSISensor, id_suffix="lqi"):
     """LQI sensor for a device."""
 
     _attr_name: str = "LQI"
-    _attr_device_class = None
-    _attr_native_unit_of_measurement = None
+    _attr_device_class: SensorDeviceClass = None
+    _attr_native_unit_of_measurement: str = None
 
 
 @MULTI_MATCH(
