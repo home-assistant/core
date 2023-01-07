@@ -157,6 +157,7 @@ FLOWS = {
         "goodwe",
         "google",
         "google_assistant_sdk",
+        "google_mail",
         "google_sheets",
         "google_travel_time",
         "govee_ble",
