@@ -64,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     async def remove_item_service(call: ServiceCall) -> None:
         """Remove the first item with matching `name`."""
-        data = hass.data[DOMAIN]
+        data: ShoppingData = hass.data[DOMAIN]
         name = call.data[ATTR_NAME]
 
         try:
@@ -76,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     async def complete_item_service(call: ServiceCall) -> None:
         """Mark the first item with matching `name` as completed."""
-        data = hass.data[DOMAIN]
+        data: ShoppingData = hass.data[DOMAIN]
         name = call.data[ATTR_NAME]
 
         try:
@@ -88,7 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     async def incomplete_item_service(call: ServiceCall) -> None:
         """Mark the first item with matching `name` as incomplete."""
-        data = hass.data[DOMAIN]
+        data: ShoppingData = hass.data[DOMAIN]
         name = call.data[ATTR_NAME]
 
         try:
@@ -163,6 +163,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     websocket_api.async_register_command(hass, websocket_handle_clear)
     websocket_api.async_register_command(hass, websocket_handle_reorder)
 
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
+    )
     return True
 
 
@@ -170,12 +173,21 @@ class NoMatchingShoppingListItem(Exception):
     """No matching item could be found in the shopping list."""
 
 
+class ShoppingDataItem:
+    """Class to hold individual shopping item"""
+
+    def __init__(self, name: str) -> None:
+        self.name = name
+        self.id = uuid.uuid4()
+        self.complete = False
+
+
 class ShoppingData:
     """Class to hold shopping list data."""
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the shopping list."""
-        self.hass = hass
+        self.hass: HomeAssistant = hass
         self.items = []
 
     async def async_add(self, name, context=None):
@@ -188,6 +200,7 @@ class ShoppingData:
             {"action": "add", "item": item},
             context=context,
         )
+
         return item
 
     async def async_remove(self, item_id, context=None):
