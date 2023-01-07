@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
 from whirlpool.washerdryer import MachineState, WasherDryer
@@ -15,7 +15,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -85,7 +84,7 @@ def washer_state(washer: WasherDryer) -> str | None:
             if func(washer):
                 return cycle_name
 
-    return MACHINE_STATE.get(machine_state, STATE_UNKNOWN)
+    return MACHINE_STATE.get(machine_state, None)
 
 
 @dataclass
@@ -107,14 +106,12 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
         key="state",
         name="State",
         icon=ICON_W,
-        has_entity_name=True,
         value_fn=washer_state,
     ),
     WhirlpoolSensorEntityDescription(
         key="DispenseLevel",
         name="Detergent Level",
         icon=ICON_W,
-        has_entity_name=True,
         value_fn=lambda WasherDryer: TANK_FILL[
             WasherDryer.get_attribute("WashCavity_OpStatusBulkDispense1Level")
         ],
@@ -127,7 +124,6 @@ SENSOR_TIMER: tuple[SensorEntityDescription] = (
         name="End Time",
         device_class=SensorDeviceClass.TIMESTAMP,
         icon=ICON_W,
-        has_entity_name=True,
     ),
 )
 
@@ -186,19 +182,19 @@ class WasherDryerClass(SensorEntity):
         washdry: WasherDryer,
     ) -> None:
         """Initialize the washer sensor."""
-        self._name = name.capitalize()
         self._wd: WasherDryer = washdry
 
-        if self._name == "Dryer":
+        if name == "dryer":
             self._attr_icon = ICON_D
 
         self.entity_description: WhirlpoolSensorEntityDescription = description
-        self._attr_unique_id = f"{said}-{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, said)},
-            name=self._name,
+            name=name.capitalize(),
             manufacturer="Whirlpool",
         )
+        self._attr_has_entity_name = True
+        self._attr_unique_id = f"{said}-{description.key}"
 
     async def async_added_to_hass(self) -> None:
         """Connect washer/dryer to the cloud."""
@@ -232,21 +228,20 @@ class WasherDryerTimeClass(RestoreSensor):
         washdry: WasherDryer,
     ) -> None:
         """Initialize the washer sensor."""
-        self._name = name.capitalize()
         self._wd: WasherDryer = washdry
 
-        if self._name == "Dryer":
+        if name == "dryer":
             self._attr_icon = ICON_D
 
         self.entity_description: SensorEntityDescription = description
-        self._attr_unique_id = f"{said}-{description.key}"
         self._running: bool | None = None
-        self._timestamp: datetime | None = None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, said)},
-            name=self._name,
+            name=name.capitalize(),
             manufacturer="Whirlpool",
         )
+        self._attr_has_entity_name = True
+        self._attr_unique_id = f"{said}-{description.key}"
 
     async def async_added_to_hass(self) -> None:
         """Connect washer/dryer to the cloud."""
