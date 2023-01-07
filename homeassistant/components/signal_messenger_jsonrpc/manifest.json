@@ -3,7 +3,7 @@
   "name": "Signal Messenger (JSONRPC)",
   "documentation": "https://www.home-assistant.io/integrations/signal_messenger_jsonrpc",
   "codeowners": ["@morph027"],
-  "requirements": ["pysignalclijsonrpc==22.11.9"],
+  "requirements": ["pysignalclijsonrpc==23.1.1"],
   "iot_class": "cloud_push",
   "loggers": ["pysignalclijsonrpc"]
 }
