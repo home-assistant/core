@@ -900,6 +900,9 @@ holidays==0.18.0
 # homeassistant.components.frontend
 home-assistant-frontend==20230104.0
 
+# homeassistant.components.conversation
+home-assistant-intents==0.0.1
+
 # homeassistant.components.home_connect
 homeconnect==0.7.2
 

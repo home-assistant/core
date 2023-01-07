@@ -11,7 +11,7 @@ from typing import Any
 from hassil.intents import Intents, SlotList, TextSlotList
 from hassil.recognize import recognize
 from hassil.util import merge_dict
-from yaml import safe_load
+from home_assistant_intents import get_intents
 
 from homeassistant import core, setup
 from homeassistant.helpers import area_registry, entity_registry, intent
@@ -89,9 +89,9 @@ class DefaultAgent(AbstractConversationAgent):
             lang_intents.loaded_components - self.hass.config.components
         ):
             # Load intents in executor
-            sentences_dirs = await self.async_get_sentences_dirs()
             load_intents_job = self.hass.async_add_executor_job(
-                self.get_or_load_intents, language, sentences_dirs
+                self.get_or_load_intents,
+                language,
             )
             lang_intents = await load_intents_job
 
@@ -123,9 +123,7 @@ class DefaultAgent(AbstractConversationAgent):
             response=intent_response, conversation_id=conversation_id
         )
 
-    def get_or_load_intents(
-        self, language: str, sentences_dirs: dict[str, Path]
-    ) -> LanguageIntents | None:
+    def get_or_load_intents(self, language: str) -> LanguageIntents | None:
         """Load all intents for language."""
         lang_intents = self._lang_intents.get(language)
 
@@ -137,31 +135,27 @@ class DefaultAgent(AbstractConversationAgent):
             loaded_components = lang_intents.loaded_components
 
         # Check if any new components have been loaded
-        components_changed = False
+        intents_changed = False
         for component in self.hass.config.components:
             if component in loaded_components:
                 continue
 
-            # Check for sentences in this component with the target language
-            sentences_dir = sentences_dirs.get(component)
-            if sentences_dir is None:
-                continue
+            # Don't check component again
+            loaded_components.add(component)
 
-            yaml_path = sentences_dir / f"{language}.yaml"
-            if yaml_path.exists():
+            # Check for intents for this component with the target language
+            component_intents = get_intents(component, language)
+            if component_intents:
                 # Merge sentences into existing dictionary
-                _LOGGER.info("Loading intents YAML file %s", yaml_path)
-                with yaml_path.open(encoding="utf-8") as yaml_file:
-                    merge_dict(intents_dict, safe_load(yaml_file))
+                merge_dict(intents_dict, component_intents)
 
                 # Will need to recreate graph
-                loaded_components.add(component)
-                components_changed = True
+                intents_changed = True
 
         if not intents_dict:
             return None
 
-        if not components_changed and (lang_intents is not None):
+        if not intents_changed and (lang_intents is not None):
             return lang_intents
 
         # This can be made faster by not re-parsing existing sentences.
