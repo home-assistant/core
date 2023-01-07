@@ -11,6 +11,10 @@ from pyrainbird import encryption
 import pytest
 
 from homeassistant.components.rainbird import DOMAIN
+from homeassistant.components.rainbird.const import (
+    ATTR_DURATION,
+    DEFAULT_TRIGGER_TIME_MINUTES,
+)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -100,6 +104,7 @@ async def config_entry(
         unique_id=SERIAL_NUMBER,
         domain=DOMAIN,
         data=config_entry_data,
+        options={ATTR_DURATION: DEFAULT_TRIGGER_TIME_MINUTES},
     )
 
 
