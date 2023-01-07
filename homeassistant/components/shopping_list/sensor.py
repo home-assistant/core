@@ -16,7 +16,13 @@ async def async_setup_entry(
     async_add_devices: AddEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    async_add_devices([ShoppingListTotalSensor(), ShoppingListIncompleteSensor()])
+    async_add_devices(
+        [
+            ShoppingListTotalSensor(),
+            ShoppingListIncompleteSensor(),
+            ShoppingListCompletedSensor(),
+        ]
+    )
 
 
 class ShoppingListTotalSensor(SensorEntity):
@@ -43,7 +49,7 @@ class ShoppingListTotalSensor(SensorEntity):
 
 
 class ShoppingListIncompleteSensor(SensorEntity):
-    """Sensor to count the number of items in the shopping list"""
+    """Sensor to count the number of incomplete items in the shopping list"""
 
     def __init__(self) -> None:
         self._attr_unique_id = "shopping_list_incomplete"
@@ -63,5 +69,30 @@ class ShoppingListIncompleteSensor(SensorEntity):
         shopping: ShoppingData = self.hass.data[DOMAIN]
         self._attr_native_value = len(
             [item for item in shopping.items if item["complete"] is False]
+        )
+        self.schedule_update_ha_state()
+
+
+class ShoppingListCompletedSensor(SensorEntity):
+    """Sensor to count the number of completed items in the shopping list"""
+
+    def __init__(self) -> None:
+        self._attr_unique_id = "shopping_list_completed"
+        self._attr_name = "Shopping List Completed Items"
+        self._attr_native_value = 0
+        self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_should_poll = False
+        self._attr_icon = "mdi:format-list-group"
+
+    async def async_added_to_hass(self) -> None:
+        """Register device notification."""
+        self.hass.bus.async_listen(EVENT_SHOPPING_LIST_UPDATED, self.handle_update)
+        self.handle_update(None)
+
+    def handle_update(self, _):
+        """Handles the List update event and published new total"""
+        shopping: ShoppingData = self.hass.data[DOMAIN]
+        self._attr_native_value = len(
+            [item for item in shopping.items if item["complete"] is True]
         )
         self.schedule_update_ha_state()

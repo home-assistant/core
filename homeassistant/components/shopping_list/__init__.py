@@ -59,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     async def add_item_service(call: ServiceCall) -> None:
         """Add an item with `name`."""
-        data = hass.data[DOMAIN]
+        data: ShoppingData = hass.data[DOMAIN]
         await data.async_add(call.data[ATTR_NAME])
 
     async def remove_item_service(call: ServiceCall) -> None:
@@ -163,9 +163,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     websocket_api.async_register_command(hass, websocket_handle_clear)
     websocket_api.async_register_command(hass, websocket_handle_reorder)
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
-    )
+    await hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
+
     return True
 
 

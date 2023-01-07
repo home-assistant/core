@@ -5,7 +5,8 @@ import pytest
 from homeassistant.core import HomeAssistant
 
 from homeassistant.components.shopping_list import intent as sl_intent
-
+from homeassistant.components.shopping_list.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from tests.common import MockConfigEntry
 
 
@@ -28,3 +29,15 @@ async def sl_setup(hass: HomeAssistant):
     assert await hass.config_entries.async_setup(entry.entry_id)
 
     await sl_intent.async_setup_intents(hass)
+
+
+@pytest.fixture
+async def init_integration(hass: HomeAssistant):
+    """Sets up the integration for testing entities"""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
