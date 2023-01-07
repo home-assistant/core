@@ -182,9 +182,10 @@ async def test_unload(hass: HomeAssistant):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
     assert entry.entry_id in hass.data[pi_hole.DOMAIN]
-
     assert await hass.config_entries.async_unload(entry.entry_id)
+
     await hass.async_block_till_done()
+
     assert entry.entry_id not in hass.data[pi_hole.DOMAIN]
 
 
@@ -197,8 +198,6 @@ async def test_remove_obsolet(hass: HomeAssistant):
     entry.add_to_hass(hass)
     with _patch_init_hole(mocked_hole):
         assert await hass.config_entries.async_setup(entry.entry_id)
-
-        entry = hass.config_entries.async_get_entry(entry.entry_id)
         assert CONF_STATISTICS_ONLY not in entry.data
 
 
@@ -211,6 +210,4 @@ async def test_missing_api_key(hass: HomeAssistant):
     entry.add_to_hass(hass)
     with _patch_init_hole(mocked_hole):
         assert not await hass.config_entries.async_setup(entry.entry_id)
-
-        entry = hass.config_entries.async_get_entry(entry.entry_id)
         assert entry.state == ConfigEntryState.SETUP_ERROR
