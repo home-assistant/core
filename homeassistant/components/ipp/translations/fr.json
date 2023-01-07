@@ -36,7 +36,9 @@
         "sensor": {
             "printer": {
                 "state": {
-                    "stopped": "Arr\u00eat\u00e9"
+                    "idle": "Inactive",
+                    "printing": "Impression",
+                    "stopped": "Arr\u00eat\u00e9e"
                 }
             }
         }

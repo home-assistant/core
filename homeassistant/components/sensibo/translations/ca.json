@@ -34,6 +34,14 @@
         "select": {
             "horizontalswing": {
                 "state": {
+                    "fixedcenter": "Fix al centre",
+                    "fixedcenterleft": "Fix al centre i a l'esquerra",
+                    "fixedcenterright": "Fix al centre i a la dreta",
+                    "fixedleft": "Fix a l'esquerra",
+                    "fixedleftright": "Fix a l'esquerra i a la dreta",
+                    "fixedright": "Fix a la dreta",
+                    "rangecenter": "Rang central",
+                    "rangefull": "Rang complet",
                     "stopped": "Aturat"
                 }
             },

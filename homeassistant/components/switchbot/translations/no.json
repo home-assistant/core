@@ -8,7 +8,7 @@
             "unknown": "Uventet feil"
         },
         "error": {
-            "auth_failed": "Autentisering mislyktes",
+            "auth_failed": "Autentisering mislyktes: {error_detail}",
             "encryption_key_invalid": "N\u00f8kkel-ID eller krypteringsn\u00f8kkel er ugyldig",
             "key_id_invalid": "N\u00f8kkel-ID eller krypteringsn\u00f8kkel er ugyldig"
         },
