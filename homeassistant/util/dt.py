@@ -4,6 +4,7 @@ from __future__ import annotations
 import bisect
 from contextlib import suppress
 import datetime as dt
+from functools import partial
 import platform
 import re
 import time
@@ -466,8 +467,8 @@ def _datetime_ambiguous(dattim: dt.datetime) -> bool:
     return _datetime_exists(dattim) and dattim.utcoffset() != opposite_fold.utcoffset()
 
 
-def __monotonic_time_coarse() -> float:
-    """Return a monotonic time in seconds.
+def __gen_monotonic_time_coarse() -> partial[float]:
+    """Return a function that provides monotonic time in seconds.
 
     This is the coarse version of time_monotonic, which is faster but less accurate.
 
@@ -477,13 +478,15 @@ def __monotonic_time_coarse() -> float:
 
     https://lore.kernel.org/lkml/20170404171826.25030-1-marc.zyngier@arm.com/
     """
-    return time.clock_gettime(CLOCK_MONOTONIC_COARSE)
+    # We use a partial here since its implementation is in native code
+    # which allows us to avoid the overhead of a function call.
+    return partial(time.clock_gettime, CLOCK_MONOTONIC_COARSE)
 
 
 monotonic_time_coarse = time.monotonic
 with suppress(Exception):
     if (
         platform.system() == "Linux"
-        and abs(time.monotonic() - __monotonic_time_coarse()) < 1
+        and abs(time.monotonic() - __gen_monotonic_time_coarse()()) < 1
     ):
-        monotonic_time_coarse = __monotonic_time_coarse
+        monotonic_time_coarse = __gen_monotonic_time_coarse()
