@@ -15,8 +15,8 @@ from homeassistant.const import ATTR_ENTITY_ID, CONF_API_KEY, CONF_HOST, CONF_NA
 from homeassistant.core import HomeAssistant
 
 from . import (
-    CONF_DATA,
-    CONF_DATA_DEFAULTS,
+    CONFIG_DATA,
+    CONFIG_DATA_DEFAULTS,
     SWITCH_ENTITY_ID,
     _create_mocked_hole,
     _patch_init_hole,
@@ -29,7 +29,7 @@ async def test_setup_with_defaults(hass: HomeAssistant):
     """Tests component setup with default config."""
     mocked_hole = _create_mocked_hole()
     entry = MockConfigEntry(
-        domain=pi_hole.DOMAIN, data={**CONF_DATA_DEFAULTS, CONF_STATISTICS_ONLY: True}
+        domain=pi_hole.DOMAIN, data={**CONFIG_DATA_DEFAULTS, CONF_STATISTICS_ONLY: True}
     )
     entry.add_to_hass(hass)
     with _patch_init_hole(mocked_hole):
@@ -80,7 +80,7 @@ async def test_setup_name_config(hass: HomeAssistant):
     """Tests component setup with a custom name."""
     mocked_hole = _create_mocked_hole()
     entry = MockConfigEntry(
-        domain=pi_hole.DOMAIN, data={**CONF_DATA_DEFAULTS, CONF_NAME: "Custom"}
+        domain=pi_hole.DOMAIN, data={**CONFIG_DATA_DEFAULTS, CONF_NAME: "Custom"}
     )
     entry.add_to_hass(hass)
     with _patch_init_hole(mocked_hole):
@@ -97,7 +97,7 @@ async def test_setup_name_config(hass: HomeAssistant):
 async def test_switch(hass: HomeAssistant, caplog):
     """Test Pi-hole switch."""
     mocked_hole = _create_mocked_hole()
-    entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=CONF_DATA)
+    entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=CONFIG_DATA)
     entry.add_to_hass(hass)
 
     with _patch_init_hole(mocked_hole):
@@ -146,12 +146,12 @@ async def test_disable_service_call(hass: HomeAssistant):
 
     mocked_hole = _create_mocked_hole()
     with _patch_init_hole(mocked_hole):
-        entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=CONF_DATA)
+        entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=CONFIG_DATA)
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
 
         entry = MockConfigEntry(
-            domain=pi_hole.DOMAIN, data={**CONF_DATA_DEFAULTS, CONF_NAME: "Custom"}
+            domain=pi_hole.DOMAIN, data={**CONFIG_DATA_DEFAULTS, CONF_NAME: "Custom"}
         )
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -174,7 +174,7 @@ async def test_unload(hass: HomeAssistant):
     """Test unload entities."""
     entry = MockConfigEntry(
         domain=pi_hole.DOMAIN,
-        data={**CONF_DATA_DEFAULTS, CONF_HOST: "pi.hole"},
+        data={**CONFIG_DATA_DEFAULTS, CONF_HOST: "pi.hole"},
     )
     entry.add_to_hass(hass)
     mocked_hole = _create_mocked_hole()
@@ -193,7 +193,7 @@ async def test_remove_obsolete(hass: HomeAssistant):
     """Test removing obsolete config entry parameters."""
     mocked_hole = _create_mocked_hole()
     entry = MockConfigEntry(
-        domain=pi_hole.DOMAIN, data={**CONF_DATA_DEFAULTS, CONF_STATISTICS_ONLY: True}
+        domain=pi_hole.DOMAIN, data={**CONFIG_DATA_DEFAULTS, CONF_STATISTICS_ONLY: True}
     )
     entry.add_to_hass(hass)
     with _patch_init_hole(mocked_hole):
@@ -204,7 +204,7 @@ async def test_remove_obsolete(hass: HomeAssistant):
 async def test_missing_api_key(hass: HomeAssistant):
     """Tests start reauth flow if api key is missing."""
     mocked_hole = _create_mocked_hole()
-    data = CONF_DATA_DEFAULTS.copy()
+    data = CONFIG_DATA_DEFAULTS.copy()
     data.pop(CONF_API_KEY)
     entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=data)
     entry.add_to_hass(hass)

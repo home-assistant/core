@@ -7,9 +7,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
-    CONF_CONFIG_ENTRY,
-    CONF_CONFIG_FLOW_USER,
-    CONF_DATA_DEFAULTS,
+    CONFIG_DATA_DEFAULTS,
+    CONFIG_ENTRY,
+    CONFIG_FLOW_USER,
     NAME,
     ZERO_DATA,
     _create_mocked_hole,
@@ -34,7 +34,7 @@ async def test_flow_user(hass: HomeAssistant):
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input=CONF_CONFIG_FLOW_USER,
+            user_input=CONFIG_FLOW_USER,
         )
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "user"
@@ -43,17 +43,17 @@ async def test_flow_user(hass: HomeAssistant):
         mocked_hole.data = ZERO_DATA
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input=CONF_CONFIG_FLOW_USER,
+            user_input=CONFIG_FLOW_USER,
         )
         assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["title"] == NAME
-        assert result["data"] == CONF_CONFIG_ENTRY
+        assert result["data"] == CONFIG_ENTRY
 
         # duplicated server
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
-            data=CONF_CONFIG_FLOW_USER,
+            data=CONFIG_FLOW_USER,
         )
         assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "already_configured"
@@ -64,7 +64,7 @@ async def test_flow_user_invalid(hass: HomeAssistant):
     mocked_hole = _create_mocked_hole(True)
     with _patch_config_flow_hole(mocked_hole):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_CONFIG_FLOW_USER
+            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG_FLOW_USER
         )
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "user"
@@ -74,7 +74,7 @@ async def test_flow_user_invalid(hass: HomeAssistant):
 async def test_flow_reauth(hass: HomeAssistant):
     """Test reauth flow."""
     mocked_hole = _create_mocked_hole(has_data=False)
-    entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=CONF_DATA_DEFAULTS)
+    entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=CONFIG_DATA_DEFAULTS)
     entry.add_to_hass(hass)
     with _patch_init_hole(mocked_hole), _patch_config_flow_hole(mocked_hole):
         assert not await hass.config_entries.async_setup(entry.entry_id)
