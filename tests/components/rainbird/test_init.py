@@ -5,8 +5,9 @@ from __future__ import annotations
 import pytest
 
 from homeassistant.components.rainbird import DOMAIN
+from homeassistant.components.rainbird.const import ATTR_CONFIG_ENTRY_ID, ATTR_DURATION
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import ATTR_DEVICE_ID, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -116,7 +117,7 @@ async def test_rain_delay_service(
     device_registry = dr.async_get(hass)
     device = device_registry.async_get_device({(DOMAIN, SERIAL_NUMBER)})
     assert device
-    assert device.name == "Rain Bird"
+    assert device.name == "Rain Bird Controller"
 
     aioclient_mock.mock_calls.clear()
     responses.append(mock_response(ACK_ECHO))
@@ -124,14 +125,14 @@ async def test_rain_delay_service(
     await hass.services.async_call(
         DOMAIN,
         "set_rain_delay",
-        {ATTR_DEVICE_ID: device.id, "duration": 30},
+        {ATTR_CONFIG_ENTRY_ID: config_entry.entry_id, ATTR_DURATION: 3},
         blocking=True,
     )
 
     assert len(aioclient_mock.mock_calls) == 1
 
 
-async def test_rain_delay_invalid_device(
+async def test_rain_delay_invalid_config_entry(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     aioclient_mock: AiohttpClientMocker,
@@ -143,11 +144,11 @@ async def test_rain_delay_invalid_device(
 
     aioclient_mock.mock_calls.clear()
 
-    with pytest.raises(HomeAssistantError, match="Device id did not match"):
+    with pytest.raises(HomeAssistantError, match="Config entry id does not exist"):
         await hass.services.async_call(
             DOMAIN,
             "set_rain_delay",
-            {ATTR_DEVICE_ID: "invalid-device-id", "duration": 30},
+            {ATTR_CONFIG_ENTRY_ID: "invalid", ATTR_DURATION: 3},
             blocking=True,
         )
 

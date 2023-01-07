@@ -9,10 +9,11 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_DURATION, CONF_IMPORTED_NAMES, DOMAIN
+from .const import ATTR_DURATION, CONF_IMPORTED_NAMES, DOMAIN, MANUFACTURER
 from .coordinator import RainbirdUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,12 +65,18 @@ class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity)
         self._zone = zone
         if imported_name:
             self._attr_name = imported_name
+            self._attr_has_entity_name = False
         else:
-            self._attr_name = f"Sprinkler {zone}"
+            self._attr_has_entity_name = True
         self._state = None
         self._duration_minutes = duration_minutes
         self._attr_unique_id = f"{coordinator.serial_number}-{zone}"
-        self._attr_device_info = coordinator.device_info
+        self._attr_device_info = DeviceInfo(
+            default_name=f"{MANUFACTURER} Sprinkler {zone}",
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            manufacturer=MANUFACTURER,
+            via_device=(DOMAIN, coordinator.serial_number),
+        )
 
     @property
     def extra_state_attributes(self):

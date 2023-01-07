@@ -15,10 +15,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, TIMEOUT_SECONDS
+from .const import DOMAIN, MANUFACTURER, TIMEOUT_SECONDS
 
 UPDATE_INTERVAL = datetime.timedelta(minutes=1)
-MANUFACTURER = "Rain Bird"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,7 +70,7 @@ class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
     def device_info(self) -> DeviceInfo:
         """Return information about the device."""
         return DeviceInfo(
-            default_name=MANUFACTURER,
+            default_name=f"{MANUFACTURER} Controller",
             identifiers={(DOMAIN, self._serial_number)},
             manufacturer=MANUFACTURER,
         )

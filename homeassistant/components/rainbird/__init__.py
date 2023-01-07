@@ -1,7 +1,6 @@
 """Support for Rain Bird Irrigation system LNK WiFi Module."""
 from __future__ import annotations
 
-import asyncio
 import logging
 
 from pyrainbird.async_client import AsyncRainbirdClient, AsyncRainbirdController
@@ -9,7 +8,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryState
 from homeassistant.const import (
-    ATTR_DEVICE_ID,
     CONF_FRIENDLY_NAME,
     CONF_HOST,
     CONF_PASSWORD,
@@ -21,10 +19,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.service import async_extract_config_entry_ids
 from homeassistant.helpers.typing import ConfigType
 
-from .const import ATTR_DURATION, CONF_SERIAL_NUMBER, CONF_ZONES
+from .const import ATTR_CONFIG_ENTRY_ID, ATTR_DURATION, CONF_SERIAL_NUMBER, CONF_ZONES
 from .coordinator import RainbirdUpdateCoordinator
 
 PLATFORMS = [Platform.SWITCH, Platform.SENSOR, Platform.BINARY_SENSOR]
@@ -60,11 +57,10 @@ SERVICE_SET_RAIN_DELAY = "set_rain_delay"
 SERVICE_SCHEMA_RAIN_DELAY = vol.All(
     vol.Schema(
         {
-            **cv.TARGET_SERVICE_FIELDS,
+            vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
             vol.Required(ATTR_DURATION): cv.positive_float,
         }
     ),
-    cv.has_at_least_one_key(ATTR_DEVICE_ID),
 )
 
 
@@ -121,16 +117,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def set_rain_delay(call: ServiceCall) -> None:
         """Service call to delay automatic irrigigation."""
+        entry_id = call.data[ATTR_CONFIG_ENTRY_ID]
         duration = call.data[ATTR_DURATION]
-        entry_ids = await async_extract_config_entry_ids(hass, call)
-        if not entry_ids:
-            raise HomeAssistantError("Device id did not match any devices")
-        await asyncio.gather(
-            *(
-                hass.data[DOMAIN][entry_id].controller.set_rain_delay(duration)
-                for entry_id in entry_ids
-            )
-        )
+        if entry_id not in hass.data[DOMAIN]:
+            raise HomeAssistantError(f"Config entry id does not exist: {entry_id}")
+        coordinator = hass.data[DOMAIN][entry_id]
+        await coordinator.controller.set_rain_delay(duration)
 
     hass.services.async_register(
         DOMAIN,

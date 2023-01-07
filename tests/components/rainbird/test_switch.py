@@ -44,7 +44,7 @@ async def test_no_zones(
 
     assert await setup_integration()
 
-    zone = hass.states.get("switch.sprinkler_1")
+    zone = hass.states.get("switch.rain_bird_sprinkler_1")
     assert zone is None
 
 
@@ -61,43 +61,43 @@ async def test_zones(
 
     assert await setup_integration()
 
-    zone = hass.states.get("switch.sprinkler_1")
+    zone = hass.states.get("switch.rain_bird_sprinkler_1")
     assert zone is not None
     assert zone.state == "off"
     assert zone.attributes == {
-        "friendly_name": "Sprinkler 1",
+        "friendly_name": "Rain Bird Sprinkler 1",
         "zone": 1,
     }
 
-    zone = hass.states.get("switch.sprinkler_2")
+    zone = hass.states.get("switch.rain_bird_sprinkler_2")
     assert zone is not None
     assert zone.state == "off"
     assert zone.attributes == {
-        "friendly_name": "Sprinkler 2",
+        "friendly_name": "Rain Bird Sprinkler 2",
         "zone": 2,
     }
 
-    zone = hass.states.get("switch.sprinkler_3")
+    zone = hass.states.get("switch.rain_bird_sprinkler_3")
     assert zone is not None
     assert zone.state == "off"
 
-    zone = hass.states.get("switch.sprinkler_4")
+    zone = hass.states.get("switch.rain_bird_sprinkler_4")
     assert zone is not None
     assert zone.state == "off"
 
-    zone = hass.states.get("switch.sprinkler_5")
+    zone = hass.states.get("switch.rain_bird_sprinkler_5")
     assert zone is not None
     assert zone.state == "on"
 
-    zone = hass.states.get("switch.sprinkler_6")
+    zone = hass.states.get("switch.rain_bird_sprinkler_6")
     assert zone is not None
     assert zone.state == "off"
 
-    zone = hass.states.get("switch.sprinkler_7")
+    zone = hass.states.get("switch.rain_bird_sprinkler_7")
     assert zone is not None
     assert zone.state == "off"
 
-    assert not hass.states.get("switch.sprinkler_8")
+    assert not hass.states.get("switch.rain_bird_sprinkler_8")
 
 
 async def test_switch_on(
@@ -112,7 +112,7 @@ async def test_switch_on(
 
     # Initially all zones are off. Pick zone3 as an arbitrary to assert
     # state, then update below as a switch.
-    zone = hass.states.get("switch.sprinkler_3")
+    zone = hass.states.get("switch.rain_bird_sprinkler_3")
     assert zone is not None
     assert zone.state == "off"
 
@@ -126,11 +126,11 @@ async def test_switch_on(
             mock_response(RAIN_DELAY_OFF),
         ]
     )
-    await switch_common.async_turn_on(hass, "switch.sprinkler_3")
+    await switch_common.async_turn_on(hass, "switch.rain_bird_sprinkler_3")
     await hass.async_block_till_done()
 
     # Verify switch state is updated
-    zone = hass.states.get("switch.sprinkler_3")
+    zone = hass.states.get("switch.rain_bird_sprinkler_3")
     assert zone is not None
     assert zone.state == "on"
 
@@ -150,7 +150,7 @@ async def test_switch_off(
     assert await setup_integration()
 
     # Initially the test zone is on
-    zone = hass.states.get("switch.sprinkler_3")
+    zone = hass.states.get("switch.rain_bird_sprinkler_3")
     assert zone is not None
     assert zone.state == "on"
 
@@ -163,11 +163,11 @@ async def test_switch_off(
             mock_response(RAIN_DELAY_OFF),
         ]
     )
-    await switch_common.async_turn_off(hass, "switch.sprinkler_3")
+    await switch_common.async_turn_off(hass, "switch.rain_bird_sprinkler_3")
     await hass.async_block_till_done()
 
     # Verify switch state is updated
-    zone = hass.states.get("switch.sprinkler_3")
+    zone = hass.states.get("switch.rain_bird_sprinkler_3")
     assert zone is not None
     assert zone.state == "off"
 
@@ -183,7 +183,7 @@ async def test_irrigation_service(
 
     assert await setup_integration()
 
-    zone = hass.states.get("switch.sprinkler_3")
+    zone = hass.states.get("switch.rain_bird_sprinkler_3")
     assert zone is not None
     assert zone.state == "off"
 
@@ -201,11 +201,11 @@ async def test_irrigation_service(
     await hass.services.async_call(
         DOMAIN,
         "start_irrigation",
-        {ATTR_ENTITY_ID: "switch.sprinkler_3", "duration": 30},
+        {ATTR_ENTITY_ID: "switch.rain_bird_sprinkler_3", "duration": 30},
         blocking=True,
     )
 
-    zone = hass.states.get("switch.sprinkler_3")
+    zone = hass.states.get("switch.rain_bird_sprinkler_3")
     assert zone is not None
     assert zone.state == "on"
 
@@ -243,7 +243,7 @@ async def test_yaml_config(
     assert await setup_integration()
 
     assert hass.states.get("switch.garden_sprinkler")
-    assert not hass.states.get("switch.sprinkler_1")
+    assert not hass.states.get("switch.rain_bird_sprinkler_1")
     assert hass.states.get("switch.back_yard")
-    assert not hass.states.get("switch.sprinkler_2")
-    assert hass.states.get("switch.sprinkler_3")
+    assert not hass.states.get("switch.rain_bird_sprinkler_2")
+    assert hass.states.get("switch.rain_bird_sprinkler_3")
