@@ -99,9 +99,10 @@ def get_time_zone(time_zone_str: str) -> dt.tzinfo | None:
         return None
 
 
-def utcnow() -> dt.datetime:
-    """Get now in UTC time."""
-    return dt.datetime.now(UTC)
+# We use a partial here since it is implemented in native code
+# and avoids the global lookup of UTC
+utcnow: partial[dt.datetime] = partial(dt.datetime.now, UTC)
+utcnow.__doc__ = "Get now in UTC time."
 
 
 def now(time_zone: dt.tzinfo | None = None) -> dt.datetime:
@@ -479,7 +480,8 @@ def __gen_monotonic_time_coarse() -> partial[float]:
     https://lore.kernel.org/lkml/20170404171826.25030-1-marc.zyngier@arm.com/
     """
     # We use a partial here since its implementation is in native code
-    # which allows us to avoid the overhead of a function call.
+    # which allows us to avoid the overhead of the global lookup
+    # of CLOCK_MONOTONIC_COARSE.
     return partial(time.clock_gettime, CLOCK_MONOTONIC_COARSE)
 
 
