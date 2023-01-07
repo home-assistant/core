@@ -142,10 +142,10 @@ def _get_device_lookup(devices: dict[str, dict[str, Any]]) -> dict[str, dict[str
     for event_code, event_config in devices.items():
         if (event := get_rfx_object(event_code)) is None:
             continue
-        device_identifer = get_device_identifier_from_device(
+        device_identifier = get_device_identifier_from_device(
             event.device, data_bits=event_config.get(CONF_DATA_BITS)
         )
-        lookup[device_identifer] = event_config
+        lookup[device_identifier] = event_config
     return lookup
 
 
