@@ -189,8 +189,8 @@ async def test_unload(hass: HomeAssistant):
     assert entry.entry_id not in hass.data[pi_hole.DOMAIN]
 
 
-async def test_remove_obsolet(hass: HomeAssistant):
-    """Tests removing obsolet config entry parameters."""
+async def test_remove_obsolete(hass: HomeAssistant):
+    """Test removing obsolete config entry parameters."""
     mocked_hole = _create_mocked_hole()
     entry = MockConfigEntry(
         domain=pi_hole.DOMAIN, data={**CONF_DATA_DEFAULTS, CONF_STATISTICS_ONLY: True}
