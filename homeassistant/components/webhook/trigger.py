@@ -91,7 +91,7 @@ async def async_attach_trigger(
             hass,
             DOMAIN,
             issue_id,
-            breaks_in_ha_version="2023.1.0",
+            breaks_in_ha_version="2023.4.0",
             is_fixable=False,
             learn_more_url="https://github.com/home-assistant/core/pull/66494",
             severity=IssueSeverity.WARNING,
@@ -104,7 +104,7 @@ async def async_attach_trigger(
         _LOGGER.warning(
             "Deprecation warning: "
             "Webhook '%s' does not provide a value for local_only. "
-            "The default value will be 'true' in the 2023.1.0 release",
+            "The default value will be 'true' in the 2023.4.0 release",
             webhook_id,
         )
     allowed_methods = config.get(CONF_ALLOWED_METHODS, DEFAULT_METHODS)

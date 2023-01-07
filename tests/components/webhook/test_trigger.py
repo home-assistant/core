@@ -131,7 +131,7 @@ async def test_webhook_allowed_methods_internet(hass, hass_client_no_auth):
                     "platform": "webhook",
                     "webhook_id": "post_webhook",
                     "allowed_methods": "PUT",
-                    # Enable after 2023.1.0: "local_only": False,
+                    # Enable after 2023.4.0: "local_only": False,
                 },
                 "action": {
                     "event": "test_success",
