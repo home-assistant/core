@@ -12,12 +12,7 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    ATTR_DURATION,
-    CONF_IMPORTED_NAMES,
-    DEFAULT_TRIGGER_TIME_MINUTES,
-    DOMAIN,
-)
+from .const import ATTR_DURATION, CONF_IMPORTED_NAMES, DOMAIN
 from .coordinator import RainbirdUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
