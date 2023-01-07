@@ -14,5 +14,33 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "line_status": {
+                "state": {
+                    "loss_of_power": "V\u00f5imsuse kaotus",
+                    "loss_of_signal": "Signaali kadumine",
+                    "loss_of_signal_quality": "Signaali kvaliteedi kaotus",
+                    "no_defect": "Korras",
+                    "of_frame": "Kaadrist",
+                    "unknown": "Teadmata"
+                }
+            },
+            "training": {
+                "state": {
+                    "g_922_channel_analysis": "G.922 kanali anal\u00fc\u00fcs",
+                    "g_992_message_exchange": "G.992 s\u00f5numivahetus",
+                    "g_992_started": "G.992 algas",
+                    "g_993_channel_analysis": "G.993 kanali anal\u00fc\u00fcs",
+                    "g_993_message_exchange": "G.993 s\u00f5numivahetus",
+                    "g_993_started": "G.993 algas",
+                    "g_994_training": "G.994 koolitus",
+                    "idle": "Ootel",
+                    "showtime": "Kuvamise aeg",
+                    "unknown": "Teadmata"
+                }
+            }
+        }
     }
 }

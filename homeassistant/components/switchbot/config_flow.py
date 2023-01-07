@@ -166,6 +166,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the SwitchBot API auth step."""
         errors = {}
         assert self._discovered_adv is not None
+        description_placeholders = {}
         if user_input is not None:
             try:
                 key_details = await self.hass.async_add_executor_job(
@@ -176,8 +177,10 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except SwitchbotAccountConnectionError as ex:
                 raise AbortFlow("cannot_connect") from ex
-            except SwitchbotAuthenticationError:
+            except SwitchbotAuthenticationError as ex:
+                _LOGGER.debug("Authentication failed: %s", ex, exc_info=True)
                 errors = {"base": "auth_failed"}
+                description_placeholders = {"error_detail": str(ex)}
             else:
                 return await self.async_step_lock_key(key_details)
 
@@ -195,6 +198,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             description_placeholders={
                 "name": name_from_discovery(self._discovered_adv),
+                **description_placeholders,
             },
         )
 

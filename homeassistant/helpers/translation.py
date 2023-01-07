@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections import ChainMap
 from collections.abc import Iterable, Mapping
 import logging
 from typing import Any
@@ -311,4 +310,7 @@ async def async_get_translations(
             cache = hass.data[TRANSLATION_FLATTEN_CACHE] = _TranslationCache(hass)
         cached = await cache.async_fetch(language, category, components)
 
-    return dict(ChainMap(*cached))
+    result = {}
+    for entry in cached:
+        result.update(entry)
+    return result

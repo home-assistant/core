@@ -596,6 +596,7 @@ omit =
     homeassistant/components/iss/sensor.py
     homeassistant/components/isy994/__init__.py
     homeassistant/components/isy994/binary_sensor.py
+    homeassistant/components/isy994/button.py
     homeassistant/components/isy994/climate.py
     homeassistant/components/isy994/cover.py
     homeassistant/components/isy994/entity.py
@@ -670,6 +671,9 @@ omit =
     homeassistant/components/lcn/helpers.py
     homeassistant/components/lcn/scene.py
     homeassistant/components/lcn/services.py
+    homeassistant/components/ld2410_ble/__init__.py
+    homeassistant/components/ld2410_ble/binary_sensor.py
+    homeassistant/components/ld2410_ble/coordinator.py
     homeassistant/components/led_ble/__init__.py
     homeassistant/components/led_ble/light.py
     homeassistant/components/lg_netcast/media_player.py
@@ -1117,7 +1121,6 @@ omit =
     homeassistant/components/sesame/lock.py
     homeassistant/components/seven_segments/image_processing.py
     homeassistant/components/seventeentrack/sensor.py
-    homeassistant/components/sfr_box/sensor.py
     homeassistant/components/shiftr/*
     homeassistant/components/shodan/sensor.py
     homeassistant/components/sia/__init__.py
@@ -1213,6 +1216,9 @@ omit =
     homeassistant/components/squeezebox/__init__.py
     homeassistant/components/squeezebox/browse_media.py
     homeassistant/components/squeezebox/media_player.py
+    homeassistant/components/starlink/coordinator.py
+    homeassistant/components/starlink/entity.py
+    homeassistant/components/starlink/sensor.py
     homeassistant/components/starline/__init__.py
     homeassistant/components/starline/account.py
     homeassistant/components/starline/binary_sensor.py

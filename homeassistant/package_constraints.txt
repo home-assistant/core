@@ -28,7 +28,7 @@ ifaddr==0.1.7
 janus==1.0.0
 jinja2==3.1.2
 lru-dict==1.1.8
-orjson==3.8.3
+orjson==3.8.4
 paho-mqtt==1.6.1
 pillow==9.4.0
 pip>=21.0,<22.4
@@ -62,6 +62,7 @@ httplib2>=0.19.0
 # want to ensure we have wheels built.
 grpcio==1.51.1
 grpcio-status==1.51.1
+grpcio-reflection==1.51.1
 
 # libcst >=0.4.0 requires a newer Rust than we currently have available,
 # thus our wheels builds fail. This pins it to the last working version,

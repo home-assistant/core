@@ -6,8 +6,9 @@ from typing import Any
 
 from pyisy.constants import ISY_VALUE_UNKNOWN, PROTO_INSTEON
 
-from homeassistant.components.fan import DOMAIN as FAN, FanEntity, FanEntityFeature
+from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
@@ -30,13 +31,13 @@ async def async_setup_entry(
     hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
     entities: list[ISYFanEntity | ISYFanProgramEntity] = []
 
-    for node in hass_isy_data[ISY994_NODES][FAN]:
+    for node in hass_isy_data[ISY994_NODES][Platform.FAN]:
         entities.append(ISYFanEntity(node))
 
-    for name, status, actions in hass_isy_data[ISY994_PROGRAMS][FAN]:
+    for name, status, actions in hass_isy_data[ISY994_PROGRAMS][Platform.FAN]:
         entities.append(ISYFanProgramEntity(name, status, actions))
 
-    await migrate_old_unique_ids(hass, FAN, entities)
+    await migrate_old_unique_ids(hass, Platform.FAN, entities)
     async_add_entities(entities)
 
 

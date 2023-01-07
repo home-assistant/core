@@ -190,12 +190,13 @@ class UnifiEntity(Entity, Generic[HandlerT, DataT]):
             await self.async_remove(force_remove=True)
 
     @callback
-    @abstractmethod
     def async_initiate_state(self) -> None:
         """Initiate entity state.
 
         Perform additional actions setting up platform entity child class state.
+        Defaults to using async_update_state to set initial state.
         """
+        self.async_update_state(ItemEvent.ADDED, self._obj_id)
 
     @callback
     @abstractmethod
