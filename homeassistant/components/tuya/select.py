@@ -354,10 +354,9 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
         ),
         SelectEntityDescription(
             key=DPCode.DEHUMIDITY_SET_ENUM,
-            name="Target Humidity",
+            name="Target humidity",
             entity_category=EntityCategory.CONFIG,
             icon="mdi:water-percent",
-            translation_key="humidity",
         ),
     ),
 }
