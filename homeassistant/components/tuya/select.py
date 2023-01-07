@@ -353,13 +353,6 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             translation_key="countdown",
         ),
         SelectEntityDescription(
-            key=DPCode.FAN_SPEED_ENUM,
-            name="Fan Speed",
-            entity_category=EntityCategory.CONFIG,
-            icon="mdi:fan",
-            translation_key="fan_speed",
-        ),
-        SelectEntityDescription(
             key=DPCode.DEHUMIDITY_SET_ENUM,
             name="Target Humidity",
             entity_category=EntityCategory.CONFIG,
