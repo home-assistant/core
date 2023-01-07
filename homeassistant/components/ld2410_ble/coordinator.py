@@ -12,7 +12,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class LD2410BLECoordinator(DataUpdateCoordinator):
+class LD2410BLECoordinator(DataUpdateCoordinator[None]):
     """Data coordinator for receiving LD2410B updates."""
 
     def __init__(self, hass: HomeAssistant, ld2410_ble: LD2410BLE) -> None:
@@ -31,7 +31,7 @@ class LD2410BLECoordinator(DataUpdateCoordinator):
     def _async_handle_update(self, state: LD2410BLEState) -> None:
         """Just trigger the callbacks."""
         self.connected = True
-        self.async_set_updated_data(True)
+        self.async_set_updated_data(None)
 
     @callback
     def _async_handle_disconnect(self) -> None:
