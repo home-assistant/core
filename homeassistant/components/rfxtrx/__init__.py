@@ -441,7 +441,7 @@ def get_device_tuple_from_identifiers(
     identifiers: set[tuple[str, str]]
 ) -> DeviceTuple | None:
     """Calculate the device tuple from a device entry."""
-    identifier = next((x for x in identifiers if x[0] == DOMAIN), None)
+    identifier = next((x for x in identifiers if x[0] == DOMAIN and len(x) == 4), None)
     if not identifier:
         return None
     # work around legacy identifier, being a multi tuple value
