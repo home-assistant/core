@@ -13,6 +13,7 @@ from homeassistant.components.update import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_COORDINATOR, DOMAIN
@@ -21,13 +22,11 @@ from .entity import EzvizEntity
 
 PARALLEL_UPDATES = 1
 
-UPDATE_ENTITY_TYPES: dict[str, UpdateEntityDescription] = {
-    "version": UpdateEntityDescription(
-        key="version",
-        name="Firmware Update",
-        device_class=UpdateDeviceClass.FIRMWARE,
-    )
-}
+UPDATE_ENTITY_TYPES = UpdateEntityDescription(
+    key="version",
+    name="Firmware update",
+    device_class=UpdateDeviceClass.FIRMWARE,
+)
 
 
 async def async_setup_entry(
@@ -39,13 +38,11 @@ async def async_setup_entry(
     ]
 
     async_add_entities(
-        [
-            EzvizUpdateEntity(coordinator, camera, sensor)
-            for camera in coordinator.data
-            for sensor, value in coordinator.data[camera].items()
-            if sensor in UPDATE_ENTITY_TYPES
-            if value
-        ]
+        EzvizUpdateEntity(coordinator, camera, sensor, UPDATE_ENTITY_TYPES)
+        for camera in coordinator.data
+        for sensor, value in coordinator.data[camera].items()
+        if sensor in UPDATE_ENTITY_TYPES.key
+        if value
     )
 
 
@@ -61,13 +58,21 @@ class EzvizUpdateEntity(EzvizEntity, UpdateEntity):
     )
 
     def __init__(
-        self, coordinator: EzvizDataUpdateCoordinator, serial: str, sensor: str
+        self,
+        coordinator: EzvizDataUpdateCoordinator,
+        serial: str,
+        sensor: str,
+        description: UpdateEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, serial)
-        self._attr_installed_version = self.data["version"]
         self._attr_unique_id = f"{serial}_{sensor}"
-        self.entity_description = UPDATE_ENTITY_TYPES[sensor]
+        self.entity_description = description
+
+    @property
+    def installed_version(self) -> str | None:
+        """Version installed and in use."""
+        return self.data["version"]
 
     @property
     def in_progress(self) -> bool | int | None:
@@ -100,6 +105,6 @@ class EzvizUpdateEntity(EzvizEntity, UpdateEntity):
             )
 
         except (HTTPError, PyEzvizError) as err:
-            raise PyEzvizError(
-                f"Failed to update firmware on {self._attr_name}"
+            raise HomeAssistantError(
+                f"Failed to update firmware on {self.name}"
             ) from err
