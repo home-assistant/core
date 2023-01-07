@@ -45,6 +45,25 @@ async def test_dryer_sensor_values(
     mock_sensor2_api: MagicMock,
 ):
     """Test the sensor value callbacks."""
+    hass.state = CoreState.not_running
+    thetimestamp: datetime = datetime(2022, 11, 29, 00, 00, 00, 00, timezone.utc)
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State(
+                    "sensor.washer_end_time",
+                    "1",
+                ),
+                {"native_value": thetimestamp, "native_unit_of_measurement": None},
+            ),
+            (
+                State("sensor.dryer_end_time", "1"),
+                {"native_value": thetimestamp, "native_unit_of_measurement": None},
+            ),
+        ),
+    )
+
     await init_integration(hass)
 
     entity_id = "sensor.dryer_state"
@@ -90,6 +109,25 @@ async def test_washer_sensor_values(
     mock_sensor1_api: MagicMock,
 ):
     """Test the sensor value callbacks."""
+    hass.state = CoreState.not_running
+    thetimestamp: datetime = datetime(2022, 11, 29, 00, 00, 00, 00, timezone.utc)
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State(
+                    "sensor.washer_end_time",
+                    "1",
+                ),
+                {"native_value": thetimestamp, "native_unit_of_measurement": None},
+            ),
+            (
+                State("sensor.dryer_end_time", "1"),
+                {"native_value": thetimestamp, "native_unit_of_measurement": None},
+            ),
+        ),
+    )
+
     await init_integration(hass)
 
     entity_id = "sensor.washer_state"
