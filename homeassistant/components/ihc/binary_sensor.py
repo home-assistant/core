@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from ihcsdk.ihccontroller import IHCController
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASSES,
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
@@ -63,9 +67,13 @@ class IHCBinarySensor(IHCDevice, BinarySensorEntity):
         self.inverting = inverting
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the class of this sensor."""
-        return self._sensor_type
+        return (
+            BinarySensorDeviceClass(self._sensor_type)
+            if self._sensor_type in DEVICE_CLASSES
+            else None
+        )
 
     @property
     def is_on(self) -> bool | None:

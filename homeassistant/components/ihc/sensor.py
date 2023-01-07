@@ -62,7 +62,7 @@ class IHCSensor(IHCDevice, SensorEntity):
         self._unit_of_measurement = unit
 
     @property
-    def device_class(self) -> SensorDeviceClass | str | None:
+    def device_class(self) -> SensorDeviceClass | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return (
             SensorDeviceClass.TEMPERATURE
