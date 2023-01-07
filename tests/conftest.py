@@ -78,6 +78,14 @@ asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 asyncio.set_event_loop_policy = lambda policy: None
 
 
+def _utcnow():
+    """Make utcnow patchable by freezegun."""
+    return dt_util.dt.datetime.now(dt_util.UTC)
+
+
+dt_util.utcnow = _utcnow
+
+
 def pytest_addoption(parser):
     """Register custom pytest options."""
     parser.addoption("--dburl", action="store", default="sqlite://")
@@ -188,21 +196,6 @@ def check_real(func):
 # Guard a few functions that would make network connections
 location.async_detect_location_info = check_real(location.async_detect_location_info)
 util.get_local_ip = lambda: "127.0.0.1"
-
-
-@pytest.fixture(autouse=True, scope="session")
-def patchable_utcnow():
-    """Patchable utcnow.
-
-    utcnow cannot be patched by freezegun unless we replace it
-    with a normal function.
-    """
-
-    def utcnow():
-        return dt_util.dt.datetime.now(dt_util.UTC)
-
-    with patch("homeassistant.util.dt.utcnow", utcnow):
-        yield
 
 
 @pytest.fixture(autouse=True, scope="module")
