@@ -8,8 +8,8 @@ from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import State
 
-from .conftest import create_rfx_test_cfg
 from . import ENTRY_VERSION
+from .conftest import create_rfx_test_cfg
 
 from tests.common import MockConfigEntry, mock_restore_cache
 

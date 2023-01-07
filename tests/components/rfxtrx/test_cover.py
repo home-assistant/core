@@ -7,8 +7,8 @@ from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.core import State
 from homeassistant.exceptions import HomeAssistantError
 
-from .conftest import create_rfx_test_cfg
 from . import ENTRY_VERSION
+from .conftest import create_rfx_test_cfg
 
 from tests.common import MockConfigEntry, mock_restore_cache
 

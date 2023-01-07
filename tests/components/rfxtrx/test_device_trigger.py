@@ -11,8 +11,8 @@ from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.setup import async_setup_component
 
-from .conftest import create_rfx_test_cfg
 from . import ENTRY_VERSION
+from .conftest import create_rfx_test_cfg
 
 from tests.common import (
     MockConfigEntry,
