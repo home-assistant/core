@@ -18,7 +18,7 @@ from homeassistant.helpers import event as evt
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DeviceTuple, RfxtrxEntity, async_setup_platform_entry, get_pt2262_cmd
+from . import RfxtrxEntity, async_setup_platform_entry, get_pt2262_cmd
 from .const import (
     COMMAND_OFF_LIST,
     COMMAND_ON_LIST,
@@ -101,7 +101,7 @@ async def async_setup_entry(
     def _constructor(
         event: rfxtrxmod.RFXtrxEvent,
         auto: rfxtrxmod.RFXtrxEvent | None,
-        device_identifier: DeviceTuple,
+        device_identifier: str,
         entity_info: dict[str, Any],
     ) -> list[Entity]:
 
@@ -135,7 +135,7 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
     def __init__(
         self,
         device: rfxtrxmod.RFXtrxDevice,
-        device_identifier: DeviceTuple,
+        device_identifier: str,
         entity_description: BinarySensorEntityDescription,
         off_delay: float | None = None,
         data_bits: int | None = None,
@@ -198,7 +198,7 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
 
     @callback
     def _handle_event(
-        self, event: rfxtrxmod.RFXtrxEvent, device_identifier: DeviceTuple
+        self, event: rfxtrxmod.RFXtrxEvent, device_identifier: str
     ) -> None:
         """Check if event applies to me and update."""
         if not self._event_applies(event, device_identifier):

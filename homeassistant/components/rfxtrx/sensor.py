@@ -37,7 +37,7 @@ from homeassistant.helpers.entity import Entity, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import DeviceTuple, RfxtrxEntity, async_setup_platform_entry, get_rfx_object
+from . import RfxtrxEntity, async_setup_platform_entry, get_rfx_object
 from .const import ATTR_EVENT
 
 _LOGGER = logging.getLogger(__name__)
@@ -259,7 +259,7 @@ async def async_setup_entry(
     def _constructor(
         event: RFXtrxEvent,
         auto: RFXtrxEvent | None,
-        device_identifier: DeviceTuple,
+        device_identifier: str,
         entity_info: dict[str, Any],
     ) -> list[Entity]:
         entities: list[Entity] = []
@@ -293,7 +293,7 @@ class RfxtrxSensor(RfxtrxEntity, SensorEntity):
     def __init__(
         self,
         device: RFXtrxDevice,
-        device_identifier: DeviceTuple,
+        device_identifier: str,
         entity_description: RfxtrxSensorEntityDescription,
         event: RFXtrxEvent | None = None,
     ) -> None:
@@ -322,7 +322,7 @@ class RfxtrxSensor(RfxtrxEntity, SensorEntity):
         return self.entity_description.convert(value)
 
     @callback
-    def _handle_event(self, event: RFXtrxEvent, device_identifier: DeviceTuple) -> None:
+    def _handle_event(self, event: RFXtrxEvent, device_identifier: str) -> None:
         """Check if event applies to me and update."""
         if device_identifier != self._device_identifier:
             return

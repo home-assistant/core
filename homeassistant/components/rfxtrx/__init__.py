@@ -6,7 +6,7 @@ import binascii
 from collections.abc import Callable, Mapping
 import copy
 import logging
-from typing import Any, NewType, cast
+from typing import Any, cast
 
 import RFXtrx as rfxtrxmod
 import async_timeout
@@ -51,9 +51,6 @@ DEFAULT_OFF_DELAY = 2.0
 SIGNAL_EVENT = f"{DOMAIN}_event"
 
 _LOGGER = logging.getLogger(__name__)
-
-
-DeviceTuple = NewType("DeviceTuple", str)
 
 
 def _bytearray_string(data: Any) -> bytearray:
@@ -139,9 +136,7 @@ def _create_rfx(config: Mapping[str, Any]) -> rfxtrxmod.Connect:
     return rfx
 
 
-def _get_device_lookup(
-    devices: dict[str, dict[str, Any]]
-) -> dict[DeviceTuple, dict[str, Any]]:
+def _get_device_lookup(devices: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
     """Get a lookup structure for devices."""
     lookup = {}
     for event_code, event_config in devices.items():
@@ -215,9 +210,7 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
         hass.bus.async_fire(EVENT_RFXTRX_EVENT, event_data)
 
     @callback
-    def _add_device(
-        event: rfxtrxmod.RFXtrxEvent, device_identifier: DeviceTuple
-    ) -> None:
+    def _add_device(event: rfxtrxmod.RFXtrxEvent, device_identifier: str) -> None:
         """Add a device to config entry."""
         config = {}
         config[CONF_DEVICE_IDENTIFIER] = device_identifier
@@ -238,7 +231,7 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
         devices[device_identifier] = config
 
     @callback
-    def _remove_device(device_identifier: DeviceTuple) -> None:
+    def _remove_device(device_identifier: str) -> None:
         data = {
             **entry.data,
             CONF_DEVICES: {
@@ -257,7 +250,7 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
         device_entry = device_registry.deleted_devices[event.data[ATTR_DEVICE_ID]]
         if entry.entry_id not in device_entry.config_entries:
             return
-        device_identifier = get_device_tuple_from_identifiers(device_entry.identifiers)
+        device_identifier = get_device_identifier_from_device_entry(device_entry)
         if device_identifier:
             _remove_device(device_identifier)
 
@@ -292,7 +285,7 @@ async def async_setup_platform_entry(
         [
             rfxtrxmod.RFXtrxEvent,
             rfxtrxmod.RFXtrxEvent | None,
-            DeviceTuple,
+            str,
             dict[str, Any],
         ],
         list[Entity],
@@ -300,7 +293,7 @@ async def async_setup_platform_entry(
 ) -> None:
     """Set up config entry."""
     entry_data = config_entry.data
-    device_ids: set[DeviceTuple] = set()
+    device_ids: set[str] = set()
 
     # Add entities from config
     entities = []
@@ -326,9 +319,7 @@ async def async_setup_platform_entry(
     if entry_data[CONF_AUTOMATIC_ADD]:
 
         @callback
-        def _update(
-            event: rfxtrxmod.RFXtrxEvent, device_identifier: DeviceTuple
-        ) -> None:
+        def _update(event: rfxtrxmod.RFXtrxEvent, device_identifier: str) -> None:
             """Handle light updates from the RFXtrx gateway."""
             if not supported(event):
                 return
@@ -366,11 +357,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 device_entry.id, new_identifiers=identifiers
             )
 
-        def _get_device_id(event_code: str, options: dict[str, Any]) -> DeviceTuple:
+        def _get_device_id(event_code: str, options: dict[str, Any]) -> str:
             if device_identifier := options.get(CONF_DEVICE_IDENTIFIER):
-                return cast(DeviceTuple, device_identifier)
+                return cast(str, device_identifier)
             if device_id_tuple := options.get(CONF_DEVICE_IDENTIFIER):
-                return cast(DeviceTuple, "_".join(device_id_tuple))
+                return "_".join(device_id_tuple)
             event = get_rfx_object(event_code)
             assert event
             return get_device_identifier_from_device(
@@ -435,7 +426,7 @@ def get_pt2262_cmd(device_id: str, data_bits: int) -> str | None:
 
 
 def get_device_data_bits(
-    device: rfxtrxmod.RFXtrxDevice, devices: dict[DeviceTuple, dict[str, Any]]
+    device: rfxtrxmod.RFXtrxDevice, devices: dict[str, dict[str, Any]]
 ) -> int | None:
     """Deduce data bits for device based on a cache of device bits."""
     data_bits = None
@@ -479,7 +470,7 @@ def find_possible_pt2262_device(device_ids: set[str], device_id: str) -> str | N
 
 def get_device_identifier_from_device(
     device: rfxtrxmod.RFXtrxDevice, data_bits: int | None = None
-) -> DeviceTuple:
+) -> str:
     """Calculate a device id for device."""
     id_string: str = device.id_string
     if (
@@ -489,24 +480,17 @@ def get_device_identifier_from_device(
     ):
         id_string = masked_id.decode("ASCII")
 
-    return cast(DeviceTuple, f"{device.packettype:x}_{device.subtype:x}_{id_string}")
+    return f"{device.packettype:x}_{device.subtype:x}_{id_string}"
 
 
-def get_device_tuple_from_identifiers(
-    identifiers: set[tuple[str, str]]
-) -> DeviceTuple | None:
+def get_device_identifier_from_device_entry(
+    entry: dr.DeviceEntry | dr.DeletedDeviceEntry,
+) -> str | None:
     """Calculate the device tuple from a device entry."""
-    identifier = next((x for x in identifiers if x[0] == DOMAIN and len(x) == 4), None)
+    identifier = next((x for x in entry.identifiers if x[0] == DOMAIN and len(x) == 4), None)
     if not identifier:
         return None
-    return cast(DeviceTuple, identifier[1])
-
-
-def get_identifiers_from_device_tuple(
-    device_identifier: DeviceTuple,
-) -> set[tuple[str, str]]:
-    """Calculate the device identifier from a device tuple."""
-    return {(DOMAIN, device_identifier)}
+    return identifier[1]
 
 
 async def async_remove_config_entry_device(
@@ -534,12 +518,12 @@ class RfxtrxEntity(RestoreEntity):
     def __init__(
         self,
         device: rfxtrxmod.RFXtrxDevice,
-        device_identifier: DeviceTuple,
+        device_identifier: str,
         event: rfxtrxmod.RFXtrxEvent | None = None,
     ) -> None:
         """Initialize the device."""
         self._attr_device_info = DeviceInfo(
-            identifiers=get_identifiers_from_device_tuple(device_identifier),
+            identifiers={(DOMAIN, device_identifier)},
             model=device.type_string,
             name=f"{device.type_string} {device.id_string}",
         )
@@ -568,7 +552,7 @@ class RfxtrxEntity(RestoreEntity):
         return {ATTR_EVENT: "".join(f"{x:02x}" for x in self._event.data)}
 
     def _event_applies(
-        self, event: rfxtrxmod.RFXtrxEvent, device_identifier: DeviceTuple
+        self, event: rfxtrxmod.RFXtrxEvent, device_identifier: str
     ) -> bool:
         """Check if event applies to me."""
         if isinstance(event, rfxtrxmod.ControlEvent):
@@ -589,7 +573,7 @@ class RfxtrxEntity(RestoreEntity):
 
     @callback
     def _handle_event(
-        self, event: rfxtrxmod.RFXtrxEvent, device_identifier: DeviceTuple
+        self, event: rfxtrxmod.RFXtrxEvent, device_identifier: str
     ) -> None:
         """Handle a reception of data, overridden by other classes."""
 
@@ -603,7 +587,7 @@ class RfxtrxCommandEntity(RfxtrxEntity):
     def __init__(
         self,
         device: rfxtrxmod.RFXtrxDevice,
-        device_identifier: DeviceTuple,
+        device_identifier: str,
         event: rfxtrxmod.RFXtrxEvent | None = None,
     ) -> None:
         """Initialzie a switch or light device."""

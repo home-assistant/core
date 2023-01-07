@@ -13,12 +13,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
-from . import (
-    DEFAULT_OFF_DELAY,
-    DeviceTuple,
-    RfxtrxCommandEntity,
-    async_setup_platform_entry,
-)
+from . import DEFAULT_OFF_DELAY, RfxtrxCommandEntity, async_setup_platform_entry
 from .const import CONF_OFF_DELAY
 
 SECURITY_PANIC_ON = "Panic"
@@ -57,7 +52,7 @@ async def async_setup_entry(
     def _constructor(
         event: rfxtrxmod.RFXtrxEvent,
         auto: rfxtrxmod.RFXtrxEvent | None,
-        device_identifier: DeviceTuple,
+        device_identifier: str,
         entity_info: dict[str, Any],
     ) -> list[Entity]:
         """Construct a entity from an event."""
@@ -129,7 +124,7 @@ class RfxtrxChime(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin):
     def __init__(
         self,
         device: rfxtrxmod.RFXtrxDevice,
-        device_identifier: DeviceTuple,
+        device_identifier: str,
         off_delay: float | None = None,
         event: rfxtrxmod.RFXtrxEvent | None = None,
     ) -> None:
@@ -170,7 +165,7 @@ class RfxtrxChime(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin):
 
     @callback
     def _handle_event(
-        self, event: rfxtrxmod.RFXtrxEvent, device_identifier: DeviceTuple
+        self, event: rfxtrxmod.RFXtrxEvent, device_identifier: str
     ) -> None:
         """Check if event applies to me and update."""
         if self._event_applies(event, device_identifier):
@@ -188,7 +183,7 @@ class RfxtrxSecurityPanic(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin)
     def __init__(
         self,
         device: rfxtrxmod.RFXtrxDevice,
-        device_identifier: DeviceTuple,
+        device_identifier: str,
         off_delay: float | None = None,
         event: rfxtrxmod.RFXtrxEvent | None = None,
     ) -> None:
@@ -235,7 +230,7 @@ class RfxtrxSecurityPanic(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin)
 
     @callback
     def _handle_event(
-        self, event: rfxtrxmod.RFXtrxEvent, device_identifier: DeviceTuple
+        self, event: rfxtrxmod.RFXtrxEvent, device_identifier: str
     ) -> None:
         """Check if event applies to me and update."""
         if self._event_applies(event, device_identifier):

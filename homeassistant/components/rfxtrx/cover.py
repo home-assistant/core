@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DeviceTuple, RfxtrxCommandEntity, async_setup_platform_entry
+from . import RfxtrxCommandEntity, async_setup_platform_entry
 from .const import (
     COMMAND_OFF_LIST,
     COMMAND_ON_LIST,
@@ -40,7 +40,7 @@ async def async_setup_entry(
     def _constructor(
         event: rfxtrxmod.RFXtrxEvent,
         auto: rfxtrxmod.RFXtrxEvent | None,
-        device_identifier: DeviceTuple,
+        device_identifier: str,
         entity_info: dict[str, Any],
     ) -> list[Entity]:
         return [
@@ -65,7 +65,7 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
     def __init__(
         self,
         device: rfxtrxmod.RFXtrxDevice,
-        device_identifier: DeviceTuple,
+        device_identifier: str,
         event: rfxtrxmod.RFXtrxEvent = None,
         venetian_blind_mode: str | None = None,
     ) -> None:
@@ -156,7 +156,7 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
 
     @callback
     def _handle_event(
-        self, event: rfxtrxmod.RFXtrxEvent, device_identifier: DeviceTuple
+        self, event: rfxtrxmod.RFXtrxEvent, device_identifier: str
     ) -> None:
         """Check if event applies to me and update."""
         if device_identifier != self._device_identifier:

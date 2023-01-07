@@ -33,9 +33,8 @@ from homeassistant.helpers.event import async_track_state_change
 
 from . import (
     DOMAIN,
-    DeviceTuple,
     get_device_identifier_from_device,
-    get_device_tuple_from_identifiers,
+    get_device_identifier_from_device_entry,
     get_rfx_object,
 )
 from .binary_sensor import supported as binary_supported
@@ -63,7 +62,7 @@ class DeviceData(TypedDict):
     """Dict data representing a device entry."""
 
     event_code: str | None
-    device_identifier: DeviceTuple
+    device_identifier: str
 
 
 def none_or_int(value: str | None, base: int) -> int | None:
@@ -432,7 +431,7 @@ class OptionsFlow(config_entries.OptionsFlow):
         event_code: str | None = None
         entry = self._device_registry.async_get(entry_id)
         assert entry
-        device_identifier = get_device_tuple_from_identifiers(entry.identifiers)
+        device_identifier = get_device_identifier_from_device_entry(entry)
         assert device_identifier
         for packet_id, entity_info in self._config_entry.data[CONF_DEVICES].items():
             if entity_info.get(CONF_DEVICE_IDENTIFIER) == device_identifier:
