@@ -1,10 +1,8 @@
 """Standard conversation implementation for Home Assistant."""
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 import logging
-from pathlib import Path
 import re
 from typing import Any
 
@@ -15,7 +13,6 @@ from home_assistant_intents import get_intents
 
 from homeassistant import core, setup
 from homeassistant.helpers import area_registry, entity_registry, intent
-from homeassistant.loader import async_get_integration
 
 from .agent import AbstractConversationAgent, ConversationResult
 from .const import DOMAIN
@@ -85,11 +82,11 @@ class DefaultAgent(AbstractConversationAgent):
         lang_intents = self._lang_intents.get(language)
 
         # Reload intents if missing or new components
-        if (lang_intents is None) or (
+        if lang_intents is None or (
             lang_intents.loaded_components - self.hass.config.components
         ):
             # Load intents in executor
-            load_intents = await self.hass.async_add_executor_job(
+            lang_intents = await self.hass.async_add_executor_job(
                 self.get_or_load_intents,
                 language,
             )
@@ -154,7 +151,7 @@ class DefaultAgent(AbstractConversationAgent):
         if not intents_dict:
             return None
 
-        if not intents_changed and (lang_intents is not None):
+        if not intents_changed and lang_intents is not None:
             return lang_intents
 
         # This can be made faster by not re-parsing existing sentences.
