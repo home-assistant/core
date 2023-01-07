@@ -173,6 +173,7 @@ class DPCode(StrEnum):
     CUR_VOLTAGE = "cur_voltage"  # Actual voltage
     DECIBEL_SENSITIVITY = "decibel_sensitivity"
     DECIBEL_SWITCH = "decibel_switch"
+    DEHUMIDITY_SET_ENUM = "dehumidify_set_enum"
     DEHUMIDITY_SET_VALUE = "dehumidify_set_value"
     DISINFECTION = "disinfection"
     DO_NOT_DISTURB = "do_not_disturb"

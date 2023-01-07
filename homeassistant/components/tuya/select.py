@@ -342,6 +342,31 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             translation_key="countdown",
         ),
     ),
+    # Dehumidifier
+    # https://developer.tuya.com/en/docs/iot/categorycs?id=Kaiuz1vcz4dha
+    "cs": (
+        SelectEntityDescription(
+            key=DPCode.COUNTDOWN_SET,
+            name="Countdown",
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:timer-cog-outline",
+            translation_key="countdown",
+        ),
+        SelectEntityDescription(
+            key=DPCode.FAN_SPEED_ENUM,
+            name="Fan Speed",
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:fan",
+            translation_key="fan_speed",
+        ),
+        SelectEntityDescription(
+            key=DPCode.DEHUMIDITY_SET_ENUM,
+            name="Target Humidity",
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:water-percent",
+            translation_key="humidity",
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)
