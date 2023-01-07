@@ -1486,6 +1486,11 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "evse_wifi": {
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "ezviz": {
       "name": "EZVIZ",
       "integration_type": "hub",
@@ -6460,6 +6465,7 @@
     "demo",
     "derivative",
     "emulated_roku",
+    "evse_wifi",
     "filesize",
     "garages_amsterdam",
     "google_travel_time",

@@ -1,0 +1,24 @@
+{
+  "title": "Simple EVSE Wifi",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Define EVSE Configuration",
+        "data": {
+          "name": "Assign a name to this device",
+          "host": "IP address/hostname of controller",
+          "max_current": "Maximum charge current",
+          "interval": "Polling interval in seconds"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

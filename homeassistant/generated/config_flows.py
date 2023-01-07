@@ -120,6 +120,7 @@ FLOWS = {
         "escea",
         "esphome",
         "evil_genius_labs",
+        "evse_wifi",
         "ezviz",
         "faa_delays",
         "fibaro",
