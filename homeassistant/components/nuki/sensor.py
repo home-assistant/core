@@ -28,20 +28,15 @@ class NukiBatterySensor(NukiEntity, SensorEntity):
 
     _attr_has_entity_name = True
 
-    @property
-    def name(self):
-        """Return the name of the lock."""
-        return "Battery"
+    _attr_name = "Battery"
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
         return f"{self._nuki_device.nuki_id}_battery_level"
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return SensorDeviceClass.BATTERY
 
     @property
     def extra_state_attributes(self):
@@ -52,16 +47,6 @@ class NukiBatterySensor(NukiEntity, SensorEntity):
         return data
 
     @property
-    def entity_category(self):
-        """Device entity category."""
-        return EntityCategory.DIAGNOSTIC
-
-    @property
     def native_value(self) -> float:
         """Return the state of the sensor."""
         return self._nuki_device.battery_charge
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Return the unit the value is expressed in."""
-        return PERCENTAGE
