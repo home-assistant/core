@@ -333,6 +333,7 @@ FLOWS = {
         "radarr",
         "radio_browser",
         "radiotherm",
+        "rainbird",
         "rainforest_eagle",
         "rainmachine",
         "rdw",
