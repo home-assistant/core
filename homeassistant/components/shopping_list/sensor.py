@@ -1,12 +1,11 @@
 """Platform for sensor integration."""
 from __future__ import annotations
+
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.components.sensor import (
-    SensorEntity,
-    SensorStateClass,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
 from . import ShoppingData
 from .const import DOMAIN, EVENT_SHOPPING_LIST_UPDATED
 

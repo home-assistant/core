@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 import pytest
+from homeassistant.core import HomeAssistant
 
 from homeassistant.components.shopping_list import intent as sl_intent
 
@@ -18,7 +19,7 @@ def mock_shopping_list_io():
 
 
 @pytest.fixture
-async def sl_setup(hass):
+async def sl_setup(hass: HomeAssistant):
     """Set up the shopping list."""
 
     entry = MockConfigEntry(domain="shopping_list")

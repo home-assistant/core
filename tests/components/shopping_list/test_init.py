@@ -12,18 +12,19 @@ from homeassistant.components.shopping_list.const import (
     SERVICE_COMPLETE_ITEM,
     SERVICE_REMOVE_ITEM,
 )
-from homeassistant.components.websocket_api.const import (
+from homeassistant.components.websocket_api import (
     ERR_INVALID_FORMAT,
     ERR_NOT_FOUND,
     TYPE_RESULT,
 )
 from homeassistant.const import ATTR_NAME
 from homeassistant.helpers import intent
+from homeassistant.core import HomeAssistant
 
 from tests.common import async_capture_events
 
 
-async def test_add_item(hass, sl_setup):
+async def test_add_item(hass: HomeAssistant, sl_setup):
     """Test adding an item intent."""
 
     response = await intent.async_handle(
@@ -33,7 +34,7 @@ async def test_add_item(hass, sl_setup):
     assert response.speech["plain"]["speech"] == "I've added beer to your shopping list"
 
 
-async def test_remove_item(hass, sl_setup):
+async def test_remove_item(hass: HomeAssistant, sl_setup):
     """Test removiung list items."""
     await intent.async_handle(
         hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
@@ -59,7 +60,7 @@ async def test_remove_item(hass, sl_setup):
         await hass.data[DOMAIN].async_remove(item_id)
 
 
-async def test_update_list(hass, sl_setup):
+async def test_update_list(hass: HomeAssistant, sl_setup):
     """Test updating all list items."""
     await intent.async_handle(
         hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
@@ -92,7 +93,7 @@ async def test_update_list(hass, sl_setup):
     assert cheese["complete"] is False
 
 
-async def test_clear_completed_items(hass, sl_setup):
+async def test_clear_completed_items(hass: HomeAssistant, sl_setup):
     """Test clear completed list items."""
     await intent.async_handle(
         hass,
@@ -115,7 +116,7 @@ async def test_clear_completed_items(hass, sl_setup):
     assert len(hass.data[DOMAIN].items) == 0
 
 
-async def test_recent_items_intent(hass, sl_setup):
+async def test_recent_items_intent(hass: HomeAssistant, sl_setup):
     """Test recent items."""
 
     await intent.async_handle(
@@ -136,7 +137,7 @@ async def test_recent_items_intent(hass, sl_setup):
     )
 
 
-async def test_deprecated_api_get_all(hass, hass_client, sl_setup):
+async def test_deprecated_api_get_all(hass: HomeAssistant, hass_client, sl_setup):
     """Test the API."""
 
     await intent.async_handle(
@@ -158,7 +159,7 @@ async def test_deprecated_api_get_all(hass, hass_client, sl_setup):
     assert not data[1]["complete"]
 
 
-async def test_ws_get_items(hass, hass_ws_client, sl_setup):
+async def test_ws_get_items(hass: HomeAssistant, hass_ws_client, sl_setup):
     """Test get shopping_list items websocket command."""
 
     await intent.async_handle(
@@ -187,7 +188,7 @@ async def test_ws_get_items(hass, hass_ws_client, sl_setup):
     assert not data[1]["complete"]
 
 
-async def test_deprecated_api_update(hass, hass_client, sl_setup):
+async def test_deprecated_api_update(hass: HomeAssistant, hass_client, sl_setup):
     """Test the API."""
 
     await intent.async_handle(
@@ -225,7 +226,7 @@ async def test_deprecated_api_update(hass, hass_client, sl_setup):
     assert wine == {"id": wine_id, "name": "wine", "complete": True}
 
 
-async def test_ws_update_item(hass, hass_ws_client, sl_setup):
+async def test_ws_update_item(hass: HomeAssistant, hass_ws_client, sl_setup):
     """Test update shopping_list item websocket command."""
     await intent.async_handle(
         hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
@@ -271,7 +272,7 @@ async def test_ws_update_item(hass, hass_ws_client, sl_setup):
     assert wine == {"id": wine_id, "name": "wine", "complete": True}
 
 
-async def test_api_update_fails(hass, hass_client, sl_setup):
+async def test_api_update_fails(hass: HomeAssistant, hass_client, sl_setup):
     """Test the API."""
 
     await intent.async_handle(
@@ -291,7 +292,7 @@ async def test_api_update_fails(hass, hass_client, sl_setup):
     assert resp.status == HTTPStatus.BAD_REQUEST
 
 
-async def test_ws_update_item_fail(hass, hass_ws_client, sl_setup):
+async def test_ws_update_item_fail(hass: HomeAssistant, hass_ws_client, sl_setup):
     """Test failure of update shopping_list item websocket command."""
     await intent.async_handle(
         hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
@@ -318,7 +319,9 @@ async def test_ws_update_item_fail(hass, hass_ws_client, sl_setup):
     assert len(events) == 0
 
 
-async def test_deprecated_api_clear_completed(hass, hass_client, sl_setup):
+async def test_deprecated_api_clear_completed(
+    hass: HomeAssistant, hass_client, sl_setup
+):
     """Test the API."""
 
     await intent.async_handle(
@@ -351,7 +354,7 @@ async def test_deprecated_api_clear_completed(hass, hass_client, sl_setup):
     assert items[0] == {"id": wine_id, "name": "wine", "complete": False}
 
 
-async def test_ws_clear_items(hass, hass_ws_client, sl_setup):
+async def test_ws_clear_items(hass: HomeAssistant, hass_ws_client, sl_setup):
     """Test clearing shopping_list items websocket command."""
     await intent.async_handle(
         hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
@@ -384,7 +387,7 @@ async def test_ws_clear_items(hass, hass_ws_client, sl_setup):
     assert len(events) == 2
 
 
-async def test_deprecated_api_create(hass, hass_client, sl_setup):
+async def test_deprecated_api_create(hass: HomeAssistant, hass_client, sl_setup):
     """Test the API."""
 
     client = await hass_client()
@@ -403,7 +406,7 @@ async def test_deprecated_api_create(hass, hass_client, sl_setup):
     assert items[0]["complete"] is False
 
 
-async def test_deprecated_api_create_fail(hass, hass_client, sl_setup):
+async def test_deprecated_api_create_fail(hass: HomeAssistant, hass_client, sl_setup):
     """Test the API."""
 
     client = await hass_client()
@@ -415,7 +418,7 @@ async def test_deprecated_api_create_fail(hass, hass_client, sl_setup):
     assert len(events) == 0
 
 
-async def test_ws_add_item(hass, hass_ws_client, sl_setup):
+async def test_ws_add_item(hass: HomeAssistant, hass_ws_client, sl_setup):
     """Test adding shopping_list item websocket command."""
     client = await hass_ws_client(hass)
     events = async_capture_events(hass, EVENT_SHOPPING_LIST_UPDATED)
@@ -433,7 +436,7 @@ async def test_ws_add_item(hass, hass_ws_client, sl_setup):
     assert items[0]["complete"] is False
 
 
-async def test_ws_add_item_fail(hass, hass_ws_client, sl_setup):
+async def test_ws_add_item_fail(hass: HomeAssistant, hass_ws_client, sl_setup):
     """Test adding shopping_list item failure websocket command."""
     client = await hass_ws_client(hass)
     events = async_capture_events(hass, EVENT_SHOPPING_LIST_UPDATED)
@@ -444,7 +447,7 @@ async def test_ws_add_item_fail(hass, hass_ws_client, sl_setup):
     assert len(hass.data["shopping_list"].items) == 0
 
 
-async def test_ws_remove_item(hass, hass_ws_client, sl_setup):
+async def test_ws_remove_item(hass: HomeAssistant, hass_ws_client, sl_setup):
     """Test removing shopping_list item websocket command."""
     client = await hass_ws_client(hass)
     events = async_capture_events(hass, EVENT_SHOPPING_LIST_UPDATED)
@@ -472,7 +475,7 @@ async def test_ws_remove_item(hass, hass_ws_client, sl_setup):
     assert items[0]["name"] == "cheese"
 
 
-async def test_ws_remove_item_fail(hass, hass_ws_client, sl_setup):
+async def test_ws_remove_item_fail(hass: HomeAssistant, hass_ws_client, sl_setup):
     """Test removing shopping_list item failure websocket command."""
     client = await hass_ws_client(hass)
     events = async_capture_events(hass, EVENT_SHOPPING_LIST_UPDATED)
@@ -485,7 +488,7 @@ async def test_ws_remove_item_fail(hass, hass_ws_client, sl_setup):
     assert len(hass.data["shopping_list"].items) == 1
 
 
-async def test_ws_reorder_items(hass, hass_ws_client, sl_setup):
+async def test_ws_reorder_items(hass: HomeAssistant, hass_ws_client, sl_setup):
     """Test reordering shopping_list items websocket command."""
     await intent.async_handle(
         hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
@@ -568,7 +571,7 @@ async def test_ws_reorder_items(hass, hass_ws_client, sl_setup):
     }
 
 
-async def test_ws_reorder_items_failure(hass, hass_ws_client, sl_setup):
+async def test_ws_reorder_items_failure(hass: HomeAssistant, hass_ws_client, sl_setup):
     """Test reordering shopping_list items websocket command."""
     await intent.async_handle(
         hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
@@ -614,7 +617,7 @@ async def test_ws_reorder_items_failure(hass, hass_ws_client, sl_setup):
     assert len(events) == 0
 
 
-async def test_add_item_service(hass, sl_setup):
+async def test_add_item_service(hass: HomeAssistant, sl_setup):
     """Test adding shopping_list item service."""
     events = async_capture_events(hass, EVENT_SHOPPING_LIST_UPDATED)
     await hass.services.async_call(
@@ -629,7 +632,7 @@ async def test_add_item_service(hass, sl_setup):
     assert len(events) == 1
 
 
-async def test_remove_item_service(hass, sl_setup):
+async def test_remove_item_service(hass: HomeAssistant, sl_setup):
     """Test removing shopping_list item service."""
     events = async_capture_events(hass, EVENT_SHOPPING_LIST_UPDATED)
     await hass.services.async_call(
@@ -663,7 +666,7 @@ async def test_remove_item_service(hass, sl_setup):
     assert len(events) == 3
 
 
-async def test_clear_completed_items_service(hass, sl_setup):
+async def test_clear_completed_items_service(hass: HomeAssistant, sl_setup):
     """Test clearing completed shopping_list items service."""
     events = async_capture_events(hass, EVENT_SHOPPING_LIST_UPDATED)
     await hass.services.async_call(
