@@ -227,10 +227,12 @@ async def test_migrate_entry(hass):
     device_1 = registry.async_get(device_1.id)
     assert device_1.identifiers == {
         (DOMAIN, "11_0_213c7f2:16"),
+        (DOMAIN, "11", "0", "213c7f2:16"),
         ("dummy", "id"),
     }
 
     device_2 = registry.async_get(device_2.id)
     assert device_2.identifiers == {
         (DOMAIN, "16_0_00:90"),
+        (DOMAIN, "16", "0", "00:90"),
     }

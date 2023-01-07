@@ -350,9 +350,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ):
             identifiers = set()
             for identifier in device_entry.identifiers:
+                identifiers.add(identifier)
                 if identifier[0] == DOMAIN and len(identifier) == 4:
                     identifier = (DOMAIN, "_".join(identifier[1:]))
-                identifiers.add(identifier)
+                    identifiers.add(identifier)
             device_registry.async_update_device(
                 device_entry.id, new_identifiers=identifiers
             )
@@ -487,7 +488,9 @@ def get_device_identifier_from_device_entry(
     entry: dr.DeviceEntry | dr.DeletedDeviceEntry,
 ) -> str | None:
     """Calculate the device tuple from a device entry."""
-    identifier = next((x for x in entry.identifiers if x[0] == DOMAIN and len(x) == 4), None)
+    identifier = next(
+        (x for x in entry.identifiers if x[0] == DOMAIN and len(x) == 2), None
+    )
     if not identifier:
         return None
     return identifier[1]
