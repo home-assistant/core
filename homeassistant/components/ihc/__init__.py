@@ -54,10 +54,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             autosetup_ihc_products, hass, ihc_controller, controller_id
         )
     await hass.async_add_executor_job(manual_setup, hass, controller_id)
-    for component in IHC_PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setups(entry, IHC_PLATFORMS)
+    )
     entry.add_update_listener(async_update_options)
     # We only wan to register service functions once, in case you have multiple controllers
     if len(hass.data[DOMAIN]) == 1:
