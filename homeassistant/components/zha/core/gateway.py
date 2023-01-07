@@ -6,7 +6,6 @@ import collections
 from collections.abc import Callable
 from datetime import timedelta
 from enum import Enum
-import errno
 import itertools
 import logging
 import re
@@ -18,6 +17,7 @@ from zigpy.application import ControllerApplication
 from zigpy.config import CONF_DEVICE
 import zigpy.device
 import zigpy.endpoint
+import zigpy.exceptions
 import zigpy.group
 from zigpy.types.named import EUI64
 
@@ -174,6 +174,8 @@ class ZHAGateway:
                 self.application_controller = await app_controller_cls.new(
                     app_config, auto_form=True, start_radio=True
                 )
+            except zigpy.exceptions.TransientConnectionError as exc:
+                raise ConfigEntryNotReady from exc
             except Exception as exc:  # pylint: disable=broad-except
                 _LOGGER.warning(
                     "Couldn't start %s coordinator (attempt %s of %s)",
@@ -182,13 +184,6 @@ class ZHAGateway:
                     STARTUP_RETRIES,
                     exc_info=exc,
                 )
-
-                # Allow Core to retry reloading ZHA if the network is down
-                if (
-                    isinstance(exc, OSError)
-                    and exc.errno == errno.ENETUNREACH  # pylint: disable=no-member
-                ):
-                    raise ConfigEntryNotReady from exc
 
                 if attempt == STARTUP_RETRIES - 1:
                     raise exc

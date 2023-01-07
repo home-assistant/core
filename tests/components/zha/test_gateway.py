@@ -1,9 +1,9 @@
 """Test ZHA Gateway."""
 import asyncio
-import errno
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+import zigpy.exceptions
 import zigpy.profiles.zha as zha
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.lighting as lighting
@@ -269,15 +269,12 @@ async def test_gateway_initialize_failure_transient(hass, device_light_1, coordi
     zha_gateway = get_zha_gateway(hass)
     assert zha_gateway is not None
 
-    network_unreachable_error = OSError("Network is unreachable")
-    network_unreachable_error.errno = errno.ENETUNREACH
-
     with patch(
         "bellows.zigbee.application.ControllerApplication.new",
-        side_effect=[RuntimeError(), network_unreachable_error],
+        side_effect=[RuntimeError(), zigpy.exceptions.TransientConnectionError()],
     ) as mock_new:
         with pytest.raises(ConfigEntryNotReady):
             await zha_gateway.async_initialize()
 
-    # Initialization immediately stops and is retried after `ENETUNREACH` is received
+    # Initialization immediately stops and is retried after TransientConnectionError
     assert mock_new.call_count == 2
