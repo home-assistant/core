@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import async_timeout
 from devolo_plc_api import Device
@@ -80,7 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Disconnect from device."""
         await device.async_disconnect()
 
-    coordinators: dict[str, DataUpdateCoordinator] = {}
+    coordinators: dict[str, DataUpdateCoordinator[Any]] = {}
     if device.plcnet:
         coordinators[CONNECTED_PLC_DEVICES] = DataUpdateCoordinator(
             hass,
