@@ -88,7 +88,10 @@ class DevoloScannerEntity(
     """Representation of a devolo device tracker."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, device: Device, mac: str
+        self,
+        coordinator: DataUpdateCoordinator[list[ConnectedStationInfo]],
+        device: Device,
+        mac: str,
     ) -> None:
         """Initialize entity."""
         super().__init__(coordinator)

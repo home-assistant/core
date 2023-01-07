@@ -64,7 +64,7 @@ WazeRouteCalculator==0.14
 abodepy==1.2.0
 
 # homeassistant.components.accuweather
-accuweather==0.4.0
+accuweather==0.5.0
 
 # homeassistant.components.adax
 adax==0.2.0
@@ -777,7 +777,7 @@ librouteros==3.2.0
 libsoundtouch==0.8
 
 # homeassistant.components.life360
-life360==5.3.0
+life360==5.5.0
 
 # homeassistant.components.logi_circle
 logi_circle==0.2.3
