@@ -25,7 +25,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-def dovalidate(hass: HomeAssistant, user_input) -> str:
+def do_validate(hass: HomeAssistant, user_input) -> str:
     """Validate the user input.
 
     Return the IHC controller serial number
@@ -58,7 +58,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 serialnumber = await self.hass.async_add_executor_job(
-                    dovalidate, self.hass, user_input
+                    do_validate, self.hass, user_input
                 )
                 await self.async_set_unique_id(serialnumber)
                 self._abort_if_unique_id_configured()
