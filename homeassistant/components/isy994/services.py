@@ -13,12 +13,14 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
     SERVICE_RELOAD,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import async_get_platforms
 import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.service import entity_service_call
 
 from .const import _LOGGER, DOMAIN, ISY994_ISY
@@ -181,7 +183,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         """Handle a system query service call."""
         address = service.data.get(CONF_ADDRESS)
         isy_name = service.data.get(CONF_ISY)
-
+        entity_registry = er.async_get(hass)
         for config_entry_id in hass.data[DOMAIN]:
             isy = hass.data[DOMAIN][config_entry_id][ISY994_ISY]
             if isy_name and isy_name != isy.configuration["name"]:
@@ -195,11 +197,31 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                     isy.configuration["uuid"],
                 )
                 await isy.query(address)
+                async_log_deprecated_service_call(
+                    hass,
+                    call=service,
+                    alternate_service="button.press",
+                    alternate_target=entity_registry.async_get_entity_id(
+                        Platform.BUTTON,
+                        DOMAIN,
+                        f"{isy.configuration['uuid']}_{address}_query",
+                    ),
+                    breaks_in_ha_version="2023.5.0",
+                )
                 return
             _LOGGER.debug(
                 "Requesting system query of ISY %s", isy.configuration["uuid"]
             )
             await isy.query()
+            async_log_deprecated_service_call(
+                hass,
+                call=service,
+                alternate_service="button.press",
+                alternate_target=entity_registry.async_get_entity_id(
+                    Platform.BUTTON, DOMAIN, f"{isy.configuration['uuid']}_query"
+                ),
+                breaks_in_ha_version="2023.5.0",
+            )
 
     async def async_run_network_resource_service_handler(service: ServiceCall) -> None:
         """Handle a network resource service call."""
@@ -446,4 +468,44 @@ def async_setup_light_services(hass: HomeAssistant) -> None:
     )
     platform.async_register_entity_service(
         SERVICE_SET_RAMP_RATE, SERVICE_SET_RAMP_RATE_SCHEMA, "async_set_ramp_rate"
+    )
+
+
+@callback
+def async_log_deprecated_service_call(
+    hass: HomeAssistant,
+    call: ServiceCall,
+    alternate_service: str,
+    alternate_target: str | None,
+    breaks_in_ha_version: str,
+) -> None:
+    """Log a warning about a deprecated service call."""
+    deprecated_service = f"{call.domain}.{call.service}"
+    alternate_target = alternate_target or "this device"
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecated_service_{deprecated_service}",
+        breaks_in_ha_version=breaks_in_ha_version,
+        is_fixable=True,
+        is_persistent=True,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_service",
+        translation_placeholders={
+            "alternate_service": alternate_service,
+            "alternate_target": alternate_target,
+            "deprecated_service": deprecated_service,
+        },
+    )
+
+    _LOGGER.warning(
+        (
+            'The "%s" service is deprecated and will be removed in %s; use the "%s" '
+            'service and pass it a target entity ID of "%s"'
+        ),
+        deprecated_service,
+        breaks_in_ha_version,
+        alternate_service,
+        alternate_target,
     )
