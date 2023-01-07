@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.helpers import device_registry
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC 
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -26,7 +26,7 @@ class EzvizEntity(CoordinatorEntity[EzvizDataUpdateCoordinator], Entity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial)},
             connections={
-                (device_registry.CONNECTION_NETWORK_MAC, self.data["mac_address"]),
+                (CONNECTION_NETWORK_MAC, self.data["mac_address"]),
             },
             manufacturer=MANUFACTURER,
             model=self.data["device_sub_category"],
