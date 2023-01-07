@@ -190,6 +190,21 @@ location.async_detect_location_info = check_real(location.async_detect_location_
 util.get_local_ip = lambda: "127.0.0.1"
 
 
+@pytest.fixture(autouse=True)
+def patchable_utcnow():
+    """Patchable utcnow.
+
+    utcnow cannot be patched by freezegun unless we replace it
+    with a normal function.
+    """
+
+    def utcnow():
+        return dt_util.dt.datetime.now(dt_util.UTC)
+
+    with patch("homeassistant.util.dt.utcnow", utcnow):
+        yield
+
+
 @pytest.fixture(autouse=True, scope="module")
 def garbage_collection():
     """Run garbage collection at known locations.
