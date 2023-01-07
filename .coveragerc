@@ -596,6 +596,7 @@ omit =
     homeassistant/components/iss/sensor.py
     homeassistant/components/isy994/__init__.py
     homeassistant/components/isy994/binary_sensor.py
+    homeassistant/components/isy994/button.py
     homeassistant/components/isy994/climate.py
     homeassistant/components/isy994/cover.py
     homeassistant/components/isy994/entity.py
@@ -670,6 +671,9 @@ omit =
     homeassistant/components/lcn/helpers.py
     homeassistant/components/lcn/scene.py
     homeassistant/components/lcn/services.py
+    homeassistant/components/ld2410_ble/__init__.py
+    homeassistant/components/ld2410_ble/binary_sensor.py
+    homeassistant/components/ld2410_ble/coordinator.py
     homeassistant/components/led_ble/__init__.py
     homeassistant/components/led_ble/light.py
     homeassistant/components/lg_netcast/media_player.py
@@ -1078,6 +1082,9 @@ omit =
     homeassistant/components/rova/sensor.py
     homeassistant/components/rpi_camera/*
     homeassistant/components/rtorrent/sensor.py
+    homeassistant/components/ruuvi_gateway/__init__.py
+    homeassistant/components/ruuvi_gateway/bluetooth.py
+    homeassistant/components/ruuvi_gateway/coordinator.py
     homeassistant/components/russound_rio/media_player.py
     homeassistant/components/russound_rnet/media_player.py
     homeassistant/components/sabnzbd/__init__.py
@@ -1114,7 +1121,6 @@ omit =
     homeassistant/components/sesame/lock.py
     homeassistant/components/seven_segments/image_processing.py
     homeassistant/components/seventeentrack/sensor.py
-    homeassistant/components/sfr_box/sensor.py
     homeassistant/components/shiftr/*
     homeassistant/components/shodan/sensor.py
     homeassistant/components/sia/__init__.py

@@ -3,7 +3,7 @@
   "name": "Universal Devices ISY/IoX",
   "integration_type": "hub",
   "documentation": "https://www.home-assistant.io/integrations/isy994",
-  "requirements": ["pyisy==3.0.10"],
+  "requirements": ["pyisy==3.0.11"],
   "codeowners": ["@bdraco", "@shbatm"],
   "config_flow": true,
   "ssdp": [
@@ -18,6 +18,10 @@
     },
     {
       "hostname": "isy*",
+      "macaddress": "0021B9*"
+    },
+    {
+      "hostname": "eisy*",
       "macaddress": "0021B9*"
     },
     {

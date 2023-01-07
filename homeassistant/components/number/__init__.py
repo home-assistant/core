@@ -213,7 +213,7 @@ class NumberDeviceClass(StrEnum):
     POWER_FACTOR = "power_factor"
     """Power factor.
 
-    Unit of measurement: `%`
+    Unit of measurement: `%`, `None`
     """
 
     POWER = "power"

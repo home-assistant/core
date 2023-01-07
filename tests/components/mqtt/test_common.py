@@ -18,6 +18,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.generated.mqtt import MQTT
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -1818,3 +1819,15 @@ async def help_test_unload_config_entry_with_platform(
 
     discovery_setup_entity = hass.states.get(f"{domain}.discovery_setup")
     assert discovery_setup_entity is None
+
+
+async def help_test_discovery_setup(
+    hass: HomeAssistant, domain: str, discovery_data_payload: str, name: str
+) -> None:
+    """Test setting up an MQTT entity using discovery."""
+    async_fire_mqtt_message(
+        hass, f"homeassistant/{domain}/{name}/config", discovery_data_payload
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(f"{domain}.{name}")
+    assert state.state is not None

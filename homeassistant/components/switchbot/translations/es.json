@@ -8,7 +8,7 @@
             "unknown": "Error inesperado"
         },
         "error": {
-            "auth_failed": "Error de autenticaci\u00f3n",
+            "auth_failed": "Error de autenticaci\u00f3n: {error_detail}",
             "encryption_key_invalid": "El ID de clave o la clave de cifrado no son v\u00e1lidos",
             "key_id_invalid": "El ID de clave o la clave de cifrado no son v\u00e1lidos"
         },

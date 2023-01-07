@@ -168,8 +168,8 @@ set_ramp_rate:
           min: 0
           max: 31
 system_query:
-  name: System query
-  description: Request the ISY Query the connected devices.
+  name: System query (Deprecated)
+  description: "Request the ISY Query the connected devices. Deprecated: Use device Query button entity."
   fields:
     address:
       name: Address

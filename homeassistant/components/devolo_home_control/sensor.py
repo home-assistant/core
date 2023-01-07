@@ -21,7 +21,6 @@ from .devolo_device import DevoloDeviceEntity
 DEVICE_CLASS_MAPPING = {
     "battery": SensorDeviceClass.BATTERY,
     "temperature": SensorDeviceClass.TEMPERATURE,
-    "light": SensorDeviceClass.ILLUMINANCE,
     "humidity": SensorDeviceClass.HUMIDITY,
     "current": SensorDeviceClass.POWER,
     "total": SensorDeviceClass.ENERGY,

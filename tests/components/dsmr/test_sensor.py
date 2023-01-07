@@ -26,6 +26,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     VOLUME_CUBIC_METERS,
+    UnitOfEnergy,
     UnitOfPower,
 )
 from homeassistant.helpers import entity_registry as er
@@ -804,3 +805,57 @@ async def test_reconnect(hass, dsmr_connection_fixture):
     await hass.config_entries.async_unload(mock_entry.entry_id)
 
     assert mock_entry.state == config_entries.ConfigEntryState.NOT_LOADED
+
+
+async def test_gas_meter_providing_energy_reading(hass, dsmr_connection_fixture):
+    """Test that gas providing energy readings use the correct device class."""
+    (connection_factory, transport, protocol) = dsmr_connection_fixture
+
+    from dsmr_parser.obis_references import GAS_METER_READING
+    from dsmr_parser.objects import MBusObject
+
+    entry_data = {
+        "port": "/dev/ttyUSB0",
+        "dsmr_version": "2.2",
+        "precision": 4,
+        "reconnect_interval": 30,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
+    }
+    entry_options = {
+        "time_between_update": 0,
+    }
+
+    telegram = {
+        GAS_METER_READING: MBusObject(
+            [
+                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": Decimal(123.456), "unit": UnitOfEnergy.GIGA_JOULE},
+            ]
+        ),
+    }
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    telegram_callback = connection_factory.call_args_list[0][0][2]
+    telegram_callback(telegram)
+    await asyncio.sleep(0)
+
+    gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
+    assert gas_consumption.state == "123.456"
+    assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
+    assert (
+        gas_consumption.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
+    )
+    assert (
+        gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfEnergy.GIGA_JOULE
+    )

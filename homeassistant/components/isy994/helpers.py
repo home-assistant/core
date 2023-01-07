@@ -16,12 +16,6 @@ from pyisy.nodes import Group, Node, Nodes
 from pyisy.programs import Programs
 from pyisy.variables import Variables
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
-from homeassistant.components.climate import DOMAIN as CLIMATE
-from homeassistant.components.fan import DOMAIN as FAN
-from homeassistant.components.light import DOMAIN as LIGHT
-from homeassistant.components.sensor import DOMAIN as SENSOR
-from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -95,7 +89,7 @@ def _check_for_insteon_type(
     works for Insteon device. "Node Server" (v5+) and Z-Wave and others will
     not have a type.
     """
-    if not hasattr(node, "protocol") or node.protocol != PROTO_INSTEON:
+    if node.protocol != PROTO_INSTEON:
         return False
     if not hasattr(node, "type") or node.type is None:
         # Node doesn't have a type (non-Insteon device most likely)
@@ -115,34 +109,34 @@ def _check_for_insteon_type(
             subnode_id = int(node.address.split(" ")[-1], 16)
 
             # FanLinc, which has a light module as one of its nodes.
-            if platform == FAN and subnode_id == SUBNODE_FANLINC_LIGHT:
-                hass_isy_data[ISY994_NODES][LIGHT].append(node)
+            if platform == Platform.FAN and subnode_id == SUBNODE_FANLINC_LIGHT:
+                hass_isy_data[ISY994_NODES][Platform.LIGHT].append(node)
                 return True
 
             # Thermostats, which has a "Heat" and "Cool" sub-node on address 2 and 3
-            if platform == CLIMATE and subnode_id in (
+            if platform == Platform.CLIMATE and subnode_id in (
                 SUBNODE_CLIMATE_COOL,
                 SUBNODE_CLIMATE_HEAT,
             ):
-                hass_isy_data[ISY994_NODES][BINARY_SENSOR].append(node)
+                hass_isy_data[ISY994_NODES][Platform.BINARY_SENSOR].append(node)
                 return True
 
             # IOLincs which have a sensor and relay on 2 different nodes
             if (
-                platform == BINARY_SENSOR
+                platform == Platform.BINARY_SENSOR
                 and device_type.startswith(TYPE_CATEGORY_SENSOR_ACTUATORS)
                 and subnode_id == SUBNODE_IOLINC_RELAY
             ):
-                hass_isy_data[ISY994_NODES][SWITCH].append(node)
+                hass_isy_data[ISY994_NODES][Platform.SWITCH].append(node)
                 return True
 
             # Smartenit EZIO2X4
             if (
-                platform == SWITCH
+                platform == Platform.SWITCH
                 and device_type.startswith(TYPE_EZIO2X4)
                 and subnode_id in SUBNODE_EZIO2X4_SENSORS
             ):
-                hass_isy_data[ISY994_NODES][BINARY_SENSOR].append(node)
+                hass_isy_data[ISY994_NODES][Platform.BINARY_SENSOR].append(node)
                 return True
 
             hass_isy_data[ISY994_NODES][platform].append(node)
@@ -159,7 +153,7 @@ def _check_for_zwave_cat(
     This is for (presumably) every version of the ISY firmware, but only
     works for Z-Wave Devices with the devtype.cat property.
     """
-    if not hasattr(node, "protocol") or node.protocol != PROTO_ZWAVE:
+    if node.protocol != PROTO_ZWAVE:
         return False
 
     if not hasattr(node, "zwave_props") or node.zwave_props is None:
@@ -292,11 +286,15 @@ def _categorize_nodes(
             # Don't import this node as a device at all
             continue
 
-        if hasattr(node, "protocol") and node.protocol == PROTO_GROUP:
+        if hasattr(node, "parent_node") and node.parent_node is None:
+            # This is a physical device / parent node, add a query button
+            hass_isy_data[ISY994_NODES][Platform.BUTTON].append(node)
+
+        if node.protocol == PROTO_GROUP:
             hass_isy_data[ISY994_NODES][ISY_GROUP_PLATFORM].append(node)
             continue
 
-        if getattr(node, "protocol", None) == PROTO_INSTEON:
+        if node.protocol == PROTO_INSTEON:
             for control in node.aux_properties:
                 hass_isy_data[ISY994_NODES][SENSOR_AUX].append((node, control))
 
@@ -305,7 +303,7 @@ def _categorize_nodes(
             # determine if it should be a binary_sensor.
             if _is_sensor_a_binary_sensor(hass_isy_data, node):
                 continue
-            hass_isy_data[ISY994_NODES][SENSOR].append(node)
+            hass_isy_data[ISY994_NODES][Platform.SENSOR].append(node)
             continue
 
         # We have a bunch of different methods for determining the device type,
@@ -323,7 +321,7 @@ def _categorize_nodes(
             continue
 
         # Fallback as as sensor, e.g. for un-sortable items like NodeServer nodes.
-        hass_isy_data[ISY994_NODES][SENSOR].append(node)
+        hass_isy_data[ISY994_NODES][Platform.SENSOR].append(node)
 
 
 def _categorize_programs(hass_isy_data: dict, programs: Programs) -> None:
@@ -348,7 +346,7 @@ def _categorize_programs(hass_isy_data: dict, programs: Programs) -> None:
                 )
                 continue
 
-            if platform != BINARY_SENSOR:
+            if platform != Platform.BINARY_SENSOR:
                 actions = entity_folder.get_by_name(KEY_ACTIONS)
                 if not actions or actions.protocol != PROTO_PROGRAM:
                     _LOGGER.warning(
