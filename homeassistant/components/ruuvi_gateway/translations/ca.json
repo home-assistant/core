@@ -11,7 +11,8 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Amfitri\u00f3 (adre\u00e7a IP o nom del DNS)"
+                    "host": "Amfitri\u00f3 (adre\u00e7a IP o nom del DNS)",
+                    "token": "Token del portador (configurat durant la configuraci\u00f3 de la passarel\u00b7la)"
                 }
             }
         }

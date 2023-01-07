@@ -8,7 +8,7 @@
             "unknown": "Erro inesperado"
         },
         "error": {
-            "auth_failed": "Falha na autentica\u00e7\u00e3o",
+            "auth_failed": "Falha na autentica\u00e7\u00e3o: {error_detail}",
             "encryption_key_invalid": "A chave ID ou Chave de Criptografia \u00e9 inv\u00e1lida",
             "key_id_invalid": "A chave ID ou Chave de Criptografia \u00e9 inv\u00e1lida",
             "one": "",
