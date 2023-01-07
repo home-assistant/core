@@ -50,6 +50,11 @@
             "hvac_action": {
                 "name": "Aktu\u00e1ln\u00ed akce",
                 "state": {
+                    "cooling": "Chlazen\u00ed",
+                    "drying": "Vysou\u0161en\u00ed",
+                    "fan": "V\u011btr\u00e1n\u00ed",
+                    "heating": "Vyt\u00e1p\u011bn\u00ed",
+                    "idle": "Ne\u010dinn\u00fd",
                     "off": "Vypnuto"
                 }
             },

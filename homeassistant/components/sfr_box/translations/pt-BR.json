@@ -14,5 +14,33 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "line_status": {
+                "state": {
+                    "loss_of_power": "Perda de energia",
+                    "loss_of_signal": "Perda de sinal",
+                    "loss_of_signal_quality": "Perda de qualidade do sinal",
+                    "no_defect": "Sem defeito",
+                    "of_frame": "Da moldura",
+                    "unknown": "Desconhecido"
+                }
+            },
+            "training": {
+                "state": {
+                    "g_922_channel_analysis": "G.922 An\u00e1lise de Canais",
+                    "g_992_message_exchange": "G.992 Troca de Mensagens",
+                    "g_992_started": "G.992 Iniciado",
+                    "g_993_channel_analysis": "G.993 An\u00e1lise de Canais",
+                    "g_993_message_exchange": "G.993 Troca de Mensagens",
+                    "g_993_started": "G.993 Iniciado",
+                    "g_994_training": "Treinamento G.994",
+                    "idle": "Ocioso",
+                    "showtime": "Showtime",
+                    "unknown": "Desconhecido"
+                }
+            }
+        }
     }
 }

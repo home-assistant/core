@@ -10,7 +10,7 @@
         },
         "step": {
             "user": {
-                "description": "Biztos benne, hogy be szeretn\u00e9 \u00e1ll\u00edtani a Mailgunt?",
+                "description": "Biztos benne, hogy be szeretn\u00e9 \u00e1ll\u00edtani Mailgunt?",
                 "title": "Mailgun Webhook be\u00e1ll\u00edt\u00e1sa"
             }
         }
