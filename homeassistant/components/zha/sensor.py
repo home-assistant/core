@@ -21,6 +21,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     Platform,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -755,6 +756,8 @@ class RSSISensor(Sensor, id_suffix="rssi"):
     """RSSI sensor for a device."""
 
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.SIGNAL_STRENGTH
+    _attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
     _attr_should_poll = True  # BaseZhaEntity defaults to False
