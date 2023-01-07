@@ -889,7 +889,6 @@ numato-gpio==0.10.0
 numpy==1.23.2
 
 # homeassistant.components.google
-# homeassistant.components.google_mail
 oauth2client==4.1.3
 
 # homeassistant.components.profiler

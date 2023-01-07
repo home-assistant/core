@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import ComponentSetup
+from .conftest import GOOGLE_TOKEN_URI, ComponentSetup
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -42,7 +42,7 @@ async def test_expired_token_refresh_success(
 
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        "https://oauth2.googleapis.com/token",
+        GOOGLE_TOKEN_URI,
         json={
             "access_token": "updated-access-token",
             "refresh_token": "updated-refresh-token",
@@ -87,7 +87,7 @@ async def test_expired_token_refresh_failure(
 
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        "https://oauth2.googleapis.com/token",
+        GOOGLE_TOKEN_URI,
         status=status,
     )
 

@@ -2,14 +2,13 @@
 from unittest.mock import patch
 
 from httplib2 import Response
-import oauth2client
 
 from homeassistant import config_entries
 from homeassistant.components.google_mail.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .conftest import CLIENT_ID, SCOPES, TITLE
+from .conftest import CLIENT_ID, GOOGLE_AUTH_URI, GOOGLE_TOKEN_URI, SCOPES, TITLE
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -33,7 +32,7 @@ async def test_full_flow(
     )
 
     assert result["url"] == (
-        f"{oauth2client.GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
+        f"{GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}&scope={'+'.join(SCOPES)}"
         "&access_type=offline&prompt=consent"
@@ -96,7 +95,7 @@ async def test_reauth(
         },
     )
     assert result["url"] == (
-        f"{oauth2client.GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
+        f"{GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}&scope={'+'.join(SCOPES)}"
         "&access_type=offline&prompt=consent"
@@ -108,7 +107,7 @@ async def test_reauth(
 
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        oauth2client.GOOGLE_TOKEN_URI,
+        GOOGLE_TOKEN_URI,
         json={
             "refresh_token": "mock-refresh-token",
             "access_token": "updated-access-token",
@@ -156,7 +155,7 @@ async def test_already_configured(
     )
 
     assert result["url"] == (
-        f"{oauth2client.GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
+        f"{GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}&scope={'+'.join(SCOPES)}"
         "&access_type=offline&prompt=consent"

@@ -4,7 +4,6 @@ import time
 from unittest.mock import patch
 
 from httplib2 import Response
-import oauth2client
 from pytest import fixture
 
 from homeassistant.components.application_credentials import (
@@ -23,6 +22,8 @@ ComponentSetup = Callable[[], Awaitable[None]]
 BUILD = "homeassistant.components.google_mail.api.build"
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
+GOOGLE_AUTH_URI = "https://accounts.google.com/o/oauth2/v2/auth"
+GOOGLE_TOKEN_URI = "https://oauth2.googleapis.com/token"
 SCOPES = [
     "https://www.googleapis.com/auth/gmail.compose",
     "https://www.googleapis.com/auth/gmail.settings.basic",
@@ -79,7 +80,7 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
 def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
     """Mock Google Mail connection."""
     aioclient_mock.post(
-        oauth2client.GOOGLE_TOKEN_URI,
+        GOOGLE_TOKEN_URI,
         json={
             "refresh_token": "mock-refresh-token",
             "access_token": "mock-access-token",
