@@ -1230,6 +1230,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/suez_water/ @ooii
 /homeassistant/components/sun/ @Swamp-Ig
 /tests/components/sun/ @Swamp-Ig
+/homeassistant/components/sunsynk/ @jamesridgway
+/tests/components/sunsynk/ @jamesridgway
 /homeassistant/components/supla/ @mwegrzynek
 /homeassistant/components/surepetcare/ @benleb @danielhiversen
 /tests/components/surepetcare/ @benleb @danielhiversen
