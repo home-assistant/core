@@ -1805,7 +1805,7 @@ wallbox==0.4.12
 watchdog==2.2.1
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.18.0
+whirlpool-sixth-sense==0.18.1
 
 # homeassistant.components.whois
 whois==0.9.16
