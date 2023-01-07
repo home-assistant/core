@@ -177,7 +177,7 @@ class PhilipsTVMediaPlayer(
     async def async_media_play_pause(self) -> None:
         """Send pause command to media player."""
         if self._tv.quirk_playpause_spacebar:
-            await self._tv.sendUnicode(" ")
+            await self._tv.sendKey("Confirm")
         else:
             await self._tv.sendKey("PlayPause")
         await self._async_update_soon()
@@ -465,6 +465,8 @@ class PhilipsTVMediaPlayer(
             self._attr_media_content_id = None
             self._attr_media_title = self._sources.get(self._tv.source_id)
             self._attr_media_channel = None
+
+        self._attr_assumed_state = True
 
     @callback
     def _handle_coordinator_update(self) -> None:
