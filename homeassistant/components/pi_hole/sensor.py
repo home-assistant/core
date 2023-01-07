@@ -1,7 +1,6 @@
 """Support for getting statistical data from a Pi-hole system."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
 
 from hole import Hole
@@ -21,64 +20,56 @@ from .const import (
     DOMAIN as PIHOLE_DOMAIN,
 )
 
-
-@dataclass
-class PiHoleSensorEntityDescription(SensorEntityDescription):
-    """Describes PiHole sensor entity."""
-
-    icon: str = "mdi:pi-hole"
-
-
-SENSOR_TYPES: tuple[PiHoleSensorEntityDescription, ...] = (
-    PiHoleSensorEntityDescription(
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
         key="ads_blocked_today",
         name="Ads Blocked Today",
         native_unit_of_measurement="ads",
         icon="mdi:close-octagon-outline",
     ),
-    PiHoleSensorEntityDescription(
+    SensorEntityDescription(
         key="ads_percentage_today",
         name="Ads Percentage Blocked Today",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:close-octagon-outline",
     ),
-    PiHoleSensorEntityDescription(
+    SensorEntityDescription(
         key="clients_ever_seen",
         name="Seen Clients",
         native_unit_of_measurement="clients",
         icon="mdi:account-outline",
     ),
-    PiHoleSensorEntityDescription(
+    SensorEntityDescription(
         key="dns_queries_today",
         name="DNS Queries Today",
         native_unit_of_measurement="queries",
         icon="mdi:comment-question-outline",
     ),
-    PiHoleSensorEntityDescription(
+    SensorEntityDescription(
         key="domains_being_blocked",
         name="Domains Blocked",
         native_unit_of_measurement="domains",
         icon="mdi:block-helper",
     ),
-    PiHoleSensorEntityDescription(
+    SensorEntityDescription(
         key="queries_cached",
         name="DNS Queries Cached",
         native_unit_of_measurement="queries",
         icon="mdi:comment-question-outline",
     ),
-    PiHoleSensorEntityDescription(
+    SensorEntityDescription(
         key="queries_forwarded",
         name="DNS Queries Forwarded",
         native_unit_of_measurement="queries",
         icon="mdi:comment-question-outline",
     ),
-    PiHoleSensorEntityDescription(
+    SensorEntityDescription(
         key="unique_clients",
         name="DNS Unique Clients",
         native_unit_of_measurement="clients",
         icon="mdi:account-outline",
     ),
-    PiHoleSensorEntityDescription(
+    SensorEntityDescription(
         key="unique_domains",
         name="DNS Unique Domains",
         native_unit_of_measurement="domains",
@@ -109,7 +100,7 @@ async def async_setup_entry(
 class PiHoleSensor(PiHoleEntity, SensorEntity):
     """Representation of a Pi-hole sensor."""
 
-    entity_description: PiHoleSensorEntityDescription
+    entity_description: SensorEntityDescription
 
     def __init__(
         self,
@@ -117,7 +108,7 @@ class PiHoleSensor(PiHoleEntity, SensorEntity):
         coordinator: DataUpdateCoordinator,
         name: str,
         server_unique_id: str,
-        description: PiHoleSensorEntityDescription,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize a Pi-hole sensor."""
         super().__init__(api, coordinator, name, server_unique_id)
