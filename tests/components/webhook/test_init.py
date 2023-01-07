@@ -181,7 +181,7 @@ async def test_webhook_get(hass, mock_client):
     assert hooks[0][1] == webhook_id
     assert hooks[0][2].method == "GET"
 
-    # Test that status is HTTPStatus.OK even when GET is not allowed.
+    # Test that status is HTTPStatus.METHOD_NOT_ALLOWED even when GET is not allowed.
     webhook.async_unregister(hass, webhook_id)
     webhook.async_register(
         hass, "test", "Test hook", webhook_id, handle, allowed_methods=["PUT"]
