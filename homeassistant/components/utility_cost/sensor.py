@@ -48,6 +48,7 @@ SUPPORTED_STATE_CLASSES = [
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Required(CONF_UTILITY_SOURCE_SENSOR): cv.entity_id,
         vol.Required(CONF_PRICE_SOURCE_SENSOR): cv.entity_id,
     }
