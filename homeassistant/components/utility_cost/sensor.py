@@ -37,8 +37,6 @@ from .const import CONF_PRICE_SOURCE_SENSOR, CONF_UTILITY_SOURCE_SENSOR
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_UTILITY_SOURCE_ID = "utility_source"
-ATTR_PRICE_SOURCE_ID = "price_source"
 ATTR_LAST_PERIOD = "last_period"
 
 SUPPORTED_STATE_CLASSES = [
@@ -297,8 +295,4 @@ class UtilityCostSensor(RestoreEntity, SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
-        return {
-            ATTR_UTILITY_SOURCE_ID: self._utility_sensor_source_id,
-            ATTR_PRICE_SOURCE_ID: self._price_sensor_source_id,
-            ATTR_LAST_PERIOD: str(self._last_period),
-        }
+        return {ATTR_LAST_PERIOD: str(self._last_period)}

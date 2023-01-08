@@ -41,8 +41,6 @@ async def test_setup_and_remove_config_entry(
     state = hass.states.get(utility_cost_entity_id)
     assert state.state == "unknown"
     assert "unit_of_measurement" not in state.attributes
-    assert state.attributes["utility_source"] == "sensor.utility_input"
-    assert state.attributes["price_source"] == "sensor.price_input"
 
     hass.states.async_set(
         price_input_sensor_entity_id, 20, {"unit_of_measurement": "EUR/cat"}
