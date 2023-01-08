@@ -627,7 +627,7 @@ def current_request():
             "GET",
             "/some/request",
             headers={"Host": "example.com"},
-            sslcontext=ssl.SSLContext(ssl.PROTOCOL_TLS),
+            sslcontext=ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT),
         )
         mock_request_context.get.return_value = mocked_request
         yield mock_request_context
