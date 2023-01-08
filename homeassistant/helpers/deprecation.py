@@ -115,7 +115,7 @@ def deprecated_class(
 def deprecated_function(
     replacement: str,
 ) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
-    """Mark function as deprecated and provide a replacement function to be used instead."""
+    """Mark function as deprecated and provide a replacement to be used instead."""
 
     def deprecated_decorator(func: Callable[_P, _R]) -> Callable[_P, _R]:
         """Decorate function as deprecated."""
