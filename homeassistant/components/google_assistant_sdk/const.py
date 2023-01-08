@@ -20,5 +20,7 @@ SUPPORTED_LANGUAGE_CODES: Final = [
     "fr-CA",
     "fr-FR",
     "it-IT",
+    "ja-JP",
+    "ko-KR",
     "pt-BR",
 ]
