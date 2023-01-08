@@ -26,6 +26,8 @@ from homeassistant.helpers.service import entity_service_call
 from .const import _LOGGER, DOMAIN, ISY994_ISY
 from .util import unique_ids_for_config_entry_id
 
+ISY_CONF_UUID = "uuid"  # TODO: Remove and import when PR#85429 is merged
+
 # Common Services for All Platforms:
 SERVICE_SYSTEM_QUERY = "system_query"
 SERVICE_SET_VARIABLE = "set_variable"
@@ -288,6 +290,18 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                 variable = isy.variables.vobjs[vtype].get(address)
             if variable is not None:
                 await variable.set_value(value, init)
+                entity_registry = er.async_get(hass)
+                async_log_deprecated_service_call(
+                    hass,
+                    call=service,
+                    alternate_service="number.set_value",
+                    alternate_target=entity_registry.async_get_entity_id(
+                        Platform.NUMBER,
+                        DOMAIN,
+                        f"{isy.configuration[ISY_CONF_UUID]}_{address}{'_init' if init else ''}",
+                    ),
+                    breaks_in_ha_version="2023.5.0",
+                )
                 return
         _LOGGER.error("Could not set variable value; not found or enabled on the ISY")
 

@@ -184,8 +184,8 @@ system_query:
       selector:
         text:
 set_variable:
-  name: Set variable
-  description: Set an ISY variable's current or initial value. Variables can be set by either type/address or by name.
+  name: Set variable (Deprecated)
+  description: "Set an ISY variable's current or initial value. Variables can be set by either type/address or by name. Deprecated: Use number entities instead."
   fields:
     address:
       name: Address
