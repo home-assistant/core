@@ -78,6 +78,14 @@ asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 asyncio.set_event_loop_policy = lambda policy: None
 
 
+def _utcnow():
+    """Make utcnow patchable by freezegun."""
+    return dt_util.dt.datetime.now(dt_util.UTC)
+
+
+dt_util.utcnow = _utcnow
+
+
 def pytest_addoption(parser):
     """Register custom pytest options."""
     parser.addoption("--dburl", action="store", default="sqlite://")
