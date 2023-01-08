@@ -202,16 +202,23 @@ class SonosDiscoveryManager:
         @callback
         def _async_add_visible_zones(subscription_succeeded: bool = False) -> None:
             """Determine visible zones and create SonosSpeaker instances."""
+            zones_to_add = set()
             subscription = None
+            if subscription_succeeded:
+                subscription = sub
+
             visible_zones = soco.visible_zones
             self._known_invisible = soco.all_zones - visible_zones
             for zone in visible_zones:
                 if zone.uid not in self.data.discovered:
-                    if subscription_succeeded and zone is soco:
-                        subscription = sub
-                    self.hass.async_create_task(
-                        self.async_add_speaker(zone, subscription)
-                    )
+                    zones_to_add.add(zone)
+
+            if not zones_to_add:
+                return
+
+            self.hass.async_create_task(
+                self.async_add_speakers(zones_to_add, subscription, soco.uid)
+            )
 
         async def async_subscription_failed(now: datetime.datetime) -> None:
             """Fallback logic if the subscription callback never arrives."""
@@ -273,16 +280,19 @@ class SonosDiscoveryManager:
             self.data.hosts_heartbeat()
             self.data.hosts_heartbeat = None
 
-    async def async_add_speaker(
-        self, soco: SoCo, zone_group_state_sub: SubscriptionBase | None = None
+    async def async_add_speakers(
+        self,
+        socos: set[SoCo],
+        zgs_subscription: SubscriptionBase | None,
+        zgs_subscription_uid: str | None,
     ) -> None:
-        """Create and set up a new SonosSpeaker instance."""
+        """Create and set up new SonosSpeaker instances."""
         async with self.creation_lock:
-            if soco.uid in self.data.discovered:
-                return
-            await self.hass.async_add_executor_job(
-                self._add_speaker, soco, zone_group_state_sub
-            )
+            for soco in socos:
+                sub = None
+                if soco.uid == zgs_subscription_uid and zgs_subscription:
+                    sub = zgs_subscription
+                await self.hass.async_add_executor_job(self._add_speaker, soco, sub)
 
     def _add_speaker(
         self, soco: SoCo, zone_group_state_sub: SubscriptionBase | None
