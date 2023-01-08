@@ -89,7 +89,7 @@ async def setup_controller_device(
     hass: HomeAssistant, ihc_controller: IHCController, entry: ConfigEntry
 ) -> bool:
     """Register the IHC controller as a Home Assistant device."""
-    # We must have a controller id, and cast the unique_id to a string.
+    # We must have a controller id, and cast the unique_id from string | None to a string.
     # we know it is not None because it will always be set to the controller serial during setup
     controller_id: str = str(entry.unique_id)
     system_info = await hass.async_add_executor_job(
