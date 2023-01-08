@@ -11,6 +11,7 @@ import socket
 from typing import TYPE_CHECKING, Any, Optional, cast
 from urllib.parse import urlparse
 
+from requests.exceptions import Timeout
 from soco import events_asyncio, zonegroupstate
 import soco.config as soco_config
 from soco.core import SoCo
@@ -223,13 +224,13 @@ class SonosDiscoveryManager:
 
         async def async_subscription_failed(now: datetime.datetime) -> None:
             """Fallback logic if the subscription callback never arrives."""
-            await sub.unsubscribe()
             _LOGGER.warning(
                 "Subscription to %s failed, attempting to poll directly", ip_address
             )
             try:
+                await sub.unsubscribe()
                 await self.hass.async_add_executor_job(soco.zone_group_state.poll, soco)
-            except (OSError, SoCoException) as ex:
+            except (OSError, SoCoException, Timeout) as ex:
                 _LOGGER.warning(
                     "Fallback pollling to %s failed, setup cannot continue: %s",
                     ip_address,
@@ -322,8 +323,8 @@ class SonosDiscoveryManager:
                     new_coordinator.setup(soco)
                     coord_dict[soco.household_id] = new_coordinator
             speaker.setup(self.entry)
-        except (OSError, SoCoException):
-            _LOGGER.warning("Failed to add SonosSpeaker using %s", soco, exc_info=True)
+        except (OSError, SoCoException, Timeout) as ex:
+            _LOGGER.warning("Failed to add SonosSpeaker using %s: %s", soco, ex)
 
     async def async_poll_manual_hosts(
         self, now: datetime.datetime | None = None
@@ -344,8 +345,10 @@ class SonosDiscoveryManager:
                     get_sync_attributes,
                     soco,
                 )
-            except OSError:
-                _LOGGER.warning("Could not get visible Sonos devices from %s", ip_addr)
+            except (OSError, SoCoException, Timeout) as ex:
+                _LOGGER.warning(
+                    "Could not get visible Sonos devices from %s: %s", ip_addr, ex
+                )
             else:
                 if new_hosts := {
                     x.ip_address
