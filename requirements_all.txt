@@ -751,7 +751,7 @@ gTTS==2.2.4
 gassist-text==0.0.7
 
 # homeassistant.components.google
-gcal-sync==4.1.0
+gcal-sync==4.1.1
 
 # homeassistant.components.geniushub
 geniushub-client==0.6.30
@@ -2342,7 +2342,7 @@ smhi-pkg==1.0.16
 snapcast==2.3.0
 
 # homeassistant.components.sonos
-soco==0.28.1
+soco==0.29.0
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.0
