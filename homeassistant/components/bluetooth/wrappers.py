@@ -327,12 +327,6 @@ class HaBleakClientWrapper(BleakClient):
             if backend := self._async_get_backend_for_ble_device(
                 manager, device.scanner, device.ble_device
             ):
-                _LOGGER.warning(
-                    "%s: using backend: %s with details %s",
-                    address,
-                    backend,
-                    ble_device.details,
-                )
                 return backend
 
         raise BleakError(
