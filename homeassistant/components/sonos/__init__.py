@@ -287,12 +287,17 @@ class SonosDiscoveryManager:
         zgs_subscription_uid: str | None,
     ) -> None:
         """Create and set up new SonosSpeaker instances."""
-        async with self.creation_lock:
+
+        def _add_speakers():
+            """Add all speakers in a single executor job."""
             for soco in socos:
                 sub = None
                 if soco.uid == zgs_subscription_uid and zgs_subscription:
                     sub = zgs_subscription
-                await self.hass.async_add_executor_job(self._add_speaker, soco, sub)
+                self._add_speaker(soco, sub)
+
+        async with self.creation_lock:
+            await self.hass.async_add_executor_job(_add_speakers)
 
     def _add_speaker(
         self, soco: SoCo, zone_group_state_sub: SubscriptionBase | None
