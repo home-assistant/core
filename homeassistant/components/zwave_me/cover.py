@@ -71,15 +71,14 @@ class ZWaveMeCover(ZWaveMeEntity, CoverEntity):
     @property
     def current_cover_position(self) -> int | None:
         """Return current position of cover.
-
+        
         None is unknown, 0 is closed, 100 is fully open.
         
         Allow small calibration errors (some devices after a long time become not well calibrated)
         """
-        
         if self.device.level > 95:
             return 100
-
+        
         return self.device.level
 
     @property
