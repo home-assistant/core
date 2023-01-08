@@ -94,6 +94,35 @@ async def test_p1_dsmr_sensor_entities(
     assert float(state.state) == 584.85
 
 
+async def test_p1_3ph_dsmr_sensor_entities(
+    hass: HomeAssistant, mock_smile_p1_2: MagicMock, init_integration: MockConfigEntry
+) -> None:
+    """Test creation of power related sensor entities."""
+    state = hass.states.get("sensor.p1_electricity_phase_one_consumed")
+    assert state
+    assert float(state.state) == 1763.0
+
+    state = hass.states.get("sensor.p1_electricity_phase_two_consumed")
+    assert state
+    assert float(state.state) == 1703.0
+
+    state = hass.states.get("sensor.p1_electricity_phase_three_consumed")
+    assert state
+    assert float(state.state) == 2080.0
+
+    state = hass.states.get("sensor.p1_voltage_phase_one")
+    assert state
+    assert float(state.state) == 233.2
+
+    state = hass.states.get("sensor.p1_voltage_phase_two")
+    assert state
+    assert float(state.state) == 234.4
+
+    state = hass.states.get("sensor.p1_voltage_phase_three")
+    assert state
+    assert float(state.state) == 234.7
+
+
 async def test_stretch_sensor_entities(
     hass: HomeAssistant, mock_stretch: MagicMock, init_integration: MockConfigEntry
 ) -> None:
