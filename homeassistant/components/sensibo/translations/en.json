@@ -54,6 +54,80 @@
             }
         },
         "sensor": {
+            "_": {
+                "state_attributes": {
+                    "fanlevel": {
+                        "name": "Fan level",
+                        "state": {
+                            "auto": "Auto",
+                            "high": "High",
+                            "low": "Low",
+                            "medium": "Medium",
+                            "medium_high": "Medium high",
+                            "quiet": "Quiet"
+                        }
+                    },
+                    "horizontalswing": {
+                        "name": "Horizontal swing",
+                        "state": {
+                            "fixedcenter": "Fixed center",
+                            "fixedcenterleft": "Fixed center left",
+                            "fixedcenterright": "Fixed center right",
+                            "fixedleft": "Fixed left",
+                            "fixedleftright": "Fixed left right",
+                            "fixedright": "Fixed right",
+                            "rangecenter": "Range center",
+                            "rangefull": "Range full",
+                            "stopped": "Stopped"
+                        }
+                    },
+                    "light": {
+                        "name": "Light",
+                        "state": {
+                            "dim": "Dim",
+                            "off": "Off",
+                            "on": "On"
+                        }
+                    },
+                    "mode": {
+                        "name": "Mode"
+                    },
+                    "on": {
+                        "name": "On",
+                        "state": {
+                            "false": "Off",
+                            "true": "On"
+                        }
+                    },
+                    "swing": {
+                        "name": "Swing",
+                        "state": {
+                            "both": "Both",
+                            "fixedbottom": "Fixed bottom",
+                            "fixedmiddle": "Fixed middle",
+                            "fixedmiddlebottom": "Fixed middle bottom",
+                            "fixedmiddletop": "Fixed middle top",
+                            "fixedtop": "Fixed top",
+                            "horizontal": "Horizontal",
+                            "rangebottom": "Range bottom",
+                            "rangefull": "Range full",
+                            "rangemiddle": "Range middle",
+                            "rangetop": "Range top",
+                            "stopped": "Stopped"
+                        }
+                    },
+                    "targettemperature": {
+                        "name": "Temperature target"
+                    },
+                    "temperatureunit": {
+                        "name": "Temperature unit",
+                        "state": {
+                            "c": "Celsius",
+                            "f": "Fahrenheit"
+                        }
+                    }
+                }
+            },
             "sensitivity": {
                 "state": {
                     "n": "Normal",
@@ -67,42 +141,29 @@
                     "temperature": "Temperature"
                 }
             }
-        }
-    },
-    "state_attributes": {
-        "_": {
-            "fanlevel": {
-                "name": "Fan level"
-            },
-            "horizontalswing": {
-                "name": "Horizontal swing"
-            },
-            "id": {
-                "name": "Id"
-            },
-            "light": {
-                "name": "Light"
-            },
-            "mode": {
-                "name": "Mode"
-            },
-            "on": {
-                "name": "On"
-            },
-            "swing": {
-                "name": "Swing"
-            },
-            "targettemperature": {
-                "name": "Temperature target"
-            },
-            "temperatureunit": {
-                "name": "Temperature unit"
-            },
-            "turn_on": {
-                "name": "Turned on"
-            },
-            "type": {
-                "name": "Type"
+        },
+        "switch": {
+            "_": {
+                "state_attributes": {
+                    "id": {
+                        "name": "Id"
+                    },
+                    "turn_on": {
+                        "name": "Turn on",
+                        "state": {
+                            "false": "Off",
+                            "true": "On"
+                        }
+                    },
+                    "type": {
+                        "name": "Type",
+                        "state": {
+                            "feelslike": "Feels like",
+                            "humidity": "Humidity",
+                            "temperature": "Temperature"
+                        }
+                    }
+                }
             }
         }
     }
