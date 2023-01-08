@@ -14,5 +14,33 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "line_status": {
+                "state": {
+                    "loss_of_power": "\u65b7\u96fb",
+                    "loss_of_signal": "\u65b7\u8a0a",
+                    "loss_of_signal_quality": "\u8a0a\u865f\u54c1\u8cea\u640d\u5931",
+                    "no_defect": "\u7121\u7f3a\u9677",
+                    "of_frame": "\u5e40\u6578",
+                    "unknown": "\u672a\u77e5"
+                }
+            },
+            "training": {
+                "state": {
+                    "g_922_channel_analysis": "G.992 \u983b\u9053\u5206\u6790",
+                    "g_992_message_exchange": "G.992 \u8a0a\u606f\u4ea4\u63db",
+                    "g_992_started": "G.992 \u5df2\u958b\u59cb",
+                    "g_993_channel_analysis": "G.993 \u983b\u9053\u5206\u6790",
+                    "g_993_message_exchange": "G.993 \u8a0a\u606f\u4ea4\u63db",
+                    "g_993_started": "G.993 \u5df2\u958b\u59cb",
+                    "g_994_training": "G.994 \u8a13\u7df4",
+                    "idle": "\u9592\u7f6e",
+                    "showtime": "\u958b\u64ad\u6642\u9593",
+                    "unknown": "\u672a\u77e5"
+                }
+            }
+        }
     }
 }

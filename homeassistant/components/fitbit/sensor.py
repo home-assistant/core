@@ -449,7 +449,7 @@ class FitbitSensor(SensorEntity):
                     self._attr_native_value = raw_state
                 else:
                     try:
-                        self._attr_native_value = f"{int(raw_state):,}"
+                        self._attr_native_value = int(raw_state)
                     except TypeError:
                         self._attr_native_value = raw_state
 

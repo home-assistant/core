@@ -76,6 +76,7 @@ KEY_STATUS = "status"
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.CLIMATE,
     Platform.COVER,
     Platform.FAN,
@@ -188,6 +189,14 @@ NODE_FILTERS: dict[Platform, dict[str, list[str]]] = {
             TYPE_CATEGORY_SAFETY,
         ],  # Does a startswith() match; include the dot
         FILTER_ZWAVE_CAT: (["104", "112", "138"] + list(map(str, range(148, 180)))),
+    },
+    Platform.BUTTON: {
+        # No devices automatically sorted as buttons at this time. Query buttons added elsewhere.
+        FILTER_UOM: [],
+        FILTER_STATES: [],
+        FILTER_NODE_DEF_ID: [],
+        FILTER_INSTEON_TYPE: [],
+        FILTER_ZWAVE_CAT: [],
     },
     Platform.SENSOR: {
         # This is just a more-readable way of including MOST uoms between 1-100

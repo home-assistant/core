@@ -5,8 +5,9 @@ from typing import Any
 
 from pyisy.constants import ISY_VALUE_UNKNOWN
 
-from homeassistant.components.lock import DOMAIN as LOCK, LockEntity
+from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -23,13 +24,13 @@ async def async_setup_entry(
     """Set up the ISY lock platform."""
     hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
     entities: list[ISYLockEntity | ISYLockProgramEntity] = []
-    for node in hass_isy_data[ISY994_NODES][LOCK]:
+    for node in hass_isy_data[ISY994_NODES][Platform.LOCK]:
         entities.append(ISYLockEntity(node))
 
-    for name, status, actions in hass_isy_data[ISY994_PROGRAMS][LOCK]:
+    for name, status, actions in hass_isy_data[ISY994_PROGRAMS][Platform.LOCK]:
         entities.append(ISYLockProgramEntity(name, status, actions))
 
-    await migrate_old_unique_ids(hass, LOCK, entities)
+    await migrate_old_unique_ids(hass, Platform.LOCK, entities)
     async_add_entities(entities)
 
 

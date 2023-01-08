@@ -1,4 +1,5 @@
-"""The Whirlpool Sixth Sense integration."""
+"""The Whirlpool Appliances integration."""
+import asyncio
 from dataclasses import dataclass
 import logging
 
@@ -17,7 +18,7 @@ from .util import get_brand_for_region
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.CLIMATE]
+PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -30,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     auth = Auth(backend_selector, entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
     try:
         await auth.do_auth(store=False)
-    except aiohttp.ClientError as ex:
+    except (aiohttp.ClientError, asyncio.TimeoutError) as ex:
         raise ConfigEntryNotReady("Cannot connect") from ex
 
     if not auth.is_access_token_valid():
@@ -49,7 +50,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
     return True
 
 

@@ -1995,6 +1995,12 @@
           "iot_class": "cloud_polling",
           "name": "Google Domains"
         },
+        "google_mail": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Google Mail"
+        },
         "google_maps": {
           "integration_type": "hub",
           "config_flow": false,
@@ -4341,7 +4347,7 @@
     "rainbird": {
       "name": "Rain Bird",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "rainforest_eagle": {
@@ -5165,6 +5171,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
+    },
+    "starlink": {
+      "name": "Starlink",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "startca": {
       "name": "Start.ca",
@@ -6051,7 +6063,7 @@
       "iot_class": "local_push"
     },
     "whirlpool": {
-      "name": "Whirlpool Sixth Sense",
+      "name": "Whirlpool Appliances",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_push"
