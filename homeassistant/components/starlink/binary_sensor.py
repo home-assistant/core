@@ -23,10 +23,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up all binary sensors for this entry."""
     coordinator: StarlinkUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    await coordinator.async_refresh()
     alerts = coordinator.data[2]
     entities = []
 
+    # Alerts may change over time, so we want to find available alerts and register them.
     for key, _ in alerts.items():
         entities.append(
             StarlinkBinarySensorEntity(
@@ -42,5 +42,17 @@ async def async_setup_entry(
                 ),
             )
         )
+
+    entities.append(
+        StarlinkBinarySensorEntity(
+            coordinator=coordinator,
+            description=StarlinkBinarySensorEntityDescription(
+                key="currently_obstructed",
+                name="Currently obstructed",
+                device_class=BinarySensorDeviceClass.PROBLEM,
+                value_fn=lambda data: data[0]["currently_obstructed"],
+            ),
+        )
+    )
 
     async_add_entities(entities)
