@@ -106,6 +106,11 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
         name="State",
         translation_key="whirlpool_machine",
         device_class=SensorDeviceClass.ENUM,
+        options=(
+            [value for index, value in MACHINE_STATE.items()]
+            + [value for index, value in CYCLE_FUNC]
+            + ["door_open"]
+        ),
         value_fn=washer_state,
     ),
     WhirlpoolSensorEntityDescription(
@@ -113,6 +118,7 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
         name="Detergent Level",
         translation_key="whirlpool_tank",
         device_class=SensorDeviceClass.ENUM,
+        options=[value for index, value in TANK_FILL.items()],
         value_fn=lambda WasherDryer: TANK_FILL[
             WasherDryer.get_attribute("WashCavity_OpStatusBulkDispense1Level")
         ],
