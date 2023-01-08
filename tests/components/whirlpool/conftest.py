@@ -63,6 +63,7 @@ def get_aircon_mock(said):
     mock_aircon = mock.Mock(said=said)
     mock_aircon.connect = AsyncMock()
     mock_aircon.disconnect = AsyncMock()
+    mock_aircon.register_attr_callback = AsyncMock()
     mock_aircon.get_online.return_value = True
     mock_aircon.get_power_on.return_value = True
     mock_aircon.get_mode.return_value = whirlpool.aircon.Mode.Cool
@@ -114,6 +115,8 @@ def side_effect_function(*args, **kwargs):
         return "0"
     if args[0] == "WashCavity_OpStatusBulkDispense1Level":
         return "3"
+    if args[0] == "Cavity_TimeStatusEstTimeRemaining":
+        return "4000"
 
 
 def get_sensor_mock(said):
@@ -121,6 +124,7 @@ def get_sensor_mock(said):
     mock_sensor = mock.Mock(said=said)
     mock_sensor.connect = AsyncMock()
     mock_sensor.disconnect = AsyncMock()
+    mock_sensor.register_attr_callback = AsyncMock()
     mock_sensor.get_online.return_value = True
     mock_sensor.get_machine_state.return_value = (
         whirlpool.washerdryer.MachineState.Standby

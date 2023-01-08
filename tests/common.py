@@ -5,7 +5,7 @@ import asyncio
 from collections import OrderedDict
 from collections.abc import Awaitable, Callable, Collection
 from contextlib import contextmanager
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import functools as ft
 from io import StringIO
 import json
@@ -402,7 +402,7 @@ def async_fire_time_changed_exact(
     approach, as this is only for testing.
     """
     if datetime_ is None:
-        utc_datetime = date_util.utcnow()
+        utc_datetime = datetime.now(timezone.utc)
     else:
         utc_datetime = date_util.as_utc(datetime_)
 
@@ -424,7 +424,7 @@ def async_fire_time_changed(
     for an exact microsecond, use async_fire_time_changed_exact.
     """
     if datetime_ is None:
-        utc_datetime = date_util.utcnow()
+        utc_datetime = datetime.now(timezone.utc)
     else:
         utc_datetime = date_util.as_utc(datetime_)
 
