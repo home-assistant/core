@@ -37,7 +37,7 @@ async def test_entity_registry(hass, async_autosetup_sonos):
     assert "switch.zone_a_touch_controls" in entity_registry.entities
 
 
-async def test_switch_attributes(hass, async_autosetup_sonos, soco):
+async def test_switch_attributes(hass, async_autosetup_sonos, soco, fire_zgs_event):
     """Test for correct Sonos switch states."""
     entity_registry = ent_reg.async_get(hass)
 
@@ -113,6 +113,9 @@ async def test_switch_attributes(hass, async_autosetup_sonos, soco):
         )
         await hass.async_block_till_done()
         assert m.called
+
+    # Trigger subscription callback for speaker discovery
+    await fire_zgs_event()
 
     status_light_state = hass.states.get(status_light.entity_id)
     assert status_light_state.state == STATE_ON
