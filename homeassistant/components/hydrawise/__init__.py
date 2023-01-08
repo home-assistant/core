@@ -40,7 +40,7 @@ DEFAULT_WATERING_TIME = 15
 
 PLATFORMS: list[Platform] = [Platform.SWITCH]
 
-SCAN_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(seconds=120)
 
 SIGNAL_UPDATE_HYDRAWISE = "hydrawise_update"
 

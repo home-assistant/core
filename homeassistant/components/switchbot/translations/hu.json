@@ -8,7 +8,7 @@
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "error": {
-            "auth_failed": "Sikertelen volt a hiteles\u00edt\u00e9s",
+            "auth_failed": "Sikertelen volt a hiteles\u00edt\u00e9s: {error_detail}",
             "encryption_key_invalid": "A kulcs azonos\u00edt\u00f3ja vagy a titkos\u00edt\u00e1si kulcs \u00e9rv\u00e9nytelen",
             "key_id_invalid": "A kulcsazonos\u00edt\u00f3 vagy a titkos\u00edt\u00e1si kulcs \u00e9rv\u00e9nytelen",
             "one": "\u00dcres",

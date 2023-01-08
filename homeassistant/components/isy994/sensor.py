@@ -21,13 +21,12 @@ from pyisy.helpers import NodeProperty
 from pyisy.nodes import Node
 
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -60,6 +59,7 @@ SKIP_AUX_PROPERTIES = {PROP_BUSY, PROP_COMMS_ERROR, PROP_STATUS}
 
 # Reference pyisy.constants.COMMAND_FRIENDLY_NAME for API details.
 #   Note: "LUMIN"/Illuminance removed, some devices use non-conformant "%" unit
+#         "VOCLVL"/VOC removed, uses qualitative UOM not ug/m^3
 ISY_CONTROL_TO_DEVICE_CLASS = {
     PROP_BATTERY_LEVEL: SensorDeviceClass.BATTERY,
     PROP_HUMIDITY: SensorDeviceClass.HUMIDITY,
@@ -71,15 +71,29 @@ ISY_CONTROL_TO_DEVICE_CLASS = {
     "CV": SensorDeviceClass.VOLTAGE,
     "DEWPT": SensorDeviceClass.TEMPERATURE,
     "DISTANC": SensorDeviceClass.DISTANCE,
+    "ETO": SensorDeviceClass.PRECIPITATION_INTENSITY,
+    "FATM": SensorDeviceClass.WEIGHT,
+    "FREQ": SensorDeviceClass.FREQUENCY,
+    "MUSCLEM": SensorDeviceClass.WEIGHT,
     "PF": SensorDeviceClass.POWER_FACTOR,
+    "PM10": SensorDeviceClass.PM10,
+    "PM25": SensorDeviceClass.PM25,
+    "PRECIP": SensorDeviceClass.PRECIPITATION,
     "RAINRT": SensorDeviceClass.PRECIPITATION_INTENSITY,
+    "RFSS": SensorDeviceClass.SIGNAL_STRENGTH,
+    "SOILH": SensorDeviceClass.MOISTURE,
     "SOILT": SensorDeviceClass.TEMPERATURE,
     "SOLRAD": SensorDeviceClass.IRRADIANCE,
     "SPEED": SensorDeviceClass.SPEED,
+    "TEMPEXH": SensorDeviceClass.TEMPERATURE,
+    "TEMPOUT": SensorDeviceClass.TEMPERATURE,
     "TPW": SensorDeviceClass.ENERGY,
-    "VOCLVL": SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+    "WATERP": SensorDeviceClass.PRESSURE,
     "WATERT": SensorDeviceClass.TEMPERATURE,
+    "WATERTB": SensorDeviceClass.TEMPERATURE,
+    "WATERTD": SensorDeviceClass.TEMPERATURE,
     "WEIGHT": SensorDeviceClass.WEIGHT,
+    "WINDCH": SensorDeviceClass.TEMPERATURE,
 }
 ISY_CONTROL_TO_STATE_CLASS = {
     control: SensorStateClass.MEASUREMENT for control in ISY_CONTROL_TO_DEVICE_CLASS
@@ -98,7 +112,7 @@ async def async_setup_entry(
     hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
     entities: list[ISYSensorEntity | ISYSensorVariableEntity] = []
 
-    for node in hass_isy_data[ISY994_NODES][SENSOR]:
+    for node in hass_isy_data[ISY994_NODES][Platform.SENSOR]:
         _LOGGER.debug("Loading %s", node.name)
         entities.append(ISYSensorEntity(node))
 
@@ -120,7 +134,7 @@ async def async_setup_entry(
     for vname, vobj in hass_isy_data[ISY994_VARIABLES]:
         entities.append(ISYSensorVariableEntity(vname, vobj))
 
-    await migrate_old_unique_ids(hass, SENSOR, entities)
+    await migrate_old_unique_ids(hass, Platform.SENSOR, entities)
     async_add_entities(entities)
 
 
