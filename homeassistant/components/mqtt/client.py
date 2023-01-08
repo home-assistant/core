@@ -132,7 +132,8 @@ async def async_publish(
             return
         outgoing_payload = str(payload)
         if encoding != DEFAULT_ENCODING:
-            # a string is encoded as utf-8 by default, other encoding requires bytes as payload
+            # A string is encoded as utf-8 by default, other encoding
+            # requires bytes as payload
             try:
                 outgoing_payload = outgoing_payload.encode(encoding)
             except (AttributeError, LookupError, UnicodeEncodeError):
