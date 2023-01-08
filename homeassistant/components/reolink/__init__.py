@@ -15,14 +15,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 from .host import ReolinkHost
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.CAMERA]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.CAMERA]
 DEVICE_UPDATE_INTERVAL = 60
 
 
@@ -61,8 +61,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     async def async_device_config_update():
         """Update the host state cache and renew the ONVIF-subscription."""
         async with async_timeout.timeout(host.api.timeout):
-            # Login session is implicitly updated here
-            await host.update_states()
+            if not await host.update_states()
+                raise UpdateFailed("Error updating Reolink %s", host.api.nvr_name)
+        async with async_timeout.timeout(host.api.timeout):
+            if not await host.renew():
+                _LOGGER.error("Reolink %s event subscription lost", host.api.nvr_name)
 
     coordinator_device_config_update = DataUpdateCoordinator(
         hass,
