@@ -225,10 +225,11 @@ class BluetoothManager:
         results: list[tuple[BaseHaScanner, BLEDevice, AdvertisementData]] = []
         for type_ in types_:
             for scanner in self._get_scanners_by_type(type_):
-                if adv_data := scanner.discovered_devices_and_advertisement_data.get(
+                devices_and_adv_data = scanner.discovered_devices_and_advertisement_data
+                if device_adv_data := devices_and_adv_data.get(address):
                     address
                 ):
-                    results.append((scanner, *adv_data))
+                    results.append((scanner, *device_adv_data))
         return results
 
     @hass_callback

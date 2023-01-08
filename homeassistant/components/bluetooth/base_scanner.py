@@ -260,10 +260,10 @@ class BaseHaRemoteScanner(BaseHaScanner):
     @property
     def discovered_devices(self) -> list[BLEDevice]:
         """Return a list of discovered devices."""
-        advertisement_data = self._discovered_device_advertisement_datas.values()
+        device_adv_datas = self._discovered_device_advertisement_datas.values()
         return [
             device_advertisement_data[0]
-            for device_advertisement_data in advertisement_data
+            for device_advertisement_data in device_adv_datas
         ]
 
     @property
