@@ -225,11 +225,13 @@ class BluetoothManager:
         if not connectable:
             scanners.extend(self._get_scanners_by_type(False))
         return [
-            BluetoothScannerDevice(
-                scanner, *scanner.discovered_devices_and_advertisement_data[address]
-            )
+            BluetoothScannerDevice(scanner, *device_adv)
             for scanner in scanners
-            if address in scanner.discovered_devices_and_advertisement_data
+            if (
+                device_adv := scanner.discovered_devices_and_advertisement_data.get(
+                    address
+                )
+            )
         ]
 
     @hass_callback
