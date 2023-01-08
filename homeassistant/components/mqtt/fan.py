@@ -136,7 +136,8 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
         vol.Optional(CONF_PERCENTAGE_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_PERCENTAGE_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_PERCENTAGE_VALUE_TEMPLATE): cv.template,
-        # CONF_PRESET_MODE_COMMAND_TOPIC and CONF_PRESET_MODES_LIST must be used together
+        # CONF_PRESET_MODE_COMMAND_TOPIC and CONF_PRESET_MODES_LIST
+        # must be used together
         vol.Inclusive(
             CONF_PRESET_MODE_COMMAND_TOPIC, "preset_modes"
         ): valid_publish_topic,
@@ -194,7 +195,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT fan through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT fan through YAML and through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
