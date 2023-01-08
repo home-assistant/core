@@ -83,6 +83,8 @@ def setup_platform(
                     [ATTR_CONDITION_RAINY, 15, 18, 7, 0],
                     [ATTR_CONDITION_FOG, 0.2, 21, 12, 100],
                 ],
+                None,
+                None,
             ),
             DemoWeather(
                 "North",
@@ -102,6 +104,47 @@ def setup_platform(
                     [ATTR_CONDITION_SNOWY, 4, -19, -20, 40],
                     [ATTR_CONDITION_SUNNY, 0.3, -14, -19, 0],
                     [ATTR_CONDITION_SUNNY, 0, -9, -12, 0],
+                ],
+                None,
+                None,
+            ),
+            DemoWeather(
+                "East",
+                "Shower rain",
+                -12,
+                54,
+                987,
+                4.8,
+                UnitOfTemperature.FAHRENHEIT,
+                UnitOfPressure.INHG,
+                UnitOfSpeed.MILES_PER_HOUR,
+                [
+                    [ATTR_CONDITION_SNOWY, 2, -10, -15, 60],
+                    [ATTR_CONDITION_PARTLYCLOUDY, 1, -13, -14, 25],
+                    [ATTR_CONDITION_SUNNY, 0, -18, -22, 70],
+                    [ATTR_CONDITION_SUNNY, 0.1, -23, -23, 90],
+                    [ATTR_CONDITION_SNOWY, 4, -19, -20, 40],
+                    [ATTR_CONDITION_SUNNY, 0.3, -14, -19, 0],
+                    [ATTR_CONDITION_SUNNY, 0, -9, -12, 0],
+                ],
+                [
+                    [ATTR_CONDITION_SNOWY, 2, -10, -15, 60],
+                    [ATTR_CONDITION_PARTLYCLOUDY, 1, -13, -14, 25],
+                    [ATTR_CONDITION_SUNNY, 0, -18, -22, 70],
+                    [ATTR_CONDITION_SUNNY, 0.1, -23, -23, 90],
+                    [ATTR_CONDITION_SNOWY, 4, -19, -20, 40],
+                    [ATTR_CONDITION_SUNNY, 0.3, -14, -19, 0],
+                    [ATTR_CONDITION_SUNNY, 0, -9, -12, 0],
+                ],
+                [
+                    [ATTR_CONDITION_SNOWY, 2, -10, -15, 60, True],
+                    [ATTR_CONDITION_PARTLYCLOUDY, 1, -13, -14, 25, False],
+                    [ATTR_CONDITION_SUNNY, 0, -18, -22, 70, True],
+                    [ATTR_CONDITION_SUNNY, 0.1, -23, -23, 90, False],
+                    [ATTR_CONDITION_SNOWY, 4, -19, -20, 40, True],
+                    [ATTR_CONDITION_SUNNY, 0.3, -14, -19, 0, False],
+                    [ATTR_CONDITION_SUNNY, 0, -9, -12, 0, True],
+                    [ATTR_CONDITION_SUNNY, 0, -9, -12, 0, False],
                 ],
             ),
         ]
@@ -126,6 +169,8 @@ class DemoWeather(WeatherEntity):
         pressure_unit: str,
         wind_speed_unit: str,
         forecast_daily: list[list],
+        forecast_hourly: list[list] | None,
+        forecast_twice_daily: list[list] | None,
     ) -> None:
         """Initialize the Demo weather."""
         self._attr_name = f"Demo Weather {name}"
@@ -138,6 +183,8 @@ class DemoWeather(WeatherEntity):
         self._native_wind_speed = wind_speed
         self._native_wind_speed_unit = wind_speed_unit
         self._forecast_daily = forecast_daily
+        self._forecast_hourly = forecast_hourly
+        self._forecast_twice_daily = forecast_twice_daily
 
     @property
     def native_temperature(self) -> float:
@@ -183,7 +230,7 @@ class DemoWeather(WeatherEntity):
 
     @property
     def forecast_daily(self) -> list[Forecast]:
-        """Return the forecast."""
+        """Return the daily forecast."""
         reftime = dt_util.now().replace(hour=16, minute=00)
 
         forecast_data = []
@@ -196,7 +243,52 @@ class DemoWeather(WeatherEntity):
                 templow=entry[3],
                 precipitation_probability=entry[4],
             )
-            reftime = reftime + timedelta(hours=4)
+            reftime = reftime + timedelta(hours=24)
+            forecast_data.append(data_dict)
+
+        return forecast_data
+
+    @property
+    def forecast_hourly(self) -> list[Forecast]:
+        """Return the hourly forecast."""
+        if self._forecast_hourly is None:
+            return []
+        reftime = dt_util.now().replace(hour=16, minute=00)
+
+        forecast_data = []
+        for entry in self._forecast_hourly:
+            data_dict = Forecast(
+                datetime=reftime.isoformat(),
+                condition=entry[0],
+                precipitation=entry[1],
+                temperature=entry[2],
+                templow=entry[3],
+                precipitation_probability=entry[4],
+            )
+            reftime = reftime + timedelta(hours=1)
+            forecast_data.append(data_dict)
+
+        return forecast_data
+
+    @property
+    def forecast_twice_daily(self) -> list[Forecast]:
+        """Return the twice daily forecast."""
+        if self._forecast_twice_daily is None:
+            return []
+        reftime = dt_util.now().replace(hour=11, minute=00)
+
+        forecast_data = []
+        for entry in self._forecast_twice_daily:
+            data_dict = Forecast(
+                datetime=reftime.isoformat(),
+                condition=entry[0],
+                precipitation=entry[1],
+                temperature=entry[2],
+                templow=entry[3],
+                precipitation_probability=entry[4],
+                is_daytime=entry[5],
+            )
+            reftime = reftime + timedelta(hours=12)
             forecast_data.append(data_dict)
 
         return forecast_data
