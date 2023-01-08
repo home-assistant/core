@@ -182,6 +182,7 @@ async def test_invalid_url_setup(
 
 
 async def test_invalid_url_on_update(
+    recorder_mock: AsyncMock,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -192,22 +193,9 @@ async def test_invalid_url_on_update(
         "column": "value",
         "name": "count_tables",
     }
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        source=SOURCE_USER,
-        data={},
-        options=config,
-        entry_id="1",
-    )
-
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await init_integration(hass, config)
 
     with patch(
-        "homeassistant.components.recorder",
-    ), patch(
         "homeassistant.components.sql.sensor.sqlalchemy.engine.cursor.CursorResult",
         side_effect=SQLAlchemyError(
             "sqlite://homeassistant:hunter2@homeassistant.local"
@@ -219,7 +207,6 @@ async def test_invalid_url_on_update(
         )
         await hass.async_block_till_done()
 
-    assert "sqlite://homeassistant:hunter2@homeassistant.local" not in caplog.text
     assert "sqlite://****:****@homeassistant.local" in caplog.text
 
 

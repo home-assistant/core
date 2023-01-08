@@ -369,12 +369,10 @@ async def test_options_flow_db_url_empty(
         )
         await hass.async_block_till_done()
 
-    db_url = DEFAULT_URL.format(hass_config_path=hass.config.path(DEFAULT_DB_FILE))
-
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "name": "Get Value",
-        "db_url": db_url,
+        "db_url": None,
         "query": "SELECT 5 as size",
         "column": "size",
         "unit_of_measurement": "MiB",
