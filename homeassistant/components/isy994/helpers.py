@@ -286,6 +286,14 @@ def _categorize_nodes(
             # Don't import this node as a device at all
             continue
 
+        if not getattr(node, "enabled", True):
+            # Warn about this node if it's disabled in the ISY
+            _LOGGER.info(
+                "Node %s (%s) is disabled in the ISY, use 'isy994.send_node_command' service with command 'enable' to enable from Home Assistant",
+                node.name,
+                node.address,
+            )
+
         if hasattr(node, "parent_node") and node.parent_node is None:
             # This is a physical device / parent node, add a query button
             hass_isy_data[ISY994_NODES][Platform.BUTTON].append(node)

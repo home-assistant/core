@@ -36,6 +36,7 @@ class ISYEntity(Entity):
         self._attrs: dict[str, Any] = {}
         self._change_handler: EventListener | None = None
         self._control_handler: EventListener | None = None
+        self._attr_entity_registry_enabled_default = getattr(node, "enabled", True)
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to the node change events."""
@@ -218,6 +219,14 @@ class ISYNodeEntity(ISYEntity):
     async def async_rename_node(self, name: str) -> None:
         """Respond to an entity service command to rename a node on the ISY."""
         await self._node.rename(name)
+
+    def check_disabled(self) -> bool:
+        """Error if a device is attempted to be controlled while disabled in the ISY."""
+        if not getattr(self._node, "enabled", True):
+            raise HomeAssistantError(
+                f"Attempted to send command to device disabled in ISY. Use isy994.send_node_command to enable {self.entity_id}"
+            )
+        return True
 
 
 class ISYProgramEntity(ISYEntity):

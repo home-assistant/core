@@ -71,7 +71,6 @@ VALID_NODE_COMMANDS = [
     "brighten",
     "dim",
     "disable",
-    "enable",
     "fade_down",
     "fade_stop",
     "fade_up",

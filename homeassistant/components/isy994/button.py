@@ -9,6 +9,7 @@ from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -58,39 +59,56 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ISYNodeQueryButtonEntity(ButtonEntity):
-    """Representation of a device query button entity."""
+class ISYNodeButtonEntity(ButtonEntity):
+    """Additional methods for ISYNodeButton classes."""
 
     _attr_should_poll = False
-    _attr_entity_category = EntityCategory.CONFIG
     _attr_has_entity_name = True
 
     def __init__(self, node: Node | ISY, base_unique_id: str) -> None:
-        """Initialize a query ISY device button entity."""
+        """Initialize a ISY device button entity."""
         self._node = node
-
-        # Entity class attributes
-        self._attr_name = "Query"
-        self._attr_unique_id = f"{base_unique_id}_query"
+        self._attr_entity_registry_enabled_default = getattr(node, "enabled", True)
         self._attr_device_info = DeviceInfo(
             identifiers={(ISY994_DOMAIN, base_unique_id)}
         )
 
+    def check_disabled(self) -> bool:
+        """Warn the user if the device is disabled in the ISY."""
+        if not getattr(self._node, "enabled", True):
+            raise HomeAssistantError(
+                f"Attempted to send command to device disabled in ISY. Use isy994.send_node_command to enable {self.entity_id}"
+            )
+        return True
+
+
+class ISYNodeQueryButtonEntity(ISYNodeButtonEntity):
+    """Representation of a device query button entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(self, node: Node | ISY, base_unique_id: str) -> None:
+        """Initialize a query ISY device button entity."""
+        super().__init__(node, base_unique_id)
+
+        # Entity class attributes
+        self._attr_name = "Query"
+        self._attr_unique_id = f"{base_unique_id}_query"
+
     async def async_press(self) -> None:
         """Press the button."""
-        await self._node.query()
+        if self.check_disabled():
+            await self._node.query()
 
 
-class ISYNodeBeepButtonEntity(ButtonEntity):
+class ISYNodeBeepButtonEntity(ISYNodeButtonEntity):
     """Representation of a device beep button entity."""
 
-    _attr_should_poll = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_has_entity_name = True
 
     def __init__(self, node: Node, base_unique_id: str) -> None:
         """Initialize a beep Insteon device button entity."""
-        self._node = node
+        super().__init__(node, base_unique_id)
 
         # Entity class attributes
         self._attr_name = "Beep"
@@ -101,7 +119,8 @@ class ISYNodeBeepButtonEntity(ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        await self._node.beep()
+        if self.check_disabled():
+            await self._node.beep()
 
 
 class ISYNetworkResourceButtonEntity(ButtonEntity):

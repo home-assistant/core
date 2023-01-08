@@ -44,12 +44,12 @@ class ISYSwitchEntity(ISYNodeEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the turn off command to the ISY switch."""
-        if not await self._node.turn_off():
+        if self.check_disabled() and not await self._node.turn_off():
             _LOGGER.debug("Unable to turn off switch")
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Send the turn on command to the ISY switch."""
-        if not await self._node.turn_on():
+        if self.check_disabled() and not await self._node.turn_on():
             _LOGGER.debug("Unable to turn on switch")
 
     @property
