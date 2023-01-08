@@ -876,6 +876,12 @@ async def test_async_is_plugged_in(hass):
         await hass.async_block_till_done()
         assert await usb.async_is_plugged_in(hass, matcher)
 
+    with patch("homeassistant.components.usb.comports", return_value=[]), patch.object(
+        hass.config_entries.flow, "async_init"
+    ), patch("homeassistant.components.usb.REQUEST_SCAN_COOLDOWN", 0):
+        await hass.async_block_till_done()
+        assert not await usb.async_is_plugged_in(hass, matcher)
+
 
 @pytest.mark.parametrize(
     "matcher",

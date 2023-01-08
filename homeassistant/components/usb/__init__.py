@@ -85,7 +85,7 @@ async def async_is_plugged_in(hass: HomeAssistant, matcher: USBCallbackMatcher) 
     await usb_discovery.async_request_scan()
     return any(
         _is_matching(USBDevice(*device_tuple), matcher)
-        for device_tuple in usb_discovery.seen
+        for device_tuple in usb_discovery.plugged_in
     )
 
 
@@ -182,6 +182,7 @@ class USBDiscovery:
         """Init USB Discovery."""
         self.hass = hass
         self.usb = usb
+        self.plugged_in: set[tuple[str, ...]] = set()
         self.seen: set[tuple[str, ...]] = set()
         self.observer_active = False
         self._request_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None
@@ -263,6 +264,7 @@ class USBDiscovery:
         """Process a USB discovery."""
         _LOGGER.debug("Discovered USB Device: %s", device)
         device_tuple = dataclasses.astuple(device)
+        self.plugged_in.add(device_tuple)
         if device_tuple in self.seen:
             return
         self.seen.add(device_tuple)
@@ -299,6 +301,7 @@ class USBDiscovery:
     @hass_callback
     def _async_process_ports(self, ports: list[ListPortInfo]) -> None:
         """Process each discovered port."""
+        self.plugged_in = set()
         for port in ports:
             if port.vid is None and port.pid is None:
                 continue
