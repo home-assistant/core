@@ -17,14 +17,8 @@
   },
   "entity": {
     "sensor": {
-      "whirlpool": {
+      "whirlpool_machine": {
         "state": {
-          "unknown": "Unknown",
-          "empty": "Empty",
-          "25%": "25%",
-          "50%": "50%",
-          "100%": "100%",
-          "active": "Active",
           "standby": "Standby",
           "setting": "Setting",
           "delay_countdown": "Delay Countdown",
@@ -51,6 +45,16 @@
           "cycle_spinning": "Cycle Spinning",
           "cycle_washing": "Cycle Washing",
           "door_open": "Door Open"
+        }
+      },
+      "whirlpool_tank": {
+        "state": {
+          "unknown": "Unknown",
+          "empty": "Empty",
+          "25%": "25%",
+          "50%": "50%",
+          "100%": "100%",
+          "active": "Active"
         }
       }
     }

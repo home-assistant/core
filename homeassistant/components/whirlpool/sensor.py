@@ -64,7 +64,6 @@ CYCLE_FUNC = [
     (WasherDryer.get_cycle_status_washing, "cycle_washing"),
 ]
 
-
 ICON_D = "mdi:tumble-dryer"
 ICON_W = "mdi:washing-machine"
 
@@ -105,14 +104,14 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
     WhirlpoolSensorEntityDescription(
         key="state",
         name="State",
-        translation_key="whirlpool",
+        translation_key="whirlpool_machine",
         device_class=SensorDeviceClass.ENUM,
         value_fn=washer_state,
     ),
     WhirlpoolSensorEntityDescription(
         key="DispenseLevel",
         name="Detergent Level",
-        translation_key="whirlpool",
+        translation_key="whirlpool_tank",
         device_class=SensorDeviceClass.ENUM,
         value_fn=lambda WasherDryer: TANK_FILL[
             WasherDryer.get_attribute("WashCavity_OpStatusBulkDispense1Level")

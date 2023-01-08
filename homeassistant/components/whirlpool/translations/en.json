@@ -17,12 +17,8 @@
     },
     "entity": {
         "sensor": {
-            "whirlpool": {
+            "whirlpool_machine": {
                 "state": {
-                    "100%": "100%",
-                    "25%": "25%",
-                    "50%": "50%",
-                    "active": "Active",
                     "complete": "Complete",
                     "customer_focus_mode": "Customer Focus Mode",
                     "cycle_filling": "Cycle Filling",
@@ -35,7 +31,6 @@
                     "delay_paused": "Delay Paused",
                     "demo_mode": "Demo Mode",
                     "door_open": "Door Open",
-                    "empty": "Empty",
                     "exception": "Exception",
                     "factory_diagnostic_mode": "Factory Diagnostic Mode",
                     "hard_stop_or_error": "Hard Stop or Error",
@@ -49,7 +44,16 @@
                     "smart_delay": "Smart Delay",
                     "smart_grid_pause": "Smart Delay",
                     "standby": "Standby",
-                    "system_initialize": "System Initialize",
+                    "system_initialize": "System Initialize"
+                }
+            },
+            "whirlpool_tank": {
+                "state": {
+                    "100%": "100%",
+                    "25%": "25%",
+                    "50%": "50%",
+                    "active": "Active",
+                    "empty": "Empty",
                     "unknown": "Unknown"
                 }
             }
