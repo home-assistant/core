@@ -1,26 +1,31 @@
 """Constants used for mocking data."""
 
-from homeassistant.components import zeroconf
+from devolo_plc_api.device_api import (
+    WIFI_BAND_2G,
+    WIFI_BAND_5G,
+    WIFI_VAP_MAIN_AP,
+    ConnectedStationInfo,
+    NeighborAPInfo,
+)
+from devolo_plc_api.plcnet_api import LogicalNetwork
+
+from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 IP = "1.1.1.1"
 
-CONNECTED_STATIONS = {
-    "connected_stations": [
-        {
-            "mac_address": "AA:BB:CC:DD:EE:FF",
-            "vap_type": "WIFI_VAP_MAIN_AP",
-            "band": "WIFI_BAND_5G",
-            "rx_rate": 87800,
-            "tx_rate": 87800,
-        }
-    ],
-}
+CONNECTED_STATIONS = [
+    ConnectedStationInfo(
+        mac_address="AA:BB:CC:DD:EE:FF",
+        vap_type=WIFI_VAP_MAIN_AP,
+        band=WIFI_BAND_5G,
+        rx_rate=87800,
+        tx_rate=87800,
+    )
+]
 
-NO_CONNECTED_STATIONS = {
-    "connected_stations": [],
-}
+NO_CONNECTED_STATIONS = []
 
-DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
+DISCOVERY_INFO = ZeroconfServiceInfo(
     host=IP,
     addresses=[IP],
     port=14791,
@@ -41,7 +46,7 @@ DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     },
 )
 
-DISCOVERY_INFO_WRONG_DEVICE = zeroconf.ZeroconfServiceInfo(
+DISCOVERY_INFO_WRONG_DEVICE = ZeroconfServiceInfo(
     host="mock_host",
     addresses=["mock_host"],
     hostname="mock_hostname",
@@ -51,46 +56,42 @@ DISCOVERY_INFO_WRONG_DEVICE = zeroconf.ZeroconfServiceInfo(
     type="mock_type",
 )
 
-NEIGHBOR_ACCESS_POINTS = {
-    "neighbor_aps": [
+NEIGHBOR_ACCESS_POINTS = [
+    NeighborAPInfo(
+        mac_address="AA:BB:CC:DD:EE:FF",
+        ssid="wifi",
+        band=WIFI_BAND_2G,
+        channel=1,
+        signal=-73,
+        signal_bars=1,
+    )
+]
+
+
+PLCNET = LogicalNetwork(
+    devices=[
         {
             "mac_address": "AA:BB:CC:DD:EE:FF",
-            "ssid": "wifi",
-            "band": "WIFI_BAND_2G",
-            "channel": 1,
-            "signal": -73,
-            "signal_bars": 1,
+            "attached_to_router": False,
         }
-    ]
-}
+    ],
+    data_rates=[
+        {
+            "mac_address_from": "AA:BB:CC:DD:EE:FF",
+            "mac_address_to": "11:22:33:44:55:66",
+            "rx_rate": 0.0,
+            "tx_rate": 0.0,
+        },
+    ],
+)
 
-PLCNET = {
-    "network": {
-        "devices": [
-            {
-                "mac_address": "AA:BB:CC:DD:EE:FF",
-                "attached_to_router": False,
-            }
-        ],
-        "data_rates": [
-            {
-                "mac_address_from": "AA:BB:CC:DD:EE:FF",
-                "mac_address_to": "11:22:33:44:55:66",
-                "rx_rate": 0.0,
-                "tx_rate": 0.0,
-            },
-        ],
-    }
-}
 
-PLCNET_ATTACHED = {
-    "network": {
-        "devices": [
-            {
-                "mac_address": "AA:BB:CC:DD:EE:FF",
-                "attached_to_router": True,
-            }
-        ],
-        "data_rates": [],
-    }
-}
+PLCNET_ATTACHED = LogicalNetwork(
+    devices=[
+        {
+            "mac_address": "AA:BB:CC:DD:EE:FF",
+            "attached_to_router": True,
+        }
+    ],
+    data_rates=[],
+)

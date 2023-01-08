@@ -16,7 +16,8 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
@@ -38,6 +39,13 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.UPDATE,
+]
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Pi-hole entry."""
@@ -48,11 +56,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     location = entry.data[CONF_LOCATION]
     api_key = entry.data.get(CONF_API_KEY)
 
-    # For backward compatibility
-    if CONF_STATISTICS_ONLY not in entry.data:
-        hass.config_entries.async_update_entry(
-            entry, data={**entry.data, CONF_STATISTICS_ONLY: not api_key}
-        )
+    # remove obsolet CONF_STATISTICS_ONLY from entry.data
+    if CONF_STATISTICS_ONLY in entry.data:
+        entry_data = entry.data.copy()
+        entry_data.pop(CONF_STATISTICS_ONLY)
+        hass.config_entries.async_update_entry(entry, data=entry_data)
+
+    # start reauth to force api key is present
+    if CONF_API_KEY not in entry.data:
+        raise ConfigEntryAuthFailed
 
     _LOGGER.debug("Setting up %s integration with host %s", DOMAIN, host)
 
@@ -72,6 +84,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await api.get_versions()
         except HoleError as err:
             raise UpdateFailed(f"Failed to communicate with API: {err}") from err
+        if not isinstance(api.data, dict):
+            raise ConfigEntryAuthFailed
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -89,28 +103,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    await hass.config_entries.async_forward_entry_setups(entry, _async_platforms(entry))
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Pi-hole entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        entry, _async_platforms(entry)
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
-
-
-@callback
-def _async_platforms(entry: ConfigEntry) -> list[Platform]:
-    """Return platforms to be loaded / unloaded."""
-    platforms = [Platform.BINARY_SENSOR, Platform.UPDATE, Platform.SENSOR]
-    if not entry.data[CONF_STATISTICS_ONLY]:
-        platforms.append(Platform.SWITCH)
-    return platforms
 
 
 class PiHoleEntity(CoordinatorEntity):

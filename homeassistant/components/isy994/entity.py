@@ -15,15 +15,7 @@ from pyisy.helpers import EventListener, NodeProperty
 from pyisy.nodes import Node
 from pyisy.programs import Program
 
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_SUGGESTED_AREA,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, STATE_OFF, STATE_ON
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -87,57 +79,47 @@ class ISYEntity(Entity):
 
         basename = self._name or str(self._node.name)
 
-        if hasattr(node, "protocol") and node.protocol == PROTO_GROUP:
-            # If Group has only 1 Controller, link to that device, otherwise link to ISY Hub
-            if len(node.controllers) != 1:
-                return DeviceInfo(identifiers={(DOMAIN, uuid)})
-
+        if node.protocol == PROTO_GROUP and len(node.controllers) == 1:
+            # If Group has only 1 Controller, link to that device instead of the hub
             node = isy.nodes.get_by_id(node.controllers[0])
             basename = node.name
 
-        if hasattr(node, "parent_node") and node.parent_node is not None:
-            # This is not the parent node, get the parent node.
-            node = node.parent_node
-            basename = node.name
+        if hasattr(node, "parent_node"):  # Verify this is a Node class
+            if node.parent_node is not None:
+                # This is not the parent node, get the parent node.
+                node = node.parent_node
+                basename = node.name
+        else:
+            # Default to the hub device if parent node is not a physical device
+            return DeviceInfo(identifiers={(DOMAIN, uuid)})
 
         device_info = DeviceInfo(
-            manufacturer="Unknown",
-            model="Unknown",
-            name=basename,
+            identifiers={(DOMAIN, f"{uuid}_{node.address}")},
+            manufacturer=node.protocol,
+            name=f"{basename} ({(str(node.address).rpartition(' ')[0] or node.address)})",
             via_device=(DOMAIN, uuid),
             configuration_url=url,
+            suggested_area=node.folder,
         )
 
-        if hasattr(node, "address"):
-            assert isinstance(node.address, str)
-            device_info[
-                ATTR_NAME
-            ] = f"{basename} ({(node.address.rpartition(' ')[0] or node.address)})"
-        if hasattr(node, "primary_node"):
-            device_info[ATTR_IDENTIFIERS] = {(DOMAIN, f"{uuid}_{node.address}")}
-        # ISYv5 Device Types
-        if hasattr(node, "node_def_id") and node.node_def_id is not None:
-            model: str = str(node.node_def_id)
-            # Numerical Device Type
-            if hasattr(node, "type") and node.type is not None:
-                model += f" {node.type}"
-            device_info[ATTR_MODEL] = model
-        if hasattr(node, "protocol"):
-            model = str(device_info[ATTR_MODEL])
-            manufacturer = str(node.protocol)
-            if node.protocol == PROTO_ZWAVE:
-                # Get extra information for Z-Wave Devices
-                manufacturer += f" MfrID:{node.zwave_props.mfr_id}"
-                model += (
-                    f" Type:{node.zwave_props.devtype_gen} "
-                    f"ProductTypeID:{node.zwave_props.prod_type_id} "
-                    f"ProductID:{node.zwave_props.product_id}"
-                )
-            device_info[ATTR_MANUFACTURER] = manufacturer
-            device_info[ATTR_MODEL] = model
-        if hasattr(node, "folder") and node.folder is not None:
-            device_info[ATTR_SUGGESTED_AREA] = node.folder
-        # Note: sw_version is not exposed by the ISY for the individual devices.
+        # ISYv5 Device Types can provide model and manufacturer
+        model: str = "Unknown"
+        if node.node_def_id is not None:
+            model = str(node.node_def_id)
+
+        # Numerical Device Type
+        if node.type is not None:
+            model += f" ({node.type})"
+
+        # Get extra information for Z-Wave Devices
+        if node.protocol == PROTO_ZWAVE:
+            device_info[ATTR_MANUFACTURER] = f"Z-Wave MfrID:{node.zwave_props.mfr_id}"
+            model += (
+                f" Type:{node.zwave_props.devtype_gen} "
+                f"ProductTypeID:{node.zwave_props.prod_type_id} "
+                f"ProductID:{node.zwave_props.product_id}"
+            )
+        device_info[ATTR_MODEL] = model
 
         return device_info
 

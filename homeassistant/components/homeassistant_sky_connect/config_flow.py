@@ -5,7 +5,7 @@ from typing import Any
 
 from homeassistant.components import usb
 from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
-from homeassistant.config_entries import ConfigEntry, ConfigEntryDisabler, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
@@ -35,12 +35,7 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         manufacturer = discovery_info.manufacturer
         description = discovery_info.description
         unique_id = f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
-        if existing_entry := await self.async_set_unique_id(unique_id):
-            # Re-enable existing config entry which was disabled by USB unplug
-            if existing_entry.disabled_by == ConfigEntryDisabler.INTEGRATION:
-                await self.hass.config_entries.async_set_disabled_by(
-                    existing_entry.entry_id, None
-                )
+        if await self.async_set_unique_id(unique_id):
             self._abort_if_unique_id_configured(updates={"device": device})
         return self.async_create_entry(
             title="Home Assistant Sky Connect",

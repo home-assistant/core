@@ -38,6 +38,20 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # EasyBaby
+    # Undocumented, might have a wider use
+    "cn": (
+        SwitchEntityDescription(
+            key=DPCode.DISINFECTION,
+            name="Disinfection",
+            icon="mdi:bacteria",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.WATER,
+            name="Water",
+            icon="mdi:water",
+        ),
+    ),
     # Smart Pet Feeder
     # https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
     "cwwsq": (

@@ -7,8 +7,9 @@ from pyisy.constants import ISY_VALUE_UNKNOWN
 from pyisy.helpers import NodeProperty
 from pyisy.nodes import Node
 
-from homeassistant.components.light import DOMAIN as LIGHT, ColorMode, LightEntity
+from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -36,10 +37,10 @@ async def async_setup_entry(
     restore_light_state = isy_options.get(CONF_RESTORE_LIGHT_STATE, False)
 
     entities = []
-    for node in hass_isy_data[ISY994_NODES][LIGHT]:
+    for node in hass_isy_data[ISY994_NODES][Platform.LIGHT]:
         entities.append(ISYLightEntity(node, restore_light_state))
 
-    await migrate_old_unique_ids(hass, LIGHT, entities)
+    await migrate_old_unique_ids(hass, Platform.LIGHT, entities)
     async_add_entities(entities)
     async_setup_light_services(hass)
 
