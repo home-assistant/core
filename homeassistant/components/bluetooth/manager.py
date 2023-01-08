@@ -227,8 +227,6 @@ class BluetoothManager:
             for scanner in self._get_scanners_by_type(type_):
                 devices_and_adv_data = scanner.discovered_devices_and_advertisement_data
                 if device_adv_data := devices_and_adv_data.get(address):
-                    address
-                ):
                     results.append((scanner, *device_adv_data))
         return results
 
