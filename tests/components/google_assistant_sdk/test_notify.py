@@ -17,8 +17,8 @@ from .conftest import ComponentSetup, ExpectedCredentials
     [
         ("en-US", "Dinner is served", "broadcast Dinner is served"),
         ("es-ES", "La cena está en la mesa", "Anuncia La cena está en la mesa"),
-        ("ko-KR", "저녁 식사가 준비됐어요", "저녁 식사가 준비됐어요 방송"),
-        ("ja-JP", "晩ご飯できたよ", "晩ご飯できたよ、とブロードキャストして"),
+        ("ko-KR", "저녁 식사가 준비됐어요", "저녁 식사가 준비됐어요 라고 방송해 줘"),
+        ("ja-JP", "晩ご飯できたよ", "晩ご飯できたよとほうそうして"),
     ],
     ids=["english", "spanish", "korean", "japanese"],
 )
@@ -63,8 +63,8 @@ async def test_broadcast_no_targets(
             "el salón",
             "Anuncia en el salón Es hora de hacer los deberes",
         ),
-        ("ko-KR", "숙제할 시간이야", "거실", "거실에 방송해 줘, 숙제할 시간이야"),
-        ("ja-JP", "宿題の時間だよ", "リビングルーム", "リビングルームに、宿題の時間だよ、とブロードキャストして"),
+        ("ko-KR", "숙제할 시간이야", "거실", "숙제할 시간이야 라고 거실에 방송해 줘"),
+        ("ja-JP", "宿題の時間だよ", "リビング", "宿題の時間だよとリビングにブロードキャストして"),
     ],
     ids=["english", "spanish", "korean", "japanese"],
 )
