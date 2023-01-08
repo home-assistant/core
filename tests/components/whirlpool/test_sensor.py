@@ -6,6 +6,7 @@ from whirlpool.washerdryer import MachineState
 
 from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.helpers import entity_registry
+from homeassistant.util.dt import as_timestamp, utc_from_timestamp
 
 from . import init_integration
 
@@ -79,7 +80,7 @@ async def test_dryer_sensor_values(
     assert state is not None
     state_id = f"{entity_id.split('_')[0]}_end_time"
     state = hass.states.get(state_id)
-    assert state is not None
+    assert state.state == thetimestamp.isoformat()
 
     mock_instance.get_machine_state.return_value = MachineState.RunningMainCycle
     mock_instance.get_cycle_status_filling.return_value = False
@@ -143,7 +144,7 @@ async def test_washer_sensor_values(
     assert state is not None
     state_id = f"{entity_id.split('_')[0]}_end_time"
     state = hass.states.get(state_id)
-    assert state is not None
+    assert state.state == thetimestamp.isoformat()
 
     state_id = f"{entity_id.split('_')[0]}_detergent_level"
     state = hass.states.get(state_id)
@@ -281,3 +282,62 @@ async def test_restore_state(
     assert state.state == thetimestamp.isoformat()
     state = hass.states.get("sensor.dryer_end_time")
     assert state.state == thetimestamp.isoformat()
+
+
+async def test_callback(
+    hass: HomeAssistant,
+    mock_sensor_api_instances: MagicMock,
+    mock_sensor1_api: MagicMock,
+):
+    """Test callback timestamp callback function."""
+    hass.state = CoreState.not_running
+    thetimestamp: datetime = datetime(2022, 11, 29, 00, 00, 00, 00, timezone.utc)
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State(
+                    "sensor.washer_end_time",
+                    "1",
+                ),
+                {"native_value": thetimestamp, "native_unit_of_measurement": None},
+            ),
+            (
+                State("sensor.dryer_end_time", "1"),
+                {"native_value": thetimestamp, "native_unit_of_measurement": None},
+            ),
+        ),
+    )
+
+    # create and add entry
+    await init_integration(hass)
+    # restore from cache
+    state = hass.states.get("sensor.washer_end_time")
+    assert state.state == thetimestamp.isoformat()
+    callback = mock_sensor1_api.register_attr_callback.call_args_list[2][0][0]
+    callback()
+    # await hass.async_block_till_done()
+    state = hass.states.get("sensor.washer_end_time")
+    assert state.state == thetimestamp.isoformat()
+    mock_sensor1_api.get_machine_state.return_value = MachineState.RunningMainCycle
+    mock_sensor1_api.get_attribute.side_effect = None
+    mock_sensor1_api.get_attribute.return_value = "60"
+    callback()
+
+    # Test new timestamp when machine starts a cycle.
+    state = hass.states.get("sensor.washer_end_time")
+    time = state.state
+    assert state.state != thetimestamp.isoformat()
+
+    # Test no timestamp change for < 60 seconds time change.
+    mock_sensor1_api.get_attribute.return_value = "65"
+    callback()
+    state = hass.states.get("sensor.washer_end_time")
+    assert state.state == time
+
+    # Test timestamp change for > 60 seconds.
+    mock_sensor1_api.get_attribute.return_value = "120"
+    callback()
+    state = hass.states.get("sensor.washer_end_time")
+    newtime = utc_from_timestamp(as_timestamp(time) + 60)
+    assert state.state == newtime.isoformat()
