@@ -21,7 +21,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from . import _async_isy_to_configuration_url
-from .const import DOMAIN
+from .const import DOMAIN, ISY_CONF_UUID
 
 
 class ISYEntity(Entity):
@@ -73,7 +73,7 @@ class ISYEntity(Entity):
     def device_info(self) -> DeviceInfo | None:
         """Return the device_info of the device."""
         isy = self._node.isy
-        uuid = isy.configuration["uuid"]
+        uuid = isy.configuration[ISY_CONF_UUID]
         node = self._node
         url = _async_isy_to_configuration_url(isy)
 
@@ -127,7 +127,7 @@ class ISYEntity(Entity):
     def unique_id(self) -> str | None:
         """Get the unique identifier of the device."""
         if hasattr(self._node, "address"):
-            return f"{self._node.isy.configuration['uuid']}_{self._node.address}"
+            return f"{self._node.isy.configuration[ISY_CONF_UUID]}_{self._node.address}"
         return None
 
     @property
