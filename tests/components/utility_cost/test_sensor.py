@@ -11,9 +11,9 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
-    ENERGY_KILO_WATT_HOUR,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfEnergy,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
@@ -36,7 +36,7 @@ async def test_state(hass) -> None:
         }
     }
     utility_attributes = {
-        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
         ATTR_STATE_CLASS: SensorStateClass.TOTAL,
     }
     price_attributes = {
@@ -154,7 +154,7 @@ async def test_update_monotonic(hass):
         }
     }
     utility_attributes = {
-        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
         ATTR_STATE_CLASS: SensorStateClass.TOTAL,
     }
     price_attributes = {
@@ -193,7 +193,7 @@ async def test_update_with_reset(hass):
         }
     }
     utility_attributes = {
-        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
         ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
     }
     price_attributes = {
@@ -235,7 +235,7 @@ async def test_update_with_last_reset(hass):
     old_reset = dt_util.utc_from_timestamp(0).isoformat()
     new_reset = dt_util.utcnow().isoformat()
     utility_attributes = {
-        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
         ATTR_STATE_CLASS: SensorStateClass.TOTAL,
         ATTR_LAST_RESET: old_reset,
     }
@@ -298,7 +298,7 @@ async def test_utility_initialization(hass):
     hass.states.async_set(utility_entity_id, 200, utility_attributes)
     await hass.async_block_till_done()
 
-    utility_attributes[ATTR_UNIT_OF_MEASUREMENT] = ENERGY_KILO_WATT_HOUR
+    utility_attributes[ATTR_UNIT_OF_MEASUREMENT] = UnitOfEnergy.KILO_WATT_HOUR
     hass.states.async_set(utility_entity_id, 300, utility_attributes)
     await hass.async_block_till_done()
 
@@ -332,7 +332,7 @@ async def test_price_initialization(hass):
         }
     }
     utility_attributes = {
-        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
         ATTR_STATE_CLASS: SensorStateClass.TOTAL,
     }
     price_attributes = {
