@@ -257,7 +257,9 @@ class _TranslationCache:
                 _merge_resources if category == "state" else _build_resources
             )
             new_resources: Mapping[str, dict[str, Any] | str]
-            new_resources = resource_func(translation_strings, components, category)  # type: ignore[assignment]
+            new_resources = resource_func(  # type: ignore[assignment]
+                translation_strings, components, category
+            )
 
             for component, resource in new_resources.items():
                 category_cache: dict[str, Any] = cached.setdefault(
