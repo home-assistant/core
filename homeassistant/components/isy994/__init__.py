@@ -54,7 +54,7 @@ from .const import (
     SCHEME_HTTPS,
     SENSOR_AUX,
 )
-from .helpers import _categorize_nodes, _categorize_programs, _categorize_variables
+from .helpers import _categorize_nodes, _categorize_programs
 from .services import async_setup_services, async_unload_services
 from .util import unique_ids_for_config_entry_id
 
@@ -212,7 +212,12 @@ async def async_setup_entry(
 
     _categorize_nodes(hass_isy_data, isy.nodes, ignore_identifier, sensor_identifier)
     _categorize_programs(hass_isy_data, isy.programs)
-    _categorize_variables(hass_isy_data, isy.variables, variable_identifier)
+
+    # Gather ISY Variables to be added. Identifier used to enable by default.
+    for vtype, vname, vid in isy.variables.children:
+        hass_isy_data[ISY994_VARIABLES].append(
+            (isy.variables[vtype][vid], variable_identifier in vname)
+        )
     if isy.configuration[ISY_CONF_NETWORKING]:
         for resource in isy.networking.nobjs:
             hass_isy_data[ISY994_NODES][PROTO_NETWORK_RESOURCE].append(resource)

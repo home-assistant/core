@@ -14,7 +14,6 @@ from pyisy.constants import (
 )
 from pyisy.nodes import Group, Node, Nodes
 from pyisy.programs import Programs
-from pyisy.variables import Variables
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -31,7 +30,6 @@ from .const import (
     FILTER_ZWAVE_CAT,
     ISY994_NODES,
     ISY994_PROGRAMS,
-    ISY994_VARIABLES,
     ISY_GROUP_PLATFORM,
     KEY_ACTIONS,
     KEY_STATUS,
@@ -361,23 +359,6 @@ def _categorize_programs(hass_isy_data: dict, programs: Programs) -> None:
 
             entity = (entity_folder.name, status, actions)
             hass_isy_data[ISY994_PROGRAMS][platform].append(entity)
-
-
-def _categorize_variables(
-    hass_isy_data: dict, variables: Variables, identifier: str
-) -> None:
-    """Gather the ISY Variables to be added as sensors."""
-    try:
-        var_to_add = [
-            (vtype, vname, vid)
-            for (vtype, vname, vid) in variables.children
-            if identifier in vname
-        ]
-    except KeyError as err:
-        _LOGGER.error("Error adding ISY Variables: %s", err)
-        return
-    for vtype, vname, vid in var_to_add:
-        hass_isy_data[ISY994_VARIABLES].append((vname, variables[vtype][vid]))
 
 
 async def migrate_old_unique_ids(
