@@ -12,7 +12,9 @@ from math import floor, log10
 from typing import Any, Final, cast, final
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (  # noqa: F401, pylint: disable=[hass-deprecated-import]
+
+# pylint: disable=[hass-deprecated-import]
+from homeassistant.const import (  # noqa: F401
     CONF_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_AQI,
     DEVICE_CLASS_BATTERY,
@@ -350,12 +352,12 @@ class SensorEntity(Entity):
         For sensors without a `unique_id`, this takes precedence over legacy
         temperature conversion rules only.
 
-        For sensors with a `unique_id`, this is applied only if the unit is not set by the user,
-        and takes precedence over automatic device-class conversion rules.
+        For sensors with a `unique_id`, this is applied only if the unit is not set by
+        the user, and takes precedence over automatic device-class conversion rules.
 
         Note:
-            suggested_unit_of_measurement is stored in the entity registry the first time
-            the entity is seen, and then never updated.
+            suggested_unit_of_measurement is stored in the entity registry the first
+            time the entity is seen, and then never updated.
         """
         if hasattr(self, "_attr_suggested_unit_of_measurement"):
             return self._attr_suggested_unit_of_measurement
@@ -367,8 +369,8 @@ class SensorEntity(Entity):
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the entity, after unit conversion."""
-        # Highest priority, for registered entities: unit set by user, with fallback to unit suggested
-        # by integration or secondary fallback to unit conversion rules
+        # Highest priority, for registered entities: unit set by user,with fallback to
+        # unit suggested by integration or secondary fallback to unit conversion rules
         if self._sensor_option_unit_of_measurement:
             return self._sensor_option_unit_of_measurement
 
