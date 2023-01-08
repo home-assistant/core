@@ -22,7 +22,7 @@
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi"
                 },
-                "description": "Sisestage SwitchBot rakenduse kasutajanimi ja sals\u00f5na. Neid andmeid ei salvestata ja neid kasutatakse ainult lukkude kr\u00fcpteerimisv\u00f5tme k\u00e4ttesaamiseks."
+                "description": "Sisesta SwitchBot rakenduse kasutajanimi ja sals\u00f5na. Neid andmeid ei salvestata ja neid kasutatakse ainult lukkude kr\u00fcpteerimisv\u00f5tme k\u00e4ttesaamiseks. Kasutajanimi ja salas\u00f5na on t\u00f5stutundlikud."
             },
             "lock_choose_method": {
                 "description": "SwitchBoti lukku saab Home Assistantis seadistada kahel erineval viisil. \n\n V\u00f5tme ID ja kr\u00fcpteerimisv\u00f5tme saad ise sisestada v\u00f5i Home Assistant saab need importida SwitchBoti kontolt.",
