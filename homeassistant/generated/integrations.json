@@ -1990,6 +1990,12 @@
           "iot_class": "cloud_polling",
           "name": "Google Domains"
         },
+        "google_mail": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Google Mail"
+        },
         "google_maps": {
           "integration_type": "hub",
           "config_flow": false,
@@ -5160,6 +5166,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
+    },
+    "starlink": {
+      "name": "Starlink",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "startca": {
       "name": "Start.ca",
